@@ -72,13 +72,6 @@ class GeExpectation:
             "meta": self._meta,
         }
 
-    def to_ge_object(self) -> ExpectationConfiguration:
-        return ExpectationConfiguration(
-            expectation_type = self.expectation_type,
-            kwargs = self.kwargs,
-            meta = self.meta
-        )
-
     def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 

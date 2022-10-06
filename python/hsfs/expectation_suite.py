@@ -196,7 +196,7 @@ class ExpectationSuite:
             self._expectation_suite_engine.save(self)
         elif self._feature_store_id and self._feature_group_id:
             self._init_expectation_suite_engine(feature_group_id=feature_group_id, feature_store_id=feature_store_id)
-            return self._expectation_suite_engine.save(self)
+            self._expectation_suite_engine.save(self)
         else:
             raise ValueError("Cannot attach or update the expectation suite without providing feature_store_id and feature_group_id.")
 
@@ -233,6 +233,7 @@ class ExpectationSuite:
         if self.id:
             converted_expectation = self._expectation_engine.create(expectation=converted_expectation)
             self.expectations.append(converted_expectation)
+            self._ge_object = self.to_ge_type()
             if ge_type:
                 return converted_expectation.to_ge_type()
             else:
@@ -250,6 +251,7 @@ class ExpectationSuite:
             self._expectation_engine.check_for_id(converted_expectation)
             converted_expectation = self._expectation_engine.update(expectation=converted_expectation)
             self._replace_expectation_local(converted_expectation)
+            self._ge_object = self.to_ge_type()
         elif existing_expectation:
             self._ge_object.replace_expectation(converted_expectation.to_ge_type(), self._convert_expectation(existing_expectation))
             self.expectations = self._ge_object.expectations
@@ -276,10 +278,12 @@ class ExpectationSuite:
         if self.id and expectation_id:
             self._expectation_engine.delete(expectation_id=expectation_id)
             self._remove_expectation_local(expectation_id=expectation_id)
+            self._ge_object = self.to_ge_type()
         elif self.id and expectation:
             converted_expectation = self._convert_expectation(expectation)
             self._expectation_engine.delete(converted_expectation.id)
             self._remove_expectation_local(expectation_id=converted_expectation.id)
+            self._ge_object = self.to_ge_type()
         else:
             self._ge_object.remove_expectation(expectation)
             self.expectations = self._ge_object.expectations
@@ -294,7 +298,7 @@ class ExpectationSuite:
             Fetch suite using fg.get_expectation_suite() to start over with correct ids.""")
         else:
             self.expectations.pop(matches[0])
-            self._ge_object.expectations = [expect.to_ge_object() for expect in self.expectations]
+            self._ge_object.expectations = [expect.to_ge_type() for expect in self.expectations]
     # End of single expectation API              
 
     def __str__(self) -> str:
@@ -320,6 +324,7 @@ class ExpectationSuite:
     @expectation_suite_name.setter
     def expectation_suite_name(self, expectation_suite_name: str):
         self._expectation_suite_name = expectation_suite_name
+        self._ge_object = self.to_ge_type()
 
     @property
     def data_asset_type(self) -> str:
@@ -329,6 +334,7 @@ class ExpectationSuite:
     @data_asset_type.setter
     def data_asset_type(self, data_asset_type: str):
         self._data_asset_type = data_asset_type
+        self._ge_object = self.to_ge_type()
 
     @property
     def ge_cloud_id(self):
@@ -338,6 +344,7 @@ class ExpectationSuite:
     @ge_cloud_id.setter
     def ge_coud_id(self, ge_cloud_id):
         self._ge_cloud_id = ge_cloud_id
+        self._ge_object = self.to_ge_type()
 
     @property
     def run_validation(self) -> bool:
@@ -369,7 +376,7 @@ class ExpectationSuite:
     @expectations.setter
     def expectations(self, expectations: Union[List[ge.core.ExpectationConfiguration], List[GeExpectation], List[dict]]):
         if expectations is None:
-            pass
+            self._expectations = []
         elif isinstance(expectations, list):
             for expectation in expectations:
                 if isinstance(expectation, ge.core.ExpectationConfiguration):
@@ -384,6 +391,7 @@ class ExpectationSuite:
                     raise TypeError(
                         f"Expectation of type {type(expectation)} is not supported."
                     )
+        self._ge_object = self.to_ge_type()
 
     @property
     def meta(self) -> dict:
@@ -398,4 +406,5 @@ class ExpectationSuite:
             self._meta = json.loads(meta)
         else:
             raise ValueError("Meta field must be stringified json or dict.")
+        self._ge_object = self.to_ge_type()
 
