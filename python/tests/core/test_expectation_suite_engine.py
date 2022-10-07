@@ -49,7 +49,7 @@ class TestExpectationSuiteEngine:
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0
-        ] == "Attached expectation suite to featuregroup, edit it at {}".format(
+        ] == "Attached expectation suite to Feature Group, edit it at {}".format(
             expectation_suite_url
         )
 
@@ -78,11 +78,11 @@ class TestExpectationSuiteEngine:
         es_engine.update(expectation_suite=None)
 
         # Assert
-        assert mock_es_api.return_value.create.call_count == 1
+        assert mock_es_api.return_value.update.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0
-        ] == "Updated expectation suite attached to featuregroup, edit it at {}".format(
+        ] == "Updated expectation suite attached to Feature Group, edit it at {}".format(
             expectation_suite_url
         )
 
@@ -117,7 +117,7 @@ class TestExpectationSuiteEngine:
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0
-        ] == "Attached expectation suite to featuregroup, edit it at {}".format(
+        ] == "Attached expectation suite to Feature Group, edit it at {}".format(
             expectation_suite_url
         )
 

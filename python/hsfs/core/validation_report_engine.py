@@ -15,7 +15,7 @@
 #
 
 from typing import Union, List
-from hsfs.core.validation_report_api import ValidationReportApi
+from hsfs.core import validation_report_api
 from hsfs import client, util
 
 from hsfs.validation_report import ValidationReport
@@ -32,7 +32,7 @@ class ValidationReportEngine:
         """
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
-        self._validation_report_api = ValidationReportApi(
+        self._validation_report_api = validation_report_api.ValidationReportApi(
             feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 

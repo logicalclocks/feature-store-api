@@ -15,7 +15,7 @@
 #
 
 from typing import Optional
-from hsfs.core.expectation_suite_api import ExpectationSuiteApi
+from hsfs.core import expectation_suite_api
 from hsfs import client, util
 from hsfs.expectation_suite import ExpectationSuite
 
@@ -31,7 +31,7 @@ class ExpectationSuiteEngine:
         """
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
-        self._expectation_suite_api = ExpectationSuiteApi(
+        self._expectation_suite_api = expectation_suite_api.ExpectationSuiteApi(
             feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
@@ -45,7 +45,7 @@ class ExpectationSuiteEngine:
         saved_suite = self._expectation_suite_api.create(expectation_suite)
 
         url = self._get_expectation_suite_url()
-        print(f"Attached expectation suite to featuregroup, edit it at {url}")
+        print(f"Attached expectation suite to Feature Group, edit it at {url}")
 
         return saved_suite
 
@@ -53,7 +53,7 @@ class ExpectationSuiteEngine:
         saved_suite = self._expectation_suite_api.update(expectation_suite)
 
         url = self._get_expectation_suite_url()
-        print(f"Updated expectation suite to featuregroup, edit it at {url}")
+        print(f"Updated expectation suite attached to Feature Group, edit it at {url}")
 
         return saved_suite
 

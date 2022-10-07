@@ -63,15 +63,8 @@ class ExpectationSuite:
         self._href = href
 
         if href is not None:
-            print("Populating feature_store_id and feature_group_id from href")
             self._init_feature_store_and_feature_group_ids_from_href(href)
-            print(
-                f"self._feature_store_id: {self._feature_store_id}, self._feature_group_id: {self._feature_group_id}"
-            )
         else:
-            print(
-                f"Not populating from href: fs_id {feature_store_id} and fg_id {feature_group_id}"
-            )
             self._feature_store_id = feature_store_id
             self._feature_group_id = feature_group_id
 
@@ -80,12 +73,6 @@ class ExpectationSuite:
         self.meta = meta
 
         if self.id:
-            print(
-                f"Expectation suite init, suite has an id: {self.id}. Initialising engine with : "
-            )
-            print(
-                f"self._feature_store_id : {self._feature_store_id}, self._feature_group_id: {self._feature_group_id}, expectation_suite_id: {self.id}"
-            )
             self._expectation_engine = ExpectationEngine(
                 feature_store_id=self._feature_store_id,
                 feature_group_id=self._feature_group_id,
@@ -183,11 +170,7 @@ class ExpectationSuite:
     def _init_expectation_engine(
         self, feature_store_id: int, feature_group_id: int
     ) -> None:
-        print("init expectation engine of suite:")
         if self.id:
-            print(
-                f"feature_store_id:{feature_store_id}, feature_group_id:{feature_group_id}, expectation_suite_id: {self.id}"
-            )
             self._expectation_engine = ExpectationEngine(
                 feature_store_id=feature_store_id,
                 feature_group_id=feature_group_id,
@@ -201,7 +184,6 @@ class ExpectationSuite:
     def _init_expectation_suite_engine(
         self, feature_store_id: Optional[int], feature_group_id: Optional[int]
     ) -> None:
-        print("init expectation suite engine of suite:")
         if feature_group_id and feature_store_id:
             self._expectation_suite_engine = (
                 expectation_suite_engine.ExpectationSuiteEngine(
@@ -210,9 +192,6 @@ class ExpectationSuite:
                 )
             )
         elif self._feature_group_id and self._feature_store_id:
-            print(
-                f"feature_store_id:{feature_store_id}, feature_group_id:{feature_group_id}, expectation_suite_id: {self.id}"
-            )
             self._expectation_suite_engine = (
                 expectation_suite_engine.ExpectationSuiteEngine(
                     feature_store_id=self._feature_store_id,

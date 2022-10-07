@@ -766,12 +766,8 @@ class FeatureGroup(FeatureGroupBase):
                 self._hudi_precombine_key = None
 
             self.statistics_config = statistics_config
-            print(f"FG has an id, here is the suite : {expectation_suite}")
             self.expectation_suite = expectation_suite
             if expectation_suite:
-                print(
-                    f"Creating engine via init_expectation_engine with featurestore_id: {featurestore_id}, featuregroup_id: {self._id}"
-                )
                 self._expectation_suite._init_expectation_engine(
                     feature_store_id=featurestore_id, feature_group_id=self._id
                 )
