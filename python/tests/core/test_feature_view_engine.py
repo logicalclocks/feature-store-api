@@ -28,29 +28,29 @@ from hsfs import engine
 
 engine._engine_type = "python"
 fg1 = feature_group.FeatureGroup(
-            name="test1",
-            version=1,
-            featurestore_id=99,
-            primary_key=[],
-            partition_key=[],
-            id=10,
-            stream=False,
-        )
+    name="test1",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    id=10,
+    stream=False,
+)
 
 fg2 = feature_group.FeatureGroup(
-            name="test2",
-            version=1,
-            featurestore_id=99,
-            primary_key=[],
-            partition_key=[],
-            id=10,
-            stream=False,
-        )
+    name="test2",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    id=10,
+    stream=False,
+)
 
 query = fg1.select_all()
 
-class TestFeatureViewEngine:
 
+class TestFeatureViewEngine:
     def test_save(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -133,10 +133,10 @@ class TestFeatureViewEngine:
         ] == "Feature view created successfully, explore it at \n{}".format(
             feature_view_url
         )
-        assert mock_warning.call_args[0][
-            0
-        ] == ("`as_of` argument in the `Query` will be ignored because" +
-               " feature view does not support time travel query.")
+        assert mock_warning.call_args[0][0] == (
+            "`as_of` argument in the `Query` will be ignored because"
+            + " feature view does not support time travel query."
+        )
 
     def test_save_time_travel_sub_query(self, mocker):
         # Arrange
@@ -179,10 +179,10 @@ class TestFeatureViewEngine:
         ] == "Feature view created successfully, explore it at \n{}".format(
             feature_view_url
         )
-        assert mock_warning.call_args[0][
-            0
-        ] == ("`as_of` argument in the `Query` will be ignored because" +
-               " feature view does not support time travel query.")
+        assert mock_warning.call_args[0][0] == (
+            "`as_of` argument in the `Query` will be ignored because"
+            + " feature view does not support time travel query."
+        )
 
     def test_get_name(self, mocker):
         # Arrange

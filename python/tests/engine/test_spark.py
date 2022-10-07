@@ -44,7 +44,7 @@ from hsfs import (
     storage_connector,
     expectation_suite,
     training_dataset_feature,
-    engine
+    engine,
 )
 from hsfs.core import training_dataset_engine
 from hsfs.engine import spark
@@ -52,6 +52,7 @@ from hsfs.constructor import query, hudi_feature_group_alias
 from hsfs.client import exceptions
 
 engine._engine_type = "spark"
+
 
 class TestSpark:
     def test_sql(self, mocker):
