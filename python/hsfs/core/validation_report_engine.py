@@ -33,8 +33,7 @@ class ValidationReportEngine:
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
         self._validation_report_api = ValidationReportApi(
-            feature_store_id=feature_store_id,
-            feature_group_id=feature_group_id
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
     def save(self, validation_report: ValidationReport) -> ValidationReport:

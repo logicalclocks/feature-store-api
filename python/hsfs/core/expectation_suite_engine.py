@@ -16,14 +16,12 @@
 
 from typing import Optional
 from hsfs.core.expectation_suite_api import ExpectationSuiteApi
-from hsfs.core.expectation_engine import ExpectationEngine
 from hsfs import client, util
-from hsfs.ge_expectation import GeExpectation
 from hsfs.expectation_suite import ExpectationSuite
 
 
 class ExpectationSuiteEngine:
-    def __init__(self, feature_store_id : int, feature_group_id: int):
+    def __init__(self, feature_store_id: int, feature_group_id: int):
         """Expectation Suite engine.
 
         :param feature_store_id: id of the respective featurestore
@@ -34,8 +32,7 @@ class ExpectationSuiteEngine:
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
         self._expectation_suite_api = ExpectationSuiteApi(
-            feature_store_id=feature_store_id,
-            feature_group_id=feature_group_id
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
     def save(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
@@ -46,18 +43,18 @@ class ExpectationSuiteEngine:
 
     def create(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
         saved_suite = self._expectation_suite_api.create(expectation_suite)
-        
+
         url = self._get_expectation_suite_url()
         print(f"Attached expectation suite to featuregroup, edit it at {url}")
-        
+
         return saved_suite
 
     def update(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
         saved_suite = self._expectation_suite_api.update(expectation_suite)
-        
+
         url = self._get_expectation_suite_url()
         print(f"Updated expectation suite to featuregroup, edit it at {url}")
-        
+
         return saved_suite
 
     def update_metadata(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:

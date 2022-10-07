@@ -5,8 +5,8 @@
       "expectations": [
         {
           "expectation_type": "1",
-          "kwargs": "2",
-          "meta": "3",
+          "kwargs": {"kwargs_key": "kwargs_value"},
+          "meta": {"meta_key": "meta_value"},
           "id": "4"
         }
       ],
@@ -16,8 +16,8 @@
       "ge_cloud_id": "test_ge_cloud_id",
       "run_validation": "test_run_validation",
       "validation_ingestion_policy": "test_validation_ingestion_policy",
-      "featurestore_id": "test_featurestore_id",
-      "featuregroup_id": "test_featuregroup_id",
+      "feature_store_id": "test_featurestore_id",
+      "feature_group_id": "test_featuregroup_id",
       "href": "test_href",
       "expand": "test_expand",
       "items": "test_items",
@@ -34,8 +34,8 @@
           "expectations": [
             {
               "expectation_type": "1",
-              "kwargs": "2",
-              "meta": "3",
+              "kwargs": {"kwargs_key": "kwargs_value"},
+              "meta": {"meta_key": "meta_value"},
               "id": "4"
             }
           ],
@@ -47,8 +47,8 @@
           "ge_cloud_id": "test_ge_cloud_id",
           "run_validation": "test_run_validation",
           "validation_ingestion_policy": "test_validation_ingestion_policy",
-          "featurestore_id": "test_featurestore_id",
-          "featuregroup_id": "test_featuregroup_id",
+          "feature_store_id": "test_featurestore_id",
+          "feature_group_id": "test_featuregroup_id",
           "href": "test_href",
           "expand": "test_expand",
           "items": "test_items",
@@ -64,8 +64,8 @@
       "expectations": [
         {
           "expectation_type": "1",
-          "kwargs": "2",
-          "meta": "3",
+          "kwargs": {"kwargs_key": "kwargs_value"},
+          "meta": {"meta_key": "meta_value"},
           "id": "4"
         }
       ],

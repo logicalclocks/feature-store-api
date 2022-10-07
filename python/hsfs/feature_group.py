@@ -378,7 +378,9 @@ class FeatureGroupBase:
         self._feature_group_engine.append_features(self, new_features)
         return self
 
-    def get_expectation_suite(self, ge_type: bool = True) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
+    def get_expectation_suite(
+        self, ge_type: bool = True
+    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
         """Return the expectation suite attached to the feature group if it exists.
 
         # Arguments
@@ -401,8 +403,8 @@ class FeatureGroupBase:
     def save_expectation_suite(
         self,
         expectation_suite: Union[ExpectationSuite, ge.core.ExpectationSuite],
-        run_validation : bool=True,
-        validation_ingestion_policy: str="ALWAYS",
+        run_validation: bool = True,
+        validation_ingestion_policy: str = "ALWAYS",
     ) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
         """Attach an expectation suite to a feature group and saves it for future use. If an expectation
         suite is already attached, it is replaced. Note that the provided expectation suite is modified
@@ -424,7 +426,7 @@ class FeatureGroupBase:
                 run_validation=run_validation,
                 validation_ingestion_policy=validation_ingestion_policy,
                 feature_store_id=self._featurestore_id,
-                feature_group_id=self._id
+                feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, ExpectationSuite):
             tmp_expectation_suite = expectation_suite
@@ -442,7 +444,7 @@ class FeatureGroupBase:
             expectation_suite = self._expectation_suite.to_ge_type()
         else:
             # Added to avoid throwing an error if Feature Group is not initialised with the backend
-            self._expectation_suite = tmp_expectation_suite 
+            self._expectation_suite = tmp_expectation_suite
 
     def delete_expectation_suite(self) -> None:
         """Delete the expectation suite attached to the Feature Group.
@@ -453,7 +455,9 @@ class FeatureGroupBase:
         self._expectation_suite_engine.delete(self)
         self._expectation_suite = None
 
-    def get_latest_validation_report(self, ge_type: bool = True) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult, None]:
+    def get_latest_validation_report(
+        self, ge_type: bool = True
+    ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult, None]:
         """Return the latest validation report attached to the Feature Group if it exists.
 
         # Arguments
@@ -472,7 +476,9 @@ class FeatureGroupBase:
         else:
             return self._validation_report_engine.get_last(self)
 
-    def get_all_validation_reports(self, ge_type: bool = True) -> List[Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]]:
+    def get_all_validation_reports(
+        self, ge_type: bool = True
+    ) -> List[Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]]:
         """Return the latest validation report attached to the feature group if it exists.
 
         # Arguments
@@ -645,19 +651,34 @@ class FeatureGroupBase:
         return self._location
 
     @property
-    def expectation_suite(self) -> Union[ExpectationSuite, ge.core.ExpectationSuite, None]:
+    def expectation_suite(
+        self,
+    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite, None]:
         """Expectation Suite configuration object defining the settings for
         data validation of the feature group."""
         return self._expectation_suite
 
     @expectation_suite.setter
-    def expectation_suite(self, expectation_suite: Union[ExpectationSuite, ge.core.ExpectationSuite, dict, None]):
+    def expectation_suite(
+        self,
+        expectation_suite: Union[
+            ExpectationSuite, ge.core.ExpectationSuite, dict, None
+        ],
+    ):
         if isinstance(expectation_suite, ExpectationSuite):
             self._expectation_suite = expectation_suite
         elif isinstance(expectation_suite, ge.core.expectation_suite.ExpectationSuite):
-            self._expectation_suite = ExpectationSuite(**expectation_suite.to_json_dict(), feature_store_id=self._feature_store_id, feature_group_id=self._id)
+            self._expectation_suite = ExpectationSuite(
+                **expectation_suite.to_json_dict(),
+                feature_store_id=self._feature_store_id,
+                feature_group_id=self._id,
+            )
         elif isinstance(expectation_suite, dict):
-            self._expectation_suite = ExpectationSuite(**expectation_suite, feature_store_id=self._feature_store_id, feature_group_id=self._id)
+            self._expectation_suite = ExpectationSuite(
+                **expectation_suite,
+                feature_store_id=self._feature_store_id,
+                feature_group_id=self._id,
+            )
         elif expectation_suite is None:
             self._expectation_suite = expectation_suite
         else:
@@ -748,16 +769,21 @@ class FeatureGroup(FeatureGroupBase):
             print(f"FG has an id, here is the suite : {expectation_suite}")
             self.expectation_suite = expectation_suite
             if expectation_suite:
-                print(f"Creating engine via init_expectation_engine with featurestore_id: {featurestore_id}, featuregroup_id: {self._id}")
-                self._expectation_suite._init_expectation_engine(
-                    feature_store_id=featurestore_id,
-                    feature_group_id=self._id
+                print(
+                    f"Creating engine via init_expectation_engine with featurestore_id: {featurestore_id}, featuregroup_id: {self._id}"
                 )
-            self._expectation_suite_engine = expectation_suite_engine.ExpectationSuiteEngine(
-                    feature_store_id = self._feature_store_id, 
-                    feature_group_id = self._id)
+                self._expectation_suite._init_expectation_engine(
+                    feature_store_id=featurestore_id, feature_group_id=self._id
+                )
+            self._expectation_suite_engine = (
+                expectation_suite_engine.ExpectationSuiteEngine(
+                    feature_store_id=self._feature_store_id, feature_group_id=self._id
+                )
+            )
             self._validation_report_engine = (
-                validation_report_engine.ValidationReportEngine(self._feature_store_id, self._id)
+                validation_report_engine.ValidationReportEngine(
+                    self._feature_store_id, self._id
+                )
             )
 
         else:

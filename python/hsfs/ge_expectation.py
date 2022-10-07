@@ -28,11 +28,11 @@ class GeExpectation:
 
     def __init__(
         self,
-        expectation_type : str,
-        kwargs : Dict[str, Any],
-        meta : Dict[str, Any],
-        id: Optional[int]=None,
-        href=None
+        expectation_type: str,
+        kwargs: Dict[str, Any],
+        meta: Dict[str, Any],
+        id: Optional[int] = None,
+        href=None,
     ):
         self._id = id
         self._expectation_type = expectation_type
@@ -42,7 +42,7 @@ class GeExpectation:
         if not self.id:
             if "expectationId" in self.meta.keys():
                 self.id = int(self.meta["expectationId"])
-                
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)

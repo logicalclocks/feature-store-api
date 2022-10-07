@@ -20,7 +20,7 @@ from hsfs.expectation_suite import ExpectationSuite
 
 
 class ExpectationSuiteApi:
-    def __init__(self, feature_store_id : int, feature_group_id : int):
+    def __init__(self, feature_store_id: int, feature_group_id: int):
         """Expectation Suite endpoints for the Feature Group resource.
         :param feature_store_id: id of the respective Feature Store
         :type feature_store_id: int
@@ -30,7 +30,7 @@ class ExpectationSuiteApi:
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
 
-    def create(self, expectation_suite : ExpectationSuite) -> ExpectationSuite:
+    def create(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
         """Create an expectation suite attached to a Feature Group.
 
         :param expectation_suite: expectation suite object to be created for a Feature Group
@@ -53,7 +53,7 @@ class ExpectationSuiteApi:
             _client._send_request("POST", path_params, headers=headers, data=payload)
         )
 
-    def update(self, expectation_suite : ExpectationSuite) -> ExpectationSuite:
+    def update(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
         """Update an expectation suite attached to a Feature Group.
 
         :param expectation_suite: expectation suite object to be created for a Feature Group
@@ -68,7 +68,7 @@ class ExpectationSuiteApi:
             "featuregroups",
             self._feature_group_id,
             "expectationsuite",
-            expectation_suite.id
+            expectation_suite.id,
         ]
 
         headers = {"content-type": "application/json"}
@@ -77,7 +77,7 @@ class ExpectationSuiteApi:
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )
 
-    def update_metadata(self, expectation_suite : ExpectationSuite) -> ExpectationSuite:
+    def update_metadata(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
         """Update the metadata of an expectation suite attached to a Feature Group.
 
         :param expectation_suite: expectation suite object to be updated
@@ -93,7 +93,7 @@ class ExpectationSuiteApi:
             self._feature_group_id,
             "expectationsuite",
             expectation_suite.id,
-            "metadata"
+            "metadata",
         ]
 
         headers = {"content-type": "application/json"}

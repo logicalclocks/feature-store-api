@@ -75,7 +75,7 @@ class ValidationReportApi:
 
     def get_last(self) -> ValidationReport:
         """Gets the latest Validation Report of a featuregroup.
-        
+
         :return: latest validation report
         :rtype: `ValidationReport`
         """

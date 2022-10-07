@@ -28,8 +28,8 @@ class TestGeExpectation:
 
         # Assert
         assert ge.expectation_type == "1"
-        assert ge.kwargs == 2
-        assert ge.meta == 3
+        assert ge.kwargs == {"kwargs_key": "kwargs_value"}
+        assert ge.meta == {"meta_key": "meta_value"}
         assert ge.id == "4"
 
     def test_from_response_json_list(self, backend_fixtures):
@@ -43,8 +43,8 @@ class TestGeExpectation:
         assert len(ge_list) == 1
         ge = ge_list[0]
         assert ge.expectation_type == "1"
-        assert ge.kwargs == 2
-        assert ge.meta == 3
+        assert ge.kwargs == {"kwargs_key": "kwargs_value"}
+        assert ge.meta == {"meta_key": "meta_value"}
         assert ge.id == "4"
 
     def test_from_response_json_list_empty(self, backend_fixtures):

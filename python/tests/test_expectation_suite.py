@@ -29,8 +29,8 @@ class TestExpectationSuite:
         # Assert
         assert es.id == "test_id"
         assert es.expectation_suite_name == "test_expectation_suite_name"
-        assert es._featurestore_id == "test_featurestore_id"
-        assert es._featuregroup_id == "test_featuregroup_id"
+        assert es._feature_store_id == "test_featurestore_id"
+        assert es._feature_group_id == "test_featuregroup_id"
         assert es.ge_cloud_id == "test_ge_cloud_id"
         assert es.data_asset_type == "test_data_asset_type"
         assert es.run_validation == "test_run_validation"
@@ -51,8 +51,8 @@ class TestExpectationSuite:
         es = es_list[0]
         assert es.id == "test_id"
         assert es.expectation_suite_name == "test_expectation_suite_name"
-        assert es._featurestore_id == "test_featurestore_id"
-        assert es._featuregroup_id == "test_featuregroup_id"
+        assert es._feature_store_id == "test_featurestore_id"
+        assert es._feature_group_id == "test_featuregroup_id"
         assert es.ge_cloud_id == "test_ge_cloud_id"
         assert es.data_asset_type == "test_data_asset_type"
         assert es.run_validation == "test_run_validation"
@@ -71,8 +71,8 @@ class TestExpectationSuite:
         # Assert
         assert es.id is None
         assert es.expectation_suite_name == "test_expectation_suite_name"
-        assert es._featurestore_id is None
-        assert es._featuregroup_id is None
+        assert es._feature_store_id is None
+        assert es._feature_group_id is None
         assert es.ge_cloud_id is None
         assert es.data_asset_type is None
         assert es.run_validation is True

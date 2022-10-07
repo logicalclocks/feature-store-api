@@ -14,14 +14,16 @@
 #   limitations under the License.
 #
 
-from hsfs import feature_group
 from hsfs.core import expectation_suite_engine
+
+from hsfs.expectation_suite import ExpectationSuite
 
 
 class TestExpectationSuiteEngine:
-    def test_save(self, mocker):
+    def test_create(self, mocker):
         # Arrange
         feature_store_id = 99
+        feature_group_id = 10
         expectation_suite_url = "test_url"
 
         mocker.patch("hsfs.engine.get_type")
@@ -34,21 +36,81 @@ class TestExpectationSuiteEngine:
         mock_print = mocker.patch("builtins.print")
 
         es_engine = expectation_suite_engine.ExpectationSuiteEngine(
-            feature_store_id=feature_store_id
-        )
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            partition_key=[],
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
         mock_es_engine_get_expectation_suite_url.return_value = expectation_suite_url
 
         # Act
-        es_engine.save(feature_group=fg, expectation_suite=None)
+        es_engine.create(expectation_suite=None)
+
+        # Assert
+        assert mock_es_api.return_value.create.call_count == 1
+        assert mock_print.call_count == 1
+        assert mock_print.call_args[0][
+            0
+        ] == "Attached expectation suite to featuregroup, edit it at {}".format(
+            expectation_suite_url
+        )
+
+    def test_update(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        feature_group_id = 10
+        expectation_suite_url = "test_url"
+
+        mocker.patch("hsfs.engine.get_type")
+        mock_es_api = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi"
+        )
+        mock_es_engine_get_expectation_suite_url = mocker.patch(
+            "hsfs.core.expectation_suite_engine.ExpectationSuiteEngine._get_expectation_suite_url"
+        )
+        mock_print = mocker.patch("builtins.print")
+
+        es_engine = expectation_suite_engine.ExpectationSuiteEngine(
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
+        )
+
+        mock_es_engine_get_expectation_suite_url.return_value = expectation_suite_url
+
+        # Act
+        es_engine.update(expectation_suite=None)
+
+        # Assert
+        assert mock_es_api.return_value.create.call_count == 1
+        assert mock_print.call_count == 1
+        assert mock_print.call_args[0][
+            0
+        ] == "Updated expectation suite attached to featuregroup, edit it at {}".format(
+            expectation_suite_url
+        )
+
+    def test_save(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        feature_group_id = 10
+        expectation_suite_url = "test_url"
+
+        mocker.patch("hsfs.engine.get_type")
+        mock_es_api = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi"
+        )
+        mock_es_engine_get_expectation_suite_url = mocker.patch(
+            "hsfs.core.expectation_suite_engine.ExpectationSuiteEngine._get_expectation_suite_url"
+        )
+        mock_print = mocker.patch("builtins.print")
+
+        es_engine = expectation_suite_engine.ExpectationSuiteEngine(
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
+        )
+
+        mock_es_engine_get_expectation_suite_url.return_value = expectation_suite_url
+
+        # Act
+        es_engine.save(
+            expectation_suite=ExpectationSuite("test_fake", expectations=[], meta={})
+        )
 
         # Assert
         assert mock_es_api.return_value.create.call_count == 1
@@ -62,6 +124,7 @@ class TestExpectationSuiteEngine:
     def test_get(self, mocker):
         # Arrange
         feature_store_id = 99
+        feature_group_id = 10
 
         mocker.patch("hsfs.engine.get_type")
         mock_es_api = mocker.patch(
@@ -69,20 +132,11 @@ class TestExpectationSuiteEngine:
         )
 
         es_engine = expectation_suite_engine.ExpectationSuiteEngine(
-            feature_store_id=feature_store_id
-        )
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            partition_key=[],
-            id=10,
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
         # Act
-        es_engine.get(feature_group=fg)
+        es_engine.get()
 
         # Assert
         assert mock_es_api.return_value.get.call_count == 1
@@ -90,6 +144,7 @@ class TestExpectationSuiteEngine:
     def test_delete(self, mocker):
         # Arrange
         feature_store_id = 99
+        feature_group_id = 10
 
         mocker.patch("hsfs.engine.get_type")
         mock_es_api = mocker.patch(
@@ -97,20 +152,11 @@ class TestExpectationSuiteEngine:
         )
 
         es_engine = expectation_suite_engine.ExpectationSuiteEngine(
-            feature_store_id=feature_store_id
-        )
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            partition_key=[],
-            id=10,
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
         # Act
-        es_engine.delete(feature_group=fg)
+        es_engine.delete()
 
         # Assert
         assert mock_es_api.return_value.delete.call_count == 1
@@ -118,6 +164,7 @@ class TestExpectationSuiteEngine:
     def test_get_expectation_suite_url(self, mocker):
         # Arrange
         feature_store_id = 99
+        feature_group_id = 10
 
         mocker.patch("hsfs.engine.get_type")
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
@@ -126,22 +173,13 @@ class TestExpectationSuiteEngine:
         )
 
         es_engine = expectation_suite_engine.ExpectationSuiteEngine(
-            feature_store_id=feature_store_id
-        )
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            partition_key=[],
-            id=10,
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
         mock_client_get_instance.return_value._project_id = 50
 
         # Act
-        es_engine._get_expectation_suite_url(feature_group=fg)
+        es_engine._get_expectation_suite_url()
 
         # Assert
         assert mock_util_get_hostname_replaced_url.call_count == 1

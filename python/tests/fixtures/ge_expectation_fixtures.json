@@ -2,8 +2,8 @@
   "get": {
     "response": {
       "expectation_type": "1",
-      "kwargs": "2",
-      "meta": "3",
+      "kwargs": {"kwargs_key": "kwargs_value"},
+      "meta": {"meta_key": "meta_value"},
       "id": "4"
     }
   },
@@ -13,8 +13,8 @@
       "items": [
         {
           "expectation_type": "1",
-          "kwargs": "2",
-          "meta": "3",
+          "kwargs": {"kwargs_key": "kwargs_value"},
+          "meta": {"meta_key": "meta_value"},
           "id": "4"
         }
       ]

@@ -21,7 +21,9 @@ from hsfs.ge_expectation import GeExpectation
 
 
 class ExpectationEngine:
-    def __init__(self, feature_store_id : int, feature_group_id : int, expectation_suite_id : int):
+    def __init__(
+        self, feature_store_id: int, feature_group_id: int, expectation_suite_id: int
+    ):
         """Expectation engine.
 
         :param feature_store_id: id of the respective Feature Store
@@ -39,16 +41,16 @@ class ExpectationEngine:
         )
 
     # CRUD operations
-    def create(self, expectation : GeExpectation) -> GeExpectation:
+    def create(self, expectation: GeExpectation) -> GeExpectation:
         return self._expectation_api.create(expectation)
 
-    def update(self, expectation : GeExpectation) -> GeExpectation:
+    def update(self, expectation: GeExpectation) -> GeExpectation:
         return self._expectation_api.update(expectation)
 
-    def get(self, expectation_id : int) -> Optional[GeExpectation]:
+    def get(self, expectation_id: int) -> Optional[GeExpectation]:
         return self._expectation_api.get(expectation_id)
 
-    def delete(self, expectation_id : int) -> None:
+    def delete(self, expectation_id: int) -> None:
         self._expectation_api.delete(expectation_id)
 
     # End of CRUD operations
@@ -60,4 +62,6 @@ class ExpectationEngine:
             if "expectationId" in expectation.meta.keys():
                 expectation.id = int(expectation.meta["expectationId"])
             else:
-                raise ValueError("The provided expectation has no id. Either set the id field or populate the meta field with an expectationId keyword.")
+                raise ValueError(
+                    "The provided expectation has no id. Either set the id field or populate the meta field with an expectationId keyword."
+                )
