@@ -11,6 +11,18 @@ PAGES = {
         ),
         "connection_methods": keras_autodoc.get_methods("hsfs.connection.Connection"),
     },
+    "api/expectation_suite_api.md": {
+        "expectation_suite": ["hsfs.expectation_suite.ExpectationSuite"],
+        "expectation_suite_attach": [
+            "hsfs.feature_group.FeatureGroup.save_expectation_suite"
+        ],
+        "expectation_suite_properties": keras_autodoc.get_properties(
+            "hsfs.expectation_suite.ExpectationSuite"
+        ),
+        "expectation_suite_methods": keras_autodoc.get_methods(
+            "hsfs.expectation_suite.ExpectationSuite"
+        ),
+    },
     "api/feature_store_api.md": {
         "fs": ["hsfs.feature_store.FeatureStore"],
         "fs_get": ["hsfs.connection.Connection.get_feature_store"],
@@ -151,6 +163,23 @@ PAGES = {
         "get_transformation_functions": [
             "hsfs.feature_store.FeatureStore.get_transformation_functions"
         ],
+    },
+    "api/validation_report_api.md": {
+        "validation_report": ["hsfs.validation_report.ValidationReport"],
+        "validation_report_validate": [
+            "hsfs.feature_group.FeatureGroup.validate",
+            "hsfs.feature_group.FeatureGroup.insert",
+        ],
+        "validation_report_get": [
+            "hsfs.feature_group.FeatureGroup.get_latest_validation_report",
+            "hsfs.feature_group.FeatureGroup.get_all_validation_reports",
+        ],
+        "validation_report_properties": keras_autodoc.get_properties(
+            "hsfs.validation_report.ValidationReport"
+        ),
+        "validation_report_methods": keras_autodoc.get_methods(
+            "hsfs.validation_report.ValidationReport"
+        ),
     },
     "api/job_configuration.md": {
         "job_configuration": ["hsfs.core.job_configuration.JobConfiguration"]

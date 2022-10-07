@@ -19,6 +19,7 @@ nav:
   - API:
     - API Reference:
       - Connection: generated/api/connection_api.md
+      - ExpectationSuite: generated/api/expectation_suite_api.md
       - FeatureStore: generated/api/feature_store_api.md
       - FeatureGroup: generated/api/feature_group_api.md
       - ExternalFeatureGroup: generated/api/external_feature_group_api.md
@@ -28,6 +29,7 @@ nav:
       - Feature: generated/api/feature_api.md
       - Query: generated/api/query_api.md
       - Transformation Functions: generated/api/transformation_functions_api.md
+      - ValidationReport: generated/api/validation_report_api.md
       - Job configuration: generated/api/job_configuration.md
     - Contributing: CONTRIBUTING.md
   - Community: https://community.hopsworks.ai/

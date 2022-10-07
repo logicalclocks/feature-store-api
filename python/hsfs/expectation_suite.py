@@ -231,8 +231,7 @@ class ExpectationSuite:
     def delete(self):
         if self._expectation_suite_engine and self.id:
             self._expectation_suite_engine.delete(self.id)
-        else:
-            self = None
+        self.__
 
     # Emulate GE single expectation api to edit list of expectations
     def _convert_expectation(
