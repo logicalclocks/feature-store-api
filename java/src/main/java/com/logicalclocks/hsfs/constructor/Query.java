@@ -309,8 +309,7 @@ public class Query {
       return true;
     }
     for (Join join: joins) {
-      if (join.getQuery().leftFeatureGroupStartTime != null
-          || join.getQuery().leftFeatureGroupEndTime != null) {
+      if (join.getQuery().isTimeTravel()) {
         return true;
       }
     }

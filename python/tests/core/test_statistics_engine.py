@@ -19,21 +19,22 @@ import pytest
 from hsfs.client import exceptions
 from hsfs import training_dataset, feature_group, feature_view, statistics_config
 from hsfs.core import statistics_engine
+from hsfs import engine
+
+engine._engine_type = "python"
+fg = feature_group.FeatureGroup(
+    name="test",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    id=10,
+    stream=False,
+)
+query = fg.select_all()
 
 
 class TestStatisticsEngine:
-    def __init__(self):
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=99,
-            primary_key=[],
-            partition_key=[],
-            id=10,
-            stream=False,
-        )
-        self.query = fg.select_all()
-
     def test_compute_statistics(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -153,7 +154,7 @@ class TestStatisticsEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query=self.query,
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -247,7 +248,7 @@ class TestStatisticsEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query=self.query,
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -341,7 +342,7 @@ class TestStatisticsEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query=self.query,
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -755,7 +756,7 @@ class TestStatisticsEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query=self.query,
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )

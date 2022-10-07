@@ -634,6 +634,40 @@ class TestPython:
             + "environment with Spark Engine."
         )
 
+    def test_register_hudi_temporary_table_time_travel_sub_query(self):
+        # Arrange
+        python_engine = python.Engine()
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            stream=False,
+        )
+        q = HudiFeatureGroupAlias(
+            fg.to_dict(),
+            "fg",
+            left_feature_group_end_timestamp="20220101",
+            left_feature_group_start_timestamp="20220101",
+        )
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as e_info:
+            python_engine.register_hudi_temporary_table(
+                hudi_fg_alias=q,
+                feature_store_id=None,
+                feature_store_name=None,
+                read_options=None,
+            )
+
+        # Assert
+        assert str(e_info.value) == (
+            "Hive engine on Python environments does not support incremental queries. "
+            + "Read feature group without timestamp to retrieve latest snapshot or switch to "
+            + "environment with Spark Engine."
+        )
+
     def test_profile(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_statistics = mocker.patch(

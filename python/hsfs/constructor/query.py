@@ -408,14 +408,6 @@ class Query:
         self._left_features.append(feature)
 
     def is_time_travel(self):
-        return any(
-            self.left_feature_group_start_time
-            or self.left_feature_group_end_time
-            or any(
-                [
-                    _join.query.left_feature_group_start_time
-                    or _join.query.left_feature_group_end_time
-                    for _join in self._joins
-                ]
-            )
-        )
+        return (self.left_feature_group_start_time or
+                self.left_feature_group_end_time or
+                any([_join.query.is_time_travel() for _join in self._joins]))
