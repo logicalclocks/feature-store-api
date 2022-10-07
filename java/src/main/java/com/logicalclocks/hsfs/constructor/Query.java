@@ -303,4 +303,16 @@ public class Query {
     this.leftFeatures.add(feature);
     return this;
   }
+
+  public boolean isTimeTravel() {
+    if (leftFeatureGroupStartTime != null || leftFeatureGroupEndTime != null) {
+      return true;
+    }
+    for (Join join: joins) {
+      if (join.getQuery().isTimeTravel()) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

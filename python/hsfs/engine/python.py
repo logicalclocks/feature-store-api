@@ -249,8 +249,15 @@ class Engine:
     def register_hudi_temporary_table(
         self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
     ):
-        # No op to avoid query failure
-        pass
+        if hudi_fg_alias and (
+            hudi_fg_alias.left_feature_group_end_timestamp is not None
+            or hudi_fg_alias.left_feature_group_start_timestamp is not None
+        ):
+            raise FeatureStoreException(
+                "Hive engine on Python environments does not support incremental queries. "
+                + "Read feature group without timestamp to retrieve latest snapshot or switch to "
+                + "environment with Spark Engine."
+            )
 
     def profile_by_spark(self, metadata_instance):
         stat_api = statistics_api.StatisticsApi(

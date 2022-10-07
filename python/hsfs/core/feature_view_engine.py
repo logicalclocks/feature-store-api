@@ -15,6 +15,7 @@
 #
 
 import datetime
+import warnings
 from hsfs import engine, training_dataset_feature, client, util
 from hsfs.client import exceptions
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -61,6 +62,11 @@ class FeatureViewEngine:
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
 
     def save(self, feature_view_obj):
+        if feature_view_obj.query.is_time_travel():
+            warnings.warn(
+                "`as_of` argument in the `Query` will be ignored because"
+                " feature view does not support time travel query."
+            )
         if feature_view_obj.labels:
             feature_view_obj._features += [
                 training_dataset_feature.TrainingDatasetFeature(
