@@ -72,7 +72,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         operation,
         storage,
         write_options,
-        validation_options,
+        validation_options={},
     ):
 
         dataframe_features = engine.get_instance().parse_schema_feature_group(
@@ -89,6 +89,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             self._verify_schema_compatibility(
                 feature_group.features, dataframe_features
             )
+
+        if validation_options is None:
+            validation_options = {}
 
         # ge validation on python and non stream feature groups on spark
         ge_report = feature_group._great_expectation_engine.validate(

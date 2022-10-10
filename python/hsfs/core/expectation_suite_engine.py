@@ -17,7 +17,7 @@
 from typing import Optional
 from hsfs.core import expectation_suite_api
 from hsfs import client, util
-from hsfs.expectation_suite import ExpectationSuite
+from hsfs import expectation_suite as es
 
 
 class ExpectationSuiteEngine:
@@ -35,13 +35,13 @@ class ExpectationSuiteEngine:
             feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
-    def save(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
+    def save(self, expectation_suite: es.ExpectationSuite) -> es.ExpectationSuite:
         if expectation_suite.id:
             self.update(expectation_suite)
         else:
             self.create(expectation_suite)
 
-    def create(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
+    def create(self, expectation_suite: es.ExpectationSuite) -> es.ExpectationSuite:
         saved_suite = self._expectation_suite_api.create(expectation_suite)
 
         url = self._get_expectation_suite_url()
@@ -49,7 +49,7 @@ class ExpectationSuiteEngine:
 
         return saved_suite
 
-    def update(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
+    def update(self, expectation_suite: es.ExpectationSuite) -> es.ExpectationSuite:
         saved_suite = self._expectation_suite_api.update(expectation_suite)
 
         url = self._get_expectation_suite_url()
@@ -57,10 +57,12 @@ class ExpectationSuiteEngine:
 
         return saved_suite
 
-    def update_metadata(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
+    def update_metadata(
+        self, expectation_suite: es.ExpectationSuite
+    ) -> es.ExpectationSuite:
         return self._expectation_suite_api.update_metadata(expectation_suite)
 
-    def get(self) -> Optional[ExpectationSuite]:
+    def get(self) -> Optional[es.ExpectationSuite]:
         return self._expectation_suite_api.get()
 
     def delete(self) -> None:

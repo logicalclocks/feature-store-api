@@ -29,7 +29,7 @@ from datetime import datetime, date
 from hsfs import util, engine, feature, user, storage_connector as sc
 from hsfs.core import (
     feature_group_engine,
-    great_expectation_engine,
+    # great_expectation_engine,
     statistics_engine,
     expectation_suite_engine,
     validation_report_engine,
@@ -44,6 +44,7 @@ from hsfs.validation_report import ValidationReport
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.job import Job
+from hsfs.core import great_expectation_engine
 
 
 class FeatureGroupBase:

@@ -15,8 +15,7 @@
 #
 
 from hsfs.core import expectation_suite_engine
-
-from hsfs.expectation_suite import ExpectationSuite
+from hsfs import expectation_suite as es
 
 
 class TestExpectationSuiteEngine:
@@ -109,7 +108,7 @@ class TestExpectationSuiteEngine:
 
         # Act
         es_engine.save(
-            expectation_suite=ExpectationSuite("test_fake", expectations=[], meta={})
+            expectation_suite=es.ExpectationSuite("test_fake", expectations=[], meta={})
         )
 
         # Assert

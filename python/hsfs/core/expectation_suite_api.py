@@ -16,7 +16,7 @@
 
 from typing import Optional
 from hsfs import client
-from hsfs.expectation_suite import ExpectationSuite
+from hsfs import expectation_suite as es
 
 
 class ExpectationSuiteApi:
@@ -31,7 +31,7 @@ class ExpectationSuiteApi:
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
 
-    def create(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
+    def create(self, expectation_suite: es.ExpectationSuite) -> es.ExpectationSuite:
         """Create an expectation suite attached to a Feature Group.
 
         :param expectation_suite: expectation suite object to be created for a Feature Group
@@ -52,11 +52,11 @@ class ExpectationSuiteApi:
 
         headers = {"content-type": "application/json"}
         payload = expectation_suite.json()
-        return ExpectationSuite.from_response_json(
+        return es.ExpectationSuite.from_response_json(
             _client._send_request("POST", path_params, headers=headers, data=payload)
         )
 
-    def update(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
+    def update(self, expectation_suite: es.ExpectationSuite) -> es.ExpectationSuite:
         """Update an expectation suite attached to a Feature Group.
 
         :param expectation_suite: expectation suite object to be created for a Feature Group
@@ -78,11 +78,13 @@ class ExpectationSuiteApi:
 
         headers = {"content-type": "application/json"}
         payload = expectation_suite.json()
-        return ExpectationSuite.from_response_json(
+        return es.ExpectationSuite.from_response_json(
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )
 
-    def update_metadata(self, expectation_suite: ExpectationSuite) -> ExpectationSuite:
+    def update_metadata(
+        self, expectation_suite: es.ExpectationSuite
+    ) -> es.ExpectationSuite:
         """Update the metadata of an expectation suite attached to a Feature Group.
 
         :param expectation_suite: expectation suite object to be updated
@@ -105,7 +107,7 @@ class ExpectationSuiteApi:
 
         headers = {"content-type": "application/json"}
         payload = expectation_suite.json()
-        return ExpectationSuite.from_response_json(
+        return es.ExpectationSuite.from_response_json(
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )
 
@@ -124,7 +126,7 @@ class ExpectationSuiteApi:
 
         _client._send_request("DELETE", path_params)
 
-    def get(self) -> Optional[ExpectationSuite]:
+    def get(self) -> Optional[es.ExpectationSuite]:
         """Get the expectation suite attached to a Feature Group.
 
         :return: fetched expectation suite attached to the FeatureG Group
@@ -141,6 +143,6 @@ class ExpectationSuiteApi:
             "expectationsuite",
         ]
 
-        return ExpectationSuite.from_response_json(
+        return es.ExpectationSuite.from_response_json(
             _client._send_request("GET", path_params)
         )
