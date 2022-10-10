@@ -939,6 +939,10 @@ class FeatureStore:
     ):
         """Create a feature view metadata object and saved it to Hopsworks.
 
+        !!! warning
+        `as_of` argument in the `Query` will be ignored because
+        feature view does not support time travel query.
+
         # Arguments
             name: Name of the feature view to create.
             query: Feature store `Query`.
