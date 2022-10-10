@@ -15,6 +15,10 @@
 #
 
 from hsfs import engine, validation_report
+from typing import Dict, Any, Union
+import great_expectations as ge
+
+from python.hsfs.expectation_suite import ExpectationSuite
 
 
 class GreatExpectationEngine:
@@ -28,9 +32,28 @@ class GreatExpectationEngine:
         """
         self._feature_store_id = feature_store_id
 
-    def validate(self, feature_group, dataframe, save_report: bool, validation_options):
+    def validate(
+        self,
+        feature_group,
+        dataframe,
+        expectation_suite: Union[
+            ge.core.ExpectationSuite, ExpectationSuite, None
+        ] = None,
+        save_report: bool = False,
+        validation_options: Dict[str, Any] = {},
+        ge_type: bool = True,
+    ) -> Union[
+        ge.core.ExpectationSuiteValidationResult, validation_report.ValidationReport
+    ]:
 
-        suite = feature_group.get_expectation_suite(False)
+        if expectation_suite:
+            if isinstance(expectation_suite, ExpectationSuite):
+                suite = expectation_suite
+            else:
+                suite = ExpectationSuite.from_ge_type(expectation_suite)
+        else:
+            suite = feature_group.get_expectation_suite(False)
+
         if suite is not None:
             run_validation = validation_options.get(
                 "run_validation", suite.run_validation
@@ -44,7 +67,12 @@ class GreatExpectationEngine:
 
                 save_report = validation_options.get("save_report", save_report)
                 if save_report:
-                    return feature_group.save_validation_report(report, ge_type=False)
+                    return feature_group.save_validation_report(report, ge_type=ge_type)
 
-                return validation_report.ValidationReport(**report.to_json_dict())
+                if ge_type:
+                    return validation_report.ValidationReport(
+                        **report.to_json_dict()
+                    ).to_ge_type()
+                else:
+                    return validation_report.ValidationReport(**report.to_json_dict())
         return

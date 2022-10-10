@@ -16,6 +16,11 @@ PAGES = {
         "expectation_suite_attach": [
             "hsfs.feature_group.FeatureGroup.save_expectation_suite"
         ],
+        "single_expectation_api": [
+            "hsfs.expectation_suite.ExpectationSuite.add_expectation",
+            "hsfs.expectation_suite.ExpectationSuite.replace_expectation",
+            "hsfs.expectation_suite.ExpectationSuite.remove_expectation",
+        ],
         "expectation_suite_properties": keras_autodoc.get_properties(
             "hsfs.expectation_suite.ExpectationSuite"
         ),

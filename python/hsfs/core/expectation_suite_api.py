@@ -22,6 +22,7 @@ from hsfs.expectation_suite import ExpectationSuite
 class ExpectationSuiteApi:
     def __init__(self, feature_store_id: int, feature_group_id: int):
         """Expectation Suite endpoints for the Feature Group resource.
+
         :param feature_store_id: id of the respective Feature Store
         :type feature_store_id: int
         :param feature_group_id: id of the respective Feature Group
@@ -35,6 +36,8 @@ class ExpectationSuiteApi:
 
         :param expectation_suite: expectation suite object to be created for a Feature Group
         :type expectation_suite: `ExpectationSuite`
+        :return: the created expectation suite
+        :rtype: ExpectationSuite
         """
         _client = client.get_instance()
         path_params = [
@@ -58,6 +61,8 @@ class ExpectationSuiteApi:
 
         :param expectation_suite: expectation suite object to be created for a Feature Group
         :type expectation_suite: `ExpectationSuite`
+        :return: the updated expectation suite
+        :rtype: ExpectationSuite
         """
         _client = client.get_instance()
         path_params = [
@@ -82,6 +87,8 @@ class ExpectationSuiteApi:
 
         :param expectation_suite: expectation suite object to be updated
         :type expectation_suite: `ExpectationSuite`
+        :return: the expectation suite with updated metadata.
+        :rtype: ExpectationSuite
         """
         _client = client.get_instance()
         path_params = [
@@ -120,8 +127,8 @@ class ExpectationSuiteApi:
     def get(self) -> Optional[ExpectationSuite]:
         """Get the expectation suite attached to a Feature Group.
 
-        :return: expectation suite
-        :rtype: dict
+        :return: fetched expectation suite attached to the FeatureG Group
+        :rtype: ExpectationSuite || None
         """
         _client = client.get_instance()
         path_params = [

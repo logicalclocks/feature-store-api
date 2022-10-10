@@ -26,6 +26,12 @@ expectation_suite = ge.core.ExpectationSuite(
 
 {{expectation_suite_attach}}
 
+## Single Expectation API
+
+An API to edit the expectation list based on Great Expectations API.
+
+{{single_expectation_api}}
+
 ## Properties
 
 {{expectation_suite_properties}}

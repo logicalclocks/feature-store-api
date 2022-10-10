@@ -209,6 +209,16 @@ class ExpectationSuite:
         feature_store_id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
     ):
+        """
+        Attach suite to a Feature Group or persist edit to the backend.
+
+        # Arguments
+            feature_group_id: Id of the Feature Group to which the Expectation Suite should attach.
+            feature_store_id: Id of the Feature Store in which the Feature Group is registered.
+
+        # Raises
+            `RestAPIException`
+        """
         if self._expectation_suite_engine:
             self._expectation_suite_engine.save(self)
         elif feature_store_id and feature_group_id:
@@ -229,20 +239,26 @@ class ExpectationSuite:
             )
 
     def delete(self):
+        """Detach Expectation Suite from its Feature Group. The suite still exist locally."""
         if self._expectation_suite_engine and self.id:
             self._expectation_suite_engine.delete(self.id)
-        self.__
+        self.__del__()
 
     # Emulate GE single expectation api to edit list of expectations
     def _convert_expectation(
         self, expectation: Union[GeExpectation, ge.core.ExpectationConfiguration, dict]
     ) -> GeExpectation:
-        """Convert different representation of expectation to Hopsworks GeExpectation type.
+        """
+        Convert different representation of expectation to Hopsworks GeExpectation type.
 
-        :param expectation: An expectation to convert to Hopsworks GeExpectation type
-        :type Union[GeExpectation, ge.core.ExpectationConfiguration, dict]
-        :return: An expectation converted to Hopsworks GeExpectation type
-        :rtype `GeExpectation`
+        # Arguments
+            expectation: An expectation to convert to Hopsworks GeExpectation type
+
+        # Returns
+            An expectation converted to Hopsworks GeExpectation type
+
+        # Raises
+            `TypeError`
         """
         if isinstance(expectation, ge.core.ExpectationConfiguration):
             return GeExpectation(**expectation.to_json_dict())
@@ -258,6 +274,20 @@ class ExpectationSuite:
     def get_expectation(
         self, expectation_id: int, ge_type: bool = True
     ) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
+        """
+        Fetch expectation with expectation_id from the backend.
+
+        # Arguments
+            expectation_id: Id of the expectation to fetch from the backend.
+            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
+
+        # Returns
+            The expectation with expectation_id registered in the backend.
+
+        # Raises
+            `RestAPIException`
+            `ValueError`
+        """
         if self.id and self._expectation_engine:
             if ge_type:
                 return self._expectation_engine.get(expectation_id).to_ge_type()
@@ -273,6 +303,20 @@ class ExpectationSuite:
         expectation: Union[GeExpectation, ge.core.ExpectationConfiguration],
         ge_type: bool = True,
     ) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
+        """
+        Append an expectation to the local suite or in the backend if attached to a Feature Group.
+
+        # Arguments
+            expectation: The new expectation object.
+            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
+
+        # Returns
+            The new expectation append to the suite.
+
+        # Raises
+            `RestAPIException`
+            `ValueError`
+        """
         converted_expectation = self._convert_expectation(expectation=expectation)
         if self.id:
             converted_expectation = self._expectation_engine.create(
@@ -301,6 +345,23 @@ class ExpectationSuite:
         ] = None,
         ge_type: bool = True,
     ) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
+        """
+        Update an expectation from the suite locally or from the backend if attached to a Feature Group.
+
+        # Arguments
+            expectation: The updated expectation object. The meta field should contain an expectationId field
+            if the edit is to be registered with the backend.
+            existing_expectation: The existing expectation object to be replaced. Only used if the suite is not attached to a Feature Group.
+            Passed to great expectations Expectation Suite api.
+            ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
+
+        # Returns
+            The updated expectation with an id if attached to the Feature Group.
+
+        # Raises
+            `RestAPIException`
+            `ValueError`
+        """
         converted_expectation = self._convert_expectation(expectation=expectation)
         if self.id:
             # To update an expectation we need an id either from meta field or from self.id
@@ -357,6 +418,17 @@ class ExpectationSuite:
             ge.core.ExpectationConfiguration, GeExpectation, None
         ] = None,
     ) -> None:
+        """
+        Remove an expectation from the suite locally or from the backend if attached to a Feature Group.
+
+        # Arguments
+            expectation_id: Id of the expectation to remove. Necessary to delete an expectation registered with the backend.
+            expectation: An expectation to remove from the local suite. Passed to great expectations Expectation Suite api
+
+        # Raises
+            `RestAPIException`
+            `ValueError`
+        """
         if self.id and expectation_id:
             self._expectation_engine.delete(expectation_id=expectation_id)
             self._remove_expectation_local(expectation_id=expectation_id)

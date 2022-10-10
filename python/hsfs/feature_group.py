@@ -22,7 +22,7 @@ import pandas as pd
 import numpy as np
 import great_expectations as ge
 import avro.schema
-from typing import Optional, Union, Any, Dict, List, TypeVar
+from typing import Optional, Union, Any, Dict, List, TypeVar, Tuple
 
 from datetime import datetime, date
 
@@ -43,6 +43,7 @@ from hsfs.expectation_suite import ExpectationSuite
 from hsfs.validation_report import ValidationReport
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core.job import Job
 
 
 class FeatureGroupBase:
@@ -1049,7 +1050,7 @@ class FeatureGroup(FeatureGroupBase):
         storage: Optional[str] = None,
         write_options: Optional[Dict[Any, Any]] = {},
         validation_options: Optional[Dict[Any, Any]] = {},
-    ):
+    ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         """Persist the metadata and materialize the feature group to the feature store
         or insert data from a dataframe into the existing feature group.
 
@@ -1105,8 +1106,9 @@ class FeatureGroup(FeatureGroupBase):
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+
         # Returns
-            `FeatureGroup`. Updated feature group metadata object.
+            A tuple with job information if python engine is used and the validation report if validation is enabled.
         """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
@@ -1344,7 +1346,8 @@ class FeatureGroup(FeatureGroupBase):
         expectation_suite: Optional[ExpectationSuite] = None,
         save_report: Optional[bool] = False,
         validation_options: Optional[Dict[Any, Any]] = {},
-    ):
+        ge_type: bool = True,
+    ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
         """Run validation based on the attached expectations.
 
         Runs any expectation attached with Deequ. But also runs attached Great Expectation
@@ -1358,13 +1361,14 @@ class FeatureGroup(FeatureGroupBase):
                 will never be persisted. Defaults to `None`.
             validation_options: Additional validation options as key-value pairs, defaults to `{}`.
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
-                * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+            save_report: Whether to save the report to the backend. This is only possible if the Expectation suite
+                is initialised and attached to the Feature Group. Defaults to False.
+            ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.
 
 
         # Returns
-            `FeatureGroupValidation`, `ValidationReport`. The feature group validation metadata object,
-                as well as the Validation Report produced by Great Expectations.
+            A Validation Report produced by Great Expectations.
 
         """
         # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
@@ -1372,7 +1376,12 @@ class FeatureGroup(FeatureGroupBase):
             dataframe = self.read()
 
         return self._great_expectation_engine.validate(
-            self, dataframe, save_report, validation_options
+            self,
+            dataframe=dataframe,
+            expectation_suite=expectation_suite,
+            save_report=save_report,
+            validation_options=validation_options,
+            ge_type=ge_type,
         )
 
     def compute_statistics(
