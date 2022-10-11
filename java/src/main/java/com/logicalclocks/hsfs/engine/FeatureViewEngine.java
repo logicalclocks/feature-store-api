@@ -207,7 +207,7 @@ public class FeatureViewEngine {
         Dataset<Row> dataset = readDataset(featureView, trainingDatasetUpdated, userReadOptions);
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(), dataset,
             featureView.getLabels());
-        computeStatistics(featureView, trainingDatasetUpdated, new Dataset[]{dataset});
+        computeStatistics(featureView, trainingDatasetUpdated, new Dataset[] {dataset});
       }
       return trainingDatasetBundle;
     }
@@ -272,7 +272,7 @@ public class FeatureViewEngine {
   }
 
   public Statistics computeStatistics(FeatureView featureView, TrainingDataset trainingDataset,
-      Dataset<Row>[] datasets)
+                                      Dataset<Row>[] datasets)
       throws FeatureStoreException, IOException {
     if (trainingDataset.getStatisticsConfig().getEnabled()) {
       if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()) {
@@ -300,7 +300,7 @@ public class FeatureViewEngine {
   }
 
   private Dataset<Row> readDataset(FeatureView featureView, TrainingDataset trainingDataset,
-      Map<String, String> userReadOptions) throws IOException,
+                                   Map<String, String> userReadOptions) throws IOException,
       FeatureStoreException {
     Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(), trainingDataset.getEventEndTime(),
         true, trainingDataset.getVersion());
@@ -336,17 +336,30 @@ public class FeatureViewEngine {
   }
 
   public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime, Boolean withLabels,
-      Integer trainingDataVersion)
+                             Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
-    Query query = featureViewApi.getBatchQuery(
-        featureView.getFeatureStore(),
-        featureView.getName(),
-        featureView.getVersion(),
-        startTime == null ? null : startTime.getTime(),
-        endTime == null ? null : endTime.getTime(),
-        withLabels,
-        trainingDataVersion
-    );
+    Query query = null;
+    try {
+      query = featureViewApi.getBatchQuery(
+          featureView.getFeatureStore(),
+          featureView.getName(),
+          featureView.getVersion(),
+          startTime == null ? null : startTime.getTime(),
+          endTime == null ? null : endTime.getTime(),
+          withLabels,
+          trainingDataVersion
+      );
+    } catch (IOException e) {
+      if (e.getMessage().contains("\"errorCode\":270172")) {
+        throw new FeatureStoreException(
+            "Cannot generate dataset or query from the given start/end time because"
+                + " event time column is not available in the left feature groups."
+                + " A start/end time should not be provided as parameters."
+        );
+      } else {
+        throw e;
+      }
+    }
     query.getLeftFeatureGroup().setFeatureStore(featureView.getQuery().getLeftFeatureGroup().getFeatureStore());
     return query;
   }

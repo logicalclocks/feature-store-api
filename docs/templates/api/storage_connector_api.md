@@ -80,7 +80,6 @@ Read more about encryption on [Google Documentation.](https://cloud.google.com/s
 The storage connector uses the Google `gcs-connector-hadoop` behind the scenes. For more information, check out [Google Cloud Storage Connector for Spark and Hadoop](
 https://github.com/GoogleCloudDataproc/hadoop-connectors/tree/master/gcs#google-cloud-storage-connector-for-spark-and-hadoop 'google-cloud-storage-connector-for-spark-and-hadoop')
 
-
 ### Properties
 
 {{gcs_properties}}
@@ -100,6 +99,7 @@ on service accounts and creating keyfile in GCP, read [Google Cloud documentatio
 The storage connector uses the Google `spark-bigquery-connector` behind the scenes.
 To read more about the spark connector, like the spark options or usage, check [Apache Spark SQL connector for Google BigQuery.](https://github.com/GoogleCloudDataproc/spark-bigquery-connector#usage
 'github.com/GoogleCloudDataproc/spark-bigquery-connector')
+
 ### Properties
 
 {{bigquery_properties}}
@@ -107,3 +107,13 @@ To read more about the spark connector, like the spark options or usage, check [
 ### Methods
 
 {{bigquery_methods}}
+
+## Kafka
+
+### Properties
+
+{{kafka_properties}}
+
+### Methods
+
+{{kafka_methods}}
