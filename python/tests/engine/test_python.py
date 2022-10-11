@@ -33,6 +33,7 @@ from hsfs.engine import python
 from hsfs.core import inode, execution
 from hsfs.constructor import query
 from hsfs.client import exceptions
+from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
 
 
 class TestPython:
@@ -598,6 +599,74 @@ class TestPython:
 
         # Assert
         assert result is None
+
+    def test_register_hudi_temporary_table_time_travel(self):
+        # Arrange
+        python_engine = python.Engine()
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            stream=False,
+        )
+        q = HudiFeatureGroupAlias(
+            fg.to_dict(),
+            "fg",
+            left_feature_group_end_timestamp="20220101",
+            left_feature_group_start_timestamp="20220101",
+        )
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as e_info:
+            python_engine.register_hudi_temporary_table(
+                hudi_fg_alias=q,
+                feature_store_id=None,
+                feature_store_name=None,
+                read_options=None,
+            )
+
+        # Assert
+        assert str(e_info.value) == (
+            "Hive engine on Python environments does not support incremental queries. "
+            + "Read feature group without timestamp to retrieve latest snapshot or switch to "
+            + "environment with Spark Engine."
+        )
+
+    def test_register_hudi_temporary_table_time_travel_sub_query(self):
+        # Arrange
+        python_engine = python.Engine()
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            stream=False,
+        )
+        q = HudiFeatureGroupAlias(
+            fg.to_dict(),
+            "fg",
+            left_feature_group_end_timestamp="20220101",
+            left_feature_group_start_timestamp="20220101",
+        )
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as e_info:
+            python_engine.register_hudi_temporary_table(
+                hudi_fg_alias=q,
+                feature_store_id=None,
+                feature_store_name=None,
+                read_options=None,
+            )
+
+        # Assert
+        assert str(e_info.value) == (
+            "Hive engine on Python environments does not support incremental queries. "
+            + "Read feature group without timestamp to retrieve latest snapshot or switch to "
+            + "environment with Spark Engine."
+        )
 
     def test_profile(self, mocker):
         # Arrange
@@ -1876,7 +1945,7 @@ class TestPython:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=q,
             featurestore_id=99,
             labels=[],
         )

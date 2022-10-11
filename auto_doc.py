@@ -119,6 +119,12 @@ PAGES = {
         "bigquery_properties": keras_autodoc.get_properties(
             "hsfs.storage_connector.BigQueryConnector"
         ),
+        "kafka_methods": keras_autodoc.get_methods(
+            "hsfs.storage_connector.KafkaConnector", exclude=["from_response_json"]
+        ),
+        "kafka_properties": keras_autodoc.get_properties(
+            "hsfs.storage_connector.KafkaConnector"
+        ),
     },
     "api/statistics_config_api.md": {
         "statistics_config": ["hsfs.statistics_config.StatisticsConfig"],
