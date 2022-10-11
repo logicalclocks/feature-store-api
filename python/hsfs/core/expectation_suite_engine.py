@@ -37,9 +37,9 @@ class ExpectationSuiteEngine:
 
     def save(self, expectation_suite: es.ExpectationSuite) -> es.ExpectationSuite:
         if expectation_suite.id:
-            self.update(expectation_suite)
+            return self.update(expectation_suite)
         else:
-            self.create(expectation_suite)
+            return self.create(expectation_suite)
 
     def create(self, expectation_suite: es.ExpectationSuite) -> es.ExpectationSuite:
         saved_suite = self._expectation_suite_api.create(expectation_suite)
