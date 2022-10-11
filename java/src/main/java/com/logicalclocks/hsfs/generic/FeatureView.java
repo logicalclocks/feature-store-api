@@ -18,6 +18,8 @@
 package com.logicalclocks.hsfs.generic;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.logicalclocks.hsfs.generic.constructor.Filter;
+import com.logicalclocks.hsfs.generic.constructor.FilterLogic;
 import com.logicalclocks.hsfs.generic.constructor.Query;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.generic.engine.FeatureViewEngine;
@@ -26,6 +28,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
+import org.apache.spark.sql.sources.In;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -36,7 +39,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class FeatureView {
+public abstract class FeatureView {
 
   @Getter
   @Setter
@@ -119,11 +122,13 @@ public class FeatureView {
       return this;
     }
 
+    /* TODO (davit)
     public FeatureView build() throws FeatureStoreException, IOException {
       FeatureView featureView = new FeatureView(name, version, query, description, featureStore, labels);
       featureViewEngine.save(featureView);
       return featureView;
     }
+    */
   }
 
   public FeatureView(@NonNull String name, Integer version, @NonNull Query query, String description,
@@ -200,10 +205,9 @@ public class FeatureView {
         endTime != null ? FeatureGroupUtils.getDateFromDateString(endTime) : null,
         extraFilterVersion);
   }
-  //TODO (davit): this methods should be implemented in spark package
+
   @JsonIgnore
-  public void getBatchData(){
-  }
+  public abstract void getBatchData();
 
   /**
    * Add name/value tag to the feature view.
@@ -255,58 +259,6 @@ public class FeatureView {
    */
   public void deleteTag(String name) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTag(this, name);
-  }
-
-  public void createTrainingData() {
-  }
-
-  public void createTrainTestSplit() {
-  }
-
-  public void createTrainValidationTestSplit() {
-  }
-
-  // TODO (davit): this method should implemented in spark package
-  private void getDataset() {
-  }
-
-  public void recreateTrainingDataset(){
-  }
-
-  public void getTrainingData() {
-  }
-
-  public void getTrainTestSplit() {
-  }
-
-  public void getTrainValidationTestSplit() {
-  }
-
-  public void trainingData() {
-  }
-
-  public void trainTestSplit()  {
-  }
-
-  public void trainValidationTestSplit() {
-  }
-
-  private void validateTrainTestSplit() {
-  }
-
-  private void validateTrainValidationTestSplit() {
-  }
-
-  public void purgeTrainingData() {
-  }
-
-  public void purgeAllTrainingData() {
-  }
-
-  public void deleteTrainingDataset() {
-  }
-
-  public void deleteAllTrainingDatasets() {
   }
 
   /**
@@ -379,4 +331,76 @@ public class FeatureView {
     }
     return vectorServer.getServingKeys();
   }
+
+  public abstract Integer createTrainingData(String startTime, String endTime, String description, DataFormat dataFormat,
+                                             Boolean coalesce, StorageConnector storageConnector, String location,
+                                             Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions,
+                                             FilterLogic extraFilterLogic, Filter extraFilter)
+      throws IOException, FeatureStoreException, ParseException;
+
+  public abstract Integer createTrainTestSplit(Float testSize, String trainStart, String trainEnd, String testStart,
+                                               String testEnd, String description, DataFormat dataFormat)
+      throws IOException, FeatureStoreException, ParseException;
+
+  public abstract Integer createTrainTestSplit(Float testSize, String trainStart, String trainEnd, String testStart,
+                                               String testEnd, String description, DataFormat dataFormat,
+                                               Boolean coalesce, StorageConnector storageConnector, String location,
+                                               Long seed, StatisticsConfig statisticsConfig,
+                                               Map<String, String> writeOptions, FilterLogic extraFilterLogic,
+                                               Filter extraFilter)
+      throws IOException, FeatureStoreException, ParseException;
+
+  public abstract Integer createTrainValidationTestSplit(
+      Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
+      String validationEnd, String testStart, String testEnd, String description, DataFormat dataFormat
+  ) throws IOException, FeatureStoreException, ParseException;
+
+  public abstract Integer createTrainValidationTestSplit(Float validationSize, Float testSize, String trainStart,
+                                                    String trainEnd, String validationStart, String validationEnd,
+                                                    String testStart, String testEnd, String description,
+                                                    DataFormat dataFormat, Boolean coalesce,
+                                                    StorageConnector storageConnector, String location, Long seed,
+                                                    StatisticsConfig statisticsConfig, Map<String, String> writeOptions,
+                                                    FilterLogic extraFilterLogic, Filter extraFilter)
+      throws IOException, FeatureStoreException, ParseException;
+
+  public abstract void recreateTrainingDataset(Integer version, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException;
+
+
+  public abstract Object getTrainingData(Integer version, Map<String, String> readOptions)
+      throws IOException, FeatureStoreException, ParseException;
+
+  public abstract Object getTrainTestSplit(Integer version, Map<String, String> readOptions)
+      throws IOException, FeatureStoreException, ParseException;
+
+  public abstract Object getTrainValidationTestSplit(Integer version, Map<String, String> readOptions)
+      throws IOException, FeatureStoreException, ParseException;
+
+  public abstract Object trainingData(String startTime, String endTime, String description,
+                                    Long seed, StatisticsConfig statisticsConfig, Map<String, String> readOptions,
+                                    FilterLogic extraFilterLogic, Filter extraFilter)
+      throws IOException, FeatureStoreException, ParseException ;
+
+  public abstract Object trainTestSplit(Float testSize, String trainStart, String trainEnd, String testStart,
+                                              String testEnd, String description, Long seed,
+                                              StatisticsConfig statisticsConfig, Map<String, String> readOptions,
+                                              FilterLogic extraFilterLogic, Filter extraFilter)
+      throws IOException, FeatureStoreException, ParseException;
+
+  public abstract Object trainValidationTestSplit(Float validationSize, Float testSize, String trainStart,
+                                                String trainEnd, String validationStart, String validationEnd,
+                                                String testStart, String testEnd, String description, Long seed,
+                                                StatisticsConfig statisticsConfig, Map<String, String> readOptions,
+                                                FilterLogic extraFilterLogic, Filter extraFilter)
+      throws IOException, FeatureStoreException, ParseException;
+
+
+  public abstract void purgeTrainingData(Integer version) throws FeatureStoreException, IOException;
+
+  public abstract void purgeAllTrainingData() throws FeatureStoreException, IOException;
+
+  public abstract void deleteTrainingDataset(Integer version) throws FeatureStoreException, IOException;
+
+  public abstract void deleteAllTrainingDatasets() throws FeatureStoreException, IOException;
 }

@@ -5,15 +5,15 @@ import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.generic.EntityEndpointType;
 import com.logicalclocks.hsfs.generic.FeatureStore;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
-import com.logicalclocks.hsfs.spark.FeatureView;
+import com.logicalclocks.hsfs.generic.FeatureView;
 import com.logicalclocks.hsfs.generic.Split;
-import com.logicalclocks.hsfs.spark.TrainingDataset;
 import com.logicalclocks.hsfs.generic.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.generic.constructor.Query;
 import com.logicalclocks.hsfs.generic.metadata.FeatureViewApi;
 import com.logicalclocks.hsfs.generic.metadata.TagsApi;
-import com.logicalclocks.hsfs.spark.engine.StatisticsEngine;
-import com.logicalclocks.hsfs.spark.engine.TrainingDatasetEngine;
+// import com.logicalclocks.hsfs.generic.TrainingDataset;
+// import com.logicalclocks.hsfs.spark.engine.StatisticsEngine;
+// import com.logicalclocks.hsfs.spark.engine.TrainingDatasetEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,9 +27,9 @@ public class FeatureViewEngine {
 
   private FeatureViewApi featureViewApi = new FeatureViewApi();
   private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_VIEW);
-  private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
+  //private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureViewEngine.class);
-  private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
+  //private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
 
   public FeatureView save(FeatureView featureView) throws FeatureStoreException, IOException {
     featureView.setFeatures(makeLabelFeatures(featureView.getLabels()));
@@ -112,38 +112,10 @@ public class FeatureViewEngine {
   private void setTrainSplit() {
   }
 
-  private TrainingDataset createTrainingDataMetadata(
-      FeatureView featureView, TrainingDataset trainingDataset) throws IOException, FeatureStoreException {
-    setEventTime(featureView, trainingDataset);
-    return featureViewApi.createTrainingData(
-        featureView.getName(), featureView.getVersion(), trainingDataset);
+  private void createTrainingDataMetadata(){
   }
 
-  private void setEventTime(FeatureView featureView, TrainingDataset trainingDataset) {
-    String eventTime = featureView.getQuery().getLeftFeatureGroup().getEventTime();
-    if (!Strings.isNullOrEmpty(eventTime)) {
-      if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()) {
-        for (Split split : trainingDataset.getSplits()) {
-          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT
-              && split.getName().equals(Split.TRAIN)
-              && split.getStartTime() == null) {
-            split.setStartTime(getStartTime());
-          }
-          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT
-              && split.getName().equals(Split.TEST)
-              && split.getEndTime() == null) {
-            split.setEndTime(getEndTime());
-          }
-        }
-      } else {
-        if (trainingDataset.getEventStartTime() == null) {
-          trainingDataset.setEventStartTime(getStartTime());
-        }
-        if (trainingDataset.getEventEndTime() == null) {
-          trainingDataset.setEventEndTime(getEndTime());
-        }
-      }
-    }
+  private void setEventTime() {
   }
 
   private Date getStartTime() {
@@ -154,10 +126,7 @@ public class FeatureViewEngine {
     return new Date();
   }
 
-  private TrainingDataset getTrainingDataMetadata(
-      FeatureView featureView, Integer trainingDatasetVersion) throws IOException, FeatureStoreException {
-    return featureViewApi.getTrainingData(featureView.getFeatureStore(), featureView.getName(),
-        featureView.getVersion(), trainingDatasetVersion);
+  private void getTrainingDataMetadata(){;
   }
 
   public void computeStatistics(){
@@ -173,12 +142,6 @@ public class FeatureViewEngine {
   }
 
   public void deleteTrainingData() {
-  }
-
-  public void deleteTrainingData() {
-  }
-
-  public void deleteTrainingDatasetOnly()  {
   }
 
   public void deleteTrainingDatasetOnly() {

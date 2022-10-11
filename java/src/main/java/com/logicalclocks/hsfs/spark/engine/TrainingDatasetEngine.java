@@ -23,7 +23,7 @@ import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.Storage;
 import com.logicalclocks.hsfs.spark.TrainingDataset;
 import com.logicalclocks.hsfs.generic.constructor.FsQuery;
-import com.logicalclocks.hsfs.generic.constructor.Query;
+import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.generic.metadata.TagsApi;
 import com.logicalclocks.hsfs.generic.metadata.TrainingDatasetApi;
 import org.apache.hadoop.fs.Path;
@@ -61,7 +61,7 @@ public class TrainingDatasetEngine {
       throws FeatureStoreException, IOException {
 
     // Make the rest call to create the training dataset metadata
-    TrainingDataset apiTD = trainingDatasetApi.createTrainingDataset(trainingDataset);
+    TrainingDataset apiTD = (TrainingDataset) trainingDatasetApi.createTrainingDataset(trainingDataset);
 
     if (trainingDataset.getVersion() == null) {
       LOGGER.info("VersionWarning: No version provided for creating training dataset `" + trainingDataset.getName()
@@ -94,7 +94,7 @@ public class TrainingDatasetEngine {
     } else {
       path = new Path(trainingDataset.getLocation(), trainingDataset.getName()).toString();
     }
-    return (Dataset<Row>) trainingDataset.getStorageConnector()
+    return trainingDataset.getStorageConnector()
         .read(null, trainingDataset.getDataFormat().toString(), readOptions, path);
   }
 
@@ -130,7 +130,7 @@ public class TrainingDatasetEngine {
   }
 
   public void updateStatisticsConfig(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
-    TrainingDataset apiTD = trainingDatasetApi.updateMetadata(trainingDataset, "updateStatsConfig");
+    TrainingDataset apiTD = (TrainingDataset) trainingDatasetApi.updateMetadata(trainingDataset, "updateStatsConfig");
     trainingDataset.getStatisticsConfig().setCorrelations(apiTD.getStatisticsConfig().getCorrelations());
     trainingDataset.getStatisticsConfig().setHistograms(apiTD.getStatisticsConfig().getHistograms());
     trainingDataset.getStatisticsConfig().setExactUniqueness(apiTD.getStatisticsConfig().getExactUniqueness());

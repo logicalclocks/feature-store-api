@@ -17,15 +17,12 @@
 package com.logicalclocks.hsfs.generic.constructor;
 
 import com.logicalclocks.hsfs.generic.Feature;
-import com.logicalclocks.hsfs.spark.FeatureGroup;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.Storage;
-import com.logicalclocks.hsfs.generic.StorageConnector;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
-import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.generic.metadata.QueryConstructorApi;
-import com.logicalclocks.hsfs.generic.metadata.StorageConnectorApi;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -40,9 +37,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class Query {
+public abstract class Query {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(Query.class);
 
   @Getter
   @Setter
@@ -67,13 +64,7 @@ public class Query {
   private Boolean hiveEngine = false;
 
   private QueryConstructorApi queryConstructorApi = new QueryConstructorApi();
-  private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
-
-  public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
-    this.leftFeatureGroup = leftFeatureGroup;
-    this.leftFeatures = leftFeatures;
-  }
 
   public Query join(Query subquery) {
     return join(subquery, JoinType.INNER);
@@ -233,39 +224,6 @@ public class Query {
     return this;
   }
 
-  public Object read() throws FeatureStoreException, IOException {
-    return read(false, null);
-  }
-
-  public Object read(boolean online) throws FeatureStoreException, IOException {
-    return read(online, null);
-  }
-
-  public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
-    FsQuery fsQuery = queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
-
-    if (online) {
-      LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.ONLINE));
-      StorageConnector onlineConnector =
-          storageConnectorApi.getOnlineStorageConnector(leftFeatureGroup.getFeatureStore());
-      return onlineConnector.read(fsQuery.getStorageQuery(Storage.ONLINE),null, null, null);
-    } else {
-      fsQuery.registerOnDemandFeatureGroups();
-      fsQuery.registerHudiFeatureGroups(readOptions);
-
-      LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.OFFLINE));
-      return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
-    }
-  }
-
-  public void show(int numRows) throws FeatureStoreException, IOException {
-    show(false, numRows);
-  }
-
-  public void show(boolean online, int numRows) throws FeatureStoreException, IOException {
-    SparkEngine.getInstance().objectToDataset(read(online)).show(numRows);
-  }
-
   public String sql() {
     // overriding toString does not work wtih jackson
     return sql(Storage.OFFLINE);
@@ -303,4 +261,8 @@ public class Query {
     this.leftFeatures.add(feature);
     return this;
   }
+
+  public abstract Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException;
+
+  public abstract void show(boolean online, int numRows);
 }

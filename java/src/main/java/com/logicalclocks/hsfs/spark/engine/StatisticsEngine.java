@@ -17,8 +17,15 @@
 
 package com.logicalclocks.hsfs.spark.engine;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.generic.EntityEndpointType;
+import com.logicalclocks.hsfs.generic.Feature;
+import com.logicalclocks.hsfs.generic.FeatureGroupCommit;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
+import com.logicalclocks.hsfs.generic.StreamFeatureGroup;
+import com.logicalclocks.hsfs.generic.TimeTravelFormat;
+import com.logicalclocks.hsfs.generic.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.generic.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.spark.FeatureView;
 import com.logicalclocks.hsfs.generic.Split;
 import com.logicalclocks.hsfs.spark.TrainingDataset;
@@ -33,11 +40,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class StatisticsEngine {
 

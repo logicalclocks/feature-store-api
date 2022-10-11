@@ -23,19 +23,22 @@ import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.generic.DataFormat;
-import com.logicalclocks.hsfs.generic.ExternalFeatureGroup;
+import com.logicalclocks.hsfs.generic.FeatureGroupCommit;
+import com.logicalclocks.hsfs.generic.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.generic.metadata.HopsworksHttpClient;
+import com.logicalclocks.hsfs.spark.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.generic.Feature;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.spark.FeatureGroup;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.HudiOperationType;
 import com.logicalclocks.hsfs.generic.Split;
-import com.logicalclocks.hsfs.generic.StorageConnector;
+import com.logicalclocks.hsfs.spark.StorageConnector;
 import com.logicalclocks.hsfs.generic.StreamFeatureGroup;
 import com.logicalclocks.hsfs.generic.TimeTravelFormat;
 import com.logicalclocks.hsfs.spark.TrainingDataset;
 import com.logicalclocks.hsfs.generic.constructor.HudiFeatureGroupAlias;
-import com.logicalclocks.hsfs.generic.constructor.Query;
+import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.generic.metadata.OnDemandOptions;
@@ -75,6 +78,8 @@ import scala.collection.JavaConverters;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -250,7 +255,7 @@ public class SparkEngine {
 
     if (trainingDataset.getSplits() == null || trainingDataset.getSplits().isEmpty()) {
       // Write a single dataset
-      Dataset<Row> dataset = (Dataset<Row>) query.read();
+      Dataset<Row> dataset = query.read();
       // The actual data will be stored in training_ds_version/training_ds the double directory is needed
       // for cases such as tfrecords in which we need to store also the schema
       // also in case of multiple splits, the single splits will be stored inside the training dataset dir
@@ -856,5 +861,98 @@ public class SparkEngine {
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
     List<Row> rows = new ArrayList<Row>();
     return (S) sparkSession.sqlContext().createDataFrame(rows, dataset.schema());
+  }
+
+
+  //-----------------------------------------------------------
+  // TODO (davit): this will be implemented in sparkEngine to return FeatureGroup class
+  public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric, TimeTravelFormat timeTravelFormat)
+      throws FeatureStoreException {
+    return null;
+    //return SparkEngine.getInstance().parseFeatureGroupSchema(datasetGeneric, timeTravelFormat);
+  }
+
+  // TODO (davit): this will be implemented in sparkEngine to return FeatureGroup class
+  public <S> S sanitizeFeatureNames(S datasetGeneric) throws FeatureStoreException {
+    return null;
+    //return SparkEngine.getInstance().sanitizeFeatureNames(datasetGeneric);
+  }
+
+  // TODO (davit): this will be implemented in sparkEngine to return FeatureGroup class
+  public String constructCheckpointPath(FeatureGroupBase featureGroup, String queryName, String queryPrefix)
+      throws FeatureStoreException, IOException {
+    if (Strings.isNullOrEmpty(queryName)) {
+      queryName = queryPrefix + featureGroup.getOnlineTopicName() + "_" + LocalDateTime.now().format(
+          DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+    }
+    return "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
+        + "/Resources/" + queryName + "-checkpoint";
+  }
+
+  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    Map<String, String> config = new HashMap<>();
+    if (writeOptions != null) {
+      config.putAll(writeOptions);
+    }
+    HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
+
+    config.put("kafka.bootstrap.servers",
+        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
+            "INTERNAL://", "")).collect(Collectors.joining(",")));
+    config.put("kafka.security.protocol", "SSL");
+    config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
+    config.put("kafka.ssl.truststore.password", client.getCertKey());
+    config.put("kafka.ssl.keystore.location", client.getKeyStorePath());
+    config.put("kafka.ssl.keystore.password", client.getCertKey());
+    config.put("kafka.ssl.key.password", client.getCertKey());
+    config.put("kafka.ssl.endpoint.identification.algorithm", "");
+    return config;
+  }
+
+  // TODO (davit): this will be implemented in spark engine to return FeatureGroup class
+  public Map<Long, Map<String, String>> commitDetails(FeatureGroupBase featureGroupBase, Integer limit)
+      throws IOException, FeatureStoreException, ParseException {
+    // operation is only valid for time travel enabled feature group
+    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.HUDI)
+        || featureGroupBase instanceof StreamFeatureGroup)) {
+      // operation is only valid for time travel enabled feature group
+      throw new FeatureStoreException("commitDetails function is only valid for "
+          + "time travel enabled feature group");
+    }
+    return getCommitDetails(featureGroupBase, null, limit);
+  }
+
+  public Map<Long, Map<String, String>> commitDetailsByWallclockTime(FeatureGroupBase featureGroup,
+                                                                     String wallclockTime, Integer limit)
+      throws IOException, FeatureStoreException, ParseException {
+    return getCommitDetails(featureGroup, wallclockTime, limit);
+  }
+
+  // TODO (davit): this will be implemented in spark engine to return FeatureGroup class
+  public <S> FeatureGroupCommit commitDelete(FeatureGroupBase featureGroupBase, S genericDataset,
+                                             Map<String, String> writeOptions)
+      throws IOException, FeatureStoreException, ParseException {
+    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.HUDI)
+        || featureGroupBase instanceof StreamFeatureGroup)) {
+      // operation is only valid for time travel enabled feature group
+      throw new FeatureStoreException("delete function is only valid for "
+          + "time travel enabled feature group");
+    }
+    return null;
+    /*
+    HudiEngine hudiEngine = new HudiEngine();
+    return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroupBase, genericDataset,
+        writeOptions);
+     */
+  }
+
+  // TODO (davit): this will be implemented in sparkEngine to return FeatureGroup class
+  public String checkpointDirPath(String queryName, String onlineTopicName) throws FeatureStoreException {
+    if (Strings.isNullOrEmpty(queryName)) {
+      queryName = "insert_stream_" + onlineTopicName;
+    }
+    return "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
+        + "/Resources/" + queryName + "-checkpoint";
   }
 }

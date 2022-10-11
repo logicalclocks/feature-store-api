@@ -19,9 +19,7 @@ package com.logicalclocks.hsfs.generic.constructor;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
-import com.logicalclocks.hsfs.generic.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.generic.Storage;
-import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -74,22 +72,27 @@ public class FsQuery {
     }
   }
 
+  // TODO (davit): this will be implemented in spark engine to return FeatureGroup class
   public void registerOnDemandFeatureGroups() throws FeatureStoreException, IOException {
     if (onDemandFeatureGroups == null || onDemandFeatureGroups.isEmpty()) {
       return;
     }
 
+    /*
     for (ExternalFeatureGroupAlias externalFeatureGroupAlias : onDemandFeatureGroups) {
       String alias = externalFeatureGroupAlias.getAlias();
       ExternalFeatureGroup onDemandFeatureGroup = externalFeatureGroupAlias.getOnDemandFeatureGroup();
 
       SparkEngine.getInstance().registerOnDemandTemporaryTable(onDemandFeatureGroup, alias);
     }
+    */
   }
 
   public void registerHudiFeatureGroups(Map<String, String> readOptions) {
+    /*
     for (HudiFeatureGroupAlias hudiFeatureGroupAlias : hudiCachedFeatureGroups) {
       SparkEngine.getInstance().registerHudiTemporaryTable(hudiFeatureGroupAlias, readOptions);
     }
+     */
   }
 }

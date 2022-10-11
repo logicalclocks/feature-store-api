@@ -24,10 +24,11 @@ import com.logicalclocks.hsfs.generic.Feature;
 import com.logicalclocks.hsfs.generic.FeatureStore;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.HudiOperationType;
+import com.logicalclocks.hsfs.generic.JobConfiguration;
 import com.logicalclocks.hsfs.generic.StatisticsConfig;
 import com.logicalclocks.hsfs.generic.Storage;
 import com.logicalclocks.hsfs.generic.TimeTravelFormat;
-import com.logicalclocks.hsfs.generic.constructor.Query;
+import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.generic.engine.CodeEngine;
 import com.logicalclocks.hsfs.spark.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
@@ -50,6 +51,8 @@ import org.apache.avro.Schema;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -140,15 +143,16 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   public Dataset<Row> read(boolean online) throws FeatureStoreException, IOException {
-    return (Dataset<Row>) selectAll().read(online);
+    return selectAll().read(online);
   }
 
   public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return read(false, readOptions);
   }
 
+  @Override
   public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
-    return (Dataset<Row>) selectAll().read(online, readOptions);
+    return selectAll().read(online, readOptions);
   }
 
   /**
@@ -226,7 +230,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws ParseException
    */
   public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
-    return selectAll().asOf(wallclockTime);
+    return (Query) selectAll().asOf(wallclockTime);
   }
 
   /**
@@ -244,7 +248,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws ParseException
    */
   public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
-    return selectAll().asOf(wallclockTime, excludeUntil);
+    return (Query) selectAll().asOf(wallclockTime, excludeUntil);
   }
 
   public void show(int numRows) throws FeatureStoreException, IOException {
@@ -492,6 +496,61 @@ public class FeatureGroup extends FeatureGroupBase {
       avroSchema = utils.getAvroSchema(this);
     }
     return avroSchema;
+  }
+
+  @Override
+  public Query selectFeatures(List<Feature> features) {
+    return new Query(this, features);
+  }
+
+  @Override
+  public Query selectAll() {
+    return new Query(this, getFeatures());
+  }
+
+  @Override
+  public Query selectExceptFeatures(List<Feature> features) {
+    List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
+    return selectExcept(exceptFeatures);
+  }
+
+  @Override
+  public Query selectExcept(List<String> features) {
+    return new Query(this,
+        getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));
+  }
+
+  @Override
+  public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
+    featureGroupEngine.appendFeatures(this, features);
+  }
+
+  @Override
+  public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
+    featureGroupEngine.appendFeatures(this, Collections.singletonList(feature));
+  }
+
+  @Override
+  public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
+    featureGroupEngine.appendFeatures(this, new ArrayList<>(features));
+  }
+
+  @Override
+  public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
+    List<Feature> featureList = new ArrayList<>();
+    featureList.add(features);
+    featureGroupEngine.appendFeatures(this, featureList);
+  }
+
+  @Override
+  public Statistics computeStatistics() throws FeatureStoreException, IOException {
+    if (statisticsConfig.getEnabled()) {
+      return statisticsEngine.computeStatistics(this, read(), null);
+    } else {
+      LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
+          + version + "`. No statistics computed.");
+    }
+    return null;
   }
 
   @JsonIgnore

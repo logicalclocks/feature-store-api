@@ -18,7 +18,7 @@
 package com.logicalclocks.hsfs.spark.engine;
 
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
-import com.logicalclocks.hsfs.generic.ExternalFeatureGroup;
+import com.logicalclocks.hsfs.spark.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupBaseEngine;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupApi;

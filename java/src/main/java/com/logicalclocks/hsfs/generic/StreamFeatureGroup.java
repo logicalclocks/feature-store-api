@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021-2022. Logical Clocks AB
+ *  Copyright (c) 2022. Logical Clocks AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,10 +20,8 @@ package com.logicalclocks.hsfs.generic;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import com.logicalclocks.hsfs.generic.constructor.Query;
 import com.logicalclocks.hsfs.generic.engine.CodeEngine;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
-import com.logicalclocks.hsfs.spark.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.generic.engine.StreamFeatureGroupEngine;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 
@@ -92,7 +90,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   private DeltaStreamerJobConf deltaStreamerJobConf;
 
   private final StreamFeatureGroupEngine streamFeatureGroupEngine = new StreamFeatureGroupEngine();
-  private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
@@ -108,9 +105,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     this.version = version;
     this.description = description;
     this.primaryKeys = primaryKeys != null
-                ? primaryKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
+        ? primaryKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
     this.partitionKeys = partitionKeys != null
-                ? partitionKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
+        ? partitionKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
     this.hudiPrecombineKey = hudiPrecombineKey != null ? hudiPrecombineKey.toLowerCase() : null;
     this.onlineEnabled = onlineEnabled;
     this.features = features;
@@ -129,132 +126,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   public StreamFeatureGroup(FeatureStore featureStore, int id) {
     this.featureStore = featureStore;
     this.id = id;
-  }
-
-  /**
-   * Reads Feature group data.
-   *
-   * @return DataFrame.
-   * @throws FeatureStoreException
-   * @throws IOException
-   * @throws ParseException
-   */
-
-  public Object read() throws FeatureStoreException, IOException {
-    return read(false, null);
-  }
-
-  public Object read(boolean online) throws FeatureStoreException, IOException {
-    return read(online, null);
-  }
-
-  public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
-    return selectAll().read(online, readOptions);
-  }
-
-  /**
-   * Reads Feature group data at a specific point in time.
-   *
-   * @param wallclockTime
-   * @return DataFrame.
-   * @throws FeatureStoreException
-   * @throws IOException
-   * @throws ParseException
-   */
-  public Object read(String wallclockTime)
-      throws FeatureStoreException, IOException, ParseException {
-    return selectAll().asOf(wallclockTime).read(false, null);
-  }
-
-  public Object read(String wallclockTime, Map<String, String> readOptions)
-      throws FeatureStoreException, IOException, ParseException {
-    return selectAll().asOf(wallclockTime).read(false, readOptions);
-  }
-
-  /**
-   * Reads changes that occurred between specified points in time.
-   *
-   * @deprecated
-   *   `readChanges` method is deprecated. Use `asOf(wallclockEndTime, wallclockStartTime).read()` instead.
-   *
-   * @param wallclockStartTime start date.
-   * @param wallclockEndTime   end date.
-   * @return DataFrame.
-   * @throws FeatureStoreException
-   * @throws IOException
-   * @throws ParseException
-   */
-  @Deprecated
-  public Object readChanges(String wallclockStartTime, String wallclockEndTime)
-      throws FeatureStoreException, IOException, ParseException {
-    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, null);
-  }
-
-  /*
-   * @deprecated
-   * `readChanges` method is deprecated. Use `asOf(wallclockEndTime, wallclockStartTime).read(readOptions)` instead.
-   */
-  @Deprecated
-  public Object readChanges(String wallclockStartTime, String wallclockEndTime, Map<String, String> readOptions)
-      throws FeatureStoreException, IOException, ParseException {
-    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, readOptions);
-  }
-
-  /**
-   * Get Query object to retrieve all features of the group at a point in the past.
-   * This method selects all features in the feature group and returns a Query object
-   * at the specified point in time. This can then either be read into a Dataframe
-   * or used further to perform joins or construct a training dataset.
-   *
-   * @param wallclockTime Datetime string. The String should be formatted in one of the
-   *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
-   * @return Query. The query object with the applied time travel condition
-   * @throws FeatureStoreException
-   * @throws ParseException
-   */
-  public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
-    return selectAll().asOf(wallclockTime);
-  }
-
-  /**
-   * Get Query object to retrieve all features of the group at a point in the past.
-   * This method selects all features in the feature group and returns a Query object
-   * at the specified point in time. This can then either be read into a Dataframe
-   * or used further to perform joins or construct a training dataset.
-   *
-   * @param wallclockTime Datetime string. The String should be formatted in one of the
-   *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
-   * @param excludeUntil Datetime string. The String should be formatted in one of the
-   *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
-   * @return Query. The query object with the applied time travel condition
-   * @throws FeatureStoreException
-   * @throws ParseException
-   */
-  public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
-    return selectAll().asOf(wallclockTime, excludeUntil);
-  }
-
-  /*
-   * @deprecated
-   * `save` method is deprecated and in the next release it will be  replaced by `insert` and `insertStream` methods.
-   */
-  @Deprecated
-  public <S> void save(S featureData, Map<String, String> writeOptions)
-          throws FeatureStoreException, IOException, ParseException {
-    streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions, null);
-    codeEngine.saveCode(this);
-  }
-
-  /*
-   * @deprecated
-   * In the next release save method will be  replaced by insert method.
-   */
-  @Deprecated
-  public <S> void save(S featureData, Map<String, String> writeOptions, JobConfiguration jobConfiguration)
-      throws FeatureStoreException, IOException, ParseException {
-    streamFeatureGroupEngine.save(this, featureData, partitionKeys, hudiPrecombineKey, writeOptions,
-        jobConfiguration);
-    codeEngine.saveCode(this);
   }
 
   public <S> void insert(S featureData) throws FeatureStoreException, IOException, ParseException {
@@ -283,56 +154,49 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   public <S> void insert(S featureData, boolean overwrite, SaveMode saveMode,
                          Map<String, String> writeOptions, JobConfiguration jobConfiguration)
-          throws FeatureStoreException, IOException, ParseException {
+      throws FeatureStoreException, IOException, ParseException {
 
     streamFeatureGroupEngine.insert(this, featureData, saveMode,  partitionKeys,
         hudiPrecombineKey, writeOptions, jobConfiguration);
     codeEngine.saveCode(this);
   }
 
-  public <S> Object insertStream(S featureData) throws FeatureStoreException, IOException, ParseException {
+  public <S> Object insertStream(S featureData) {
     return insertStream(featureData, null, "append", false, null, null, null);
   }
 
-  public <S> Object insertStream(S featureData, String queryName)
-      throws FeatureStoreException, IOException, ParseException {
+  public <S> Object insertStream(S featureData, String queryName) {
     return insertStream(featureData, queryName, null,false, null, null, null);
   }
 
-  public <S> Object insertStream(S featureData, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException {
+  public <S> Object insertStream(S featureData, Map<String, String> writeOptions) {
     return insertStream(featureData, null, null, false, null, null, writeOptions);
   }
 
-  public <S> Object insertStream(S featureData, String queryName, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException {
+  public <S> Object insertStream(S featureData, String queryName, Map<String, String> writeOptions) {
     return insertStream(featureData, queryName, "append", false, null, null, writeOptions);
   }
 
-  public <S> Object insertStream(S featureData, String queryName, String outputMode)
-      throws FeatureStoreException, IOException, ParseException {
+  public <S> Object insertStream(S featureData, String queryName, String outputMode) {
     return insertStream(featureData, queryName, outputMode, false, null, null, null);
   }
 
-  public <S> Object insertStream(S featureData, String queryName, String outputMode, String checkpointLocation)
-      throws FeatureStoreException, IOException, ParseException {
+  public <S> Object insertStream(S featureData, String queryName, String outputMode, String checkpointLocation) {
     return insertStream(featureData, queryName, outputMode, false, null, checkpointLocation, null);
   }
 
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
-                                 Long timeout) throws FeatureStoreException, IOException, ParseException {
+                                 Long timeout) {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null, null);
   }
 
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
-                                 Long timeout, String checkpointLocation)
-      throws FeatureStoreException, IOException, ParseException {
+                                 Long timeout, String checkpointLocation) {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, checkpointLocation, null);
   }
 
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
-                                 Long timeout,  String checkpointLocation, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException {
+                                 Long timeout,  String checkpointLocation, Map<String, String> writeOptions) {
 
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, checkpointLocation, writeOptions,
         null);
@@ -345,61 +209,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     return streamFeatureGroupEngine.insertStream(this, featureData, queryName, outputMode,
         awaitTermination, timeout, checkpointLocation,  partitionKeys, hudiPrecombineKey, writeOptions,
         jobConfiguration);
-  }
-
-  public <S> void commitDeleteRecord(S featureData)
-      throws FeatureStoreException, IOException, ParseException {
-    utils.commitDelete(this, featureData, null);
-  }
-
-  public <S> void commitDeleteRecord(S featureData, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException {
-    utils.commitDelete(this, featureData, writeOptions);
-  }
-
-  /**
-   * Return commit details.
-   *
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
-    return utils.commitDetails(this, null);
-  }
-
-  /**
-   * Return commit details.
-   *
-   * @param limit number of commits to return.
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public Map<Long, Map<String, String>> commitDetails(Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    return utils.commitDetails(this, limit);
-  }
-
-  /**
-   * Return commit details.
-   *
-   * @param wallclockTime point in time.
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
-      throws IOException, FeatureStoreException, ParseException {
-    return utils.commitDetailsByWallclockTime(this, wallclockTime, null);
-  }
-
-  /**
-   * Return commit details.
-   *
-   * @param wallclockTime point in time.
-   * @param limit number of commits to return.
-   */
-  public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    return utils.commitDetailsByWallclockTime(this, wallclockTime, limit);
   }
 
   @JsonIgnore

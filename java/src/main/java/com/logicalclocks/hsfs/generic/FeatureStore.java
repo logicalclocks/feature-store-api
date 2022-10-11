@@ -19,24 +19,21 @@ package com.logicalclocks.hsfs.generic;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.generic.engine.FeatureViewEngine;
-import com.logicalclocks.hsfs.spark.FeatureView;
-import com.logicalclocks.hsfs.spark.TrainingDataset;
-import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.generic.metadata.StorageConnectorApi;
-import com.logicalclocks.hsfs.generic.metadata.TrainingDatasetApi;
-import com.logicalclocks.hsfs.spark.FeatureGroup;
+import com.logicalclocks.hsfs.spark.ExternalFeatureGroup;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.collection.JavaConverters;
+import scala.collection.Seq;
 
 import java.io.IOException;
 import java.util.List;
 
-public class FeatureStore {
+public abstract class FeatureStore {
 
   @Getter
   @Setter
@@ -53,7 +50,6 @@ public class FeatureStore {
   private Integer projectId;
 
   private FeatureGroupApi featureGroupApi;
-  private TrainingDatasetApi trainingDatasetApi;
   private StorageConnectorApi storageConnectorApi;
   private FeatureViewEngine featureViewEngine;
 
@@ -63,52 +59,10 @@ public class FeatureStore {
 
   public FeatureStore() {
     featureGroupApi = new FeatureGroupApi();
-    trainingDatasetApi = new TrainingDatasetApi();
     storageConnectorApi = new StorageConnectorApi();
     featureViewEngine = new FeatureViewEngine();
   }
 
-  /**
-   * Get a feature group object from the feature store.
-   *
-   * @param name    the name of the feature group
-   * @param version the version of the feature group
-   * @return FeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public FeatureGroup getFeatureGroup(@NonNull String name, @NonNull Integer version)
-      throws FeatureStoreException, IOException {
-    return featureGroupApi.getFeatureGroup(this, name, version);
-  }
-
-  /**
-   * Get a feature group object with default version `1` from the feature store.
-   *
-   * @param name the name of the feature group
-   * @return FeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public FeatureGroup getFeatureGroup(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getFeatureGroup(name, DEFAULT_VERSION);
-  }
-
-  /**
-   * Get a list of all versions of a feature group from the feature store.
-   *
-   * @param name    the name of the feature group
-   * @return FeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public scala.collection.Seq<FeatureGroup> getFeatureGroups(@NonNull String name)
-      throws FeatureStoreException, IOException {
-    return JavaConverters.asScalaBufferConverter(featureGroupApi.getFeatureGroups(this, name))
-        .asScala().toSeq();
-  }
 
   /**
    * Get a feature group object from the feature store.
@@ -136,157 +90,6 @@ public class FeatureStore {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
     return getStreamFeatureGroup(name, DEFAULT_VERSION);
-  }
-
-  /**
-   * Get a external feature group object from the feature store.
-   *
-   * @param name    the name of the feature group
-   * @param version the version of the feature group
-   * @return ExternalFeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public ExternalFeatureGroup getExternalFeatureGroup(@NonNull String name, @NonNull Integer version)
-      throws FeatureStoreException, IOException {
-    return featureGroupApi.getExternalFeatureGroup(this, name, version);
-  }
-
-  /**
-   * Get a external feature group object with default version `1` from the feature store.
-   *
-   * @param name the name of the feature group
-   * @return ExternalFeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public ExternalFeatureGroup getExternalFeatureGroup(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getExternalFeatureGroup(name, DEFAULT_VERSION);
-  }
-
-  /**
-   * Get a list of all versions of an external feature group from the feature store.
-   *
-   * @param name    the name of the feature group
-   * @return ExternalFeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public scala.collection.Seq<ExternalFeatureGroup> getExternalFeatureGroups(@NonNull String name)
-      throws FeatureStoreException, IOException {
-    return JavaConverters.asScalaBufferConverter(featureGroupApi.getExternalFeatureGroups(this, name))
-        .asScala().toSeq();
-  }
-
-  @Deprecated
-  public ExternalFeatureGroup getOnDemandFeatureGroup(@NonNull String name, @NonNull Integer version)
-      throws FeatureStoreException, IOException {
-    return featureGroupApi.getExternalFeatureGroup(this, name, version);
-  }
-
-  @Deprecated
-  public ExternalFeatureGroup getOnDemandFeatureGroup(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getExternalFeatureGroup(name, DEFAULT_VERSION);
-  }
-
-  @Deprecated
-  public scala.collection.Seq<ExternalFeatureGroup> getOnDemandFeatureGroups(@NonNull String name)
-      throws FeatureStoreException, IOException {
-    return JavaConverters.asScalaBufferConverter(featureGroupApi.getExternalFeatureGroups(this, name))
-        .asScala().toSeq();
-  }
-
-  public Object sql(String query) {
-    return SparkEngine.getInstance().sql(query);
-  }
-
-  public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name);
-  }
-
-  public StorageConnector.JdbcConnector getJdbcConnector(String name) throws FeatureStoreException, IOException {
-    return (StorageConnector.JdbcConnector) storageConnectorApi.getByName(this, name);
-  }
-
-  public StorageConnector.S3Connector getS3Connector(String name) throws FeatureStoreException, IOException {
-    return (StorageConnector.S3Connector) storageConnectorApi.getByName(this, name);
-  }
-
-  public StorageConnector.HopsFsConnector getHopsFsConnector(String name) throws FeatureStoreException, IOException {
-    return (StorageConnector.HopsFsConnector) storageConnectorApi.getByName(this, name);
-  }
-
-  public StorageConnector.RedshiftConnector getRedshiftConnector(String name)
-      throws FeatureStoreException, IOException {
-    return (StorageConnector.RedshiftConnector) storageConnectorApi.getByName(this, name);
-  }
-
-  public StorageConnector.SnowflakeConnector getSnowflakeConnector(String name)
-      throws FeatureStoreException, IOException {
-    return (StorageConnector.SnowflakeConnector) storageConnectorApi.getByName(this, name);
-  }
-
-  public StorageConnector.AdlsConnector getAdlsConnector(String name) throws FeatureStoreException, IOException {
-    return (StorageConnector.AdlsConnector) storageConnectorApi.getByName(this, name);
-  }
-
-  public StorageConnector.KafkaConnector getKafkaConnector(String name) throws FeatureStoreException, IOException {
-    return (StorageConnector.KafkaConnector) storageConnectorApi.getByName(this, name);
-  }
-
-  public StorageConnector.BigqueryConnector getBigqueryConnector(String name) throws FeatureStoreException,
-      IOException {
-    return (StorageConnector.BigqueryConnector) storageConnectorApi.getByName(this, name);
-  }
-
-  public StorageConnector.JdbcConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
-    return storageConnectorApi.getOnlineStorageConnector(this);
-  }
-
-  public StorageConnector.GcsConnector getGcsConnector(String name) throws FeatureStoreException, IOException {
-    return (StorageConnector.GcsConnector) storageConnectorApi.getByName(this, name);
-  }
-
-  public FeatureGroup.FeatureGroupBuilder createFeatureGroup() {
-    return FeatureGroup.builder()
-        .featureStore(this);
-  }
-
-  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
-    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, null,
-        null, null, false, null, null, null);
-  }
-
-  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, List<String> primaryKeys,
-                                              boolean onlineEnabled, String eventTime)
-      throws IOException, FeatureStoreException {
-    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
-        null, null, onlineEnabled, null, null, eventTime);
-  }
-
-  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
-                                              List<String> primaryKeys,
-                                              List<String> partitionKeys,
-                                              boolean onlineEnabled,
-                                              String eventTime) throws IOException, FeatureStoreException {
-
-    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
-        partitionKeys, null, onlineEnabled, null, null, eventTime);
-  }
-
-  public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, String description,
-                                              List<String> primaryKeys, List<String> partitionKeys,
-                                              String hudiPrecombineKey,
-                                              boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
-                                              StatisticsConfig statisticsConfig, String eventTime)
-      throws IOException, FeatureStoreException {
-
-    return   featureGroupApi.getOrCreateFeatureGroup(this, name, version, description, primaryKeys,
-        partitionKeys, hudiPrecombineKey, onlineEnabled, timeTravelFormat, statisticsConfig, eventTime);
   }
 
   public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
@@ -357,6 +160,97 @@ public class FeatureStore {
   }
 
   /**
+   * Get a external feature group object from the feature store.
+   *
+   * @param name    the name of the feature group
+   * @param version the version of the feature group
+   * @return ExternalFeatureGroup
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public ExternalFeatureGroup getExternalFeatureGroup(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException {
+    return featureGroupApi.getExternalFeatureGroup(this, name, version);
+  }
+
+  /**
+   * Get a external feature group object with default version `1` from the feature store.
+   *
+   * @param name the name of the feature group
+   * @return ExternalFeatureGroup
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public ExternalFeatureGroup getExternalFeatureGroup(String name) throws FeatureStoreException, IOException {
+    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
+    return getExternalFeatureGroup(name, DEFAULT_VERSION);
+  }
+
+  /**
+   * Get a list of all versions of an external feature group from the feature store.
+   *
+   * @param name    the name of the feature group
+   * @return ExternalFeatureGroup
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public scala.collection.Seq<ExternalFeatureGroup> getExternalFeatureGroups(@NonNull String name)
+      throws FeatureStoreException, IOException {
+    return JavaConverters.asScalaBufferConverter(featureGroupApi.getExternalFeatureGroups(this, name))
+        .asScala().toSeq();
+  }
+
+  @Deprecated
+  public ExternalFeatureGroup getOnDemandFeatureGroup(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException {
+    return featureGroupApi.getExternalFeatureGroup(this, name, version);
+  }
+
+  @Deprecated
+  public ExternalFeatureGroup getOnDemandFeatureGroup(String name) throws FeatureStoreException, IOException {
+    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
+    return getExternalFeatureGroup(name, DEFAULT_VERSION);
+  }
+
+  @Deprecated
+  public scala.collection.Seq<ExternalFeatureGroup> getOnDemandFeatureGroups(@NonNull String name)
+      throws FeatureStoreException, IOException {
+    return JavaConverters.asScalaBufferConverter(featureGroupApi.getExternalFeatureGroups(this, name))
+        .asScala().toSeq();
+  }
+
+  public abstract Object sql(String query);
+
+  public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {
+    return storageConnectorApi.getByName(this, name);
+  }
+
+  public StorageConnector.HopsFsConnector getHopsFsConnector(String name) throws FeatureStoreException, IOException {
+    return (StorageConnector.HopsFsConnector) storageConnectorApi.getByName(this, name);
+  }
+
+  public abstract Object getJdbcConnector(String name) throws FeatureStoreException, IOException;
+
+  public abstract Object getS3Connector(String name) throws FeatureStoreException, IOException;
+
+  public abstract Object getRedshiftConnector(String name) throws FeatureStoreException, IOException;
+
+  public abstract Object getSnowflakeConnector(String name) throws FeatureStoreException, IOException;
+
+  public abstract Object getAdlsConnector(String name) throws FeatureStoreException, IOException;
+
+  public abstract Object getKafkaConnector(String name) throws FeatureStoreException, IOException;
+
+  public abstract Object getBigqueryConnector(String name) throws FeatureStoreException, IOException;
+
+  public abstract Object getOnlineStorageConnector() throws FeatureStoreException, IOException;
+
+  public abstract Object getGcsConnector(String name) throws FeatureStoreException, IOException;
+
+
+  /**
    * Get a feature view object with the default version `1` from the selected feature store.
    *
    * @param name name of the feature view
@@ -370,10 +264,7 @@ public class FeatureStore {
     return getFeatureView(name, DEFAULT_VERSION);
   }
 
-  public TrainingDataset.TrainingDatasetBuilder createTrainingDataset() {
-    return TrainingDataset.builder()
-        .featureStore(this);
-  }
+  public abstract TrainingDataset.TrainingDatasetBuilder createTrainingDataset();
 
   /**
    * Get a training dataset object from the selected feature store.
@@ -384,10 +275,8 @@ public class FeatureStore {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public TrainingDataset getTrainingDataset(@NonNull String name, @NonNull Integer version)
-      throws FeatureStoreException, IOException {
-    return trainingDatasetApi.getTrainingDataset(this, name, version);
-  }
+  public abstract TrainingDataset getTrainingDataset(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException;
 
   /**
    * Get a training dataset object with the default version `1` from the selected feature store.
@@ -397,11 +286,7 @@ public class FeatureStore {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public TrainingDataset getTrainingDataset(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getTrainingDataset(name, DEFAULT_VERSION);
-  }
+  public abstract TrainingDataset getTrainingDataset(String name) throws FeatureStoreException, IOException;
 
   /**
    * Get all versions of a training dataset object from the selected feature store.
@@ -411,10 +296,8 @@ public class FeatureStore {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public scala.collection.Seq<TrainingDataset> getTrainingDatasets(@NonNull String name)
-      throws FeatureStoreException, IOException {
-    return JavaConverters.asScalaBufferConverter(trainingDatasetApi.get(this, name, null)).asScala().toSeq();
-  }
+  public abstract Seq<com.logicalclocks.hsfs.spark.TrainingDataset> getTrainingDatasets(@NonNull String name)
+      throws FeatureStoreException, IOException;
 
   @Override
   public String toString() {

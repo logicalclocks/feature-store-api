@@ -51,7 +51,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class FeatureView {
+public class FeatureView extends com.logicalclocks.hsfs.generic.FeatureView {
 
   @Getter
   @Setter
@@ -216,6 +216,11 @@ public class FeatureView {
         extraFilterVersion);
   }
 
+  @Override
+  public void getBatchData() {
+
+  }
+
   @JsonIgnore
   public Dataset<Row> getBatchData(String startTime, String endTime)
       throws FeatureStoreException, IOException, ParseException {
@@ -290,7 +295,7 @@ public class FeatureView {
       String startTime, String endTime, String description, DataFormat dataFormat
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
-        this.featureStore
+        (TrainingDataset) this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .eventStartTime(startTime)
@@ -301,6 +306,7 @@ public class FeatureView {
     return featureViewEngine.createTrainingDataset(this, trainingDataset, null).getVersion();
   }
 
+  @Override
   public Integer createTrainingData(
       String startTime, String endTime, String description, DataFormat dataFormat,
       Boolean coalesce, StorageConnector storageConnector, String location,
@@ -308,7 +314,7 @@ public class FeatureView {
       FilterLogic extraFilterLogic, Filter extraFilter
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
-        this.featureStore
+        (TrainingDataset) this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .eventStartTime(startTime)
@@ -326,13 +332,14 @@ public class FeatureView {
     return featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions).getVersion();
   }
 
+  @Override
   public Integer createTrainTestSplit(
       Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
       String description, DataFormat dataFormat
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainTestSplit(testSize, trainEnd, testStart);
     TrainingDataset trainingDataset =
-        this.featureStore
+        (TrainingDataset) this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .testSize(testSize)
@@ -348,6 +355,7 @@ public class FeatureView {
     return featureViewEngine.createTrainingDataset(this, trainingDataset, null).getVersion();
   }
 
+  @Override
   public Integer createTrainTestSplit(
       Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
       String description, DataFormat dataFormat, Boolean coalesce, StorageConnector storageConnector, String location,
@@ -356,7 +364,7 @@ public class FeatureView {
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainTestSplit(testSize, trainEnd, testStart);
     TrainingDataset trainingDataset =
-        this.featureStore
+        (TrainingDataset) this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .testSize(testSize)
@@ -379,13 +387,14 @@ public class FeatureView {
     return featureViewEngine.createTrainingDataset(this, trainingDataset, writeOptions).getVersion();
   }
 
+  @Override
   public Integer createTrainValidationTestSplit(
       Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
       String validationEnd, String testStart, String testEnd, String description, DataFormat dataFormat
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainValidationTestSplit(validationSize, testSize, trainEnd, validationStart, validationEnd, testStart);
     TrainingDataset trainingDataset =
-        this.featureStore
+        (TrainingDataset) this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .validationSize(validationSize)
@@ -404,6 +413,7 @@ public class FeatureView {
     return featureViewEngine.createTrainingDataset(this, trainingDataset, null).getVersion();
   }
 
+  @Override
   public Integer createTrainValidationTestSplit(
       Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
       String validationEnd, String testStart, String testEnd, String description, DataFormat dataFormat,
@@ -413,7 +423,7 @@ public class FeatureView {
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainValidationTestSplit(validationSize, testSize, trainEnd, validationStart, validationEnd, testStart);
     TrainingDataset trainingDataset =
-        this.featureStore
+        (TrainingDataset) this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .validationSize(validationSize)
@@ -451,6 +461,7 @@ public class FeatureView {
     return features;
   }
 
+  @Override
   public void recreateTrainingDataset(Integer version, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     featureViewEngine.recreateTrainingDataset(this, version, writeOptions);
@@ -462,6 +473,7 @@ public class FeatureView {
     return getTrainingData(version, null);
   }
 
+  @Override
   public List<Dataset<Row>> getTrainingData(
       Integer version, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
@@ -476,6 +488,7 @@ public class FeatureView {
     return getTrainTestSplit(version, null);
   }
 
+  @Override
   public List<Dataset<Row>> getTrainTestSplit(
       Integer version, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
@@ -491,6 +504,7 @@ public class FeatureView {
     return getTrainValidationTestSplit(version, null);
   }
 
+  @Override
   public List<Dataset<Row>> getTrainValidationTestSplit(
       Integer version, Map<String, String> readOptions
   ) throws IOException, FeatureStoreException, ParseException {
@@ -504,7 +518,7 @@ public class FeatureView {
       String startTime, String endTime, String description
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
-        this.featureStore
+        (TrainingDataset) this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .eventStartTime(startTime)
@@ -515,13 +529,14 @@ public class FeatureView {
     return featureViewEngine.getTrainingDataset(this, trainingDataset, null).getDataset(true);
   }
 
+  @Override
   public List<Dataset<Row>> trainingData(
       String startTime, String endTime, String description,
       Long seed, StatisticsConfig statisticsConfig, Map<String, String> readOptions,
       FilterLogic extraFilterLogic, Filter extraFilter
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
-        this.featureStore
+        (TrainingDataset) this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .eventStartTime(startTime)
@@ -542,7 +557,7 @@ public class FeatureView {
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainTestSplit(testSize, trainEnd, testStart);
     TrainingDataset trainingDataset =
-        this.featureStore
+        (TrainingDataset) this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .testSize(testSize)
@@ -560,6 +575,7 @@ public class FeatureView {
         Lists.newArrayList(Split.TRAIN, Split.TEST));
   }
 
+  @Override
   public List<Dataset<Row>> trainTestSplit(
       Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
       String description, Long seed, StatisticsConfig statisticsConfig, Map<String, String> readOptions,
@@ -567,7 +583,7 @@ public class FeatureView {
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainTestSplit(testSize, trainEnd, testStart);
     TrainingDataset trainingDataset =
-        this.featureStore
+        (TrainingDataset) this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .testSize(testSize)
@@ -595,7 +611,7 @@ public class FeatureView {
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainValidationTestSplit(validationSize, testSize, trainEnd, validationStart, validationEnd, testStart);
     TrainingDataset trainingDataset =
-        this.featureStore
+        (TrainingDataset) this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .validationSize(validationSize)
@@ -616,6 +632,7 @@ public class FeatureView {
         Lists.newArrayList(Split.TRAIN, Split.VALIDATION, Split.TEST));
   }
 
+  @Override
   public List<Dataset<Row>> trainValidationTestSplit(
       Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
       String validationEnd, String testStart, String testEnd, String description,
@@ -624,7 +641,7 @@ public class FeatureView {
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainValidationTestSplit(validationSize, testSize, trainEnd, validationStart, validationEnd, testStart);
     TrainingDataset trainingDataset =
-        this.featureStore
+        (TrainingDataset) this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .validationSize(validationSize)
@@ -680,18 +697,22 @@ public class FeatureView {
     }
   }
 
+  @Override
   public void purgeTrainingData(Integer version) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingDatasetOnly(this, version);
   }
 
+  @Override
   public void purgeAllTrainingData() throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingDatasetOnly(this);
   }
 
+  @Override
   public void deleteTrainingDataset(Integer version) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingData(this, version);
   }
 
+  @Override
   public void deleteAllTrainingDatasets() throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingData(this);
   }

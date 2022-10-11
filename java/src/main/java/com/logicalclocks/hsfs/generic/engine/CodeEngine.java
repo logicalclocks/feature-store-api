@@ -21,7 +21,7 @@ import com.databricks.dbutils_v1.DBUtilsHolder;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.generic.EntityEndpointType;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
-import com.logicalclocks.hsfs.spark.TrainingDataset;
+import com.logicalclocks.hsfs.generic.TrainingDataset;
 import com.logicalclocks.hsfs.generic.metadata.Code;
 import com.logicalclocks.hsfs.generic.metadata.CodeApi;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;

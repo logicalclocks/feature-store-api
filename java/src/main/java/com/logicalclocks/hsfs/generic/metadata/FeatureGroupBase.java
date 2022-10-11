@@ -17,21 +17,22 @@
 package com.logicalclocks.hsfs.generic.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.logicalclocks.hsfs.generic.EntityEndpointType;
 import com.logicalclocks.hsfs.generic.Feature;
 import com.logicalclocks.hsfs.generic.FeatureStore;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
+import com.logicalclocks.hsfs.generic.JobConfiguration;
+import com.logicalclocks.hsfs.generic.SaveMode;
 import com.logicalclocks.hsfs.generic.StatisticsConfig;
 import com.logicalclocks.hsfs.generic.TimeTravelFormat;
 import com.logicalclocks.hsfs.generic.constructor.Filter;
 import com.logicalclocks.hsfs.generic.constructor.FilterLogic;
 import com.logicalclocks.hsfs.generic.constructor.Query;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupBaseEngine;
-import com.logicalclocks.hsfs.spark.engine.StatisticsEngine;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.avro.Schema;
+import org.apache.spark.sql.streaming.StreamingQueryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,10 +43,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class FeatureGroupBase {
+public abstract class FeatureGroupBase {
 
   @Getter
   @Setter
@@ -98,7 +100,6 @@ public class FeatureGroupBase {
   protected String location;
 
   private FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
-  protected StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
 
@@ -107,9 +108,7 @@ public class FeatureGroupBase {
     this.id = id;
   }
 
-  public Query selectFeatures(List<Feature> features) {
-    return new Query(this, features);
-  }
+  public abstract Query selectFeatures(List<Feature> features);
 
   public Query select(List<String> features) {
     // Create a feature object for each string feature given by the user.
@@ -118,28 +117,17 @@ public class FeatureGroupBase {
     return selectFeatures(featureObjList);
   }
 
-  public Query selectAll() {
-    return new Query(this, getFeatures());
-  }
+  public abstract Query selectAll();
 
-  public Query selectExceptFeatures(List<Feature> features) {
-    List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
-    return selectExcept(exceptFeatures);
-  }
+  public abstract Query selectExceptFeatures(List<Feature> features);
 
-  public Query selectExcept(List<String> features) {
-    return new Query(this,
-        getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));
-  }
+  public abstract Query selectExcept(List<String> features);
 
   public void delete() throws FeatureStoreException, IOException {
     featureGroupBaseEngine.delete(this);
   }
 
-  public <T> T read() throws FeatureStoreException, IOException {
-    // This method should be overridden by the FeatureGroup/StreamFeatureGroup/OnDeamandFeatureGroup classes
-    return null;
-  }
+  public abstract Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException;
 
   /**
    * Add name/value tag to the feature group.
@@ -223,9 +211,7 @@ public class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
-    featureGroupBaseEngine.appendFeatures(this, features, this.getClass());
-  }
+  public abstract void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException;
 
   /**
    * Update the metadata of multiple features.
@@ -235,9 +221,7 @@ public class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
-    featureGroupBaseEngine.appendFeatures(this, Collections.singletonList(feature), this.getClass());
-  }
+  public abstract void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException;
 
   /**
    * Append features to the schema of the feature group.
@@ -247,9 +231,7 @@ public class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
-    featureGroupBaseEngine.appendFeatures(this, new ArrayList<>(features), this.getClass());
-  }
+  public abstract void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException;
 
   /**
    * Append a single feature to the schema of the feature group.
@@ -259,11 +241,7 @@ public class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
-    List<Feature> featureList = new ArrayList<>();
-    featureList.add(features);
-    featureGroupBaseEngine.appendFeatures(this, featureList, this.getClass());
-  }
+  public abstract void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException;
 
   /**
    * Update the statistics configuration of the feature group.
@@ -284,15 +262,7 @@ public class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Statistics computeStatistics() throws FeatureStoreException, IOException {
-    if (statisticsConfig.getEnabled()) {
-      return statisticsEngine.computeStatistics(this, read(), null);
-    } else {
-      LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
-          + version + "`. No statistics computed.");
-    }
-    return null;
-  }
+  public abstract <T> T computeStatistics() throws FeatureStoreException, IOException;
 
   /**
    * Get the last statistics commit for the feature group.
@@ -302,21 +272,8 @@ public class FeatureGroupBase {
    * @throws IOException
    */
   @JsonIgnore
-  public Statistics getStatistics() throws FeatureStoreException, IOException {
-    return statisticsEngine.getLast(this);
-  }
-
-  /**
-   * Get the statistics of a specific commit time for the feature group.
-   *
-   * @param commitTime commit time in the format "YYYYMMDDhhmmss"
-   * @return statistics object for the commit time
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  @JsonIgnore
-  public Statistics getStatistics(String commitTime) throws FeatureStoreException, IOException {
-    return statisticsEngine.get(this, commitTime);
+  public <T> T getStatistics() throws FeatureStoreException, IOException {
+    return null;
   }
 
   /**
@@ -366,37 +323,19 @@ public class FeatureGroupBase {
     return primaryKeys;
   }
 
-  public String getOnlineTopicName() throws FeatureStoreException, IOException {
-    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
-    return null;
-  }
+  public abstract String getOnlineTopicName() throws FeatureStoreException, IOException;
 
   @JsonIgnore
-  public List<String> getComplexFeatures() {
-    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
-    return null;
-  }
+  public abstract List<String> getComplexFeatures();
 
   @JsonIgnore
-  public String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException {
-    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
-    return null;
-  }
+  public abstract String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException;
 
   @JsonIgnore
-  public String getEncodedAvroSchema() throws FeatureStoreException, IOException {
-    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
-    return null;
-  }
+  public abstract String getEncodedAvroSchema() throws FeatureStoreException, IOException ;
 
   @JsonIgnore
-  public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
-    // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
-    return null;
-  }
+  public abstract Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException;
 
-  public TimeTravelFormat getTimeTravelFormat() {
-    // This method should be overridden by the FeatureGroup classes
-    return null;
-  }
+  public abstract TimeTravelFormat getTimeTravelFormat();
 }

@@ -15,12 +15,15 @@
  *
  */
 
-package com.logicalclocks.hsfs.generic;
+package com.logicalclocks.hsfs.spark;
 
-import com.logicalclocks.hsfs.spark.TrainingDataset;
+import com.logicalclocks.hsfs.generic.DataFormat;
+import com.logicalclocks.hsfs.spark.FeatureStore;
+import com.logicalclocks.hsfs.generic.HopsworksConnection;
+import com.logicalclocks.hsfs.generic.Split;
+import com.logicalclocks.hsfs.generic.TrainingDataset;
 import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import com.logicalclocks.hsfs.generic.constructor.Query;
-import com.logicalclocks.hsfs.spark.FeatureGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +39,7 @@ public class MainClass {
 
     HopsworksConnection connection = HopsworksConnection.builder().build();
 
-    FeatureStore fs = connection.getFeatureStore();
+    FeatureStore fs = (FeatureStore) connection.getFeatureStore();
     LOGGER.info("Feature Store " + fs);
 
     FeatureGroup housingFeatureGroup = fs.createFeatureGroup()

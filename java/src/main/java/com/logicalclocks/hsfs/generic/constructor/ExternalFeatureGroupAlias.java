@@ -16,7 +16,7 @@
 
 package com.logicalclocks.hsfs.generic.constructor;
 
-import com.logicalclocks.hsfs.generic.ExternalFeatureGroup;
+import com.logicalclocks.hsfs.spark.ExternalFeatureGroup;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

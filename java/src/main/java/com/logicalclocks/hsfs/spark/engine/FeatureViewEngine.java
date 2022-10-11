@@ -9,7 +9,7 @@ import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.spark.FeatureView;
 import com.logicalclocks.hsfs.generic.Split;
 import com.logicalclocks.hsfs.generic.TrainingDatasetFeature;
-import com.logicalclocks.hsfs.generic.constructor.Query;
+import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.generic.metadata.FeatureViewApi;
 import com.logicalclocks.hsfs.generic.metadata.Statistics;
 import com.logicalclocks.hsfs.generic.metadata.TagsApi;
@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class FeatureViewEngine {
 
   public FeatureView save(FeatureView featureView) throws FeatureStoreException, IOException {
     featureView.setFeatures(makeLabelFeatures(featureView.getLabels()));
-    FeatureView updatedFeatureView = featureViewApi.save(featureView);
+    FeatureView updatedFeatureView = (FeatureView) featureViewApi.save(featureView);
     featureView.setVersion(updatedFeatureView.getVersion());
     featureView.setFeatures(updatedFeatureView.getFeatures());
     return featureView;
@@ -58,18 +59,18 @@ public class FeatureViewEngine {
 
   public FeatureView update(FeatureView featureView) throws FeatureStoreException,
       IOException {
-    FeatureView featureViewUpdated = featureViewApi.update(featureView);
+    FeatureView featureViewUpdated = (FeatureView) featureViewApi.update(featureView);
     featureView.setDescription(featureViewUpdated.getDescription());
     return featureView;
   }
 
   public FeatureView get(FeatureStore featureStore, String name, Integer version) throws FeatureStoreException,
       IOException {
-    FeatureView featureView = featureViewApi.get(featureStore, name, version);
+    FeatureView featureView = (FeatureView) featureViewApi.get(featureStore, name, version);
     featureView.setFeatureStore(featureStore);
     featureView.getFeatures().stream()
-        .filter(f -> f.getFeaturegroup() != null)
-        .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
+        .filter(f -> f.getFeatureGroup() != null)
+        .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStore));
     featureView.getQuery().getLeftFeatureGroup().setFeatureStore(featureStore);
     featureView.setLabels(
         featureView.getFeatures().stream()
@@ -81,19 +82,24 @@ public class FeatureViewEngine {
 
   public List<FeatureView> get(FeatureStore featureStore, String name) throws FeatureStoreException,
       IOException {
-    List<FeatureView> featureViews = featureViewApi.get(featureStore, name);
-    for (FeatureView fv : featureViews) {
+    List<FeatureView> featureViews = new ArrayList<>();
+    List<com.logicalclocks.hsfs.generic.FeatureView> featureViewsGen = featureViewApi.get(featureStore, name);
+    for (com.logicalclocks.hsfs.generic.FeatureView fvGen : featureViewsGen) {
+      FeatureView fv = (FeatureView) fvGen;
       fv.setFeatureStore(featureStore);
       fv.getFeatures().stream()
-          .filter(f -> f.getFeaturegroup() != null)
-          .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
+          .filter(f -> f.getFeatureGroup() != null)
+          .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStore));
       fv.getQuery().getLeftFeatureGroup().setFeatureStore(featureStore);
       fv.setLabels(
           fv.getFeatures().stream()
               .filter(TrainingDatasetFeature::getLabel)
               .map(TrainingDatasetFeature::getName)
               .collect(Collectors.toList()));
+
+      featureViews.add(fv);
     }
+
     return featureViews;
   }
 
@@ -134,7 +140,7 @@ public class FeatureViewEngine {
       FeatureView featureView, Integer trainingDatasetVersion, List<String> requestedSplits,
       Map<String, String> userReadOptions
   ) throws IOException, FeatureStoreException, ParseException {
-    TrainingDataset trainingDataset = featureView.getFeatureStore().createTrainingDataset()
+    TrainingDataset trainingDataset = (TrainingDataset) featureView.getFeatureStore().createTrainingDataset()
         .name(featureView.getName())
         .version(trainingDatasetVersion)
         .build();
@@ -227,7 +233,7 @@ public class FeatureViewEngine {
   private TrainingDataset createTrainingDataMetadata(
       FeatureView featureView, TrainingDataset trainingDataset) throws IOException, FeatureStoreException {
     setEventTime(featureView, trainingDataset);
-    return featureViewApi.createTrainingData(
+    return (TrainingDataset) featureViewApi.createTrainingData(
         featureView.getName(), featureView.getVersion(), trainingDataset);
   }
 
@@ -268,7 +274,7 @@ public class FeatureViewEngine {
 
   private TrainingDataset getTrainingDataMetadata(
       FeatureView featureView, Integer trainingDatasetVersion) throws IOException, FeatureStoreException {
-    return featureViewApi.getTrainingData(featureView.getFeatureStore(), featureView.getName(),
+    return (TrainingDataset) featureViewApi.getTrainingData(featureView.getFeatureStore(), featureView.getName(),
         featureView.getVersion(), trainingDatasetVersion);
   }
 
@@ -339,7 +345,7 @@ public class FeatureViewEngine {
   public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime, Boolean withLabels,
       Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
-    Query query = featureViewApi.getBatchQuery(
+    Query query = (Query) featureViewApi.getBatchQuery(
         featureView.getFeatureStore(),
         featureView.getName(),
         featureView.getVersion(),

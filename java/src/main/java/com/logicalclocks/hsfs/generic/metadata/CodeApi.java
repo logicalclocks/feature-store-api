@@ -19,7 +19,7 @@ package com.logicalclocks.hsfs.generic.metadata;
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.generic.EntityEndpointType;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
-import com.logicalclocks.hsfs.spark.TrainingDataset;
+import com.logicalclocks.hsfs.generic.TrainingDataset;
 import lombok.NonNull;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;

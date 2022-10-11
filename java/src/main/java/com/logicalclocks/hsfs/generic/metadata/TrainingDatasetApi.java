@@ -20,7 +20,7 @@ import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.generic.FeatureStore;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.constructor.FsQuery;
-import com.logicalclocks.hsfs.spark.TrainingDataset;
+import com.logicalclocks.hsfs.generic.TrainingDataset;
 import com.logicalclocks.hsfs.generic.constructor.ServingPreparedStatement;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpDelete;
@@ -73,8 +73,8 @@ public class TrainingDatasetApi {
     for (TrainingDataset td : trainingDatasets) {
       td.setFeatureStore(featureStore);
       td.getFeatures().stream()
-          .filter(f -> f.getFeaturegroup() != null)
-          .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
+          .filter(f -> f.getFeatureGroup() != null)
+          .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStore));
     }
     return Arrays.asList(trainingDatasets);
   }

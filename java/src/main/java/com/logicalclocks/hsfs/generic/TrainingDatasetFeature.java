@@ -18,7 +18,7 @@
 package com.logicalclocks.hsfs.generic;
 
 import com.logicalclocks.hsfs.generic.util.Constants;
-import com.logicalclocks.hsfs.spark.FeatureGroup;
+import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -37,7 +37,7 @@ public class TrainingDatasetFeature {
 
   @Getter
   @Setter
-  private FeatureGroup featuregroup;
+  private FeatureGroupBase featureGroup;
 
   @Getter
   @Setter

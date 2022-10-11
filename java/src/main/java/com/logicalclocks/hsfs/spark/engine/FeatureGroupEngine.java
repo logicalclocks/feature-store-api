@@ -18,6 +18,8 @@
 package com.logicalclocks.hsfs.spark.engine;
 
 import com.logicalclocks.hsfs.generic.Feature;
+import com.logicalclocks.hsfs.generic.FeatureStore;
+import com.logicalclocks.hsfs.generic.StatisticsConfig;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.spark.FeatureGroup;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
@@ -37,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -189,7 +192,7 @@ public class FeatureGroupEngine {
     }
 
     // Send Hopsworks the request to create a new feature group
-    FeatureGroup apiFG = featureGroupApi.save(featureGroup);
+    FeatureGroup apiFG = (FeatureGroup) featureGroupApi.save(featureGroup);
 
     if (featureGroup.getVersion() == null) {
       LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
@@ -221,5 +224,52 @@ public class FeatureGroupEngine {
     }
 
     return featureGroup;
+  }
+
+  public FeatureGroup getOrCreateFeatureGroup(FeatureStore featureStore, String name, Integer version,
+                                              String description, List<String> primaryKeys, List<String> partitionKeys,
+                                              String hudiPrecombineKey, boolean onlineEnabled,
+                                              TimeTravelFormat timeTravelFormat,
+                                              StatisticsConfig statisticsConfig, String eventTime)
+      throws IOException, FeatureStoreException {
+
+
+    FeatureGroup featureGroup;
+    try {
+      featureGroup =  (FeatureGroup) featureGroupApi.getFeatureGroup(featureStore, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270009")) {
+        featureGroup =  FeatureGroup.builder()
+            .featureStore(featureStore)
+            .name(name)
+            .version(version)
+            .description(description)
+            .primaryKeys(primaryKeys)
+            .partitionKeys(partitionKeys)
+            .hudiPrecombineKey(hudiPrecombineKey)
+            .onlineEnabled(onlineEnabled)
+            .timeTravelFormat(timeTravelFormat)
+            .statisticsConfig(statisticsConfig)
+            .eventTime(eventTime)
+            .build();
+
+        featureGroup.setFeatureStore(featureStore);
+      } else {
+        throw e;
+      }
+    }
+
+    return featureGroup;
+  }
+
+  public void appendFeatures(FeatureGroup featureGroup, List<Feature> features)
+      throws FeatureStoreException, IOException, ParseException {
+    featureGroup.getFeatures().addAll(features);
+    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata",
+        FeatureGroup.class);
+    featureGroup.setFeatures(apiFG.getFeatures());
+    SparkEngine.getInstance().writeOfflineDataframe((FeatureGroup) featureGroup,
+        SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features),
+        HudiOperationType.UPSERT, new HashMap<>(), null);
   }
 }

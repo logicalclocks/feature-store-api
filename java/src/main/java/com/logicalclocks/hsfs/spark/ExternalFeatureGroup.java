@@ -15,20 +15,34 @@
  *
  */
 
-package com.logicalclocks.hsfs.generic;
+package com.logicalclocks.hsfs.spark;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.generic.EntityEndpointType;
+import com.logicalclocks.hsfs.generic.ExternalDataFormat;
+import com.logicalclocks.hsfs.generic.Feature;
+import com.logicalclocks.hsfs.generic.FeatureStore;
+import com.logicalclocks.hsfs.generic.FeatureStoreException;
+import com.logicalclocks.hsfs.generic.StatisticsConfig;
+import com.logicalclocks.hsfs.generic.StorageConnector;
+import com.logicalclocks.hsfs.generic.TimeTravelFormat;
+import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.ExternalFeatureGroupEngine;
 import com.logicalclocks.hsfs.generic.engine.CodeEngine;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.generic.metadata.OnDemandOptions;
+import com.logicalclocks.hsfs.spark.engine.StatisticsEngine;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import org.apache.avro.Schema;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,7 +53,7 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
-  private StorageConnector storageConnector;
+  private com.logicalclocks.hsfs.generic.StorageConnector storageConnector;
 
   @Getter
   @Setter
@@ -62,10 +76,11 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
   private String type = "onDemandFeaturegroupDTO";
 
   private ExternalFeatureGroupEngine externalFeatureGroupEngine = new ExternalFeatureGroupEngine();
+  private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
 
   @Builder
-  public ExternalFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String query,
+  public ExternalFeatureGroup(com.logicalclocks.hsfs.generic.FeatureStore featureStore, @NonNull String name, Integer version, String query,
                               ExternalDataFormat dataFormat, String path, Map<String, String> options,
                               @NonNull StorageConnector storageConnector, String description, List<String> primaryKeys,
                               List<Feature> features, StatisticsConfig statisticsConfig, String eventTime) {
@@ -105,12 +120,87 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
   }
 
   @Override
-  public Object read() throws FeatureStoreException, IOException {
+  public Dataset<Row> read() throws FeatureStoreException, IOException {
     return selectAll().read();
   }
 
+
   public void show(int numRows) throws FeatureStoreException, IOException {
-    // TODO: implement in spark
-    //read().show(numRows);
+    read().show(numRows);
+  }
+
+  @Override
+  public Query selectAll() {
+    return new Query(this, getFeatures());
+  }
+
+  @Override
+  public Query selectFeatures(List<Feature> features) {
+    return null;
+  }
+
+  @Override
+  public Query selectExceptFeatures(List<Feature> features) {
+    return null;
+  }
+
+  @Override
+  public Query selectExcept(List<String> features) {
+    return null;
+  }
+
+  @Override
+  public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
+
+  }
+
+  @Override
+  public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
+
+  }
+
+  @Override
+  public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
+
+  }
+
+  @Override
+  public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
+
+  }
+
+  @Override
+  public <T> T computeStatistics() throws FeatureStoreException, IOException {
+    return null;
+  }
+
+  @Override
+  public String getOnlineTopicName() throws FeatureStoreException, IOException {
+    return null;
+  }
+
+  @Override
+  public List<String> getComplexFeatures() {
+    return null;
+  }
+
+  @Override
+  public String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException {
+    return null;
+  }
+
+  @Override
+  public String getEncodedAvroSchema() throws FeatureStoreException, IOException {
+    return null;
+  }
+
+  @Override
+  public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
+    return null;
+  }
+
+  @Override
+  public TimeTravelFormat getTimeTravelFormat() {
+    return null;
   }
 }

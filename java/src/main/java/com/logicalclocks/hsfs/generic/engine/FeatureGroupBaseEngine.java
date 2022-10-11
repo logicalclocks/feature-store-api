@@ -17,20 +17,13 @@ package com.logicalclocks.hsfs.generic.engine;
 
 import com.logicalclocks.hsfs.generic.EntityEndpointType;
 import com.logicalclocks.hsfs.generic.Feature;
-import com.logicalclocks.hsfs.spark.FeatureGroup;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
-import com.logicalclocks.hsfs.generic.HudiOperationType;
-import com.logicalclocks.hsfs.generic.ExternalFeatureGroup;
-import com.logicalclocks.hsfs.generic.StreamFeatureGroup;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.generic.metadata.TagsApi;
-import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.text.ParseException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -89,34 +82,9 @@ public class FeatureGroupBaseEngine {
     featureGroup.setFeatures(apiFG.getFeatures());
   }
 
-  public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features,
-                                                          Class<T> fgClass)
-      throws FeatureStoreException, IOException, ParseException {
-    featureGroup.getFeatures().addAll(features);
-    T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata",
-        fgClass);
-    featureGroup.setFeatures(apiFG.getFeatures());
-    if (featureGroup instanceof FeatureGroup) {
-      SparkEngine.getInstance().writeOfflineDataframe((FeatureGroup) featureGroup,
-          SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features),
-          HudiOperationType.UPSERT, new HashMap<>(), null);
-    }
-  }
-
   public <T extends FeatureGroupBase> void updateStatisticsConfig(FeatureGroupBase featureGroup, Class<T> fgClass)
       throws FeatureStoreException, IOException {
     T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsConfig", fgClass);
     featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
-  }
-
-  private FeatureGroupBase initFeatureGroupBase(FeatureGroupBase featureGroup) {
-    if (featureGroup instanceof FeatureGroup) {
-      return new FeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
-    } else if (featureGroup instanceof StreamFeatureGroup) {
-      return new StreamFeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
-    } else if (featureGroup instanceof ExternalFeatureGroup) {
-      return new ExternalFeatureGroup(featureGroup.getFeatureStore(), featureGroup.getId());
-    }
-    return new FeatureGroupBase();
   }
 }

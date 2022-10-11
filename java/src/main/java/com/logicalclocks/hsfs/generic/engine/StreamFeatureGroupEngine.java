@@ -22,12 +22,9 @@ import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.JobConfiguration;
 import com.logicalclocks.hsfs.generic.SaveMode;
 import com.logicalclocks.hsfs.generic.StreamFeatureGroup;
-import com.logicalclocks.hsfs.generic.metadata.KafkaApi;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.generic.metadata.Option;
 
-import com.logicalclocks.hsfs.spark.engine.FeatureGroupEngine;
-import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import lombok.SneakyThrows;
 
 import org.slf4j.Logger;
@@ -42,11 +39,10 @@ import java.util.stream.Collectors;
 
 public class StreamFeatureGroupEngine {
 
-  private KafkaApi kafkaApi = new KafkaApi();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(StreamFeatureGroupEngine.class);
 
   /**
    * Create the metadata and write the data to the online/offline feature store.
@@ -73,6 +69,7 @@ public class StreamFeatureGroupEngine {
     return featureGroup;
   }
 
+  // TODO (davit): this will be implemented in spark engine to return FeatureGroup class
   @SneakyThrows
   public <S> Object insertStream(StreamFeatureGroup streamFeatureGroup, S featureData, String queryName,
                                  String outputMode, boolean awaitTermination, Long timeout,  String checkpointLocation,
@@ -88,11 +85,15 @@ public class StreamFeatureGroupEngine {
           jobConfiguration, featureData);
     }
 
+    /*
     return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
       utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout, checkpointLocation,
       utils.getKafkaConfig(streamFeatureGroup, writeOptions));
+     */
+    return null;
   }
 
+  // TODO (davit): this will be implemented in spark engine to return FeatureGroup class
   public <S> void insert(StreamFeatureGroup streamFeatureGroup, S featureData,
                          SaveMode saveMode, List<String> partitionKeys, String hudiPrecombineKey,
                          Map<String, String> writeOptions, JobConfiguration jobConfiguration)
@@ -111,8 +112,10 @@ public class StreamFeatureGroupEngine {
       featureGroupApi.deleteContent(streamFeatureGroup);
     }
 
+    /*
     SparkEngine.getInstance().writeOnlineDataframe(streamFeatureGroup, featureData,
         streamFeatureGroup.getOnlineTopicName(), utils.getKafkaConfig(streamFeatureGroup, writeOptions));
+     */
   }
 
   public <S> StreamFeatureGroup saveFeatureGroupMetaData(StreamFeatureGroup featureGroup, List<String> partitionKeys,

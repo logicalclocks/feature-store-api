@@ -22,8 +22,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.generic.constructor.Filter;
 import com.logicalclocks.hsfs.generic.constructor.SqlFilterCondition;
+import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.generic.util.Constants;
-import com.logicalclocks.hsfs.spark.FeatureGroup;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -79,7 +79,7 @@ public class Feature {
     setName(name);
   }
 
-  public Feature(@NonNull String name, @NonNull FeatureGroup featureGroup) {
+  public Feature(@NonNull String name, @NonNull FeatureGroupBase featureGroup) {
     setName(name);
     this.featureGroupId = featureGroup.getId();
   }
