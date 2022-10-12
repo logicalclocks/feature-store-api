@@ -240,7 +240,7 @@ class ExpectationSuite:
         """Detach Expectation Suite from its Feature Group. The suite still exist locally."""
         if self._expectation_suite_engine and self.id:
             self._expectation_suite_engine.delete(self.id)
-        self.__del__()
+        del self
 
     # Emulate GE single expectation api to edit list of expectations
     def _convert_expectation(
@@ -462,25 +462,22 @@ class ExpectationSuite:
     def expectations(
         self,
         expectations: Union[
-            List[ge.core.ExpectationConfiguration], List[GeExpectation], List[dict]
+            List[ge.core.ExpectationConfiguration],
+            List[GeExpectation],
+            List[dict],
+            None,
         ],
     ):
         if expectations is None:
             self._expectations = []
         elif isinstance(expectations, list):
-            for expectation in expectations:
-                if isinstance(expectation, ge.core.ExpectationConfiguration):
-                    self._expectations.append(
-                        GeExpectation(**expectation.to_json_dict())
-                    )
-                elif isinstance(expectation, GeExpectation):
-                    self._expectations.append(expectation)
-                elif isinstance(expectation, dict):
-                    self._expectations.append(GeExpectation(**expectation))
-                else:
-                    raise TypeError(
-                        f"Expectation of type {type(expectation)} is not supported."
-                    )
+            self._expectations = [
+                self._convert_expectation(expectation) for expectation in expectations
+            ]
+        else:
+            raise TypeError(
+                f"Type {type(expectations)} not supported. Expectations must be None or a list."
+            )
 
     @property
     def meta(self) -> dict:
