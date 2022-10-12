@@ -176,9 +176,15 @@ class TransformationFunctionEngine:
 
     @staticmethod
     def infer_spark_type(output_type):
+        if not output_type:
+            return "StringType()"  # StringType() is default type for spark udfs
+
+        if isinstance(output_type, str):
+            output_type = output_type.lower()
+
         if output_type in (str, "str", "string"):
             return "STRING"
-        elif output_type in (bytes, "binary"):
+        elif output_type in (bytes, "binary"):s
             return "BINARY"
         elif output_type in (numpy.int8, "int8", "byte", "tinyint"):
             return "BYTE"

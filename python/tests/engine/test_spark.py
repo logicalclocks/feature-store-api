@@ -44,11 +44,14 @@ from hsfs import (
     storage_connector,
     expectation_suite,
     training_dataset_feature,
+    engine,
 )
 from hsfs.core import training_dataset_engine
 from hsfs.engine import spark
 from hsfs.constructor import query, hudi_feature_group_alias
 from hsfs.client import exceptions
+
+engine._engine_type = "spark"
 
 
 class TestSpark:
@@ -3182,7 +3185,7 @@ class TestSpark:
                     "data_asset_name": "<YOUR_MEANGINGFUL_NAME>",
                 },
                 "expectation_suite_name": "es_name",
-                "great_expectations_version": "0.14.3",
+                "great_expectations_version": "0.14.12",
                 "run_id": {"run_name": "test_run_id", "run_time": mocker.ANY},
                 "validation_time": mocker.ANY,
             },
