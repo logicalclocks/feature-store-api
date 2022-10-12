@@ -53,8 +53,6 @@ class ExpectationSuite:
         created=None,
     ):
         self._id = id
-        # Empty object to set the fields and avoid errors in setters
-        self._ge_object = ge.core.ExpectationSuite("empty_suite")
         self._expectation_suite_name = expectation_suite_name
         self._ge_cloud_id = ge_cloud_id
         self._data_asset_type = data_asset_type
@@ -85,10 +83,9 @@ class ExpectationSuite:
                     feature_group_id=self._feature_group_id,
                 )
             )
-
-        self._expectation_engine = None
-        self._expectation_suite_engine = None
-        self._ge_object = self.to_ge_type()
+        else:
+            self._expectation_engine = None
+            self._expectation_suite_engine = None
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -415,7 +412,6 @@ class ExpectationSuite:
     @expectation_suite_name.setter
     def expectation_suite_name(self, expectation_suite_name: str):
         self._expectation_suite_name = expectation_suite_name
-        self._ge_object.expectation_suite_name = self._expectation_suite_name
 
     @property
     def data_asset_type(self) -> str:
@@ -425,7 +421,6 @@ class ExpectationSuite:
     @data_asset_type.setter
     def data_asset_type(self, data_asset_type: str):
         self._data_asset_type = data_asset_type
-        self._ge_object.data_asset_type = self._data_asset_type
 
     @property
     def ge_cloud_id(self):
@@ -435,7 +430,6 @@ class ExpectationSuite:
     @ge_cloud_id.setter
     def ge_coud_id(self, ge_cloud_id):
         self._ge_cloud_id = ge_cloud_id
-        self._ge_object.ge_cloud_id = ge_cloud_id
 
     @property
     def run_validation(self) -> bool:
@@ -487,9 +481,6 @@ class ExpectationSuite:
                     raise TypeError(
                         f"Expectation of type {type(expectation)} is not supported."
                     )
-        self._ge_object.expectations = [
-            expec.to_ge_type() for expec in self._expectations
-        ]
 
     @property
     def meta(self) -> dict:
@@ -504,4 +495,3 @@ class ExpectationSuite:
             self._meta = json.loads(meta)
         else:
             raise ValueError("Meta field must be stringified json or dict.")
-        self._ge_object.meta = self._meta
