@@ -323,9 +323,11 @@ class ExpectationSuite:
             converted_expectation = self._expectation_engine.create(
                 expectation=converted_expectation
             )
-            self.expectations = self._expectation_engine.get_expectations_by_suite_id(
-                expectation_suite_id=self.id
-            )
+            self.expectations = self._expectation_engine.get_expectations_by_suite_id()
+            if ge_type:
+                return converted_expectation.to_ge_type()
+            else:
+                return converted_expectation
         else:
             raise FeatureStoreException(
                 "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
@@ -358,9 +360,7 @@ class ExpectationSuite:
                 expectation=converted_expectation
             )
             # Fetch the expectations from backend to avoid sync issues
-            self.expectations = self._expectation_engine.get_expectations_by_suite_id(
-                expectation_suite_id=self.id
-            )
+            self.expectations = self._expectation_engine.get_expectations_by_suite_id()
 
             if ge_type:
                 return converted_expectation.to_ge_type()
@@ -384,9 +384,7 @@ class ExpectationSuite:
         """
         if self.id:
             self._expectation_engine.delete(expectation_id=expectation_id)
-            self.expectations = self._expectation_engine.get_expectations_by_suite_id(
-                expectation_suite_id=self.id
-            )
+            self.expectations = self._expectation_engine.get_expectations_by_suite_id()
         else:
             raise FeatureStoreException(
                 "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
