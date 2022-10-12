@@ -25,6 +25,7 @@ from hsfs import util
 from hsfs.ge_expectation import GeExpectation
 from hsfs.core.expectation_engine import ExpectationEngine
 from hsfs.core import expectation_suite_engine
+from hsfs.client.exceptions import FeatureStoreException
 
 
 class ExpectationSuite:
@@ -286,7 +287,7 @@ class ExpectationSuite:
 
         # Raises
             `RestAPIException`
-            `ValueError`
+            `FeatureStoreException`
         """
         if self.id and self._expectation_engine:
             if ge_type:
@@ -294,8 +295,8 @@ class ExpectationSuite:
             else:
                 return self._expectation_engine.get(expectation_id)
         else:
-            raise ValueError(
-                "Attach the Expectation Suite to a Feature Group to register it and enable fetching expectation by id"
+            raise FeatureStoreException(
+                "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
             )
 
     def add_expectation(
@@ -311,167 +312,85 @@ class ExpectationSuite:
             ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
 
         # Returns
-            The new expectation append to the suite.
+            The new expectation attached to the Feature Group.
 
         # Raises
             `RestAPIException`
-            `ValueError`
+            `FeatureStoreException`
         """
-        converted_expectation = self._convert_expectation(expectation=expectation)
         if self.id:
+            converted_expectation = self._convert_expectation(expectation=expectation)
             converted_expectation = self._expectation_engine.create(
                 expectation=converted_expectation
             )
-            self.expectations.append(converted_expectation)
-            self._ge_object.expectations = [
-                expect.to_ge_type() for expect in self.expectations
-            ]
-            if ge_type:
-                return converted_expectation.to_ge_type()
-            else:
-                return converted_expectation
+            self.expectations = self._expectation_engine.get_expectations_by_suite_id(
+                expectation_suite_id=self.id
+            )
         else:
-            self._ge_object.add_expectation(converted_expectation.to_ge_type())
-            self._expectations = [
-                GeExpectation(**expectation.to_json_dict())
-                for expectation in self._ge_object.expectations
-            ]
+            raise FeatureStoreException(
+                "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
+            )
 
     def replace_expectation(
         self,
         expectation: Union[GeExpectation, ge.core.ExpectationConfiguration],
-        existing_expectation: Union[
-            GeExpectation, ge.core.ExpectationConfiguration, None
-        ] = None,
         ge_type: bool = True,
     ) -> Union[GeExpectation, ge.core.ExpectationConfiguration]:
         """
         Update an expectation from the suite locally or from the backend if attached to a Feature Group.
 
         # Arguments
-            expectation: The updated expectation object. The meta field should contain an expectationId field
-            if the edit is to be registered with the backend.
-            existing_expectation: The existing expectation object to be replaced. Only used if the suite is not attached to a Feature Group.
-            Passed to great expectations Expectation Suite api.
+            expectation: The updated expectation object. The meta field should contain an expectationId field.
             ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
 
         # Returns
-            The updated expectation with an id if attached to the Feature Group.
+            The updated expectation attached to the Feature Group.
 
         # Raises
             `RestAPIException`
-            `ValueError`
+            `FeatureStoreException`
         """
-        converted_expectation = self._convert_expectation(expectation=expectation)
         if self.id:
+            converted_expectation = self._convert_expectation(expectation=expectation)
             # To update an expectation we need an id either from meta field or from self.id
             self._expectation_engine.check_for_id(converted_expectation)
             converted_expectation = self._expectation_engine.update(
                 expectation=converted_expectation
             )
-            self._replace_expectation_local(converted_expectation)
-            self._ge_object.expectations = [
-                expect.to_ge_type() for expect in self.expectations
-            ]
-        elif existing_expectation:
-            self._ge_object.replace_expectation(
-                converted_expectation.to_ge_type(),
-                self._convert_expectation(existing_expectation).to_ge_type(),
-            )
-            self._expectations = [
-                GeExpectation(**expectation.to_json_dict())
-                for expectation in self._ge_object.expectations
-            ]
-        else:
-            raise ValueError(
-                "Provide existing expectation configuration or attach the suite to a Feature Group to enable single expectation API"
+            # Fetch the expectations from backend to avoid sync issues
+            self.expectations = self._expectation_engine.get_expectations_by_suite_id(
+                expectation_suite_id=self.id
             )
 
-        if ge_type:
-            return converted_expectation.to_ge_type()
+            if ge_type:
+                return converted_expectation.to_ge_type()
+            else:
+                return converted_expectation
         else:
-            return converted_expectation
-
-    def _replace_expectation_local(self, expectation: GeExpectation) -> None:
-        matches = [
-            list_index
-            for list_index, expec in enumerate(self._expectations)
-            if expec.id == expectation.id
-        ]
-        if len(matches) == 0:
-            raise ValueError(
-                f"""Expectation not found in local expectation suite based on id : {expectation.id}.
-            Fetch suite using fg.get_expectation_suite() to start over with correct ids."""
+            raise FeatureStoreException(
+                "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
             )
-        elif len(matches) > 1:
-            raise ValueError(
-                f"""Found multiple expectations in local expectation suite based on id : {expectation.id}.
-            Fetch suite using fg.get_expectation_suite() to start over with correct ids."""
-            )
-        else:
-            self.expectations[matches[0]] = expectation
 
-    def remove_expectation(
-        self,
-        expectation_id: Optional[int] = None,
-        expectation: Union[
-            ge.core.ExpectationConfiguration, GeExpectation, None
-        ] = None,
-    ) -> None:
+    def remove_expectation(self, expectation_id: Optional[int] = None) -> None:
         """
-        Remove an expectation from the suite locally or from the backend if attached to a Feature Group.
+        Remove an expectation from the suite locally and from the backend if attached to a Feature Group.
 
         # Arguments
-            expectation_id: Id of the expectation to remove. Necessary to delete an expectation registered with the backend.
-            expectation: An expectation to remove from the local suite. Passed to great expectations Expectation Suite api
+            expectation_id: Id of the expectation to remove. The expectation will be deleted both locally and from the backend.
 
         # Raises
             `RestAPIException`
-            `ValueError`
+            `FeatureStoreException`
         """
-        if self.id and expectation_id:
+        if self.id:
             self._expectation_engine.delete(expectation_id=expectation_id)
-            self._remove_expectation_local(expectation_id=expectation_id)
-            self._ge_object.expectations = [
-                expect.to_ge_type() for expect in self.expectations
-            ]
-        elif self.id and expectation:
-            converted_expectation = self._convert_expectation(expectation)
-            self._expectation_engine.delete(converted_expectation.id)
-            self._remove_expectation_local(expectation_id=converted_expectation.id)
-            self._ge_object.expectations = [
-                expect.to_ge_type() for expect in self.expectations
-            ]
-        else:
-            self._ge_object.remove_expectation(
-                self._convert_expectation(expectation).to_ge_type()
-            )
-            self._expectations = [
-                GeExpectation(**expectation.to_json_dict())
-                for expectation in self._ge_object.expectations
-            ]
-
-    def _remove_expectation_local(self, expectation_id: int) -> None:
-        matches = [
-            list_index
-            for list_index, expec in enumerate(self._expectations)
-            if expec.id == expectation_id
-        ]
-        if len(matches) == 0:
-            raise ValueError(
-                f"""Expectation not found in local expectation suite based on id : {expectation_id}.
-            Fetch suite using fg.get_expectation_suite() to start over with correct ids."""
-            )
-        elif len(matches) > 1:
-            raise ValueError(
-                f"""Found multiple expectations in local expectation suite based on id : {expectation_id}.
-            Fetch suite using fg.get_expectation_suite() to start over with correct ids."""
+            self.expectations = self._expectation_engine.get_expectations_by_suite_id(
+                expectation_suite_id=self.id
             )
         else:
-            self.expectations.pop(matches[0])
-            self._ge_object.expectations = [
-                expect.to_ge_type() for expect in self.expectations
-            ]
+            raise FeatureStoreException(
+                "Initialize Expectation Suite by attaching to a Feature Group to enable single expectation API"
+            )
 
     # End of single expectation API
 

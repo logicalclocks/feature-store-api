@@ -55,6 +55,9 @@ class ExpectationEngine:
 
     # End of CRUD operations
 
+    def get_expectations_by_suite_id(self):
+        return self._expectation_api.get_expectations_by_suite_id()
+
     def check_for_id(self, expectation: GeExpectation) -> None:
         if expectation.id:
             return

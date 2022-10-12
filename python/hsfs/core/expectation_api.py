@@ -16,6 +16,7 @@
 
 from hsfs import client
 from hsfs.ge_expectation import GeExpectation
+from typing import List
 
 
 class ExpectationApi:
@@ -128,6 +129,29 @@ class ExpectationApi:
             self._expectation_suite_id,
             "expectations",
             expectation_id,
+        ]
+
+        return GeExpectation.from_response_json(
+            _client._send_request("GET", path_params)
+        )
+
+    def get_expectations_by_suite_id(self) -> List[GeExpectation]:
+        """Get an expectation attached to a feature group.
+
+        :return: expectation
+        :rtype: `GeExpectation`
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            self._feature_group_id,
+            "expectationsuite",
+            self._expectation_suite_id,
+            "expectations",
         ]
 
         return GeExpectation.from_response_json(
