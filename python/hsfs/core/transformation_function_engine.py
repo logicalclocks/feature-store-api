@@ -184,7 +184,7 @@ class TransformationFunctionEngine:
 
         if output_type in (str, "str", "string"):
             return "STRING"
-        elif output_type in (bytes, "binary"):s
+        elif output_type in (bytes, "binary"):
             return "BINARY"
         elif output_type in (numpy.int8, "int8", "byte", "tinyint"):
             return "BYTE"
