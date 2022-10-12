@@ -19,11 +19,8 @@ import statistics
 import pandas as pd
 import numpy as np
 import datetime
-<<<<<<< HEAD
-=======
 
 import pytest
->>>>>>> 602609b2c32c0f7cf5cc36a8c72215f302799df6
 from pyspark.sql.types import (
     IntegerType,
     DoubleType,
@@ -45,7 +42,7 @@ from hsfs.engine import python
 from hsfs.core.transformation_function_engine import TransformationFunctionEngine
 
 
-class TestPythonSparkTransformationFunctions:
+class TestPythonSparkTransformationFuctions:
     def _create_training_dataset(
         self, tf_fun, output_type=None, name=None, col="col_0"
     ):
@@ -165,11 +162,7 @@ class TestPythonSparkTransformationFunctions:
             '        except ZeroDivisionError:\\n            return 0\\n"}'
         )
 
-<<<<<<< HEAD
-        td = self._create_training_dataset(tf_fun, "DOUBLE", "min_max_scaler")
-=======
         td = self._create_training_dataset(tf_fun, "DoubleType()", "min_max_scaler")
->>>>>>> 602609b2c32c0f7cf5cc36a8c72215f302799df6
 
         td.transformation_functions[
             "col_0"
@@ -230,10 +223,7 @@ class TestPythonSparkTransformationFunctions:
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df, schema=expected_schema
         )
-<<<<<<< HEAD
-=======
         expected_df["col_1"] = expected_df["col_1"].astype(int)
->>>>>>> 602609b2c32c0f7cf5cc36a8c72215f302799df6
 
         # Arrange
         tf_fun = (
@@ -243,13 +233,9 @@ class TestPythonSparkTransformationFunctions:
             '    return value_to_index[value]"}'
         )
 
-<<<<<<< HEAD
-        td = self._create_training_dataset(tf_fun, "INT", "label_encoder", "col_1")
-=======
         td = self._create_training_dataset(
             tf_fun, "IntegerType()", "label_encoder", "col_1"
         )
->>>>>>> 602609b2c32c0f7cf5cc36a8c72215f302799df6
 
         td.transformation_functions[
             "col_1"
@@ -310,11 +296,7 @@ class TestPythonSparkTransformationFunctions:
             'ZeroDivisionError:\\n            return 0\\n"}'
         )
 
-<<<<<<< HEAD
-        td = self._create_training_dataset(tf_fun, "DOUBLE", "standard_scaler")
-=======
         td = self._create_training_dataset(tf_fun, "DoubleType()", "standard_scaler")
->>>>>>> 602609b2c32c0f7cf5cc36a8c72215f302799df6
 
         mean = statistics.mean([1, 2])
         stddev = statistics.pstdev([1, 2])
@@ -386,11 +368,7 @@ class TestPythonSparkTransformationFunctions:
             'except ZeroDivisionError:\\n            return 0\\n"}\n'
         )
 
-<<<<<<< HEAD
-        td = self._create_training_dataset(tf_fun, "DOUBLE", "robust_scaler")
-=======
         td = self._create_training_dataset(tf_fun, "DoubleType()", "robust_scaler")
->>>>>>> 602609b2c32c0f7cf5cc36a8c72215f302799df6
 
         percentiles = [1] * 100
         percentiles[24] = 1
@@ -454,10 +432,7 @@ class TestPythonSparkTransformationFunctions:
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df, schema=expected_schema
         )
-<<<<<<< HEAD
-=======
         expected_df["col_0"] = expected_df["col_0"].astype(int)
->>>>>>> 602609b2c32c0f7cf5cc36a8c72215f302799df6
 
         # Arrange
         def tf_fun(a) -> int:
@@ -540,22 +515,14 @@ class TestPythonSparkTransformationFunctions:
 
         expected_schema = StructType(
             [
-<<<<<<< HEAD
-                StructField("col_0", IntegerType(), True),
-=======
                 StructField("col_0", DoubleType(), True),
->>>>>>> 602609b2c32c0f7cf5cc36a8c72215f302799df6
                 StructField("col_1", StringType(), True),
                 StructField("col_2", BooleanType(), True),
             ]
         )
         expected_df = pd.DataFrame(
             data={
-<<<<<<< HEAD
-                "col_0": [2, 3],
-=======
                 "col_0": [2.0, 3.0],
->>>>>>> 602609b2c32c0f7cf5cc36a8c72215f302799df6
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
             }
@@ -566,17 +533,10 @@ class TestPythonSparkTransformationFunctions:
         spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
 
         # Arrange
-<<<<<<< HEAD
-        def tf_fun(a) -> int:
-            return a + 1
-
-        td = self._create_training_dataset(tf_fun, int)
-=======
         def tf_fun(a) -> np.float64:
             return a + 1.0
 
         td = self._create_training_dataset(tf_fun, "double")
->>>>>>> 602609b2c32c0f7cf5cc36a8c72215f302799df6
 
         # Assert
         self._validate_on_python_engine(td, df, expected_df)
@@ -691,8 +651,6 @@ class TestPythonSparkTransformationFunctions:
         # Assert
         self._validate_on_python_engine(td, df, expected_df)
         self._validate_on_spark_engine(td, spark_df, expected_spark_df)
-<<<<<<< HEAD
-=======
 
     def test_apply_plus_one_no_type(self, mocker):
         # Arrange
@@ -806,4 +764,3 @@ class TestPythonSparkTransformationFunctions:
 
         # Assert
         assert str(e_info.value) == "Not supported type <class 'list'>."
->>>>>>> 602609b2c32c0f7cf5cc36a8c72215f302799df6
