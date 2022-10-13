@@ -177,7 +177,7 @@ class TransformationFunctionEngine:
     @staticmethod
     def infer_spark_type(output_type):
         if not output_type:
-            return "StringType()"  # StringType() is default type for spark udfs
+            return "STRING"  # STRING is default type for spark udfs
 
         if isinstance(output_type, str):
             output_type = output_type.lower()
@@ -190,7 +190,7 @@ class TransformationFunctionEngine:
             return "BYTE"
         elif output_type in (numpy.int16, "int16", "short", "smallint"):
             return "SHORT"
-        elif output_type in (int, "int", numpy.int, numpy.int32):
+        elif output_type in (int, "int", "integer", numpy.int, numpy.int32):
             return "INT"
         elif output_type in (numpy.int64, "int64", "long", "bigint"):
             return "LONG"
@@ -198,7 +198,12 @@ class TransformationFunctionEngine:
             return "FLOAT"
         elif output_type in (numpy.float64, "float64", "double"):
             return "DOUBLE"
-        elif output_type in (datetime.datetime, numpy.datetime64, "datetime"):
+        elif output_type in (
+            datetime.datetime,
+            numpy.datetime64,
+            "datetime",
+            "timestamp",
+        ):
             return "TIMESTAMP"
         elif output_type in (datetime.date, "date"):
             return "DATE"

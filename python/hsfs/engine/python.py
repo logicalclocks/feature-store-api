@@ -843,9 +843,10 @@ class Engine:
         elif output_type == "DOUBLE":
             return feature_column.astype(np.float64)
         elif output_type == "TIMESTAMP":
-            return pd.to_datetime(feature_column)
+            # convert (if tz!=UTC) to utc, then make timezone unaware
+            return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
         elif output_type == "DATE":
-            return pd.to_datetime(feature_column).dt.date
+            return pd.to_datetime(feature_column, utc=True).dt.date
         elif output_type == "BOOLEAN":
             return feature_column.astype(bool)
         else:
