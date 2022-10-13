@@ -162,7 +162,7 @@ class TestPythonSparkTransformationFuctions:
             '        except ZeroDivisionError:\\n            return 0\\n"}'
         )
 
-        td = self._create_training_dataset(tf_fun, "DoubleType()", "min_max_scaler")
+        td = self._create_training_dataset(tf_fun, "DOUBLE", "min_max_scaler")
 
         td.transformation_functions[
             "col_0"
@@ -234,7 +234,7 @@ class TestPythonSparkTransformationFuctions:
         )
 
         td = self._create_training_dataset(
-            tf_fun, "IntegerType()", "label_encoder", "col_1"
+            tf_fun, "INT", "label_encoder", "col_1"
         )
 
         td.transformation_functions[
@@ -296,7 +296,7 @@ class TestPythonSparkTransformationFuctions:
             'ZeroDivisionError:\\n            return 0\\n"}'
         )
 
-        td = self._create_training_dataset(tf_fun, "DoubleType()", "standard_scaler")
+        td = self._create_training_dataset(tf_fun, "DOUBLE", "standard_scaler")
 
         mean = statistics.mean([1, 2])
         stddev = statistics.pstdev([1, 2])
@@ -368,7 +368,7 @@ class TestPythonSparkTransformationFuctions:
             'except ZeroDivisionError:\\n            return 0\\n"}\n'
         )
 
-        td = self._create_training_dataset(tf_fun, "DoubleType()", "robust_scaler")
+        td = self._create_training_dataset(tf_fun, "DOUBLE", "robust_scaler")
 
         percentiles = [1] * 100
         percentiles[24] = 1
