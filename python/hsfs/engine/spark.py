@@ -24,6 +24,7 @@ from typing import Optional, TypeVar
 import numpy as np
 import pandas as pd
 import avro
+from datetime import datetime
 
 # in case importing in %%local
 try:
@@ -88,7 +89,7 @@ class Engine:
         self._spark_session.conf.set("hive.exec.dynamic.partition", "true")
         self._spark_session.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
         self._spark_session.conf.set("spark.sql.hive.convertMetastoreParquet", "false")
-        self._spark_session.conf.set("spark.sql.session.timeZone", "UTC")
+        self._spark_session.conf.set("spark.sql.session.timeZone", "GMT")
 
         if importlib.util.find_spec("pydoop"):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
@@ -171,9 +172,18 @@ class Engine:
             for n_col in list(range(num_cols)):
                 col_name = "col_" + str(n_col)
                 dataframe_dict[col_name] = dataframe[:, n_col]
-            pandas_df = pd.DataFrame(dataframe_dict)
-            dataframe = self._spark_session.createDataFrame(pandas_df)
-        elif isinstance(dataframe, pd.DataFrame):
+            dataframe = pd.DataFrame(dataframe_dict)
+
+        if isinstance(dataframe, pd.DataFrame):
+            # convert timestamps to current timezone
+            current_timezone = datetime.now().astimezone().tzinfo
+            for c in dataframe.columns:
+                if isinstance(
+                    dataframe[c].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
+                ):
+                    dataframe[c] = dataframe[c].dt.tz_convert(current_timezone)
+                elif dataframe[c].dtype == np.dtype("datetime64[ns]"):
+                    dataframe[c] = dataframe[c].dt.tz_localize(current_timezone)
             dataframe = self._spark_session.createDataFrame(dataframe)
         elif isinstance(dataframe, RDD):
             dataframe = dataframe.toDF()
