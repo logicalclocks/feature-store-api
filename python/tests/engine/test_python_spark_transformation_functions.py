@@ -44,7 +44,6 @@ from hsfs.core.transformation_function_engine import TransformationFunctionEngin
 
 
 class TestPythonSparkTransformationFunctions:
-
     def _create_training_dataset(
         self, tf_fun, output_type=None, name=None, col="col_0"
     ):
@@ -235,9 +234,7 @@ class TestPythonSparkTransformationFunctions:
             '    return value_to_index[value]"}'
         )
 
-        td = self._create_training_dataset(
-            tf_fun, "INT", "label_encoder", "col_1"
-        )
+        td = self._create_training_dataset(tf_fun, "INT", "label_encoder", "col_1")
 
         td.transformation_functions[
             "col_1"
