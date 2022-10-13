@@ -116,7 +116,7 @@ public class StreamFeatureGroupEngine {
   public <S> StreamFeatureGroup saveFeatureGroupMetaData(StreamFeatureGroup featureGroup, List<String> partitionKeys,
                                                      String hudiPrecombineKey, Map<String, String> writeOptions,
                                                      JobConfiguration sparkJobConfiguration, S featureData)
-      throws FeatureStoreException, IOException, ParseException {
+      throws FeatureStoreException, IOException{
 
     if (featureGroup.getFeatures() == null) {
       featureGroup.setFeatures(utils
