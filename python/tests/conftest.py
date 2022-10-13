@@ -24,3 +24,7 @@ pytest_plugins = [
 
 os.environ["PYSPARK_PYTHON"] = sys.executable
 os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
+
+current_path = os.path.dirname(os.path.realpath(__file__))
+os.environ["HADOOP_HOME"] = current_path + "/data/hadoop/"
+
