@@ -190,11 +190,11 @@ class TransformationFunctionEngine:
             return "BYTE"
         elif output_type in (numpy.int16, "int16", "short", "smallint"):
             return "SHORT"
-        elif output_type in (int, "int", "integer", numpy.int, numpy.int32):
+        elif output_type in (int, "int", "integer", numpy.int32):
             return "INT"
         elif output_type in (numpy.int64, "int64", "long", "bigint"):
             return "LONG"
-        elif output_type in (float, "float", numpy.float):
+        elif output_type in (float, "float"):
             return "FLOAT"
         elif output_type in (numpy.float64, "float64", "double"):
             return "DOUBLE"
