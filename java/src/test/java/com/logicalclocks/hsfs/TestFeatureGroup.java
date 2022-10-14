@@ -17,64 +17,105 @@
 
 package com.logicalclocks.hsfs;
 
-import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.engine.StreamFeatureGroupEngine;
-import com.logicalclocks.hsfs.util.Constants;
-import org.junit.Assert;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestFeatureGroup {
 
   @Test
-  public void testFeatureGroup() throws IOException, FeatureStoreException, ParseException {
+  public void testFeatureGroupPrimaryKey() {
     // Arrange
-    FeatureStore fs = Mockito.mock(FeatureStore.class);
-    /*
-    FeatureGroup aa = Mockito.verify(fs).createFeatureGroup()
-        .name("marketing")
-        .version(1)
-        .description("Features about inbound/outbound communication with customers")
-        .onlineEnabled(true)
-        .statisticsConfig(new StatisticsConfig(false, false, false, false))
-        .primaryKeys(Collections.singletonList("cc_num"))
-        .eventTime("ts")
-        .build();
-    */
-
-    StreamFeatureGroupEngine streamFeatureGroupEngine = Mockito.mock(StreamFeatureGroupEngine.class);
+    FeatureStore featureStore = Mockito.mock(FeatureStore.class);
+    StreamFeatureGroupEngine streamFeatureGroupEngine = new StreamFeatureGroupEngine();
 
     // Act
-    StreamFeatureGroup featureGroup = Mockito.mock(StreamFeatureGroup.class);
-
-
     List<Feature> features = new ArrayList<>();
-    features.add( new Feature("a"));
-    features.add( new Feature("b"));
-    features.add( new Feature("c"));
-    featureGroup.setName("cardTransactions10mAgg");
-    featureGroup.setVersion(1);
-    featureGroup.setFeatures(features);
+    features.add( new Feature("featureA"));
+    features.add( new Feature("featureB"));
+    features.add( new Feature("featureC"));
 
-    // Assert
-    Exception exception = assertThrows(FeatureStoreException.class, () -> {
-      streamFeatureGroupEngine.saveFeatureGroupMetaData(featureGroup, Collections.singletonList("cc_num"), null, null, null, null);;
+    StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
+        Collections.singletonList("primaryKey"), Collections.singletonList("partitionKey"), "hudiPrecombineKey",
+        true, features, null, "onlineTopicName", null);
+
+    Exception pkException = assertThrows(FeatureStoreException.class, () -> {
+      streamFeatureGroupEngine.saveFeatureGroupMetaData(featureGroup,
+         null, null, null, null, null);;;
     });
 
+    // Assert
+    Assertions.assertEquals(pkException.getMessage(),
+        "Provided primary key(s) primarykey doesn't exist in feature dataframe");
+  }
+
+  @Test
+  public void testFeatureGroupEventTimeFeature() {
+    // Arrange
+    FeatureStore featureStore = Mockito.mock(FeatureStore.class);
+    StreamFeatureGroupEngine streamFeatureGroupEngine = new StreamFeatureGroupEngine();
+
+    // Act
+    List<Feature> features = new ArrayList<>();
+    features.add( new Feature("featureA"));
+    features.add( new Feature("featureB"));
+    features.add( new Feature("featureC"));
+
+    StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
+        Collections.singletonList("featureA"), null, null,
+        true, features, null, "onlineTopicName", "eventTime");
+
+    Exception eventTimeException = assertThrows(FeatureStoreException.class, () -> {
+      streamFeatureGroupEngine.saveFeatureGroupMetaData(featureGroup,
+          null, null, null, null, null);;;
+    });
+
+    // Assert
+    Assertions.assertEquals(eventTimeException.getMessage(),
+        "Provided eventTime feature name eventTime doesn't exist in feature dataframe");
+  }
+
+  @Test
+  public void testFeatureGroupPartitionPrecombineKeys() {
+    // Arrange
+    FeatureStore featureStore = Mockito.mock(FeatureStore.class);
+    StreamFeatureGroupEngine streamFeatureGroupEngine = new StreamFeatureGroupEngine();
+
+    // Act
+    List<Feature> features = new ArrayList<>();
+    features.add( new Feature("featureA"));
+    features.add( new Feature("featureB"));
+    features.add( new Feature("featureC"));
+
+    StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
+        Collections.singletonList("featureA"), Collections.singletonList("partitionKey"), "hudiPrecombineKey",
+        true, features, null, "onlineTopicName", null);
+
+    Exception partitionException = assertThrows(FeatureStoreException.class, () -> {
+      streamFeatureGroupEngine.saveFeatureGroupMetaData(featureGroup,
+          Collections.singletonList("partitionKey"), null, null, null,
+          null);
+    });
+
+    Exception precombineException = assertThrows(FeatureStoreException.class, () -> {
+      streamFeatureGroupEngine.saveFeatureGroupMetaData(featureGroup,
+          null, "hudiPrecombineKey", null, null,
+          null);
+    });
+
+    // Assert
+    Assertions.assertEquals(partitionException.getMessage(),
+        "Provided partition key(s) partitionKey doesn't exist in feature dataframe");
+
+    Assertions.assertEquals(precombineException.getMessage(),
+        "Provided Hudi precombine key hudiPrecombineKey doesn't exist in feature dataframe");
   }
 }
