@@ -400,13 +400,19 @@ public class FeatureViewEngine {
   }
 
   public FeatureView getOrCreateFeatureView(FeatureStore featureStore, String name, Integer version,  Query query,
-                                            String description, List<String> labels) {
+                                            String description, List<String> labels)
+      throws FeatureStoreException, IOException {
     FeatureView featureView = null;
     try {
       featureView = get(featureStore, name, version);
     } catch (IOException | FeatureStoreException e) {
       if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270181")) {
-        featureView = new FeatureView(name, version, query, description, featureStore, labels);
+        featureView = new FeatureView.FeatureViewBuilder(featureStore)
+            .name(name)
+            .version(version)
+            .query(query)
+            .labels(labels)
+            .build();
       }
     }
     return featureView;

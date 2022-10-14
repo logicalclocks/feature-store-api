@@ -348,7 +348,8 @@ public class FeatureStore {
    * @param version version of the feature view
    * @return FeatureView
    */
-  public FeatureView getOrCreateFeatureView(String name, Query query, Integer version) {
+  public FeatureView getOrCreateFeatureView(String name, Query query, Integer version)
+      throws FeatureStoreException, IOException {
     return featureViewEngine.getOrCreateFeatureView(this, name, version, query, null, null);
   }
 
@@ -364,7 +365,7 @@ public class FeatureStore {
    * @return FeatureView
    */
   public FeatureView getOrCreateFeatureView(String name, Query query, Integer version, String description,
-                                            List<String> labels) {
+                                            List<String> labels) throws FeatureStoreException, IOException {
     return featureViewEngine.getOrCreateFeatureView(this, name, version, query, description, labels);
   }
 
