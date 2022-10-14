@@ -720,6 +720,65 @@ class TestPythonSparkTransformationFunctions:
         self._validate_on_python_engine(td, df, expected_df)
         self._validate_on_spark_engine(td, spark_df, expected_spark_df)
 
+    def test_apply_plus_one_datetime_ts_none(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        spark_engine = spark.Engine()
+
+        schema = StructType(
+            [
+                StructField("col_0", IntegerType(), True),
+                StructField("col_1", StringType(), True),
+                StructField("col_2", BooleanType(), True),
+            ]
+        )
+        df = pd.DataFrame(
+            data={
+                "col_0": [1640995200, 1640995201],
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+            }
+        )
+        spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
+
+        expected_schema = StructType(
+            [
+                StructField("col_0", TimestampType(), True),
+                StructField("col_1", StringType(), True),
+                StructField("col_2", BooleanType(), True),
+            ]
+        )
+
+        expected_df = pd.DataFrame(
+            data={
+                "col_0": [
+                    None,
+                    datetime.datetime.utcfromtimestamp(1640995202),
+                ],
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+            }
+        )
+        # convert timestamps to current timezone
+        current_timezone = datetime.datetime.now().astimezone().tzinfo
+        expected_df_localized = expected_df.copy(True)
+        expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
+            current_timezone
+        )
+        expected_spark_df = spark_engine._spark_session.createDataFrame(
+            expected_df_localized, schema=expected_schema
+        )
+
+        # Arrange
+        def tf_fun(a) -> datetime.datetime:
+            return None if a == 1640995200 else datetime.datetime.utcfromtimestamp(a + 1)
+
+        td = self._create_training_dataset(tf_fun, "datetime")
+
+        # Assert
+        self._validate_on_python_engine(td, df, expected_df)
+        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+
     def test_apply_plus_one_date(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
