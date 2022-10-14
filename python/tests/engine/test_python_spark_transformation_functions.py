@@ -771,7 +771,9 @@ class TestPythonSparkTransformationFunctions:
 
         # Arrange
         def tf_fun(a) -> datetime.datetime:
-            return None if a == 1640995200 else datetime.datetime.utcfromtimestamp(a + 1)
+            return (
+                None if a == 1640995200 else datetime.datetime.utcfromtimestamp(a + 1)
+            )
 
         td = self._create_training_dataset(tf_fun, "datetime")
 
