@@ -411,6 +411,7 @@ public class FeatureViewEngine {
             .name(name)
             .version(version)
             .query(query)
+            .description(description)
             .labels(labels)
             .build();
       }
