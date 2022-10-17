@@ -23,9 +23,9 @@ import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.generic.DataFormat;
-import com.logicalclocks.hsfs.generic.FeatureGroupCommit;
 import com.logicalclocks.hsfs.generic.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.generic.metadata.HopsworksHttpClient;
+import com.logicalclocks.hsfs.generic.metadata.KafkaApi;
 import com.logicalclocks.hsfs.spark.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.generic.Feature;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
@@ -123,6 +123,7 @@ public class SparkEngine {
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
   private HudiEngine hudiEngine = new HudiEngine();
+  private KafkaApi kafkaApi = new KafkaApi();
 
   private SparkEngine() {
     sparkSession = SparkSession.builder()
@@ -509,7 +510,7 @@ public class SparkEngine {
         .format(Constants.KAFKA_FORMAT)
         .outputMode(outputMode)
         .option("checkpointLocation", checkpointLocation == null
-            ? utils.checkpointDirPath(queryName, featureGroupBase.getOnlineTopicName())
+            ? checkpointDirPath(queryName, featureGroupBase.getOnlineTopicName())
             : checkpointLocation)
         .options(writeOptions)
         .option("topic", featureGroupBase.getOnlineTopicName());
@@ -705,14 +706,13 @@ public class SparkEngine {
 
   public void streamToHudiTable(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)
       throws Exception {
-    writeOptions = utils.getKafkaConfig(streamFeatureGroup, writeOptions);
+    writeOptions = getKafkaConfig(streamFeatureGroup, writeOptions);
     hudiEngine.streamToHoodieTable(sparkSession, streamFeatureGroup, writeOptions);
   }
 
-  public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric,
+  public List<Feature> parseFeatureGroupSchema(Dataset<Row> dataset,
       TimeTravelFormat timeTravelFormat) throws FeatureStoreException {
     List<Feature> features = new ArrayList<>();
-    Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
     Boolean usingHudi = timeTravelFormat == TimeTravelFormat.HUDI;
     for (StructField structField : dataset.schema().fields()) {
       String featureType = "";
@@ -751,9 +751,8 @@ public class SparkEngine {
     return features;
   }
 
-  public <S> S sanitizeFeatureNames(S datasetGeneric) {
-    Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
-    return (S) dataset.select(Arrays.asList(dataset.columns()).stream().map(f -> col(f).alias(f.toLowerCase())).toArray(
+  public Dataset<Row> sanitizeFeatureNames(Dataset<Row> dataset) {
+    return dataset.select(Arrays.asList(dataset.columns()).stream().map(f -> col(f).alias(f.toLowerCase())).toArray(
         Column[]::new));
   }
 
@@ -866,19 +865,6 @@ public class SparkEngine {
 
   //-----------------------------------------------------------
   // TODO (davit): this will be implemented in sparkEngine to return FeatureGroup class
-  public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric, TimeTravelFormat timeTravelFormat)
-      throws FeatureStoreException {
-    return null;
-    //return SparkEngine.getInstance().parseFeatureGroupSchema(datasetGeneric, timeTravelFormat);
-  }
-
-  // TODO (davit): this will be implemented in sparkEngine to return FeatureGroup class
-  public <S> S sanitizeFeatureNames(S datasetGeneric) throws FeatureStoreException {
-    return null;
-    //return SparkEngine.getInstance().sanitizeFeatureNames(datasetGeneric);
-  }
-
-  // TODO (davit): this will be implemented in sparkEngine to return FeatureGroup class
   public String constructCheckpointPath(FeatureGroupBase featureGroup, String queryName, String queryPrefix)
       throws FeatureStoreException, IOException {
     if (Strings.isNullOrEmpty(queryName)) {
@@ -910,44 +896,6 @@ public class SparkEngine {
     return config;
   }
 
-  // TODO (davit): this will be implemented in spark engine to return FeatureGroup class
-  public Map<Long, Map<String, String>> commitDetails(FeatureGroupBase featureGroupBase, Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    // operation is only valid for time travel enabled feature group
-    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.HUDI)
-        || featureGroupBase instanceof StreamFeatureGroup)) {
-      // operation is only valid for time travel enabled feature group
-      throw new FeatureStoreException("commitDetails function is only valid for "
-          + "time travel enabled feature group");
-    }
-    return getCommitDetails(featureGroupBase, null, limit);
-  }
-
-  public Map<Long, Map<String, String>> commitDetailsByWallclockTime(FeatureGroupBase featureGroup,
-                                                                     String wallclockTime, Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    return getCommitDetails(featureGroup, wallclockTime, limit);
-  }
-
-  // TODO (davit): this will be implemented in spark engine to return FeatureGroup class
-  public <S> FeatureGroupCommit commitDelete(FeatureGroupBase featureGroupBase, S genericDataset,
-                                             Map<String, String> writeOptions)
-      throws IOException, FeatureStoreException, ParseException {
-    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.HUDI)
-        || featureGroupBase instanceof StreamFeatureGroup)) {
-      // operation is only valid for time travel enabled feature group
-      throw new FeatureStoreException("delete function is only valid for "
-          + "time travel enabled feature group");
-    }
-    return null;
-    /*
-    HudiEngine hudiEngine = new HudiEngine();
-    return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroupBase, genericDataset,
-        writeOptions);
-     */
-  }
-
-  // TODO (davit): this will be implemented in sparkEngine to return FeatureGroup class
   public String checkpointDirPath(String queryName, String onlineTopicName) throws FeatureStoreException {
     if (Strings.isNullOrEmpty(queryName)) {
       queryName = "insert_stream_" + onlineTopicName;

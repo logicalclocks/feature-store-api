@@ -1,19 +1,14 @@
 package com.logicalclocks.hsfs.generic.engine;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.generic.EntityEndpointType;
 import com.logicalclocks.hsfs.generic.FeatureStore;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.FeatureView;
-import com.logicalclocks.hsfs.generic.Split;
 import com.logicalclocks.hsfs.generic.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.generic.constructor.Query;
 import com.logicalclocks.hsfs.generic.metadata.FeatureViewApi;
 import com.logicalclocks.hsfs.generic.metadata.TagsApi;
-// import com.logicalclocks.hsfs.generic.TrainingDataset;
-// import com.logicalclocks.hsfs.spark.engine.StatisticsEngine;
-// import com.logicalclocks.hsfs.spark.engine.TrainingDatasetEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,8 +55,8 @@ public class FeatureViewEngine {
     FeatureView featureView = featureViewApi.get(featureStore, name, version);
     featureView.setFeatureStore(featureStore);
     featureView.getFeatures().stream()
-        .filter(f -> f.getFeaturegroup() != null)
-        .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
+        .filter(f -> f.getFeatureGroup() != null)
+        .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStore));
     featureView.getQuery().getLeftFeatureGroup().setFeatureStore(featureStore);
     featureView.setLabels(
         featureView.getFeatures().stream()
@@ -77,8 +72,8 @@ public class FeatureViewEngine {
     for (FeatureView fv : featureViews) {
       fv.setFeatureStore(featureStore);
       fv.getFeatures().stream()
-          .filter(f -> f.getFeaturegroup() != null)
-          .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStore));
+          .filter(f -> f.getFeatureGroup() != null)
+          .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStore));
       fv.getQuery().getLeftFeatureGroup().setFeatureStore(featureStore);
       fv.setLabels(
           fv.getFeatures().stream()
@@ -126,10 +121,11 @@ public class FeatureViewEngine {
     return new Date();
   }
 
-  private void getTrainingDataMetadata(){;
+  private void getTrainingDataMetadata() {
+
   }
 
-  public void computeStatistics(){
+  public void computeStatistics() {
   }
 
   private void convertSplitDatasetsToMap() {
@@ -138,7 +134,7 @@ public class FeatureViewEngine {
   public void recreateTrainingDataset() {
   }
 
-  private void readDataset()  {
+  private void readDataset() {
   }
 
   public void deleteTrainingData() {

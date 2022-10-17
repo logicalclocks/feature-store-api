@@ -18,10 +18,8 @@
 package com.logicalclocks.hsfs.spark.engine;
 
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
-import com.logicalclocks.hsfs.generic.StorageConnector;
-import com.logicalclocks.hsfs.generic.StorageConnectorType;
 import com.logicalclocks.hsfs.generic.TrainingDatasetFeature;
-import com.logicalclocks.hsfs.generic.TrainingDatasetType;
+
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.catalyst.parser.CatalystSqlParser;

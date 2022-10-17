@@ -66,6 +66,21 @@ public abstract class Query {
   private QueryConstructorApi queryConstructorApi = new QueryConstructorApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
+  public String sql() {
+    // overriding toString does not work wtih jackson
+    return sql(Storage.OFFLINE);
+  }
+
+  public String sql(Storage storage) {
+    try {
+      return queryConstructorApi
+          .constructQuery(leftFeatureGroup.getFeatureStore(), this)
+          .getStorageQuery(storage);
+    } catch (FeatureStoreException | IOException e) {
+      return e.getMessage();
+    }
+  }
+
   public Query join(Query subquery) {
     return join(subquery, JoinType.INNER);
   }
@@ -224,21 +239,6 @@ public abstract class Query {
     return this;
   }
 
-  public String sql() {
-    // overriding toString does not work wtih jackson
-    return sql(Storage.OFFLINE);
-  }
-
-  public String sql(Storage storage) {
-    try {
-      return queryConstructorApi
-          .constructQuery(leftFeatureGroup.getFeatureStore(), this)
-          .getStorageQuery(storage);
-    } catch (FeatureStoreException | IOException e) {
-      return e.getMessage();
-    }
-  }
-
   public Query filter(Filter filter) {
     if (this.filter == null) {
       this.filter = new FilterLogic(filter);
@@ -262,7 +262,8 @@ public abstract class Query {
     return this;
   }
 
-  public abstract Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException;
+  public abstract Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException,
+      IOException;
 
   public abstract void show(boolean online, int numRows);
 }

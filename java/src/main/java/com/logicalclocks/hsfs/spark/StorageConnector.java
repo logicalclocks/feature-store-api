@@ -87,7 +87,8 @@ public abstract class StorageConnector extends com.logicalclocks.hsfs.generic.St
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
   @Override
-  public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path) throws FeatureStoreException, IOException {
+  public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
+      throws FeatureStoreException, IOException {
     return SparkEngine.getInstance().read(this, dataFormat, options, path);
   }
 
@@ -399,7 +400,8 @@ public abstract class StorageConnector extends com.logicalclocks.hsfs.generic.St
         readOptions.put("query", query);
       }
       // TODO (davit): some mambo jambo here
-      return SparkEngine.getInstance().read((StorageConnector) this.refetch(), Constants.JDBC_FORMAT, readOptions, null);
+      return SparkEngine.getInstance().read((StorageConnector) this.refetch(), Constants.JDBC_FORMAT, readOptions,
+          null);
     }
 
     public void update() throws FeatureStoreException, IOException {
@@ -497,7 +499,8 @@ public abstract class StorageConnector extends com.logicalclocks.hsfs.generic.St
     }
 
     public Object readStream(String topic, boolean topicPattern, String messageFormat, String schema,
-                             Map<String, String> options, boolean includeMetadata) throws FeatureStoreException, IOException {
+                             Map<String, String> options, boolean includeMetadata) throws FeatureStoreException,
+        IOException {
       if (!Arrays.asList("avro", "json", null).contains(messageFormat.toLowerCase())) {
         throw new IllegalArgumentException("Can only read JSON and AVRO encoded records from Kafka.");
       }

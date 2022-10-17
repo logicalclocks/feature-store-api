@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.SecretStore;
+import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHeaders;
@@ -60,7 +61,6 @@ import java.security.cert.CertificateException;
 import java.util.HashMap;
 
 public class HopsworksExternalClient implements HopsworksHttpClient {
-
   private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksExternalClient.class.getName());
   private static final String PARAM_NAME_SECRET_STORE = "hopsworks/role/";
   private static final String PARAM_NAME_PARAMETER_STORE = "/hopsworks/role/";
@@ -86,8 +86,6 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
   @Getter
   private String certKey;
 
-  /*
-  // TODO (davit): this will be implemented in spark engine to return FeatureGroup class
   public HopsworksExternalClient(String host, int port, String apiKeyFilepath,
                                  boolean hostnameVerification, String trustStorePath)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
@@ -144,7 +142,6 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     this.keyStorePath = SparkEngine.getInstance().getKeyStorePath();
     this.certKey = HopsworksHttpClient.readCertKey(SparkEngine.getInstance().getCertKey());
   }
-  */
 
   private Registry<ConnectionSocketFactory> createConnectionFactory(HttpHost httpHost, boolean hostnameVerification,
                                                                     String trustStorePath)

@@ -160,6 +160,20 @@ public abstract class FeatureStore {
   }
 
   /**
+   * Get a feature view object with the default version `1` from the selected feature store.
+   *
+   * @param name name of the feature view
+   * @return FeatureView
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public FeatureView getFeatureView(String name) throws FeatureStoreException, IOException {
+    LOGGER.info("VersionWarning: No version provided for getting feature view `" + name + "`, defaulting to `"
+        + DEFAULT_VERSION + "`.");
+    return getFeatureView(name, DEFAULT_VERSION);
+  }
+
+  /**
    * Get a external feature group object from the feature store.
    *
    * @param name    the name of the feature group
@@ -248,21 +262,6 @@ public abstract class FeatureStore {
   public abstract Object getOnlineStorageConnector() throws FeatureStoreException, IOException;
 
   public abstract Object getGcsConnector(String name) throws FeatureStoreException, IOException;
-
-
-  /**
-   * Get a feature view object with the default version `1` from the selected feature store.
-   *
-   * @param name name of the feature view
-   * @return FeatureView
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public FeatureView getFeatureView(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting feature view `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getFeatureView(name, DEFAULT_VERSION);
-  }
 
   public abstract TrainingDataset.TrainingDatasetBuilder createTrainingDataset();
 

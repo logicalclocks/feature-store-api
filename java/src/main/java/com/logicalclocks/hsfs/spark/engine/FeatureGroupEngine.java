@@ -18,9 +18,12 @@
 package com.logicalclocks.hsfs.spark.engine;
 
 import com.logicalclocks.hsfs.generic.Feature;
+import com.logicalclocks.hsfs.generic.FeatureGroupCommit;
 import com.logicalclocks.hsfs.generic.FeatureStore;
 import com.logicalclocks.hsfs.generic.StatisticsConfig;
+import com.logicalclocks.hsfs.generic.StreamFeatureGroup;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
+import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.spark.FeatureGroup;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.HudiOperationType;
@@ -67,7 +70,7 @@ public class FeatureGroupEngine {
   public FeatureGroup save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> partitionKeys,
                            String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
-    dataset = utils.sanitizeFeatureNames(dataset);
+    dataset = SparkEngine.getInstance().sanitizeFeatureNames(dataset);
 
     featureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
         dataset, false);
@@ -100,7 +103,7 @@ public class FeatureGroupEngine {
     }
 
     saveDataframe(featureGroup, featureData, storage, operation,
-        writeOptions, utils.getKafkaConfig(featureGroup, writeOptions), validationId);
+        writeOptions, SparkEngine.getInstance().getKafkaConfig(featureGroup, writeOptions), validationId);
   }
 
   @Deprecated
@@ -121,8 +124,8 @@ public class FeatureGroupEngine {
     }
 
     StreamingQuery streamingQuery = SparkEngine.getInstance().writeStreamDataframe(featureGroup,
-        utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
-        checkpointLocation, utils.getKafkaConfig(featureGroup, writeOptions));
+        SparkEngine.getInstance().sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
+        checkpointLocation, SparkEngine.getInstance().getKafkaConfig(featureGroup, writeOptions));
 
     return streamingQuery;
   }
@@ -156,7 +159,7 @@ public class FeatureGroupEngine {
       throws FeatureStoreException, IOException, ParseException {
 
     if (featureGroup.getFeatures() == null) {
-      featureGroup.setFeatures(utils.parseFeatureGroupSchema(featureData,
+      featureGroup.setFeatures(SparkEngine.getInstance().parseFeatureGroupSchema(featureData,
           featureGroup.getTimeTravelFormat()));
     }
 
@@ -271,5 +274,37 @@ public class FeatureGroupEngine {
     SparkEngine.getInstance().writeOfflineDataframe((FeatureGroup) featureGroup,
         SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features),
         HudiOperationType.UPSERT, new HashMap<>(), null);
+  }
+
+  public Map<Long, Map<String, String>> commitDetails(FeatureGroupBase featureGroupBase, Integer limit)
+      throws IOException, FeatureStoreException, ParseException {
+    // operation is only valid for time travel enabled feature group
+    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.HUDI)
+        || featureGroupBase instanceof StreamFeatureGroup)) {
+      // operation is only valid for time travel enabled feature group
+      throw new FeatureStoreException("commitDetails function is only valid for "
+          + "time travel enabled feature group");
+    }
+    return utils.getCommitDetails(featureGroupBase, null, limit);
+  }
+
+  public Map<Long, Map<String, String>> commitDetailsByWallclockTime(FeatureGroupBase featureGroup,
+                                                                     String wallclockTime, Integer limit)
+      throws IOException, FeatureStoreException, ParseException {
+    return utils.getCommitDetails(featureGroup, wallclockTime, limit);
+  }
+
+  public FeatureGroupCommit commitDelete(FeatureGroupBase featureGroupBase, Dataset<Row> genericDataset,
+                                         Map<String, String> writeOptions)
+      throws IOException, FeatureStoreException, ParseException {
+    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.HUDI)
+        || featureGroupBase instanceof StreamFeatureGroup)) {
+      // operation is only valid for time travel enabled feature group
+      throw new FeatureStoreException("delete function is only valid for "
+          + "time travel enabled feature group");
+    }
+    HudiEngine hudiEngine = new HudiEngine();
+    return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroupBase, genericDataset,
+        writeOptions);
   }
 }

@@ -21,17 +21,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.google.common.collect.Lists;
-import com.logicalclocks.hsfs.generic.constructor.Filter;
 import com.logicalclocks.hsfs.generic.constructor.FilterLogic;
 import com.logicalclocks.hsfs.generic.constructor.Query;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
 
 import com.logicalclocks.hsfs.generic.engine.VectorServer;
 import com.logicalclocks.hsfs.generic.metadata.Statistics;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.Setter;
 
 import java.io.IOException;
@@ -132,6 +129,7 @@ public abstract class TrainingDataset {
 
   private VectorServer vectorServer = new VectorServer();
 
+  /* TODO (davit): this is
   @Builder
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
       Boolean coalesce, StorageConnector storageConnector, String location, List<Split> splits, String trainSplit,
@@ -167,6 +165,7 @@ public abstract class TrainingDataset {
       this.extraFilter = extraFilterLogic;
     }
   }
+   */
 
   private void setTimeSeriesSplits(Integer timeSplitSize, String trainStart, String trainEnd, String valStart,
       String valEnd, String testStart, String testEnd) throws FeatureStoreException, ParseException {
@@ -291,6 +290,7 @@ public abstract class TrainingDataset {
    * @throws IOException
    */
   public abstract void updateStatisticsConfig() throws FeatureStoreException, IOException;
+
   /**
    * Get the last statistics commit for the training dataset.
    *

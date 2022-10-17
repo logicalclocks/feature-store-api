@@ -24,7 +24,6 @@ import com.logicalclocks.hsfs.generic.Feature;
 import com.logicalclocks.hsfs.generic.FeatureStore;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.HudiOperationType;
-import com.logicalclocks.hsfs.generic.JobConfiguration;
 import com.logicalclocks.hsfs.generic.StatisticsConfig;
 import com.logicalclocks.hsfs.generic.Storage;
 import com.logicalclocks.hsfs.generic.TimeTravelFormat;
@@ -165,7 +164,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws ParseException
    */
   public Dataset<Row> read(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
-    return (Dataset<Row>) selectAll().asOf(wallclockTime).read(false, null);
+    return selectAll().asOf(wallclockTime).read(false, null);
   }
 
   /**
@@ -180,7 +179,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Dataset<Row> read(String wallclockTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
-    return (Dataset<Row>) selectAll().asOf(wallclockTime).read(false, readOptions);
+    return selectAll().asOf(wallclockTime).read(false, readOptions);
   }
 
   /**
@@ -197,7 +196,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime)
       throws FeatureStoreException, IOException, ParseException {
-    return (Dataset<Row>) selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, null);
+    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, null);
   }
 
   /**
@@ -214,7 +213,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Dataset<Row> readChanges(String wallclockStartTime, String wallclockEndTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
-    return (Dataset<Row>) selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, readOptions);
+    return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, readOptions);
   }
 
   /**
@@ -230,7 +229,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws ParseException
    */
   public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
-    return (Query) selectAll().asOf(wallclockTime);
+    return selectAll().asOf(wallclockTime);
   }
 
   /**
@@ -248,7 +247,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws ParseException
    */
   public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
-    return (Query) selectAll().asOf(wallclockTime, excludeUntil);
+    return selectAll().asOf(wallclockTime, excludeUntil);
   }
 
   public void show(int numRows) throws FeatureStoreException, IOException {
@@ -435,12 +434,12 @@ public class FeatureGroup extends FeatureGroupBase {
 
   public void commitDeleteRecord(Dataset<Row> featureData)
       throws FeatureStoreException, IOException, ParseException {
-    utils.commitDelete(this, featureData, null);
+    featureGroupEngine.commitDelete(this, featureData, null);
   }
 
   public void commitDeleteRecord(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
-    utils.commitDelete(this, featureData, writeOptions);
+    featureGroupEngine.commitDelete(this, featureData, writeOptions);
   }
 
   /**
@@ -450,7 +449,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException
    */
   public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
-    return utils.commitDetails(this, null);
+    return featureGroupEngine.commitDetails(this, null);
   }
 
   /**
@@ -462,7 +461,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Map<Long, Map<String, String>> commitDetails(Integer limit)
       throws IOException, FeatureStoreException, ParseException {
-    return utils.commitDetails(this, limit);
+    return featureGroupEngine.commitDetails(this, limit);
   }
 
   /**
@@ -474,7 +473,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
       throws IOException, FeatureStoreException, ParseException {
-    return utils.commitDetailsByWallclockTime(this, wallclockTime, null);
+    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, null);
   }
 
   /**
@@ -487,7 +486,7 @@ public class FeatureGroup extends FeatureGroupBase {
    */
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
-    return utils.commitDetailsByWallclockTime(this, wallclockTime, limit);
+    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);
   }
 
   @JsonIgnore
@@ -553,6 +552,28 @@ public class FeatureGroup extends FeatureGroupBase {
     return null;
   }
 
+  /**
+   * Recompute the statistics for the feature group and save them to the feature store.
+   *
+   * @param wallclockTime number of commits to return.
+   * @return statistics object of computed statistics
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
+    if (statisticsConfig.getEnabled()) {
+      Map<Long, Map<String, String>> latestCommitMetaData =
+          featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, 1);
+      Dataset<Row> featureData = selectAll().asOf(wallclockTime).read(false, null);
+      Long commitId = (Long) latestCommitMetaData.keySet().toArray()[0];
+      return statisticsEngine.computeStatistics(this, featureData, commitId);
+    } else {
+      LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
+          + version + "`. No statistics computed.");
+    }
+    return null;
+  }
+
   @JsonIgnore
   public List<String> getComplexFeatures() {
     return utils.getComplexFeatures(features);
@@ -571,27 +592,5 @@ public class FeatureGroup extends FeatureGroupBase {
   @JsonIgnore
   public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
     return utils.getDeserializedAvroSchema(getAvroSchema());
-  }
-
-  /**
-   * Recompute the statistics for the feature group and save them to the feature store.
-   *
-   * @param wallclockTime number of commits to return.
-   * @return statistics object of computed statistics
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
-    if (statisticsConfig.getEnabled()) {
-      Map<Long, Map<String, String>> latestCommitMetaData =
-          utils.commitDetailsByWallclockTime(this, wallclockTime, 1);
-      Dataset<Row> featureData = (Dataset<Row>) selectAll().asOf(wallclockTime).read(false, null);
-      Long commitId = (Long) latestCommitMetaData.keySet().toArray()[0];
-      return statisticsEngine.computeStatistics(this, featureData, commitId);
-    } else {
-      LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
-          + version + "`. No statistics computed.");
-    }
-    return null;
   }
 }

@@ -20,8 +20,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.logicalclocks.hsfs.generic.Feature;
 import com.logicalclocks.hsfs.generic.FeatureStore;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
-import com.logicalclocks.hsfs.generic.JobConfiguration;
-import com.logicalclocks.hsfs.generic.SaveMode;
 import com.logicalclocks.hsfs.generic.StatisticsConfig;
 import com.logicalclocks.hsfs.generic.TimeTravelFormat;
 import com.logicalclocks.hsfs.generic.constructor.Filter;
@@ -32,18 +30,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.avro.Schema;
-import org.apache.spark.sql.streaming.StreamingQueryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -127,7 +122,8 @@ public abstract class FeatureGroupBase {
     featureGroupBaseEngine.delete(this);
   }
 
-  public abstract Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException;
+  public abstract Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException,
+      IOException;
 
   /**
    * Add name/value tag to the feature group.
@@ -332,7 +328,7 @@ public abstract class FeatureGroupBase {
   public abstract String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException;
 
   @JsonIgnore
-  public abstract String getEncodedAvroSchema() throws FeatureStoreException, IOException ;
+  public abstract String getEncodedAvroSchema() throws FeatureStoreException, IOException;
 
   @JsonIgnore
   public abstract Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException;

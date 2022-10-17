@@ -80,7 +80,8 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
 
   @Builder
-  public ExternalFeatureGroup(com.logicalclocks.hsfs.generic.FeatureStore featureStore, @NonNull String name, Integer version, String query,
+  public ExternalFeatureGroup(com.logicalclocks.hsfs.generic.FeatureStore featureStore, @NonNull String name,
+                              Integer version, String query,
                               ExternalDataFormat dataFormat, String path, Map<String, String> options,
                               @NonNull StorageConnector storageConnector, String description, List<String> primaryKeys,
                               List<Feature> features, StatisticsConfig statisticsConfig, String eventTime) {
@@ -119,11 +120,14 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
     }
   }
 
-  @Override
   public Dataset<Row> read() throws FeatureStoreException, IOException {
     return selectAll().read();
   }
 
+  @Override
+  public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
+    return null;
+  }
 
   public void show(int numRows) throws FeatureStoreException, IOException {
     read().show(numRows);

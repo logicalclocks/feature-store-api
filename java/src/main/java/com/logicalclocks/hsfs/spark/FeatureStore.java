@@ -99,7 +99,7 @@ public class FeatureStore extends com.logicalclocks.hsfs.generic.FeatureStore {
       throws FeatureStoreException, IOException {
     List<FeatureGroup> featureGroups = new ArrayList<>();
     for (FeatureGroupBase fg: featureGroupApi.getFeatureGroups(this, name)) {
-      featureGroups.add( (FeatureGroup) fg);
+      featureGroups.add((FeatureGroup) fg);
     }
     return JavaConverters.asScalaBufferConverter(featureGroups)
         .asScala().toSeq();
@@ -201,6 +201,7 @@ public class FeatureStore extends com.logicalclocks.hsfs.generic.FeatureStore {
     return TrainingDataset.builder()
         .featureStore(this);
   }
+
   /**
    * Get a training dataset object from the selected feature store.
    *
@@ -237,7 +238,7 @@ public class FeatureStore extends com.logicalclocks.hsfs.generic.FeatureStore {
 
     List<TrainingDataset> trainingDatasets = new ArrayList<>();
     for (com.logicalclocks.hsfs.generic.TrainingDataset td: trainingDatasetApi.get(this, name, null)) {
-      trainingDatasets.add( (TrainingDataset) td);
+      trainingDatasets.add((TrainingDataset) td);
     }
     return JavaConverters.asScalaBufferConverter(trainingDatasets).asScala().toSeq();
   }

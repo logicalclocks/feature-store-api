@@ -144,7 +144,8 @@ public class TrainingDataset extends com.logicalclocks.hsfs.generic.TrainingData
    * @throws IOException
    */
   @Override
-  public void save(com.logicalclocks.hsfs.generic.constructor.Query query, Map<String, String> writeOptions) throws FeatureStoreException, IOException {
+  public void save(com.logicalclocks.hsfs.generic.constructor.Query query, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
     this.queryInt = (Query) query;
     TrainingDataset trainingDataset = trainingDatasetEngine.save(this, this.queryInt, writeOptions, label);
     this.setStorageConnector(trainingDataset.getStorageConnector());

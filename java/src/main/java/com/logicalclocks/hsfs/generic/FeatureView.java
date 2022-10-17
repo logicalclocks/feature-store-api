@@ -28,7 +28,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
-import org.apache.spark.sql.sources.In;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -332,9 +331,11 @@ public abstract class FeatureView {
     return vectorServer.getServingKeys();
   }
 
-  public abstract Integer createTrainingData(String startTime, String endTime, String description, DataFormat dataFormat,
+  public abstract Integer createTrainingData(String startTime, String endTime, String description,
+                                             DataFormat dataFormat,
                                              Boolean coalesce, StorageConnector storageConnector, String location,
-                                             Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions,
+                                             Long seed, StatisticsConfig statisticsConfig,
+                                             Map<String, String> writeOptions,
                                              FilterLogic extraFilterLogic, Filter extraFilter)
       throws IOException, FeatureStoreException, ParseException;
 
@@ -380,7 +381,7 @@ public abstract class FeatureView {
   public abstract Object trainingData(String startTime, String endTime, String description,
                                     Long seed, StatisticsConfig statisticsConfig, Map<String, String> readOptions,
                                     FilterLogic extraFilterLogic, Filter extraFilter)
-      throws IOException, FeatureStoreException, ParseException ;
+      throws IOException, FeatureStoreException, ParseException;
 
   public abstract Object trainTestSplit(Float testSize, String trainStart, String trainEnd, String testStart,
                                               String testEnd, String description, Long seed,

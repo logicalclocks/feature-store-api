@@ -1,18 +1,17 @@
 /*
- *  Copyright (c) 2020-2022. Logical Clocks AB
+ * Copyright (c) 2020 Logical Clocks AB
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *
- *  See the License for the specific language governing permissions and limitations under the License.
- *
+ * See the License for the specific language governing permissions and limitations under the License.
  */
 
 package com.logicalclocks.hsfs.generic;
@@ -23,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.generic.metadata.Option;
 import com.logicalclocks.hsfs.generic.metadata.StorageConnectorApi;
+import com.logicalclocks.hsfs.generic.util.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -41,6 +42,7 @@ import java.util.Map;
     use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "storageConnectorType", visible = true)
 @JsonSubTypes({
     @JsonSubTypes.Type(value = StorageConnector.HopsFsConnector.class, name = "HOPSFS"),
+    @JsonSubTypes.Type(value = StorageConnector.JdbcConnector.class, name = "JDBC")
 })
 public abstract class StorageConnector {
 
@@ -61,9 +63,7 @@ public abstract class StorageConnector {
 
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
-  public abstract Object read(String query, String dataFormat, Map<String, String> options, String path) throws FeatureStoreException, IOException;
-
-  public StorageConnector refetch() throws FeatureStoreException, IOException {
+  public StorageConnector refetch() throws FeatureStoreException, IOException, FeatureStoreException {
     return  storageConnectorApi.get(getFeaturestoreId(), getName());
   }
 
@@ -71,6 +71,9 @@ public abstract class StorageConnector {
   public abstract String getPath(String subPath) throws FeatureStoreException;
 
   public abstract Map<String, String> sparkOptions() throws IOException;
+
+  public abstract Object read(String query, String dataFormat, Map<String, String> options, String path)
+      throws FeatureStoreException, IOException;
 
   public static class HopsFsConnector extends StorageConnector {
 
@@ -96,7 +99,8 @@ public abstract class StorageConnector {
     }
   }
 
-  public static abstract class JdbcConnector extends StorageConnector {
+
+  public static class JdbcConnector extends StorageConnector {
 
     @Getter @Setter
     private String connectionString;
@@ -104,9 +108,24 @@ public abstract class StorageConnector {
     @Getter @Setter
     private List<Option> arguments;
 
-    public abstract Map<String, String> sparkOptions();
+    public Map<String, String> sparkOptions() {
+      Map<String, String> readOptions = arguments.stream()
+          .collect(Collectors.toMap(arg -> arg.getName(), arg -> arg.getValue()));
+      readOptions.put(Constants.JDBC_URL, connectionString);
+      return readOptions;
+    }
 
-    public abstract Object read(String query, String dataFormat, Map<String, String> options, String path) throws FeatureStoreException, IOException;
+    @Override
+    public Object read(String query, String dataFormat, Map<String, String> options, String path)
+        throws FeatureStoreException, IOException {
+      update();
+      Map<String, String> readOptions = sparkOptions();
+      if (!Strings.isNullOrEmpty(query)) {
+        readOptions.put("query", query);
+      }
+      return null;
+      //return SparkEngine.getInstance().read(this, Constants.JDBC_FORMAT, readOptions, null);
+    }
 
     public void update() throws FeatureStoreException, IOException {
       JdbcConnector updatedConnector = (JdbcConnector) refetch();

@@ -20,11 +20,12 @@ package com.logicalclocks.hsfs.spark.constructor;
 import com.logicalclocks.hsfs.generic.Feature;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.Storage;
+import com.logicalclocks.hsfs.generic.constructor.Filter;
+import com.logicalclocks.hsfs.generic.constructor.JoinType;
 import com.logicalclocks.hsfs.spark.StorageConnector;
 import com.logicalclocks.hsfs.generic.constructor.FilterLogic;
 import com.logicalclocks.hsfs.generic.constructor.FsQuery;
 import com.logicalclocks.hsfs.generic.constructor.Join;
-import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.generic.metadata.QueryConstructorApi;
 import com.logicalclocks.hsfs.generic.metadata.StorageConnectorApi;
@@ -37,9 +38,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Query extends com.logicalclocks.hsfs.generic.constructor.Query {
 
@@ -69,11 +72,159 @@ public class Query extends com.logicalclocks.hsfs.generic.constructor.Query {
 
   private QueryConstructorApi queryConstructorApi = new QueryConstructorApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
-  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
+  }
+
+  public Query join(Query subquery, String prefix) {
+    return join(subquery, JoinType.INNER, prefix);
+  }
+
+  public Query join(Query subquery, List<String> on) {
+    return joinFeatures(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER);
+  }
+
+  public Query join(Query subquery, List<String> leftOn, List<String> rightOn) {
+    return joinFeatures(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
+        rightOn.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER);
+  }
+
+  public Query join(Query subquery, List<String> leftOn, List<String> rightOn, String prefix) {
+    return joinFeatures(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
+        rightOn.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER, prefix);
+  }
+
+  public Query join(Query subquery, JoinType joinType) {
+    joins.add(new Join(subquery, joinType, null));
+    return this;
+  }
+
+  public Query join(Query subquery, JoinType joinType, String prefix) {
+    joins.add(new Join(subquery, joinType, prefix));
+    return this;
+  }
+
+  public Query join(Query subquery, List<String> on, JoinType joinType) {
+    joins.add(new Join(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), joinType, null));
+    return this;
+  }
+
+  public Query join(Query subquery, List<String> on, JoinType joinType, String prefix) {
+    joins.add(new Join(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), joinType, prefix));
+    return this;
+  }
+
+  public Query join(Query subquery, List<String> leftOn, List<String> rightOn, JoinType joinType) {
+    joins.add(new Join(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
+        rightOn.stream().map(Feature::new).collect(Collectors.toList()), joinType, null));
+    return this;
+  }
+
+  public Query join(Query subquery, List<String> leftOn, List<String> rightOn, JoinType joinType, String prefix) {
+    joins.add(new Join(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
+        rightOn.stream().map(Feature::new).collect(Collectors.toList()), joinType, prefix));
+    return this;
+  }
+
+  public Query joinFeatures(
+      Query subquery, List<Feature> on) {
+    return joinFeatures(subquery, on, JoinType.INNER);
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> on, String prefix) {
+    return joinFeatures(subquery, on, JoinType.INNER, prefix);
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn) {
+    return joinFeatures(subquery, leftOn, rightOn, JoinType.INNER);
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn, String prefix) {
+    return joinFeatures(subquery, leftOn, rightOn, JoinType.INNER, prefix);
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> on, JoinType joinType) {
+    joins.add(new Join(subquery, on, joinType, null));
+    return this;
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> on, JoinType joinType, String prefix) {
+    joins.add(new Join(subquery, on, joinType, prefix));
+    return this;
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType) {
+    joins.add(new Join(subquery, leftOn, rightOn, joinType, null));
+    return this;
+  }
+
+  public Query joinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType,
+      String prefix) {
+    joins.add(new Join(subquery, leftOn, rightOn, joinType, prefix));
+    return this;
+  }
+
+  /**
+   * Perform time travel on the given Query.
+   * This method returns a new Query object at the specified point in time.
+   * This can then either be read into a Dataframe or used further to perform joins
+   * or construct a training dataset.
+   *
+   * @param wallclockTime point in time
+   * @return Query
+   * @throws FeatureStoreException
+   * @throws ParseException
+   */
+  public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
+    return asOf(wallclockTime, null);
+  }
+
+  /**
+   * Perform time travel on the given Query.
+   * This method returns a new Query object at the specified point in time.
+   * This can then either be read into a Dataframe or used further to perform joins
+   * or construct a training dataset.
+   *
+   * @param wallclockTime point in time
+   * @param excludeUntil point in time
+   * @return Query
+   * @throws FeatureStoreException
+   * @throws ParseException
+   */
+  public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
+    return (Query) super.asOf(wallclockTime, excludeUntil);
+  }
+
+  /**
+   * Reads changes that occurred between specified points in time.
+   *
+   * @param wallclockStartTime start date.
+   * @param wallclockEndTime   end date.
+   * @return Query
+   * @throws FeatureStoreException
+   * @throws IOException
+   * @throws ParseException
+   *
+   * @deprecated use asOf(wallclockEndTime, wallclockStartTime) instead
+   */
+  public Query pullChanges(String wallclockStartTime, String wallclockEndTime)
+      throws FeatureStoreException, ParseException {
+    return (Query) super.pullChanges(wallclockStartTime, wallclockEndTime);
+  }
+
+  public Query filter(Filter filter) {
+    return (Query) super.filter(filter);
+  }
+
+  public Query filter(FilterLogic filter) {
+    return (Query) super.filter(filter);
+  }
+
+  public Query appendFeature(Feature feature) {
+    this.leftFeatures.add(feature);
+    return this;
   }
 
   public Dataset<Row> read() throws FeatureStoreException, IOException {
@@ -91,7 +242,8 @@ public class Query extends com.logicalclocks.hsfs.generic.constructor.Query {
     if (online) {
       LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.ONLINE));
       StorageConnector.SparkJdbcConnector onlineConnector =
-          (StorageConnector.SparkJdbcConnector) storageConnectorApi.getOnlineStorageConnector(leftFeatureGroup.getFeatureStore());
+          (StorageConnector.SparkJdbcConnector) storageConnectorApi.getOnlineStorageConnector(
+              leftFeatureGroup.getFeatureStore());
       return onlineConnector.read(fsQuery.getStorageQuery(Storage.ONLINE),null, null, null);
     } else {
       fsQuery.registerOnDemandFeatureGroups();

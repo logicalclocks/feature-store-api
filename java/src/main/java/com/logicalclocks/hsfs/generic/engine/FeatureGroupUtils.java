@@ -146,8 +146,8 @@ public class FeatureGroupUtils {
     return dateFormat.format(commitedOnDate);
   }
 
-  private Map<Long, Map<String, String>>  getCommitDetails(FeatureGroupBase featureGroup, String wallclockTime,
-                                                           Integer limit)
+  public Map<Long, Map<String, String>>  getCommitDetails(FeatureGroupBase featureGroup, String wallclockTime,
+                                                          Integer limit)
       throws FeatureStoreException, IOException, ParseException {
 
     Long wallclockTimestamp =  wallclockTime != null ? getTimeStampFromDateString(wallclockTime) : null;
