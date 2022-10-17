@@ -160,10 +160,12 @@ class ExpectationSuite:
         )
 
     def _init_feature_store_and_feature_group_ids_from_href(self, href: str) -> None:
-        self._feature_store_id, self._feature_group_id = re.search(
+        feature_store_id, feature_group_id = re.search(
             r"\/featurestores\/([0-9]+)\/featuregroups\/([0-9]+)\/expectationsuite*",
             href,
         ).groups(0)
+        self._feature_store_id = int(feature_store_id)
+        self._feature_group_id = int(feature_group_id)
 
     def _init_expectation_engine(
         self, feature_store_id: int, feature_group_id: int
@@ -200,47 +202,6 @@ class ExpectationSuite:
             raise ValueError(
                 "Provide feature_store_id or feature_group_id to use the expectation suite API"
             )
-
-    # Expectation Suite Convenience Operations
-    def save(
-        self,
-        feature_store_id: Optional[int] = None,
-        feature_group_id: Optional[int] = None,
-    ):
-        """
-        Attach suite to a Feature Group or persist edit to the backend.
-
-        # Arguments
-            feature_group_id: Id of the Feature Group to which the Expectation Suite should attach.
-            feature_store_id: Id of the Feature Store in which the Feature Group is registered.
-
-        # Raises
-            `RestAPIException`
-        """
-        if self._expectation_suite_engine:
-            self._expectation_suite_engine.save(self)
-        elif feature_store_id and feature_group_id:
-            self._feature_store_id = feature_store_id
-            self._feature_group_id = feature_group_id
-            self._init_expectation_suite_engine(
-                feature_group_id=feature_group_id, feature_store_id=feature_store_id
-            )
-            self._expectation_suite_engine.save(self)
-        elif self._feature_store_id and self._feature_group_id:
-            self._init_expectation_suite_engine(
-                feature_group_id=feature_group_id, feature_store_id=feature_store_id
-            )
-            self._expectation_suite_engine.save(self)
-        else:
-            raise ValueError(
-                "Cannot attach or update the expectation suite without providing feature_store_id and feature_group_id."
-            )
-
-    def delete(self):
-        """Detach Expectation Suite from its Feature Group. The suite still exist locally."""
-        if self._expectation_suite_engine and self.id:
-            self._expectation_suite_engine.delete(self.id)
-        del self
 
     # Emulate GE single expectation api to edit list of expectations
     def _convert_expectation(

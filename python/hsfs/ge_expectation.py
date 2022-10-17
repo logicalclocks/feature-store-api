@@ -18,7 +18,7 @@ import json
 
 import humps
 from typing import Any, Dict, Optional
-from great_expectations.core import ExpectationConfiguration
+import great_expectations as ge
 
 from hsfs import util
 
@@ -32,16 +32,22 @@ class GeExpectation:
         kwargs: Dict[str, Any],
         meta: Dict[str, Any],
         id: Optional[int] = None,
-        href=None,
+        href: Optional[str] = None,
     ):
         self._id = id
+        self._href = href
         self._expectation_type = expectation_type
         self.kwargs = kwargs
         self.meta = meta
 
-        if not self.id:
-            if "expectationId" in self.meta.keys():
-                self.id = int(self.meta["expectationId"])
+        # Id should be parsed from meta field if init from GE object
+        if "expectationId" in meta.keys():
+            self._id = meta["expectationId"]
+
+        # if from_response_json meta expactationId field
+        # should be fixed due to humps.decamelize
+        if "expectation_id" in meta.keys():
+            self.meta["expectationId"] = self.meta.pop("expectation_id")
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -56,9 +62,13 @@ class GeExpectation:
         else:
             return cls(**json_decamelized)
 
+    @classmethod
+    def from_ge_type(cls, ge_expectation: ge.core.ExpectationConfiguration):
+        return cls(**ge_expectation.to_json_dict())
+
     def to_dict(self) -> Dict[str, Any]:
         return {
-            # "id": self._id,
+            "id": self._id,
             "expectationType": self._expectation_type,
             "kwargs": json.dumps(self._kwargs),
             "meta": json.dumps(self._meta),
@@ -66,7 +76,7 @@ class GeExpectation:
 
     def to_json_dict(self) -> Dict[str, Any]:
         return {
-            # "id": self._id,
+            "id": self._id,
             "expectationType": self._expectation_type,
             "kwargs": self._kwargs,
             "meta": self._meta,
@@ -81,26 +91,25 @@ class GeExpectation:
     def __repr__(self):
         return f"Expectation({self._expectation_type}, {self._kwargs}, {self._meta})"
 
-    def to_ge_type(self) -> ExpectationConfiguration:
-        return ExpectationConfiguration(
+    def to_ge_type(self) -> ge.core.ExpectationConfiguration:
+        return ge.core.ExpectationConfiguration(
             expectation_type=self.expectation_type, kwargs=self.kwargs, meta=self.meta
         )
 
     @property
-    def id(self) -> int:
+    def id(self) -> Optional[int]:
         """Id of the expectation, set by backend."""
         if self._id:
             return self._id
         else:
-            if "expectationId" in self._meta.keys():
-                self._id = self._meta["expectationId"]
-                return self._id
-            else:
-                return None
+            return None
 
     @id.setter
     def id(self, id):
-        self._id = id
+        if isinstance(id, int):
+            self._id = id
+        elif isinstance(id, str):
+            self._id = int(id)
 
     @property
     def expectation_type(self) -> str:

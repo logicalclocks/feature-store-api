@@ -65,8 +65,8 @@ class ExpectationSuiteEngine:
     def get(self) -> Optional[es.ExpectationSuite]:
         return self._expectation_suite_api.get()
 
-    def delete(self) -> None:
-        self._expectation_suite_api.delete()
+    def delete(self, expectation_suite_id: int) -> None:
+        self._expectation_suite_api.delete(expectation_suite_id=expectation_suite_id)
         self._expectation_engine = None
 
     def _get_expectation_suite_url(self) -> str:

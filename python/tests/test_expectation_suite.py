@@ -27,10 +27,10 @@ class TestExpectationSuite:
         es = expectation_suite.ExpectationSuite.from_response_json(json)
 
         # Assert
-        assert es.id == "test_id"
+        assert es.id == 21
         assert es.expectation_suite_name == "test_expectation_suite_name"
-        assert es._feature_store_id == str(99)
-        assert es._feature_group_id == str(10)
+        assert es._feature_store_id == 99
+        assert es._feature_group_id == 10
         assert es.ge_cloud_id == "test_ge_cloud_id"
         assert es.data_asset_type == "test_data_asset_type"
         assert es.run_validation == "test_run_validation"
@@ -49,10 +49,10 @@ class TestExpectationSuite:
         # Assert
         assert len(es_list) == 1
         es = es_list[0]
-        assert es.id == "test_id"
+        assert es.id == 21
         assert es.expectation_suite_name == "test_expectation_suite_name"
-        assert es._feature_store_id == str(99)
-        assert es._feature_group_id == str(10)
+        assert es._feature_store_id == 99
+        assert es._feature_group_id == 10
         assert es.ge_cloud_id == "test_ge_cloud_id"
         assert es.data_asset_type == "test_data_asset_type"
         assert es.run_validation == "test_run_validation"

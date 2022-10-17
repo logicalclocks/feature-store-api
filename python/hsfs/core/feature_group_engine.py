@@ -28,7 +28,13 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         # cache online feature store connector
         self._online_conn = None
 
-    def save(self, feature_group, feature_dataframe, write_options, validation_options):
+    def save(
+        self,
+        feature_group,
+        feature_dataframe,
+        write_options,
+        validation_options: dict = {},
+    ):
 
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
@@ -72,7 +78,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         operation,
         storage,
         write_options,
-        validation_options={},
+        validation_options: dict = {},
     ):
 
         dataframe_features = engine.get_instance().parse_schema_feature_group(
@@ -90,14 +96,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 feature_group.features, dataframe_features
             )
 
-        if validation_options is None:
-            validation_options = {}
-
         # ge validation on python and non stream feature groups on spark
         ge_report = feature_group._great_expectation_engine.validate(
             feature_group=feature_group,
             dataframe=feature_dataframe,
-            save_report=validation_options.get("save_report", True),
             validation_options=validation_options,
             ge_type=False,
         )

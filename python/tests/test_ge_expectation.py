@@ -16,6 +16,7 @@
 
 
 from hsfs import ge_expectation
+import great_expectations as ge
 
 
 class TestGeExpectation:
@@ -24,13 +25,15 @@ class TestGeExpectation:
         json = backend_fixtures["ge_expectation"]["get"]["response"]
 
         # Act
-        ge = ge_expectation.GeExpectation.from_response_json(json)
+        expect = ge_expectation.GeExpectation.from_response_json(json)
 
         # Assert
-        assert ge.expectation_type == "1"
-        assert ge.kwargs == {"kwargs_key": "kwargs_value"}
-        assert ge.meta == {"meta_key": "meta_value"}
-        assert ge.id == "4"
+        print(expect.meta)
+        assert expect.expectation_type == "1"
+        assert expect.kwargs == {"kwargs_key": "kwargs_value"}
+        assert expect.meta["meta_key"] == "meta_value"
+        assert expect.meta["expectationId"] == 32
+        assert expect.id == 32
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
@@ -41,11 +44,13 @@ class TestGeExpectation:
 
         # Assert
         assert len(ge_list) == 1
-        ge = ge_list[0]
-        assert ge.expectation_type == "1"
-        assert ge.kwargs == {"kwargs_key": "kwargs_value"}
-        assert ge.meta == {"meta_key": "meta_value"}
-        assert ge.id == "4"
+        expect = ge_list[0]
+        print(expect.meta)
+        assert expect.expectation_type == "1"
+        assert expect.kwargs == {"kwargs_key": "kwargs_value"}
+        assert expect.meta["meta_key"] == "meta_value"
+        assert expect.meta["expectationId"] == 32
+        assert expect.id == 32
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange
@@ -56,3 +61,24 @@ class TestGeExpectation:
 
         # Assert
         assert len(ge_list) == 0
+
+    def test_from_ge_object(self):
+        # Arrange
+        expectationId = 32
+        expectation_type = "expect_column_min_to_be_between"
+        kwargs = {"kwargs_key": "kwargs_value"}
+        meta = {"meta_key": "meta_value", "expectationId": expectationId}
+        ge_object = ge.core.ExpectationConfiguration(
+            expectation_type=expectation_type,
+            kwargs=kwargs,
+            meta=meta,
+        )
+
+        # Act
+        expect = ge_expectation.GeExpectation.from_ge_type(ge_object)
+
+        # Assert
+        assert expect.id == 32
+        assert expect.expectation_type == expectation_type
+        assert expect.kwargs == kwargs
+        assert expect.meta == meta

@@ -29,7 +29,6 @@ from datetime import datetime, date
 from hsfs import util, engine, feature, user, storage_connector as sc
 from hsfs.core import (
     feature_group_engine,
-    # great_expectation_engine,
     statistics_engine,
     expectation_suite_engine,
     validation_report_engine,
@@ -57,7 +56,7 @@ class FeatureGroupBase:
         self._great_expectation_engine = (
             great_expectation_engine.GreatExpectationEngine(featurestore_id)
         )
-        self._featurestore_id = featurestore_id
+        self._feature_store_id = featurestore_id
 
     def delete(self):
         """Drop the entire feature group along with its feature data.
@@ -427,7 +426,7 @@ class FeatureGroupBase:
                 ge_expectation_suite=expectation_suite,
                 run_validation=run_validation,
                 validation_ingestion_policy=validation_ingestion_policy,
-                feature_store_id=self._featurestore_id,
+                feature_store_id=self._feature_store_id,
                 feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, ExpectationSuite):
@@ -454,7 +453,8 @@ class FeatureGroupBase:
         # Raises
             `RestAPIException`.
         """
-        self._expectation_suite_engine.delete(self)
+        if self._expectation_suite.id:
+            self._expectation_suite_engine.delete(self._expectation_suite.id)
         self._expectation_suite = None
 
     def get_latest_validation_report(
@@ -721,7 +721,6 @@ class FeatureGroup(FeatureGroupBase):
     ):
         super().__init__(featurestore_id, location)
 
-        self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
@@ -1109,7 +1108,7 @@ class FeatureGroup(FeatureGroupBase):
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
 
         # Returns
-            A tuple with job information if python engine is used and the validation report if validation is enabled.
+            (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
         """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
@@ -1457,7 +1456,6 @@ class FeatureGroup(FeatureGroupBase):
         return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):
-        print("Updating from response json")
         json_decamelized = humps.decamelize(json_dict)
         json_decamelized["stream"] = json_decamelized["type"] == "streamFeatureGroupDTO"
         _ = json_decamelized.pop("type")
@@ -1658,7 +1656,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
     ):
         super().__init__(featurestore_id, location)
 
-        self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created

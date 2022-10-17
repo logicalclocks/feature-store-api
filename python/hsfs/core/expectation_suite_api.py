@@ -111,7 +111,7 @@ class ExpectationSuiteApi:
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )
 
-    def delete(self) -> None:
+    def delete(self, expectation_suite_id: int) -> None:
         """Delete the expectation suite attached to a Feature Group."""
         _client = client.get_instance()
         path_params = [
@@ -122,6 +122,7 @@ class ExpectationSuiteApi:
             "featuregroups",
             self._feature_group_id,
             "expectationsuite",
+            expectation_suite_id,
         ]
 
         _client._send_request("DELETE", path_params)

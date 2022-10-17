@@ -144,6 +144,7 @@ class TestExpectationSuiteEngine:
         # Arrange
         feature_store_id = 99
         feature_group_id = 10
+        expectation_suite_id = 21
 
         mocker.patch("hsfs.engine.get_type")
         mock_es_api = mocker.patch(
@@ -155,7 +156,7 @@ class TestExpectationSuiteEngine:
         )
 
         # Act
-        es_engine.delete()
+        es_engine.delete(expectation_suite_id=expectation_suite_id)
 
         # Assert
         assert mock_es_api.return_value.delete.call_count == 1
