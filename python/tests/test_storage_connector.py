@@ -19,6 +19,7 @@ import base64
 from hsfs import engine, storage_connector
 from hsfs.storage_connector import BigQueryConnector
 from hsfs.engine import spark
+from pathlib import WindowsPath
 
 
 class TestHopsfsConnector:
@@ -531,7 +532,10 @@ class TestBigQueryConnector:
         credentialsFile.write_text(credentials)
 
         json = backend_fixtures["storage_connector"]["get_big_query"]["response"]
-        json["key_path"] = "file://" + str(credentialsFile.resolve())
+        if isinstance(tmp_path, WindowsPath):
+            json["key_path"] = "file:///" + str(credentialsFile.resolve())
+        else:
+            json["key_path"] = "file://" + str(credentialsFile.resolve())
 
         sc = storage_connector.StorageConnector.from_response_json(json)
 
