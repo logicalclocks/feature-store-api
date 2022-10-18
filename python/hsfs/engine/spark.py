@@ -24,9 +24,10 @@ from typing import Optional, TypeVar
 import numpy as np
 import pandas as pd
 import avro
-from datetime import datetime
+from datetime import datetime, timezone
 
 # in case importing in %%local
+
 try:
     from pyspark import SparkFiles
     from pyspark.sql import SparkSession, DataFrame, SQLContext
@@ -888,12 +889,33 @@ class Engine:
                 + "_"
                 + feature_name
             )
+
+            def timezone_decorator(func):
+                if transformation_fn.output_type != "TIMESTAMP":
+                    return func
+
+                current_timezone = datetime.now().astimezone().tzinfo
+
+                def decorated_func(x):
+                    result = func(x)
+                    if isinstance(result, datetime):
+                        if result.tzinfo is None:
+                            # if timestamp is timezone unaware, make sure it's localized to the system's timezone.
+                            # otherwise, spark will implicitly convert it to the system's timezone.
+                            return result.replace(tzinfo=current_timezone)
+                        else:
+                            # convert to utc, then localize to system's timezone
+                            return result.astimezone(timezone.utc).replace(
+                                tzinfo=current_timezone
+                            )
+                    return result
+
+                return decorated_func
+
             self._spark_session.udf.register(
                 fn_registration_name,
-                transformation_fn.transformation_fn,
-                transformation_function_engine.TransformationFunctionEngine.convert_legacy_type(
-                    transformation_fn.output_type
-                ),
+                timezone_decorator(transformation_fn.transformation_fn),
+                transformation_fn.output_type,
             )
             transformation_fn_expressions.append(
                 "{fn_name:}({name:}) AS {name:}".format(
