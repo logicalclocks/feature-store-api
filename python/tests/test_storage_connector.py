@@ -533,7 +533,7 @@ class TestBigQueryConnector:
 
         json = backend_fixtures["storage_connector"]["get_big_query"]["response"]
         if isinstance(tmp_path, WindowsPath):
-            json["key_path"] = "file:///" + str(credentialsFile.resolve())
+            json["key_path"] = "file:///" + str(credentialsFile.resolve()).replace("\\", "/")
         else:
             json["key_path"] = "file://" + str(credentialsFile.resolve())
 
