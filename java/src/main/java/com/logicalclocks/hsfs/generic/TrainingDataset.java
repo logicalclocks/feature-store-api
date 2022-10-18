@@ -165,7 +165,6 @@ public abstract class TrainingDataset {
       this.extraFilter = extraFilterLogic;
     }
   }
-   */
 
   private void setTimeSeriesSplits(Integer timeSplitSize, String trainStart, String trainEnd, String valStart,
       String valEnd, String testStart, String testEnd) throws FeatureStoreException, ParseException {
