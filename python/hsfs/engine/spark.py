@@ -949,6 +949,9 @@ class Engine:
         PROPERTY_GCS_FS_KEY = "fs.AbstractFileSystem.gs.impl"
         PROPERTY_GCS_FS_VALUE = "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS"
         PROPERTY_GCS_ACCOUNT_ENABLE = "google.cloud.auth.service.account.enable"
+        PROPERTY_ACCT_EMAIL = "fs.gs.auth.service.account.email"
+        PROPERTY_ACCT_KEY_ID = "fs.gs.auth.service.account.private.key.id"
+        PROPERTY_ACCT_KEY = "fs.gs.auth.service.account.private.key"
         # The AbstractFileSystem for 'gs:' URIs
         self._spark_context._jsc.hadoopConfiguration().setIfUnset(
             PROPERTY_GCS_FS_KEY, PROPERTY_GCS_FS_VALUE
@@ -965,6 +968,18 @@ class Engine:
         self._spark_context._jsc.hadoopConfiguration().set(
             PROPERTY_KEY_FILE, local_path
         )
+
+        with open(local_path, "r") as fin:
+            jsondata = json.load(fin)
+            self._spark_context._jsc.hadoopConfiguration().set(
+                PROPERTY_ACCT_EMAIL, jsondata["client_email"]
+            )
+            self._spark_context._jsc.hadoopConfiguration().set(
+                PROPERTY_ACCT_KEY_ID, jsondata["private_key_id"]
+            )
+            self._spark_context._jsc.hadoopConfiguration().set(
+                PROPERTY_ACCT_KEY, jsondata["private_key"]
+            )
 
         if storage_connector.algorithm:
             # if encryption fields present
