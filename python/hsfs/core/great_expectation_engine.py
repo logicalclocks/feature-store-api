@@ -16,7 +16,7 @@
 
 from hsfs import engine, validation_report
 from hsfs import expectation_suite as es
-from typing import Dict, Any, Union
+from typing import Dict, Any, Optional, Union
 import great_expectations as ge
 
 
@@ -42,9 +42,42 @@ class GreatExpectationEngine:
         validation_options: Dict[str, Any] = {},
         ge_type: bool = True,
     ) -> Union[
-        ge.core.ExpectationSuiteValidationResult, validation_report.ValidationReport
+        ge.core.ExpectationSuiteValidationResult,
+        validation_report.ValidationReport,
+        None,
     ]:
+        suite = self.fetch_or_convert_expectation_suite(
+            feature_group, expectation_suite
+        )
 
+        if self.should_run_validation(
+            expectation_suite=suite, validation_options=validation_options
+        ):
+            report = engine.get_instance().validate_with_great_expectations(
+                dataframe=dataframe,
+                expectation_suite=suite.to_ge_type(),
+                ge_validate_kwargs=validation_options.get("ge_validate_kwargs", {}),
+            )
+        else:
+            # if run_validation is False we skip validation
+            return
+
+        return self.save_or_convert_report(
+            feature_group=feature_group,
+            report=report,
+            save_report=save_report,
+            validation_options=validation_options,
+            ge_type=ge_type,
+        )
+
+    def fetch_or_convert_expectation_suite(
+        self,
+        feature_group,
+        expectation_suite: Union[
+            ge.core.ExpectationSuite, es.ExpectationSuite, None
+        ] = None,
+    ) -> Optional[es.ExpectationSuite]:
+        """Convert provided expectation suite or fetch the one attached to the Feature Group from backend."""
         if expectation_suite:
             if isinstance(expectation_suite, es.ExpectationSuite):
                 suite = expectation_suite
@@ -53,25 +86,39 @@ class GreatExpectationEngine:
         else:
             suite = feature_group.get_expectation_suite(False)
 
-        if suite is not None:
-            run_validation = validation_options.get(
-                "run_validation", suite.run_validation
-            )
-            if run_validation:
-                report = engine.get_instance().validate_with_great_expectations(
-                    dataframe=dataframe,
-                    expectation_suite=suite.to_ge_type(),
-                    ge_validate_kwargs=validation_options.get("ge_validate_kwargs", {}),
-                )
+        return suite
 
-                save_report = validation_options.get("save_report", save_report)
-                if save_report:
-                    return feature_group.save_validation_report(report, ge_type=ge_type)
+    def should_run_validation(
+        self,
+        expectation_suite: Optional[es.ExpectationSuite],
+        validation_options: Dict[str, Any],
+    ) -> bool:
+        # Suite is None if not provided and nothing attached to FG.
+        # In that case we skip validation
+        if expectation_suite is None:
+            return False
 
-                if ge_type:
-                    return validation_report.ValidationReport(
-                        **report.to_json_dict()
-                    ).to_ge_type()
-                else:
-                    return validation_report.ValidationReport(**report.to_json_dict())
-        return
+        # If "run_validation" is provided it overrides the value of run_validation of the suite
+        return validation_options.get(
+            "run_validation", expectation_suite.run_validation
+        )
+
+    def save_or_convert_report(
+        self,
+        feature_group,
+        report: ge.core.ExpectationSuiteValidationResult,
+        save_report: bool,
+        ge_type: bool,
+        validation_options: Dict[str, Any],
+    ) -> Union[
+        ge.core.ExpectationSuiteValidationResult, validation_report.ValidationReport
+    ]:
+
+        save_report = validation_options.get("save_report", save_report)
+        if save_report:
+            return feature_group.save_validation_report(report, ge_type=ge_type)
+
+        if ge_type:
+            return report
+        else:
+            return validation_report.ValidationReport(**report.to_json_dict())
