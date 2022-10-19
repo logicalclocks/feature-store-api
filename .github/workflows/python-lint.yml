@@ -27,7 +27,7 @@ jobs:
       - name: end-of-file-fixer
         run: end-of-file-fixer $(find python -name "*.py" -type f) || exit 1
 
-  unit_tests_ubuntu-utc:
+  unit_tests_ubuntu_utc:
     name: Unit Testing (Ubuntu)
     needs: lint_stylecheck
     runs-on: ubuntu-latest
@@ -54,8 +54,8 @@ jobs:
       - name: Run Pytest suite
         run: pytest python/tests
         
-  unit_tests_ubuntu-local:
-    name: Unit Testing (Ubuntu) TZ: Europe/Amsterdam
+  unit_tests_ubuntu_local:
+    name: Unit Testing (Ubuntu, Local TZ)
     needs: lint_stylecheck
     runs-on: ubuntu-latest
 
@@ -78,7 +78,7 @@ jobs:
       - name: Run Pytest suite
         run: pytest python/tests
         
-  unit_tests_windows-utc:
+  unit_tests_windows_utc:
     name: Unit Testing (Windows)
     needs: lint_stylecheck
     runs-on: windows-latest
@@ -103,8 +103,8 @@ jobs:
         run: pytest python/tests
 
 
-  unit_tests_windows-local:
-    name: Unit Testing (Windows) TZ: "W. Europe Standard Time"
+  unit_tests_windows_local:
+    name: Unit Testing (Windows, Local TZ)
     needs: lint_stylecheck
     runs-on: windows-latest
 
