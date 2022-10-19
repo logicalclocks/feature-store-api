@@ -19,7 +19,31 @@ from hsfs.engine import python
 
 
 class TestPythonSparkConvertDataframe:
-    def test_convert_to_default_dataframe_w_timezone(
+    def test_convert_to_default_dataframe_w_timezone_notz(
+        self, mocker, dataframe_fixture_times
+    ):
+        mocker.patch("hsfs.client.get_instance")
+        python_engine = python.Engine()
+
+        default_df_python = python_engine.convert_to_default_dataframe(
+            dataframe_fixture_times
+        )
+
+        spark_engine = spark.Engine()
+
+        default_df_spark_from_pd = spark_engine.convert_to_default_dataframe(
+            dataframe_fixture_times
+        )
+
+        tz = spark_engine._spark_session.conf.get("spark.sql.session.timeZone")
+        print(tz)
+
+        assert (
+            default_df_spark_from_pd.head()[2]
+            == default_df_python["event_datetime_notz"][0].to_pydatetime()
+        )
+
+    def test_convert_to_default_dataframe_w_timezone_utc(
         self, mocker, dataframe_fixture_times
     ):
         mocker.patch("hsfs.client.get_instance")
@@ -36,21 +60,68 @@ class TestPythonSparkConvertDataframe:
         )
 
         assert (
-            default_df_spark_from_pd.head()[2]
-            == default_df_python["event_datetime_notz"][0].to_pydatetime()
-        )
-        assert (
             default_df_spark_from_pd.head()[3]
             == default_df_python["event_datetime_utc"][0].to_pydatetime()
         )
+
+    def test_convert_to_default_dataframe_w_timezone_utc_3(
+        self, mocker, dataframe_fixture_times
+    ):
+        mocker.patch("hsfs.client.get_instance")
+        python_engine = python.Engine()
+
+        default_df_python = python_engine.convert_to_default_dataframe(
+            dataframe_fixture_times
+        )
+
+        spark_engine = spark.Engine()
+
+        default_df_spark_from_pd = spark_engine.convert_to_default_dataframe(
+            dataframe_fixture_times
+        )
+
         assert (
             default_df_spark_from_pd.head()[4]
             == default_df_python["event_datetime_utc_3"][0].to_pydatetime()
         )
+
+    def test_convert_to_default_dataframe_w_timezone_timestamp(
+        self, mocker, dataframe_fixture_times
+    ):
+        mocker.patch("hsfs.client.get_instance")
+        python_engine = python.Engine()
+
+        default_df_python = python_engine.convert_to_default_dataframe(
+            dataframe_fixture_times
+        )
+
+        spark_engine = spark.Engine()
+
+        default_df_spark_from_pd = spark_engine.convert_to_default_dataframe(
+            dataframe_fixture_times
+        )
+
         assert (
             default_df_spark_from_pd.head()[5]
             == default_df_python["event_timestamp"][0].to_pydatetime()
         )
+
+    def test_convert_to_default_dataframe_w_timezone_timestamp_pacific(
+        self, mocker, dataframe_fixture_times
+    ):
+        mocker.patch("hsfs.client.get_instance")
+        python_engine = python.Engine()
+
+        default_df_python = python_engine.convert_to_default_dataframe(
+            dataframe_fixture_times
+        )
+
+        spark_engine = spark.Engine()
+
+        default_df_spark_from_pd = spark_engine.convert_to_default_dataframe(
+            dataframe_fixture_times
+        )
+
         assert (
             default_df_spark_from_pd.head()[6]
             == default_df_python["event_timestamp_pacific"][0].to_pydatetime()
