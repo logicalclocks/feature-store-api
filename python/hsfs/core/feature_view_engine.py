@@ -18,6 +18,7 @@ import datetime
 import warnings
 from hsfs import engine, training_dataset_feature, client, util
 from hsfs.client import exceptions
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.core import (
     tags_api,
@@ -68,23 +69,49 @@ class FeatureViewEngine:
                 " feature view does not support time travel query."
             )
         if feature_view_obj.labels:
-            prefixed_feature_map = {}
+            # If provided label matches column with prefix, then attach label.
+            # If provided label matches only one column without prefix, then attach label. (For
+            # backward compatibility purpose, as of v3.0, labels are matched to columns without prefix.)
+            # If provided label matches multiple columns without prefix, then raise exception because it is ambiguous.
+            prefix_feature_map = {}
+            feature_map = {}
             for feat in feature_view_obj.query.features:
-                prefixed_feature_map[feat.name] = (
+                prefix_feature_map[feat.name] = (
                     feat.name, feature_view_obj.query._left_feature_group
                 )
             for join in feature_view_obj.query.joins:
                 for feat in join.query.features:
-                    prefixed_feature_map[join.prefix + feat.name] = (
+                    prefix_feature_map[join.prefix + feat.name] = (
                         feat.name, join.query._left_feature_group
                     )
-            feature_view_obj._features += [
-                training_dataset_feature.TrainingDatasetFeature(
-                    name=prefixed_feature_map[label_name][0], label=True,
-                    featuregroup=prefixed_feature_map[label_name][1]
-                )
-                for label_name in feature_view_obj.labels
-            ]
+                    feature_map[feat.name] = feature_map.get(feat.name, []) + [
+                        join.query._left_feature_group
+                    ]
+
+            for label_name in feature_view_obj.labels:
+                if label_name in prefix_feature_map:
+                    feature_view_obj._features.append(
+                        training_dataset_feature.TrainingDatasetFeature(
+                            name=prefix_feature_map[label_name][0], label=True,
+                            featuregroup=prefix_feature_map[label_name][1]
+                        )
+                    )
+                elif label_name in feature_map:
+                    if len(feature_map[label_name]) > 1:
+                        raise FeatureStoreException(
+                            f"Provided label '{label_name}' is ambiguous and exists in more than one feature groups. "
+                            "You can provide the label with the prefix you specify in the join."
+                        )
+                    feature_view_obj._features.append(
+                        training_dataset_feature.TrainingDatasetFeature(
+                            name=label_name, label=True,
+                            featuregroup=feature_map[label_name][0]
+                        )
+                    )
+                else:
+                    raise FeatureStoreException(
+                        f"Provided label '{label_name}' do not exist in any of the feature groups."
+                    )
         self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
         updated_fv = self._feature_view_api.post(feature_view_obj)
         print(
