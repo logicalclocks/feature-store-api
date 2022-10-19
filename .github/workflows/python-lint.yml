@@ -28,14 +28,17 @@ jobs:
         run: end-of-file-fixer $(find python -name "*.py" -type f) || exit 1
 
   unit_tests:
-    name: Unit Testing
+    name: Unit Testing (Ubuntu)
     needs: lint_stylecheck
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9"]
 
-    steps:
+    steps:      
+      - name: Set Timezone
+        run: sudo timedatectl set-timezone Europe/Amsterdam
+
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         name: Setup Python
@@ -50,3 +53,31 @@ jobs:
 
       - name: Run Pytest suite
         run: pytest python/tests
+        
+  unit_tests:
+    name: Unit Testing (Windows)
+    needs: lint_stylecheck
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.7", "3.8", "3.9"]
+
+    steps:
+      - name: Set Timezone
+        run: tzutil /s "W. Europe Standard Time"
+        
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        name: Setup Python
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          cache-dependency-path: "python/setup.py"
+      - run: pip install -e python[python,dev,docs]
+
+      - name: Display Python version
+        run: python --version
+
+      - name: Run Pytest suite
+        run: pytest python/tests
+
