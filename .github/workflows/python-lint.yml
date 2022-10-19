@@ -27,7 +27,7 @@ jobs:
       - name: end-of-file-fixer
         run: end-of-file-fixer $(find python -name "*.py" -type f) || exit 1
 
-  unit_tests_ubuntu:
+  unit_tests_ubuntu-utc:
     name: Unit Testing (Ubuntu)
     needs: lint_stylecheck
     runs-on: ubuntu-latest
@@ -37,7 +37,7 @@ jobs:
 
     steps:      
       - name: Set Timezone
-        run: sudo timedatectl set-timezone Europe/Amsterdam
+        run: sudo timedatectl set-timezone UTC
 
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -54,13 +54,59 @@ jobs:
       - name: Run Pytest suite
         run: pytest python/tests
         
-  unit_tests_windows:
+  unit_tests_ubuntu-local:
+    name: Unit Testing (Ubuntu) TZ: Europe/Amsterdam
+    needs: lint_stylecheck
+    runs-on: ubuntu-latest
+
+    steps:      
+      - name: Set Timezone
+        run: sudo timedatectl set-timezone Europe/Amsterdam
+
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        name: Setup Python
+        with:
+          python-version: "3.9"
+          cache: "pip"
+          cache-dependency-path: "python/setup.py"
+      - run: pip install -e python[python,dev,docs]
+
+      - name: Display Python version
+        run: python --version
+
+      - name: Run Pytest suite
+        run: pytest python/tests
+        
+  unit_tests_windows-utc:
     name: Unit Testing (Windows)
     needs: lint_stylecheck
     runs-on: windows-latest
-    strategy:
-      matrix:
-        python-version: ["3.7", "3.8", "3.9"]
+
+    steps:
+      - name: Set Timezone
+        run: tzutil /s "UTC"
+        
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        name: Setup Python
+        with:
+          python-version: "3.9"
+          cache: "pip"
+          cache-dependency-path: "python/setup.py"
+      - run: pip install -e python[python,dev,docs]
+
+      - name: Display Python version
+        run: python --version
+
+      - name: Run Pytest suite
+        run: pytest python/tests
+
+
+  unit_tests_windows-local:
+    name: Unit Testing (Windows) TZ: "W. Europe Standard Time"
+    needs: lint_stylecheck
+    runs-on: windows-latest
 
     steps:
       - name: Set Timezone
@@ -70,7 +116,7 @@ jobs:
       - uses: actions/setup-python@v4
         name: Setup Python
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.9"
           cache: "pip"
           cache-dependency-path: "python/setup.py"
       - run: pip install -e python[python,dev,docs]
@@ -80,4 +126,3 @@ jobs:
 
       - name: Run Pytest suite
         run: pytest python/tests
-
