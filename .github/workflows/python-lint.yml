@@ -55,7 +55,7 @@ jobs:
         run: pytest python/tests
         
   unit_tests_ubuntu_local:
-    name: Unit Testing (Ubuntu, Local TZ)
+    name: Unit Testing (Ubuntu) (Local TZ)
     needs: lint_stylecheck
     runs-on: ubuntu-latest
 
@@ -104,7 +104,7 @@ jobs:
 
 
   unit_tests_windows_local:
-    name: Unit Testing (Windows, Local TZ)
+    name: Unit Testing (Windows) (Local TZ)
     needs: lint_stylecheck
     runs-on: windows-latest
 
