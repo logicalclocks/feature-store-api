@@ -21,7 +21,6 @@ import com.logicalclocks.hsfs.generic.FeatureGroupCommit;
 import com.logicalclocks.hsfs.generic.FeatureStore;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.spark.ExternalFeatureGroup;
-import com.logicalclocks.hsfs.generic.StatisticsConfig;
 import com.logicalclocks.hsfs.generic.StreamFeatureGroup;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -288,40 +287,5 @@ public class FeatureGroupApi {
     LOGGER.info("Sending metadata request: " + uri);
     FeatureGroupCommit featureGroupCommit = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit.class);
     return featureGroupCommit.getItems();
-  }
-
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(FeatureStore featureStore, String name, Integer version,
-                                                          String description, List<String> primaryKeys,
-                                                          List<String> partitionKeys, String hudiPrecombineKey,
-                                                          boolean onlineEnabled,
-                                                          StatisticsConfig statisticsConfig,
-                                                          String eventTime) throws IOException, FeatureStoreException {
-
-
-    StreamFeatureGroup featureGroup;
-    try {
-      featureGroup =  getStreamFeatureGroup(featureStore, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270009")) {
-        featureGroup =  StreamFeatureGroup.builder()
-            .featureStore(featureStore)
-            .name(name)
-            .version(version)
-            .description(description)
-            .primaryKeys(primaryKeys)
-            .partitionKeys(partitionKeys)
-            .hudiPrecombineKey(hudiPrecombineKey)
-            .onlineEnabled(onlineEnabled)
-            .statisticsConfig(statisticsConfig)
-            .eventTime(eventTime)
-            .build();
-
-        featureGroup.setFeatureStore(featureStore);
-      } else {
-        throw e;
-      }
-    }
-
-    return featureGroup;
   }
 }

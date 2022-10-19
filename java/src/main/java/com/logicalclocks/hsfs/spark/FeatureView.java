@@ -28,11 +28,9 @@ import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.spark.engine.FeatureViewEngine;
 import com.logicalclocks.hsfs.generic.engine.VectorServer;
 import com.logicalclocks.hsfs.generic.DataFormat;
-import com.logicalclocks.hsfs.generic.FeatureStore;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.Split;
 import com.logicalclocks.hsfs.generic.StatisticsConfig;
-import com.logicalclocks.hsfs.generic.StorageConnector;
 import com.logicalclocks.hsfs.generic.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.generic.TrainingDatasetType;
 import lombok.Getter;
@@ -307,14 +305,13 @@ public class FeatureView extends com.logicalclocks.hsfs.generic.FeatureView {
   }
 
   @Override
-  public Integer createTrainingData(
-      String startTime, String endTime, String description, DataFormat dataFormat,
-      Boolean coalesce, StorageConnector storageConnector, String location,
-      Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions,
-      FilterLogic extraFilterLogic, Filter extraFilter
-  ) throws IOException, FeatureStoreException, ParseException {
+  public Integer createTrainingData(String startTime, String endTime, String description, DataFormat dataFormat,
+                                    Boolean coalesce, com.logicalclocks.hsfs.generic.StorageConnector storageConnector,
+                                    String location, Long seed, StatisticsConfig statisticsConfig,
+                                    Map<String, String> writeOptions, FilterLogic extraFilterLogic, Filter extraFilter)
+      throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
-        (TrainingDataset) this.featureStore
+        this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .eventStartTime(startTime)
@@ -322,7 +319,7 @@ public class FeatureView extends com.logicalclocks.hsfs.generic.FeatureView {
             .description(description)
             .dataFormat(dataFormat)
             .coalesce(coalesce)
-            .storageConnector(storageConnector)
+            .storageConnector((StorageConnector) storageConnector) //TODO (davit)
             .location(location)
             .seed(seed)
             .statisticsConfig(statisticsConfig)
@@ -358,7 +355,8 @@ public class FeatureView extends com.logicalclocks.hsfs.generic.FeatureView {
   @Override
   public Integer createTrainTestSplit(
       Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
-      String description, DataFormat dataFormat, Boolean coalesce, StorageConnector storageConnector, String location,
+      String description, DataFormat dataFormat, Boolean coalesce,
+      com.logicalclocks.hsfs.generic.StorageConnector storageConnector, String location,
       Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions,
       FilterLogic extraFilterLogic, Filter extraFilter
   ) throws IOException, FeatureStoreException, ParseException {
@@ -375,7 +373,7 @@ public class FeatureView extends com.logicalclocks.hsfs.generic.FeatureView {
             .description(description)
             .dataFormat(dataFormat)
             .coalesce(coalesce)
-            .storageConnector(storageConnector)
+            .storageConnector((StorageConnector) storageConnector) //TODO (davit)
             .location(location)
             .trainSplit(Split.TRAIN)
             .seed(seed)
@@ -417,7 +415,7 @@ public class FeatureView extends com.logicalclocks.hsfs.generic.FeatureView {
   public Integer createTrainValidationTestSplit(
       Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
       String validationEnd, String testStart, String testEnd, String description, DataFormat dataFormat,
-      Boolean coalesce, StorageConnector storageConnector, String location,
+      Boolean coalesce, com.logicalclocks.hsfs.generic.StorageConnector storageConnector, String location,
       Long seed, StatisticsConfig statisticsConfig, Map<String, String> writeOptions,
       FilterLogic extraFilterLogic, Filter extraFilter
   ) throws IOException, FeatureStoreException, ParseException {
@@ -437,7 +435,7 @@ public class FeatureView extends com.logicalclocks.hsfs.generic.FeatureView {
             .description(description)
             .dataFormat(dataFormat)
             .coalesce(coalesce)
-            .storageConnector(storageConnector)
+            .storageConnector((StorageConnector) storageConnector) //TODO (davit)
             .location(location)
             .trainSplit(Split.TRAIN)
             .timeSplitSize(3)

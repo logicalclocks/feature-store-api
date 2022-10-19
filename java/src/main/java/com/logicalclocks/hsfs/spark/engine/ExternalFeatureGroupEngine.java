@@ -20,7 +20,6 @@ package com.logicalclocks.hsfs.spark.engine;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.spark.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupBaseEngine;
-import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupApi;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -28,8 +27,6 @@ import org.apache.spark.sql.Row;
 import java.io.IOException;
 
 public class ExternalFeatureGroupEngine extends FeatureGroupBaseEngine {
-
-  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
 
@@ -39,7 +36,7 @@ public class ExternalFeatureGroupEngine extends FeatureGroupBaseEngine {
     if (externalFeatureGroup.getFeatures() == null) {
       onDemandDataset = SparkEngine.getInstance()
           .registerOnDemandTemporaryTable(externalFeatureGroup, "read_ondmd");
-      externalFeatureGroup.setFeatures(utils.parseFeatureGroupSchema(onDemandDataset,
+      externalFeatureGroup.setFeatures(SparkEngine.getInstance().parseFeatureGroupSchema(onDemandDataset,
           externalFeatureGroup.getTimeTravelFormat()));
     }
 

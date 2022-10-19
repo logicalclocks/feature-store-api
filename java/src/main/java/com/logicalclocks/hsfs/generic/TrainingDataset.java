@@ -129,45 +129,9 @@ public abstract class TrainingDataset {
 
   private VectorServer vectorServer = new VectorServer();
 
-  /* TODO (davit): this is
-  @Builder
-  public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
-      Boolean coalesce, StorageConnector storageConnector, String location, List<Split> splits, String trainSplit,
-      Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label,
-      String eventStartTime, String eventEndTime, TrainingDatasetType trainingDatasetType,
-      Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
-      String validationEnd, String testStart, String testEnd, Integer timeSplitSize, FilterLogic extraFilterLogic,
-      Filter extraFilter)
-      throws FeatureStoreException, ParseException {
-    this.name = name;
-    this.version = version;
-    this.description = description;
-    this.dataFormat = dataFormat != null ? dataFormat : DataFormat.CSV;
-    this.coalesce = coalesce != null ? coalesce : false;
-    this.location = location;
-    this.storageConnector = storageConnector;
-    this.trainSplit = trainSplit;
-    this.splits = splits == null ? Lists.newArrayList() : splits;
-    this.seed = seed;
-    this.featureStore = featureStore;
-    this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
-    this.label = label != null ? label.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
-    this.eventStartTime = eventStartTime != null ? FeatureGroupUtils.getDateFromDateString(eventStartTime) : null;
-    this.eventEndTime = eventEndTime != null ? FeatureGroupUtils.getDateFromDateString(eventEndTime) : null;
-    this.trainingDatasetType = trainingDatasetType != null ? trainingDatasetType :
-        getTrainingDatasetType(storageConnector);
-    setValTestSplit(validationSize, testSize);
-    setTimeSeriesSplits(timeSplitSize, trainStart, trainEnd, validationStart, validationEnd, testStart, testEnd);
-    if (extraFilter != null) {
-      this.extraFilter = new FilterLogic(extraFilter);
-    }
-    if (extraFilterLogic != null) {
-      this.extraFilter = extraFilterLogic;
-    }
-  }
-
-  private void setTimeSeriesSplits(Integer timeSplitSize, String trainStart, String trainEnd, String valStart,
-      String valEnd, String testStart, String testEnd) throws FeatureStoreException, ParseException {
+  public void setTimeSeriesSplits(Integer timeSplitSize, String trainStart, String trainEnd, String valStart,
+                                  String valEnd, String testStart, String testEnd) throws FeatureStoreException,
+      ParseException {
     List<Split> splits = Lists.newArrayList();
     appendTimeSeriesSplit(splits, Split.TRAIN,
         trainStart, trainEnd != null ? trainEnd : valStart != null ? valStart : testStart);
@@ -194,7 +158,7 @@ public abstract class TrainingDataset {
     }
   }
 
-  private void setValTestSplit(Float valSize, Float testSize) {
+  public void setValTestSplit(Float valSize, Float testSize) {
     if (valSize != null && testSize != null) {
       this.splits = Lists.newArrayList();
       this.splits.add(new Split(Split.TRAIN, 1 - valSize - testSize));
@@ -489,7 +453,7 @@ public abstract class TrainingDataset {
     return vectorServer.getServingKeys();
   }
 
-  private TrainingDatasetType getTrainingDatasetType(StorageConnector storageConnector) {
+  public TrainingDatasetType getTrainingDatasetType(StorageConnector storageConnector) {
     if (storageConnector == null) {
       return TrainingDatasetType.HOPSFS_TRAINING_DATASET;
     } else if (storageConnector.getStorageConnectorType() == StorageConnectorType.HOPSFS) {

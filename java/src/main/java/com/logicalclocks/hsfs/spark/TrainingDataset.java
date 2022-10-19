@@ -20,6 +20,7 @@ package com.logicalclocks.hsfs.spark;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.generic.DataFormat;
 import com.logicalclocks.hsfs.generic.EntityEndpointType;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
@@ -28,21 +29,27 @@ import com.logicalclocks.hsfs.generic.StatisticsConfig;
 import com.logicalclocks.hsfs.generic.Storage;
 import com.logicalclocks.hsfs.generic.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.generic.TrainingDatasetType;
+import com.logicalclocks.hsfs.generic.constructor.Filter;
 import com.logicalclocks.hsfs.generic.constructor.FilterLogic;
+import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.generic.engine.CodeEngine;
 import com.logicalclocks.hsfs.generic.metadata.Statistics;
 import com.logicalclocks.hsfs.spark.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.spark.engine.TrainingDatasetEngine;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TrainingDataset extends com.logicalclocks.hsfs.generic.TrainingDataset {
 
@@ -134,6 +141,45 @@ public class TrainingDataset extends com.logicalclocks.hsfs.generic.TrainingData
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
   private CodeEngine codeEngine = new CodeEngine(EntityEndpointType.TRAINING_DATASET);
+
+  @Builder
+  public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
+                         Boolean coalesce, StorageConnector storageConnector, String location, List<Split> splits,
+                         String trainSplit,
+                         Long seed, FeatureStore featureStore, StatisticsConfig statisticsConfig, List<String> label,
+                         String eventStartTime, String eventEndTime, TrainingDatasetType trainingDatasetType,
+                         Float validationSize, Float testSize, String trainStart, String trainEnd,
+                         String validationStart,
+                         String validationEnd, String testStart, String testEnd, Integer timeSplitSize,
+                         FilterLogic extraFilterLogic,
+                         Filter extraFilter)
+      throws FeatureStoreException, ParseException {
+    this.name = name;
+    this.version = version;
+    this.description = description;
+    this.dataFormat = dataFormat != null ? dataFormat : DataFormat.CSV;
+    this.coalesce = coalesce != null ? coalesce : false;
+    this.location = location;
+    this.storageConnector = storageConnector;
+    this.trainSplit = trainSplit;
+    this.splits = splits == null ? Lists.newArrayList() : splits;
+    this.seed = seed;
+    this.featureStore = featureStore;
+    this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
+    this.label = label != null ? label.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
+    this.eventStartTime = eventStartTime != null ? FeatureGroupUtils.getDateFromDateString(eventStartTime) : null;
+    this.eventEndTime = eventEndTime != null ? FeatureGroupUtils.getDateFromDateString(eventEndTime) : null;
+    this.trainingDatasetType = trainingDatasetType != null ? trainingDatasetType :
+        getTrainingDatasetType(storageConnector);
+    setValTestSplit(validationSize, testSize);
+    setTimeSeriesSplits(timeSplitSize, trainStart, trainEnd, validationStart, validationEnd, testStart, testEnd);
+    if (extraFilter != null) {
+      this.extraFilter = new FilterLogic(extraFilter);
+    }
+    if (extraFilterLogic != null) {
+      this.extraFilter = extraFilterLogic;
+    }
+  }
 
   /**
    * Create the training dataset based on the content of the feature store query.

@@ -20,19 +20,14 @@ import com.logicalclocks.hsfs.generic.DeltaStreamerJobConf;
 import com.logicalclocks.hsfs.generic.Feature;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.JobConfiguration;
-import com.logicalclocks.hsfs.generic.SaveMode;
 import com.logicalclocks.hsfs.generic.StreamFeatureGroup;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.generic.metadata.Option;
-
-import lombok.SneakyThrows;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,94 +35,58 @@ import java.util.stream.Collectors;
 public class StreamFeatureGroupEngine {
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StreamFeatureGroupEngine.class);
 
-  /**
-   * Create the metadata and write the data to the online/offline feature store.
-   *
-   * @param featureGroup
-   * @param dataset
-   * @param partitionKeys
-   * @param writeOptions
-   * @param sparkJobConfiguration
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public <S> StreamFeatureGroup save(StreamFeatureGroup featureGroup, S dataset, List<String> partitionKeys,
-                                     String hudiPrecombineKey, Map<String, String> writeOptions,
-                                     JobConfiguration sparkJobConfiguration)
-          throws FeatureStoreException, IOException, ParseException {
+  /*
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(FeatureStore featureStore, String name, Integer version,
+                                                          String description, List<String> primaryKeys,
+                                                          List<String> partitionKeys, String hudiPrecombineKey,
+                                                          boolean onlineEnabled,
+                                                          StatisticsConfig statisticsConfig,
+                                                          String eventTime) throws IOException, FeatureStoreException {
 
-    StreamFeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
-        writeOptions, sparkJobConfiguration, dataset);
 
-    insert(updatedFeatureGroup, utils.sanitizeFeatureNames(dataset),
-        SaveMode.APPEND,  partitionKeys, hudiPrecombineKey, writeOptions, sparkJobConfiguration);
+    StreamFeatureGroup featureGroup;
+    try {
+      featureGroup =  featureGroupApi.getStreamFeatureGroup(featureStore, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270009")) {
+        featureGroup =  StreamFeatureGroup.builder()
+            .featureStore(featureStore)
+            .name(name)
+            .version(version)
+            .description(description)
+            .primaryKeys(primaryKeys)
+            .partitionKeys(partitionKeys)
+            .hudiPrecombineKey(hudiPrecombineKey)
+            .onlineEnabled(onlineEnabled)
+            .statisticsConfig(statisticsConfig)
+            .eventTime(eventTime)
+            .build();
+
+        featureGroup.setFeatureStore(featureStore);
+      } else {
+        throw e;
+      }
+    }
 
     return featureGroup;
   }
+  */
 
-  // TODO (davit): this will be implemented in spark engine to return FeatureGroup class
-  @SneakyThrows
-  public <S> Object insertStream(StreamFeatureGroup streamFeatureGroup, S featureData, String queryName,
-                                 String outputMode, boolean awaitTermination, Long timeout,  String checkpointLocation,
-                                 List<String> partitionKeys, String hudiPrecombineKey, Map<String, String>
-                                       writeOptions, JobConfiguration jobConfiguration) {
-
-    if (writeOptions == null) {
-      writeOptions = new HashMap<>();
-    }
-
-    if (streamFeatureGroup.getId() == null) {
-      streamFeatureGroup = saveFeatureGroupMetaData(streamFeatureGroup, partitionKeys, hudiPrecombineKey, writeOptions,
-          jobConfiguration, featureData);
-    }
-
-    /*
-    return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
-      utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout, checkpointLocation,
-      utils.getKafkaConfig(streamFeatureGroup, writeOptions));
-     */
-    return null;
-  }
-
-  // TODO (davit): this will be implemented in spark engine to return FeatureGroup class
-  public <S> void insert(StreamFeatureGroup streamFeatureGroup, S featureData,
-                         SaveMode saveMode, List<String> partitionKeys, String hudiPrecombineKey,
-                         Map<String, String> writeOptions, JobConfiguration jobConfiguration)
-      throws FeatureStoreException, IOException, ParseException {
-
-    if (streamFeatureGroup.getId() == null) {
-      streamFeatureGroup = saveFeatureGroupMetaData(streamFeatureGroup, partitionKeys, hudiPrecombineKey, writeOptions,
-          jobConfiguration, featureData);
-    }
-
-    if (saveMode == SaveMode.OVERWRITE) {
-      // If we set overwrite, then the directory will be removed and with it all the metadata
-      // related to the feature group will be lost. We need to keep them.
-      // So we call Hopsworks to manage to truncate the table and re-create the metadata
-      // After that it's going to be just a normal append
-      featureGroupApi.deleteContent(streamFeatureGroup);
-    }
-
-    /*
-    SparkEngine.getInstance().writeOnlineDataframe(streamFeatureGroup, featureData,
-        streamFeatureGroup.getOnlineTopicName(), utils.getKafkaConfig(streamFeatureGroup, writeOptions));
-     */
-  }
-
-  public <S> StreamFeatureGroup saveFeatureGroupMetaData(StreamFeatureGroup featureGroup, List<String> partitionKeys,
+  public StreamFeatureGroup saveFeatureGroupMetaData(StreamFeatureGroup featureGroup, List<String> partitionKeys,
                                                      String hudiPrecombineKey, Map<String, String> writeOptions,
-                                                     JobConfiguration sparkJobConfiguration, S featureData)
-      throws FeatureStoreException, IOException, ParseException {
+                                                     JobConfiguration sparkJobConfiguration)
+      throws FeatureStoreException, IOException {
 
+    /* TODO (davit): this must be implemented in engine as parseFeatureGroupSchema is different in frameworks
     if (featureGroup.getFeatures() == null) {
       featureGroup.setFeatures(utils
           .parseFeatureGroupSchema(utils.sanitizeFeatureNames(featureData),
             featureGroup.getTimeTravelFormat()));
     }
+     */
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 

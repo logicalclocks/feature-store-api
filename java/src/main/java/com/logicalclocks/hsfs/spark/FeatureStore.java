@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs.spark;
 
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.StatisticsConfig;
+import com.logicalclocks.hsfs.generic.StreamFeatureGroup;
 import com.logicalclocks.hsfs.generic.TimeTravelFormat;
 import com.logicalclocks.hsfs.generic.engine.FeatureViewEngine;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupApi;
@@ -57,6 +58,37 @@ public class FeatureStore extends com.logicalclocks.hsfs.generic.FeatureStore {
     trainingDatasetApi = new TrainingDatasetApi();
     storageConnectorApi = new StorageConnectorApi();
     featureViewEngine = new FeatureViewEngine();
+  }
+
+  @Override
+  public Object createStreamFeatureGroup() {
+    return null;
+  }
+
+  @Override
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version) {
+    return null;
+  }
+
+  @Override
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
+                                                          boolean onlineEnabled, String eventTime) {
+    return null;
+  }
+
+  @Override
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
+                                                          List<String> partitionKeys, boolean onlineEnabled,
+                                                          String eventTime) {
+    return null;
+  }
+
+  @Override
+  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, String description,
+                                                          List<String> primaryKeys, List<String> partitionKeys,
+                                                          String hudiPrecombineKey, boolean onlineEnabled,
+                                                          StatisticsConfig statisticsConfig, String eventTime) {
+    return null;
   }
 
   /**
@@ -196,7 +228,6 @@ public class FeatureStore extends com.logicalclocks.hsfs.generic.FeatureStore {
     return (StorageConnector.GcsConnector) storageConnectorApi.getByName(this, name);
   }
 
-  @Override
   public TrainingDataset.TrainingDatasetBuilder createTrainingDataset() {
     return TrainingDataset.builder()
         .featureStore(this);

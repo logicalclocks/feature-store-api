@@ -92,43 +92,23 @@ public abstract class FeatureStore {
     return getStreamFeatureGroup(name, DEFAULT_VERSION);
   }
 
-  public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
-    return StreamFeatureGroup.builder()
-        .featureStore(this);
-  }
+  public abstract Object createStreamFeatureGroup();
 
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version)
-      throws IOException, FeatureStoreException {
-    return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, null,
-        null, null, null, false, null, null);
-  }
+  public abstract StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version);
 
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
-                                                          boolean onlineEnabled, String eventTime)
-      throws IOException, FeatureStoreException {
-    return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, null,
-        primaryKeys, null, null, onlineEnabled, null, eventTime);
-  }
+  public abstract StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version,
+                                                                   List<String> primaryKeys, boolean onlineEnabled,
+                                                                   String eventTime);
 
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
-                                                          List<String> partitionKeys, boolean onlineEnabled,
-                                                          String eventTime) throws IOException, FeatureStoreException {
+  public abstract StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version,
+                                                                   List<String> primaryKeys, List<String> partitionKeys,
+                                                                   boolean onlineEnabled, String eventTime);
 
-
-    return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, null,
-        primaryKeys, partitionKeys, null, onlineEnabled, null, eventTime);
-  }
-
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, String description,
+  public abstract StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, String description,
                                                           List<String> primaryKeys, List<String> partitionKeys,
                                                           String hudiPrecombineKey, boolean onlineEnabled,
                                                           StatisticsConfig statisticsConfig,
-                                                          String eventTime)
-      throws IOException, FeatureStoreException {
-
-    return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, description,
-        primaryKeys, partitionKeys, hudiPrecombineKey, onlineEnabled, statisticsConfig, eventTime);
-  }
+                                                          String eventTime);
 
   public ExternalFeatureGroup.ExternalFeatureGroupBuilder createExternalFeatureGroup() {
     return ExternalFeatureGroup.builder()
@@ -262,8 +242,6 @@ public abstract class FeatureStore {
   public abstract Object getOnlineStorageConnector() throws FeatureStoreException, IOException;
 
   public abstract Object getGcsConnector(String name) throws FeatureStoreException, IOException;
-
-  public abstract TrainingDataset.TrainingDatasetBuilder createTrainingDataset();
 
   /**
    * Get a training dataset object from the selected feature store.
