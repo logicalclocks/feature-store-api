@@ -15,12 +15,10 @@
 #
 
 from hsfs import util
-from datetime import datetime
 
 
 class TestUtil:
     def test_get_hudi_datestr_from_timestamp(self):
         dt = util.get_hudi_datestr_from_timestamp(1640995200000)
-        dt_test = datetime(2022, 1, 1, 0, 0, 0)
 
         assert dt == "20220101000000000"
