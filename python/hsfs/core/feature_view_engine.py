@@ -68,9 +68,20 @@ class FeatureViewEngine:
                 " feature view does not support time travel query."
             )
         if feature_view_obj.labels:
+            prefixed_feature_map = {}
+            for feat in feature_view_obj.query.features:
+                prefixed_feature_map[feat.name] = (
+                    feat.name, feature_view_obj.query._left_feature_group
+                )
+            for join in feature_view_obj.query.joins:
+                for feat in join.query.features:
+                    prefixed_feature_map[join.prefix + feat.name] = (
+                        feat.name, join.query._left_feature_group
+                    )
             feature_view_obj._features += [
                 training_dataset_feature.TrainingDatasetFeature(
-                    name=label_name, label=True
+                    name=prefixed_feature_map[label_name][0], label=True,
+                    featuregroup=prefixed_feature_map[label_name][1]
                 )
                 for label_name in feature_view_obj.labels
             ]
