@@ -27,7 +27,7 @@ jobs:
       - name: end-of-file-fixer
         run: end-of-file-fixer $(find python -name "*.py" -type f) || exit 1
 
-  unit_tests:
+  unit_tests_ubuntu:
     name: Unit Testing (Ubuntu)
     needs: lint_stylecheck
     runs-on: ubuntu-latest
@@ -54,7 +54,7 @@ jobs:
       - name: Run Pytest suite
         run: pytest python/tests
         
-  unit_tests:
+  unit_tests_windows:
     name: Unit Testing (Windows)
     needs: lint_stylecheck
     runs-on: ubuntu-latest
