@@ -162,7 +162,11 @@ class Query:
         )
         return self
 
-    def as_of(self, wallclock_time: Optional[Union[str, int, datetime, date]] = None, exclude_until: Optional[Union[str, int, datetime, date]] = None):
+    def as_of(
+        self,
+        wallclock_time: Optional[Union[str, int, datetime, date]] = None,
+        exclude_until: Optional[Union[str, int, datetime, date]] = None,
+    ):
         """Perform time travel on the given Query.
 
         This method returns a new Query object at the specified point in time. Optionally, commits before a

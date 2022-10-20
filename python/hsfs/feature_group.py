@@ -580,7 +580,9 @@ class FeatureGroupBase:
     def primary_key(self, new_primary_key):
         self._primary_key = [pk.lower() for pk in new_primary_key]
 
-    def get_statistics(self, commit_time: Optional[Union[str, int, datetime, date]] = None):
+    def get_statistics(
+        self, commit_time: Optional[Union[str, int, datetime, date]] = None
+    ):
         """Returns the statistics for this feature group at a specific time.
 
         If `commit_time` is `None`, the most recent statistics are returned.
@@ -1194,7 +1196,9 @@ class FeatureGroup(FeatureGroupBase):
             )
 
     def commit_details(
-        self, wallclock_time: Optional[Union[str, int, datetime, date]] = None, limit: Optional[int] = None
+        self,
+        wallclock_time: Optional[Union[str, int, datetime, date]] = None,
+        limit: Optional[int] = None,
     ):
         """Retrieves commit timeline for this feature group. This method can only be used
         on time travel enabled feature groups
@@ -1232,7 +1236,11 @@ class FeatureGroup(FeatureGroupBase):
         """
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
-    def as_of(self, wallclock_time: Optional[Union[str, int, datetime, date]] = None, exclude_until: Optional[Union[str, int, datetime, date]] = None):
+    def as_of(
+        self,
+        wallclock_time: Optional[Union[str, int, datetime, date]] = None,
+        exclude_until: Optional[Union[str, int, datetime, date]] = None,
+    ):
         """Get Query object to retrieve all features of the group at a point in the past.
 
         This method selects all features in the feature group and returns a Query object

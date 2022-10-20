@@ -243,7 +243,12 @@ class FeatureView:
             self.init_serving(external=external)
         return self._batch_vectors_server.get_feature_vectors(entry, passed_features)
 
-    def get_batch_data(self, start_time: Optional[Union[str, int, datetime, date]] = None, end_time: Optional[Union[str, int, datetime, date]] = None, read_options=None):
+    def get_batch_data(
+        self,
+        start_time: Optional[Union[str, int, datetime, date]] = None,
+        end_time: Optional[Union[str, int, datetime, date]] = None,
+        read_options=None,
+    ):
         """Get a batch of data from an event time interval.
 
         # Arguments
