@@ -873,9 +873,9 @@ class FeatureGroup(FeatureGroupBase):
             ```
 
         # Arguments
-            start_wallclock_time: Exclude commits before this point in time. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
+            start_wallclock_time: Start time of the time travel query. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
-            end_wallclock_time: Include commits up to this point in time. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
+            end_wallclock_time: End time of the time travel query. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
             read_options: User provided read options. Defaults to `{}`.
 
@@ -1309,9 +1309,9 @@ class FeatureGroup(FeatureGroupBase):
             when calling the `insert()` method.
 
         # Arguments
-            wallclock_time: Include only commits before and at this point in time. Strings should be formatted in one of the
+            wallclock_time: Read data as of this point in time. Strings should be formatted in one of the
                 following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, or `%Y-%m-%d %H:%M:%S`.
-            exclude_until: Exclude commits before and at this point in time. String should be formatted in one of the
+            exclude_until: Exclude commits until this point in time. String should be formatted in one of the
                 following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, or `%Y-%m-%d %H:%M:%S`.
 
         # Returns

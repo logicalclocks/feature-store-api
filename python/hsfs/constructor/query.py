@@ -234,9 +234,9 @@ class Query:
             when calling the `insert()` method.
 
         # Arguments
-            wallclock_time: Include only commits before and at this point in time.
+            wallclock_time: Read data as of this point in time.
                 Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, or `%Y-%m-%d %H:%M:%S`.
-            exclude_until: Exclude commits before and at this point in time. Strings should be formatted in one of the
+            exclude_until: Exclude commits until this point in time. Strings should be formatted in one of the
                 following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, or `%Y-%m-%d %H:%M:%S`.
 
         # Returns
