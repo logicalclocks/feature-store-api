@@ -230,9 +230,9 @@ class Query:
 
         # Arguments
             wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
-                following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`, or `%y-%m-%d %H:%M:%S`.
+                following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, or `%Y-%m-%d %H:%M:%S`.
             exclude_until: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
-                following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`, or `%y-%m-%d %H:%M:%S`.
+                following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, or `%Y-%m-%d %H:%M:%S`.
 
         # Returns
             `Query`. The query object with the applied time travel condition.
