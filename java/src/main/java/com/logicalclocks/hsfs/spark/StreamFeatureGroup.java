@@ -30,6 +30,7 @@ import com.logicalclocks.hsfs.generic.engine.CodeEngine;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 
+import com.logicalclocks.hsfs.generic.metadata.Statistics;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 
 import com.logicalclocks.hsfs.spark.engine.FeatureGroupEngine;
@@ -48,6 +49,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -95,6 +98,10 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   @Setter
   private DeltaStreamerJobConf deltaStreamerJobConf;
+
+  @Getter(onMethod = @__(@Override))
+  @Setter
+  private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
 
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
@@ -244,30 +251,30 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   public void insert(Dataset<Row> featureData) throws FeatureStoreException, IOException, ParseException {
-    insert(featureData, false, SaveMode.APPEND, null, null);
+    insert(featureData, SaveMode.APPEND, null, null);
   }
 
   public void insert(Dataset<Row> featureData, Map<String, String> writeOptions) throws FeatureStoreException,
       IOException, ParseException {
-    insert(featureData, false, SaveMode.APPEND, writeOptions, null);
+    insert(featureData, SaveMode.APPEND, writeOptions, null);
   }
 
   public void insert(Dataset<Row>  featureData, JobConfiguration jobConfiguration) throws FeatureStoreException,
       IOException, ParseException {
-    insert(featureData, false, SaveMode.APPEND, null, jobConfiguration);
+    insert(featureData, SaveMode.APPEND, null, jobConfiguration);
   }
 
-  public void insert(Dataset<Row> featureData, boolean overwrite, SaveMode saveMode,
+  public void insert(Dataset<Row> featureData, SaveMode saveMode,
                          Map<String, String> writeOptions) throws FeatureStoreException, IOException, ParseException {
-    insert(featureData, overwrite, saveMode, writeOptions, null);
+    insert(featureData, saveMode, writeOptions, null);
   }
 
-  public void insert(Dataset<Row>  featureData, boolean overwrite, SaveMode saveMode,
+  public void insert(Dataset<Row>  featureData, SaveMode saveMode,
                          JobConfiguration jobConfiguration) throws FeatureStoreException, IOException, ParseException {
-    insert(featureData, overwrite, saveMode, null, jobConfiguration);
+    insert(featureData, saveMode, null, jobConfiguration);
   }
 
-  public void insert(Dataset<Row>  featureData, boolean overwrite, SaveMode saveMode,
+  public void insert(Dataset<Row>  featureData, SaveMode saveMode,
                          Map<String, String> writeOptions, JobConfiguration jobConfiguration)
       throws FeatureStoreException, IOException, ParseException {
 
@@ -327,12 +334,12 @@ public class StreamFeatureGroup extends FeatureGroupBase {
         jobConfiguration);
   }
 
-  public <S> void commitDeleteRecord(Dataset<Row>  featureData)
+  public void commitDeleteRecord(Dataset<Row>  featureData)
       throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.commitDelete(this, featureData, null);
   }
 
-  public <S> void commitDeleteRecord(Dataset<Row>  featureData, Map<String, String> writeOptions)
+  public void commitDeleteRecord(Dataset<Row>  featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.commitDelete(this, featureData, writeOptions);
   }
@@ -416,57 +423,87 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   @Override
-  public TimeTravelFormat getTimeTravelFormat() {
-    return null;
-  }
-
-  @Override
   public Query selectFeatures(List<Feature> features) {
-    return null;
+    return new Query(this, features);
   }
 
   @Override
   public Query selectAll() {
-    return null;
+    return new Query(this, getFeatures());
   }
 
   @Override
   public Query selectExceptFeatures(List<Feature> features) {
-    return null;
+    List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
+    return selectExcept(exceptFeatures);
   }
 
   @Override
   public Query selectExcept(List<String> features) {
-    return null;
+    return new Query(this,
+        getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));
   }
 
+  /**
+   * Update the metadata of multiple features.
+   * Currently only feature description updates are supported.
+   *
+   * @param features
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
   @Override
   public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
-
+    featureGroupEngine.appendFeatures(this, features, this.getClass());
   }
 
   @Override
   public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
-
+    featureGroupEngine.appendFeatures(this, Collections.singletonList(feature), this.getClass());
   }
 
   @Override
   public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
-
+    featureGroupEngine.appendFeatures(this, new ArrayList<>(features), this.getClass());
   }
 
   @Override
   public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
-
+    List<Feature> featureList = new ArrayList<>();
+    featureList.add(features);
+    featureGroupEngine.appendFeatures(this, featureList, this.getClass());
   }
 
   @Override
-  public <T> T computeStatistics() throws FeatureStoreException, IOException {
+  public Statistics computeStatistics() throws FeatureStoreException, IOException {
+    if (statisticsConfig.getEnabled()) {
+      return statisticsEngine.computeStatistics(this, read(), null);
+    } else {
+      LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
+          + version + "`. No statistics computed.");
+    }
     return null;
   }
 
-  @Override
-  public String getOnlineTopicName() throws FeatureStoreException, IOException {
+  /**
+   * Recompute the statistics for the feature group and save them to the feature store.
+   *
+   * @param wallclockTime number of commits to return.
+   * @return statistics object of computed statistics
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
+    if (statisticsConfig.getEnabled()) {
+      Map<Long, Map<String, String>> latestCommitMetaData =
+          featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, 1);
+      Dataset<Row> featureData = selectAll().asOf(wallclockTime).read(false, null);
+      Long commitId = (Long) latestCommitMetaData.keySet().toArray()[0];
+      return statisticsEngine.computeStatistics(this, featureData, commitId);
+    } else {
+      LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
+          + version + "`. No statistics computed.");
+    }
     return null;
   }
 }

@@ -490,14 +490,6 @@ public class FeatureGroup extends FeatureGroupBase {
     return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);
   }
 
-  @JsonIgnore
-  public String getAvroSchema() throws FeatureStoreException, IOException {
-    if (avroSchema == null) {
-      avroSchema = utils.getAvroSchema(this);
-    }
-    return avroSchema;
-  }
-
   @Override
   public Query selectFeatures(List<Feature> features) {
     return new Query(this, features);
@@ -522,30 +514,24 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @Override
   public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.appendFeatures(this, features);
+    featureGroupEngine.appendFeatures(this, features, this.getClass());
   }
 
   @Override
   public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.appendFeatures(this, Collections.singletonList(feature));
+    featureGroupEngine.appendFeatures(this, Collections.singletonList(feature), this.getClass());
   }
 
   @Override
   public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.appendFeatures(this, new ArrayList<>(features));
+    featureGroupEngine.appendFeatures(this, new ArrayList<>(features), this.getClass());
   }
 
   @Override
   public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
     List<Feature> featureList = new ArrayList<>();
     featureList.add(features);
-    featureGroupEngine.appendFeatures(this, featureList);
-  }
-
-  @Override
-  public void setDeltaStreamerJobConf(DeltaStreamerJobConf deltaStreamerJobConf)
-      throws FeatureStoreException, IOException {
-
+    featureGroupEngine.appendFeatures(this, featureList, this.getClass());
   }
 
   @Override
@@ -587,6 +573,14 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   @JsonIgnore
+  public String getAvroSchema() throws FeatureStoreException, IOException {
+    if (avroSchema == null) {
+      avroSchema = utils.getAvroSchema(this);
+    }
+    return avroSchema;
+  }
+
+  @JsonIgnore
   public String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException {
     return utils.getFeatureAvroSchema(featureName, utils.getDeserializedAvroSchema(getAvroSchema()));
   }
@@ -599,5 +593,11 @@ public class FeatureGroup extends FeatureGroupBase {
   @JsonIgnore
   public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
     return utils.getDeserializedAvroSchema(getAvroSchema());
+  }
+
+  @Override
+  public void setDeltaStreamerJobConf(DeltaStreamerJobConf deltaStreamerJobConf)
+      throws FeatureStoreException, IOException {
+
   }
 }

@@ -86,6 +86,32 @@ public class FeatureGroupEngine {
     return featureGroup;
   }
 
+  /**
+   * Create the metadata and write the data to the online/offline feature store.
+   *
+   * @param featureGroup
+   * @param dataset
+   * @param partitionKeys
+   * @param writeOptions
+   * @param sparkJobConfiguration
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public StreamFeatureGroup save(StreamFeatureGroup featureGroup, Dataset<Row> dataset, List<String> partitionKeys,
+                                 String hudiPrecombineKey, Map<String, String> writeOptions,
+                                 JobConfiguration sparkJobConfiguration)
+      throws FeatureStoreException, IOException, ParseException {
+
+    StreamFeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
+        writeOptions, sparkJobConfiguration, dataset);
+
+    insert(updatedFeatureGroup, SparkEngine.getInstance().sanitizeFeatureNames(dataset),
+        com.logicalclocks.hsfs.generic.SaveMode.APPEND,  partitionKeys, hudiPrecombineKey, writeOptions,
+        sparkJobConfiguration);
+
+    return featureGroup;
+  }
+
   public void insert(FeatureGroup featureGroup, Dataset<Row> featureData, Storage storage,
                      HudiOperationType operation, SaveMode saveMode, List<String> partitionKeys,
                      String hudiPrecombineKey, Map<String, String> writeOptions)
@@ -109,31 +135,28 @@ public class FeatureGroupEngine {
         writeOptions, SparkEngine.getInstance().getKafkaConfig(featureGroup, writeOptions), validationId);
   }
 
-  /**
-   * Create the metadata and write the data to the online/offline feature store.
-   *
-   * @param featureGroup
-   * @param dataset
-   * @param partitionKeys
-   * @param writeOptions
-   * @param sparkJobConfiguration
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public StreamFeatureGroup save(StreamFeatureGroup featureGroup, Dataset<Row> dataset, List<String> partitionKeys,
-                                 String hudiPrecombineKey, Map<String, String> writeOptions,
-                                 JobConfiguration sparkJobConfiguration)
+  public void insert(StreamFeatureGroup streamFeatureGroup, Dataset<Row> featureData,
+                     com.logicalclocks.hsfs.generic.SaveMode saveMode, List<String> partitionKeys,
+                     String hudiPrecombineKey, Map<String, String> writeOptions, JobConfiguration jobConfiguration)
       throws FeatureStoreException, IOException, ParseException {
 
-    StreamFeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
-        writeOptions, sparkJobConfiguration, dataset);
+    if (streamFeatureGroup.getId() == null) {
+      streamFeatureGroup = saveFeatureGroupMetaData(streamFeatureGroup, partitionKeys, hudiPrecombineKey, writeOptions,
+          jobConfiguration, featureData);
+    }
 
-    insert(updatedFeatureGroup, SparkEngine.getInstance().sanitizeFeatureNames(dataset),
-        com.logicalclocks.hsfs.generic.SaveMode.APPEND,  partitionKeys, hudiPrecombineKey, writeOptions, sparkJobConfiguration);
+    if (saveMode == com.logicalclocks.hsfs.generic.SaveMode.OVERWRITE) {
+      // If we set overwrite, then the directory will be removed and with it all the metadata
+      // related to the feature group will be lost. We need to keep them.
+      // So we call Hopsworks to manage to truncate the table and re-create the metadata
+      // After that it's going to be just a normal append
+      featureGroupApi.deleteContent(streamFeatureGroup);
+    }
 
-    return featureGroup;
+    SparkEngine.getInstance().writeOnlineDataframe(streamFeatureGroup, featureData,
+        streamFeatureGroup.getOnlineTopicName(),
+        SparkEngine.getInstance().getKafkaConfig(streamFeatureGroup, writeOptions));
   }
-
 
   @Deprecated
   public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
@@ -177,29 +200,6 @@ public class FeatureGroupEngine {
     return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
         SparkEngine.getInstance().sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
         checkpointLocation, SparkEngine.getInstance().getKafkaConfig(streamFeatureGroup, writeOptions));
-  }
-
-  public void insert(StreamFeatureGroup streamFeatureGroup, Dataset<Row> featureData,
-                     com.logicalclocks.hsfs.generic.SaveMode saveMode, List<String> partitionKeys, String hudiPrecombineKey,
-                     Map<String, String> writeOptions, JobConfiguration jobConfiguration)
-      throws FeatureStoreException, IOException, ParseException {
-
-    if (streamFeatureGroup.getId() == null) {
-      streamFeatureGroup = saveFeatureGroupMetaData(streamFeatureGroup, partitionKeys, hudiPrecombineKey, writeOptions,
-          jobConfiguration, featureData);
-    }
-
-    if (saveMode == com.logicalclocks.hsfs.generic.SaveMode.OVERWRITE) {
-      // If we set overwrite, then the directory will be removed and with it all the metadata
-      // related to the feature group will be lost. We need to keep them.
-      // So we call Hopsworks to manage to truncate the table and re-create the metadata
-      // After that it's going to be just a normal append
-      featureGroupApi.deleteContent(streamFeatureGroup);
-    }
-
-    SparkEngine.getInstance().writeOnlineDataframe(streamFeatureGroup, featureData,
-        streamFeatureGroup.getOnlineTopicName(),
-        SparkEngine.getInstance().getKafkaConfig(streamFeatureGroup, writeOptions));
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
@@ -314,15 +314,19 @@ public class FeatureGroupEngine {
     return featureGroup;
   }
 
-  public void appendFeatures(FeatureGroup featureGroup, List<Feature> features)
+  public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroupBase, List<Feature> features,
+                                                          Class<T> fgClass)
       throws FeatureStoreException, IOException, ParseException {
-    featureGroup.getFeatures().addAll(features);
-    FeatureGroup apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata",
-        FeatureGroup.class);
-    featureGroup.setFeatures(apiFG.getFeatures());
-    SparkEngine.getInstance().writeOfflineDataframe((FeatureGroup) featureGroup,
-        SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features),
-        HudiOperationType.UPSERT, new HashMap<>(), null);
+    featureGroupBase.getFeatures().addAll(features);
+    T apiFG = featureGroupApi.updateMetadata(featureGroupBase, "updateMetadata",
+        fgClass);
+    featureGroupBase.setFeatures(apiFG.getFeatures());
+    if (featureGroupBase instanceof FeatureGroup) {
+      FeatureGroup featureGroup = (FeatureGroup) featureGroupBase;
+      SparkEngine.getInstance().writeOfflineDataframe(featureGroup,
+          SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features),
+          HudiOperationType.UPSERT, new HashMap<>(), null);
+    }
   }
 
   public Map<Long, Map<String, String>> commitDetails(FeatureGroupBase featureGroupBase, Integer limit)
