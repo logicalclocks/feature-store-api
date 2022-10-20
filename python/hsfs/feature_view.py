@@ -246,7 +246,8 @@ class FeatureView:
         return self._batch_vectors_server.get_feature_vectors(entry, passed_features)
 
     def get_batch_data(self, start_time=None, end_time=None, read_options=None):
-        """
+        """Get a batch of data from an event time interval.
+
         # Arguments
             start_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be
                 formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
@@ -669,8 +670,8 @@ class FeatureView:
         Recreate a training dataset.
 
         !!! info
-        If a materialised training data has deleted. Use `recreate_training_dataset()` to
-        recreate the training data.
+            If a materialised training data has deleted. Use `recreate_training_dataset()` to
+            recreate the training data.
 
         # Arguments
             version: training dataset version
@@ -704,8 +705,8 @@ class FeatureView:
         Get training data from feature groups.
 
         !!! info
-        If a materialised training data has deleted. Use `recreate_training_dataset()` to
-        recreate the training data.
+            If a materialised training data has deleted. Use `recreate_training_dataset()` to
+            recreate the training data.
 
         # Arguments
             start_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
@@ -777,8 +778,8 @@ class FeatureView:
         Get training data from feature groups.
 
         !!! info
-        If a materialised training data has deleted. Use `recreate_training_dataset()` to
-        recreate the training data.
+            If a materialised training data has deleted. Use `recreate_training_dataset()` to
+            recreate the training data.
 
         # Arguments
             test_size: size of test set. Should be between 0 and 1.
@@ -878,8 +879,8 @@ class FeatureView:
         Get training data from feature groups.
 
         !!! info
-        If a materialised training data has deleted. Use `recreate_training_dataset()` to
-        recreate the training data.
+            If a materialised training data has deleted. Use `recreate_training_dataset()` to
+            recreate the training data.
 
         # Arguments
             validation_size: size of validation set. Should be between 0 and 1.
@@ -1036,8 +1037,8 @@ class FeatureView:
         Get training data from storage or feature groups.
 
         !!! info
-        If a materialised training data has deleted. Use `recreate_training_dataset()` to
-        recreate the training data.
+            If a materialised training data has deleted. Use `recreate_training_dataset()` to
+            recreate the training data.
 
         # Arguments
             version: training dataset version
@@ -1070,8 +1071,8 @@ class FeatureView:
         Get training data from storage or feature groups.
 
         !!! info
-        If a materialised training data has deleted. Use `recreate_training_dataset()` to
-        recreate the training data.
+            If a materialised training data has deleted. Use `recreate_training_dataset()` to
+            recreate the training data.
 
         # Arguments
             version: training dataset version

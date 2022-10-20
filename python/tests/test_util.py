@@ -14,18 +14,11 @@
 #   limitations under the License.
 #
 
-import os
-import sys
+from hsfs import util
 
-pytest_plugins = [
-    "tests.fixtures.backend_fixtures",
-    "tests.fixtures.dataframe_fixtures",
-]
 
-os.environ["PYSPARK_PYTHON"] = sys.executable
-os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
+class TestUtil:
+    def test_get_hudi_datestr_from_timestamp(self):
+        dt = util.get_hudi_datestr_from_timestamp(1640995200000)
 
-# set hadoop home if on windows
-if os.name == "nt":
-    current_path = os.path.dirname(os.path.realpath(__file__))
-    os.environ["HADOOP_HOME"] = current_path + "/data/hadoop/"
+        assert dt == "20220101000000000"
