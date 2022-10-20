@@ -142,7 +142,7 @@ class Links:
                 if bool(link_json["node"]["accessible"]):
                     links.accessible.append(
                         feature_view.FeatureView.from_response_json(
-                            link_json["artifact"]
+                            link_json["node"]["artifact"]
                         )
                     )
                 elif bool(link_json["node"]["deleted"]):
