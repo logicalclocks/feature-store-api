@@ -17,6 +17,7 @@
 import json
 import humps
 from typing import Optional, List, Union
+from datetime import datetime, date
 
 from hsfs import util, engine, feature_group
 from hsfs.core import query_constructor_api, storage_connector_api
@@ -86,6 +87,14 @@ class Query:
         It is possible to specify the storage (online/offline) to read from and the
         type of the output DataFrame (Spark, Pandas, Numpy, Python Lists).
 
+        !!! warning "External Feature Group Engine Support"
+            **Spark only**
+
+            Reading a Query containing an External Feature Group directly into a
+            Pandas Dataframe using Python/Pandas as Engine is not supported,
+            however, you can use the Query API to create Feature Views/Training
+            Data containing External Feature Groups.
+
         # Arguments
             online: Read from online storage. Defaults to `False`.
             dataframe_type: DataFrame type to return. Defaults to `"default"`.
@@ -153,7 +162,11 @@ class Query:
         )
         return self
 
-    def as_of(self, wallclock_time=None, exclude_until=None):
+    def as_of(
+        self,
+        wallclock_time: Optional[Union[str, int, datetime, date]] = None,
+        exclude_until: Optional[Union[str, int, datetime, date]] = None,
+    ):
         """Perform time travel on the given Query.
 
         This method returns a new Query object at the specified point in time. Optionally, commits before a
@@ -221,10 +234,10 @@ class Query:
             when calling the `insert()` method.
 
         # Arguments
-            wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
-                following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`, or `%y-%m-%d %H:%M:%S`.
-            exclude_until: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
-                following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`, or `%y-%m-%d %H:%M:%S`.
+            wallclock_time: Include only commits before and at this point in time.
+                Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, or `%Y-%m-%d %H:%M:%S`.
+            exclude_until: Exclude commits before and at this point in time. Strings should be formatted in one of the
+                following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, or `%Y-%m-%d %H:%M:%S`.
 
         # Returns
             `Query`. The query object with the applied time travel condition.
@@ -233,9 +246,9 @@ class Query:
 
         exclude_until_timestamp = util.convert_event_time_to_timestamp(exclude_until)
 
-        for join in self._joins:
-            join.query.left_feature_group_end_time = wallclock_timestamp
-            join.query.left_feature_group_start_time = exclude_until_timestamp
+        for _join in self._joins:
+            _join.query.left_feature_group_end_time = wallclock_timestamp
+            _join.query.left_feature_group_start_time = exclude_until_timestamp
         self.left_feature_group_end_time = wallclock_timestamp
         self.left_feature_group_start_time = exclude_until_timestamp
         return self
@@ -398,3 +411,10 @@ class Query:
 
     def append_feature(self, feature):
         self._left_features.append(feature)
+
+    def is_time_travel(self):
+        return (
+            self.left_feature_group_start_time
+            or self.left_feature_group_end_time
+            or any([_join.query.is_time_travel() for _join in self._joins])
+        )

@@ -1,0 +1,62 @@
+name: java
+
+on: pull_request
+
+jobs:
+  unit_tests_utc:
+    name: Java Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set Timezone
+        run: sudo timedatectl set-timezone UTC
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('java/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Test
+        working-directory: ./java
+        run: mvn --batch-mode test
+    
+  unit_tests_local:
+    name: Java Unit Tests (Local TZ)
+    runs-on: ubuntu-latest
+
+    steps:      
+      - name: Set Timezone
+        run: sudo timedatectl set-timezone Europe/Amsterdam
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('java/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Test
+        working-directory: ./java
+        run: mvn --batch-mode test

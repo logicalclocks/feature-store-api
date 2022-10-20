@@ -50,6 +50,7 @@ setup(
             "mkdocs-jupyter==0.21.0",
             "markdown==3.3.7",
             "pymdown-extensions",
+            "mkdocs-macros-plugin==0.7.0",
         ],
         "hive": [
             "pyhopshive[thrift]",

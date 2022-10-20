@@ -134,14 +134,22 @@ def check_timestamp_format_from_date_string(input_date):
 
 def get_timestamp_from_date_string(input_date):
     norm_input_date, date_format = check_timestamp_format_from_date_string(input_date)
-    date_time = datetime.strptime(norm_input_date, date_format)
+    try:
+        date_time = datetime.strptime(norm_input_date, date_format)
+    except ValueError:
+        raise ValueError(
+            "Unable to parse the normalized input date value : "
+            + norm_input_date
+            + " with format "
+            + date_format
+        )
     if date_time.tzinfo is None:
         date_time = date_time.replace(tzinfo=timezone.utc)
     return int(float(date_time.timestamp()) * 1000)
 
 
 def get_hudi_datestr_from_timestamp(timestamp):
-    return datetime.fromtimestamp(timestamp / 1000).strftime("%Y%m%d%H%M%S%f")[:-3]
+    return datetime.utcfromtimestamp(timestamp / 1000).strftime("%Y%m%d%H%M%S%f")[:-3]
 
 
 def convert_event_time_to_timestamp(event_time):

@@ -17,8 +17,8 @@ package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logicalclocks.hsfs.EntityEndpointType;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Map;
@@ -29,7 +29,7 @@ public class TestTagsApi {
     TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
     ObjectMapper objectMapper = new ObjectMapper();
     Object obj = tagsApi.parseTagValue(objectMapper, 4.2d);
-    Assert.assertTrue(obj instanceof Double);
+    Assertions.assertTrue(obj instanceof Double);
   }
 
   @Test
@@ -44,7 +44,7 @@ public class TestTagsApi {
     TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
     ObjectMapper objectMapper = new ObjectMapper();
     Object obj = tagsApi.parseTagValue(objectMapper, 4);
-    Assert.assertTrue(obj instanceof Integer);
+    Assertions.assertTrue(obj instanceof Integer);
   }
 
   @Test
@@ -52,7 +52,7 @@ public class TestTagsApi {
     TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
     ObjectMapper objectMapper = new ObjectMapper();
     Object obj = tagsApi.parseTagValue(objectMapper, "test");
-    Assert.assertTrue(obj instanceof String);
+    Assertions.assertTrue(obj instanceof String);
   }
 
   @Test
@@ -60,7 +60,7 @@ public class TestTagsApi {
     TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
     ObjectMapper objectMapper = new ObjectMapper();
     Object obj = tagsApi.parseTagValue(objectMapper, "{\"key\":\"value\"}");
-    Assert.assertTrue(obj instanceof Map);
+    Assertions.assertTrue(obj instanceof Map);
   }
 
   @Test
@@ -68,7 +68,7 @@ public class TestTagsApi {
     TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
     ObjectMapper objectMapper = new ObjectMapper();
     Object obj = tagsApi.parseTagValue(objectMapper, "[{\"key\":\"value1\"}, {\"key\":\"value2\"}]");
-    Assert.assertTrue(obj.getClass().isArray());
+    Assertions.assertTrue(obj.getClass().isArray());
   }
 
   @Test
@@ -76,9 +76,9 @@ public class TestTagsApi {
     TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
     ObjectMapper objectMapper = new ObjectMapper();
     Object obj = tagsApi.parseTagValue(objectMapper, "{\"key1\":\"value\", \"key2\":4.2, \"key3\":4}");
-    Assert.assertTrue(obj instanceof Map);
-    Assert.assertTrue(((Map) obj).get("key1") instanceof String);
-    Assert.assertTrue(((Map) obj).get("key2") instanceof Double);
-    Assert.assertTrue(((Map) obj).get("key3") instanceof Integer);
+    Assertions.assertTrue(obj instanceof Map);
+    Assertions.assertTrue(((Map) obj).get("key1") instanceof String);
+    Assertions.assertTrue(((Map) obj).get("key2") instanceof Double);
+    Assertions.assertTrue(((Map) obj).get("key3") instanceof Integer);
   }
 }

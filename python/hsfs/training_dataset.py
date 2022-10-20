@@ -262,6 +262,9 @@ class TrainingDataset:
         lists or Numpy ndarrays.
         From v2.5 onward, filters are saved along with the `Query`.
 
+        !!! warning "Engine Support"
+            Creating Training Datasets from Dataframes is only supported using Spark as Engine.
+
         # Arguments
             features: Feature data to be materialized.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
@@ -711,9 +714,11 @@ class TrainingDataset:
         If `commit_time` is `None`, the most recent statistics are returned.
 
         # Arguments
-            commit_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
-                be formatted in one of the following formats `%y-%m-%d`, `%y-%m-%d %H`, `%y-%m-%d %H:%M`, `%y-%m-%d %H:%M:%S`,
-                or `%y-%m-%d %H:%M:%S.%f`. Defaults to `None`.
+            commit_time: If specified will recompute statistics on
+                feature group as of specific point in time. If not specified then will compute statistics
+                as of most recent time of this feature group. Defaults to `None`. Strings should
+                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
 
         # Returns
             `Statistics`. Object with statistics information.

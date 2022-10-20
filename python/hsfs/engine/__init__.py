@@ -55,6 +55,14 @@ def get_instance():
     raise Exception("Couldn't find execution engine. Try reconnecting to Hopsworks.")
 
 
+# Used for testing
+def set_instance(engine_type, engine):
+    global _engine_type
+    global _engine
+    _engine_type = engine_type
+    _engine = engine
+
+
 def get_type():
     global _engine_type
     if _engine_type:
