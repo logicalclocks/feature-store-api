@@ -1,0 +1,174 @@
+#
+#   Copyright 2022 Logical Clocks AB
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+
+
+from enum import Enum
+from typing import Set
+from hsfs import feature_group, feature_view
+
+
+class Artifact:
+    class MetaType(Enum):
+        DELETED = 1
+        INACCESSIBLE = 2
+
+    def __init__(
+        self,
+        feature_store_name,
+        name,
+        version,
+        type,
+        meta_type,
+        href=None,
+    ):
+        self._feature_store_name = feature_store_name
+        self._name = name
+        self._version = version
+        self._type = type
+        self._meta_type = meta_type
+        self._href = href
+
+    @staticmethod
+    def from_response_json(link_json: dict):
+        if bool(link_json["deleted"]):
+            return Artifact(
+                link_json["artifact"]["project"],
+                link_json["artifact"]["name"],
+                link_json["artifact"]["version"],
+                link_json["artifactType"],
+                Artifact.MetaType.DELETED,
+            )
+        elif not bool(link_json["accessible"]):
+            return Artifact(
+                link_json["artifact"]["project"],
+                link_json["artifact"]["name"],
+                link_json["artifact"]["version"],
+                link_json["artifactType"],
+                Artifact.MetaType.INACCESSIBLE,
+                link_json["artifact"]["href"],
+            )
+
+
+class Links:
+    def __init__(self):
+        self._accessible = []
+        self._deleted = []
+        self._inaccessible = []
+
+    @property
+    def deleted(self):
+        return self._deleted
+
+    @property
+    def inaccessible(self):
+        return self._inaccessible
+
+    @property
+    def accessible(self):
+        return self._accessible
+
+    class Direction(Enum):
+        UPSTREAM = 1
+        DOWNSTREAM = 2
+
+    class Type(Enum):
+        FEATURE_GROUP = 1
+        FEATURE_VIEW = 2
+
+    @staticmethod
+    def __feature_group(link_json: dict):
+        if (
+            link_json["type"] == "cachedFeaturegroupDTO"
+            or link_json["type"] == "streamFeatureGroupDTO"
+        ):
+            return feature_group.FeatureGroup.from_response_json(link_json)
+        elif link_json["type"] == "onDemandFeaturegroupDTO":
+            return feature_group.ExternalFeatureGroup.from_response_json(link_json)
+
+    @staticmethod
+    def __parse_feature_groups(links_json: dict, artifacts: Set[str]):
+        links = Links()
+        for link_json in links_json:
+            if link_json["artifact_type"] in artifacts:
+                if bool(link_json["node"]["accessible"]):
+                    links.accessible.append(
+                        Links.__feature_group(link_json["node"]["artifact"])
+                    )
+                elif bool(link_json["node"]["deleted"]):
+                    links.deleted.append(Artifact.from_response_json(link_json["node"]))
+                else:
+                    links.inaccessible.append(
+                        Artifact.from_response_json(link_json["node"])
+                    )
+
+    @staticmethod
+    def __parse_feature_views(links_json: dict, artifacts: Set[str]):
+        links = Links()
+        for link_json in links_json:
+            if link_json["artifact_type"] in artifacts:
+                if bool(link_json["node"]["accessible"]):
+                    links.accessible.append(
+                        feature_view.FeatureView.from_response_json(
+                            link_json["artifact"]
+                        )
+                    )
+                elif bool(link_json["node"]["deleted"]):
+                    links.deleted.append(Artifact.from_response_json(link_json["node"]))
+                else:
+                    links.inaccessible.append(
+                        Artifact.from_response_json(link_json["node"])
+                    )
+
+    @staticmethod
+    def from_response_json(links_json: dict, direction: Direction, artifact: Type):
+        """Parse explicit links from json response. There are three types of
+        Links: UpstreamFeatureGroups, DownstreamFeatureGroups, DownstreamFeatureViews
+
+        # Arguments
+            links_json: json response from the explicit provenance endpoint
+            direction: subset of links to parse - UPTREAM/DOWNSTREAM
+            type: subset of links to parse - FEATURE_GROUP/FEATURE_VIEW
+
+        # Returns
+            A ProvenanceLink object for the selected parse type.
+        """
+        if direction == Links.Direction.UPSTREAM:
+            # upstream is currently, always, only feature groups
+            return Links.__parse_feature_groups(
+                links_json["upstream"],
+                {
+                    "FEATURE_GROUP",
+                    "CACHED_FEATURE_GROUP",
+                    "STREAMING_FEATURE_GROUP",
+                    "ON_DEMAND_FEATURE_GROUP",
+                },
+            )
+
+        if direction == Links.Direction.DOWNSTREAM:
+            if artifact == Links.Type.FEATURE_GROUP:
+                return Links.__parse_feature_groups(
+                    links_json["downstream"],
+                    {
+                        "FEATURE_GROUP",
+                        "CACHED_FEATURE_GROUP",
+                        "STREAMING_FEATURE_GROUP",
+                        "ON_DEMAND_FEATURE_GROUP",
+                    },
+                )
+            else:
+                return Links.__parse_feature_views(
+                    links_json["downstream"], {"FEATURE_VIEW"}
+                )

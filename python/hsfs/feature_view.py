@@ -278,6 +278,21 @@ class FeatureView:
     def get_tags(self):
         return self._feature_view_engine.get_tags(self)
 
+    def get_parent_feature_groups(self):
+        """Get the parents of this feature view, based on explicit provenance.
+        Parents are feature groups: cached, streaming or external. These feature
+        groups can be accessible, deleted or inaccessible.
+        For deleted and inaccessible feature groups, only a minimal information is
+        returned.
+
+        # Arguments
+            feature_view_obj: Metadata object of feature view.
+
+        # Returns
+            `ProvenanceLinks`:  the feature groups used to generated this feature view
+        """
+        return self._feature_view_engine.get_parent_feature_groups(self)
+
     def delete_tag(self, name: str):
         return self._feature_view_engine.delete_tag(self, name)
 

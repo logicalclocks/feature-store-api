@@ -509,6 +509,21 @@ class FeatureViewEngine:
             feature_view_obj, training_dataset_version=training_dataset_version
         )
 
+    def get_parent_feature_groups(self, feature_view_obj):
+        """Get the parents of this feature view, based on explicit provenance.
+        Parents are feature groups: cached, streaming or external. These feature
+        groups can be accessible, deleted or inaccessible.
+        For deleted and inaccessible feature groups, only a minimal information is
+        returned.
+
+        # Arguments
+            feature_view_obj: Metadata object of feature view.
+
+        # Returns
+            `ProvenanceLinks`:  the feature groups used to generated this feature view
+        """
+        return self._feature_view_api.get_parent_feature_groups(feature_view_obj)
+
     def _check_feature_group_accessibility(self, feature_view_obj):
         if (
             engine.get_type() == "python" or engine.get_type() == "hive"

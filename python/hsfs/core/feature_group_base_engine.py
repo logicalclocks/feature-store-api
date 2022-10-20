@@ -47,13 +47,50 @@ class FeatureGroupBaseEngine:
         """Get all tags for a feature group."""
         return self._tags_api.get(feature_group)
 
-    def get_explicit_provenance_links(self, feature_group):
-        """Get the parent feature groups that were used to generate this feature
-        group. This is based on explicit provenance.
+    def get_parent_feature_groups(self, feature_group):
+        """Get the parents of this feature group, based on explicit provenance.
+        Parents are feature groups: cached, streaming or external. These feature
+        groups can be accessible, deleted or inaccessible.
+        For deleted and inaccessible feature groups, only a minimal information is
+        returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ProvenanceLinks`:  the feature groups used to generated this feature group
         """
-        return self._feature_group_api.get_explicit_provenance_links(
-            self, feature_group
-        )
+        return self._feature_group_api.get_parent_feature_groups(feature_group)
+
+    def get_generated_feature_views(self, feature_group):
+        """Get the generated feature view using this feature group, based on explicit
+        provenance. These feature views can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated feature view links, so deleted
+        will always be empty.
+        For inaccessible feature views, only a minimal information is returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ProvenanceLinks`:  the feature views generated using this feature group
+        """
+        return self._feature_group_api.get_generated_feature_views(feature_group)
+
+    def get_generated_feature_groups(self, feature_group):
+        """Get the generated feature groups using this feature group, based on explicit
+        provenance. These feature groups can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated feature group links, so deleted
+        will always be empty.
+        For inaccessible feature groups, only a minimal information is returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ProvenanceLinks`:  the feature groups generated using this feature group
+        """
+        return self._feature_group_api.get_generated_feature_groups(feature_group)
 
     def update_statistics_config(self, feature_group):
         """Update the statistics configuration of a feature group."""
