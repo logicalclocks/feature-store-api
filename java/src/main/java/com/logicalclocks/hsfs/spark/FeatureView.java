@@ -392,7 +392,7 @@ public class FeatureView extends com.logicalclocks.hsfs.generic.FeatureView {
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainValidationTestSplit(validationSize, testSize, trainEnd, validationStart, validationEnd, testStart);
     TrainingDataset trainingDataset =
-        (TrainingDataset) this.featureStore
+        this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .validationSize(validationSize)

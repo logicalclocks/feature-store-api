@@ -27,7 +27,6 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
 import java.io.IOException;
@@ -73,10 +72,8 @@ public abstract class FeatureStore {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public StreamFeatureGroup getStreamFeatureGroup(@NonNull String name, @NonNull Integer version)
-      throws FeatureStoreException, IOException {
-    return featureGroupApi.getStreamFeatureGroup(this, name, version);
-  }
+  public abstract Object getStreamFeatureGroup(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException;
 
   /**
    * Get a feature group object with default version `1` from the feature store.
@@ -86,25 +83,21 @@ public abstract class FeatureStore {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public StreamFeatureGroup getStreamFeatureGroup(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getStreamFeatureGroup(name, DEFAULT_VERSION);
-  }
+  public abstract Object  getStreamFeatureGroup(String name) throws FeatureStoreException, IOException;
 
   public abstract Object createStreamFeatureGroup();
 
-  public abstract StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version);
+  public abstract Object getOrCreateStreamFeatureGroup(String name, Integer version);
 
-  public abstract StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version,
+  public abstract Object getOrCreateStreamFeatureGroup(String name, Integer version,
                                                                    List<String> primaryKeys, boolean onlineEnabled,
                                                                    String eventTime);
 
-  public abstract StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version,
+  public abstract Object getOrCreateStreamFeatureGroup(String name, Integer version,
                                                                    List<String> primaryKeys, List<String> partitionKeys,
                                                                    boolean onlineEnabled, String eventTime);
 
-  public abstract StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, String description,
+  public abstract Object getOrCreateStreamFeatureGroup(String name, Integer version, String description,
                                                           List<String> primaryKeys, List<String> partitionKeys,
                                                           String hudiPrecombineKey, boolean onlineEnabled,
                                                           StatisticsConfig statisticsConfig,
@@ -162,10 +155,8 @@ public abstract class FeatureStore {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public ExternalFeatureGroup getExternalFeatureGroup(@NonNull String name, @NonNull Integer version)
-      throws FeatureStoreException, IOException {
-    return featureGroupApi.getExternalFeatureGroup(this, name, version);
-  }
+  public abstract Object getExternalFeatureGroup(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException;
 
   /**
    * Get a external feature group object with default version `1` from the feature store.
@@ -175,12 +166,7 @@ public abstract class FeatureStore {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public ExternalFeatureGroup getExternalFeatureGroup(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getExternalFeatureGroup(name, DEFAULT_VERSION);
-  }
-
+  public abstract Object getExternalFeatureGroup(String name) throws FeatureStoreException, IOException;
   /**
    * Get a list of all versions of an external feature group from the feature store.
    *
@@ -189,31 +175,8 @@ public abstract class FeatureStore {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public scala.collection.Seq<ExternalFeatureGroup> getExternalFeatureGroups(@NonNull String name)
-      throws FeatureStoreException, IOException {
-    return JavaConverters.asScalaBufferConverter(featureGroupApi.getExternalFeatureGroups(this, name))
-        .asScala().toSeq();
-  }
 
-  @Deprecated
-  public ExternalFeatureGroup getOnDemandFeatureGroup(@NonNull String name, @NonNull Integer version)
-      throws FeatureStoreException, IOException {
-    return featureGroupApi.getExternalFeatureGroup(this, name, version);
-  }
-
-  @Deprecated
-  public ExternalFeatureGroup getOnDemandFeatureGroup(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getExternalFeatureGroup(name, DEFAULT_VERSION);
-  }
-
-  @Deprecated
-  public scala.collection.Seq<ExternalFeatureGroup> getOnDemandFeatureGroups(@NonNull String name)
-      throws FeatureStoreException, IOException {
-    return JavaConverters.asScalaBufferConverter(featureGroupApi.getExternalFeatureGroups(this, name))
-        .asScala().toSeq();
-  }
+  public abstract Object getExternalFeatureGroups(@NonNull String name) throws FeatureStoreException, IOException;
 
   public abstract Object sql(String query);
 

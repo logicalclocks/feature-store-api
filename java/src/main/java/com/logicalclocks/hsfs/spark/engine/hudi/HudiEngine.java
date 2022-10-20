@@ -20,7 +20,6 @@ import com.logicalclocks.hsfs.generic.Feature;
 import com.logicalclocks.hsfs.generic.FeatureGroupCommit;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.HudiOperationType;
-import com.logicalclocks.hsfs.generic.StreamFeatureGroup;
 import com.logicalclocks.hsfs.generic.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupApi;
@@ -28,6 +27,7 @@ import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 
 import com.logicalclocks.hsfs.generic.metadata.KafkaApi;
 import com.logicalclocks.hsfs.generic.metadata.PartitionDetails;
+import com.logicalclocks.hsfs.spark.StreamFeatureGroup;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hudi.common.model.HoodieCommitMetadata;

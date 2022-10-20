@@ -20,8 +20,9 @@ package com.logicalclocks.hsfs.spark.engine;
 import com.logicalclocks.hsfs.generic.Feature;
 import com.logicalclocks.hsfs.generic.FeatureGroupCommit;
 import com.logicalclocks.hsfs.generic.FeatureStore;
+import com.logicalclocks.hsfs.generic.JobConfiguration;
 import com.logicalclocks.hsfs.generic.StatisticsConfig;
-import com.logicalclocks.hsfs.generic.StreamFeatureGroup;
+import com.logicalclocks.hsfs.spark.StreamFeatureGroup;
 import com.logicalclocks.hsfs.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.spark.FeatureGroup;
@@ -32,6 +33,7 @@ import com.logicalclocks.hsfs.generic.TimeTravelFormat;
 import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.generic.metadata.KafkaApi;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupApi;
+import lombok.SneakyThrows;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -42,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,6 +109,32 @@ public class FeatureGroupEngine {
         writeOptions, SparkEngine.getInstance().getKafkaConfig(featureGroup, writeOptions), validationId);
   }
 
+  /**
+   * Create the metadata and write the data to the online/offline feature store.
+   *
+   * @param featureGroup
+   * @param dataset
+   * @param partitionKeys
+   * @param writeOptions
+   * @param sparkJobConfiguration
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public StreamFeatureGroup save(StreamFeatureGroup featureGroup, Dataset<Row> dataset, List<String> partitionKeys,
+                                 String hudiPrecombineKey, Map<String, String> writeOptions,
+                                 JobConfiguration sparkJobConfiguration)
+      throws FeatureStoreException, IOException, ParseException {
+
+    StreamFeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
+        writeOptions, sparkJobConfiguration, dataset);
+
+    insert(updatedFeatureGroup, SparkEngine.getInstance().sanitizeFeatureNames(dataset),
+        com.logicalclocks.hsfs.generic.SaveMode.APPEND,  partitionKeys, hudiPrecombineKey, writeOptions, sparkJobConfiguration);
+
+    return featureGroup;
+  }
+
+
   @Deprecated
   public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
                                      String outputMode, boolean awaitTermination, Long timeout,
@@ -128,6 +157,49 @@ public class FeatureGroupEngine {
         checkpointLocation, SparkEngine.getInstance().getKafkaConfig(featureGroup, writeOptions));
 
     return streamingQuery;
+  }
+
+  @SneakyThrows
+  public StreamingQuery insertStream(StreamFeatureGroup streamFeatureGroup, Dataset<Row> featureData, String queryName,
+                                     String outputMode, boolean awaitTermination, Long timeout,
+                                     String checkpointLocation, List<String> partitionKeys, String hudiPrecombineKey,
+                                     Map<String, String> writeOptions, JobConfiguration jobConfiguration) {
+
+    if (writeOptions == null) {
+      writeOptions = new HashMap<>();
+    }
+
+    if (streamFeatureGroup.getId() == null) {
+      streamFeatureGroup = saveFeatureGroupMetaData(streamFeatureGroup, partitionKeys, hudiPrecombineKey, writeOptions,
+          jobConfiguration, featureData);
+    }
+
+    return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
+        SparkEngine.getInstance().sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
+        checkpointLocation, SparkEngine.getInstance().getKafkaConfig(streamFeatureGroup, writeOptions));
+  }
+
+  public void insert(StreamFeatureGroup streamFeatureGroup, Dataset<Row> featureData,
+                     com.logicalclocks.hsfs.generic.SaveMode saveMode, List<String> partitionKeys, String hudiPrecombineKey,
+                     Map<String, String> writeOptions, JobConfiguration jobConfiguration)
+      throws FeatureStoreException, IOException, ParseException {
+
+    if (streamFeatureGroup.getId() == null) {
+      streamFeatureGroup = saveFeatureGroupMetaData(streamFeatureGroup, partitionKeys, hudiPrecombineKey, writeOptions,
+          jobConfiguration, featureData);
+    }
+
+    if (saveMode == com.logicalclocks.hsfs.generic.SaveMode.OVERWRITE) {
+      // If we set overwrite, then the directory will be removed and with it all the metadata
+      // related to the feature group will be lost. We need to keep them.
+      // So we call Hopsworks to manage to truncate the table and re-create the metadata
+      // After that it's going to be just a normal append
+      featureGroupApi.deleteContent(streamFeatureGroup);
+    }
+
+    SparkEngine.getInstance().writeOnlineDataframe(streamFeatureGroup, featureData,
+        streamFeatureGroup.getOnlineTopicName(),
+        SparkEngine.getInstance().getKafkaConfig(streamFeatureGroup, writeOptions));
   }
 
   public void saveDataframe(FeatureGroup featureGroup, Dataset<Row> dataset, Storage storage,
@@ -165,56 +237,10 @@ public class FeatureGroupEngine {
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
-    /* set primary features */
-    if (featureGroup.getPrimaryKeys() != null) {
-      featureGroup.getPrimaryKeys().forEach(pk ->
-          featureGroup.getFeatures().forEach(f -> {
-            if (f.getName().equals(pk)) {
-              f.setPrimary(true);
-            }
-          }));
-    }
+    FeatureGroup apiFG = (FeatureGroup) featureGroupApi.saveFeatureGroupMetaData(featureGroup, partitionKeys,
+        hudiPrecombineKey, null, null);
 
-    /* set partition key features */
-    if (partitionKeys != null) {
-      partitionKeys.forEach(pk ->
-          featureGroup.getFeatures().forEach(f -> {
-            if (f.getName().equals(pk)) {
-              f.setPartition(true);
-            }
-          }));
-    }
-
-    /* set hudi precombine key name */
-    if (hudiPrecombineKey != null) {
-      featureGroup.getFeatures().forEach(f -> {
-        if (f.getName().equals(hudiPrecombineKey)) {
-          f.setHudiPrecombineKey(true);
-        }
-      });
-    }
-
-    // Send Hopsworks the request to create a new feature group
-    FeatureGroup apiFG = (FeatureGroup) featureGroupApi.save(featureGroup);
-
-    if (featureGroup.getVersion() == null) {
-      LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
-          + "`, incremented version to `" + apiFG.getVersion() + "`.");
-    }
-
-    // Update the original object - Hopsworks returns the incremented version
-    featureGroup.setId(apiFG.getId());
-    featureGroup.setVersion(apiFG.getVersion());
-    featureGroup.setLocation(apiFG.getLocation());
-    featureGroup.setId(apiFG.getId());
-    featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
     featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
-
-    /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
-    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI & hudiPrecombineKey == null) {
-      List<Feature> features = apiFG.getFeatures();
-      featureGroup.setFeatures(features);
-    }
 
     if (saveEmpty) {
       // insertStream method was called on feature group object that has not been saved
@@ -229,6 +255,29 @@ public class FeatureGroupEngine {
     return featureGroup;
   }
 
+  public StreamFeatureGroup saveFeatureGroupMetaData(StreamFeatureGroup featureGroup, List<String> partitionKeys,
+                                                     String hudiPrecombineKey, Map<String, String> writeOptions,
+                                                     JobConfiguration sparkJobConfiguration,
+                                                     Dataset<Row> featureData)
+      throws FeatureStoreException, IOException {
+
+    if (featureGroup.getFeatures() == null) {
+      featureGroup.setFeatures(SparkEngine.getInstance()
+          .parseFeatureGroupSchema(SparkEngine.getInstance().sanitizeFeatureNames(featureData),
+              featureGroup.getTimeTravelFormat()));
+    }
+
+    LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
+
+    StreamFeatureGroup apiFG = (StreamFeatureGroup) featureGroupApi.saveFeatureGroupMetaData(featureGroup,
+        partitionKeys, hudiPrecombineKey, writeOptions, sparkJobConfiguration);
+    featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
+
+
+    return featureGroup;
+  }
+
+
   public FeatureGroup getOrCreateFeatureGroup(FeatureStore featureStore, String name, Integer version,
                                               String description, List<String> primaryKeys, List<String> partitionKeys,
                                               String hudiPrecombineKey, boolean onlineEnabled,
@@ -239,7 +288,7 @@ public class FeatureGroupEngine {
 
     FeatureGroup featureGroup;
     try {
-      featureGroup =  (FeatureGroup) featureGroupApi.getFeatureGroup(featureStore, name, version);
+      featureGroup =  (FeatureGroup) getFeatureGroup(featureStore, name, version);
     } catch (IOException | FeatureStoreException e) {
       if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270009")) {
         featureGroup =  FeatureGroup.builder()
@@ -306,5 +355,25 @@ public class FeatureGroupEngine {
     HudiEngine hudiEngine = new HudiEngine();
     return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroupBase, genericDataset,
         writeOptions);
+  }
+
+  public List<FeatureGroup> getFeatureGroups(FeatureStore featureStore, String fgName)
+      throws FeatureStoreException, IOException {
+    FeatureGroup[] offlineFeatureGroups =
+       featureGroupApi.getInternal(featureStore, fgName, null, FeatureGroup[].class);
+
+    return Arrays.asList(offlineFeatureGroups);
+  }
+
+  public FeatureGroup getFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
+      throws IOException, FeatureStoreException {
+    FeatureGroup[] offlineFeatureGroups =
+        featureGroupApi.getInternal(featureStore, fgName, fgVersion, FeatureGroup[].class);
+
+    // There can be only one single feature group with a specific name and version in a feature store
+    // There has to be one otherwise an exception would have been thrown.
+    FeatureGroup resultFg = offlineFeatureGroups[0];
+    resultFg.setFeatureStore(featureStore);
+    return resultFg;
   }
 }

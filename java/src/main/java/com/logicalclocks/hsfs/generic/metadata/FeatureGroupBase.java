@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs.generic.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.logicalclocks.hsfs.generic.DeltaStreamerJobConf;
 import com.logicalclocks.hsfs.generic.Feature;
 import com.logicalclocks.hsfs.generic.FeatureStore;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
@@ -50,7 +51,6 @@ public abstract class FeatureGroupBase {
 
   @Getter
   @Setter
-  //TODO fv: featureGroupDTO does not match this class
   protected FeatureStore featureStore;
 
   @Getter
@@ -320,6 +320,9 @@ public abstract class FeatureGroupBase {
   }
 
   public abstract String getOnlineTopicName() throws FeatureStoreException, IOException;
+
+  public abstract void setDeltaStreamerJobConf(DeltaStreamerJobConf deltaStreamerJobConf)
+      throws FeatureStoreException, IOException;
 
   @JsonIgnore
   public abstract List<String> getComplexFeatures();

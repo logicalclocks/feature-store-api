@@ -19,13 +19,13 @@ package com.logicalclocks.hsfs.spark;
 
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.StatisticsConfig;
-import com.logicalclocks.hsfs.generic.StreamFeatureGroup;
 import com.logicalclocks.hsfs.generic.TimeTravelFormat;
 import com.logicalclocks.hsfs.generic.engine.FeatureViewEngine;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.generic.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.generic.metadata.TrainingDatasetApi;
+import com.logicalclocks.hsfs.spark.StreamFeatureGroup;
 import com.logicalclocks.hsfs.spark.TrainingDataset;
 import com.logicalclocks.hsfs.spark.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.spark.engine.SparkEngine;
@@ -61,6 +61,17 @@ public class FeatureStore extends com.logicalclocks.hsfs.generic.FeatureStore {
   }
 
   @Override
+  public Object getStreamFeatureGroup(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException {
+    return null;
+  }
+
+  @Override
+  public Object getStreamFeatureGroup(String name) throws FeatureStoreException, IOException {
+    return null;
+  }
+
+  @Override
   public Object createStreamFeatureGroup() {
     return null;
   }
@@ -91,6 +102,22 @@ public class FeatureStore extends com.logicalclocks.hsfs.generic.FeatureStore {
     return null;
   }
 
+  @Override
+  public Object getExternalFeatureGroup(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException {
+    return null;
+  }
+
+  @Override
+  public Object getExternalFeatureGroup(String name) throws FeatureStoreException, IOException {
+    return null;
+  }
+
+  @Override
+  public Object getExternalFeatureGroups(@NonNull String name) throws FeatureStoreException, IOException {
+    return null;
+  }
+
   /**
    * Get a feature group object from the feature store.
    *
@@ -102,7 +129,7 @@ public class FeatureStore extends com.logicalclocks.hsfs.generic.FeatureStore {
    */
   public FeatureGroup getFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    return (FeatureGroup) featureGroupApi.getFeatureGroup(this, name, version);
+    return featureGroupEngine.getFeatureGroup(this, name, version);
   }
 
   /**
@@ -130,7 +157,7 @@ public class FeatureStore extends com.logicalclocks.hsfs.generic.FeatureStore {
   public scala.collection.Seq<FeatureGroup> getFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
     List<FeatureGroup> featureGroups = new ArrayList<>();
-    for (FeatureGroupBase fg: featureGroupApi.getFeatureGroups(this, name)) {
+    for (FeatureGroupBase fg: featureGroupEngine.getFeatureGroups(this, name)) {
       featureGroups.add((FeatureGroup) fg);
     }
     return JavaConverters.asScalaBufferConverter(featureGroups)

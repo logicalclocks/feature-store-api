@@ -33,11 +33,11 @@ import com.logicalclocks.hsfs.spark.FeatureGroup;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.HudiOperationType;
 import com.logicalclocks.hsfs.generic.Split;
-import com.logicalclocks.hsfs.spark.StorageConnector;
-import com.logicalclocks.hsfs.generic.StreamFeatureGroup;
-import com.logicalclocks.hsfs.generic.TimeTravelFormat;
-import com.logicalclocks.hsfs.spark.TrainingDataset;
 import com.logicalclocks.hsfs.generic.constructor.HudiFeatureGroupAlias;
+import com.logicalclocks.hsfs.spark.StorageConnector;
+import com.logicalclocks.hsfs.generic.TimeTravelFormat;
+import com.logicalclocks.hsfs.spark.StreamFeatureGroup;
+import com.logicalclocks.hsfs.spark.TrainingDataset;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
@@ -487,10 +487,10 @@ public class SparkEngine {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public <S> void writeOnlineDataframe(FeatureGroupBase featureGroupBase, S dataset, String onlineTopicName,
+  public void writeOnlineDataframe(FeatureGroupBase featureGroupBase, Dataset<Row> dataset, String onlineTopicName,
                                          Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, (Dataset<Row>) dataset))
+    onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
         .write()
         .format(Constants.KAFKA_FORMAT)
         .options(writeOptions)
@@ -498,12 +498,11 @@ public class SparkEngine {
         .save();
   }
 
-  public <S> StreamingQuery writeStreamDataframe(FeatureGroupBase featureGroupBase, S datasetGeneric, String queryName,
-                                             String outputMode, boolean awaitTermination, Long timeout,
-                                             String checkpointLocation, Map<String, String> writeOptions)
+  public StreamingQuery writeStreamDataframe(FeatureGroupBase featureGroupBase, Dataset<Row> dataset,
+                                             String queryName, String outputMode, boolean awaitTermination,
+                                             Long timeout, String checkpointLocation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
 
-    Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
     DataStreamWriter<Row> writer =
         onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
         .writeStream()

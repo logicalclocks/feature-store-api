@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs.spark;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.generic.DeltaStreamerJobConf;
 import com.logicalclocks.hsfs.generic.EntityEndpointType;
 import com.logicalclocks.hsfs.generic.Feature;
 import com.logicalclocks.hsfs.generic.FeatureStore;
@@ -539,6 +540,12 @@ public class FeatureGroup extends FeatureGroupBase {
     List<Feature> featureList = new ArrayList<>();
     featureList.add(features);
     featureGroupEngine.appendFeatures(this, featureList);
+  }
+
+  @Override
+  public void setDeltaStreamerJobConf(DeltaStreamerJobConf deltaStreamerJobConf)
+      throws FeatureStoreException, IOException {
+
   }
 
   @Override

@@ -17,11 +17,13 @@
 package com.logicalclocks.hsfs.generic.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
+import com.logicalclocks.hsfs.generic.DeltaStreamerJobConf;
+import com.logicalclocks.hsfs.generic.Feature;
 import com.logicalclocks.hsfs.generic.FeatureGroupCommit;
 import com.logicalclocks.hsfs.generic.FeatureStore;
 import com.logicalclocks.hsfs.generic.FeatureStoreException;
+import com.logicalclocks.hsfs.generic.JobConfiguration;
 import com.logicalclocks.hsfs.spark.ExternalFeatureGroup;
-import com.logicalclocks.hsfs.generic.StreamFeatureGroup;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.HttpHeaders;
@@ -32,8 +34,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.logicalclocks.hsfs.generic.metadata.HopsworksClient.PROJECT_PATH;
 
@@ -49,69 +52,7 @@ public class FeatureGroupApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
-  // TODO (davit): this will be implemented in spark engine to return FeatureGroup class
-  public List<FeatureGroupBase> getFeatureGroups(FeatureStore featureStore, String fgName)
-      throws FeatureStoreException, IOException {
-    FeatureGroupBase[] offlineFeatureGroups =
-        getInternal(featureStore, fgName, null, FeatureGroupBase[].class);
-
-    return Arrays.asList(offlineFeatureGroups);
-  }
-
-  // TODO (davit): this will be implemented in spark engine to return FeatureGroup class
-  public FeatureGroupBase getFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
-      throws IOException, FeatureStoreException {
-    FeatureGroupBase[] offlineFeatureGroups =
-        getInternal(featureStore, fgName, fgVersion, FeatureGroupBase[].class);
-
-    // There can be only one single feature group with a specific name and version in a feature store
-    // There has to be one otherwise an exception would have been thrown.
-    FeatureGroupBase resultFg = offlineFeatureGroups[0];
-    resultFg.setFeatureStore(featureStore);
-    return resultFg;
-  }
-
-  public StreamFeatureGroup getStreamFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
-      throws IOException, FeatureStoreException {
-    StreamFeatureGroup[] streamFeatureGroups =
-      getInternal(featureStore, fgName, fgVersion, StreamFeatureGroup[].class);
-
-    // There can be only one single feature group with a specific name and version in a feature store
-    // There has to be one otherwise an exception would have been thrown.
-    StreamFeatureGroup resultFg = streamFeatureGroups[0];
-    resultFg.setFeatureStore(featureStore);
-    return resultFg;
-  }
-
-  public List<StreamFeatureGroup> getStreamFeatureGroups(FeatureStore featureStore, String fgName)
-      throws FeatureStoreException, IOException {
-    StreamFeatureGroup[] streamFeatureGroups =
-      getInternal(featureStore, fgName, null, StreamFeatureGroup[].class);
-
-    return Arrays.asList(streamFeatureGroups);
-  }
-
-  public List<ExternalFeatureGroup> getExternalFeatureGroups(FeatureStore featureStore, String fgName)
-      throws FeatureStoreException, IOException {
-    ExternalFeatureGroup[] offlineFeatureGroups =
-        getInternal(featureStore, fgName, null, ExternalFeatureGroup[].class);
-
-    return Arrays.asList(offlineFeatureGroups);
-  }
-
-  public ExternalFeatureGroup getExternalFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
-      throws IOException, FeatureStoreException {
-    ExternalFeatureGroup[] offlineFeatureGroups =
-        getInternal(featureStore, fgName, fgVersion, ExternalFeatureGroup[].class);
-
-    // There can be only one single feature group with a specific name and version in a feature store
-    // There has to be one otherwise an exception would have been thrown.
-    ExternalFeatureGroup resultFg = offlineFeatureGroups[0];
-    resultFg.setFeatureStore(featureStore);
-    return resultFg;
-  }
-
-  private <U> U getInternal(FeatureStore featureStore, String fgName, Integer fgVersion, Class<U> fgType)
+  public <U> U getInternal(FeatureStore featureStore, String fgName, Integer fgVersion, Class<U> fgType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = PROJECT_PATH
@@ -147,14 +88,7 @@ public class FeatureGroupApi {
     return saveInternal(featureGroup, new StringEntity(featureGroupJson), FeatureGroupBase.class);
   }
 
-  public StreamFeatureGroup save(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
-
-    return saveInternal(featureGroup, new StringEntity(featureGroupJson), StreamFeatureGroup.class);
-  }
-
-  private <U> U saveInternal(FeatureGroupBase featureGroupBase,
+  public <U> U saveInternal(FeatureGroupBase featureGroupBase,
                              StringEntity entity, Class<U> fgType) throws FeatureStoreException, IOException {
     String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
@@ -287,5 +221,77 @@ public class FeatureGroupApi {
     LOGGER.info("Sending metadata request: " + uri);
     FeatureGroupCommit featureGroupCommit = hopsworksClient.handleRequest(new HttpGet(uri), FeatureGroupCommit.class);
     return featureGroupCommit.getItems();
+  }
+
+  public FeatureGroupBase saveFeatureGroupMetaData(FeatureGroupBase featureGroup, List<String> partitionKeys,
+                                                   String hudiPrecombineKey, Map<String, String> writeOptions,
+                                                   JobConfiguration  jobConfiguration)
+      throws FeatureStoreException, IOException {
+
+    LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
+
+    /* set primary features */
+    if (featureGroup.getPrimaryKeys() != null) {
+      featureGroup.getPrimaryKeys().forEach(pk ->
+          featureGroup.getFeatures().forEach(f -> {
+            if (f.getName().equals(pk)) {
+              f.setPrimary(true);
+            }
+          }));
+    }
+
+    /* set partition key features */
+    if (partitionKeys != null) {
+      partitionKeys.forEach(pk ->
+          featureGroup.getFeatures().forEach(f -> {
+            if (f.getName().equals(pk)) {
+              f.setPartition(true);
+            }
+          }));
+    }
+
+    /* set hudi precombine key name */
+    if (hudiPrecombineKey != null) {
+      featureGroup.getFeatures().forEach(f -> {
+        if (f.getName().equals(hudiPrecombineKey)) {
+          f.setHudiPrecombineKey(true);
+        }
+      });
+    }
+
+    // set write options for delta streamer job
+    if (writeOptions != null) {
+      // set write options for delta streamer job
+      DeltaStreamerJobConf deltaStreamerJobConf = new DeltaStreamerJobConf();
+      deltaStreamerJobConf.setWriteOptions(writeOptions != null ? writeOptions.entrySet().stream()
+          .map(e -> new Option(e.getKey(), e.getValue()))
+          .collect(Collectors.toList())
+          : null);
+      deltaStreamerJobConf.setSparkJobConfiguration(jobConfiguration);
+
+      featureGroup.setDeltaStreamerJobConf(deltaStreamerJobConf);
+    }
+
+    // Send Hopsworks the request to create a new feature group
+    FeatureGroupBase apiFG = save(featureGroup);
+
+    if (featureGroup.getVersion() == null) {
+      LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
+          + "`, incremented version to `" + apiFG.getVersion() + "`.");
+    }
+
+    // Update the original object - Hopsworks returns the incremented version
+    featureGroup.setId(apiFG.getId());
+    featureGroup.setVersion(apiFG.getVersion());
+    featureGroup.setLocation(apiFG.getLocation());
+    featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
+
+    /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
+    if (hudiPrecombineKey == null) {
+      List<Feature> features = apiFG.getFeatures();
+      featureGroup.setFeatures(features);
+    }
+
+    return featureGroup;
   }
 }

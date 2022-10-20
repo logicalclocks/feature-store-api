@@ -18,6 +18,7 @@
 package com.logicalclocks.hsfs.spark;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.generic.DeltaStreamerJobConf;
 import com.logicalclocks.hsfs.generic.EntityEndpointType;
 import com.logicalclocks.hsfs.generic.ExternalDataFormat;
 import com.logicalclocks.hsfs.generic.Feature;
@@ -181,6 +182,12 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
   @Override
   public String getOnlineTopicName() throws FeatureStoreException, IOException {
     return null;
+  }
+
+  @Override
+  public void setDeltaStreamerJobConf(DeltaStreamerJobConf deltaStreamerJobConf)
+      throws FeatureStoreException, IOException {
+
   }
 
   @Override
