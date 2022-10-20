@@ -24,8 +24,10 @@ from typing import Optional, TypeVar
 import numpy as np
 import pandas as pd
 import avro
+from datetime import datetime, timezone
 
 # in case importing in %%local
+
 try:
     from pyspark import SparkFiles
     from pyspark.sql import SparkSession, DataFrame, SQLContext
@@ -88,6 +90,7 @@ class Engine:
         self._spark_session.conf.set("hive.exec.dynamic.partition", "true")
         self._spark_session.conf.set("hive.exec.dynamic.partition.mode", "nonstrict")
         self._spark_session.conf.set("spark.sql.hive.convertMetastoreParquet", "false")
+        self._spark_session.conf.set("spark.sql.session.timeZone", "UTC")
 
         if importlib.util.find_spec("pydoop"):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
@@ -170,9 +173,18 @@ class Engine:
             for n_col in list(range(num_cols)):
                 col_name = "col_" + str(n_col)
                 dataframe_dict[col_name] = dataframe[:, n_col]
-            pandas_df = pd.DataFrame(dataframe_dict)
-            dataframe = self._spark_session.createDataFrame(pandas_df)
-        elif isinstance(dataframe, pd.DataFrame):
+            dataframe = pd.DataFrame(dataframe_dict)
+
+        if isinstance(dataframe, pd.DataFrame):
+            # convert timestamps to current timezone
+            current_timezone = datetime.now().astimezone().tzinfo
+            for c in dataframe.columns:
+                if isinstance(
+                    dataframe[c].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
+                ):
+                    dataframe[c] = dataframe[c].dt.tz_convert(current_timezone)
+                elif dataframe[c].dtype == np.dtype("datetime64[ns]"):
+                    dataframe[c] = dataframe[c].dt.tz_localize(current_timezone)
             dataframe = self._spark_session.createDataFrame(dataframe)
         elif isinstance(dataframe, RDD):
             dataframe = dataframe.toDF()
@@ -627,7 +639,11 @@ class Engine:
         return stream.load().select("key", "value")
 
     def add_file(self, file):
-        self._spark_context.addFile("hdfs://" + file)
+        # This is used for unit testing
+        if not file.startswith("file://"):
+            file = "hdfs://" + file
+
+        self._spark_context.addFile(file)
         return SparkFiles.get(os.path.basename(file))
 
     def profile(
@@ -790,9 +806,6 @@ class Engine:
         raise ValueError(f"spark type {str(type(hive_type))} not supported")
 
     def setup_storage_connector(self, storage_connector, path=None):
-        # update storage connector to get new session token
-        storage_connector.refetch()
-
         if storage_connector.type == StorageConnector.S3:
             return self._setup_s3_hadoop_conf(storage_connector, path)
         elif storage_connector.type == StorageConnector.ADLS:
@@ -876,12 +889,33 @@ class Engine:
                 + "_"
                 + feature_name
             )
+
+            def timezone_decorator(func):
+                if transformation_fn.output_type != "TIMESTAMP":
+                    return func
+
+                current_timezone = datetime.now().astimezone().tzinfo
+
+                def decorated_func(x):
+                    result = func(x)
+                    if isinstance(result, datetime):
+                        if result.tzinfo is None:
+                            # if timestamp is timezone unaware, make sure it's localized to the system's timezone.
+                            # otherwise, spark will implicitly convert it to the system's timezone.
+                            return result.replace(tzinfo=current_timezone)
+                        else:
+                            # convert to utc, then localize to system's timezone
+                            return result.astimezone(timezone.utc).replace(
+                                tzinfo=current_timezone
+                            )
+                    return result
+
+                return decorated_func
+
             self._spark_session.udf.register(
                 fn_registration_name,
-                transformation_fn.transformation_fn,
-                transformation_function_engine.TransformationFunctionEngine.convert_legacy_type(
-                    transformation_fn.output_type
-                ),
+                timezone_decorator(transformation_fn.transformation_fn),
+                transformation_fn.output_type,
             )
             transformation_fn_expressions.append(
                 "{fn_name:}({name:}) AS {name:}".format(

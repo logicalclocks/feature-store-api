@@ -1125,6 +1125,16 @@ class FeatureGroup(FeatureGroupBase):
         [q.name for q in sqm.active]
         ```
 
+        !!! warning "Engine Support"
+            **Spark only**
+
+            Stream ingestion using Pandas/Python as engine is currently not supported.
+            Python/Pandas has no notion of streaming.
+
+        !!! warning "Data Validation Support"
+            `insert_stream` does not perform any data validation using Great Expectations
+            even when a expectation suite is attached.
+
         # Arguments
             features: Features in Streaming Dataframe to be saved.
             query_name: It is possible to optionally specify a name for the query to
@@ -1680,7 +1690,30 @@ class ExternalFeatureGroup(FeatureGroupBase):
             self._statistics_engine.compute_statistics(self, self.read())
 
     def read(self, dataframe_type="default"):
-        """Get the feature group as a DataFrame."""
+        """Get the feature group as a DataFrame.
+
+        !!! warning "Engine Support"
+            **Spark only**
+
+            Reading an External Feature Group directly into a Pandas Dataframe using
+            Python/Pandas as Engine is not supported, however, you can use the
+            Query API to create Feature Views/Training Data containing External
+            Feature Groups.
+
+        # Arguments
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+
+        # Returns
+            `DataFrame`: The spark dataframe containing the feature data.
+            `pyspark.DataFrame`. A Spark DataFrame.
+            `pandas.DataFrame`. A Pandas DataFrame.
+            `numpy.ndarray`. A two-dimensional Numpy array.
+            `list`. A two-dimensional Python list.
+
+        # Raises
+            `RestAPIError`.
+        """
         engine.get_instance().set_job_group(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(

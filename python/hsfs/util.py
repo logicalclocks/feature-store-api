@@ -141,7 +141,7 @@ def get_timestamp_from_date_string(input_date):
 
 
 def get_hudi_datestr_from_timestamp(timestamp):
-    return datetime.fromtimestamp(timestamp / 1000).strftime("%Y%m%d%H%M%S%f")[:-3]
+    return datetime.utcfromtimestamp(timestamp / 1000).strftime("%Y%m%d%H%M%S%f")[:-3]
 
 
 def convert_event_time_to_timestamp(event_time):

@@ -15,7 +15,9 @@
 #
 
 import datetime
+import warnings
 from hsfs import engine, training_dataset_feature, client, util
+from hsfs.client import exceptions
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.core import (
     tags_api,
@@ -60,6 +62,11 @@ class FeatureViewEngine:
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
 
     def save(self, feature_view_obj):
+        if feature_view_obj.query.is_time_travel():
+            warnings.warn(
+                "`as_of` argument in the `Query` will be ignored because"
+                " feature view does not support time travel query."
+            )
         if feature_view_obj.labels:
             feature_view_obj._features += [
                 training_dataset_feature.TrainingDatasetFeature(
@@ -103,27 +110,48 @@ class FeatureViewEngine:
         with_label=False,
         training_dataset_version=None,
     ):
-        return self._feature_view_api.get_batch_query(
-            feature_view_obj.name,
-            feature_view_obj.version,
-            util.convert_event_time_to_timestamp(start_time),
-            util.convert_event_time_to_timestamp(end_time),
-            training_dataset_version=training_dataset_version,
-            is_python_engine=engine.get_type() == "python",
-            with_label=with_label,
-        )
+        try:
+            return self._feature_view_api.get_batch_query(
+                feature_view_obj.name,
+                feature_view_obj.version,
+                util.convert_event_time_to_timestamp(start_time),
+                util.convert_event_time_to_timestamp(end_time),
+                training_dataset_version=training_dataset_version,
+                is_python_engine=engine.get_type() == "python",
+                with_label=with_label,
+            )
+        except exceptions.RestAPIError as e:
+            if e.response.json().get("errorCode", "") == 270172:
+                raise ValueError(
+                    "Cannot generate dataset(s) from the given start/end time because"
+                    " event time column is not available in the left feature groups."
+                    " A start/end time should not be provided as parameters."
+                )
+            else:
+                raise e
 
     def get_batch_query_string(
         self, feature_view_obj, start_time, end_time, training_dataset_version=None
     ):
-        query_obj = self._feature_view_api.get_batch_query(
-            feature_view_obj.name,
-            feature_view_obj.version,
-            util.convert_event_time_to_timestamp(start_time),
-            util.convert_event_time_to_timestamp(end_time),
-            training_dataset_version=training_dataset_version,
-            is_python_engine=engine.get_type() == "python",
-        )
+        try:
+            query_obj = self._feature_view_api.get_batch_query(
+                feature_view_obj.name,
+                feature_view_obj.version,
+                util.convert_event_time_to_timestamp(start_time),
+                util.convert_event_time_to_timestamp(end_time),
+                training_dataset_version=training_dataset_version,
+                is_python_engine=engine.get_type() == "python",
+            )
+        except exceptions.RestAPIError as e:
+            if e.response.json().get("errorCode", "") == 270172:
+                raise ValueError(
+                    "Cannot generate a query from the given start/end time because"
+                    " event time column is not available in the left feature groups."
+                    " A start/end time should not be provided as parameters."
+                )
+            else:
+                raise e
+
         fs_query = self._query_constructor_api.construct_query(query_obj)
         if fs_query.pit_query is not None:
             return fs_query.pit_query
