@@ -27,11 +27,13 @@ import com.logicalclocks.hsfs.generic.FeatureStoreException;
 import com.logicalclocks.hsfs.generic.StatisticsConfig;
 import com.logicalclocks.hsfs.generic.StorageConnector;
 import com.logicalclocks.hsfs.generic.TimeTravelFormat;
+import com.logicalclocks.hsfs.generic.metadata.Statistics;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.ExternalFeatureGroupEngine;
 import com.logicalclocks.hsfs.generic.engine.CodeEngine;
 import com.logicalclocks.hsfs.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.generic.metadata.OnDemandOptions;
+import com.logicalclocks.hsfs.spark.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.spark.engine.StatisticsEngine;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,9 +43,13 @@ import lombok.Setter;
 import org.apache.avro.Schema;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -54,7 +60,7 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
-  private com.logicalclocks.hsfs.generic.StorageConnector storageConnector;
+  private StorageConnector storageConnector;
 
   @Getter
   @Setter
@@ -76,13 +82,15 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
   @Setter
   private String type = "onDemandFeaturegroupDTO";
 
+  private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private ExternalFeatureGroupEngine externalFeatureGroupEngine = new ExternalFeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(ExternalFeatureGroup.class);
+
   @Builder
-  public ExternalFeatureGroup(com.logicalclocks.hsfs.generic.FeatureStore featureStore, @NonNull String name,
-                              Integer version, String query,
+  public ExternalFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String query,
                               ExternalDataFormat dataFormat, String path, Map<String, String> options,
                               @NonNull StorageConnector storageConnector, String description, List<String> primaryKeys,
                               List<Feature> features, StatisticsConfig statisticsConfig, String eventTime) {
@@ -98,7 +106,7 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
         : null;
     this.description = description;
     this.primaryKeys = primaryKeys != null
-            ? primaryKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
+        ? primaryKeys.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
     this.storageConnector = storageConnector;
     this.features = features;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
@@ -135,47 +143,57 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
   }
 
   @Override
+  public Query selectFeatures(List<Feature> features) {
+    return new Query(this, features);
+  }
+
+  @Override
   public Query selectAll() {
     return new Query(this, getFeatures());
   }
 
   @Override
-  public Query selectFeatures(List<Feature> features) {
-    return null;
-  }
-
-  @Override
   public Query selectExceptFeatures(List<Feature> features) {
-    return null;
+    List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
+    return selectExcept(exceptFeatures);
   }
 
   @Override
   public Query selectExcept(List<String> features) {
-    return null;
+    return new Query(this,
+        getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));
   }
 
   @Override
   public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
-
+    featureGroupEngine.appendFeatures(this, features, this.getClass());
   }
 
   @Override
   public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
-
+    featureGroupEngine.appendFeatures(this, Collections.singletonList(feature), this.getClass());
   }
 
   @Override
   public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
-
+    featureGroupEngine.appendFeatures(this, new ArrayList<>(features), this.getClass());
   }
 
   @Override
   public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
-
+    List<Feature> featureList = new ArrayList<>();
+    featureList.add(features);
+    featureGroupEngine.appendFeatures(this, featureList, this.getClass());
   }
 
   @Override
-  public <T> T computeStatistics() throws FeatureStoreException, IOException {
+  public Statistics computeStatistics() throws FeatureStoreException, IOException {
+    if (statisticsConfig.getEnabled()) {
+      return statisticsEngine.computeStatistics(this, read(), null);
+    } else {
+      LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
+          + version + "`. No statistics computed.");
+    }
     return null;
   }
 
@@ -187,7 +205,6 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
   @Override
   public void setDeltaStreamerJobConf(DeltaStreamerJobConf deltaStreamerJobConf)
       throws FeatureStoreException, IOException {
-
   }
 
   @Override
