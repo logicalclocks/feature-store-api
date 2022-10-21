@@ -94,7 +94,7 @@ public abstract class StorageConnector extends StorageConnectorBase {
   }
 
   public StorageConnector refetch() throws FeatureStoreException, IOException {
-    return (StorageConnector) storageConnectorApi.get(getFeaturestoreId(), getName());
+    return storageConnectorApi.get(getFeaturestoreId(), getName(), StorageConnector.class);
   }
 
   @JsonIgnore
@@ -376,7 +376,7 @@ public abstract class StorageConnector extends StorageConnectorBase {
     }
   }
 
-  public static class SparkJdbcConnector extends JdbcConnectorBase {
+  public static class SparkJdbcConnector extends StorageConnector {
 
     @Getter @Setter
     private String connectionString;
@@ -400,8 +400,7 @@ public abstract class StorageConnector extends StorageConnectorBase {
       if (!Strings.isNullOrEmpty(query)) {
         readOptions.put("query", query);
       }
-      return SparkEngine.getInstance().read((StorageConnector) this.refetch(), Constants.JDBC_FORMAT, readOptions,
-          null);
+      return SparkEngine.getInstance().read(refetch(), Constants.JDBC_FORMAT, readOptions, null);
     }
 
     public void update() throws FeatureStoreException, IOException {

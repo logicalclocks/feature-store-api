@@ -51,14 +51,14 @@ public class StatisticsApi {
 
   public Statistics post(FeatureGroupBase featureGroup, Statistics statistics)
       throws FeatureStoreException, IOException {
-    return post(featureGroup.getFeatureStoreBase().getProjectId(), featureGroup.getFeatureStoreBase().getId(),
+    return post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
         featureGroup.getId(), statistics);
   }
 
   public Statistics post(TrainingDatasetBase trainingDatasetBase, Statistics statistics)
       throws FeatureStoreException, IOException {
-    return post(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
-        trainingDatasetBase.getFeatureStoreBase().getId(),
+    return post(trainingDatasetBase.getFeatureStore().getProjectId(),
+        trainingDatasetBase.getFeatureStore().getId(),
         trainingDatasetBase.getId(), statistics);
   }
 
@@ -81,8 +81,8 @@ public class StatisticsApi {
     String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FV_STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
+        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("tdVersion", trainingDataVersion)
@@ -106,14 +106,14 @@ public class StatisticsApi {
 
 
   public Statistics get(FeatureGroupBase featureGroup, String commitTime) throws FeatureStoreException, IOException {
-    return get(featureGroup.getFeatureStoreBase().getProjectId(), featureGroup.getFeatureStoreBase().getId(),
+    return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
         featureGroup.getId(), commitTime);
   }
 
   public Statistics get(TrainingDatasetBase trainingDatasetBase, String commitTime)
       throws FeatureStoreException, IOException {
-    return get(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
-        trainingDatasetBase.getFeatureStoreBase().getId(),
+    return get(trainingDatasetBase.getFeatureStore().getProjectId(),
+        trainingDatasetBase.getFeatureStore().getId(),
         trainingDatasetBase.getId(), commitTime);
   }
 
@@ -145,13 +145,13 @@ public class StatisticsApi {
   }
 
   public Statistics getLast(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
-    return getLast(featureGroup.getFeatureStoreBase().getProjectId(), featureGroup.getFeatureStoreBase().getId(),
+    return getLast(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
         featureGroup.getId());
   }
 
   public Statistics getLast(TrainingDatasetBase trainingDatasetBase) throws FeatureStoreException, IOException {
-    return getLast(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
-        trainingDatasetBase.getFeatureStoreBase().getId(),
+    return getLast(trainingDatasetBase.getFeatureStore().getProjectId(),
+        trainingDatasetBase.getFeatureStore().getId(),
         trainingDatasetBase.getId());
   }
 

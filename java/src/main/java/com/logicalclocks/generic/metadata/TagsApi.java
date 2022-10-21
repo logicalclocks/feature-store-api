@@ -88,13 +88,13 @@ public class TagsApi {
 
   public void add(FeatureGroupBase featureGroupBase, String name, Object value)
       throws FeatureStoreException, IOException {
-    add(featureGroupBase.getFeatureStoreBase().getProjectId(), featureGroupBase.getFeatureStoreBase().getId(),
+    add(featureGroupBase.getFeatureStore().getProjectId(), featureGroupBase.getFeatureStore().getId(),
         featureGroupBase.getId(), name, value);
   }
 
   public void add(TrainingDatasetBase trainingDatasetBase, String name, Object value)
       throws FeatureStoreException, IOException {
-    add(trainingDatasetBase.getFeatureStoreBase().getProjectId(), trainingDatasetBase.getFeatureStoreBase().getId(),
+    add(trainingDatasetBase.getFeatureStore().getProjectId(), trainingDatasetBase.getFeatureStore().getId(),
         trainingDatasetBase.getId(), name, value);
   }
 
@@ -110,16 +110,16 @@ public class TagsApi {
 
   private UriTemplate getFvUriTemplate(FeatureViewBase featureViewBase) {
     return UriTemplate.fromTemplate(FV_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
+        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion());
   }
 
   private UriTemplate getFvUriTemplate(FeatureViewBase featureViewBase, String tagName) {
     return UriTemplate.fromTemplate(FV_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
+        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("name", tagName);
@@ -127,8 +127,8 @@ public class TagsApi {
 
   private UriTemplate getFvTdUriTemplate(FeatureViewBase featureViewBase, Integer trainingDatasetVersion) {
     return UriTemplate.fromTemplate(FV_TD_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
+        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("tdVersion", trainingDatasetVersion);
@@ -137,8 +137,8 @@ public class TagsApi {
   private UriTemplate getFvTdUriTemplate(FeatureViewBase featureViewBase, Integer trainingDatasetVersion,
                                          String tagName) {
     return UriTemplate.fromTemplate(FV_TD_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
+        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("tdVersion", trainingDatasetVersion)
@@ -199,25 +199,25 @@ public class TagsApi {
   }
 
   public Object get(FeatureGroupBase featureGroupBase, String name) throws FeatureStoreException, IOException {
-    return get(featureGroupBase.getFeatureStoreBase().getProjectId(),
-        featureGroupBase.getFeatureStoreBase().getId(), featureGroupBase.getId(), Optional.of(name))
+    return get(featureGroupBase.getFeatureStore().getProjectId(),
+        featureGroupBase.getFeatureStore().getId(), featureGroupBase.getId(), Optional.of(name))
         .get(name);
   }
 
   public Object get(TrainingDatasetBase trainingDatasetBase, String name) throws FeatureStoreException, IOException {
-    return get(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
-        trainingDatasetBase.getFeatureStoreBase().getId(), trainingDatasetBase.getId(), Optional.of(name))
+    return get(trainingDatasetBase.getFeatureStore().getProjectId(),
+        trainingDatasetBase.getFeatureStore().getId(), trainingDatasetBase.getId(), Optional.of(name))
         .get(name);
   }
 
   public Map<String, Object> get(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {
-    return get(featureGroupBase.getFeatureStoreBase().getProjectId(),
-      featureGroupBase.getFeatureStoreBase().getId(), featureGroupBase.getId(), Optional.empty());
+    return get(featureGroupBase.getFeatureStore().getProjectId(),
+      featureGroupBase.getFeatureStore().getId(), featureGroupBase.getId(), Optional.empty());
   }
 
   public Map<String, Object> get(TrainingDatasetBase trainingDatasetBase) throws FeatureStoreException, IOException {
-    return get(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
-      trainingDatasetBase.getFeatureStoreBase().getId(), trainingDatasetBase.getId(), Optional.empty());
+    return get(trainingDatasetBase.getFeatureStore().getProjectId(),
+      trainingDatasetBase.getFeatureStore().getId(), trainingDatasetBase.getId(), Optional.empty());
   }
 
   public Object parseTagValue(ObjectMapper objectMapper, Object value) throws IOException {
@@ -271,14 +271,14 @@ public class TagsApi {
   }
 
   public void deleteTag(FeatureGroupBase featureGroup, String name) throws FeatureStoreException, IOException {
-    deleteTag(featureGroup.getFeatureStoreBase().getProjectId(), featureGroup.getFeatureStoreBase().getId(),
+    deleteTag(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
         featureGroup.getId(), name);
   }
 
   public void deleteTag(TrainingDatasetBase trainingDatasetBase, String name)
       throws FeatureStoreException, IOException {
-    deleteTag(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
-        trainingDatasetBase.getFeatureStoreBase().getId(),
+    deleteTag(trainingDatasetBase.getFeatureStore().getProjectId(),
+        trainingDatasetBase.getFeatureStore().getId(),
         trainingDatasetBase.getId(), name);
   }
 }

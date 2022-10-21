@@ -18,7 +18,7 @@
 package com.logicalclocks.generic.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
-import com.logicalclocks.generic.FeatureStoreBase;
+import com.logicalclocks.generic.FeatureStore;
 import com.logicalclocks.generic.FeatureStoreException;
 import org.apache.http.client.methods.HttpGet;
 import org.slf4j.Logger;
@@ -37,14 +37,14 @@ public class KafkaApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaApi.class);
 
-  public Subject getTopicSubject(FeatureStoreBase featureStoreBase, String topicName)
+  public Subject getTopicSubject(FeatureStore featureStore, String topicName)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + KAFKA_PATH + TOPIC_PATH + SUBJECT_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStoreBase.getProjectId())
+        .set("projectId", featureStore.getProjectId())
         .set("topicName", topicName)
         .expand();
 
@@ -52,14 +52,14 @@ public class KafkaApi {
     return hopsworksClient.handleRequest(new HttpGet(uri), Subject.class);
   }
 
-  public List<PartitionDetails> getTopicDetails(FeatureStoreBase featureStoreBase, String topicName)
+  public List<PartitionDetails> getTopicDetails(FeatureStore featureStore, String topicName)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + KAFKA_PATH + TOPIC_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStoreBase.getProjectId())
+        .set("projectId", featureStore.getProjectId())
         .set("topicName", topicName)
         .expand();
 
@@ -76,13 +76,13 @@ public class KafkaApi {
     return partitionDetails;
   }
 
-  public List<String> getBrokerEndpoints(FeatureStoreBase featureStoreBase) throws FeatureStoreException, IOException {
+  public List<String> getBrokerEndpoints(FeatureStore featureStore) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + KAFKA_PATH + CLUSTERINFO_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStoreBase.getProjectId())
+        .set("projectId", featureStore.getProjectId())
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);

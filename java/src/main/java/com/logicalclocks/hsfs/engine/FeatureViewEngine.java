@@ -216,7 +216,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
   }
 
   private void setEventTime(FeatureView featureView, TrainingDataset trainingDataset) {
-    String eventTime = featureView.getQuery().getLeftFeatureGroup().getEventTime();
+    String eventTime = featureView.getQueryBase().getLeftFeatureGroup().getEventTime();
     if (!Strings.isNullOrEmpty(eventTime)) {
       if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()) {
         for (Split split : trainingDataset.getSplits()) {
@@ -332,7 +332,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
         withLabels,
         trainingDataVersion
     );
-    query.getLeftFeatureGroup().setFeatureStoreBase(featureView.getQuery().getLeftFeatureGroup().getFeatureStoreBase());
+    query.getLeftFeatureGroup().setFeatureStore(featureView.getQueryBase().getLeftFeatureGroup().getFeatureStore());
     return query;
   }
 

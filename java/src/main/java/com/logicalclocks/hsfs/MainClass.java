@@ -18,7 +18,6 @@
 package com.logicalclocks.hsfs;
 
 import com.logicalclocks.generic.DataFormat;
-import com.logicalclocks.generic.HopsworksConnection;
 import com.logicalclocks.generic.Split;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.constructor.Query;

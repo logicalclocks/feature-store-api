@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.google.common.collect.Lists;
 import com.logicalclocks.generic.constructor.FilterLogic;
-import com.logicalclocks.generic.constructor.Query;
+import com.logicalclocks.generic.constructor.QueryBase;
 import com.logicalclocks.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.generic.engine.VectorServer;
 import com.logicalclocks.generic.metadata.Statistics;
@@ -77,7 +77,7 @@ public abstract class TrainingDatasetBase {
   @Getter
   @Setter
   @JsonIgnore
-  private FeatureStoreBase featureStoreBase;
+  private FeatureStore featureStore;
 
   @Getter
   @Setter
@@ -106,7 +106,7 @@ public abstract class TrainingDatasetBase {
   @Getter
   @Setter
   @JsonProperty("queryDTO")
-  private Query queryInt;
+  private QueryBase queryBaseInt;
 
   @JsonIgnore
   private List<String> label;

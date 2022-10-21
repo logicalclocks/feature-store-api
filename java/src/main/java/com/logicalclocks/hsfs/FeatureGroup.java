@@ -63,6 +63,10 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
+  protected FeatureStore featureStore;
+
+  @Getter
+  @Setter
   private Boolean onlineEnabled;
 
   @Getter
@@ -105,7 +109,7 @@ public class FeatureGroup extends FeatureGroupBase {
                       List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
                       boolean onlineEnabled, TimeTravelFormat timeTravelFormat, List<Feature> features,
                       StatisticsConfig statisticsConfig, String onlineTopicName, String eventTime) {
-    this.featureStoreBase = featureStore;
+    this.featureStore = featureStore;
     this.name = name;
     this.version = version;
     this.description = description;
@@ -134,7 +138,7 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   public FeatureGroup(FeatureStore featureStore, int id) {
-    this.featureStoreBase = featureStore;
+    this.featureStore = featureStore;
     this.id = id;
   }
 
@@ -575,7 +579,7 @@ public class FeatureGroup extends FeatureGroupBase {
   @JsonIgnore
   public String getAvroSchema() throws FeatureStoreException, IOException {
     if (avroSchema == null) {
-      avroSchema = utils.getAvroSchema(this);
+      avroSchema = utils.getAvroSchema(this, this.featureStore);
     }
     return avroSchema;
   }

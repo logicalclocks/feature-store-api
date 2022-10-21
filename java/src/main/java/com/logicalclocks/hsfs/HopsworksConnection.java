@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020-2022. Hopsworks AB
+ *  Copyright (c) 2022. Hopsworks AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,9 +15,13 @@
  *
  */
 
-package com.logicalclocks.generic;
+package com.logicalclocks.hsfs;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.generic.FeatureStoreException;
+import com.logicalclocks.generic.HopsworksConnectionBase;
+import com.logicalclocks.generic.Project;
+import com.logicalclocks.generic.SecretStore;
 import com.logicalclocks.generic.metadata.FeatureStoreApi;
 import com.logicalclocks.generic.metadata.HopsworksClient;
 import com.logicalclocks.generic.metadata.ProjectApi;
@@ -28,10 +32,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.regions.Region;
 
-import java.io.Closeable;
 import java.io.IOException;
 
-public class HopsworksConnection implements Closeable {
+public class HopsworksConnection extends HopsworksConnectionBase {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksConnection.class);
 
@@ -99,7 +102,7 @@ public class HopsworksConnection implements Closeable {
    * @throws IOException
    * @throws FeatureStoreException
    */
-  public FeatureStoreBase getFeatureStore() throws IOException, FeatureStoreException {
+  public FeatureStore getFeatureStore() throws IOException, FeatureStoreException {
     return getFeatureStore(rewriteFeatureStoreName(project));
   }
 
@@ -112,11 +115,11 @@ public class HopsworksConnection implements Closeable {
    * @throws IOException
    * @throws FeatureStoreException
    */
-  public FeatureStoreBase getFeatureStore(String name) throws IOException, FeatureStoreException {
-    return featureStoreApi.get(projectObj.getProjectId(), rewriteFeatureStoreName(name));
+  public FeatureStore getFeatureStore(String name) throws IOException, FeatureStoreException {
+    return featureStoreApi.get(projectObj.getProjectId(), rewriteFeatureStoreName(name), FeatureStore.class);
   }
 
-  private String rewriteFeatureStoreName(String name) {
+  public String rewriteFeatureStoreName(String name) {
     name = name.toLowerCase();
     if (name.endsWith(Constants.FEATURESTORE_SUFFIX)) {
       return name;
@@ -132,12 +135,12 @@ public class HopsworksConnection implements Closeable {
     // Close the client
   }
 
-  private Project getProject() throws IOException, FeatureStoreException {
+  public Project getProject() throws IOException, FeatureStoreException {
     LOGGER.info("Getting information for project name: " + project);
     return projectApi.get(project);
   }
 
-  private String getProjectName(String project) {
+  public String getProjectName(String project) {
     if (Strings.isNullOrEmpty(project)) {
       // User didn't specify a project in the connection construction. Assume they are running
       // from within Hopsworks and the project name is available a system property

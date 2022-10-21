@@ -22,12 +22,14 @@ import com.logicalclocks.generic.FeatureStoreException;
 import com.logicalclocks.generic.Storage;
 import com.logicalclocks.generic.constructor.Filter;
 import com.logicalclocks.generic.constructor.FilterLogic;
-import com.logicalclocks.generic.constructor.FsQuery;
 import com.logicalclocks.generic.constructor.Join;
 import com.logicalclocks.generic.constructor.JoinType;
+import com.logicalclocks.generic.constructor.QueryBase;
 import com.logicalclocks.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.generic.metadata.QueryConstructorApi;
 import com.logicalclocks.generic.metadata.StorageConnectorApi;
+
+import com.logicalclocks.hsfs.constructor.FsQuery;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import lombok.Getter;
@@ -44,7 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class Query extends com.logicalclocks.generic.constructor.Query {
+public class Query extends QueryBase {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Query.class);
 
@@ -76,6 +78,23 @@ public class Query extends com.logicalclocks.generic.constructor.Query {
   public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
+  }
+
+  @Override
+  public String sql() {
+    // overriding toString does not work wtih jackson
+    return sql(Storage.OFFLINE);
+  }
+
+  @Override
+  public String sql(Storage storage) {
+    try {
+      return queryConstructorApi
+          .constructQuery(this.getLeftFeatureGroup().getFeatureStore(), this, FsQuery.class)
+          .getStorageQuery(storage);
+    } catch (FeatureStoreException | IOException e) {
+      return e.getMessage();
+    }
   }
 
   public Query join(Query subquery) {
@@ -241,13 +260,14 @@ public class Query extends com.logicalclocks.generic.constructor.Query {
 
   @Override
   public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
-    FsQuery fsQuery = queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStoreBase(), this);
+    FsQuery fsQuery = (FsQuery)
+        queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this, FsQuery.class);
 
     if (online) {
       LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.ONLINE));
       StorageConnector.SparkJdbcConnector onlineConnector =
-          (StorageConnector.SparkJdbcConnector) storageConnectorApi.getOnlineStorageConnector(
-              leftFeatureGroup.getFeatureStoreBase());
+          storageConnectorApi.getOnlineStorageConnector(
+              leftFeatureGroup.getFeatureStore(), StorageConnector.SparkJdbcConnector.class);
       return onlineConnector.read(fsQuery.getStorageQuery(Storage.ONLINE),null, null, null);
     } else {
       fsQuery.registerOnDemandFeatureGroups();

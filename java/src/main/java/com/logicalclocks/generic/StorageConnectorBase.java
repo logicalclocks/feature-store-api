@@ -64,9 +64,7 @@ public abstract class StorageConnectorBase {
 
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
-  public StorageConnectorBase refetch() throws FeatureStoreException, IOException, FeatureStoreException {
-    return  storageConnectorApi.get(getFeaturestoreId(), getName());
-  }
+  public abstract StorageConnectorBase refetch() throws FeatureStoreException, IOException, FeatureStoreException;
 
   @JsonIgnore
   public abstract String getPath(String subPath) throws FeatureStoreException;
@@ -91,6 +89,11 @@ public abstract class StorageConnectorBase {
     @Override
     public Object read(String query, String dataFormat, Map<String, String> options, String path)
         throws FeatureStoreException, IOException {
+      return null;
+    }
+
+    @Override
+    public StorageConnectorBase refetch() throws FeatureStoreException, IOException, FeatureStoreException {
       return null;
     }
 
@@ -122,10 +125,19 @@ public abstract class StorageConnectorBase {
       return null;
     }
 
+    // this will be overridden in engines
     public void update() throws FeatureStoreException, IOException {
+      /* TODO: (davit)
       JdbcConnectorBase updatedConnector = (JdbcConnectorBase) refetch();
       this.connectionString = updatedConnector.connectionString;
       this.arguments = updatedConnector.arguments;
+       */
+    }
+
+    @Override
+    // this will be overridden in engines
+    public StorageConnectorBase refetch() throws FeatureStoreException, IOException, FeatureStoreException {
+      return null;
     }
 
     @JsonIgnore

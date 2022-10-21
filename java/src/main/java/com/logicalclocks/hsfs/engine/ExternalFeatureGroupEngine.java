@@ -63,7 +63,8 @@ public class ExternalFeatureGroupEngine extends FeatureGroupBaseEngine {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(externalFeatureGroup);
 
-    return featureGroupApi.saveInternal(externalFeatureGroup, new StringEntity(featureGroupJson),
+    return (ExternalFeatureGroup)
+        featureGroupApi.saveInternal(externalFeatureGroup, new StringEntity(featureGroupJson),
         ExternalFeatureGroup.class);
   }
 }

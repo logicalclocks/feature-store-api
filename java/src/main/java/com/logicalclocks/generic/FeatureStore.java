@@ -32,7 +32,7 @@ import scala.collection.Seq;
 import java.io.IOException;
 import java.util.List;
 
-public abstract class FeatureStoreBase {
+public abstract class FeatureStore {
 
   @Getter
   @Setter
@@ -52,7 +52,7 @@ public abstract class FeatureStoreBase {
   private StorageConnectorApi storageConnectorApi;
   private FeatureViewEngineBase featureViewEngineBase;
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStoreBase.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
 
   private static final Integer DEFAULT_VERSION = 1;
 
@@ -160,11 +160,8 @@ public abstract class FeatureStoreBase {
    * @throws IOException
    */
 
-  public abstract Object getExternalFeatureGroups(@NonNull String name) throws FeatureStoreException, IOException;
-
-  public abstract Object sql(String query);
-
-  public StorageConnectorBase getStorageConnector(String name) throws FeatureStoreException, IOException {
+  /* TODO (davit): make abstract
+    public StorageConnectorBase getStorageConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name);
   }
 
@@ -172,6 +169,10 @@ public abstract class FeatureStoreBase {
       throws FeatureStoreException, IOException {
     return (StorageConnectorBase.HopsFsConnectorBase) storageConnectorApi.getByName(this, name);
   }
+   */
+  public abstract Object getExternalFeatureGroups(@NonNull String name) throws FeatureStoreException, IOException;
+
+  public abstract Object sql(String query);
 
   public abstract Object getJdbcConnector(String name) throws FeatureStoreException, IOException;
 

@@ -31,7 +31,7 @@ import com.logicalclocks.generic.TrainingDatasetFeature;
 import com.logicalclocks.generic.TrainingDatasetType;
 import com.logicalclocks.generic.constructor.Filter;
 import com.logicalclocks.generic.constructor.FilterLogic;
-import com.logicalclocks.generic.constructor.Query;
+import com.logicalclocks.generic.constructor.QueryBase;
 import com.logicalclocks.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.generic.engine.VectorServer;
 import com.logicalclocks.hsfs.engine.FeatureViewEngine;
@@ -81,7 +81,7 @@ public class FeatureView extends FeatureViewBase {
 
   @Getter
   @Setter
-  private Query query;
+  private QueryBase queryBase;
 
   @Getter
   @Setter
@@ -102,7 +102,7 @@ public class FeatureView extends FeatureViewBase {
     private Integer version;
     private String description;
     private FeatureStore featureStore;
-    private Query query;
+    private QueryBase queryBase;
     private List<String> labels;
 
     public FeatureViewBuilder(FeatureStore featureStore) {
@@ -124,8 +124,8 @@ public class FeatureView extends FeatureViewBase {
       return this;
     }
 
-    public FeatureViewBuilder query(Query query) {
-      this.query = query;
+    public FeatureViewBuilder query(QueryBase queryBase) {
+      this.queryBase = queryBase;
       return this;
     }
 
@@ -135,17 +135,17 @@ public class FeatureView extends FeatureViewBase {
     }
 
     public FeatureView build() throws FeatureStoreException, IOException {
-      FeatureView featureView = new FeatureView(name, version, query, description, featureStore, labels);
+      FeatureView featureView = new FeatureView(name, version, queryBase, description, featureStore, labels);
       featureViewEngine.save(featureView);
       return featureView;
     }
   }
 
-  public FeatureView(@NonNull String name, Integer version, @NonNull Query query, String description,
-      @NonNull FeatureStore featureStore, List<String> labels) {
+  public FeatureView(@NonNull String name, Integer version, @NonNull QueryBase queryBase, String description,
+                     @NonNull FeatureStore featureStore, List<String> labels) {
     this.name = name;
     this.version = version;
-    this.query = query;
+    this.queryBase = queryBase;
     this.description = description;
     this.featureStore = featureStore;
     this.labels = labels != null ? labels.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;

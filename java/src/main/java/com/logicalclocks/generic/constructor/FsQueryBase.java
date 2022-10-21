@@ -33,7 +33,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public abstract class FsQuery {
+public abstract class FsQueryBase {
   @Getter
   @Setter
   private String query;

@@ -20,7 +20,7 @@ package com.logicalclocks.generic;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.logicalclocks.generic.constructor.Filter;
 import com.logicalclocks.generic.constructor.FilterLogic;
-import com.logicalclocks.generic.constructor.Query;
+import com.logicalclocks.generic.constructor.QueryBase;
 import com.logicalclocks.generic.engine.VectorServer;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -60,11 +60,11 @@ public abstract class FeatureViewBase {
   @Getter
   @Setter
   @JsonIgnore
-  private FeatureStoreBase featureStoreBase;
+  private FeatureStore featureStore;
 
   @Getter
   @Setter
-  private Query query;
+  private QueryBase queryBase;
 
   @Getter
   @Setter

@@ -21,7 +21,7 @@ import com.google.common.collect.Maps;
 import com.logicalclocks.generic.EntityEndpointType;
 import com.logicalclocks.generic.FeatureStoreException;
 import com.logicalclocks.generic.Storage;
-import com.logicalclocks.generic.constructor.FsQuery;
+import com.logicalclocks.generic.constructor.FsQueryBase;
 import com.logicalclocks.generic.metadata.TagsApi;
 import com.logicalclocks.generic.metadata.TrainingDatasetApi;
 import com.logicalclocks.hsfs.TrainingDataset;
@@ -115,16 +115,16 @@ public class TrainingDatasetEngine {
 
   public String getQuery(TrainingDataset trainingDataset, Storage storage, boolean withLabel, boolean isHiveQuery)
       throws FeatureStoreException, IOException {
-    FsQuery fsQuery = trainingDatasetApi.getQuery(trainingDataset, withLabel, isHiveQuery);
+    FsQueryBase fsQueryBase = trainingDatasetApi.getQuery(trainingDataset, withLabel, isHiveQuery);
 
     if (storage == Storage.OFFLINE) {
       // register the temporary tables so that people can make
       // batch inference requests by doing `fs.sql(td.getQuery())`
-      fsQuery.registerOnDemandFeatureGroups();
-      fsQuery.registerHudiFeatureGroups(new HashMap<>());
+      fsQueryBase.registerOnDemandFeatureGroups();
+      fsQueryBase.registerHudiFeatureGroups(new HashMap<>());
     }
 
-    return fsQuery.getStorageQuery(storage);
+    return fsQueryBase.getStorageQuery(storage);
   }
 
   public void updateStatisticsConfig(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {

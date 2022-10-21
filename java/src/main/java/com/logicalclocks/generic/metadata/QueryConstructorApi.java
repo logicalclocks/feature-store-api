@@ -18,9 +18,9 @@
 package com.logicalclocks.generic.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
-import com.logicalclocks.generic.constructor.FsQuery;
-import com.logicalclocks.generic.constructor.Query;
-import com.logicalclocks.generic.FeatureStoreBase;
+import com.logicalclocks.generic.constructor.FsQueryBase;
+import com.logicalclocks.generic.constructor.QueryBase;
+import com.logicalclocks.generic.FeatureStore;
 import com.logicalclocks.generic.FeatureStoreException;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPut;
@@ -36,7 +36,7 @@ public class QueryConstructorApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(QueryConstructorApi.class);
 
-  public FsQuery constructQuery(FeatureStoreBase featureStoreBase, Query query)
+  public <U> FsQueryBase constructQuery(FeatureStore featureStore, QueryBase queryBase, Class<U> fgType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -44,18 +44,18 @@ public class QueryConstructorApi {
         + QUERY_CONSTRUCTOR_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStoreBase.getProjectId())
+        .set("projectId", featureStore.getProjectId())
         .expand();
 
-    String queryJson = hopsworksClient.getObjectMapper().writeValueAsString(query);
+    String queryJson = hopsworksClient.getObjectMapper().writeValueAsString(queryBase);
     HttpPut putRequest = new HttpPut(uri);
     putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
     putRequest.setEntity(new StringEntity(queryJson));
 
     LOGGER.info("Sending metadata request: " + uri);
     LOGGER.info("Sending query: " + queryJson);
-    FsQuery fsQuery = hopsworksClient.handleRequest(putRequest, FsQuery.class);
-    fsQuery.removeNewLines();
-    return fsQuery;
+    FsQueryBase fsQueryBase = (FsQueryBase) hopsworksClient.handleRequest(putRequest, fgType);
+    fsQueryBase.removeNewLines();
+    return fsQueryBase;
   }
 }

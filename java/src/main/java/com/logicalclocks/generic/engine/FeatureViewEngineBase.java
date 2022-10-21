@@ -18,11 +18,11 @@
 package com.logicalclocks.generic.engine;
 
 import com.google.common.collect.Lists;
-import com.logicalclocks.generic.constructor.Query;
+import com.logicalclocks.generic.constructor.QueryBase;
 import com.logicalclocks.generic.metadata.FeatureViewApi;
 import com.logicalclocks.generic.metadata.TagsApi;
 import com.logicalclocks.generic.EntityEndpointType;
-import com.logicalclocks.generic.FeatureStoreBase;
+import com.logicalclocks.generic.FeatureStore;
 import com.logicalclocks.generic.FeatureStoreException;
 import com.logicalclocks.generic.FeatureViewBase;
 import com.logicalclocks.generic.TrainingDatasetFeature;
@@ -65,14 +65,14 @@ public abstract class FeatureViewEngineBase {
     return featureViewBase;
   }
 
-  public FeatureViewBase get(FeatureStoreBase featureStoreBase, String name, Integer version)
+  public FeatureViewBase get(FeatureStore featureStore, String name, Integer version)
       throws FeatureStoreException, IOException {
-    FeatureViewBase featureViewBase = featureViewApi.get(featureStoreBase, name, version);
-    featureViewBase.setFeatureStoreBase(featureStoreBase);
+    FeatureViewBase featureViewBase = featureViewApi.get(featureStore, name, version);
+    featureViewBase.setFeatureStore(featureStore);
     featureViewBase.getFeatures().stream()
         .filter(f -> f.getFeatureGroup() != null)
-        .forEach(f -> f.getFeatureGroup().setFeatureStoreBase(featureStoreBase));
-    featureViewBase.getQuery().getLeftFeatureGroup().setFeatureStoreBase(featureStoreBase);
+        .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStore));
+    featureViewBase.getQueryBase().getLeftFeatureGroup().setFeatureStore(featureStore);
     featureViewBase.setLabels(
         featureViewBase.getFeatures().stream()
             .filter(TrainingDatasetFeature::getLabel)
@@ -81,15 +81,15 @@ public abstract class FeatureViewEngineBase {
     return featureViewBase;
   }
 
-  public List<FeatureViewBase> get(FeatureStoreBase featureStoreBase, String name) throws FeatureStoreException,
+  public List<FeatureViewBase> get(FeatureStore featureStore, String name) throws FeatureStoreException,
       IOException {
-    List<FeatureViewBase> featureViewBases = featureViewApi.get(featureStoreBase, name);
+    List<FeatureViewBase> featureViewBases = featureViewApi.get(featureStore, name);
     for (FeatureViewBase fv : featureViewBases) {
-      fv.setFeatureStoreBase(featureStoreBase);
+      fv.setFeatureStore(featureStore);
       fv.getFeatures().stream()
           .filter(f -> f.getFeatureGroup() != null)
-          .forEach(f -> f.getFeatureGroup().setFeatureStoreBase(featureStoreBase));
-      fv.getQuery().getLeftFeatureGroup().setFeatureStoreBase(featureStoreBase);
+          .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStore));
+      fv.getQueryBase().getLeftFeatureGroup().setFeatureStore(featureStore);
       fv.setLabels(
           fv.getFeatures().stream()
               .filter(TrainingDatasetFeature::getLabel)
@@ -99,14 +99,14 @@ public abstract class FeatureViewEngineBase {
     return featureViewBases;
   }
 
-  public void delete(FeatureStoreBase featureStoreBase, String name) throws FeatureStoreException,
+  public void delete(FeatureStore featureStore, String name) throws FeatureStoreException,
       IOException {
-    featureViewApi.delete(featureStoreBase, name);
+    featureViewApi.delete(featureStore, name);
   }
 
-  public void delete(FeatureStoreBase featureStoreBase, String name, Integer version) throws FeatureStoreException,
+  public void delete(FeatureStore featureStore, String name, Integer version) throws FeatureStoreException,
       IOException {
-    featureViewApi.delete(featureStoreBase, name, version);
+    featureViewApi.delete(featureStore, name, version);
   }
 
   public void createTrainingDataset() {
@@ -159,15 +159,15 @@ public abstract class FeatureViewEngineBase {
 
   public String getBatchQueryString(FeatureViewBase featureViewBase, Date startTime, Date endTime,
                                     Integer trainingDataVersion) throws FeatureStoreException, IOException {
-    Query query = getBatchQuery(featureViewBase, startTime, endTime, false, trainingDataVersion);
-    return query.sql();
+    QueryBase queryBase = getBatchQuery(featureViewBase, startTime, endTime, false, trainingDataVersion);
+    return queryBase.sql();
   }
 
-  public Query getBatchQuery(FeatureViewBase featureViewBase, Date startTime, Date endTime, Boolean withLabels,
-                             Integer trainingDataVersion)
+  public QueryBase getBatchQuery(FeatureViewBase featureViewBase, Date startTime, Date endTime, Boolean withLabels,
+                                 Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
-    Query query = featureViewApi.getBatchQuery(
-        featureViewBase.getFeatureStoreBase(),
+    QueryBase queryBase = featureViewApi.getBatchQuery(
+        featureViewBase.getFeatureStore(),
         featureViewBase.getName(),
         featureViewBase.getVersion(),
         startTime == null ? null : startTime.getTime(),
@@ -175,9 +175,9 @@ public abstract class FeatureViewEngineBase {
         withLabels,
         trainingDataVersion
     );
-    query.getLeftFeatureGroup().setFeatureStoreBase(
-        featureViewBase.getQuery().getLeftFeatureGroup().getFeatureStoreBase());
-    return query;
+    queryBase.getLeftFeatureGroup().setFeatureStore(
+        featureViewBase.getQueryBase().getLeftFeatureGroup().getFeatureStore());
+    return queryBase;
   }
 
   public void getBatchData() throws FeatureStoreException, IOException {

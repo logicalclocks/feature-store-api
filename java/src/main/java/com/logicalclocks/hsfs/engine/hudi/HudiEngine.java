@@ -28,6 +28,8 @@ import com.logicalclocks.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.generic.metadata.KafkaApi;
 import com.logicalclocks.generic.metadata.PartitionDetails;
 
+import com.logicalclocks.generic.metadata.StorageConnectorApi;
+import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -142,6 +144,7 @@ public class HudiEngine {
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
   private DeltaStreamerConfig deltaStreamerConfig = new DeltaStreamerConfig();
   private KafkaApi kafkaApi = new KafkaApi();
+  private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
   public void saveHudiFeatureGroup(SparkSession sparkSession, FeatureGroupBase featureGroup,
                                    Dataset<Row> dataset, HudiOperationType operation,
@@ -215,6 +218,11 @@ public class HudiEngine {
       throws IOException, FeatureStoreException {
     Map<String, String> hudiArgs = new HashMap<String, String>();
 
+    final StorageConnector.SparkJdbcConnector storageConnector = storageConnectorApi.getByName(
+        featureGroup.getFeatureStore(),
+        featureGroup.getFeatureStore().getName(), StorageConnector.SparkJdbcConnector.class);
+
+
     hudiArgs.put(HUDI_TABLE_STORAGE_TYPE, HUDI_COPY_ON_WRITE);
 
     hudiArgs.put(HUDI_KEY_GENERATOR_OPT_KEY, HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL);
@@ -248,8 +256,9 @@ public class HudiEngine {
     // Hive args
     hudiArgs.put(HUDI_HIVE_SYNC_ENABLE, "true");
     hudiArgs.put(HUDI_HIVE_SYNC_TABLE, tableName);
-    hudiArgs.put(HUDI_HIVE_SYNC_JDBC_URL, utils.getHiveServerConnection(featureGroup));
-    hudiArgs.put(HUDI_HIVE_SYNC_DB, featureGroup.getFeatureStoreBase().getName());
+    hudiArgs.put(HUDI_HIVE_SYNC_JDBC_URL, utils.getHiveServerConnection(featureGroup, storageConnector
+        .getConnectionString()));
+    hudiArgs.put(HUDI_HIVE_SYNC_DB, featureGroup.getFeatureStore().getName());
     hudiArgs.put(HIVE_AUTO_CREATE_DATABASE_OPT_KEY, HIVE_AUTO_CREATE_DATABASE_OPT_VAL);
     hudiArgs.put(HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP, "true");
     hudiArgs.put(HUDI_TABLE_OPERATION, operation.getValue());
@@ -303,7 +312,7 @@ public class HudiEngine {
   private String generetaInitialCheckPointStr(StreamFeatureGroup streamFeatureGroup)
       throws FeatureStoreException, IOException {
 
-    List<PartitionDetails> partitionDetails =  kafkaApi.getTopicDetails(streamFeatureGroup.getFeatureStoreBase(),
+    List<PartitionDetails> partitionDetails =  kafkaApi.getTopicDetails(streamFeatureGroup.getFeatureStore(),
         streamFeatureGroup.getOnlineTopicName());
 
     String partitionOffsets = partitionDetails.stream().map(partition -> partition.getId() + ":0")
@@ -316,8 +325,8 @@ public class HudiEngine {
 
     Map<String, String> hudiWriteOpts = setupHudiWriteOpts(streamFeatureGroup, HudiOperationType.UPSERT,
         writeOptions);
-    hudiWriteOpts.put(PROJECT_ID, String.valueOf(streamFeatureGroup.getFeatureStoreBase().getProjectId()));
-    hudiWriteOpts.put(FEATURE_STORE_NAME, streamFeatureGroup.getFeatureStoreBase().getName());
+    hudiWriteOpts.put(PROJECT_ID, String.valueOf(streamFeatureGroup.getFeatureStore().getProjectId()));
+    hudiWriteOpts.put(FEATURE_STORE_NAME, streamFeatureGroup.getFeatureStore().getName());
     hudiWriteOpts.put(FEATURE_GROUP_NAME, streamFeatureGroup.getName());
     hudiWriteOpts.put(FEATURE_GROUP_VERSION, String.valueOf(streamFeatureGroup.getVersion()));
     hudiWriteOpts.put(HUDI_TABLE_NAME, utils.getFgName(streamFeatureGroup));

@@ -883,7 +883,7 @@ public class SparkEngine {
     HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
     config.put("kafka.bootstrap.servers",
-        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStoreBase()).stream().map(broker -> broker.replaceAll(
+        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
             "INTERNAL://", "")).collect(Collectors.joining(",")));
     config.put("kafka.security.protocol", "SSL");
     config.put("kafka.ssl.truststore.location", client.getTrustStorePath());

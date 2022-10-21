@@ -46,14 +46,14 @@ public class CodeApi {
 
   public void post(FeatureGroupBase featureGroup, Code code, String entityId, Code.RunType type, String browserHostName)
           throws FeatureStoreException, IOException {
-    post(featureGroup.getFeatureStoreBase().getProjectId(), featureGroup.getFeatureStoreBase().getId(),
+    post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
             featureGroup.getId(), code, entityId, type, browserHostName);
   }
 
   public void post(TrainingDatasetBase trainingDatasetBase, Code code, String entityId, Code.RunType type,
                    String browserHostName)
           throws FeatureStoreException, IOException {
-    post(trainingDatasetBase.getFeatureStoreBase().getProjectId(), trainingDatasetBase.getFeatureStoreBase().getId(),
+    post(trainingDatasetBase.getFeatureStore().getProjectId(), trainingDatasetBase.getFeatureStore().getId(),
             trainingDatasetBase.getId(), code, entityId, type, browserHostName);
   }
 

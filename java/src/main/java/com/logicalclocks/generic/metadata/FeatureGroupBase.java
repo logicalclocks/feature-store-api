@@ -20,10 +20,10 @@ package com.logicalclocks.generic.metadata;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.logicalclocks.generic.constructor.Filter;
 import com.logicalclocks.generic.constructor.FilterLogic;
-import com.logicalclocks.generic.constructor.Query;
+import com.logicalclocks.generic.constructor.QueryBase;
 import com.logicalclocks.generic.DeltaStreamerJobConf;
 import com.logicalclocks.generic.Feature;
-import com.logicalclocks.generic.FeatureStoreBase;
+import com.logicalclocks.generic.FeatureStore;
 import com.logicalclocks.generic.FeatureStoreException;
 import com.logicalclocks.generic.StatisticsConfig;
 import com.logicalclocks.generic.TimeTravelFormat;
@@ -52,7 +52,7 @@ public abstract class FeatureGroupBase {
 
   @Getter
   @Setter
-  protected FeatureStoreBase featureStoreBase;
+  protected FeatureStore featureStore;
 
   @Getter
   @Setter
@@ -99,25 +99,25 @@ public abstract class FeatureGroupBase {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
 
-  public FeatureGroupBase(FeatureStoreBase featureStoreBase, Integer id) {
-    this.featureStoreBase = featureStoreBase;
+  public FeatureGroupBase(FeatureStore featureStore, Integer id) {
+    this.featureStore = featureStore;
     this.id = id;
   }
 
-  public abstract Query selectFeatures(List<Feature> features);
+  public abstract QueryBase selectFeatures(List<Feature> features);
 
-  public Query select(List<String> features) {
+  public QueryBase select(List<String> features) {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
     List<Feature> featureObjList = features.stream().map(Feature::new).collect(Collectors.toList());
     return selectFeatures(featureObjList);
   }
 
-  public abstract Query selectAll();
+  public abstract QueryBase selectAll();
 
-  public abstract Query selectExceptFeatures(List<Feature> features);
+  public abstract QueryBase selectExceptFeatures(List<Feature> features);
 
-  public abstract Query selectExcept(List<String> features);
+  public abstract QueryBase selectExcept(List<String> features);
 
   public void delete() throws FeatureStoreException, IOException {
     featureGroupBaseEngine.delete(this);
@@ -281,7 +281,7 @@ public abstract class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Query filter(Filter filter) throws FeatureStoreException, IOException {
+  public QueryBase filter(Filter filter) throws FeatureStoreException, IOException {
     return this.selectAll().genericFilter(filter);
   }
 
@@ -293,7 +293,7 @@ public abstract class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public Query filter(FilterLogic filter) throws FeatureStoreException, IOException {
+  public QueryBase filter(FilterLogic filter) throws FeatureStoreException, IOException {
     return this.selectAll().genericFilter(filter);
   }
 

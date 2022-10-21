@@ -18,7 +18,6 @@
 package com.logicalclocks.generic.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
-import com.logicalclocks.generic.FeatureStoreBase;
 import com.logicalclocks.generic.FeatureStoreException;
 import org.apache.http.client.methods.HttpGet;
 import org.slf4j.Logger;
@@ -34,7 +33,7 @@ public class FeatureStoreApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStoreApi.class);
 
-  public FeatureStoreBase get(int projectId, String name) throws IOException, FeatureStoreException {
+  public <U> U  get(int projectId, String name, Class<U> fsType) throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FEATURE_STORE_NAME_PATH;
@@ -45,6 +44,6 @@ public class FeatureStoreApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    return hopsworksClient.handleRequest(new HttpGet(uri), FeatureStoreBase.class);
+    return hopsworksClient.handleRequest(new HttpGet(uri), fsType);
   }
 }

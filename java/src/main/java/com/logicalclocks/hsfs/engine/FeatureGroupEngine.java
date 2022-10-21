@@ -239,7 +239,7 @@ public class FeatureGroupEngine {
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
     FeatureGroup apiFG = (FeatureGroup) featureGroupApi.saveFeatureGroupMetaData(featureGroup, partitionKeys,
-        hudiPrecombineKey, null, null);
+        hudiPrecombineKey, null, null, FeatureGroup.class);
 
     featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
 
@@ -271,7 +271,7 @@ public class FeatureGroupEngine {
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
     StreamFeatureGroup apiFG = (StreamFeatureGroup) featureGroupApi.saveFeatureGroupMetaData(featureGroup,
-        partitionKeys, hudiPrecombineKey, writeOptions, sparkJobConfiguration);
+        partitionKeys, hudiPrecombineKey, writeOptions, sparkJobConfiguration, StreamFeatureGroup.class);
     featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
 
 
@@ -306,7 +306,7 @@ public class FeatureGroupEngine {
             .eventTime(eventTime)
             .build();
 
-        featureGroup.setFeatureStoreBase(featureStore);
+        featureGroup.setFeatureStore(featureStore);
       } else {
         throw e;
       }
@@ -377,7 +377,7 @@ public class FeatureGroupEngine {
     // There can be only one single feature group with a specific name and version in a feature store
     // There has to be one otherwise an exception would have been thrown.
     FeatureGroup resultFg = offlineFeatureGroups[0];
-    resultFg.setFeatureStoreBase(featureStore);
+    resultFg.setFeatureStore(featureStore);
     return resultFg;
   }
 
@@ -389,7 +389,7 @@ public class FeatureGroupEngine {
     // There can be only one single feature group with a specific name and version in a feature store
     // There has to be one otherwise an exception would have been thrown.
     StreamFeatureGroup resultFg = streamFeatureGroups[0];
-    resultFg.setFeatureStoreBase(featureStore);
+    resultFg.setFeatureStore(featureStore);
     return resultFg;
   }
 
@@ -427,7 +427,7 @@ public class FeatureGroupEngine {
             .eventTime(eventTime)
             .build();
 
-        featureGroup.setFeatureStoreBase(featureStore);
+        featureGroup.setFeatureStore(featureStore);
       } else {
         throw e;
       }
@@ -452,7 +452,7 @@ public class FeatureGroupEngine {
     // There can be only one single feature group with a specific name and version in a feature store
     // There has to be one otherwise an exception would have been thrown.
     ExternalFeatureGroup resultFg = offlineFeatureGroups[0];
-    resultFg.setFeatureStoreBase(featureStore);
+    resultFg.setFeatureStore(featureStore);
     return resultFg;
   }
 }

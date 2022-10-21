@@ -18,6 +18,7 @@
 package com.logicalclocks.generic.engine;
 
 import com.logicalclocks.generic.Feature;
+import com.logicalclocks.generic.FeatureStore;
 import com.logicalclocks.generic.metadata.FeatureGroupApi;
 import com.logicalclocks.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.generic.metadata.HopsworksClient;
@@ -25,7 +26,6 @@ import com.logicalclocks.generic.metadata.KafkaApi;
 import com.logicalclocks.generic.metadata.StorageConnectorApi;
 import com.logicalclocks.generic.FeatureGroupCommit;
 import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.StorageConnectorBase;
 import lombok.SneakyThrows;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -54,7 +54,7 @@ public class FeatureGroupUtils {
 
   // TODO(Fabio): this should be moved in the backend
   public String getTableName(FeatureGroupBase offlineFeatureGroup) {
-    return offlineFeatureGroup.getFeatureStoreBase().getName() + "."
+    return offlineFeatureGroup.getFeatureStore().getName() + "."
         + offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
   }
 
@@ -84,18 +84,15 @@ public class FeatureGroupUtils {
     return featureGroup.getName() + "_" + featureGroup.getVersion();
   }
 
-  public String getHiveServerConnection(FeatureGroupBase featureGroup) throws IOException, FeatureStoreException {
+  public String getHiveServerConnection(FeatureGroupBase featureGroup, String connectionString)
+      throws IOException, FeatureStoreException {
     Map<String, String> credentials = new HashMap<>();
     credentials.put("sslTrustStore", HopsworksClient.getInstance().getHopsworksHttpClient().getTrustStorePath());
     credentials.put("trustStorePassword", HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey());
     credentials.put("sslKeyStore", HopsworksClient.getInstance().getHopsworksHttpClient().getKeyStorePath());
     credentials.put("keyStorePassword", HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey());
 
-    StorageConnectorBase.JdbcConnectorBase storageConnector =
-        (StorageConnectorBase.JdbcConnectorBase) storageConnectorApi.getByName(featureGroup.getFeatureStoreBase(),
-            featureGroup.getFeatureStoreBase().getName());
-
-    return storageConnector.getConnectionString()
+    return connectionString
         + credentials.entrySet().stream().map(cred -> cred.getKey() + "=" + cred.getValue())
         .collect(Collectors.joining(";"));
   }
@@ -173,8 +170,9 @@ public class FeatureGroupUtils {
     return commitDetails;
   }
 
-  public String getAvroSchema(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
-    return kafkaApi.getTopicSubject(featureGroup.getFeatureStoreBase(), featureGroup.getOnlineTopicName()).getSchema();
+  public String getAvroSchema(FeatureGroupBase featureGroup, FeatureStore featureStore)
+      throws FeatureStoreException, IOException {
+    return kafkaApi.getTopicSubject(featureStore, featureGroup.getOnlineTopicName()).getSchema();
   }
 
 

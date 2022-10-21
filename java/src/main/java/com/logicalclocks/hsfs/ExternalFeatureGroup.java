@@ -94,7 +94,7 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
                               @NonNull StorageConnector storageConnector, String description,
                               List<String> primaryKeys, List<Feature> features, StatisticsConfig statisticsConfig,
                               String eventTime) {
-    this.featureStoreBase = featureStore;
+    this.featureStore = featureStore;
     this.name = name;
     this.version = version;
     this.query = query;
@@ -117,7 +117,7 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
   }
 
   public ExternalFeatureGroup(FeatureStore featureStore, int id) {
-    this.featureStoreBase = featureStore;
+    this.featureStore = featureStore;
     this.id = id;
   }
 

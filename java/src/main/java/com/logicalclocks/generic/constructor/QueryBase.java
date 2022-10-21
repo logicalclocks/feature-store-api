@@ -38,9 +38,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public abstract class Query {
+public abstract class QueryBase {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(Query.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(QueryBase.class);
 
   @Getter
   @Setter
@@ -67,109 +67,99 @@ public abstract class Query {
   private QueryConstructorApi queryConstructorApi = new QueryConstructorApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
-  public String sql() {
-    // overriding toString does not work wtih jackson
-    return sql(Storage.OFFLINE);
-  }
+  public abstract String sql();
 
-  public String sql(Storage storage) {
-    try {
-      return queryConstructorApi
-          .constructQuery(leftFeatureGroup.getFeatureStoreBase(), this)
-          .getStorageQuery(storage);
-    } catch (FeatureStoreException | IOException e) {
-      return e.getMessage();
-    }
-  }
+  public abstract String sql(Storage storage);
 
-  public Query genericJoin(Query subquery) {
+  public QueryBase genericJoin(QueryBase subquery) {
     return genericJoin(subquery, JoinType.INNER);
   }
 
-  public Query genericJoin(Query subquery, String prefix) {
+  public QueryBase genericJoin(QueryBase subquery, String prefix) {
     return genericJoin(subquery, JoinType.INNER, prefix);
   }
 
-  public Query genericJoin(Query subquery, List<String> on) {
+  public QueryBase genericJoin(QueryBase subquery, List<String> on) {
     return genericJoinFeatures(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER);
   }
 
-  public Query genericJoin(Query subquery, List<String> leftOn, List<String> rightOn) {
+  public QueryBase genericJoin(QueryBase subquery, List<String> leftOn, List<String> rightOn) {
     return genericJoinFeatures(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
         rightOn.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER);
   }
 
-  public Query genericJoin(Query subquery, List<String> leftOn, List<String> rightOn, String prefix) {
+  public QueryBase genericJoin(QueryBase subquery, List<String> leftOn, List<String> rightOn, String prefix) {
     return genericJoinFeatures(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
         rightOn.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER, prefix);
   }
 
-  public Query genericJoin(Query subquery, JoinType joinType) {
+  public QueryBase genericJoin(QueryBase subquery, JoinType joinType) {
     joins.add(new Join(subquery, joinType, null));
     return this;
   }
 
-  public Query genericJoin(Query subquery, JoinType joinType, String prefix) {
+  public QueryBase genericJoin(QueryBase subquery, JoinType joinType, String prefix) {
     joins.add(new Join(subquery, joinType, prefix));
     return this;
   }
 
-  public Query genericJoin(Query subquery, List<String> on, JoinType joinType) {
+  public QueryBase genericJoin(QueryBase subquery, List<String> on, JoinType joinType) {
     joins.add(new Join(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), joinType, null));
     return this;
   }
 
-  public Query genericJoin(Query subquery, List<String> on, JoinType joinType, String prefix) {
+  public QueryBase genericJoin(QueryBase subquery, List<String> on, JoinType joinType, String prefix) {
     joins.add(new Join(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), joinType, prefix));
     return this;
   }
 
-  public Query genericJoin(Query subquery, List<String> leftOn, List<String> rightOn, JoinType joinType) {
+  public QueryBase genericJoin(QueryBase subquery, List<String> leftOn, List<String> rightOn, JoinType joinType) {
     joins.add(new Join(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
         rightOn.stream().map(Feature::new).collect(Collectors.toList()), joinType, null));
     return this;
   }
 
-  public Query genericJoin(Query subquery, List<String> leftOn, List<String> rightOn, JoinType joinType,
-                           String prefix) {
+  public QueryBase genericJoin(QueryBase subquery, List<String> leftOn, List<String> rightOn, JoinType joinType,
+                               String prefix) {
     joins.add(new Join(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
         rightOn.stream().map(Feature::new).collect(Collectors.toList()), joinType, prefix));
     return this;
   }
 
-  public Query genericJoinFeatures(Query subquery, List<Feature> on) {
+  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> on) {
     return genericJoinFeatures(subquery, on, JoinType.INNER);
   }
 
-  public Query genericJoinFeatures(Query subquery, List<Feature> on, String prefix) {
+  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> on, String prefix) {
     return genericJoinFeatures(subquery, on, JoinType.INNER, prefix);
   }
 
-  public Query genericJoinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn) {
+  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> leftOn, List<Feature> rightOn) {
     return genericJoinFeatures(subquery, leftOn, rightOn, JoinType.INNER);
   }
 
-  public Query genericJoinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn, String prefix) {
+  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> leftOn, List<Feature> rightOn, String prefix) {
     return genericJoinFeatures(subquery, leftOn, rightOn, JoinType.INNER, prefix);
   }
 
-  public Query genericJoinFeatures(Query subquery, List<Feature> on, JoinType joinType) {
+  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> on, JoinType joinType) {
     joins.add(new Join(subquery, on, joinType, null));
     return this;
   }
 
-  public Query genericJoinFeatures(Query subquery, List<Feature> on, JoinType joinType, String prefix) {
+  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> on, JoinType joinType, String prefix) {
     joins.add(new Join(subquery, on, joinType, prefix));
     return this;
   }
 
-  public Query genericJoinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType) {
+  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> leftOn, List<Feature> rightOn,
+                                       JoinType joinType) {
     joins.add(new Join(subquery, leftOn, rightOn, joinType, null));
     return this;
   }
 
-  public Query genericJoinFeatures(Query subquery, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType,
-                            String prefix) {
+  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> leftOn, List<Feature> rightOn,
+                                       JoinType joinType, String prefix) {
     joins.add(new Join(subquery, leftOn, rightOn, joinType, prefix));
     return this;
   }
@@ -185,7 +175,7 @@ public abstract class Query {
    * @throws FeatureStoreException
    * @throws ParseException
    */
-  public Query genericAsOf(String wallclockTime) throws FeatureStoreException, ParseException {
+  public QueryBase genericAsOf(String wallclockTime) throws FeatureStoreException, ParseException {
     return genericAsOf(wallclockTime, null);
   }
 
@@ -201,19 +191,19 @@ public abstract class Query {
    * @throws FeatureStoreException
    * @throws ParseException
    */
-  public Query genericAsOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
+  public QueryBase genericAsOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
     Long wallclockTimestamp = utils.getTimeStampFromDateString(wallclockTime);
     Long excludeUntilTimestamp = null;
     if (excludeUntil != null) {
       excludeUntilTimestamp = utils.getTimeStampFromDateString(excludeUntil);
     }
     for (Join join : this.joins) {
-      Query queryWithTimeStamp = join.getQuery();
-      queryWithTimeStamp.setLeftFeatureGroupEndTime(wallclockTimestamp);
+      QueryBase queryBaseWithTimeStamp = join.getQueryBase();
+      queryBaseWithTimeStamp.setLeftFeatureGroupEndTime(wallclockTimestamp);
       if (excludeUntilTimestamp != null) {
-        queryWithTimeStamp.setLeftFeatureGroupStartTime(excludeUntilTimestamp);
+        queryBaseWithTimeStamp.setLeftFeatureGroupStartTime(excludeUntilTimestamp);
       }
-      join.setQuery(queryWithTimeStamp);
+      join.setQueryBase(queryBaseWithTimeStamp);
     }
     this.setLeftFeatureGroupEndTime(wallclockTimestamp);
     if (excludeUntilTimestamp != null) {
@@ -234,14 +224,14 @@ public abstract class Query {
    *
    * @deprecated use asOf(wallclockEndTime, wallclockStartTime) instead
    */
-  public Query genericPullChanges(String wallclockStartTime, String wallclockEndTime)
+  public QueryBase genericPullChanges(String wallclockStartTime, String wallclockEndTime)
       throws FeatureStoreException, ParseException {
     this.setLeftFeatureGroupStartTime(utils.getTimeStampFromDateString(wallclockStartTime));
     this.setLeftFeatureGroupEndTime(utils.getTimeStampFromDateString(wallclockEndTime));
     return this;
   }
 
-  public Query genericFilter(Filter filter) {
+  public QueryBase genericFilter(Filter filter) {
     if (this.filter == null) {
       this.filter = new FilterLogic(filter);
     } else {
@@ -250,7 +240,7 @@ public abstract class Query {
     return this;
   }
 
-  public Query genericFilter(FilterLogic filter) {
+  public QueryBase genericFilter(FilterLogic filter) {
     if (this.filter == null) {
       this.filter = filter;
     } else {
@@ -259,7 +249,7 @@ public abstract class Query {
     return this;
   }
 
-  public Query getericAppendFeature(Feature feature) {
+  public QueryBase getericAppendFeature(Feature feature) {
     this.leftFeatures.add(feature);
     return this;
   }
