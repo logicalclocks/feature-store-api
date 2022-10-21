@@ -24,7 +24,7 @@ import com.logicalclocks.generic.metadata.HopsworksClient;
 import com.logicalclocks.generic.metadata.HopsworksExternalClient;
 import com.logicalclocks.generic.metadata.StorageConnectorApi;
 import com.logicalclocks.generic.metadata.TrainingDatasetApi;
-import com.logicalclocks.generic.FeatureStore;
+import com.logicalclocks.generic.FeatureStoreBase;
 import com.logicalclocks.generic.FeatureStoreException;
 import com.logicalclocks.generic.FeatureViewBase;
 import com.logicalclocks.generic.StorageConnectorBase;
@@ -91,7 +91,7 @@ public class VectorServer {
     if (preparedStatements == null || isBatch) {
       initPreparedStatement(trainingDatasetBase, false, external);
     }
-    return getFeatureVector(trainingDatasetBase.getFeatureStore(),
+    return getFeatureVector(trainingDatasetBase.getFeatureStoreBase(),
         trainingDatasetBase.getFeatures(), entry, external);
   }
 
@@ -106,14 +106,14 @@ public class VectorServer {
     if (preparedStatements == null || isBatch) {
       initPreparedStatement(featureViewBase, false, external);
     }
-    return getFeatureVector(featureViewBase.getFeatureStore(), featureViewBase.getFeatures(), entry, external);
+    return getFeatureVector(featureViewBase.getFeatureStoreBase(), featureViewBase.getFeatures(), entry, external);
   }
 
-  private List<Object> getFeatureVector(FeatureStore featureStore, List<TrainingDatasetFeature> features,
+  private List<Object> getFeatureVector(FeatureStoreBase featureStoreBase, List<TrainingDatasetFeature> features,
                                         Map<String, Object> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException {
     checkPrimaryKeys(entry.keySet());
-    refreshJdbcConnection(featureStore, external);
+    refreshJdbcConnection(featureStoreBase, external);
     // Iterate over entry map of preparedStatements and set values to them
     for (Integer fgId : preparedStatements.keySet()) {
       Map<String, Integer> parameterIndexInStatement = preparedStatementParameters.get(fgId);
@@ -172,13 +172,13 @@ public class VectorServer {
       // it was not initialized from initPreparedStatement(batchSize)
       initPreparedStatement(trainingDatasetBase, true, external);
     }
-    return getFeatureVectors(trainingDatasetBase.getFeatureStore(), trainingDatasetBase.getFeatures(),
+    return getFeatureVectors(trainingDatasetBase.getFeatureStoreBase(), trainingDatasetBase.getFeatures(),
         entry, external);
   }
 
   public List<List<Object>> getFeatureVectors(FeatureViewBase featureViewBase, Map<String, List<Object>> entry)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return getFeatureVectors(featureViewBase.getFeatureStore(), featureViewBase.getFeatures(), entry,
+    return getFeatureVectors(featureViewBase.getFeatureStoreBase(), featureViewBase.getFeatures(), entry,
         HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
   }
 
@@ -188,17 +188,17 @@ public class VectorServer {
     if (preparedStatements == null || !isBatch) {
       initPreparedStatement(featureViewBase, true, external);
     }
-    return getFeatureVectors(featureViewBase.getFeatureStore(), featureViewBase.getFeatures(), entry, external);
+    return getFeatureVectors(featureViewBase.getFeatureStoreBase(), featureViewBase.getFeatures(), entry, external);
   }
 
-  private List<List<Object>> getFeatureVectors(FeatureStore featureStore, List<TrainingDatasetFeature> features,
+  private List<List<Object>> getFeatureVectors(FeatureStoreBase featureStoreBase, List<TrainingDatasetFeature> features,
                                                Map<String, List<Object>> entry)
       throws SQLException, FeatureStoreException, IOException {
-    return getFeatureVectors(featureStore, features, entry,
+    return getFeatureVectors(featureStoreBase, features, entry,
         HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
   }
 
-  private List<List<Object>> getFeatureVectors(FeatureStore featureStore, List<TrainingDatasetFeature> features,
+  private List<List<Object>> getFeatureVectors(FeatureStoreBase featureStoreBase, List<TrainingDatasetFeature> features,
                                                Map<String, List<Object>> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException {
     checkPrimaryKeys(entry.keySet());
@@ -210,13 +210,13 @@ public class VectorServer {
               .collect(Collectors.toList()));
       queries.add(query.replaceFirst("\\?", zippedTupleString));
     }
-    return getFeatureVectors(featureStore, features, queries, external);
+    return getFeatureVectors(featureStoreBase, features, queries, external);
   }
 
-  private List<List<Object>> getFeatureVectors(FeatureStore featureStore, List<TrainingDatasetFeature> features,
+  private List<List<Object>> getFeatureVectors(FeatureStoreBase featureStoreBase, List<TrainingDatasetFeature> features,
                                                List<String> queries, boolean external)
       throws SQLException, FeatureStoreException, IOException {
-    refreshJdbcConnection(featureStore, external);
+    refreshJdbcConnection(featureStoreBase, external);
     ArrayList<Object> servingVector = new ArrayList<>();
 
     Map<String, DatumReader<Object>> complexFeatureSchemas = getComplexFeatureSchemas(features);
@@ -297,7 +297,7 @@ public class VectorServer {
     }
     List<ServingPreparedStatement> servingPreparedStatements =
         trainingDatasetApi.getServingPreparedStatement(trainingDatasetBase, batch);
-    initPreparedStatement(trainingDatasetBase.getFeatureStore(), servingPreparedStatements, batch, external);
+    initPreparedStatement(trainingDatasetBase.getFeatureStoreBase(), servingPreparedStatements, batch, external);
   }
 
   public void initPreparedStatement(FeatureViewBase featureViewBase, boolean batch)
@@ -315,24 +315,24 @@ public class VectorServer {
     }
     List<ServingPreparedStatement> servingPreparedStatements =
         featureViewApi.getServingPreparedStatement(featureViewBase, batch);
-    initPreparedStatement(featureViewBase.getFeatureStore(), servingPreparedStatements, batch, external);
+    initPreparedStatement(featureViewBase.getFeatureStoreBase(), servingPreparedStatements, batch, external);
   }
 
-  private void initPreparedStatement(FeatureStore featureStore,
+  private void initPreparedStatement(FeatureStoreBase featureStoreBase,
                                      List<ServingPreparedStatement> servingPreparedStatements, boolean batch)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
-    initPreparedStatement(featureStore, servingPreparedStatements, batch,
+    initPreparedStatement(featureStoreBase, servingPreparedStatements, batch,
         HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
   }
 
-  private void initPreparedStatement(FeatureStore featureStore,
+  private void initPreparedStatement(FeatureStoreBase featureStoreBase,
                                      List<ServingPreparedStatement> servingPreparedStatements, boolean batch,
                                      boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     Class.forName("com.mysql.jdbc.Driver");
 
     this.isBatch = batch;
-    setupJdbcConnection(featureStore, external);
+    setupJdbcConnection(featureStoreBase, external);
     // map of prepared statement index and its corresponding parameter indices
     Map<Integer, TreeMap<String, Integer>> preparedStatementParameters = new HashMap<>();
     // save map of fg index and its prepared statement
@@ -365,10 +365,10 @@ public class VectorServer {
     this.preparedQueryString = preparedQueryString;
   }
 
-  private void setupJdbcConnection(FeatureStore featureStore, Boolean external) throws FeatureStoreException,
+  private void setupJdbcConnection(FeatureStoreBase featureStoreBase, Boolean external) throws FeatureStoreException,
       IOException, SQLException {
     StorageConnectorBase storageConnectorBase =
-        storageConnectorApi.getOnlineStorageConnector(featureStore, StorageConnectorBase.class);
+        storageConnectorApi.getOnlineStorageConnector(featureStoreBase, StorageConnectorBase.class);
     Map<String, String> jdbcOptions = storageConnectorBase.sparkOptions();
     String url = jdbcOptions.get(Constants.JDBC_URL);
     if (external) {
@@ -393,10 +393,10 @@ public class VectorServer {
     return "(" + String.join(",", zippedTuples) + ")";
   }
 
-  private void refreshJdbcConnection(FeatureStore featureStore, Boolean external) throws FeatureStoreException,
+  private void refreshJdbcConnection(FeatureStoreBase featureStoreBase, Boolean external) throws FeatureStoreException,
       IOException, SQLException {
     if (!preparedStatementConnection.isValid(1)) {
-      setupJdbcConnection(featureStore, external);
+      setupJdbcConnection(featureStoreBase, external);
     }
   }
 

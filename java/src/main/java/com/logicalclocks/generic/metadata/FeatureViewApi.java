@@ -23,7 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.logicalclocks.generic.constructor.QueryBase;
 import com.logicalclocks.generic.constructor.ServingPreparedStatement;
-import com.logicalclocks.generic.FeatureStore;
+import com.logicalclocks.generic.FeatureStoreBase;
 import com.logicalclocks.generic.FeatureStoreException;
 import com.logicalclocks.generic.FeatureViewBase;
 import com.logicalclocks.generic.TrainingDatasetBase;
@@ -63,8 +63,8 @@ public class FeatureViewApi {
   public FeatureViewBase save(FeatureViewBase featureViewBase) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String uri = UriTemplate.fromTemplate(FEATURE_VIEWS_ROOT_PATH)
-        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStore().getId())
+        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
         .expand();
 
     String featureViewJson = hopsworksClient.getObjectMapper().writeValueAsString(featureViewBase);
@@ -77,11 +77,11 @@ public class FeatureViewApi {
     return hopsworksClient.handleRequest(postRequest, FeatureViewBase.class);
   }
 
-  public FeatureViewBase get(FeatureStore featureStore, String name, Integer version)
+  public FeatureViewBase get(FeatureStoreBase featureStoreBase, String name, Integer version)
       throws FeatureStoreException, IOException {
     String uri = UriTemplate.fromTemplate(FEATURE_VIEW_PATH)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .set("fvName", name)
         .set("fvVersion", version)
         .expand();
@@ -107,11 +107,11 @@ public class FeatureViewApi {
     }
   }
 
-  public List<FeatureViewBase> get(FeatureStore featureStore, String name) throws FeatureStoreException,
+  public List<FeatureViewBase> get(FeatureStoreBase featureStoreBase, String name) throws FeatureStoreException,
       IOException {
     String uri = UriTemplate.fromTemplate(FEATURE_VIEWS_PATH)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .set("fvName", name)
         .expand();
     Map<String, Object> params = Maps.newHashMap();
@@ -155,8 +155,8 @@ public class FeatureViewApi {
   public FeatureViewBase update(FeatureViewBase featureViewBase) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String uri = UriTemplate.fromTemplate(FEATURE_VIEW_PATH)
-        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStore().getId())
+        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .expand();
@@ -169,12 +169,12 @@ public class FeatureViewApi {
     return hopsworksClient.handleRequest(request, FeatureViewBase.class);
   }
 
-  public void delete(FeatureStore featureStore, String name, Integer version) throws FeatureStoreException,
+  public void delete(FeatureStoreBase featureStoreBase, String name, Integer version) throws FeatureStoreException,
       IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String uri = UriTemplate.fromTemplate(FEATURE_VIEW_PATH)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .set("fvName", name)
         .set("fvVersion", version)
         .expand();
@@ -185,11 +185,11 @@ public class FeatureViewApi {
     hopsworksClient.handleRequest(request);
   }
 
-  public void delete(FeatureStore featureStore, String name) throws FeatureStoreException, IOException {
+  public void delete(FeatureStoreBase featureStoreBase, String name) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String uri = UriTemplate.fromTemplate(FEATURE_VIEWS_PATH)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .set("fvName", name)
         .expand();
 
@@ -203,8 +203,8 @@ public class FeatureViewApi {
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String uri = UriTemplate.fromTemplate(TRANSFORMATION_PATH)
-        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStore().getId())
+        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .expand();
@@ -219,8 +219,8 @@ public class FeatureViewApi {
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String uri = UriTemplate.fromTemplate(PREPARED_STATEMENT_PATH)
-        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStore().getId())
+        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("batch", batch)
@@ -235,8 +235,8 @@ public class FeatureViewApi {
                                                 TrainingDatasetBase trainingData)
       throws FeatureStoreException, IOException {
     String uri = UriTemplate.fromTemplate(ALL_TRAINING_DATA_PATH)
-        .set("projectId", trainingData.getFeatureStore().getProjectId())
-        .set("fsId", trainingData.getFeatureStore().getId())
+        .set("projectId", trainingData.getFeatureStoreBase().getProjectId())
+        .set("fsId", trainingData.getFeatureStoreBase().getId())
         .set("fvName", featureViewName)
         .set("fvVersion", featureViewVersion)
         .expand();
@@ -251,12 +251,12 @@ public class FeatureViewApi {
     return hopsworksClient.handleRequest(request, TrainingDatasetBase.class);
   }
 
-  public TrainingDatasetBase getTrainingData(FeatureStore featureStore, String featureViewName,
+  public TrainingDatasetBase getTrainingData(FeatureStoreBase featureStoreBase, String featureViewName,
                                              Integer featureViewVersion, Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
     String uri = UriTemplate.fromTemplate(TRAINING_DATA_PATH)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .set("fvName", featureViewName)
         .set("fvVersion", featureViewVersion)
         .set("tdVersion", trainingDataVersion)
@@ -268,12 +268,12 @@ public class FeatureViewApi {
     return hopsworksClient.handleRequest(request, TrainingDatasetBase.class);
   }
 
-  public void deleteTrainingData(FeatureStore featureStore, String featureViewName,
+  public void deleteTrainingData(FeatureStoreBase featureStoreBase, String featureViewName,
                                  Integer featureViewVersion, Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
     String uri = UriTemplate.fromTemplate(TRAINING_DATA_PATH)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .set("fvName", featureViewName)
         .set("fvVersion", featureViewVersion)
         .set("tdVersion", trainingDataVersion)
@@ -286,11 +286,11 @@ public class FeatureViewApi {
     hopsworksClient.handleRequest(request);
   }
 
-  public void deleteTrainingData(FeatureStore featureStore, String name, Integer version)
+  public void deleteTrainingData(FeatureStoreBase featureStoreBase, String name, Integer version)
       throws FeatureStoreException, IOException {
     String uri = UriTemplate.fromTemplate(ALL_TRAINING_DATA_PATH)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .set("fvName", name)
         .set("fvVersion", version)
         .expand();
@@ -302,12 +302,12 @@ public class FeatureViewApi {
     hopsworksClient.handleRequest(request);
   }
 
-  public void deleteTrainingDatasetOnly(FeatureStore featureStore, String name,
+  public void deleteTrainingDatasetOnly(FeatureStoreBase featureStoreBase, String name,
                                         Integer version, Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
     String uri = UriTemplate.fromTemplate(TRAINING_DATASET_PATH)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .set("fvName", name)
         .set("fvVersion", version)
         .set("tdVersion", trainingDataVersion)
@@ -320,11 +320,11 @@ public class FeatureViewApi {
     hopsworksClient.handleRequest(request);
   }
 
-  public void deleteTrainingDatasetOnly(FeatureStore featureStore, String name, Integer version)
+  public void deleteTrainingDatasetOnly(FeatureStoreBase featureStoreBase, String name, Integer version)
       throws FeatureStoreException, IOException {
     String uri = UriTemplate.fromTemplate(ALL_TRAINING_DATASET_PATH)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .set("fvName", name)
         .set("fvVersion", version)
         .expand();
@@ -336,12 +336,12 @@ public class FeatureViewApi {
     hopsworksClient.handleRequest(request);
   }
 
-  public QueryBase getBatchQuery(FeatureStore featureStore, String name, Integer version,
+  public QueryBase getBatchQuery(FeatureStoreBase featureStoreBase, String name, Integer version,
                                  Long startTime, Long endTime, Boolean withLabels, Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
     String uri = UriTemplate.fromTemplate(FEATURE_VIEW_BATCH_QUERY_PATH)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .set("fvName", name)
         .set("fvVersion", version)
         .set("start_time", startTime)

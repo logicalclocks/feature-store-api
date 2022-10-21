@@ -22,13 +22,13 @@ import com.logicalclocks.generic.FeatureGroupCommit;
 import com.logicalclocks.generic.FeatureStoreException;
 import com.logicalclocks.generic.HudiOperationType;
 import com.logicalclocks.generic.JobConfiguration;
-import com.logicalclocks.generic.StatisticsConfig;
 import com.logicalclocks.generic.Storage;
 import com.logicalclocks.generic.TimeTravelFormat;
 import com.logicalclocks.generic.engine.FeatureGroupUtils;
 import com.logicalclocks.generic.metadata.FeatureGroupApi;
 import com.logicalclocks.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
+import com.logicalclocks.hsfs.StatisticsConfig;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroup;
 

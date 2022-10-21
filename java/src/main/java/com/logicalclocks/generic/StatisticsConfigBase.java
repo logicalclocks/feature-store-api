@@ -29,32 +29,24 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class StatisticsConfig {
+public class StatisticsConfigBase {
   @Getter
   @Setter
-  private Boolean enabled = true;
+  protected Boolean enabled = true;
 
   @Getter
   @Setter
-  private Boolean histograms = false;
+  protected Boolean histograms = false;
 
   @Getter
   @Setter
-  private Boolean correlations = false;
+  protected Boolean correlations = false;
 
   @Getter
   @Setter
-  private Boolean exactUniqueness = false;
+  protected Boolean exactUniqueness = false;
 
   @Getter
   @Setter
-  private List<String> columns = new ArrayList<>();
-
-  public StatisticsConfig(Boolean enabled, Boolean histograms, Boolean correlations,
-      Boolean exactUniqueness) {
-    this.enabled = enabled;
-    this.histograms = histograms;
-    this.correlations = correlations;
-    this.exactUniqueness = exactUniqueness;
-  }
+  protected List<String> columns = new ArrayList<>();
 }

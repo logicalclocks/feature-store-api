@@ -20,7 +20,7 @@ package com.logicalclocks.generic.metadata;
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.generic.constructor.FsQueryBase;
 import com.logicalclocks.generic.constructor.QueryBase;
-import com.logicalclocks.generic.FeatureStore;
+import com.logicalclocks.generic.FeatureStoreBase;
 import com.logicalclocks.generic.FeatureStoreException;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPut;
@@ -36,7 +36,7 @@ public class QueryConstructorApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(QueryConstructorApi.class);
 
-  public <U> FsQueryBase constructQuery(FeatureStore featureStore, QueryBase queryBase, Class<U> fgType)
+  public <U> FsQueryBase constructQuery(FeatureStoreBase featureStoreBase, QueryBase queryBase, Class<U> fgType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -44,7 +44,7 @@ public class QueryConstructorApi {
         + QUERY_CONSTRUCTOR_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStore.getProjectId())
+        .set("projectId", featureStoreBase.getProjectId())
         .expand();
 
     String queryJson = hopsworksClient.getObjectMapper().writeValueAsString(queryBase);

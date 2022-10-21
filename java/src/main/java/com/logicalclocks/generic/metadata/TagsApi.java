@@ -94,7 +94,7 @@ public class TagsApi {
 
   public void add(TrainingDatasetBase trainingDatasetBase, String name, Object value)
       throws FeatureStoreException, IOException {
-    add(trainingDatasetBase.getFeatureStore().getProjectId(), trainingDatasetBase.getFeatureStore().getId(),
+    add(trainingDatasetBase.getFeatureStoreBase().getProjectId(), trainingDatasetBase.getFeatureStoreBase().getId(),
         trainingDatasetBase.getId(), name, value);
   }
 
@@ -110,16 +110,16 @@ public class TagsApi {
 
   private UriTemplate getFvUriTemplate(FeatureViewBase featureViewBase) {
     return UriTemplate.fromTemplate(FV_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStore().getId())
+        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion());
   }
 
   private UriTemplate getFvUriTemplate(FeatureViewBase featureViewBase, String tagName) {
     return UriTemplate.fromTemplate(FV_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStore().getId())
+        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("name", tagName);
@@ -127,8 +127,8 @@ public class TagsApi {
 
   private UriTemplate getFvTdUriTemplate(FeatureViewBase featureViewBase, Integer trainingDatasetVersion) {
     return UriTemplate.fromTemplate(FV_TD_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStore().getId())
+        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("tdVersion", trainingDatasetVersion);
@@ -137,8 +137,8 @@ public class TagsApi {
   private UriTemplate getFvTdUriTemplate(FeatureViewBase featureViewBase, Integer trainingDatasetVersion,
                                          String tagName) {
     return UriTemplate.fromTemplate(FV_TD_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStore().getId())
+        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("tdVersion", trainingDatasetVersion)
@@ -205,8 +205,8 @@ public class TagsApi {
   }
 
   public Object get(TrainingDatasetBase trainingDatasetBase, String name) throws FeatureStoreException, IOException {
-    return get(trainingDatasetBase.getFeatureStore().getProjectId(),
-        trainingDatasetBase.getFeatureStore().getId(), trainingDatasetBase.getId(), Optional.of(name))
+    return get(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
+        trainingDatasetBase.getFeatureStoreBase().getId(), trainingDatasetBase.getId(), Optional.of(name))
         .get(name);
   }
 
@@ -216,8 +216,8 @@ public class TagsApi {
   }
 
   public Map<String, Object> get(TrainingDatasetBase trainingDatasetBase) throws FeatureStoreException, IOException {
-    return get(trainingDatasetBase.getFeatureStore().getProjectId(),
-      trainingDatasetBase.getFeatureStore().getId(), trainingDatasetBase.getId(), Optional.empty());
+    return get(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
+      trainingDatasetBase.getFeatureStoreBase().getId(), trainingDatasetBase.getId(), Optional.empty());
   }
 
   public Object parseTagValue(ObjectMapper objectMapper, Object value) throws IOException {
@@ -277,8 +277,8 @@ public class TagsApi {
 
   public void deleteTag(TrainingDatasetBase trainingDatasetBase, String name)
       throws FeatureStoreException, IOException {
-    deleteTag(trainingDatasetBase.getFeatureStore().getProjectId(),
-        trainingDatasetBase.getFeatureStore().getId(),
+    deleteTag(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
+        trainingDatasetBase.getFeatureStoreBase().getId(),
         trainingDatasetBase.getId(), name);
   }
 }

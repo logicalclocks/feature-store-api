@@ -22,7 +22,7 @@ import com.logicalclocks.generic.constructor.QueryBase;
 import com.logicalclocks.generic.metadata.FeatureViewApi;
 import com.logicalclocks.generic.metadata.TagsApi;
 import com.logicalclocks.generic.EntityEndpointType;
-import com.logicalclocks.generic.FeatureStore;
+import com.logicalclocks.generic.FeatureStoreBase;
 import com.logicalclocks.generic.FeatureStoreException;
 import com.logicalclocks.generic.FeatureViewBase;
 import com.logicalclocks.generic.TrainingDatasetFeature;
@@ -65,14 +65,14 @@ public abstract class FeatureViewEngineBase {
     return featureViewBase;
   }
 
-  public FeatureViewBase get(FeatureStore featureStore, String name, Integer version)
+  public FeatureViewBase get(FeatureStoreBase featureStoreBase, String name, Integer version)
       throws FeatureStoreException, IOException {
-    FeatureViewBase featureViewBase = featureViewApi.get(featureStore, name, version);
-    featureViewBase.setFeatureStore(featureStore);
+    FeatureViewBase featureViewBase = featureViewApi.get(featureStoreBase, name, version);
+    featureViewBase.setFeatureStoreBase(featureStoreBase);
     featureViewBase.getFeatures().stream()
         .filter(f -> f.getFeatureGroup() != null)
-        .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStore));
-    featureViewBase.getQueryBase().getLeftFeatureGroup().setFeatureStore(featureStore);
+        .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStoreBase));
+    featureViewBase.getQuery().getLeftFeatureGroup().setFeatureStore(featureStoreBase);
     featureViewBase.setLabels(
         featureViewBase.getFeatures().stream()
             .filter(TrainingDatasetFeature::getLabel)
@@ -81,15 +81,15 @@ public abstract class FeatureViewEngineBase {
     return featureViewBase;
   }
 
-  public List<FeatureViewBase> get(FeatureStore featureStore, String name) throws FeatureStoreException,
+  public List<FeatureViewBase> get(FeatureStoreBase featureStoreBase, String name) throws FeatureStoreException,
       IOException {
-    List<FeatureViewBase> featureViewBases = featureViewApi.get(featureStore, name);
+    List<FeatureViewBase> featureViewBases = featureViewApi.get(featureStoreBase, name);
     for (FeatureViewBase fv : featureViewBases) {
-      fv.setFeatureStore(featureStore);
+      fv.setFeatureStoreBase(featureStoreBase);
       fv.getFeatures().stream()
           .filter(f -> f.getFeatureGroup() != null)
-          .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStore));
-      fv.getQueryBase().getLeftFeatureGroup().setFeatureStore(featureStore);
+          .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStoreBase));
+      fv.getQuery().getLeftFeatureGroup().setFeatureStore(featureStoreBase);
       fv.setLabels(
           fv.getFeatures().stream()
               .filter(TrainingDatasetFeature::getLabel)
@@ -99,14 +99,14 @@ public abstract class FeatureViewEngineBase {
     return featureViewBases;
   }
 
-  public void delete(FeatureStore featureStore, String name) throws FeatureStoreException,
+  public void delete(FeatureStoreBase featureStoreBase, String name) throws FeatureStoreException,
       IOException {
-    featureViewApi.delete(featureStore, name);
+    featureViewApi.delete(featureStoreBase, name);
   }
 
-  public void delete(FeatureStore featureStore, String name, Integer version) throws FeatureStoreException,
+  public void delete(FeatureStoreBase featureStoreBase, String name, Integer version) throws FeatureStoreException,
       IOException {
-    featureViewApi.delete(featureStore, name, version);
+    featureViewApi.delete(featureStoreBase, name, version);
   }
 
   public void createTrainingDataset() {
@@ -167,7 +167,7 @@ public abstract class FeatureViewEngineBase {
                                  Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
     QueryBase queryBase = featureViewApi.getBatchQuery(
-        featureViewBase.getFeatureStore(),
+        featureViewBase.getFeatureStoreBase(),
         featureViewBase.getName(),
         featureViewBase.getVersion(),
         startTime == null ? null : startTime.getTime(),
@@ -176,7 +176,7 @@ public abstract class FeatureViewEngineBase {
         trainingDataVersion
     );
     queryBase.getLeftFeatureGroup().setFeatureStore(
-        featureViewBase.getQueryBase().getLeftFeatureGroup().getFeatureStore());
+        featureViewBase.getQuery().getLeftFeatureGroup().getFeatureStore());
     return queryBase;
   }
 

@@ -53,7 +53,7 @@ public class CodeApi {
   public void post(TrainingDatasetBase trainingDatasetBase, Code code, String entityId, Code.RunType type,
                    String browserHostName)
           throws FeatureStoreException, IOException {
-    post(trainingDatasetBase.getFeatureStore().getProjectId(), trainingDatasetBase.getFeatureStore().getId(),
+    post(trainingDatasetBase.getFeatureStoreBase().getProjectId(), trainingDatasetBase.getFeatureStoreBase().getId(),
             trainingDatasetBase.getId(), code, entityId, type, browserHostName);
   }
 

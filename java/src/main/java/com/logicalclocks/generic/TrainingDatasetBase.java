@@ -77,7 +77,7 @@ public abstract class TrainingDatasetBase {
   @Getter
   @Setter
   @JsonIgnore
-  private FeatureStore featureStore;
+  private FeatureStoreBase featureStoreBase;
 
   @Getter
   @Setter
@@ -101,7 +101,7 @@ public abstract class TrainingDatasetBase {
 
   @Getter
   @Setter
-  private StatisticsConfig statisticsConfig = new StatisticsConfig();
+  private StatisticsConfigBase statisticsConfigBase = new StatisticsConfigBase();
 
   @Getter
   @Setter

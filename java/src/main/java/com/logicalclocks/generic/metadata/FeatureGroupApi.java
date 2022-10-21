@@ -21,7 +21,7 @@ import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.generic.DeltaStreamerJobConf;
 import com.logicalclocks.generic.Feature;
 import com.logicalclocks.generic.FeatureGroupCommit;
-import com.logicalclocks.generic.FeatureStore;
+import com.logicalclocks.generic.FeatureStoreBase;
 import com.logicalclocks.generic.FeatureStoreException;
 import com.logicalclocks.generic.JobConfiguration;
 import org.apache.http.client.methods.HttpDelete;
@@ -50,7 +50,7 @@ public class FeatureGroupApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
-  public <U> U getInternal(FeatureStore featureStore, String fgName, Integer fgVersion, Class<U> fgType)
+  public <U> U getInternal(FeatureStoreBase featureStoreBase, String fgName, Integer fgVersion, Class<U> fgType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -58,8 +58,8 @@ public class FeatureGroupApi {
         + FEATURE_GROUP_PATH;
 
     UriTemplate uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .set("fgName", fgName);
 
     if (fgVersion != null) {
@@ -71,15 +71,15 @@ public class FeatureGroupApi {
     return hopsworksClient.handleRequest(new HttpGet(uriString), fgType);
   }
 
-  public <U> FeatureGroupBase save(FeatureGroupBase featureGroup, Class<U> fgType) throws FeatureStoreException,
-      IOException {
+  public <U extends FeatureGroupBase> FeatureGroupBase save(FeatureGroupBase featureGroup, Class<U> fgType)
+      throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
 
     return saveInternal(featureGroup, new StringEntity(featureGroupJson), fgType);
   }
 
-  public <U> FeatureGroupBase saveInternal(FeatureGroupBase featureGroupBase,
+  public <U extends FeatureGroupBase> FeatureGroupBase saveInternal(FeatureGroupBase featureGroupBase,
                              StringEntity entity, Class<U> fgType) throws FeatureStoreException, IOException {
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
@@ -214,10 +214,10 @@ public class FeatureGroupApi {
     return featureGroupCommit.getItems();
   }
 
-  public <U> FeatureGroupBase saveFeatureGroupMetaData(FeatureGroupBase featureGroup, List<String> partitionKeys,
-                                                   String hudiPrecombineKey, Map<String, String> writeOptions,
-                                                   JobConfiguration  jobConfiguration, Class<U> fgType)
-      throws FeatureStoreException, IOException {
+  public <U extends FeatureGroupBase> FeatureGroupBase saveFeatureGroupMetaData(
+      FeatureGroupBase featureGroup, List<String> partitionKeys,
+      String hudiPrecombineKey, Map<String, String> writeOptions,
+      JobConfiguration  jobConfiguration, Class<U> fgType) throws FeatureStoreException, IOException {
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 

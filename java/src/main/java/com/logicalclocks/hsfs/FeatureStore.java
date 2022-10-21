@@ -17,8 +17,9 @@
 
 package com.logicalclocks.hsfs;
 
+import com.logicalclocks.generic.FeatureStoreBase;
 import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.StatisticsConfig;
+import com.logicalclocks.generic.StorageConnectorBase;
 import com.logicalclocks.generic.TimeTravelFormat;
 import com.logicalclocks.generic.TrainingDatasetBase;
 import com.logicalclocks.generic.metadata.FeatureGroupBase;
@@ -42,7 +43,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FeatureStore extends com.logicalclocks.generic.FeatureStore {
+public class FeatureStore extends FeatureStoreBase {
 
   private FeatureGroupEngine featureGroupEngine;
   private TrainingDatasetApi trainingDatasetApi;
@@ -205,7 +206,6 @@ public class FeatureStore extends com.logicalclocks.generic.FeatureStore {
         primaryKeys, partitionKeys, null, onlineEnabled, null, eventTime);
   }
 
-  @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, String description,
                                                           List<String> primaryKeys, List<String> partitionKeys,
                                                           String hudiPrecombineKey, boolean onlineEnabled,
@@ -255,6 +255,17 @@ public class FeatureStore extends com.logicalclocks.generic.FeatureStore {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
     return getExternalFeatureGroup(name, DEFAULT_VERSION);
+  }
+
+  @Override
+  public StorageConnectorBase getStorageConnector(String name) throws FeatureStoreException, IOException {
+    return null;
+  }
+
+  @Override
+  public StorageConnectorBase.HopsFsConnectorBase getHopsFsConnector(String name)
+      throws FeatureStoreException, IOException {
+    return null;
   }
 
   /**

@@ -18,8 +18,6 @@
 package com.logicalclocks.generic;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.logicalclocks.generic.constructor.Filter;
-import com.logicalclocks.generic.constructor.FilterLogic;
 import com.logicalclocks.generic.constructor.QueryBase;
 import com.logicalclocks.generic.engine.VectorServer;
 import lombok.Getter;
@@ -60,11 +58,11 @@ public abstract class FeatureViewBase {
   @Getter
   @Setter
   @JsonIgnore
-  private FeatureStore featureStore;
+  private FeatureStoreBase featureStoreBase;
 
   @Getter
   @Setter
-  private QueryBase queryBase;
+  private QueryBase query;
 
   @Getter
   @Setter
@@ -234,48 +232,6 @@ public abstract class FeatureViewBase {
     return vectorServer.getServingKeys();
   }
 
-  public abstract Integer createTrainingData(String startTime, String endTime, String description,
-                                             DataFormat dataFormat,
-                                             Boolean coalesce, StorageConnectorBase storageConnectorBase,
-                                             String location,
-                                             Long seed, StatisticsConfig statisticsConfig,
-                                             Map<String, String> writeOptions,
-                                             FilterLogic extraFilterLogic, Filter extraFilter)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Integer createTrainTestSplit(Float testSize, String trainStart, String trainEnd, String testStart,
-                                               String testEnd, String description, DataFormat dataFormat)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Integer createTrainTestSplit(Float testSize, String trainStart, String trainEnd, String testStart,
-                                               String testEnd, String description, DataFormat dataFormat,
-                                               Boolean coalesce, StorageConnectorBase storageConnectorBase,
-                                               String location,
-                                               Long seed, StatisticsConfig statisticsConfig,
-                                               Map<String, String> writeOptions, FilterLogic extraFilterLogic,
-                                               Filter extraFilter)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Integer createTrainValidationTestSplit(
-      Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
-      String validationEnd, String testStart, String testEnd, String description, DataFormat dataFormat
-  ) throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Integer createTrainValidationTestSplit(Float validationSize, Float testSize, String trainStart,
-                                                         String trainEnd, String validationStart, String validationEnd,
-                                                         String testStart, String testEnd, String description,
-                                                         DataFormat dataFormat, Boolean coalesce,
-                                                         StorageConnectorBase storageConnectorBase,
-                                                         String location, Long seed,
-                                                         StatisticsConfig statisticsConfig,
-                                                         Map<String, String> writeOptions,
-                                                         FilterLogic extraFilterLogic, Filter extraFilter)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract void recreateTrainingDataset(Integer version, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException;
-
-
   public abstract Object getTrainingData(Integer version, Map<String, String> readOptions)
       throws IOException, FeatureStoreException, ParseException;
 
@@ -284,25 +240,6 @@ public abstract class FeatureViewBase {
 
   public abstract Object getTrainValidationTestSplit(Integer version, Map<String, String> readOptions)
       throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Object trainingData(String startTime, String endTime, String description,
-                                    Long seed, StatisticsConfig statisticsConfig, Map<String, String> readOptions,
-                                    FilterLogic extraFilterLogic, Filter extraFilter)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Object trainTestSplit(Float testSize, String trainStart, String trainEnd, String testStart,
-                                              String testEnd, String description, Long seed,
-                                              StatisticsConfig statisticsConfig, Map<String, String> readOptions,
-                                              FilterLogic extraFilterLogic, Filter extraFilter)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Object trainValidationTestSplit(Float validationSize, Float testSize, String trainStart,
-                                                String trainEnd, String validationStart, String validationEnd,
-                                                String testStart, String testEnd, String description, Long seed,
-                                                StatisticsConfig statisticsConfig, Map<String, String> readOptions,
-                                                FilterLogic extraFilterLogic, Filter extraFilter)
-      throws IOException, FeatureStoreException, ParseException;
-
 
   public abstract void purgeTrainingData(Integer version) throws FeatureStoreException, IOException;
 

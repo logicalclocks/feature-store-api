@@ -216,7 +216,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
   }
 
   private void setEventTime(FeatureView featureView, TrainingDataset trainingDataset) {
-    String eventTime = featureView.getQueryBase().getLeftFeatureGroup().getEventTime();
+    String eventTime = featureView.getQuery().getLeftFeatureGroup().getEventTime();
     if (!Strings.isNullOrEmpty(eventTime)) {
       if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()) {
         for (Split split : trainingDataset.getSplits()) {
@@ -332,7 +332,8 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
         withLabels,
         trainingDataVersion
     );
-    query.getLeftFeatureGroup().setFeatureStore(featureView.getQueryBase().getLeftFeatureGroup().getFeatureStore());
+    query.getLeftFeatureGroup().setFeatureStore(
+        featureView.getQuery().getLeftFeatureGroup().getFeatureStore());
     return query;
   }
 
@@ -340,7 +341,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
       FeatureView featureView, Date startTime, Date endTime, Map<String, String> readOptions,
       Integer trainingDataVersion
   ) throws FeatureStoreException, IOException {
-    return (Dataset<Row>) getBatchQuery(featureView, startTime, endTime, false, trainingDataVersion)
+    return getBatchQuery(featureView, startTime, endTime, false, trainingDataVersion)
         .read(false, readOptions);
   }
 

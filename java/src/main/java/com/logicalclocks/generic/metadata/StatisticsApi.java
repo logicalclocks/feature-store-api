@@ -57,8 +57,8 @@ public class StatisticsApi {
 
   public Statistics post(TrainingDatasetBase trainingDatasetBase, Statistics statistics)
       throws FeatureStoreException, IOException {
-    return post(trainingDatasetBase.getFeatureStore().getProjectId(),
-        trainingDatasetBase.getFeatureStore().getId(),
+    return post(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
+        trainingDatasetBase.getFeatureStoreBase().getId(),
         trainingDatasetBase.getId(), statistics);
   }
 
@@ -81,8 +81,8 @@ public class StatisticsApi {
     String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FV_STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStore().getId())
+        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("tdVersion", trainingDataVersion)
@@ -112,8 +112,8 @@ public class StatisticsApi {
 
   public Statistics get(TrainingDatasetBase trainingDatasetBase, String commitTime)
       throws FeatureStoreException, IOException {
-    return get(trainingDatasetBase.getFeatureStore().getProjectId(),
-        trainingDatasetBase.getFeatureStore().getId(),
+    return get(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
+        trainingDatasetBase.getFeatureStoreBase().getId(),
         trainingDatasetBase.getId(), commitTime);
   }
 
@@ -150,8 +150,8 @@ public class StatisticsApi {
   }
 
   public Statistics getLast(TrainingDatasetBase trainingDatasetBase) throws FeatureStoreException, IOException {
-    return getLast(trainingDatasetBase.getFeatureStore().getProjectId(),
-        trainingDatasetBase.getFeatureStore().getId(),
+    return getLast(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
+        trainingDatasetBase.getFeatureStoreBase().getId(),
         trainingDatasetBase.getId());
   }
 

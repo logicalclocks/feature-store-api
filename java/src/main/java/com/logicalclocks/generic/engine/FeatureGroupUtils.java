@@ -18,7 +18,7 @@
 package com.logicalclocks.generic.engine;
 
 import com.logicalclocks.generic.Feature;
-import com.logicalclocks.generic.FeatureStore;
+import com.logicalclocks.generic.FeatureStoreBase;
 import com.logicalclocks.generic.metadata.FeatureGroupApi;
 import com.logicalclocks.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.generic.metadata.HopsworksClient;
@@ -170,9 +170,9 @@ public class FeatureGroupUtils {
     return commitDetails;
   }
 
-  public String getAvroSchema(FeatureGroupBase featureGroup, FeatureStore featureStore)
+  public String getAvroSchema(FeatureGroupBase featureGroup, FeatureStoreBase featureStoreBase)
       throws FeatureStoreException, IOException {
-    return kafkaApi.getTopicSubject(featureStore, featureGroup.getOnlineTopicName()).getSchema();
+    return kafkaApi.getTopicSubject(featureStoreBase, featureGroup.getOnlineTopicName()).getSchema();
   }
 
 

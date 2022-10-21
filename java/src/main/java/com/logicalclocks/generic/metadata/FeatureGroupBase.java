@@ -23,11 +23,11 @@ import com.logicalclocks.generic.constructor.FilterLogic;
 import com.logicalclocks.generic.constructor.QueryBase;
 import com.logicalclocks.generic.DeltaStreamerJobConf;
 import com.logicalclocks.generic.Feature;
-import com.logicalclocks.generic.FeatureStore;
+import com.logicalclocks.generic.FeatureStoreBase;
 import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.StatisticsConfig;
 import com.logicalclocks.generic.TimeTravelFormat;
 import com.logicalclocks.generic.engine.FeatureGroupBaseEngine;
+import com.logicalclocks.hsfs.StatisticsConfig;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -44,7 +44,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public abstract class FeatureGroupBase {
+public class FeatureGroupBase {
 
   @Getter
   @Setter
@@ -52,7 +52,7 @@ public abstract class FeatureGroupBase {
 
   @Getter
   @Setter
-  protected FeatureStore featureStore;
+  protected FeatureStoreBase featureStore;
 
   @Getter
   @Setter
@@ -99,12 +99,14 @@ public abstract class FeatureGroupBase {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
 
-  public FeatureGroupBase(FeatureStore featureStore, Integer id) {
+  public FeatureGroupBase(FeatureStoreBase featureStore, Integer id) {
     this.featureStore = featureStore;
     this.id = id;
   }
 
-  public abstract QueryBase selectFeatures(List<Feature> features);
+  public QueryBase selectFeatures(List<Feature> features) {
+    return null;
+  }
 
   public QueryBase select(List<String> features) {
     // Create a feature object for each string feature given by the user.
@@ -113,18 +115,26 @@ public abstract class FeatureGroupBase {
     return selectFeatures(featureObjList);
   }
 
-  public abstract QueryBase selectAll();
+  public QueryBase selectAll() {
+    return null;
+  }
 
-  public abstract QueryBase selectExceptFeatures(List<Feature> features);
+  public QueryBase selectExceptFeatures(List<Feature> features) {
+    return null;
+  }
 
-  public abstract QueryBase selectExcept(List<String> features);
+  public QueryBase selectExcept(List<String> features) {
+    return null;
+  }
 
   public void delete() throws FeatureStoreException, IOException {
     featureGroupBaseEngine.delete(this);
   }
 
-  public abstract Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException,
-      IOException;
+  public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException,
+      IOException {
+    return null;
+  }
 
   /**
    * Add name/value tag to the feature group.
@@ -208,7 +218,9 @@ public abstract class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public abstract void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException;
+  public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
+
+  }
 
   /**
    * Update the metadata of multiple features.
@@ -218,7 +230,9 @@ public abstract class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public abstract void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException;
+  public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
+
+  }
 
   /**
    * Append features to the schema of the feature group.
@@ -228,7 +242,9 @@ public abstract class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public abstract void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException;
+  public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
+
+  }
 
   /**
    * Append a single feature to the schema of the feature group.
@@ -238,7 +254,9 @@ public abstract class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public abstract void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException;
+  public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
+
+  }
 
   /**
    * Update the statistics configuration of the feature group.
@@ -259,7 +277,9 @@ public abstract class FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public abstract <T> T computeStatistics() throws FeatureStoreException, IOException;
+  public <T> T computeStatistics() throws FeatureStoreException, IOException {
+    return null;
+  }
 
   /**
    * Get the last statistics commit for the feature group.
@@ -320,22 +340,35 @@ public abstract class FeatureGroupBase {
     return primaryKeys;
   }
 
-  public abstract String getOnlineTopicName() throws FeatureStoreException, IOException;
+  public String getOnlineTopicName() throws FeatureStoreException, IOException {
+    return null;
+  }
 
-  public abstract void setDeltaStreamerJobConf(DeltaStreamerJobConf deltaStreamerJobConf)
-      throws FeatureStoreException, IOException;
-
-  @JsonIgnore
-  public abstract List<String> getComplexFeatures();
-
-  @JsonIgnore
-  public abstract String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException;
+  public void setDeltaStreamerJobConf(DeltaStreamerJobConf deltaStreamerJobConf)
+      throws FeatureStoreException, IOException {
+  }
 
   @JsonIgnore
-  public abstract String getEncodedAvroSchema() throws FeatureStoreException, IOException;
+  public List<String> getComplexFeatures() {
+    return null;
+  }
 
   @JsonIgnore
-  public abstract Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException;
+  public String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException {
+    return null;
+  }
 
-  public abstract TimeTravelFormat getTimeTravelFormat();
+  @JsonIgnore
+  public String getEncodedAvroSchema() throws FeatureStoreException, IOException {
+    return null;
+  }
+
+  @JsonIgnore
+  public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
+    return null;
+  }
+
+  public TimeTravelFormat getTimeTravelFormat() {
+    return null;
+  }
 }

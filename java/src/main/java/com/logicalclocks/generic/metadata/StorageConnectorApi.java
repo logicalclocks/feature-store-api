@@ -18,7 +18,7 @@
 package com.logicalclocks.generic.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
-import com.logicalclocks.generic.FeatureStore;
+import com.logicalclocks.generic.FeatureStoreBase;
 import com.logicalclocks.generic.FeatureStoreException;
 import org.apache.http.client.methods.HttpGet;
 import org.slf4j.Logger;
@@ -53,12 +53,12 @@ public class StorageConnectorApi {
     return hopsworksClient.handleRequest(new HttpGet(uri), storageConnectorType);
   }
 
-  public <U> U getByName(FeatureStore featureStore, String name, Class<U> storageConnectorType)
+  public <U> U getByName(FeatureStoreBase featureStoreBase, String name, Class<U> storageConnectorType)
       throws IOException, FeatureStoreException {
-    return get(featureStore.getId(), name, storageConnectorType);
+    return get(featureStoreBase.getId(), name, storageConnectorType);
   }
 
-  public <U> U  getOnlineStorageConnector(FeatureStore featureStore, Class<U> storageConnectorType)
+  public <U> U  getOnlineStorageConnector(FeatureStoreBase featureStoreBase, Class<U> storageConnectorType)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -66,8 +66,8 @@ public class StorageConnectorApi {
         + ONLINE_CONNECTOR_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);

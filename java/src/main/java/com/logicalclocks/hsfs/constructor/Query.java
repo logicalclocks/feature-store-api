@@ -29,7 +29,6 @@ import com.logicalclocks.generic.metadata.FeatureGroupBase;
 import com.logicalclocks.generic.metadata.QueryConstructorApi;
 import com.logicalclocks.generic.metadata.StorageConnectorApi;
 
-import com.logicalclocks.hsfs.constructor.FsQuery;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import lombok.Getter;

@@ -23,7 +23,6 @@ import com.logicalclocks.generic.EntityEndpointType;
 import com.logicalclocks.generic.ExternalDataFormat;
 import com.logicalclocks.generic.Feature;
 import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.StatisticsConfig;
 import com.logicalclocks.generic.TimeTravelFormat;
 import com.logicalclocks.generic.engine.CodeEngine;
 import com.logicalclocks.generic.metadata.FeatureGroupBase;

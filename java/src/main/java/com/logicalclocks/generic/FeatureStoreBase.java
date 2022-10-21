@@ -32,7 +32,7 @@ import scala.collection.Seq;
 import java.io.IOException;
 import java.util.List;
 
-public abstract class FeatureStore {
+public abstract class FeatureStoreBase {
 
   @Getter
   @Setter
@@ -52,7 +52,7 @@ public abstract class FeatureStore {
   private StorageConnectorApi storageConnectorApi;
   private FeatureViewEngineBase featureViewEngineBase;
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStoreBase.class);
 
   private static final Integer DEFAULT_VERSION = 1;
 
@@ -88,16 +88,10 @@ public abstract class FeatureStore {
                                                                    String eventTime) throws IOException,
       FeatureStoreException;
 
-  public abstract Object getOrCreateStreamFeatureGroup(String name, Integer version,
-                                                                   List<String> primaryKeys, List<String> partitionKeys,
-                                                                   boolean onlineEnabled, String eventTime)
+  public abstract Object getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
+                                                       List<String> partitionKeys, boolean onlineEnabled,
+                                                       String eventTime)
       throws IOException, FeatureStoreException;
-
-  public abstract Object getOrCreateStreamFeatureGroup(String name, Integer version, String description,
-                                                          List<String> primaryKeys, List<String> partitionKeys,
-                                                          String hudiPrecombineKey, boolean onlineEnabled,
-                                                          StatisticsConfig statisticsConfig,
-                                                          String eventTime) throws IOException, FeatureStoreException;
 
   public abstract Object  createExternalFeatureGroup();
 
@@ -160,16 +154,11 @@ public abstract class FeatureStore {
    * @throws IOException
    */
 
-  /* TODO (davit): make abstract
-    public StorageConnectorBase getStorageConnector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name);
-  }
+  public abstract StorageConnectorBase getStorageConnector(String name) throws FeatureStoreException, IOException;
 
-  public StorageConnectorBase.HopsFsConnectorBase getHopsFsConnector(String name)
-      throws FeatureStoreException, IOException {
-    return (StorageConnectorBase.HopsFsConnectorBase) storageConnectorApi.getByName(this, name);
-  }
-   */
+  public abstract StorageConnectorBase.HopsFsConnectorBase getHopsFsConnector(String name)
+      throws FeatureStoreException, IOException;
+
   public abstract Object getExternalFeatureGroups(@NonNull String name) throws FeatureStoreException, IOException;
 
   public abstract Object sql(String query);

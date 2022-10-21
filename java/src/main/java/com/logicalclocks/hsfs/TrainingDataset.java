@@ -25,7 +25,6 @@ import com.logicalclocks.generic.DataFormat;
 import com.logicalclocks.generic.EntityEndpointType;
 import com.logicalclocks.generic.FeatureStoreException;
 import com.logicalclocks.generic.Split;
-import com.logicalclocks.generic.StatisticsConfig;
 import com.logicalclocks.generic.Storage;
 import com.logicalclocks.generic.TrainingDatasetFeature;
 import com.logicalclocks.generic.TrainingDatasetType;
