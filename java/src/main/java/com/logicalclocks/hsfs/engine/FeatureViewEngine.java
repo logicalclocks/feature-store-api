@@ -42,7 +42,7 @@ public class FeatureViewEngine {
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureViewEngine.class);
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
   static String AMBIGUOUS_LABEL_ERROR = "Provided label '%s' is ambiguous and exists in more than one feature "
-    + "groups. You can provide the label with the prefix you specify in the join.";
+      + "groups. You can provide the label with the prefix you specify in the join.";
   static String LABEL_NOT_EXIST_ERROR = "Provided label '%s' do not exist in any of the feature groups.";
 
   public FeatureView save(FeatureView featureView) throws FeatureStoreException, IOException {
