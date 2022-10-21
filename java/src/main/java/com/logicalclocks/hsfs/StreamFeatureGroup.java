@@ -18,6 +18,7 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.generic.DeltaStreamerJobConf;
 import com.logicalclocks.generic.EntityEndpointType;
 import com.logicalclocks.generic.Feature;
@@ -35,6 +36,7 @@ import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -54,6 +56,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class StreamFeatureGroup extends FeatureGroupBase {
 
   @Getter
@@ -132,6 +136,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.onlineTopicName = onlineTopicName;
     this.eventTime = eventTime;
+  }
+
+  public StreamFeatureGroup() {
   }
 
   // used for updates
