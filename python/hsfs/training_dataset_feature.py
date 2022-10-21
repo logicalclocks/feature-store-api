@@ -107,3 +107,7 @@ class TrainingDatasetFeature:
     @transformation_function.setter
     def transformation_function(self, transformation_function):
         self._transformation_function = transformation_function
+
+    @property
+    def feature_group(self):
+        return self._feature_group

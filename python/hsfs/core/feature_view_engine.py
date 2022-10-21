@@ -32,11 +32,15 @@ from hsfs.core import (
 )
 
 
+
 class FeatureViewEngine:
     ENTITY_TYPE = "featureview"
     _TRAINING_DATA_API_PATH = "trainingdatasets"
     _OVERWRITE = "overwrite"
     _APPEND = "append"
+    AMBIGUOUS_LABEL_ERROR = "Provided label '{}' is ambiguous and exists in more than one feature groups. " \
+                            "You can provide the label with the prefix you specify in the join."
+    LABEL_NOT_EXIST_ERROR = "Provided label '{}' do not exist in any of the feature groups."
 
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
@@ -99,8 +103,9 @@ class FeatureViewEngine:
                 elif label_name in feature_map:
                     if len(feature_map[label_name]) > 1:
                         raise FeatureStoreException(
-                            f"Provided label '{label_name}' is ambiguous and exists in more than one feature groups. "
-                            "You can provide the label with the prefix you specify in the join."
+                            FeatureViewEngine.AMBIGUOUS_LABEL_ERROR.format(
+                                label_name
+                            )
                         )
                     feature_view_obj._features.append(
                         training_dataset_feature.TrainingDatasetFeature(
@@ -110,7 +115,9 @@ class FeatureViewEngine:
                     )
                 else:
                     raise FeatureStoreException(
-                        f"Provided label '{label_name}' do not exist in any of the feature groups."
+                        FeatureViewEngine.LABEL_NOT_EXIST_ERROR.format(
+                            label_name
+                        )
                     )
         self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
         updated_fv = self._feature_view_api.post(feature_view_obj)
