@@ -21,7 +21,7 @@ from hsfs import (
     training_dataset,
     split_statistics,
     feature_group,
-    feature
+    feature,
 )
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import fs_query
@@ -87,9 +87,7 @@ class TestFeatureViewEngine:
         )
 
         fv = feature_view.FeatureView(
-            name="fv_name",
-            query=query,
-            featurestore_id=feature_store_id
+            name="fv_name", query=query, featurestore_id=feature_store_id
         )
 
         # Act
@@ -125,9 +123,7 @@ class TestFeatureViewEngine:
         )
 
         fv = feature_view.FeatureView(
-            name="fv_name",
-            query=query.as_of(1000),
-            featurestore_id=feature_store_id
+            name="fv_name", query=query.as_of(1000), featurestore_id=feature_store_id
         )
 
         # Act
@@ -169,7 +165,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             query=fg1.select_all().join(fg2.select_all().as_of("20221010")),
-            featurestore_id=feature_store_id
+            featurestore_id=feature_store_id,
         )
 
         # Act
@@ -218,9 +214,11 @@ class TestFeatureViewEngine:
 
         # Assert
         assert len(fv._features) == 1
-        assert (fv._features[0].name == "label"
-                and fv._features[0].label
-                and fv._features[0].feature_group.id == label_fg_id)
+        assert (
+            fv._features[0].name == "label"
+            and fv._features[0].label
+            and fv._features[0].feature_group.id == label_fg_id
+        )
         assert mock_fv_api.return_value.post.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
@@ -271,46 +269,49 @@ class TestFeatureViewEngine:
         self.template_save_label_success(mocker, _query, "fg2_label", fg2.id)
 
     def test_save_multiple_label_selected_1(self, mocker):
-        _query = fg1.select_except(["label"]).join(
-            fg2.select_all(), prefix="fg2_").join(
-            fg3.select_all(), prefix="fg3_")
+        _query = (
+            fg1.select_except(["label"])
+            .join(fg2.select_all(), prefix="fg2_")
+            .join(fg3.select_all(), prefix="fg3_")
+        )
         self.template_save_label_fail(
-            mocker, _query, "label",
-            FeatureViewEngine.AMBIGUOUS_LABEL_ERROR.format("label")
+            mocker,
+            _query,
+            "label",
+            FeatureViewEngine.AMBIGUOUS_LABEL_ERROR.format("label"),
         )
 
     def test_save_multiple_label_selected_2(self, mocker):
-        _query = fg1.select_except(["label"]).join(
-            fg2.select_all(), prefix="fg2_").join(
-            fg3.select_all(), prefix="fg3_")
-        self.template_save_label_success(
-            mocker, _query, "fg2_label", fg2.id
+        _query = (
+            fg1.select_except(["label"])
+            .join(fg2.select_all(), prefix="fg2_")
+            .join(fg3.select_all(), prefix="fg3_")
         )
+        self.template_save_label_success(mocker, _query, "fg2_label", fg2.id)
 
     def test_save_multiple_label_selected_3(self, mocker):
-        _query = fg1.select_except(["label"]).join(
-            fg2.select_all(), prefix="fg2_").join(
-            fg3.select_all(), prefix="fg3_")
-        self.template_save_label_success(
-            mocker, _query, "fg3_label", fg3.id
+        _query = (
+            fg1.select_except(["label"])
+            .join(fg2.select_all(), prefix="fg2_")
+            .join(fg3.select_all(), prefix="fg3_")
         )
+        self.template_save_label_success(mocker, _query, "fg3_label", fg3.id)
 
     def test_save_label_selected_in_join_only_1(self, mocker):
-        _query = fg1.select_except(["label"]).join(
-            fg2.select_all(), prefix="fg2_")
+        _query = fg1.select_except(["label"]).join(fg2.select_all(), prefix="fg2_")
         self.template_save_label_success(mocker, _query, "label", fg2.id)
 
     def test_save_label_selected_in_join_only_2(self, mocker):
-        _query = fg1.select_except(["label"]).join(
-            fg2.select_all(), prefix="fg2_")
+        _query = fg1.select_except(["label"]).join(fg2.select_all(), prefix="fg2_")
         self.template_save_label_success(mocker, _query, "fg2_label", fg2.id)
 
     def test_save_label_selected_in_join_only_3(self, mocker):
-        _query = fg1.select_except(["label"]).join(
-            fg2.select_all(), prefix="fg2_")
+        _query = fg1.select_except(["label"]).join(fg2.select_all(), prefix="fg2_")
         self.template_save_label_fail(
-            mocker, _query, "none",
-            FeatureViewEngine.LABEL_NOT_EXIST_ERROR.format("none")
+            mocker,
+            _query,
+            "none",
+            FeatureViewEngine.LABEL_NOT_EXIST_ERROR.format("none"),
         )
 
     def test_get_name(self, mocker):
