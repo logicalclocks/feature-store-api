@@ -12,14 +12,14 @@
         <meta name="author" content="Logical Clocks">
       
       
-        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/3.1.0-SNAPSHOT/generated/api/transformation_functions_api/">
+        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/3.1.0-SNAPSHOT/generated/api/validation_report_api/">
       
       <link rel="icon" href="../../../assets/images/favicon.ico">
       <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.8">
     
     
       
-        <title>Transformation Functions - Hopsworks Documentation</title>
+        <title>ValidationReport - Hopsworks Documentation</title>
       
     
     
@@ -83,7 +83,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#transformation-function" class="md-skip">
+        <a href="#validation-report" class="md-skip">
           Skip to content
         </a>
       
@@ -117,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Transformation Functions
+              ValidationReport
             
           </span>
         </div>
@@ -926,6 +926,20 @@
               
   
   
+  
+    <li class="md-nav__item">
+      <a href="../transformation_functions_api/" class="md-nav__link">
+        Transformation Functions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
     
   
   
@@ -938,12 +952,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Transformation Functions
+          ValidationReport
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Transformation Functions
+        ValidationReport
       </a>
       
         
@@ -962,9 +976,63 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#transformationfunction" class="md-nav__link">
-    TransformationFunction
+  <a href="#validationreport" class="md-nav__link">
+    ValidationReport
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creation" class="md-nav__link">
+    Creation
+  </a>
+  
+    <nav class="md-nav" aria-label="Creation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#validate" class="md-nav__link">
+    validate
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#insert" class="md-nav__link">
+    insert
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fetch-validation-reports" class="md-nav__link">
+    Fetch Validation Reports
+  </a>
+  
+    <nav class="md-nav" aria-label="Fetch Validation Reports">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get_latest_validation_report" class="md-nav__link">
+    get_latest_validation_report
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_all_validation_reports" class="md-nav__link">
+    get_all_validation_reports
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -977,6 +1045,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#evaluation_parameters" class="md-nav__link">
+    evaluation_parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#id" class="md-nav__link">
     id
   </a>
@@ -984,43 +1059,36 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#name" class="md-nav__link">
-    name
+  <a href="#ingestion_result" class="md-nav__link">
+    ingestion_result
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#output_type" class="md-nav__link">
-    output_type
+  <a href="#meta" class="md-nav__link">
+    meta
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#source_code_content" class="md-nav__link">
-    source_code_content
+  <a href="#results" class="md-nav__link">
+    results
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#transformation_fn" class="md-nav__link">
-    transformation_fn
+  <a href="#statistics" class="md-nav__link">
+    statistics
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#transformer_code" class="md-nav__link">
-    transformer_code
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#version" class="md-nav__link">
-    version
+  <a href="#success" class="md-nav__link">
+    success
   </a>
   
 </li>
@@ -1039,62 +1107,36 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#delete" class="md-nav__link">
-    delete
+  <a href="#from_response_json" class="md-nav__link">
+    from_response_json
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#save" class="md-nav__link">
-    save
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#creation" class="md-nav__link">
-    Creation
-  </a>
-  
-    <nav class="md-nav" aria-label="Creation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#create_transformation_function" class="md-nav__link">
-    create_transformation_function
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#retrieval" class="md-nav__link">
-    Retrieval
-  </a>
-  
-    <nav class="md-nav" aria-label="Retrieval">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#get_transformation_function" class="md-nav__link">
-    get_transformation_function
+  <a href="#json" class="md-nav__link">
+    json
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#get_transformation_functions" class="md-nav__link">
-    get_transformation_functions
+  <a href="#to_dict" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_ge_type" class="md-nav__link">
+    to_ge_type
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_json_dict" class="md-nav__link">
+    to_json_dict
   </a>
   
 </li>
@@ -1108,20 +1150,6 @@
   
 </nav>
       
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../validation_report_api/" class="md-nav__link">
-        ValidationReport
-      </a>
     </li>
   
 
@@ -1210,9 +1238,63 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#transformationfunction" class="md-nav__link">
-    TransformationFunction
+  <a href="#validationreport" class="md-nav__link">
+    ValidationReport
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creation" class="md-nav__link">
+    Creation
+  </a>
+  
+    <nav class="md-nav" aria-label="Creation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#validate" class="md-nav__link">
+    validate
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#insert" class="md-nav__link">
+    insert
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fetch-validation-reports" class="md-nav__link">
+    Fetch Validation Reports
+  </a>
+  
+    <nav class="md-nav" aria-label="Fetch Validation Reports">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#get_latest_validation_report" class="md-nav__link">
+    get_latest_validation_report
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_all_validation_reports" class="md-nav__link">
+    get_all_validation_reports
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1225,6 +1307,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#evaluation_parameters" class="md-nav__link">
+    evaluation_parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#id" class="md-nav__link">
     id
   </a>
@@ -1232,43 +1321,36 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#name" class="md-nav__link">
-    name
+  <a href="#ingestion_result" class="md-nav__link">
+    ingestion_result
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#output_type" class="md-nav__link">
-    output_type
+  <a href="#meta" class="md-nav__link">
+    meta
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#source_code_content" class="md-nav__link">
-    source_code_content
+  <a href="#results" class="md-nav__link">
+    results
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#transformation_fn" class="md-nav__link">
-    transformation_fn
+  <a href="#statistics" class="md-nav__link">
+    statistics
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#transformer_code" class="md-nav__link">
-    transformer_code
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#version" class="md-nav__link">
-    version
+  <a href="#success" class="md-nav__link">
+    success
   </a>
   
 </li>
@@ -1287,62 +1369,36 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#delete" class="md-nav__link">
-    delete
+  <a href="#from_response_json" class="md-nav__link">
+    from_response_json
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#save" class="md-nav__link">
-    save
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#creation" class="md-nav__link">
-    Creation
-  </a>
-  
-    <nav class="md-nav" aria-label="Creation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#create_transformation_function" class="md-nav__link">
-    create_transformation_function
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#retrieval" class="md-nav__link">
-    Retrieval
-  </a>
-  
-    <nav class="md-nav" aria-label="Retrieval">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#get_transformation_function" class="md-nav__link">
-    get_transformation_function
+  <a href="#json" class="md-nav__link">
+    json
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#get_transformation_functions" class="md-nav__link">
-    get_transformation_functions
+  <a href="#to_dict" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_ge_type" class="md-nav__link">
+    to_ge_type
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_json_dict" class="md-nav__link">
+    to_json_dict
   </a>
   
 </li>
@@ -1366,103 +1422,220 @@
                 
 
 
-<h1 id="transformation-function">Transformation Function<a class="headerlink" href="#transformation-function" title="Permanent link">#</a></h1>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L25">[source]</a></span></p>
-<h3 id="transformationfunction">TransformationFunction<a class="headerlink" href="#transformationfunction" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">transformation_function</span><span class="o">.</span><span class="n">TransformationFunction</span><span class="p">(</span>
-    <span class="n">featurestore_id</span><span class="p">,</span>
-    <span class="n">transformation_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">source_code_content</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">builtin_source_code</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">output_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<h1 id="validation-report">Validation Report<a class="headerlink" href="#validation-report" title="Permanent link">#</a></h1>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_report.py#L26">[source]</a></span></p>
+<h3 id="validationreport">ValidationReport<a class="headerlink" href="#validationreport" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">validation_report</span><span class="o">.</span><span class="n">ValidationReport</span><span class="p">(</span>
+    <span class="n">success</span><span class="p">,</span>
+    <span class="n">results</span><span class="p">,</span>
+    <span class="n">meta</span><span class="p">,</span>
+    <span class="n">statistics</span><span class="p">,</span>
+    <span class="n">evaluation_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">full_report_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">featurestore_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">featuregroup_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">href</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">expand</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">items</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">count</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">href</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">validation_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">ingestion_result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
-<hr />
-<h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L188">[source]</a></span></p>
-<h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
-<p>Training dataset id.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L197">[source]</a></span></p>
-<h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L217">[source]</a></span></p>
-<h3 id="output_type">output_type<a class="headerlink" href="#output_type" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L213">[source]</a></span></p>
-<h3 id="source_code_content">source_code_content<a class="headerlink" href="#source_code_content" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L209">[source]</a></span></p>
-<h3 id="transformation_fn">transformation_fn<a class="headerlink" href="#transformation_fn" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L205">[source]</a></span></p>
-<h3 id="transformer_code">transformer_code<a class="headerlink" href="#transformer_code" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L201">[source]</a></span></p>
-<h3 id="version">version<a class="headerlink" href="#version" title="Permanent link">#</a></h3>
-<hr />
-<h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L85">[source]</a></span></p>
-<h3 id="delete">delete<a class="headerlink" href="#delete" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TransformationFunction</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
-</code></pre></div>
-<p>Delete transformation function from backend.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L81">[source]</a></span></p>
-<h3 id="save">save<a class="headerlink" href="#save" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TransformationFunction</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-</code></pre></div>
-<p>Persist transformation function in backend.</p>
+<p>Metadata object representing a validation report generated by Great Expectations in the Feature Store.</p>
 <hr />
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L858">[source]</a></span></p>
-<h3 id="create_transformation_function">create_transformation_function<a class="headerlink" href="#create_transformation_function" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_transformation_function</span><span class="p">(</span><span class="n">transformation_function</span><span class="p">,</span> <span class="n">output_type</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1351">[source]</a></span></p>
+<h3 id="validate">validate<a class="headerlink" href="#validate" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span>
+    <span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">expectation_suite</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_report</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validation_options</span><span class="o">=</span><span class="p">{},</span> <span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
 </code></pre></div>
-<p>Create a transformation function metadata object.</p>
-<div class="admonition note">
-<p class="admonition-title">Lazy</p>
-<p>This method is lazy and does not persist the transformation function in the
-feature store on its own. To materialize the transformation function and save
-call the <code>save()</code> method of the transformation function metadata object.</p>
+<p>Run validation based on the attached expectations.</p>
+<p>Runs any expectation attached with Deequ. But also runs attached Great Expectation
+Suites.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>dataframe</strong> <code>Optional[Union[pandas.DataFrame, pyspark.sql.DataFrame]]</code>: The dataframe to run the data validation expectations against.</li>
+<li><strong>expectation_suite</strong> <code>Optional[hsfs.expectation_suite.ExpectationSuite]</code>: Optionally provide an Expectation Suite to override the
+    one that is possibly attached to the feature group. This is useful for
+    testing new Expectation suites. When an extra suite is provided, the results
+    will never be persisted. Defaults to <code>None</code>.</li>
+<li><strong>validation_options</strong> <code>Optional[Dict[Any, Any]]</code>: Additional validation options as key-value pairs, defaults to <code>{}</code>.<ul>
+<li>key <code>run_validation</code> boolean value, set to <code>False</code> to skip validation temporarily on ingestion.</li>
+<li>key <code>ge_validate_kwargs</code> a dictionary containing kwargs for the validate method of Great Expectations.</li>
+</ul>
+</li>
+<li><strong>save_report</strong> <code>Optional[bool]</code>: Whether to save the report to the backend. This is only possible if the Expectation suite
+    is initialised and attached to the Feature Group. Defaults to False.</li>
+<li><strong>ge_type</strong> <code>bool</code>: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p>A Validation Report produced by Great Expectations.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L1039">[source]</a></span></p>
+<h3 id="insert">insert<a class="headerlink" href="#insert" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span>
+    <span class="n">features</span><span class="p">,</span>
+    <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">operation</span><span class="o">=</span><span class="s2">&quot;upsert&quot;</span><span class="p">,</span>
+    <span class="n">storage</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">write_options</span><span class="o">=</span><span class="p">{},</span>
+    <span class="n">validation_options</span><span class="o">=</span><span class="p">{},</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Persist the metadata and materialize the feature group to the feature store
+or insert data from a dataframe into the existing feature group.</p>
+<p>Incrementally insert data to a feature group or overwrite all  data contained in the feature group. By
+default, the data is inserted into the offline storag as well as the online storage if the feature group is
+<code>online_enabled=True</code>. To insert only into the online storage, set <code>storage="online"</code>, or oppositely
+<code>storage="offline"</code>.</p>
+<p>The <code>features</code> dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
+or a two-dimensional Numpy array or a two-dimensional Python nested list.
+If statistics are enabled, statistics are recomputed for the entire feature
+group.
+If feature group's time travel format is <code>HUDI</code> then <code>operation</code> argument can be
+either <code>insert</code> or <code>upsert</code>.</p>
+<p>If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
+invoked and writes the specified <code>features</code> dataframe as feature group to the online/offline feature store.</p>
+<div class="admonition example">
+<p class="admonition-title">Upsert new feature data with time travel format <code>HUDI</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">fs</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_feature_store</span><span class="p">();</span>
+<span class="n">fg</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">get_feature_group</span><span class="p">(</span><span class="s2">&quot;example_feature_group&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">upsert_df</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">fg</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">upsert_df</span><span class="p">)</span>
+</code></pre></div>
 </div>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>transformation_function</strong> <code>callable</code>: callable object.</li>
-<li><strong>output_type</strong> <code>Union[str, bytes, int, numpy.int8, numpy.int16, numpy.int32, numpy.int64, float, numpy.float64, datetime.datetime, numpy.datetime64, datetime.date, bool]</code>: python or numpy output type that will be inferred as pyspark.sql.types type.</li>
+<li><strong>features</strong> <code>Union[pandas.DataFrame, pyspark.sql.DataFrame, pyspark.RDD, numpy.ndarray, List[list]]</code>: DataFrame, RDD, Ndarray, list. Features to be saved.</li>
+<li><strong>overwrite</strong> <code>Optional[bool]</code>: Drop all data in the feature group before
+    inserting new data. This does not affect metadata, defaults to False.</li>
+<li><strong>operation</strong> <code>Optional[str]</code>: Apache Hudi operation type <code>"insert"</code> or <code>"upsert"</code>.
+    Defaults to <code>"upsert"</code>.</li>
+<li><strong>storage</strong> <code>Optional[str]</code>: Overwrite default behaviour, write to offline
+    storage only with <code>"offline"</code> or online only with <code>"online"</code>, defaults
+    to <code>None</code>.</li>
+<li><strong>write_options</strong> <code>Optional[Dict[Any, Any]]</code>: Additional write options as key-value pairs, defaults to <code>{}</code>.
+    When using the <code>python</code> engine, write_options can contain the
+    following entries:<ul>
+<li>key <code>spark</code> and value an object of type
+<a href="../job_configuration">hsfs.core.job_configuration.JobConfiguration</a>
+  to configure the Hopsworks Job used to write data into the
+  feature group.</li>
+<li>key <code>wait_for_job</code> and value <code>True</code> or <code>False</code> to configure
+  whether or not to the insert call should return only
+  after the Hopsworks Job has finished. By default it waits.</li>
+<li>key <code>start_offline_backfill</code> and value <code>True</code> or <code>False</code> to configure
+  whether or not to start the backfill job to write data to the offline
+  storage. By default the backfill job gets started immediately.</li>
+<li>key <code>internal_kafka</code> and value <code>True</code> or <code>False</code> in case you established
+  connectivity from you Python environment to the internal advertised
+  listeners of the Hopsworks Kafka Cluster. Defaults to <code>False</code> and
+  will use external listeners when connecting from outside of Hopsworks.</li>
 </ul>
-<p><strong>Returns:</strong></p>
-<p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
+</li>
+<li><strong>validation_options</strong> <code>Optional[Dict[Any, Any]]</code>: Additional validation options as key-value pairs, defaults to <code>{}</code>.<ul>
+<li>key <code>run_validation</code> boolean value, set to <code>False</code> to skip validation temporarily on ingestion.</li>
+<li>key <code>save_report</code> boolean value, set to <code>False</code> to skip upload of the validation report to Hopsworks.</li>
+<li>key <code>ge_validate_kwargs</code> a dictionary containing kwargs for the validate method of Great Expectations.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p>(<code>Job</code>, <code>ValidationReport</code>) A tuple with job information if python engine is used and the validation report if validation is enabled.</p>
 <hr />
-<h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L899">[source]</a></span></p>
-<h3 id="get_transformation_function">get_transformation_function<a class="headerlink" href="#get_transformation_function" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<h2 id="fetch-validation-reports">Fetch Validation Reports<a class="headerlink" href="#fetch-validation-reports" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L460">[source]</a></span></p>
+<h3 id="get_latest_validation_report">get_latest_validation_report<a class="headerlink" href="#get_latest_validation_report" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">get_latest_validation_report</span><span class="p">(</span><span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
-<p>Get  transformation function metadata object.</p>
+<p>Return the latest validation report attached to the Feature Group if it exists.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>name</strong> <code>str</code>: name of transformation function.</li>
-<li><strong>version</strong> <code>Optional[int]</code>: version of transformation function. Optional, if not provided all functions that match to provided
-    name will be retrieved .</li>
+<li><strong>ge_type</strong> <code>bool</code>: If <code>True</code> returns a native Great Expectation type, Hopsworks
+    custom type otherwise. Conversion can be performed via the <code>to_ge_type()</code>
+    method on hopsworks type. Defaults to <code>True</code>.</li>
 </ul>
-<p><strong>Returns:</strong></p>
-<p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
+<p><strong>Returns</strong></p>
+<p><code>ValidationReport</code>. The latest validation report attached to the Feature Group.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L915">[source]</a></span></p>
-<h3 id="get_transformation_functions">get_transformation_functions<a class="headerlink" href="#get_transformation_functions" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_functions</span><span class="p">()</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L481">[source]</a></span></p>
+<h3 id="get_all_validation_reports">get_all_validation_reports<a class="headerlink" href="#get_all_validation_reports" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">get_all_validation_reports</span><span class="p">(</span><span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
-<p>Get  all transformation functions metadata objects.</p>
-<p><strong>Returns:</strong></p>
-<p><code>List[TransformationFunction]</code>. List of transformation function instances.</p>
+<p>Return the latest validation report attached to the feature group if it exists.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>ge_type</strong> <code>bool</code>: If <code>True</code> returns a native Great Expectation type, Hopsworks
+    custom type otherwise. Conversion can be performed via the <code>to_ge_type()</code>
+    method on hopsworks type. Defaults to <code>True</code>.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p>Union[List[<code>ValidationReport</code>], <code>ValidationReport</code>]. All validation reports attached to the feature group.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
+<hr />
+<h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_report.py#L180">[source]</a></span></p>
+<h3 id="evaluation_parameters">evaluation_parameters<a class="headerlink" href="#evaluation_parameters" title="Permanent link">#</a></h3>
+<p>Evaluation parameters field of the validation report which store kwargs of the validation.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_report.py#L108">[source]</a></span></p>
+<h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
+<p>Id of the validation report, set by backend.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_report.py#L198">[source]</a></span></p>
+<h3 id="ingestion_result">ingestion_result<a class="headerlink" href="#ingestion_result" title="Permanent link">#</a></h3>
+<p>Overall success of the validation run together with the ingestion
+validation policy. Indicating if dataframe was ingested or rejected.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_report.py#L147">[source]</a></span></p>
+<h3 id="meta">meta<a class="headerlink" href="#meta" title="Permanent link">#</a></h3>
+<p>Meta field of the validation report to store additional informations.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_report.py#L126">[source]</a></span></p>
+<h3 id="results">results<a class="headerlink" href="#results" title="Permanent link">#</a></h3>
+<p>List of expectation results obtained after validation.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_report.py#L163">[source]</a></span></p>
+<h3 id="statistics">statistics<a class="headerlink" href="#statistics" title="Permanent link">#</a></h3>
+<p>Statistics field of the validation report which store overall statistics
+about the validation result, e.g number of failing/successful expectations.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_report.py#L117">[source]</a></span></p>
+<h3 id="success">success<a class="headerlink" href="#success" title="Permanent link">#</a></h3>
+<p>Overall success of the validation step</p>
+<hr />
+<h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_report.py#L61">[source]</a></span></p>
+<h3 id="from_response_json">from_response_json<a class="headerlink" href="#from_response_json" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ValidationReport</span><span class="o">.</span><span class="n">from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_report.py#L76">[source]</a></span></p>
+<h3 id="json">json<a class="headerlink" href="#json" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ValidationReport</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_report.py#L79">[source]</a></span></p>
+<h3 id="to_dict">to_dict<a class="headerlink" href="#to_dict" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ValidationReport</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_report.py#L99">[source]</a></span></p>
+<h3 id="to_ge_type">to_ge_type<a class="headerlink" href="#to_ge_type" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ValidationReport</span><span class="o">.</span><span class="n">to_ge_type</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/validation_report.py#L89">[source]</a></span></p>
+<h3 id="to_json_dict">to_json_dict<a class="headerlink" href="#to_json_dict" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ValidationReport</span><span class="o">.</span><span class="n">to_json_dict</span><span class="p">()</span>
+</code></pre></div>
 <hr />
 
               
@@ -1477,7 +1650,7 @@ call the <code>save()</code> method of the transformation function metadata obje
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../query_api/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Query" rel="prev">
+        <a href="../transformation_functions_api/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Transformation Functions" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1486,20 +1659,20 @@ call the <code>save()</code> method of the transformation function metadata obje
               <span class="md-footer__direction">
                 Previous
               </span>
-              Query
+              Transformation Functions
             </div>
           </div>
         </a>
       
       
         
-        <a href="../validation_report_api/" class="md-footer__link md-footer__link--next" aria-label="Next: ValidationReport" rel="next">
+        <a href="../job_configuration/" class="md-footer__link md-footer__link--next" aria-label="Next: Job configuration" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              ValidationReport
+              Job configuration
             </div>
           </div>
           <div class="md-footer__button md-icon">

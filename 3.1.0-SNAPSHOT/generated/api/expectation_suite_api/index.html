@@ -12,14 +12,14 @@
         <meta name="author" content="Logical Clocks">
       
       
-        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/3.1.0-SNAPSHOT/generated/api/transformation_functions_api/">
+        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/3.1.0-SNAPSHOT/generated/api/expectation_suite_api/">
       
       <link rel="icon" href="../../../assets/images/favicon.ico">
       <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.8">
     
     
       
-        <title>Transformation Functions - Hopsworks Documentation</title>
+        <title>ExpectationSuite - Hopsworks Documentation</title>
       
     
     
@@ -83,7 +83,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#transformation-function" class="md-skip">
+        <a href="#expectation-suite" class="md-skip">
           Skip to content
         </a>
       
@@ -117,7 +117,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Transformation Functions
+              ExpectationSuite
             
           </span>
         </div>
@@ -800,11 +800,272 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../expectation_suite_api/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          ExpectationSuite
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         ExpectationSuite
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#expectationsuite" class="md-nav__link">
+    ExpectationSuite
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creation-with-great-expectations" class="md-nav__link">
+    Creation with Great Expectations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#attach-to-feature-group" class="md-nav__link">
+    Attach to Feature Group
+  </a>
+  
+    <nav class="md-nav" aria-label="Attach to Feature Group">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#save_expectation_suite" class="md-nav__link">
+    save_expectation_suite
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-expectation-api" class="md-nav__link">
+    Single Expectation API
+  </a>
+  
+    <nav class="md-nav" aria-label="Single Expectation API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add_expectation" class="md-nav__link">
+    add_expectation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replace_expectation" class="md-nav__link">
+    replace_expectation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove_expectation" class="md-nav__link">
+    remove_expectation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#properties" class="md-nav__link">
+    Properties
+  </a>
+  
+    <nav class="md-nav" aria-label="Properties">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data_asset_type" class="md-nav__link">
+    data_asset_type
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expectation_suite_name" class="md-nav__link">
+    expectation_suite_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expectations" class="md-nav__link">
+    expectations
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ge_cloud_id" class="md-nav__link">
+    ge_cloud_id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ge_cloud_id_1" class="md-nav__link">
+    ge_cloud_id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id" class="md-nav__link">
+    id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#meta" class="md-nav__link">
+    meta
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run_validation" class="md-nav__link">
+    run_validation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation_ingestion_policy" class="md-nav__link">
+    validation_ingestion_policy
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    Methods
+  </a>
+  
+    <nav class="md-nav" aria-label="Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add_expectation_1" class="md-nav__link">
+    add_expectation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from_ge_type" class="md-nav__link">
+    from_ge_type
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from_response_json" class="md-nav__link">
+    from_response_json
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_expectation" class="md-nav__link">
+    get_expectation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json" class="md-nav__link">
+    json
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove_expectation_1" class="md-nav__link">
+    remove_expectation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replace_expectation_1" class="md-nav__link">
+    replace_expectation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_ge_type" class="md-nav__link">
+    to_ge_type
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_json_dict" class="md-nav__link">
+    to_json_dict
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -926,188 +1187,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Transformation Functions
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../transformation_functions_api/" class="md-nav__link">
         Transformation Functions
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#transformationfunction" class="md-nav__link">
-    TransformationFunction
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#properties" class="md-nav__link">
-    Properties
-  </a>
-  
-    <nav class="md-nav" aria-label="Properties">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#id" class="md-nav__link">
-    id
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#name" class="md-nav__link">
-    name
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#output_type" class="md-nav__link">
-    output_type
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#source_code_content" class="md-nav__link">
-    source_code_content
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#transformation_fn" class="md-nav__link">
-    transformation_fn
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#transformer_code" class="md-nav__link">
-    transformer_code
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#version" class="md-nav__link">
-    version
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#methods" class="md-nav__link">
-    Methods
-  </a>
-  
-    <nav class="md-nav" aria-label="Methods">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#delete" class="md-nav__link">
-    delete
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#save" class="md-nav__link">
-    save
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#creation" class="md-nav__link">
-    Creation
-  </a>
-  
-    <nav class="md-nav" aria-label="Creation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#create_transformation_function" class="md-nav__link">
-    create_transformation_function
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#retrieval" class="md-nav__link">
-    Retrieval
-  </a>
-  
-    <nav class="md-nav" aria-label="Retrieval">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#get_transformation_function" class="md-nav__link">
-    get_transformation_function
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#get_transformation_functions" class="md-nav__link">
-    get_transformation_functions
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1210,9 +1294,70 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#transformationfunction" class="md-nav__link">
-    TransformationFunction
+  <a href="#expectationsuite" class="md-nav__link">
+    ExpectationSuite
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creation-with-great-expectations" class="md-nav__link">
+    Creation with Great Expectations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#attach-to-feature-group" class="md-nav__link">
+    Attach to Feature Group
+  </a>
+  
+    <nav class="md-nav" aria-label="Attach to Feature Group">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#save_expectation_suite" class="md-nav__link">
+    save_expectation_suite
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-expectation-api" class="md-nav__link">
+    Single Expectation API
+  </a>
+  
+    <nav class="md-nav" aria-label="Single Expectation API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add_expectation" class="md-nav__link">
+    add_expectation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replace_expectation" class="md-nav__link">
+    replace_expectation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove_expectation" class="md-nav__link">
+    remove_expectation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1225,6 +1370,41 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#data_asset_type" class="md-nav__link">
+    data_asset_type
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expectation_suite_name" class="md-nav__link">
+    expectation_suite_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expectations" class="md-nav__link">
+    expectations
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ge_cloud_id" class="md-nav__link">
+    ge_cloud_id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ge_cloud_id_1" class="md-nav__link">
+    ge_cloud_id
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#id" class="md-nav__link">
     id
   </a>
@@ -1232,43 +1412,22 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#name" class="md-nav__link">
-    name
+  <a href="#meta" class="md-nav__link">
+    meta
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#output_type" class="md-nav__link">
-    output_type
+  <a href="#run_validation" class="md-nav__link">
+    run_validation
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#source_code_content" class="md-nav__link">
-    source_code_content
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#transformation_fn" class="md-nav__link">
-    transformation_fn
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#transformer_code" class="md-nav__link">
-    transformer_code
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#version" class="md-nav__link">
-    version
+  <a href="#validation_ingestion_policy" class="md-nav__link">
+    validation_ingestion_policy
   </a>
   
 </li>
@@ -1287,62 +1446,71 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#delete" class="md-nav__link">
-    delete
+  <a href="#add_expectation_1" class="md-nav__link">
+    add_expectation
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#save" class="md-nav__link">
-    save
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#creation" class="md-nav__link">
-    Creation
-  </a>
-  
-    <nav class="md-nav" aria-label="Creation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#create_transformation_function" class="md-nav__link">
-    create_transformation_function
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#retrieval" class="md-nav__link">
-    Retrieval
-  </a>
-  
-    <nav class="md-nav" aria-label="Retrieval">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#get_transformation_function" class="md-nav__link">
-    get_transformation_function
+  <a href="#from_ge_type" class="md-nav__link">
+    from_ge_type
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#get_transformation_functions" class="md-nav__link">
-    get_transformation_functions
+  <a href="#from_response_json" class="md-nav__link">
+    from_response_json
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_expectation" class="md-nav__link">
+    get_expectation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json" class="md-nav__link">
+    json
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove_expectation_1" class="md-nav__link">
+    remove_expectation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replace_expectation_1" class="md-nav__link">
+    replace_expectation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_dict" class="md-nav__link">
+    to_dict
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_ge_type" class="md-nav__link">
+    to_ge_type
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_json_dict" class="md-nav__link">
+    to_json_dict
   </a>
   
 </li>
@@ -1366,103 +1534,253 @@
                 
 
 
-<h1 id="transformation-function">Transformation Function<a class="headerlink" href="#transformation-function" title="Permanent link">#</a></h1>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L25">[source]</a></span></p>
-<h3 id="transformationfunction">TransformationFunction<a class="headerlink" href="#transformationfunction" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">transformation_function</span><span class="o">.</span><span class="n">TransformationFunction</span><span class="p">(</span>
-    <span class="n">featurestore_id</span><span class="p">,</span>
-    <span class="n">transformation_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">source_code_content</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">builtin_source_code</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">output_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<h1 id="expectation-suite">Expectation Suite<a class="headerlink" href="#expectation-suite" title="Permanent link">#</a></h1>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L31">[source]</a></span></p>
+<h3 id="expectationsuite">ExpectationSuite<a class="headerlink" href="#expectationsuite" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">expectation_suite</span><span class="o">.</span><span class="n">ExpectationSuite</span><span class="p">(</span>
+    <span class="n">expectation_suite_name</span><span class="p">,</span>
+    <span class="n">expectations</span><span class="p">,</span>
+    <span class="n">meta</span><span class="p">,</span>
     <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">data_asset_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">ge_cloud_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">run_validation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">validation_ingestion_policy</span><span class="o">=</span><span class="s2">&quot;ALWAYS&quot;</span><span class="p">,</span>
+    <span class="n">feature_store_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">feature_group_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">href</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">expand</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">items</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">count</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">href</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">created</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Metadata object representing an feature validation expectation in the Feature Store.</p>
+<hr />
+<h2 id="creation-with-great-expectations">Creation with Great Expectations<a class="headerlink" href="#creation-with-great-expectations" title="Permanent link">#</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">great_expectations</span> <span class="k">as</span> <span class="nn">ge</span>
+
+<span class="n">expectation_suite</span> <span class="o">=</span> <span class="n">ge</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">ExpectationSuite</span><span class="p">(</span>
+    <span class="s2">&quot;new_expectation_suite&quot;</span><span class="p">,</span>
+    <span class="n">expectations</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">ge</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">ExpectationConfiguration</span><span class="p">(</span>
+            <span class="n">expectation_type</span><span class="o">=</span><span class="s2">&quot;expect_column_max_to_be_between&quot;</span><span class="p">,</span>
+            <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;feature&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;min_value&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;max_value&quot;</span><span class="p">:</span> <span class="mi">1</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</code></pre></div>
+<h2 id="attach-to-feature-group">Attach to Feature Group<a class="headerlink" href="#attach-to-feature-group" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_group.py#L404">[source]</a></span></p>
+<h3 id="save_expectation_suite">save_expectation_suite<a class="headerlink" href="#save_expectation_suite" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">FeatureGroup</span><span class="o">.</span><span class="n">save_expectation_suite</span><span class="p">(</span>
+    <span class="n">expectation_suite</span><span class="p">,</span> <span class="n">run_validation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">validation_ingestion_policy</span><span class="o">=</span><span class="s2">&quot;ALWAYS&quot;</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Attach an expectation suite to a feature group and saves it for future use. If an expectation
+suite is already attached, it is replaced. Note that the provided expectation suite is modified
+inplace to include expectationId fields.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>expectation_suite</strong> <code>Union[hsfs.expectation_suite.ExpectationSuite, great_expectations.core.expectation_suite.ExpectationSuite]</code>: The expectation suite to attach to the Feature Group.</li>
+<li><strong>run_validation</strong> <code>bool</code>: Set whether the expectation_suite will run on ingestion</li>
+<li><strong>validation_ingestion_policy</strong> <code>str</code>: Set the policy for ingestion to the Feature Group.<ul>
+<li>"STRICT" only allows DataFrame passing validation to be inserted into Feature Group.</li>
+<li>"ALWAYS" always insert the DataFrame to the Feature Group, irrespective of overall validation result.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>.</p>
+<hr />
+<h2 id="single-expectation-api">Single Expectation API<a class="headerlink" href="#single-expectation-api" title="Permanent link">#</a></h2>
+<p>An API to edit the expectation list based on Great Expectations API.</p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L260">[source]</a></span></p>
+<h3 id="add_expectation">add_expectation<a class="headerlink" href="#add_expectation" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExpectationSuite</span><span class="o">.</span><span class="n">add_expectation</span><span class="p">(</span><span class="n">expectation</span><span class="p">,</span> <span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<p>Append an expectation to the local suite or in the backend if attached to a Feature Group.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>expectation</strong> <code>Union[hsfs.ge_expectation.GeExpectation, great_expectations.core.expectation_configuration.ExpectationConfiguration]</code>: The new expectation object.</li>
+<li><strong>ge_type</strong> <code>bool</code>: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p>The new expectation attached to the Feature Group.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>
+<code>FeatureStoreException</code></p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L294">[source]</a></span></p>
+<h3 id="replace_expectation">replace_expectation<a class="headerlink" href="#replace_expectation" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExpectationSuite</span><span class="o">.</span><span class="n">replace_expectation</span><span class="p">(</span><span class="n">expectation</span><span class="p">,</span> <span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<p>Update an expectation from the suite locally or from the backend if attached to a Feature Group.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>expectation</strong> <code>Union[hsfs.ge_expectation.GeExpectation, great_expectations.core.expectation_configuration.ExpectationConfiguration]</code>: The updated expectation object. The meta field should contain an expectationId field.</li>
+<li><strong>ge_type</strong> <code>bool</code>: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p>The updated expectation attached to the Feature Group.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>
+<code>FeatureStoreException</code></p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L332">[source]</a></span></p>
+<h3 id="remove_expectation">remove_expectation<a class="headerlink" href="#remove_expectation" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExpectationSuite</span><span class="o">.</span><span class="n">remove_expectation</span><span class="p">(</span><span class="n">expectation_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Remove an expectation from the suite locally and from the backend if attached to a Feature Group.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>expectation_id</strong> <code>Optional[int]</code>: Id of the expectation to remove. The expectation will be deleted both locally and from the backend.</li>
+</ul>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>
+<code>FeatureStoreException</code></p>
+<hr />
+<h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L377">[source]</a></span></p>
+<h3 id="data_asset_type">data_asset_type<a class="headerlink" href="#data_asset_type" title="Permanent link">#</a></h3>
+<p>Data asset type of the expectation suite, not used by backend.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L368">[source]</a></span></p>
+<h3 id="expectation_suite_name">expectation_suite_name<a class="headerlink" href="#expectation_suite_name" title="Permanent link">#</a></h3>
+<p>Name of the expectation suite.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L417">[source]</a></span></p>
+<h3 id="expectations">expectations<a class="headerlink" href="#expectations" title="Permanent link">#</a></h3>
+<p>List of expectations to run at validation.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L386">[source]</a></span></p>
+<h3 id="ge_cloud_id">ge_cloud_id<a class="headerlink" href="#ge_cloud_id" title="Permanent link">#</a></h3>
+<p>ge_cloud_id of the expectation suite, not used by backend.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L386">[source]</a></span></p>
+<h3 id="ge_cloud_id_1">ge_cloud_id<a class="headerlink" href="#ge_cloud_id_1" title="Permanent link">#</a></h3>
+<p>ge_cloud_id of the expectation suite, not used by backend.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L359">[source]</a></span></p>
+<h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
+<p>Id of the expectation suite, set by backend.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L443">[source]</a></span></p>
+<h3 id="meta">meta<a class="headerlink" href="#meta" title="Permanent link">#</a></h3>
+<p>Meta field of the expectation suite to store additional informations.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L395">[source]</a></span></p>
+<h3 id="run_validation">run_validation<a class="headerlink" href="#run_validation" title="Permanent link">#</a></h3>
+<p>Boolean to determine whether or not the expectation suite shoudl run on ingestion.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L404">[source]</a></span></p>
+<h3 id="validation_ingestion_policy">validation_ingestion_policy<a class="headerlink" href="#validation_ingestion_policy" title="Permanent link">#</a></h3>
+<p>Whether to ingest a df based on the validation result.</p>
+<p>"STRICT" : ingest df only if all expectations succeed,
+"ALWAYS" : always ingest df, even if one or more expectations fail</p>
+<hr />
+<h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L260">[source]</a></span></p>
+<h3 id="add_expectation_1">add_expectation<a class="headerlink" href="#add_expectation_1" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExpectationSuite</span><span class="o">.</span><span class="n">add_expectation</span><span class="p">(</span><span class="n">expectation</span><span class="p">,</span> <span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<p>Append an expectation to the local suite or in the backend if attached to a Feature Group.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>expectation</strong> <code>Union[hsfs.ge_expectation.GeExpectation, great_expectations.core.expectation_configuration.ExpectationConfiguration]</code>: The new expectation object.</li>
+<li><strong>ge_type</strong> <code>bool</code>: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p>The new expectation attached to the Feature Group.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>
+<code>FeatureStoreException</code></p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L105">[source]</a></span></p>
+<h3 id="from_ge_type">from_ge_type<a class="headerlink" href="#from_ge_type" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExpectationSuite</span><span class="o">.</span><span class="n">from_ge_type</span><span class="p">(</span>
+    <span class="n">ge_expectation_suite</span><span class="p">,</span>
+    <span class="n">run_validation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">validation_ingestion_policy</span><span class="o">=</span><span class="s2">&quot;ALWAYS&quot;</span><span class="p">,</span>
+    <span class="n">feature_store_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">feature_group_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div>
 <hr />
-<h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L188">[source]</a></span></p>
-<h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
-<p>Training dataset id.</p>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L197">[source]</a></span></p>
-<h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L217">[source]</a></span></p>
-<h3 id="output_type">output_type<a class="headerlink" href="#output_type" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L213">[source]</a></span></p>
-<h3 id="source_code_content">source_code_content<a class="headerlink" href="#source_code_content" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L209">[source]</a></span></p>
-<h3 id="transformation_fn">transformation_fn<a class="headerlink" href="#transformation_fn" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L205">[source]</a></span></p>
-<h3 id="transformer_code">transformer_code<a class="headerlink" href="#transformer_code" title="Permanent link">#</a></h3>
-<hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L201">[source]</a></span></p>
-<h3 id="version">version<a class="headerlink" href="#version" title="Permanent link">#</a></h3>
-<hr />
-<h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L85">[source]</a></span></p>
-<h3 id="delete">delete<a class="headerlink" href="#delete" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TransformationFunction</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L90">[source]</a></span></p>
+<h3 id="from_response_json">from_response_json<a class="headerlink" href="#from_response_json" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExpectationSuite</span><span class="o">.</span><span class="n">from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
 </code></pre></div>
-<p>Delete transformation function from backend.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/transformation_function.py#L81">[source]</a></span></p>
-<h3 id="save">save<a class="headerlink" href="#save" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">TransformationFunction</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L233">[source]</a></span></p>
+<h3 id="get_expectation">get_expectation<a class="headerlink" href="#get_expectation" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExpectationSuite</span><span class="o">.</span><span class="n">get_expectation</span><span class="p">(</span><span class="n">expectation_id</span><span class="p">,</span> <span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
-<p>Persist transformation function in backend.</p>
-<hr />
-<h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L858">[source]</a></span></p>
-<h3 id="create_transformation_function">create_transformation_function<a class="headerlink" href="#create_transformation_function" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_transformation_function</span><span class="p">(</span><span class="n">transformation_function</span><span class="p">,</span> <span class="n">output_type</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</code></pre></div>
-<p>Create a transformation function metadata object.</p>
-<div class="admonition note">
-<p class="admonition-title">Lazy</p>
-<p>This method is lazy and does not persist the transformation function in the
-feature store on its own. To materialize the transformation function and save
-call the <code>save()</code> method of the transformation function metadata object.</p>
-</div>
+<p>Fetch expectation with expectation_id from the backend.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>transformation_function</strong> <code>callable</code>: callable object.</li>
-<li><strong>output_type</strong> <code>Union[str, bytes, int, numpy.int8, numpy.int16, numpy.int32, numpy.int64, float, numpy.float64, datetime.datetime, numpy.datetime64, datetime.date, bool]</code>: python or numpy output type that will be inferred as pyspark.sql.types type.</li>
+<li><strong>expectation_id</strong> <code>int</code>: Id of the expectation to fetch from the backend.</li>
+<li><strong>ge_type</strong> <code>bool</code>: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.</li>
 </ul>
-<p><strong>Returns:</strong></p>
-<p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
+<p><strong>Returns</strong></p>
+<p>The expectation with expectation_id registered in the backend.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>
+<code>FeatureStoreException</code></p>
 <hr />
-<h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L899">[source]</a></span></p>
-<h3 id="get_transformation_function">get_transformation_function<a class="headerlink" href="#get_transformation_function" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_function</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L148">[source]</a></span></p>
+<h3 id="json">json<a class="headerlink" href="#json" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExpectationSuite</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 </code></pre></div>
-<p>Get  transformation function metadata object.</p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L332">[source]</a></span></p>
+<h3 id="remove_expectation_1">remove_expectation<a class="headerlink" href="#remove_expectation_1" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExpectationSuite</span><span class="o">.</span><span class="n">remove_expectation</span><span class="p">(</span><span class="n">expectation_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<p>Remove an expectation from the suite locally and from the backend if attached to a Feature Group.</p>
 <p><strong>Arguments</strong></p>
 <ul>
-<li><strong>name</strong> <code>str</code>: name of transformation function.</li>
-<li><strong>version</strong> <code>Optional[int]</code>: version of transformation function. Optional, if not provided all functions that match to provided
-    name will be retrieved .</li>
+<li><strong>expectation_id</strong> <code>Optional[int]</code>: Id of the expectation to remove. The expectation will be deleted both locally and from the backend.</li>
 </ul>
-<p><strong>Returns:</strong></p>
-<p><code>TransformationFunction</code>: The TransformationFunction metadata object.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>
+<code>FeatureStoreException</code></p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L915">[source]</a></span></p>
-<h3 id="get_transformation_functions">get_transformation_functions<a class="headerlink" href="#get_transformation_functions" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_transformation_functions</span><span class="p">()</span>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L294">[source]</a></span></p>
+<h3 id="replace_expectation_1">replace_expectation<a class="headerlink" href="#replace_expectation_1" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExpectationSuite</span><span class="o">.</span><span class="n">replace_expectation</span><span class="p">(</span><span class="n">expectation</span><span class="p">,</span> <span class="n">ge_type</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
-<p>Get  all transformation functions metadata objects.</p>
-<p><strong>Returns:</strong></p>
-<p><code>List[TransformationFunction]</code>. List of transformation function instances.</p>
+<p>Update an expectation from the suite locally or from the backend if attached to a Feature Group.</p>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>expectation</strong> <code>Union[hsfs.ge_expectation.GeExpectation, great_expectations.core.expectation_configuration.ExpectationConfiguration]</code>: The updated expectation object. The meta field should contain an expectationId field.</li>
+<li><strong>ge_type</strong> <code>bool</code>: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.</li>
+</ul>
+<p><strong>Returns</strong></p>
+<p>The updated expectation attached to the Feature Group.</p>
+<p><strong>Raises</strong></p>
+<p><code>RestAPIException</code>
+<code>FeatureStoreException</code></p>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L122">[source]</a></span></p>
+<h3 id="to_dict">to_dict<a class="headerlink" href="#to_dict" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExpectationSuite</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L151">[source]</a></span></p>
+<h3 id="to_ge_type">to_ge_type<a class="headerlink" href="#to_ge_type" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExpectationSuite</span><span class="o">.</span><span class="n">to_ge_type</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/expectation_suite.py#L134">[source]</a></span></p>
+<h3 id="to_json_dict">to_json_dict<a class="headerlink" href="#to_json_dict" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">ExpectationSuite</span><span class="o">.</span><span class="n">to_json_dict</span><span class="p">()</span>
+</code></pre></div>
 <hr />
 
               
@@ -1477,7 +1795,7 @@ call the <code>save()</code> method of the transformation function metadata obje
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../query_api/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Query" rel="prev">
+        <a href="../connection_api/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Connection" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1486,20 +1804,20 @@ call the <code>save()</code> method of the transformation function metadata obje
               <span class="md-footer__direction">
                 Previous
               </span>
-              Query
+              Connection
             </div>
           </div>
         </a>
       
       
         
-        <a href="../validation_report_api/" class="md-footer__link md-footer__link--next" aria-label="Next: ValidationReport" rel="next">
+        <a href="../feature_store_api/" class="md-footer__link md-footer__link--next" aria-label="Next: FeatureStore" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              ValidationReport
+              FeatureStore
             </div>
           </div>
           <div class="md-footer__button md-icon">
