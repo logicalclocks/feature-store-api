@@ -198,7 +198,6 @@ class TestFeatureViewEngine:
             return_value=feature_view_url,
         )
         mock_print = mocker.patch("builtins.print")
-        mock_warning = mocker.patch("warnings.warn")
 
         fv_engine = feature_view_engine.FeatureViewEngine(
             feature_store_id=feature_store_id
@@ -240,8 +239,6 @@ class TestFeatureViewEngine:
             "hsfs.core.feature_view_engine.FeatureViewEngine._get_feature_view_url",
             return_value=feature_view_url,
         )
-        mock_print = mocker.patch("builtins.print")
-        mock_warning = mocker.patch("warnings.warn")
 
         fv_engine = feature_view_engine.FeatureViewEngine(
             feature_store_id=feature_store_id
