@@ -58,7 +58,7 @@ public abstract class FeatureViewBase {
   @Getter
   @Setter
   @JsonIgnore
-  private FeatureStoreBase featureStoreBase;
+  private FeatureStoreBase featureStore;
 
   @Getter
   @Setter

@@ -60,7 +60,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
 
   public FeatureView save(FeatureView featureView) throws FeatureStoreException, IOException {
     featureView.setFeatures(makeLabelFeatures(featureView.getLabels()));
-    FeatureView updatedFeatureView = (FeatureView) featureViewApi.save(featureView);
+    FeatureView updatedFeatureView = featureViewApi.save(featureView, FeatureView.class);
     featureView.setVersion(updatedFeatureView.getVersion());
     featureView.setFeatures(updatedFeatureView.getFeatures());
     return featureView;
@@ -77,7 +77,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
 
   public FeatureView update(FeatureView featureView) throws FeatureStoreException,
       IOException {
-    FeatureView featureViewUpdated = (FeatureView) featureViewApi.update(featureView);
+    FeatureView featureViewUpdated = featureViewApi.update(featureView, FeatureView.class);
     featureView.setDescription(featureViewUpdated.getDescription());
     return featureView;
   }
@@ -118,7 +118,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
       FeatureView featureView, Integer trainingDatasetVersion, List<String> requestedSplits,
       Map<String, String> userReadOptions
   ) throws IOException, FeatureStoreException, ParseException {
-    TrainingDataset trainingDataset = (TrainingDataset) featureView.getFeatureStore().createTrainingDataset()
+    TrainingDataset trainingDataset = featureView.getFeatureStore().createTrainingDataset()
         .name(featureView.getName())
         .version(trainingDatasetVersion)
         .build();
@@ -212,7 +212,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
       FeatureView featureView, TrainingDataset trainingDataset) throws IOException, FeatureStoreException {
     setEventTime(featureView, trainingDataset);
     return (TrainingDataset) featureViewApi.createTrainingData(
-        featureView.getName(), featureView.getVersion(), trainingDataset);
+        featureView.getName(), featureView.getVersion(), trainingDataset, TrainingDataset.class);
   }
 
   private void setEventTime(FeatureView featureView, TrainingDataset trainingDataset) {

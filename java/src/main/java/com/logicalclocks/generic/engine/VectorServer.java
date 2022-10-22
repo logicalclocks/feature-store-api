@@ -106,7 +106,7 @@ public class VectorServer {
     if (preparedStatements == null || isBatch) {
       initPreparedStatement(featureViewBase, false, external);
     }
-    return getFeatureVector(featureViewBase.getFeatureStoreBase(), featureViewBase.getFeatures(), entry, external);
+    return getFeatureVector(featureViewBase.getFeatureStore(), featureViewBase.getFeatures(), entry, external);
   }
 
   private List<Object> getFeatureVector(FeatureStoreBase featureStoreBase, List<TrainingDatasetFeature> features,
@@ -178,7 +178,7 @@ public class VectorServer {
 
   public List<List<Object>> getFeatureVectors(FeatureViewBase featureViewBase, Map<String, List<Object>> entry)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return getFeatureVectors(featureViewBase.getFeatureStoreBase(), featureViewBase.getFeatures(), entry,
+    return getFeatureVectors(featureViewBase.getFeatureStore(), featureViewBase.getFeatures(), entry,
         HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient);
   }
 
@@ -188,7 +188,7 @@ public class VectorServer {
     if (preparedStatements == null || !isBatch) {
       initPreparedStatement(featureViewBase, true, external);
     }
-    return getFeatureVectors(featureViewBase.getFeatureStoreBase(), featureViewBase.getFeatures(), entry, external);
+    return getFeatureVectors(featureViewBase.getFeatureStore(), featureViewBase.getFeatures(), entry, external);
   }
 
   private List<List<Object>> getFeatureVectors(FeatureStoreBase featureStoreBase, List<TrainingDatasetFeature> features,
@@ -315,7 +315,7 @@ public class VectorServer {
     }
     List<ServingPreparedStatement> servingPreparedStatements =
         featureViewApi.getServingPreparedStatement(featureViewBase, batch);
-    initPreparedStatement(featureViewBase.getFeatureStoreBase(), servingPreparedStatements, batch, external);
+    initPreparedStatement(featureViewBase.getFeatureStore(), servingPreparedStatements, batch, external);
   }
 
   private void initPreparedStatement(FeatureStoreBase featureStoreBase,

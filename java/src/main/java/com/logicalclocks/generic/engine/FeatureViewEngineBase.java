@@ -43,7 +43,7 @@ public abstract class FeatureViewEngineBase {
 
   public FeatureViewBase save(FeatureViewBase featureViewBase) throws FeatureStoreException, IOException {
     featureViewBase.setFeatures(makeLabelFeatures(featureViewBase.getLabels()));
-    FeatureViewBase updatedFeatureViewBase = featureViewApi.save(featureViewBase);
+    FeatureViewBase updatedFeatureViewBase = featureViewApi.save(featureViewBase, FeatureViewBase.class);
     featureViewBase.setVersion(updatedFeatureViewBase.getVersion());
     featureViewBase.setFeatures(updatedFeatureViewBase.getFeatures());
     return featureViewBase;
@@ -60,15 +60,15 @@ public abstract class FeatureViewEngineBase {
 
   public FeatureViewBase update(FeatureViewBase featureViewBase) throws FeatureStoreException,
       IOException {
-    FeatureViewBase featureViewBaseUpdated = featureViewApi.update(featureViewBase);
+    FeatureViewBase featureViewBaseUpdated = featureViewApi.update(featureViewBase, FeatureViewBase.class);
     featureViewBase.setDescription(featureViewBaseUpdated.getDescription());
     return featureViewBase;
   }
 
   public FeatureViewBase get(FeatureStoreBase featureStoreBase, String name, Integer version)
       throws FeatureStoreException, IOException {
-    FeatureViewBase featureViewBase = featureViewApi.get(featureStoreBase, name, version);
-    featureViewBase.setFeatureStoreBase(featureStoreBase);
+    FeatureViewBase featureViewBase = featureViewApi.get(featureStoreBase, name, version, FeatureViewBase.class);
+    featureViewBase.setFeatureStore(featureStoreBase);
     featureViewBase.getFeatures().stream()
         .filter(f -> f.getFeatureGroup() != null)
         .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStoreBase));
@@ -85,7 +85,7 @@ public abstract class FeatureViewEngineBase {
       IOException {
     List<FeatureViewBase> featureViewBases = featureViewApi.get(featureStoreBase, name);
     for (FeatureViewBase fv : featureViewBases) {
-      fv.setFeatureStoreBase(featureStoreBase);
+      fv.setFeatureStore(featureStoreBase);
       fv.getFeatures().stream()
           .filter(f -> f.getFeatureGroup() != null)
           .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStoreBase));
@@ -167,7 +167,7 @@ public abstract class FeatureViewEngineBase {
                                  Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
     QueryBase queryBase = featureViewApi.getBatchQuery(
-        featureViewBase.getFeatureStoreBase(),
+        featureViewBase.getFeatureStore(),
         featureViewBase.getName(),
         featureViewBase.getVersion(),
         startTime == null ? null : startTime.getTime(),

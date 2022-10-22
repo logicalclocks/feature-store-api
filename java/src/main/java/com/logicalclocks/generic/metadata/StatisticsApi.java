@@ -81,8 +81,8 @@ public class StatisticsApi {
     String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FV_STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
+        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("tdVersion", trainingDataVersion)

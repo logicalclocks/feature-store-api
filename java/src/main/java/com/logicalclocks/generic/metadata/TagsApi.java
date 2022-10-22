@@ -110,16 +110,16 @@ public class TagsApi {
 
   private UriTemplate getFvUriTemplate(FeatureViewBase featureViewBase) {
     return UriTemplate.fromTemplate(FV_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
+        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion());
   }
 
   private UriTemplate getFvUriTemplate(FeatureViewBase featureViewBase, String tagName) {
     return UriTemplate.fromTemplate(FV_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
+        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("name", tagName);
@@ -127,8 +127,8 @@ public class TagsApi {
 
   private UriTemplate getFvTdUriTemplate(FeatureViewBase featureViewBase, Integer trainingDatasetVersion) {
     return UriTemplate.fromTemplate(FV_TD_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
+        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("tdVersion", trainingDatasetVersion);
@@ -137,8 +137,8 @@ public class TagsApi {
   private UriTemplate getFvTdUriTemplate(FeatureViewBase featureViewBase, Integer trainingDatasetVersion,
                                          String tagName) {
     return UriTemplate.fromTemplate(FV_TD_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", featureViewBase.getFeatureStoreBase().getId())
+        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("tdVersion", trainingDatasetVersion)

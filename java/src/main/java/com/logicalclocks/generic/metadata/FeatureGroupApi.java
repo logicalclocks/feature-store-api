@@ -96,7 +96,7 @@ public class FeatureGroupApi {
 
     LOGGER.info("Sending metadata request: " + uri);
 
-    return (FeatureGroupBase) HopsworksClient.getInstance().handleRequest(postRequest, fgType);
+    return HopsworksClient.getInstance().handleRequest(postRequest, fgType);
   }
 
   public void delete(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {

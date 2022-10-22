@@ -438,6 +438,14 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   @Override
+  public Query select(List<String> features) {
+    // Create a feature object for each string feature given by the user.
+    // For the query building each feature need only the name set.
+    List<Feature> featureObjList = features.stream().map(Feature::new).collect(Collectors.toList());
+    return selectFeatures(featureObjList);
+  }
+
+  @Override
   public Query selectAll() {
     return new Query(this, getFeatures());
   }
