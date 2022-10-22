@@ -19,6 +19,7 @@ import statistics
 import pandas as pd
 import numpy as np
 import datetime
+import pytz
 
 import pytest
 from pyspark.sql.types import (
@@ -42,7 +43,7 @@ from hsfs.engine import python
 from hsfs.core.transformation_function_engine import TransformationFunctionEngine
 
 
-class TestPythonSparkTransformationFuctions:
+class TestPythonSparkTransformationFunctions:
     def _create_training_dataset(
         self, tf_fun, output_type=None, name=None, col="col_0"
     ):
@@ -97,8 +98,8 @@ class TestPythonSparkTransformationFuctions:
             dataset=df,
         )
 
-        assert np.alltrue(result.columns == expected_df.columns)
-        assert np.alltrue(result.dtypes == expected_df.dtypes)
+        assert sorted(result.columns) == sorted(expected_df.columns)
+        assert sorted(result.dtypes) == sorted(expected_df.dtypes)
         assert result.equals(expected_df)
 
     def _validate_on_spark_engine(self, td, spark_df, expected_spark_df):
@@ -162,7 +163,7 @@ class TestPythonSparkTransformationFuctions:
             '        except ZeroDivisionError:\\n            return 0\\n"}'
         )
 
-        td = self._create_training_dataset(tf_fun, "DoubleType()", "min_max_scaler")
+        td = self._create_training_dataset(tf_fun, "DOUBLE", "min_max_scaler")
 
         td.transformation_functions[
             "col_0"
@@ -233,9 +234,7 @@ class TestPythonSparkTransformationFuctions:
             '    return value_to_index[value]"}'
         )
 
-        td = self._create_training_dataset(
-            tf_fun, "IntegerType()", "label_encoder", "col_1"
-        )
+        td = self._create_training_dataset(tf_fun, "INT", "label_encoder", "col_1")
 
         td.transformation_functions[
             "col_1"
@@ -296,7 +295,7 @@ class TestPythonSparkTransformationFuctions:
             'ZeroDivisionError:\\n            return 0\\n"}'
         )
 
-        td = self._create_training_dataset(tf_fun, "DoubleType()", "standard_scaler")
+        td = self._create_training_dataset(tf_fun, "DOUBLE", "standard_scaler")
 
         mean = statistics.mean([1, 2])
         stddev = statistics.pstdev([1, 2])
@@ -368,7 +367,7 @@ class TestPythonSparkTransformationFuctions:
             'except ZeroDivisionError:\\n            return 0\\n"}\n'
         )
 
-        td = self._create_training_dataset(tf_fun, "DoubleType()", "robust_scaler")
+        td = self._create_training_dataset(tf_fun, "DOUBLE", "robust_scaler")
 
         percentiles = [1] * 100
         percentiles[24] = 1
@@ -542,7 +541,66 @@ class TestPythonSparkTransformationFuctions:
         self._validate_on_python_engine(td, df, expected_df)
         self._validate_on_spark_engine(td, spark_df, expected_spark_df)
 
-    def test_apply_plus_one_datetime(self, mocker):
+    def test_apply_plus_one_datetime_no_tz(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        spark_engine = spark.Engine()
+
+        schema = StructType(
+            [
+                StructField("col_0", IntegerType(), True),
+                StructField("col_1", StringType(), True),
+                StructField("col_2", BooleanType(), True),
+            ]
+        )
+        df = pd.DataFrame(
+            data={
+                "col_0": [1640995200, 1640995201],
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+            }
+        )
+
+        spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
+
+        expected_schema = StructType(
+            [
+                StructField("col_0", TimestampType(), True),
+                StructField("col_1", StringType(), True),
+                StructField("col_2", BooleanType(), True),
+            ]
+        )
+        expected_df = pd.DataFrame(
+            data={
+                "col_0": [
+                    datetime.datetime.utcfromtimestamp(1640995201),
+                    datetime.datetime.utcfromtimestamp(1640995202),
+                ],
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+            }
+        )
+        # convert timestamps to current timezone
+        current_timezone = datetime.datetime.now().astimezone().tzinfo
+        expected_df_localized = expected_df.copy(True)
+        expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
+            current_timezone
+        )
+        expected_spark_df = spark_engine._spark_session.createDataFrame(
+            expected_df_localized, schema=expected_schema
+        )
+
+        # Arrange
+        def tf_fun(a) -> datetime.datetime:
+            return datetime.datetime.utcfromtimestamp(a + 1)
+
+        td = self._create_training_dataset(tf_fun, "datetime")
+
+        # Assert
+        self._validate_on_python_engine(td, df, expected_df)
+        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+
+    def test_apply_plus_one_datetime_tz_utc(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
         spark_engine = spark.Engine()
@@ -573,25 +631,148 @@ class TestPythonSparkTransformationFuctions:
         expected_df = pd.DataFrame(
             data={
                 "col_0": [
-                    datetime.datetime.fromtimestamp(1640995201).replace(
-                        tzinfo=datetime.timezone.utc
-                    ),
-                    datetime.datetime.fromtimestamp(1640995202).replace(
-                        tzinfo=datetime.timezone.utc
-                    ),
+                    datetime.datetime.utcfromtimestamp(1640995201),
+                    datetime.datetime.utcfromtimestamp(1640995202),
                 ],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
             }
         )
+        # convert timestamps to current timezone
+        current_timezone = datetime.datetime.now().astimezone().tzinfo
+        expected_df_localized = expected_df.copy(True)
+        expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
+            current_timezone
+        )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
-            expected_df, schema=expected_schema
+            expected_df_localized, schema=expected_schema
         )
 
         # Arrange
         def tf_fun(a) -> datetime.datetime:
-            return datetime.datetime.fromtimestamp(a + 1).replace(
+            return datetime.datetime.utcfromtimestamp(a + 1).replace(
                 tzinfo=datetime.timezone.utc
+            )
+
+        td = self._create_training_dataset(tf_fun, "datetime")
+
+        # Assert
+        self._validate_on_python_engine(td, df, expected_df)
+        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+
+    def test_apply_plus_one_datetime_tz_pst(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        spark_engine = spark.Engine()
+
+        schema = StructType(
+            [
+                StructField("col_0", IntegerType(), True),
+                StructField("col_1", StringType(), True),
+                StructField("col_2", BooleanType(), True),
+            ]
+        )
+        df = pd.DataFrame(
+            data={
+                "col_0": [1640995200, 1640995201],
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+            }
+        )
+        spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
+
+        expected_schema = StructType(
+            [
+                StructField("col_0", TimestampType(), True),
+                StructField("col_1", StringType(), True),
+                StructField("col_2", BooleanType(), True),
+            ]
+        )
+
+        expected_df = pd.DataFrame(
+            data={
+                "col_0": [
+                    datetime.datetime.utcfromtimestamp(1641024001),
+                    datetime.datetime.utcfromtimestamp(1641024002),
+                ],
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+            }
+        )
+        # convert timestamps to current timezone
+        current_timezone = datetime.datetime.now().astimezone().tzinfo
+        expected_df_localized = expected_df.copy(True)
+        expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
+            current_timezone
+        )
+        expected_spark_df = spark_engine._spark_session.createDataFrame(
+            expected_df_localized, schema=expected_schema
+        )
+
+        # Arrange
+        def tf_fun(a) -> datetime.datetime:
+            pdt = pytz.timezone("US/Pacific")
+            return pdt.localize(datetime.datetime.utcfromtimestamp(a + 1))
+
+        td = self._create_training_dataset(tf_fun, "datetime")
+
+        # Assert
+        self._validate_on_python_engine(td, df, expected_df)
+        self._validate_on_spark_engine(td, spark_df, expected_spark_df)
+
+    def test_apply_plus_one_datetime_ts_none(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        spark_engine = spark.Engine()
+
+        schema = StructType(
+            [
+                StructField("col_0", IntegerType(), True),
+                StructField("col_1", StringType(), True),
+                StructField("col_2", BooleanType(), True),
+            ]
+        )
+        df = pd.DataFrame(
+            data={
+                "col_0": [1640995200, 1640995201],
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+            }
+        )
+        spark_df = spark_engine._spark_session.createDataFrame(df, schema=schema)
+
+        expected_schema = StructType(
+            [
+                StructField("col_0", TimestampType(), True),
+                StructField("col_1", StringType(), True),
+                StructField("col_2", BooleanType(), True),
+            ]
+        )
+
+        expected_df = pd.DataFrame(
+            data={
+                "col_0": [
+                    None,
+                    datetime.datetime.utcfromtimestamp(1640995202),
+                ],
+                "col_1": ["test_1", "test_2"],
+                "col_2": [True, False],
+            }
+        )
+        # convert timestamps to current timezone
+        current_timezone = datetime.datetime.now().astimezone().tzinfo
+        expected_df_localized = expected_df.copy(True)
+        expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
+            current_timezone
+        )
+        expected_spark_df = spark_engine._spark_session.createDataFrame(
+            expected_df_localized, schema=expected_schema
+        )
+
+        # Arrange
+        def tf_fun(a) -> datetime.datetime:
+            return (
+                None if a == 1640995200 else datetime.datetime.utcfromtimestamp(a + 1)
             )
 
         td = self._create_training_dataset(tf_fun, "datetime")
@@ -631,8 +812,8 @@ class TestPythonSparkTransformationFuctions:
         expected_df = pd.DataFrame(
             data={
                 "col_0": [
-                    datetime.datetime.fromtimestamp(1641045601).date(),
-                    datetime.datetime.fromtimestamp(1641132001).date(),
+                    datetime.datetime.utcfromtimestamp(1641045601).date(),
+                    datetime.datetime.utcfromtimestamp(1641132001).date(),
                 ],
                 "col_1": ["test_1", "test_2"],
                 "col_2": [True, False],
@@ -644,7 +825,7 @@ class TestPythonSparkTransformationFuctions:
 
         # Arrange
         def tf_fun(a) -> datetime.datetime:
-            return datetime.datetime.fromtimestamp(a + 1)
+            return datetime.datetime.utcfromtimestamp(a + 1)
 
         td = self._create_training_dataset(tf_fun, "date")
 

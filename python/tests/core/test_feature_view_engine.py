@@ -20,9 +20,34 @@ from hsfs import (
     transformation_function_attached,
     training_dataset,
     split_statistics,
+    feature_group,
 )
 from hsfs.constructor import fs_query
 from hsfs.core import feature_view_engine
+from hsfs import engine
+
+engine._engine_type = "python"
+fg1 = feature_group.FeatureGroup(
+    name="test1",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    id=10,
+    stream=False,
+)
+
+fg2 = feature_group.FeatureGroup(
+    name="test2",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    id=10,
+    stream=False,
+)
+
+query = fg1.select_all()
 
 
 class TestFeatureViewEngine:
@@ -47,7 +72,7 @@ class TestFeatureViewEngine:
 
         fv = feature_view.FeatureView(
             name="fv_name",
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=["label1", "label2"],
         )
@@ -67,6 +92,98 @@ class TestFeatureViewEngine:
             feature_view_url
         )
 
+    def test_save_time_travel_query(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        feature_view_url = "test_url"
+
+        mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
+        )
+        mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine._get_feature_view_url",
+            return_value=feature_view_url,
+        )
+        mock_print = mocker.patch("builtins.print")
+        mock_warning = mocker.patch("warnings.warn")
+
+        fv_engine = feature_view_engine.FeatureViewEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=query.as_of(1000),
+            featurestore_id=feature_store_id,
+            labels=["label1", "label2"],
+        )
+
+        # Act
+        fv_engine.save(fv)
+
+        # Assert
+        assert len(fv._features) == 2
+        assert fv._features[0].name == "label1" and fv._features[0].label
+        assert fv._features[1].name == "label2" and fv._features[1].label
+        assert mock_fv_api.return_value.post.call_count == 1
+        assert mock_print.call_count == 1
+        assert mock_print.call_args[0][
+            0
+        ] == "Feature view created successfully, explore it at \n{}".format(
+            feature_view_url
+        )
+        assert mock_warning.call_args[0][0] == (
+            "`as_of` argument in the `Query` will be ignored because"
+            + " feature view does not support time travel query."
+        )
+
+    def test_save_time_travel_sub_query(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        feature_view_url = "test_url"
+
+        mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
+        )
+        mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine._get_feature_view_url",
+            return_value=feature_view_url,
+        )
+        mock_print = mocker.patch("builtins.print")
+        mock_warning = mocker.patch("warnings.warn")
+
+        fv_engine = feature_view_engine.FeatureViewEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=fg1.select_all().join(fg2.select_all().as_of("20221010")),
+            featurestore_id=feature_store_id,
+            labels=["label1", "label2"],
+        )
+
+        # Act
+        fv_engine.save(fv)
+
+        # Assert
+        assert len(fv._features) == 2
+        assert fv._features[0].name == "label1" and fv._features[0].label
+        assert fv._features[1].name == "label2" and fv._features[1].label
+        assert mock_fv_api.return_value.post.call_count == 1
+        assert mock_print.call_count == 1
+        assert mock_print.call_args[0][
+            0
+        ] == "Feature view created successfully, explore it at \n{}".format(
+            feature_view_url
+        )
+        assert mock_warning.call_args[0][0] == (
+            "`as_of` argument in the `Query` will be ignored because"
+            + " feature view does not support time travel query."
+        )
+
     def test_get_name(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -83,14 +200,14 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
         fv1 = feature_view.FeatureView(
             name="fv_name",
             version=2,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -121,7 +238,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -183,7 +300,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -213,17 +330,17 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
-        query = fs_query.FsQuery(
+        _fs_query = fs_query.FsQuery(
             query="query",
             on_demand_feature_groups=None,
             hudi_cached_feature_groups=None,
             pit_query=None,
         )
-        mock_qc_api.return_value.construct_query.return_value = query
+        mock_qc_api.return_value.construct_query.return_value = _fs_query
 
         # Act
         result = fv_engine.get_batch_query_string(
@@ -252,18 +369,18 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
-        query = fs_query.FsQuery(
+        _fs_query = fs_query.FsQuery(
             query="query",
             on_demand_feature_groups=None,
             hudi_cached_feature_groups=None,
             pit_query="pit_query",
         )
 
-        mock_qc_api.return_value.construct_query.return_value = query
+        mock_qc_api.return_value.construct_query.return_value = _fs_query
 
         # Act
         result = fv_engine.get_batch_query_string(
@@ -388,7 +505,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -434,7 +551,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -481,7 +598,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -537,7 +654,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -586,7 +703,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -641,7 +758,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -697,7 +814,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1285,7 +1402,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1326,7 +1443,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1358,7 +1475,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1383,7 +1500,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1408,7 +1525,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1438,7 +1555,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )
@@ -1775,7 +1892,7 @@ class TestFeatureViewEngine:
         fv = feature_view.FeatureView(
             name="fv_name",
             version=1,
-            query="fv_query",
+            query=query,
             featurestore_id=feature_store_id,
             labels=[],
         )

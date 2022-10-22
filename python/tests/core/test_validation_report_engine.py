@@ -14,7 +14,6 @@
 #   limitations under the License.
 #
 
-from hsfs import feature_group, validation_report
 from hsfs.core import validation_report_engine
 
 
@@ -22,6 +21,7 @@ class TestValidationReportEngine:
     def test_save(self, mocker):
         # Arrange
         feature_store_id = 99
+        feature_group_id = 10
         validation_report_url = "test_url"
 
         mock_vr_api = mocker.patch(
@@ -32,21 +32,14 @@ class TestValidationReportEngine:
         )
         mock_print = mocker.patch("builtins.print")
 
-        vr_engine = validation_report_engine.ValidationReportEngine(feature_store_id)
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            partition_key=[],
-            id=10,
+        vr_engine = validation_report_engine.ValidationReportEngine(
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
         mock_vr_engine_get_validation_report_url.return_value = validation_report_url
 
         # Act
-        vr_engine.save(feature_group=fg, validation_report=None)
+        vr_engine.save(validation_report=None)
 
         # Assert
         assert mock_vr_api.return_value.create.call_count == 1
@@ -60,6 +53,7 @@ class TestValidationReportEngine:
     def test_get_last(self, mocker):
         # Arrange
         feature_store_id = 99
+        feature_group_id = 10
         validation_report_url = "test_url"
 
         mock_vr_api = mocker.patch(
@@ -70,21 +64,14 @@ class TestValidationReportEngine:
         )
         mock_print = mocker.patch("builtins.print")
 
-        vr_engine = validation_report_engine.ValidationReportEngine(feature_store_id)
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            partition_key=[],
-            id=10,
+        vr_engine = validation_report_engine.ValidationReportEngine(
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
         mock_vr_engine_get_validation_report_url.return_value = validation_report_url
 
         # Act
-        vr_engine.get_last(feature_group=fg)
+        vr_engine.get_last()
 
         # Assert
         assert mock_vr_api.return_value.get_last.call_count == 1
@@ -98,6 +85,7 @@ class TestValidationReportEngine:
     def test_get_all(self, mocker):
         # Arrange
         feature_store_id = 99
+        feature_group_id = 10
         validation_report_url = "test_url"
 
         mock_vr_api = mocker.patch(
@@ -108,21 +96,14 @@ class TestValidationReportEngine:
         )
         mock_print = mocker.patch("builtins.print")
 
-        vr_engine = validation_report_engine.ValidationReportEngine(feature_store_id)
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            partition_key=[],
-            id=10,
+        vr_engine = validation_report_engine.ValidationReportEngine(
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
         mock_vr_engine_get_validation_report_url.return_value = validation_report_url
 
         # Act
-        vr_engine.get_all(feature_group=fg)
+        vr_engine.get_all()
 
         # Assert
         assert mock_vr_api.return_value.get_all.call_count == 1
@@ -136,26 +117,19 @@ class TestValidationReportEngine:
     def test_delete(self, mocker):
         # Arrange
         feature_store_id = 99
+        feature_group_id = 10
+        validation_report_id = 43
 
         mock_vr_api = mocker.patch(
             "hsfs.core.validation_report_api.ValidationReportApi"
         )
 
-        vr_engine = validation_report_engine.ValidationReportEngine(feature_store_id)
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            partition_key=[],
-            id=10,
+        vr_engine = validation_report_engine.ValidationReportEngine(
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
-        vr = validation_report.ValidationReport(True, [], {}, {})
-
         # Act
-        vr_engine.delete(feature_group=fg, validation_report=vr)
+        vr_engine.delete(validation_report_id=validation_report_id)
 
         # Assert
         assert mock_vr_api.return_value.delete.call_count == 1
@@ -163,27 +137,21 @@ class TestValidationReportEngine:
     def test_get_validation_report_url(self, mocker):
         # Arrange
         feature_store_id = 99
+        feature_group_id = 10
 
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
         mock_util_get_hostname_replaced_url = mocker.patch(
             "hsfs.util.get_hostname_replaced_url"
         )
 
-        vr_engine = validation_report_engine.ValidationReportEngine(feature_store_id)
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            partition_key=[],
-            id=10,
+        vr_engine = validation_report_engine.ValidationReportEngine(
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
         mock_client_get_instance.return_value._project_id = 50
 
         # Act
-        vr_engine._get_validation_report_url(feature_group=fg)
+        vr_engine._get_validation_report_url()
 
         # Assert
         assert mock_util_get_hostname_replaced_url.call_count == 1

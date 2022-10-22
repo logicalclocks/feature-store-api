@@ -277,10 +277,12 @@ public class Query extends QueryBase {
     }
   }
 
-  public void show(int numRows) {
+  public void show(int numRows) throws FeatureStoreException, IOException {
+    show(false, numRows);
   }
 
   @Override
-  public void show(boolean online, int numRows) {
+  public void show(boolean online, int numRows) throws FeatureStoreException, IOException {
+    SparkEngine.getInstance().objectToDataset(read(online)).show(numRows);
   }
 }

@@ -54,7 +54,6 @@ class TestFeatureGroupEngine:
             feature_group=fg,
             feature_dataframe=None,
             write_options=None,
-            validation_options=None,
         )
 
         # Assert
@@ -104,7 +103,6 @@ class TestFeatureGroupEngine:
             feature_group=fg,
             feature_dataframe=None,
             write_options=None,
-            validation_options=None,
         )
 
         # Assert
@@ -148,7 +146,6 @@ class TestFeatureGroupEngine:
             operation=None,
             storage=None,
             write_options=None,
-            validation_options=None,
         )
 
         # Assert
@@ -194,7 +191,6 @@ class TestFeatureGroupEngine:
             operation=None,
             storage=None,
             write_options=None,
-            validation_options=None,
         )
 
         # Assert
@@ -251,7 +247,6 @@ class TestFeatureGroupEngine:
             operation=None,
             storage=None,
             write_options=None,
-            validation_options=None,
         )
 
         # Assert
@@ -297,7 +292,6 @@ class TestFeatureGroupEngine:
                 operation=None,
                 storage="online",
                 write_options=None,
-                validation_options=None,
             )
 
         # Assert
@@ -345,7 +339,6 @@ class TestFeatureGroupEngine:
             operation=None,
             storage=None,
             write_options=None,
-            validation_options=None,
         )
 
         # Assert

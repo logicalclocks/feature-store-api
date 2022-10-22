@@ -198,12 +198,12 @@ public abstract class QueryBase {
       excludeUntilTimestamp = utils.getTimeStampFromDateString(excludeUntil);
     }
     for (Join join : this.joins) {
-      QueryBase queryBaseWithTimeStamp = join.getQueryBase();
+      QueryBase queryBaseWithTimeStamp = join.getQuery();
       queryBaseWithTimeStamp.setLeftFeatureGroupEndTime(wallclockTimestamp);
       if (excludeUntilTimestamp != null) {
         queryBaseWithTimeStamp.setLeftFeatureGroupStartTime(excludeUntilTimestamp);
       }
-      join.setQueryBase(queryBaseWithTimeStamp);
+      join.setQuery(queryBaseWithTimeStamp);
     }
     this.setLeftFeatureGroupEndTime(wallclockTimestamp);
     if (excludeUntilTimestamp != null) {
@@ -254,8 +254,20 @@ public abstract class QueryBase {
     return this;
   }
 
+  public boolean isTimeTravel() {
+    if (leftFeatureGroupStartTime != null || leftFeatureGroupEndTime != null) {
+      return true;
+    }
+    for (Join join: joins) {
+      if (join.getQuery().isTimeTravel()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public abstract Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException,
       IOException;
 
-  public abstract void show(boolean online, int numRows);
+  public abstract void show(boolean online, int numRows) throws FeatureStoreException, IOException;
 }

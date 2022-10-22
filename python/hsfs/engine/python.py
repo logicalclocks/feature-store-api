@@ -249,8 +249,15 @@ class Engine:
     def register_hudi_temporary_table(
         self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
     ):
-        # No op to avoid query failure
-        pass
+        if hudi_fg_alias and (
+            hudi_fg_alias.left_feature_group_end_timestamp is not None
+            or hudi_fg_alias.left_feature_group_start_timestamp is not None
+        ):
+            raise FeatureStoreException(
+                "Hive engine on Python environments does not support incremental queries. "
+                + "Read feature group without timestamp to retrieve latest snapshot or switch to "
+                + "environment with Spark Engine."
+            )
 
     def profile_by_spark(self, metadata_instance):
         stat_api = statistics_api.StatisticsApi(
@@ -349,6 +356,13 @@ class Engine:
                     ),
                     util.FeatureGroupWarning,
                 )
+
+            # convert timestamps with timezone to UTC
+            for col in dataframe.columns:
+                if isinstance(
+                    dataframe[col].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
+                ):
+                    dataframe[col] = dataframe[col].dt.tz_convert(None)
 
             # making a shallow copy of the dataframe so that column names are unchanged
             dataframe_copy = dataframe.copy(deep=False)
@@ -811,29 +825,29 @@ class Engine:
 
         return dataset
 
-    @staticmethod
-    def convert_column(output_type, feature_column):
-        if output_type in ("StringType()",):
+    def convert_column(self, output_type, feature_column):
+        if output_type == "STRING":
             return feature_column.astype(str)
-        elif output_type in ("BinaryType()",):
+        elif output_type == "BINARY":
             return feature_column.astype(bytes)
-        elif output_type in ("ByteType()",):
+        elif output_type == "BYTE":
             return feature_column.astype(np.int8)
-        elif output_type in ("ShortType()",):
+        elif output_type == "SHORT":
             return feature_column.astype(np.int16)
-        elif output_type in ("IntegerType()",):
+        elif output_type == "INT":
             return feature_column.astype(int)
-        elif output_type in ("LongType()",):
+        elif output_type == "LONG":
             return feature_column.astype(np.int64)
-        elif output_type in ("FloatType()",):
+        elif output_type == "FLOAT":
             return feature_column.astype(float)
-        elif output_type in ("DoubleType()",):
+        elif output_type == "DOUBLE":
             return feature_column.astype(np.float64)
-        elif output_type in ("TimestampType()",):
-            return pd.to_datetime(feature_column)
-        elif output_type in ("DateType()",):
-            return pd.to_datetime(feature_column).dt.date
-        elif output_type in ("BooleanType()",):
+        elif output_type == "TIMESTAMP":
+            # convert (if tz!=UTC) to utc, then make timezone unaware
+            return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
+        elif output_type == "DATE":
+            return pd.to_datetime(feature_column, utc=True).dt.date
+        elif output_type == "BOOLEAN":
             return feature_column.astype(bool)
         else:
             return feature_column  # handle gracefully, just return the column as-is

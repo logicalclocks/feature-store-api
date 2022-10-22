@@ -29,7 +29,7 @@ public class Join {
 
   @Getter
   @Setter
-  private QueryBase queryBase;
+  private QueryBase query;
 
   @Getter
   @Setter
@@ -49,21 +49,21 @@ public class Join {
   @Setter
   private String prefix;
 
-  public Join(QueryBase queryBase, JoinType joinType, String prefix) {
-    this.queryBase = queryBase;
+  public Join(QueryBase query, JoinType joinType, String prefix) {
+    this.query = query;
     this.joinType = joinType;
     this.prefix = prefix;
   }
 
-  public Join(QueryBase queryBase, List<Feature> on, JoinType joinType, String prefix) {
-    this.queryBase = queryBase;
+  public Join(QueryBase query, List<Feature> on, JoinType joinType, String prefix) {
+    this.query = query;
     this.on = on;
     this.joinType = joinType;
     this.prefix = prefix;
   }
 
-  public Join(QueryBase queryBase, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType, String prefix) {
-    this.queryBase = queryBase;
+  public Join(QueryBase query, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType, String prefix) {
+    this.query = query;
     this.leftOn = leftOn;
     this.rightOn = rightOn;
     this.joinType = joinType;

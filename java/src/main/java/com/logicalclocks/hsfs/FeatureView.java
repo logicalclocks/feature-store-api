@@ -39,6 +39,8 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -93,6 +95,7 @@ public class FeatureView extends FeatureViewBase {
   private static FeatureViewEngine featureViewEngine = new FeatureViewEngine();
   private static VectorServer vectorServer = new VectorServer();
   private Integer extraFilterVersion = null;
+  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
   public static class FeatureViewBuilder {
 
@@ -122,8 +125,19 @@ public class FeatureView extends FeatureViewBase {
       return this;
     }
 
+    /**
+     * Query of a feature view. Note that `as_of` argument in the `Query` will be ignored because feature view does
+     * not support time travel query.
+     *
+     * @param query
+     * @return builder
+     */
     public FeatureViewBuilder query(Query query) {
       this.query = query;
+      if (query.isTimeTravel()) {
+        LOGGER.info("`as_of` argument in the `Query` will be ignored because "
+            + "feature view does not support time travel query.");
+      }
       return this;
     }
 
