@@ -100,7 +100,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   private String avroSchema;
 
   @Getter(onMethod = @__(@Override))
-  @Setter
+  @Setter(onMethod = @__(@Override))
   private String onlineTopicName;
 
   @Setter

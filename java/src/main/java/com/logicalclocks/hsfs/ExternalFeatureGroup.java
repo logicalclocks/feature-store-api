@@ -197,11 +197,6 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
   }
 
   @Override
-  public String getOnlineTopicName() throws FeatureStoreException, IOException {
-    return null;
-  }
-
-  @Override
   public void setDeltaStreamerJobConf(DeltaStreamerJobConf deltaStreamerJobConf)
       throws FeatureStoreException, IOException {
   }

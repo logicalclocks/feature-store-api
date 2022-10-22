@@ -95,6 +95,10 @@ public class FeatureGroupBase {
   @Setter
   protected String location;
 
+  @Getter
+  @Setter
+  protected String onlineTopicName;
+
   private FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
@@ -338,10 +342,6 @@ public class FeatureGroupBase {
       primaryKeys = features.stream().filter(f -> f.getPrimary()).map(Feature::getName).collect(Collectors.toList());
     }
     return primaryKeys;
-  }
-
-  public String getOnlineTopicName() throws FeatureStoreException, IOException {
-    return null;
   }
 
   public void setDeltaStreamerJobConf(DeltaStreamerJobConf deltaStreamerJobConf)

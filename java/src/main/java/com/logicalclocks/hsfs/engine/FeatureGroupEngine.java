@@ -153,7 +153,6 @@ public class FeatureGroupEngine {
       // After that it's going to be just a normal append
       featureGroupApi.deleteContent(streamFeatureGroup);
     }
-
     SparkEngine.getInstance().writeOnlineDataframe(streamFeatureGroup, featureData,
         streamFeatureGroup.getOnlineTopicName(),
         SparkEngine.getInstance().getKafkaConfig(streamFeatureGroup, writeOptions));
@@ -274,10 +273,8 @@ public class FeatureGroupEngine {
         partitionKeys, hudiPrecombineKey, writeOptions, sparkJobConfiguration, StreamFeatureGroup.class);
     featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
 
-
     return featureGroup;
   }
-
 
   public FeatureGroup getOrCreateFeatureGroup(FeatureStore featureStore, String name, Integer version,
                                               String description, List<String> primaryKeys, List<String> partitionKeys,
@@ -285,7 +282,6 @@ public class FeatureGroupEngine {
                                               TimeTravelFormat timeTravelFormat,
                                               StatisticsConfig statisticsConfig, String eventTime)
       throws IOException, FeatureStoreException {
-
 
     FeatureGroup featureGroup;
     try {

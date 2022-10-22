@@ -108,17 +108,17 @@ public class HudiEngine {
   protected static final String COMMIT_METADATA_KEYPREFIX_OPT_KEY = "hoodie.datasource.write.commitmeta.key.prefix";
   protected static final String DELTASTREAMER_CHECKPOINT_KEY = "deltastreamer.checkpoint.key";
   protected static final String INITIAL_CHECKPOINT_STRING = "initialCheckPointString";
-  protected static final String FEATURE_GROUP_SCHEMA = "com.logicalclocks.hsfs.spark.FeatureGroup.schema";
+  protected static final String FEATURE_GROUP_SCHEMA = "com.logicalclocks.hsfs.FeatureGroup.schema";
   protected static final String FEATURE_GROUP_ENCODED_SCHEMA =
-      "com.logicalclocks.hsfs.spark.FeatureGroup.encodedSchema";
+      "com.logicalclocks.hsfs.FeatureGroup.encodedSchema";
   protected static final String FEATURE_GROUP_COMPLEX_FEATURES =
-      "com.logicalclocks.hsfs.spark.FeatureGroup.complexFeatures";
+      "com.logicalclocks.hsfs.FeatureGroup.complexFeatures";
   protected static final String KAFKA_SOURCE =
-      "com.logicalclocks.hsfs.spark.engine.hudi.DeltaStreamerKafkaSource";
+      "com.logicalclocks.hsfs.engine.hudi.DeltaStreamerKafkaSource";
   protected static final String SCHEMA_PROVIDER =
-      "com.logicalclocks.hsfs.spark.engine.hudi.DeltaStreamerSchemaProvider";
+      "com.logicalclocks.hsfs.engine.hudi.DeltaStreamerSchemaProvider";
   protected static final String DELTA_STREAMER_TRANSFORMER =
-      "com.logicalclocks.hsfs.spark.engine.hudi.DeltaStreamerTransformer";
+      "com.logicalclocks.hsfs.engine.hudi.DeltaStreamerTransformer";
   protected static final String DELTA_SOURCE_ORDERING_FIELD_OPT_KEY = "sourceOrderingField";
 
   protected static final String MIN_SYNC_INTERVAL_SECONDS = "minSyncIntervalSeconds";

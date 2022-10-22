@@ -92,7 +92,7 @@ public class FeatureGroup extends FeatureGroupBase {
   private String avroSchema;
 
   @Getter(onMethod = @__(@Override))
-  @Setter
+  @Setter(onMethod = @__(@Override))
   private String onlineTopicName;
 
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();

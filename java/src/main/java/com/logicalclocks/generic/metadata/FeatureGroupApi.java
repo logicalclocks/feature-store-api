@@ -276,6 +276,7 @@ public class FeatureGroupApi {
     featureGroup.setVersion(apiFG.getVersion());
     featureGroup.setLocation(apiFG.getLocation());
     featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
+    featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
 
     /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
     if (hudiPrecombineKey == null) {
