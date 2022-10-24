@@ -4055,9 +4055,6 @@ class TestSpark:
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.setIfUnset.assert_any_call(
             "google.cloud.auth.service.account.enable", "true"
         )
-        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
-            "fs.gs.auth.service.account.json.keyfile", "test_local_path"
-        )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.unset.assert_any_call(
             "fs.gs.encryption.algorithm"
         )
@@ -4066,6 +4063,15 @@ class TestSpark:
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.unset.assert_any_call(
             "fs.gs.encryption.key.hash"
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.unset.assert_any_call(
+            "fs.gs.auth.service.account.email"
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.unset.assert_any_call(
+            "fs.gs.auth.service.account.private.key.id"
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.unset.assert_any_call(
+            "fs.gs.auth.service.account.private.key"
         )
 
     def test_setup_gcp_hadoop_conf_algorithm(self, mocker):
@@ -4117,9 +4123,6 @@ class TestSpark:
             "google.cloud.auth.service.account.enable", "true"
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
-            "fs.gs.auth.service.account.json.keyfile", "test_local_path"
-        )
-        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
             "fs.gs.encryption.algorithm", gcs_connector.algorithm
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
@@ -4127,6 +4130,15 @@ class TestSpark:
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
             "fs.gs.encryption.key.hash", gcs_connector.encryption_key_hash
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.unset.assert_any_call(
+            "fs.gs.auth.service.account.email"
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.unset.assert_any_call(
+            "fs.gs.auth.service.account.private.key.id"
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.unset.assert_any_call(
+            "fs.gs.auth.service.account.private.key"
         )
 
     def test_get_unique_values(self):
