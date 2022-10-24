@@ -17,7 +17,7 @@
 
 package com.logicalclocks.hsfs.engine.hudi;
 
-import com.logicalclocks.generic.FeatureStoreException;
+import com.logicalclocks.base.FeatureStoreException;
 import lombok.SneakyThrows;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;

@@ -17,8 +17,8 @@
 
 package com.logicalclocks.hsfs.engine;
 
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.TrainingDatasetFeature;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.TrainingDatasetFeature;
 
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;

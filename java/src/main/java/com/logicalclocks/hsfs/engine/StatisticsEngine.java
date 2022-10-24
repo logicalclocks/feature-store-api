@@ -17,13 +17,13 @@
 
 package com.logicalclocks.hsfs.engine;
 
-import com.logicalclocks.generic.EntityEndpointType;
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.Split;
-import com.logicalclocks.generic.metadata.FeatureGroupBase;
-import com.logicalclocks.generic.metadata.SplitStatistics;
-import com.logicalclocks.generic.metadata.Statistics;
-import com.logicalclocks.generic.metadata.StatisticsApi;
+import com.logicalclocks.base.EntityEndpointType;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.Split;
+import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.metadata.SplitStatistics;
+import com.logicalclocks.base.metadata.Statistics;
+import com.logicalclocks.base.metadata.StatisticsApi;
 
 import com.logicalclocks.hsfs.FeatureView;
 import com.logicalclocks.hsfs.TrainingDataset;

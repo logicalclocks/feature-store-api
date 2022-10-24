@@ -19,8 +19,8 @@ package com.logicalclocks.hsfs.engine.hudi;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.engine.FeatureGroupUtils;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.engine.FeatureGroupUtils;
 import lombok.SneakyThrows;
 import org.apache.avro.Conversions;
 import org.apache.avro.Schema;

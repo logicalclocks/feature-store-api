@@ -17,18 +17,18 @@
 
 package com.logicalclocks.hsfs.engine.hudi;
 
-import com.logicalclocks.generic.Feature;
-import com.logicalclocks.generic.FeatureGroupCommit;
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.HudiOperationType;
-import com.logicalclocks.generic.constructor.HudiFeatureGroupAlias;
-import com.logicalclocks.generic.engine.FeatureGroupUtils;
-import com.logicalclocks.generic.metadata.FeatureGroupApi;
-import com.logicalclocks.generic.metadata.FeatureGroupBase;
-import com.logicalclocks.generic.metadata.KafkaApi;
-import com.logicalclocks.generic.metadata.PartitionDetails;
+import com.logicalclocks.base.Feature;
+import com.logicalclocks.base.FeatureGroupCommit;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.HudiOperationType;
+import com.logicalclocks.base.constructor.HudiFeatureGroupAlias;
+import com.logicalclocks.base.engine.FeatureGroupUtils;
+import com.logicalclocks.base.metadata.FeatureGroupApi;
+import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.metadata.KafkaApi;
+import com.logicalclocks.base.metadata.PartitionDetails;
 
-import com.logicalclocks.generic.metadata.StorageConnectorApi;
+import com.logicalclocks.base.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import org.apache.hadoop.conf.Configuration;

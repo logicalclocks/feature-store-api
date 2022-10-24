@@ -17,17 +17,17 @@
 
 package com.logicalclocks.hsfs.constructor;
 
-import com.logicalclocks.generic.Feature;
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.Storage;
-import com.logicalclocks.generic.constructor.Filter;
-import com.logicalclocks.generic.constructor.FilterLogic;
-import com.logicalclocks.generic.constructor.Join;
-import com.logicalclocks.generic.constructor.JoinType;
-import com.logicalclocks.generic.constructor.QueryBase;
-import com.logicalclocks.generic.metadata.FeatureGroupBase;
-import com.logicalclocks.generic.metadata.QueryConstructorApi;
-import com.logicalclocks.generic.metadata.StorageConnectorApi;
+import com.logicalclocks.base.Feature;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.Storage;
+import com.logicalclocks.base.constructor.Filter;
+import com.logicalclocks.base.constructor.FilterLogic;
+import com.logicalclocks.base.constructor.Join;
+import com.logicalclocks.base.constructor.JoinType;
+import com.logicalclocks.base.constructor.QueryBase;
+import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.metadata.QueryConstructorApi;
+import com.logicalclocks.base.metadata.StorageConnectorApi;
 
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;

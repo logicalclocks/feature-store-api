@@ -18,12 +18,12 @@
 package com.logicalclocks.hsfs.engine;
 
 import com.google.common.collect.Maps;
-import com.logicalclocks.generic.EntityEndpointType;
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.Storage;
-import com.logicalclocks.generic.constructor.FsQueryBase;
-import com.logicalclocks.generic.metadata.TagsApi;
-import com.logicalclocks.generic.metadata.TrainingDatasetApi;
+import com.logicalclocks.base.EntityEndpointType;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.Storage;
+import com.logicalclocks.base.constructor.FsQueryBase;
+import com.logicalclocks.base.metadata.TagsApi;
+import com.logicalclocks.base.metadata.TrainingDatasetApi;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.constructor.Query;
 import org.apache.hadoop.fs.Path;

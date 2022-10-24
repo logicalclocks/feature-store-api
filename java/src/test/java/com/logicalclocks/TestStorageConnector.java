@@ -17,7 +17,7 @@
 
 package com.logicalclocks;
 
-import com.logicalclocks.generic.util.Constants;
+import com.logicalclocks.base.util.Constants;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import org.junit.jupiter.api.Assertions;

@@ -17,16 +17,16 @@
 
 package com.logicalclocks.hsfs.engine;
 
-import com.logicalclocks.generic.Feature;
-import com.logicalclocks.generic.FeatureGroupCommit;
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.HudiOperationType;
-import com.logicalclocks.generic.JobConfiguration;
-import com.logicalclocks.generic.Storage;
-import com.logicalclocks.generic.TimeTravelFormat;
-import com.logicalclocks.generic.engine.FeatureGroupUtils;
-import com.logicalclocks.generic.metadata.FeatureGroupApi;
-import com.logicalclocks.generic.metadata.FeatureGroupBase;
+import com.logicalclocks.base.Feature;
+import com.logicalclocks.base.FeatureGroupCommit;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.HudiOperationType;
+import com.logicalclocks.base.JobConfiguration;
+import com.logicalclocks.base.Storage;
+import com.logicalclocks.base.TimeTravelFormat;
+import com.logicalclocks.base.engine.FeatureGroupUtils;
+import com.logicalclocks.base.metadata.FeatureGroupApi;
+import com.logicalclocks.base.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.StatisticsConfig;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
@@ -107,7 +107,7 @@ public class FeatureGroupEngine {
         writeOptions, sparkJobConfiguration, dataset);
 
     insert(updatedFeatureGroup, SparkEngine.getInstance().sanitizeFeatureNames(dataset),
-        com.logicalclocks.generic.SaveMode.APPEND,  partitionKeys, hudiPrecombineKey, writeOptions,
+        com.logicalclocks.base.SaveMode.APPEND,  partitionKeys, hudiPrecombineKey, writeOptions,
         sparkJobConfiguration);
 
     return featureGroup;
@@ -137,7 +137,7 @@ public class FeatureGroupEngine {
   }
 
   public void insert(StreamFeatureGroup streamFeatureGroup, Dataset<Row> featureData,
-                     com.logicalclocks.generic.SaveMode saveMode, List<String> partitionKeys,
+                     com.logicalclocks.base.SaveMode saveMode, List<String> partitionKeys,
                      String hudiPrecombineKey, Map<String, String> writeOptions, JobConfiguration jobConfiguration)
       throws FeatureStoreException, IOException, ParseException {
 
@@ -146,7 +146,7 @@ public class FeatureGroupEngine {
           jobConfiguration, featureData);
     }
 
-    if (saveMode == com.logicalclocks.generic.SaveMode.OVERWRITE) {
+    if (saveMode == com.logicalclocks.base.SaveMode.OVERWRITE) {
       // If we set overwrite, then the directory will be removed and with it all the metadata
       // related to the feature group will be lost. We need to keep them.
       // So we call Hopsworks to manage to truncate the table and re-create the metadata

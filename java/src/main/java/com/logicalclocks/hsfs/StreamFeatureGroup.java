@@ -19,17 +19,17 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.logicalclocks.generic.DeltaStreamerJobConf;
-import com.logicalclocks.generic.EntityEndpointType;
-import com.logicalclocks.generic.Feature;
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.JobConfiguration;
-import com.logicalclocks.generic.SaveMode;
-import com.logicalclocks.generic.TimeTravelFormat;
-import com.logicalclocks.generic.engine.CodeEngine;
-import com.logicalclocks.generic.engine.FeatureGroupUtils;
-import com.logicalclocks.generic.metadata.FeatureGroupBase;
-import com.logicalclocks.generic.metadata.Statistics;
+import com.logicalclocks.base.DeltaStreamerJobConf;
+import com.logicalclocks.base.EntityEndpointType;
+import com.logicalclocks.base.Feature;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.JobConfiguration;
+import com.logicalclocks.base.SaveMode;
+import com.logicalclocks.base.TimeTravelFormat;
+import com.logicalclocks.base.engine.CodeEngine;
+import com.logicalclocks.base.engine.FeatureGroupUtils;
+import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.metadata.Statistics;
 
 import com.logicalclocks.hsfs.constructor.Query;
 

@@ -17,7 +17,7 @@
 
 package com.logicalclocks.hsfs;
 
-import com.logicalclocks.generic.StatisticsConfigBase;
+import com.logicalclocks.base.StatisticsConfigBase;
 
 import lombok.AllArgsConstructor;
 

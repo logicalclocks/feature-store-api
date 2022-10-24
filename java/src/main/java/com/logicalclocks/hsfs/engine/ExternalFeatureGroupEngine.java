@@ -17,10 +17,10 @@
 
 package com.logicalclocks.hsfs.engine;
 
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.engine.FeatureGroupBaseEngine;
-import com.logicalclocks.generic.metadata.FeatureGroupApi;
-import com.logicalclocks.generic.metadata.HopsworksClient;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.engine.FeatureGroupBaseEngine;
+import com.logicalclocks.base.metadata.FeatureGroupApi;
+import com.logicalclocks.base.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import org.apache.http.entity.StringEntity;
 import org.apache.spark.sql.Dataset;

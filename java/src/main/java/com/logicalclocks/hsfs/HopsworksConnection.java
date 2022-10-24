@@ -18,14 +18,14 @@
 package com.logicalclocks.hsfs;
 
 import com.google.common.base.Strings;
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.HopsworksConnectionBase;
-import com.logicalclocks.generic.Project;
-import com.logicalclocks.generic.SecretStore;
-import com.logicalclocks.generic.metadata.FeatureStoreApi;
-import com.logicalclocks.generic.metadata.HopsworksClient;
-import com.logicalclocks.generic.metadata.ProjectApi;
-import com.logicalclocks.generic.util.Constants;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.HopsworksConnectionBase;
+import com.logicalclocks.base.Project;
+import com.logicalclocks.base.SecretStore;
+import com.logicalclocks.base.metadata.FeatureStoreApi;
+import com.logicalclocks.base.metadata.HopsworksClient;
+import com.logicalclocks.base.metadata.ProjectApi;
+import com.logicalclocks.base.util.Constants;
 import lombok.Builder;
 import lombok.Getter;
 import org.slf4j.Logger;

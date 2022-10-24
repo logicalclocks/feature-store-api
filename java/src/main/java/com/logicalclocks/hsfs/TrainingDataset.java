@@ -21,18 +21,18 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.logicalclocks.generic.DataFormat;
-import com.logicalclocks.generic.EntityEndpointType;
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.Split;
-import com.logicalclocks.generic.Storage;
-import com.logicalclocks.generic.TrainingDatasetFeature;
-import com.logicalclocks.generic.TrainingDatasetType;
-import com.logicalclocks.generic.constructor.Filter;
-import com.logicalclocks.generic.constructor.FilterLogic;
-import com.logicalclocks.generic.engine.CodeEngine;
-import com.logicalclocks.generic.engine.FeatureGroupUtils;
-import com.logicalclocks.generic.metadata.Statistics;
+import com.logicalclocks.base.DataFormat;
+import com.logicalclocks.base.EntityEndpointType;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.Split;
+import com.logicalclocks.base.Storage;
+import com.logicalclocks.base.TrainingDatasetFeature;
+import com.logicalclocks.base.TrainingDatasetType;
+import com.logicalclocks.base.constructor.Filter;
+import com.logicalclocks.base.constructor.FilterLogic;
+import com.logicalclocks.base.engine.CodeEngine;
+import com.logicalclocks.base.engine.FeatureGroupUtils;
+import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetEngine;
@@ -50,7 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class TrainingDataset extends com.logicalclocks.generic.TrainingDatasetBase {
+public class TrainingDataset extends com.logicalclocks.base.TrainingDatasetBase {
 
   @Getter
   @Setter

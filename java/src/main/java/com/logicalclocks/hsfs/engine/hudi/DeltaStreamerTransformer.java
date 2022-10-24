@@ -17,7 +17,7 @@
 
 package com.logicalclocks.hsfs.engine.hudi;
 
-import com.logicalclocks.generic.metadata.FeatureStoreApi;
+import com.logicalclocks.base.metadata.FeatureStoreApi;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import lombok.SneakyThrows;
 import org.apache.hudi.common.config.TypedProperties;

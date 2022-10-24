@@ -17,8 +17,8 @@
 
 package com.logicalclocks.hsfs;
 
-import com.logicalclocks.generic.DataFormat;
-import com.logicalclocks.generic.Split;
+import com.logicalclocks.base.DataFormat;
+import com.logicalclocks.base.Split;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.constructor.Query;
 import org.slf4j.Logger;

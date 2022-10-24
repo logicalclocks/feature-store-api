@@ -19,7 +19,7 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
-import com.logicalclocks.generic.Split;
+import com.logicalclocks.base.Split;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import lombok.Getter;
 import org.apache.spark.sql.Dataset;

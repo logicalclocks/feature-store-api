@@ -17,14 +17,14 @@
 
 package com.logicalclocks.hsfs;
 
-import com.logicalclocks.generic.FeatureStoreBase;
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.StorageConnectorBase;
-import com.logicalclocks.generic.TimeTravelFormat;
-import com.logicalclocks.generic.TrainingDatasetBase;
-import com.logicalclocks.generic.metadata.FeatureGroupBase;
-import com.logicalclocks.generic.metadata.StorageConnectorApi;
-import com.logicalclocks.generic.metadata.TrainingDatasetApi;
+import com.logicalclocks.base.FeatureStoreBase;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.StorageConnectorBase;
+import com.logicalclocks.base.TimeTravelFormat;
+import com.logicalclocks.base.TrainingDatasetBase;
+import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.metadata.StorageConnectorApi;
+import com.logicalclocks.base.metadata.TrainingDatasetApi;
 
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureViewEngine;

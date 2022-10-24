@@ -16,9 +16,9 @@
  */
 package com.logicalclocks;
 
-import com.logicalclocks.generic.metadata.HopsworksExternalClient;
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.metadata.Credentials;
+import com.logicalclocks.base.metadata.HopsworksExternalClient;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.metadata.Credentials;
 import io.specto.hoverfly.junit.core.SimulationSource;
 import io.specto.hoverfly.junit.dsl.HttpBodyConverter;
 import io.specto.hoverfly.junit.rule.HoverflyRule;

@@ -17,10 +17,10 @@
 
 package com.logicalclocks.hsfs.constructor;
 
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.constructor.ExternalFeatureGroupAlias;
-import com.logicalclocks.generic.constructor.FsQueryBase;
-import com.logicalclocks.generic.constructor.HudiFeatureGroupAlias;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.constructor.ExternalFeatureGroupAlias;
+import com.logicalclocks.base.constructor.FsQueryBase;
+import com.logicalclocks.base.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 

@@ -17,14 +17,14 @@
 
 package com.logicalclocks.hsfs;
 
-import com.logicalclocks.generic.FeatureStoreException;
-import com.logicalclocks.generic.SecurityProtocol;
-import com.logicalclocks.generic.SslEndpointIdentificationAlgorithm;
-import com.logicalclocks.generic.StorageConnectorBase;
-import com.logicalclocks.generic.StorageConnectorType;
-import com.logicalclocks.generic.metadata.Option;
-import com.logicalclocks.generic.metadata.StorageConnectorApi;
-import com.logicalclocks.generic.util.Constants;
+import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.SecurityProtocol;
+import com.logicalclocks.base.SslEndpointIdentificationAlgorithm;
+import com.logicalclocks.base.StorageConnectorBase;
+import com.logicalclocks.base.StorageConnectorType;
+import com.logicalclocks.base.metadata.Option;
+import com.logicalclocks.base.metadata.StorageConnectorApi;
+import com.logicalclocks.base.util.Constants;
 
 import java.io.IOException;
 import java.util.Map;
