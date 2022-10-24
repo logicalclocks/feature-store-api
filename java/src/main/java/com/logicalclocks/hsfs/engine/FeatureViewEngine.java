@@ -58,8 +58,7 @@ public class FeatureViewEngine {
 
   public FeatureView update(FeatureView featureView) throws FeatureStoreException,
       IOException {
-    FeatureView featureViewUpdated = featureViewApi.update(featureView);
-    featureView.setDescription(featureViewUpdated.getDescription());
+    featureViewApi.update(featureView);
     return featureView;
   }
 
