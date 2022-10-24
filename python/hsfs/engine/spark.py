@@ -942,7 +942,6 @@ class Engine:
 
     def _setup_gcp_hadoop_conf(self, storage_connector, path):
 
-        PROPERTY_KEY_FILE = "fs.gs.auth.service.account.json.keyfile"
         PROPERTY_ENCRYPTION_KEY = "fs.gs.encryption.key"
         PROPERTY_ENCRYPTION_HASH = "fs.gs.encryption.key.hash"
         PROPERTY_ALGORITHM = "fs.gs.encryption.algorithm"
@@ -965,21 +964,17 @@ class Engine:
         # The JSON key file of the service account used for GCS
         # access when google.cloud.auth.service.account.enable is true.
         local_path = self.add_file(storage_connector.key_path)
+        with open(local_path, "r") as f_in:
+            jsondata = json.load(f_in)
         self._spark_context._jsc.hadoopConfiguration().set(
-            PROPERTY_KEY_FILE, local_path
+            PROPERTY_ACCT_EMAIL, jsondata["client_email"]
         )
-
-        with open(local_path, "r") as fin:
-            jsondata = json.load(fin)
-            self._spark_context._jsc.hadoopConfiguration().set(
-                PROPERTY_ACCT_EMAIL, jsondata["client_email"]
-            )
-            self._spark_context._jsc.hadoopConfiguration().set(
-                PROPERTY_ACCT_KEY_ID, jsondata["private_key_id"]
-            )
-            self._spark_context._jsc.hadoopConfiguration().set(
-                PROPERTY_ACCT_KEY, jsondata["private_key"]
-            )
+        self._spark_context._jsc.hadoopConfiguration().set(
+            PROPERTY_ACCT_KEY_ID, jsondata["private_key_id"]
+        )
+        self._spark_context._jsc.hadoopConfiguration().set(
+            PROPERTY_ACCT_KEY, jsondata["private_key"]
+        )
 
         if storage_connector.algorithm:
             # if encryption fields present

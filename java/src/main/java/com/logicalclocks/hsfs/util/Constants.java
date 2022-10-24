@@ -85,6 +85,9 @@ public class Constants {
   public static final String PROPERTY_GCS_FS_KEY = "fs.AbstractFileSystem.gs.impl";
   public static final String PROPERTY_GCS_FS_VALUE = "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS";
   public static final String PROPERTY_GCS_ACCOUNT_ENABLE = "google.cloud.auth.service.account.enable";
+  public static final String PROPERTY_GCS_ACCOUNT_EMAIL = "fs.gs.auth.service.account.email";
+  public static final String PROPERTY_GCS_ACCOUNT_KEY_ID = "fs.gs.auth.service.account.private.key.id";
+  public static final String PROPERTY_GCS_ACCOUNT_KEY = "fs.gs.auth.service.account.private.key";
   // end gcs
   // bigquery constants
   public static final String BIGQ_CREDENTIALS = "credentials";
