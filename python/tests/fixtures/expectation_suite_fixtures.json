@@ -5,20 +5,20 @@
       "expectations": [
         {
           "expectation_type": "1",
-          "kwargs": "2",
-          "meta": "3",
-          "id": "4"
+          "kwargs": { "kwargs_key": "kwargs_value" },
+          "meta": { "meta_key": "meta_value" },
+          "id": 32
         }
       ],
-      "meta": {"key":  "value"},
-      "id": "test_id",
+      "meta": { "great_expectations_version": "0.14.12", "key": "value" },
+      "id": 21,
       "data_asset_type": "test_data_asset_type",
       "ge_cloud_id": "test_ge_cloud_id",
       "run_validation": "test_run_validation",
       "validation_ingestion_policy": "test_validation_ingestion_policy",
-      "featurestore_id": "test_featurestore_id",
-      "featuregroup_id": "test_featuregroup_id",
-      "href": "test_href",
+      "feature_store_id": 99,
+      "feature_group_id": 10,
+      "href": "test_/featurestores/99/featuregroups/10/expectationsuite",
       "expand": "test_expand",
       "items": "test_items",
       "type": "expectationSuiteDTO",
@@ -34,22 +34,23 @@
           "expectations": [
             {
               "expectation_type": "1",
-              "kwargs": "2",
-              "meta": "3",
+              "kwargs": { "kwargs_key": "kwargs_value" },
+              "meta": { "meta_key": "meta_value" },
               "id": "4"
             }
           ],
           "meta": {
+            "great_expectations_version": "0.14.12",
             "key": "value"
           },
-          "id": "test_id",
+          "id": 21,
           "data_asset_type": "test_data_asset_type",
           "ge_cloud_id": "test_ge_cloud_id",
           "run_validation": "test_run_validation",
           "validation_ingestion_policy": "test_validation_ingestion_policy",
-          "featurestore_id": "test_featurestore_id",
-          "featuregroup_id": "test_featuregroup_id",
-          "href": "test_href",
+          "feature_store_id": 99,
+          "feature_group_id": 10,
+          "href": "test_/featurestores/99/featuregroups/10/expectationsuite",
           "expand": "test_expand",
           "items": "test_items",
           "type": "expectationSuiteDTO",
@@ -64,12 +65,12 @@
       "expectations": [
         {
           "expectation_type": "1",
-          "kwargs": "2",
-          "meta": "3",
-          "id": "4"
+          "kwargs": { "kwargs_key": "kwargs_value" },
+          "meta": { "meta_key": "meta_value" },
+          "id": 32
         }
       ],
-      "meta": {"key":  "value"}
+      "meta": { "great_expectations_version": "0.14.12", "key": "value" }
     }
   },
   "get_list_empty": {

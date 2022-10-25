@@ -967,6 +967,56 @@ class FeatureStore:
         )
         return self._feature_view_engine.save(feat_view)
 
+    def get_or_create_feature_view(
+        self,
+        name: str,
+        query: Query,
+        version: int,
+        description: Optional[str] = "",
+        labels: Optional[List[str]] = [],
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
+    ):
+        """Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
+        existing feature view metadata object.
+
+        # Arguments
+            name: Name of the feature view to create.
+            query: Feature store `Query`.
+            version: Version of the feature view to create.
+            description: A string describing the contents of the feature view to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            labels: A list of feature names constituting the prediction label/feature of
+                the feature view. When replaying a `Query` during model inference,
+                the label features can be omitted from the feature vector retrieval.
+                Defaults to `[]`, no label.
+            transformation_functions: A dictionary mapping tansformation functions to
+                to the features they should be applied to before writing out the
+                vector and at inference time. Defaults to `{}`, no
+                transformations.
+
+        # Returns:
+            `FeatureView`: The feature view metadata object.
+        """
+
+        try:
+            return self._feature_view_engine.get(name, version)
+        except exceptions.RestAPIError as e:
+            if (
+                e.response.json().get("errorCode", "") == 270181
+                and e.response.status_code == 404
+            ):
+                return self.create_feature_view(
+                    name=name,
+                    query=query,
+                    version=version,
+                    description=description,
+                    labels=labels,
+                    transformation_functions=transformation_functions,
+                )
+            else:
+                raise e
+
     def get_feature_view(self, name: str, version: int = None):
         """Get a feature view entity from the feature store.
 

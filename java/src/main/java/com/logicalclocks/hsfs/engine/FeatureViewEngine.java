@@ -58,8 +58,7 @@ public class FeatureViewEngine {
 
   public FeatureView update(FeatureView featureView) throws FeatureStoreException,
       IOException {
-    FeatureView featureViewUpdated = featureViewApi.update(featureView);
-    featureView.setDescription(featureViewUpdated.getDescription());
+    featureViewApi.update(featureView);
     return featureView;
   }
 
@@ -410,5 +409,25 @@ public class FeatureViewEngine {
   public Map<String, Object> getTags(FeatureView featureView, Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
     return tagsApi.get(featureView, trainingDataVersion);
+  }
+
+  public FeatureView getOrCreateFeatureView(FeatureStore featureStore, String name, Integer version,  Query query,
+                                            String description, List<String> labels)
+      throws FeatureStoreException, IOException {
+    FeatureView featureView = null;
+    try {
+      featureView = get(featureStore, name, version);
+    } catch (IOException | FeatureStoreException e) {
+      if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270181")) {
+        featureView = new FeatureView.FeatureViewBuilder(featureStore)
+            .name(name)
+            .version(version)
+            .query(query)
+            .description(description)
+            .labels(labels)
+            .build();
+      }
+    }
+    return featureView;
   }
 }
