@@ -163,6 +163,10 @@ class Feature:
     def default_value(self, default_value):
         self._default_value = default_value
 
+    @property
+    def feature_group_id(self):
+        return self._feature_group_id
+
     def __lt__(self, other):
         return filter.Filter(self, filter.Filter.LT, other)
 
