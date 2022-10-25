@@ -550,22 +550,22 @@ class FeatureView:
         # Arguments
             validation_size: size of validation set.
             test_size: size of test set.
-            train_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            train_start: Start event time for the train split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            train_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            train_end: End event time for the train split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            validation_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String
+            validation_start: Start event time for the validation split query. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            validation_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String
+            validation_end: End event time for the validation split query. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            test_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            test_start: Start event time for the test split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            test_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            test_end: End event time for the test split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
             storage_connector: Storage connector defining the sink location for the
@@ -697,11 +697,11 @@ class FeatureView:
             recreate the training data.
 
         # Arguments
-            start_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            start_time: Start event time for the training dataset query. Strings should
             be formatted in one of the following
                 formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            end_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be
+            end_time: End event time for the training dataset query. Strings should be
             formatted in one of the following
                 formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
@@ -771,16 +771,16 @@ class FeatureView:
 
         # Arguments
             test_size: size of test set. Should be between 0 and 1.
-            train_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            train_start: Start event time for the train split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            train_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            train_end: End event time for the train split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            test_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            test_start: Start event time for the test split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            test_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            test_end: End event time for the test split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
             description: A string describing the contents of the training dataset to
@@ -873,22 +873,22 @@ class FeatureView:
         # Arguments
             validation_size: size of validation set. Should be between 0 and 1.
             test_size: size of test set. Should be between 0 and 1.
-            train_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            train_start: Start event time for the train split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            train_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            train_end: End event time for the train split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            validation_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String
+            validation_start: Start event time for the validation split query. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            validation_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String
+            validation_end: End event time for the validation split query. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            test_start: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            test_start: Start event time for the test split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            test_end: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
+            test_end: End event time for the test split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
             description: A string describing the contents of the training dataset to
