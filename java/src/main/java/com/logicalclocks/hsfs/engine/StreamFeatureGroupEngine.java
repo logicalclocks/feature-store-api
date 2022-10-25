@@ -127,14 +127,7 @@ public class StreamFeatureGroupEngine {
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
     // verify primary, partition, event time or hudi precombine keys
-    utils.verifyAttributeKeyNames("primary", featureGroup.getPrimaryKeys(),
-        null, null, featureGroup.getFeatures());
-    utils.verifyAttributeKeyNames("partition", partitionKeys,
-        null, null, featureGroup.getFeatures());
-    utils.verifyAttributeKeyNames(null, null,
-        featureGroup.getEventTime(), null, featureGroup.getFeatures());
-    utils.verifyAttributeKeyNames(null, null,
-        null, hudiPrecombineKey, featureGroup.getFeatures());
+    utils.verifyAttributeKeyNames(featureGroup, partitionKeys, hudiPrecombineKey);
 
     /* set primary features */
     if (featureGroup.getPrimaryKeys() != null) {

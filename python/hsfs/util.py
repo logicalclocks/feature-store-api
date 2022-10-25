@@ -221,26 +221,32 @@ def get_hostname_replaced_url(sub_path: str):
     return url_parsed.geturl()
 
 
-def verify_attribute_key_names(attribute_name, provided_names, features):
-    feature_names = set([feat.name for feat in features])
-    if attribute_name in ["primary", "partition"]:
-        diff = list(set(provided_names) - feature_names)
+def verify_attribute_key_names(feature_group_obj):
+    feature_names = set([feat.name for feat in feature_group_obj.features])
+    if feature_group_obj.primary_key:
+        diff = list(set(feature_group_obj.primary_key) - feature_names)
         if diff:
             raise exceptions.FeatureStoreException(
-                f"Provided {attribute_name} key(s) {','.join(diff)} doesn't exist in feature dataframe"
+                f"Provided primary key(s) {','.join(diff)} doesn't exist in feature dataframe"
             )
-    elif attribute_name == "precombine":
-        if provided_names is not None and provided_names not in feature_names:
+    if feature_group_obj.partition_key:
+        diff = list(set(feature_group_obj.partition_key) - feature_names)
+        if diff:
             raise exceptions.FeatureStoreException(
-                f"Provided hudi {attribute_name} key {provided_names} doesn't exist in feature dataframe"
+                f"Provided partition key(s) {','.join(diff)} doesn't exist in feature dataframe"
             )
-    elif attribute_name == "event_time":
-        if provided_names is not None and provided_names not in feature_names:
+
+    if feature_group_obj.hudi_precombine_key:
+        if feature_group_obj.hudi_precombine_key not in feature_names:
             raise exceptions.FeatureStoreException(
-                f"Provided {attribute_name} feature {provided_names} doesn't exist in feature dataframe"
+                f"Provided hudi precombine key {feature_group_obj.hudi_precombine_key} "
+                f"doesn't exist in feature dataframe"
             )
-    else:
-        raise ValueError(f"Unknown attribute name {attribute_name}")
+    if feature_group_obj.event_time:
+        if feature_group_obj.event_time not in feature_names:
+            raise exceptions.FeatureStoreException(
+                f"Provided event_time feature {feature_group_obj.event_time} doesn't exist in feature dataframe"
+            )
 
 
 class VersionWarning(Warning):

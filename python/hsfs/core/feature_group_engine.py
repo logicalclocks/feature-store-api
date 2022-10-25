@@ -384,18 +384,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         # set primary and partition key columns
         # we should move this to the backend
-        util.verify_attribute_key_names(
-            "primary", feature_group.primary_key, feature_group.features
-        )
-        util.verify_attribute_key_names(
-            "partition", feature_group.partition_key, feature_group.features
-        )
-        util.verify_attribute_key_names(
-            "event_time", feature_group.event_time, feature_group.features
-        )
-        util.verify_attribute_key_names(
-            "precombine", feature_group.hudi_precombine_key, feature_group.features
-        )
+        util.verify_attribute_key_names(feature_group)
 
         for feat in feature_group.features:
             if feat.name in feature_group.primary_key:

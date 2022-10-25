@@ -41,8 +41,8 @@ public class ExternalFeatureGroupEngine extends FeatureGroupBaseEngine {
     }
 
     // verify primary keys
-    utils.verifyAttributeKeyNames("primary", externalFeatureGroup.getPrimaryKeys(),
-        null, null, externalFeatureGroup.getFeatures());
+    utils.verifyAttributeKeyNames(externalFeatureGroup, null, null);
+
 
     /* set primary features */
     if (externalFeatureGroup.getPrimaryKeys() != null) {
