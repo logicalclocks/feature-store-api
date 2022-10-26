@@ -46,7 +46,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         # ge validation on python and non stream feature groups on spark
         ge_report = feature_group._great_expectation_engine.validate(
-            feature_group, feature_dataframe, True, validation_options
+            feature_group=feature_group,
+            dataframe=feature_dataframe,
+            validation_options=validation_options,
         )
 
         if ge_report is not None and ge_report.ingestion_result == "REJECTED":
