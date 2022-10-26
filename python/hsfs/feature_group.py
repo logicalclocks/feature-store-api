@@ -1774,21 +1774,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         )
         return self.select_all().show(n)
 
-    def validate(
-        self,
-        save_report: Optional[bool] = False,
-        validation_options: Optional[Dict[Any, Any]] = {},
-    ):
-        """Run validation based on the attached expectations
-
-        # Returns
-            `FeatureGroupValidation`. The feature group validation metadata object.
-
-        """
-        return self._great_expectation_engine.validate(
-            self, self.read(), save_report, validation_options
-        )
-
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)

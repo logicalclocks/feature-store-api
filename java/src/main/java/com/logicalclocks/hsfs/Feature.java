@@ -82,6 +82,11 @@ public class Feature {
     this.featureGroupId = featureGroup.getId();
   }
 
+  public Feature(@NonNull String name, @NonNull int featureGroupId) {
+    setName(name);
+    this.featureGroupId = featureGroupId;
+  }
+
   public Feature(@NonNull String name, @NonNull String type) {
     this.name = name.toLowerCase();
     this.type = type;
