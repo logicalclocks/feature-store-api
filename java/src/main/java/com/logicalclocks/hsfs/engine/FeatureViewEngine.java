@@ -23,6 +23,7 @@ import com.google.common.collect.Maps;
 
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.Split;
 import com.logicalclocks.base.TrainingDatasetFeature;
 import com.logicalclocks.base.TrainingDatasetType;
@@ -45,6 +46,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +82,34 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
     FeatureView featureViewUpdated = featureViewApi.update(featureView, FeatureView.class);
     featureView.setDescription(featureViewUpdated.getDescription());
     return featureView;
+  }
+
+  public FeatureView get(FeatureStore featureStore, String name,
+                         Integer version)
+      throws FeatureStoreException, IOException {
+    FeatureView featureView = (FeatureView) super.get(featureStore, name, version, FeatureView.class);
+    featureView.setFeatureStore(featureStore);
+    return featureView;
+  }
+
+  public List<FeatureViewBase> get(FeatureStore featureStore, String name) throws FeatureStoreException,
+      IOException {
+    List<FeatureViewBase> featureViewBases = super.get(featureStore, name);
+    List<FeatureView> featureView = new ArrayList<>();
+    for (FeatureViewBase fvBase : featureViewBases) {
+      FeatureView fv = (FeatureView) fvBase;
+      fv.setFeatureStore(featureStore);
+      fv.getFeatures().stream()
+          .filter(f -> f.getFeatureGroup() != null)
+          .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStore));
+      fv.getQuery().getLeftFeatureGroup().setFeatureStore(featureStore);
+      fv.setLabels(
+          fv.getFeatures().stream()
+              .filter(TrainingDatasetFeature::getLabel)
+              .map(TrainingDatasetFeature::getName)
+              .collect(Collectors.toList()));
+    }
+    return featureViewBases;
   }
 
   public void delete(FeatureStore featureStore, String name) throws FeatureStoreException,
@@ -325,14 +355,15 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
       throws FeatureStoreException, IOException {
     Query query = null;
     try {
-      query = (Query) featureViewApi.getBatchQuery(
+      query = featureViewApi.getBatchQuery(
           featureView.getFeatureStore(),
           featureView.getName(),
           featureView.getVersion(),
           startTime == null ? null : startTime.getTime(),
           endTime == null ? null : endTime.getTime(),
           withLabels,
-          trainingDataVersion
+          trainingDataVersion,
+          Query.class
       );
     } catch (IOException e) {
       if (e.getMessage().contains("\"errorCode\":270172")) {
@@ -402,7 +433,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
       throws FeatureStoreException, IOException {
     FeatureView featureView = null;
     try {
-      featureView = (FeatureView) get(featureStore, name, version);
+      featureView = (FeatureView) get(featureStore, name, version, FeatureView.class);
     } catch (IOException | FeatureStoreException e) {
       if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270181")) {
         featureView = new FeatureView.FeatureViewBuilder(featureStore)

@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class FeatureViewEngineBase {
+public class FeatureViewEngineBase {
 
   private FeatureViewApi featureViewApi = new FeatureViewApi();
   private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_VIEW);
@@ -65,9 +65,10 @@ public abstract class FeatureViewEngineBase {
     return featureViewBase;
   }
 
-  public FeatureViewBase get(FeatureStoreBase featureStoreBase, String name, Integer version)
+  public <T extends FeatureViewBase> FeatureViewBase get(FeatureStoreBase featureStoreBase, String name,
+                                                          Integer version, Class<T> fvType)
       throws FeatureStoreException, IOException {
-    FeatureViewBase featureViewBase = featureViewApi.get(featureStoreBase, name, version, FeatureViewBase.class);
+    FeatureViewBase featureViewBase = featureViewApi.get(featureStoreBase, name, version, fvType);
     featureViewBase.setFeatureStore(featureStoreBase);
     featureViewBase.getFeatures().stream()
         .filter(f -> f.getFeatureGroup() != null)
@@ -173,7 +174,8 @@ public abstract class FeatureViewEngineBase {
         startTime == null ? null : startTime.getTime(),
         endTime == null ? null : endTime.getTime(),
         withLabels,
-        trainingDataVersion
+        trainingDataVersion,
+        QueryBase.class
     );
     queryBase.getLeftFeatureGroup().setFeatureStore(
         featureViewBase.getQuery().getLeftFeatureGroup().getFeatureStore());

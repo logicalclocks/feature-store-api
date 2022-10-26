@@ -17,16 +17,22 @@
 
 package com.logicalclocks.hsfs.constructor;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.constructor.ExternalFeatureGroupAlias;
 import com.logicalclocks.base.constructor.FsQueryBase;
 import com.logicalclocks.base.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.engine.SparkEngine;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 import java.util.Map;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@AllArgsConstructor
+@NoArgsConstructor
 public class FsQuery extends FsQueryBase {
   @Override
   public void registerOnDemandFeatureGroups() throws FeatureStoreException, IOException {

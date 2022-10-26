@@ -43,30 +43,30 @@ public class Join {
 
   @Getter
   @Setter
-  private JoinType joinType;
+  private JoinType type;
 
   @Getter
   @Setter
   private String prefix;
 
-  public Join(QueryBase query, JoinType joinType, String prefix) {
+  public Join(QueryBase query, JoinType type, String prefix) {
     this.query = query;
-    this.joinType = joinType;
+    this.type = type;
     this.prefix = prefix;
   }
 
-  public Join(QueryBase query, List<Feature> on, JoinType joinType, String prefix) {
+  public Join(QueryBase query, List<Feature> on, JoinType type, String prefix) {
     this.query = query;
     this.on = on;
-    this.joinType = joinType;
+    this.type = type;
     this.prefix = prefix;
   }
 
-  public Join(QueryBase query, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType, String prefix) {
+  public Join(QueryBase query, List<Feature> leftOn, List<Feature> rightOn, JoinType type, String prefix) {
     this.query = query;
     this.leftOn = leftOn;
     this.rightOn = rightOn;
-    this.joinType = joinType;
+    this.type = type;
     this.prefix = prefix;
   }
 }

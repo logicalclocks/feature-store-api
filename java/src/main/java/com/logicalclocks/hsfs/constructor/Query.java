@@ -32,6 +32,7 @@ import com.logicalclocks.base.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -45,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@NoArgsConstructor
 public class Query extends QueryBase {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Query.class);

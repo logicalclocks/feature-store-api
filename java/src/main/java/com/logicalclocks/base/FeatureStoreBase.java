@@ -107,7 +107,7 @@ public abstract class FeatureStoreBase {
    */
   public FeatureViewBase getFeatureView(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    return featureViewEngineBase.get(this, name, version);
+    return featureViewEngineBase.get(this, name, version, FeatureViewBase.class);
   }
 
   /**

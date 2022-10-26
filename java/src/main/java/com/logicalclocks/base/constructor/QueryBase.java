@@ -17,12 +17,12 @@
 
 package com.logicalclocks.base.constructor;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.Storage;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.metadata.FeatureGroupBase;
-import com.logicalclocks.base.metadata.QueryConstructorApi;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public abstract class QueryBase {
+public class QueryBase {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(QueryBase.class);
 
@@ -64,12 +64,20 @@ public abstract class QueryBase {
   @Setter
   private Boolean hiveEngine = false;
 
-  private QueryConstructorApi queryConstructorApi = new QueryConstructorApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
-  public abstract String sql();
+  public QueryBase(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
+    this.leftFeatureGroup = leftFeatureGroup;
+    this.leftFeatures = leftFeatures;
+  }
 
-  public abstract String sql(Storage storage);
+  public String sql() {
+    return null;
+  }
+
+  public String sql(Storage storage) {
+    return null;
+  }
 
   public QueryBase genericJoin(QueryBase subquery) {
     return genericJoin(subquery, JoinType.INNER);
@@ -254,6 +262,7 @@ public abstract class QueryBase {
     return this;
   }
 
+  @JsonIgnore
   public boolean isTimeTravel() {
     if (leftFeatureGroupStartTime != null || leftFeatureGroupEndTime != null) {
       return true;
@@ -266,8 +275,12 @@ public abstract class QueryBase {
     return false;
   }
 
-  public abstract Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException,
-      IOException;
+  public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException,
+      IOException {
+    return null;
+  }
 
-  public abstract void show(boolean online, int numRows) throws FeatureStoreException, IOException;
+  public void show(boolean online, int numRows) throws FeatureStoreException, IOException {
+
+  }
 }

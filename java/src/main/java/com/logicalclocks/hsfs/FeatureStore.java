@@ -348,7 +348,7 @@ public class FeatureStore extends FeatureStoreBase {
    */
   public FeatureView getFeatureView(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    return (FeatureView) featureViewEngine.get(this, name, version);
+    return featureViewEngine.get(this, name, version);
   }
 
   /**
