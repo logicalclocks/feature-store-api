@@ -258,15 +258,52 @@ public class FeatureStore extends FeatureStoreBase {
     return getExternalFeatureGroup(name, DEFAULT_VERSION);
   }
 
-  @Override
-  public StorageConnectorBase getStorageConnector(String name) throws FeatureStoreException, IOException {
-    return null;
+  public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {
+    return storageConnectorApi.getByName(this, name, StorageConnector.class);
   }
 
-  @Override
-  public StorageConnectorBase.HopsFsConnectorBase getHopsFsConnector(String name)
+  public StorageConnector.JdbcConnector getJdbcConnector(String name) throws FeatureStoreException, IOException {
+    return storageConnectorApi.getByName(this, name, StorageConnector.JdbcConnector.class);
+  }
+
+  public StorageConnector.JdbcConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
+    return storageConnectorApi.getOnlineStorageConnector(this, StorageConnector.JdbcConnector.class);
+  }
+
+  public StorageConnector.S3Connector getS3Connector(String name) throws FeatureStoreException, IOException {
+    return storageConnectorApi.getByName(this, name, StorageConnector.S3Connector.class);
+  }
+
+  public StorageConnectorBase.HopsFsConnectorBase getHopsFsConnector(String name) throws FeatureStoreException,
+      IOException {
+    return storageConnectorApi.getByName(this, name, StorageConnectorBase.HopsFsConnectorBase.class);
+  }
+
+  public StorageConnector.RedshiftConnector getRedshiftConnector(String name)
       throws FeatureStoreException, IOException {
-    return null;
+    return storageConnectorApi.getByName(this, name, StorageConnector.RedshiftConnector.class);
+  }
+
+  public StorageConnector.SnowflakeConnector getSnowflakeConnector(String name)
+      throws FeatureStoreException, IOException {
+    return storageConnectorApi.getByName(this, name, StorageConnector.SnowflakeConnector.class);
+  }
+
+  public StorageConnector.AdlsConnector getAdlsConnector(String name) throws FeatureStoreException, IOException {
+    return storageConnectorApi.getByName(this, name, StorageConnector.AdlsConnector.class);
+  }
+
+  public StorageConnector.KafkaConnector getKafkaConnector(String name) throws FeatureStoreException, IOException {
+    return storageConnectorApi.getByName(this, name, StorageConnector.KafkaConnector.class);
+  }
+
+  public StorageConnector.BigqueryConnector getBigqueryConnector(String name) throws FeatureStoreException,
+      IOException {
+    return storageConnectorApi.getByName(this, name, StorageConnector.BigqueryConnector.class);
+  }
+
+  public StorageConnector.GcsConnector getGcsConnector(String name) throws FeatureStoreException, IOException {
+    return storageConnectorApi.getByName(this, name, StorageConnector.GcsConnector.class);
   }
 
   /**
@@ -365,62 +402,9 @@ public class FeatureStore extends FeatureStoreBase {
     return getFeatureView(name, DEFAULT_VERSION);
   }
 
-
   @Override
   public Dataset<Row> sql(String query) {
     return SparkEngine.getInstance().sql(query);
-  }
-
-  @Override
-  public StorageConnector.SparkJdbcConnector getJdbcConnector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name,
-        StorageConnector.SparkJdbcConnector.class);
-  }
-
-  @Override
-  public StorageConnector.S3Connector getS3Connector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.S3Connector.class);
-  }
-
-  @Override
-  public StorageConnector.RedshiftConnector getRedshiftConnector(String name)
-      throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.RedshiftConnector.class);
-  }
-
-  @Override
-  public StorageConnector.SnowflakeConnector getSnowflakeConnector(String name)
-      throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.SnowflakeConnector.class);
-  }
-
-  @Override
-  public StorageConnector.AdlsConnector getAdlsConnector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnector.AdlsConnector.class);
-  }
-
-  @Override
-  public StorageConnector.KafkaConnector getKafkaConnector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name,
-        StorageConnector.KafkaConnector.class);
-  }
-
-  @Override
-  public StorageConnector.BigqueryConnector getBigqueryConnector(String name) throws FeatureStoreException,
-      IOException {
-    return storageConnectorApi.getByName(this, name,
-        StorageConnector.BigqueryConnector.class);
-  }
-
-  @Override
-  public StorageConnector.SparkJdbcConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
-    return storageConnectorApi.getOnlineStorageConnector(this, StorageConnector.SparkJdbcConnector.class);
-  }
-
-  @Override
-  public StorageConnector.GcsConnector getGcsConnector(String name) throws FeatureStoreException, IOException {
-    return storageConnectorApi.getByName(this, name,
-        StorageConnector.GcsConnector.class);
   }
 
   public TrainingDataset.TrainingDatasetBuilder createTrainingDataset() {

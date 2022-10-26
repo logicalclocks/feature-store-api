@@ -218,9 +218,9 @@ public class HudiEngine {
       throws IOException, FeatureStoreException {
     Map<String, String> hudiArgs = new HashMap<String, String>();
 
-    final StorageConnector.SparkJdbcConnector storageConnector = storageConnectorApi.getByName(
+    final StorageConnector.JdbcConnector storageConnector = storageConnectorApi.getByName(
         featureGroup.getFeatureStore(),
-        featureGroup.getFeatureStore().getName(), StorageConnector.SparkJdbcConnector.class);
+        featureGroup.getFeatureStore().getName(), StorageConnector.JdbcConnector.class);
 
 
     hudiArgs.put(HUDI_TABLE_STORAGE_TYPE, HUDI_COPY_ON_WRITE);

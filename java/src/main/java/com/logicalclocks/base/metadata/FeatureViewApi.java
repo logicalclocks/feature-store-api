@@ -340,7 +340,7 @@ public class FeatureViewApi {
 
   public <T extends QueryBase> T getBatchQuery(FeatureStoreBase featureStoreBase, String name, Integer version,
                                  Long startTime, Long endTime, Boolean withLabels, Integer trainingDataVersion,
-                                                       Class<T> qType)
+                                                       Class<T> queryType)
       throws FeatureStoreException, IOException {
     String uri = UriTemplate.fromTemplate(FEATURE_VIEW_BATCH_QUERY_PATH)
         .set("projectId", featureStoreBase.getProjectId())
@@ -356,7 +356,7 @@ public class FeatureViewApi {
     HttpGet request = new HttpGet(uri);
     LOGGER.info("Sending metadata request: " + uri);
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    return hopsworksClient.handleRequest(request, qType);
+    return hopsworksClient.handleRequest(request, queryType);
   }
 
 }

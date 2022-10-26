@@ -70,8 +70,9 @@ public class TrainingDatasetFeature {
     this.label = label;
   }
 
-  public TrainingDatasetFeature(String name, Boolean label) {
+  public TrainingDatasetFeature(FeatureGroupBase featuregroup, String name, Boolean label) {
     setName(name);
+    this.featureGroup = featuregroup;
     this.label = label;
   }
 

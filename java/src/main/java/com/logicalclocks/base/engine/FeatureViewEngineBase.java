@@ -18,7 +18,11 @@
 package com.logicalclocks.base.engine;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.logicalclocks.base.Feature;
+import com.logicalclocks.base.constructor.Join;
 import com.logicalclocks.base.constructor.QueryBase;
+import com.logicalclocks.base.metadata.FeatureGroupBase;
 import com.logicalclocks.base.metadata.FeatureViewApi;
 import com.logicalclocks.base.metadata.TagsApi;
 import com.logicalclocks.base.EntityEndpointType;
@@ -40,21 +44,69 @@ public class FeatureViewEngineBase {
   private FeatureViewApi featureViewApi = new FeatureViewApi();
   private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_VIEW);
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureViewEngineBase.class);
+  public static String AMBIGUOUS_LABEL_ERROR = "Provided label '%s' is ambiguous and exists in more than one feature "
+      + "groups. You can provide the label with the prefix you specify in the join.";
+  public static String LABEL_NOT_EXIST_ERROR = "Provided label '%s' do not exist in any of the feature groups.";
 
   public FeatureViewBase save(FeatureViewBase featureViewBase) throws FeatureStoreException, IOException {
-    featureViewBase.setFeatures(makeLabelFeatures(featureViewBase.getLabels()));
+    featureViewBase.setFeatures(makeLabelFeatures(featureViewBase.getQuery(), featureViewBase.getLabels()));
     FeatureViewBase updatedFeatureViewBase = featureViewApi.save(featureViewBase, FeatureViewBase.class);
     featureViewBase.setVersion(updatedFeatureViewBase.getVersion());
     featureViewBase.setFeatures(updatedFeatureViewBase.getFeatures());
     return featureViewBase;
   }
 
-  private List<TrainingDatasetFeature> makeLabelFeatures(List<String> labels) {
+  static List<TrainingDatasetFeature> makeLabelFeatures(QueryBase query, List<String> labels)
+      throws FeatureStoreException {
     if (labels == null || labels.isEmpty()) {
       return Lists.newArrayList();
     } else {
-      return labels.stream().map(label -> new TrainingDatasetFeature(label.toLowerCase(), true))
-          .collect(Collectors.toList());
+      // If provided label matches column with prefix, then attach label.
+      // If provided label matches only one column without prefix, then attach label. (For
+      // backward compatibility purpose, as of v3.0, labels are matched to columns without prefix.)
+      // If provided label matches multiple columns without prefix, then raise exception because it is ambiguous.
+
+      Map<String, String> labelWithPrefixToFeature = Maps.newHashMap();
+      Map<String, FeatureGroupBase> labelWithPrefixToFeatureGroup = Maps.newHashMap();
+      Map<String, List<FeatureGroupBase>> labelToFeatureGroups = Maps.newHashMap();
+      for (Feature feat : query.getLeftFeatures()) {
+        labelWithPrefixToFeature.put(feat.getName(), feat.getName());
+        labelWithPrefixToFeatureGroup.put(feat.getName(),
+            (new FeatureGroupBase(null, feat.getFeatureGroupId())));
+      }
+      for (Join join : query.getJoins()) {
+        for (Feature feat : join.getQuery().getLeftFeatures()) {
+          String labelWithPrefix = join.getPrefix() + feat.getName();
+          labelWithPrefixToFeature.put(labelWithPrefix, feat.getName());
+          labelWithPrefixToFeatureGroup.put(labelWithPrefix,
+              new FeatureGroupBase(null, feat.getFeatureGroupId()));
+          List<FeatureGroupBase> featureGroups = labelToFeatureGroups.getOrDefault(feat.getName(),
+              Lists.newArrayList());
+          featureGroups.add(new FeatureGroupBase(null, feat.getFeatureGroupId()));
+          labelToFeatureGroups.put(feat.getName(), featureGroups);
+        }
+      }
+      List<TrainingDatasetFeature> trainingDatasetFeatures = Lists.newArrayList();
+      for (String label : labels) {
+        if (labelWithPrefixToFeature.containsKey(label)) {
+          trainingDatasetFeatures.add(new TrainingDatasetFeature(
+              labelWithPrefixToFeatureGroup.get(label.toLowerCase()),
+              labelWithPrefixToFeature.get(label.toLowerCase()),
+              true));
+        } else if (labelToFeatureGroups.containsKey(label)) {
+          if (labelToFeatureGroups.get(label.toLowerCase()).size() > 1) {
+            throw new FeatureStoreException(String.format(AMBIGUOUS_LABEL_ERROR, label));
+          }
+          trainingDatasetFeatures.add(new TrainingDatasetFeature(
+              labelToFeatureGroups.get(label.toLowerCase()).get(0),
+              label.toLowerCase(),
+              true));
+        } else {
+          throw new FeatureStoreException(String.format(LABEL_NOT_EXIST_ERROR, label));
+        }
+
+      }
+      return trainingDatasetFeatures;
     }
   }
 

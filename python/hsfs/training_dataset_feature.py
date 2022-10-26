@@ -56,6 +56,7 @@ class TrainingDatasetFeature:
             "label": self._label,
             "transformationFunction": self._transformation_function,
             "featureGroupFeatureName": self._feature_group_feature_name,
+            "featuregroup": self._feature_group,
         }
 
     @classmethod
@@ -106,3 +107,7 @@ class TrainingDatasetFeature:
     @transformation_function.setter
     def transformation_function(self, transformation_function):
         self._transformation_function = transformation_function
+
+    @property
+    def feature_group(self):
+        return self._feature_group

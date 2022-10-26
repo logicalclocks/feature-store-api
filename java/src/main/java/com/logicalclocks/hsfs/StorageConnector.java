@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
     @JsonSubTypes.Type(value = StorageConnector.RedshiftConnector.class, name = "REDSHIFT"),
     @JsonSubTypes.Type(value = StorageConnector.AdlsConnector.class, name = "ADLS"),
     @JsonSubTypes.Type(value = StorageConnector.SnowflakeConnector.class, name = "SNOWFLAKE"),
-    @JsonSubTypes.Type(value = StorageConnector.SparkJdbcConnector.class, name = "JDBC"),
+    @JsonSubTypes.Type(value = StorageConnector.JdbcConnector.class, name = "JDBC"),
     @JsonSubTypes.Type(value = StorageConnector.KafkaConnector.class, name = "KAFKA"),
     @JsonSubTypes.Type(value = StorageConnector.GcsConnector.class, name = "GCS"),
     @JsonSubTypes.Type(value = StorageConnector.BigqueryConnector.class, name = "BIGQUERY")
@@ -376,7 +376,7 @@ public abstract class StorageConnector extends StorageConnectorBase {
     }
   }
 
-  public static class SparkJdbcConnector extends StorageConnector {
+  public static class JdbcConnector extends StorageConnector {
 
     @Getter @Setter
     private String connectionString;
@@ -404,7 +404,7 @@ public abstract class StorageConnector extends StorageConnectorBase {
     }
 
     public void update() throws FeatureStoreException, IOException {
-      SparkJdbcConnector updatedConnector = (SparkJdbcConnector) refetch();
+      JdbcConnector updatedConnector = (JdbcConnector) refetch();
       this.connectionString = updatedConnector.getConnectionString();
       this.arguments = updatedConnector.getArguments();
     }

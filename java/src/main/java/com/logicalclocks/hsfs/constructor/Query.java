@@ -266,9 +266,9 @@ public class Query extends QueryBase {
 
     if (online) {
       LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.ONLINE));
-      StorageConnector.SparkJdbcConnector onlineConnector =
+      StorageConnector.JdbcConnector onlineConnector =
           storageConnectorApi.getOnlineStorageConnector(
-              leftFeatureGroup.getFeatureStore(), StorageConnector.SparkJdbcConnector.class);
+              leftFeatureGroup.getFeatureStore(), StorageConnector.JdbcConnector.class);
       return onlineConnector.read(fsQuery.getStorageQuery(Storage.ONLINE),null, null, null);
     } else {
       fsQuery.registerOnDemandFeatureGroups();

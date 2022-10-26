@@ -22,15 +22,19 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import com.logicalclocks.base.EntityEndpointType;
+import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.Split;
 import com.logicalclocks.base.TrainingDatasetFeature;
 import com.logicalclocks.base.TrainingDatasetType;
+import com.logicalclocks.base.constructor.Join;
 import com.logicalclocks.base.engine.FeatureViewEngineBase;
 import com.logicalclocks.base.metadata.FeatureViewApi;
 import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.base.metadata.TagsApi;
+
+import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureView;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.FeatureStore;
@@ -61,26 +65,69 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
 
   public FeatureView save(FeatureView featureView) throws FeatureStoreException, IOException {
-    featureView.setFeatures(makeLabelFeatures(featureView.getLabels()));
+    featureView.setFeatures(makeLabelFeatures(featureView.getQuery(), featureView.getLabels()));
     FeatureView updatedFeatureView = featureViewApi.save(featureView, FeatureView.class);
     featureView.setVersion(updatedFeatureView.getVersion());
     featureView.setFeatures(updatedFeatureView.getFeatures());
     return featureView;
   }
 
-  private List<TrainingDatasetFeature> makeLabelFeatures(List<String> labels) {
+  static List<TrainingDatasetFeature> makeLabelFeatures(Query query, List<String> labels) throws FeatureStoreException {
     if (labels == null || labels.isEmpty()) {
       return Lists.newArrayList();
     } else {
-      return labels.stream().map(label -> new TrainingDatasetFeature(label.toLowerCase(), true))
-          .collect(Collectors.toList());
+      // If provided label matches column with prefix, then attach label.
+      // If provided label matches only one column without prefix, then attach label. (For
+      // backward compatibility purpose, as of v3.0, labels are matched to columns without prefix.)
+      // If provided label matches multiple columns without prefix, then raise exception because it is ambiguous.
+
+      Map<String, String> labelWithPrefixToFeature = Maps.newHashMap();
+      Map<String, FeatureGroup> labelWithPrefixToFeatureGroup = Maps.newHashMap();
+      Map<String, List<FeatureGroup>> labelToFeatureGroups = Maps.newHashMap();
+      for (Feature feat : query.getLeftFeatures()) {
+        labelWithPrefixToFeature.put(feat.getName(), feat.getName());
+        labelWithPrefixToFeatureGroup.put(feat.getName(),
+            (new FeatureGroup(null, feat.getFeatureGroupId())));
+      }
+      for (Join join : query.getJoins()) {
+        for (Feature feat : join.getQuery().getLeftFeatures()) {
+          String labelWithPrefix = join.getPrefix() + feat.getName();
+          labelWithPrefixToFeature.put(labelWithPrefix, feat.getName());
+          labelWithPrefixToFeatureGroup.put(labelWithPrefix,
+              new FeatureGroup(null, feat.getFeatureGroupId()));
+          List<FeatureGroup> featureGroups = labelToFeatureGroups.getOrDefault(feat.getName(), Lists.newArrayList());
+          featureGroups.add(new FeatureGroup(null, feat.getFeatureGroupId()));
+          labelToFeatureGroups.put(feat.getName(), featureGroups);
+        }
+      }
+      List<TrainingDatasetFeature> trainingDatasetFeatures = Lists.newArrayList();
+      for (String label : labels) {
+        if (labelWithPrefixToFeature.containsKey(label)) {
+          trainingDatasetFeatures.add(new TrainingDatasetFeature(
+              labelWithPrefixToFeatureGroup.get(label.toLowerCase()),
+              labelWithPrefixToFeature.get(label.toLowerCase()),
+              true));
+        } else if (labelToFeatureGroups.containsKey(label)) {
+          if (labelToFeatureGroups.get(label.toLowerCase()).size() > 1) {
+            throw new FeatureStoreException(String.format(AMBIGUOUS_LABEL_ERROR, label));
+          }
+          trainingDatasetFeatures.add(new TrainingDatasetFeature(
+              labelToFeatureGroups.get(label.toLowerCase()).get(0),
+              label.toLowerCase(),
+              true));
+        } else {
+          throw new FeatureStoreException(String.format(LABEL_NOT_EXIST_ERROR, label));
+        }
+
+      }
+      return trainingDatasetFeatures;
     }
   }
 
+
   public FeatureView update(FeatureView featureView) throws FeatureStoreException,
       IOException {
-    FeatureView featureViewUpdated = featureViewApi.update(featureView, FeatureView.class);
-    featureView.setDescription(featureViewUpdated.getDescription());
+    featureViewApi.update(featureView, FeatureView.class);
     return featureView;
   }
 

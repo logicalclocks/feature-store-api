@@ -101,8 +101,26 @@ class FeatureView:
         )
 
     def update(self):
-        # TODO feature view: wait for RestAPI
-        return self
+        """Update the description of the feature view.
+
+        !!! example "Update the feature view with a new description."
+            ```python
+            fs = connection.get_feature_store();
+            fv = fs.get_feature_view("example_feature_view", 1)
+            fv.description = "new description"
+            fv.update()
+
+            # Description is updated in the metadata. Below should return "new description".
+            fs.get_feature_view("example_feature_view", 1).description
+            ```
+
+        # Arguments
+        # Returns
+            `FeatureView` Updated feature view.
+        # Raises
+            `RestAPIError`.
+        """
+        return self._feature_view_engine.update(self)
 
     def init_serving(
         self,
