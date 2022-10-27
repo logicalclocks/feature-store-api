@@ -14,61 +14,30 @@
 #   limitations under the License.
 #
 
-import math
-
 from hsfs import client, util
 from hsfs.core import inode
 
 
 class DatasetApi:
-    DEFAULT_FLOW_CHUNK_SIZE = 1048576
 
     def upload(self, feature_group, path, dataframe):
         # Convert the dataframe into PARQUET for upload
         df_parquet = dataframe.to_parquet(index=False)
         parquet_length = len(df_parquet)
-        num_chunks = math.ceil(parquet_length / self.DEFAULT_FLOW_CHUNK_SIZE)
-
-        base_params = self._get_flow_base_params(
-            feature_group, num_chunks, parquet_length
+        
+        self._upload_request(
+            path,
+            util.feature_group_name(feature_group),
+            df_parquet,
+            parquet_length,
         )
 
-        chunk_number = 1
-        for i in range(0, parquet_length, self.DEFAULT_FLOW_CHUNK_SIZE):
-            query_params = base_params
-            query_params["flowCurrentChunkSize"] = len(
-                df_parquet[i : i + self.DEFAULT_FLOW_CHUNK_SIZE]
-            )
-            query_params["flowChunkNumber"] = chunk_number
-
-            self._upload_request(
-                query_params,
-                path,
-                util.feature_group_name(feature_group),
-                df_parquet[i : i + self.DEFAULT_FLOW_CHUNK_SIZE],
-            )
-
-            chunk_number += 1
-
-    def _get_flow_base_params(self, feature_group, num_chunks, size):
-        # TODO(fabio): flow identifier is not unique
-        return {
-            "templateId": -1,
-            "flowChunkSize": self.DEFAULT_FLOW_CHUNK_SIZE,
-            "flowTotalSize": size,
-            "flowIdentifier": util.feature_group_name(feature_group),
-            "flowFilename": util.feature_group_name(feature_group),
-            "flowRelativePath": util.feature_group_name(feature_group),
-            "flowTotalChunks": num_chunks,
-        }
-
-    def _upload_request(self, params, path, file_name, chunk):
+    def _upload_request(self, path, file_name, file, file_size):
         _client = client.get_instance()
-        path_params = ["project", _client._project_id, "dataset", "upload", path]
+        path_params = ["project", _client._project_id, "dataset", "v2", "upload", path]
 
-        # Flow configuration params are sent as form data
         _client._send_request(
-            "POST", path_params, data=params, files={"file": (file_name, chunk)}
+            "POST", path_params, files={"file": (file_name, file), "fileName": file_name, "fileSize": file_size}
         )
 
     def list_files(self, path, offset, limit):
