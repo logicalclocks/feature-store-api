@@ -52,7 +52,7 @@ class ValidationReportEngine:
         return self._validation_report_api.get_last()
 
     def get_all(self) -> Union[List[ValidationReport], ValidationReport]:
-        """Get all Validation Report of a FeaturevGroup."""
+        """Get all Validation Report of a Feature Group."""
         url = self._get_validation_report_url()
         print(
             f"""Long reports can be truncated when fetching from Hopsworks.

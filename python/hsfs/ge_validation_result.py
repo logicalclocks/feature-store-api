@@ -15,6 +15,8 @@
 #
 
 import json
+from typing import Any, Dict, Optional
+import datetime
 
 import humps
 import great_expectations as ge
@@ -27,15 +29,17 @@ class ValidationResult:
 
     def __init__(
         self,
-        success,
-        result,
-        exception_info,
-        expectation_config,
-        meta,
-        id=None,
-        observed_value=None,
-        expectation_id=None,
-        validation_report_id=None,
+        success: bool,
+        result: Dict[str, Any],
+        expectation_config: str,
+        exception_info: Dict[str, Any],
+        meta: Optional[Dict[str, Any]] = {},
+        id: Optional[int] = None,
+        observed_value: Optional[Any] = None,
+        expectation_id: Optional[int] = None,
+        validation_report_id: Optional[int] = None,
+        validation_time: Optional[int] = None,
+        ingestion_result: Optional[str] = None,
         href=None,
         expand=None,
         items=None,
@@ -52,6 +56,9 @@ class ValidationResult:
         self.meta = meta
         self.exception_info = exception_info
         self.expectation_config = expectation_config
+
+        self.validation_time = validation_time
+        self.ingestion_result = ingestion_result
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -79,7 +86,7 @@ class ValidationResult:
             "meta": json.dumps(self._meta),
         }
 
-    def to_json_dict(self):
+    def to_json_dict(self) -> Dict[str, Any]:
         return {
             "id": self._id,
             "success": self.success,
@@ -89,7 +96,7 @@ class ValidationResult:
             "meta": self._meta,
         }
 
-    def to_ge_type(self):
+    def to_ge_type(self) -> ge.core.ExpectationValidationResult:
         return ge.core.ExpectationValidationResult(
             success=self.success,
             exception_info=self.exception_info,
@@ -99,30 +106,30 @@ class ValidationResult:
         )
 
     @property
-    def id(self):
+    def id(self) -> Optional[int]:
         """Id of the validation report, set by backend."""
         return self._id
 
     @id.setter
-    def id(self, id):
+    def id(self, id: Optional[int] = None) -> None:
         self._id = id
 
     @property
-    def success(self):
+    def success(self) -> bool:
         """Overall success of the validation step."""
         return self._success
 
     @success.setter
-    def success(self, success):
+    def success(self, success: bool) -> None:
         self._success = success
 
     @property
-    def result(self):
+    def result(self) -> Dict[str, Any]:
         """Result of the expectation after validation."""
         return self._result
 
     @result.setter
-    def result(self, result):
+    def result(self, result: Dict[str, Any]) -> None:
         if isinstance(result, dict):
             self._result = result
         elif isinstance(result, str):
@@ -131,12 +138,12 @@ class ValidationResult:
             raise ValueError("Result field must be stringified json or dict.")
 
     @property
-    def meta(self):
+    def meta(self) -> Dict[str, Any]:
         """Meta field of the validation report to store additional informations."""
         return self._meta
 
     @meta.setter
-    def meta(self, meta):
+    def meta(self, meta: Dict[str, Any] = {}):
         if isinstance(meta, dict):
             self._meta = meta
         elif isinstance(meta, str):
@@ -145,12 +152,12 @@ class ValidationResult:
             raise ValueError("Meta field must be stringified json or dict")
 
     @property
-    def exception_info(self):
+    def exception_info(self) -> Dict[str, Any]:
         """Exception info which can be raised when running validation."""
         return self._exception_info
 
     @exception_info.setter
-    def exception_info(self, exception_info):
+    def exception_info(self, exception_info: Dict[str, Any]) -> None:
         if isinstance(exception_info, dict):
             self._exception_info = exception_info
         elif isinstance(exception_info, str):
@@ -159,12 +166,12 @@ class ValidationResult:
             raise ValueError("Exception info field must be stringified json or dict.")
 
     @property
-    def expectation_config(self):
+    def expectation_config(self) -> Dict[str, Any]:
         """Expectation configuration used when running validation."""
         return self._expectation_config
 
     @expectation_config.setter
-    def expectation_config(self, expectation_config):
+    def expectation_config(self, expectation_config: Dict[str, Any]) -> None:
         if isinstance(expectation_config, dict):
             self._expectation_config = expectation_config
         elif isinstance(expectation_config, str):
@@ -174,10 +181,38 @@ class ValidationResult:
                 "Expectation config field must be stringified json or dict"
             )
 
-    def __str__(self):
+    @property
+    def validation_time(self) -> Optional[datetime.datetime]:
+        return self._validation_time
+
+    @validation_time.setter
+    def validation_time(self, validation_time: Optional[int]) -> None:
+        if validation_time:
+            self._validation_time = datetime.datetime.fromtimestamp(validation_time)
+        else:
+            self._validation_time = None
+
+    @property
+    def ingestion_result(self) -> str:
+        return self._ingestion_result
+
+    @ingestion_result.setter
+    def ingestion_result(self, ingestion_result: Optional[str]) -> None:
+        if ingestion_result:
+            if ingestion_result == "INGESTED" or ingestion_result == "REJECTED":
+                self._ingestion_result = ingestion_result
+            else:
+                raise ValueError(
+                    f"Illegal value for ingestion_result: {ingestion_result}."
+                    + "Choose either 'INGESTED' or 'REJECTED'"
+                )
+        else:
+            self._ingestion_result = None
+
+    def __str__(self) -> str:
         return self.json()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result_string = ""
         if self._result is None and self._observed_value is not None:
             result_string += f"observed_value : {self._observed_value}"

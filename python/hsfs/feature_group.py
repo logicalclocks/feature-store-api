@@ -15,6 +15,7 @@
 #
 
 import copy
+from hsfs.ge_validation_result import ValidationResult
 import humps
 import json
 import warnings
@@ -34,6 +35,7 @@ from hsfs.core import (
     validation_report_engine,
     code_engine,
     external_feature_group_engine,
+    validation_result_engine,
 )
 
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
@@ -535,6 +537,38 @@ class FeatureGroupBase:
             return self._validation_report_engine.save(report).to_ge_type()
         return self._validation_report_engine.save(report)
 
+    def get_validation_history(
+        self,
+        expectation_id: int,
+        as_timeserie: bool = True,
+        sort_by: Optional[str] = "validation_time:desc",
+        filter_by: Optional[str] = None,
+        offset: Optional[int] = None,
+        limit: Optional[int] = None,
+    ) -> Union[List[ValidationResult], pd.Series]:
+        """Fetch validation history of an Expectation specified by its id. By default, the history is returned as a pandas timeserie.
+
+        # Arguments
+            expectation_id: id of the Expectation for which to fetch the validation history
+            as_timeserie: return validation history as timeseries or list of ValidationResult, defaults to True.
+            sort_by: sort the validation results according to validation time, descending or ascending. Value can be either
+                validation_time:desc or validation_time:asc
+            filter_by: filter the validation results based on validation time or ingestion result.
+                ingestion_result_eq:INGESTED/REJECTED
+                validation_time_(gt/gte/eq/lt/lte):<timestamp>
+            offset: offset for pagination
+            limit: limit for pagination
+        """
+
+        return self._validation_result_engine.get_validation_history(
+            expectation_id=expectation_id,
+            as_timeserie=as_timeserie,
+            sort_by=sort_by,
+            filter_by=filter_by,
+            offset=offset,
+            limit=limit,
+        )
+
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
@@ -781,6 +815,11 @@ class FeatureGroup(FeatureGroupBase):
             )
             self._validation_report_engine = (
                 validation_report_engine.ValidationReportEngine(
+                    self._feature_store_id, self._id
+                )
+            )
+            self._validation_result_engine = (
+                validation_result_engine.ValidationResultEngine(
                     self._feature_store_id, self._id
                 )
             )
