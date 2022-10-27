@@ -82,7 +82,7 @@ class ValidationReportEngine:
 
     def convert_history_to_timeserie(self, validation_history: List[ValidationResult]):
         return pd.Series(
-            [result.observed_value for result in validation_history],
+            [result._observed_value for result in validation_history],
             index=pd.DatetimeIndex(
                 [result.validation_time for result in validation_history]
             ),
