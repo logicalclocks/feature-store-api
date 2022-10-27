@@ -16,6 +16,7 @@
 
 import json
 from typing import Any, Dict, Optional
+import dateutil
 import datetime
 
 import humps
@@ -59,6 +60,9 @@ class ValidationResult:
 
         self.validation_time = validation_time
         self.ingestion_result = ingestion_result
+
+        if (observed_value is None) and ("observed_value" in self.result.keys()):
+            self._observed_value = self.result["observed_value"]
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -188,7 +192,7 @@ class ValidationResult:
     @validation_time.setter
     def validation_time(self, validation_time: Optional[int]) -> None:
         if validation_time:
-            self._validation_time = datetime.datetime.fromtimestamp(validation_time)
+            self._validation_time = dateutil.parser.isoparse(validation_time)
         else:
             self._validation_time = None
 

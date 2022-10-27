@@ -545,7 +545,7 @@ class FeatureGroupBase:
         filter_by: Optional[str] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
-    ) -> Union[List[ValidationResult], pd.Series]:
+    ) -> Union[List[ValidationResult], pd.DataFrame]:
         """Fetch validation history of an Expectation specified by its id. By default, the history is returned as a pandas timeserie.
 
         # Arguments

@@ -17,6 +17,7 @@
 from typing import Union, List, Optional
 from hsfs.core import validation_result_api
 import pandas as pd
+import dateutil
 
 from hsfs.ge_validation_result import ValidationResult
 
@@ -80,12 +81,19 @@ class ValidationResultEngine:
         else:
             return validation_history
 
-    def convert_history_to_timeserie(self, validation_history: List[ValidationResult]):
-        return pd.Series(
-            [result._observed_value for result in validation_history],
-            index=pd.DatetimeIndex(
-                [result.validation_time for result in validation_history]
-            ),
+    def convert_history_to_timeserie(
+        self, validation_history: List[ValidationResult]
+    ) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "observed_value": [
+                    result._observed_value for result in validation_history
+                ],
+                "validation_time": [
+                    dateutil.parser.parseiso(result.validation_time)
+                    for result in validation_history
+                ],
+            }
         )
 
     def _verify_sort_by(self, sort_by: str) -> None:
