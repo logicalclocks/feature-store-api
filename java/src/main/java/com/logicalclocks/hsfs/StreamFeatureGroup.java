@@ -62,7 +62,8 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
-  protected FeatureStore featureStore;
+  @JsonIgnore
+  private FeatureStore featureStore;
 
   @Getter
   @Setter

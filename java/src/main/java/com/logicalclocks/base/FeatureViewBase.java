@@ -116,14 +116,12 @@ public abstract class FeatureViewBase {
   public abstract void delete() throws FeatureStoreException, IOException;
 
   @JsonIgnore
-  public abstract String getBatchQuery() throws FeatureStoreException, IOException, ParseException;
-
-  @JsonIgnore
   public abstract String getBatchQuery(String startTime, String endTime)
       throws FeatureStoreException, IOException, ParseException;
 
   @JsonIgnore
-  public abstract void getBatchData();
+  public abstract Object getBatchData(String startTime, String endTime, Map<String, String> readOptions)
+      throws FeatureStoreException, IOException, ParseException;
 
   /**
    * Add name/value tag to the feature view.

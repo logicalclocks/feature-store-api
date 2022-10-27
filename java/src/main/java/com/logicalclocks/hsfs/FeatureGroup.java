@@ -62,7 +62,8 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
-  protected FeatureStore featureStore;
+  @JsonIgnore
+  private FeatureStore featureStore;
 
   @Getter
   @Setter

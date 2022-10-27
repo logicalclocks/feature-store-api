@@ -52,7 +52,12 @@ public class FeatureGroupBase {
 
   @Getter
   @Setter
+  @JsonIgnore
   protected FeatureStoreBase featureStore;
+
+  @Getter
+  @Setter
+  protected String type = "featuregroupDTO";
 
   @Getter
   @Setter

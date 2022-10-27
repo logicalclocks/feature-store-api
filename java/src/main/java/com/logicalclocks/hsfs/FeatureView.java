@@ -228,9 +228,9 @@ public class FeatureView extends FeatureViewBase {
         extraFilterVersion);
   }
 
-  @Override
-  public void getBatchData() {
-
+  @JsonIgnore
+  public Dataset<Row> getBatchData() throws FeatureStoreException, IOException, ParseException {
+    return getBatchData(null, null, null);
   }
 
   @JsonIgnore
@@ -240,6 +240,7 @@ public class FeatureView extends FeatureViewBase {
   }
 
   @JsonIgnore
+  @Override
   public Dataset<Row> getBatchData(String startTime, String endTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
     return featureViewEngine.getBatchData(
