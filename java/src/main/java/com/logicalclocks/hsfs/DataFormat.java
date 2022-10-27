@@ -15,7 +15,7 @@
  *
  */
 
-package com.logicalclocks.base;
+package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

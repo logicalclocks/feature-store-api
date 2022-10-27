@@ -57,8 +57,8 @@ public class StatisticsApi {
 
   public Statistics post(TrainingDatasetBase trainingDatasetBase, Statistics statistics)
       throws FeatureStoreException, IOException {
-    return post(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
-        trainingDatasetBase.getFeatureStoreBase().getId(),
+    return post(trainingDatasetBase.getFeatureStore().getProjectId(),
+        trainingDatasetBase.getFeatureStore().getId(),
         trainingDatasetBase.getId(), statistics);
   }
 
@@ -112,8 +112,8 @@ public class StatisticsApi {
 
   public Statistics get(TrainingDatasetBase trainingDatasetBase, String commitTime)
       throws FeatureStoreException, IOException {
-    return get(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
-        trainingDatasetBase.getFeatureStoreBase().getId(),
+    return get(trainingDatasetBase.getFeatureStore().getProjectId(),
+        trainingDatasetBase.getFeatureStore().getId(),
         trainingDatasetBase.getId(), commitTime);
   }
 
@@ -150,8 +150,8 @@ public class StatisticsApi {
   }
 
   public Statistics getLast(TrainingDatasetBase trainingDatasetBase) throws FeatureStoreException, IOException {
-    return getLast(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
-        trainingDatasetBase.getFeatureStoreBase().getId(),
+    return getLast(trainingDatasetBase.getFeatureStore().getProjectId(),
+        trainingDatasetBase.getFeatureStore().getId(),
         trainingDatasetBase.getId());
   }
 

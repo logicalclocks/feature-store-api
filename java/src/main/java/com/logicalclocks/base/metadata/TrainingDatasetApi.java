@@ -71,7 +71,7 @@ public class TrainingDatasetApi {
         trainingDatasetBases = hopsworksClient.handleRequest(new HttpGet(uriString), TrainingDatasetBase[].class);
 
     for (TrainingDatasetBase td : trainingDatasetBases) {
-      td.setFeatureStoreBase(featureStoreBase);
+      td.setFeatureStore(featureStoreBase);
       td.getFeatures().stream()
           .filter(f -> f.getFeatureGroup() != null)
           .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStoreBase));
@@ -94,8 +94,8 @@ public class TrainingDatasetApi {
         + TRAINING_DATASETS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDatasetBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", trainingDatasetBase.getFeatureStoreBase().getId())
+        .set("projectId", trainingDatasetBase.getFeatureStore().getProjectId())
+        .set("fsId", trainingDatasetBase.getFeatureStore().getId())
         .expand();
 
     String trainingDatasetJson = hopsworksClient.getObjectMapper().writeValueAsString(trainingDatasetBase);
@@ -116,8 +116,8 @@ public class TrainingDatasetApi {
         + TRAINING_QUERY_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDatasetBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", trainingDatasetBase.getFeatureStoreBase().getId())
+        .set("projectId", trainingDatasetBase.getFeatureStore().getProjectId())
+        .set("fsId", trainingDatasetBase.getFeatureStore().getId())
         .set("tdId", trainingDatasetBase.getId())
         .set("withLabel", withLabel)
         .set("hiveQuery", isHiveQuery)
@@ -137,8 +137,8 @@ public class TrainingDatasetApi {
         + PREP_STATEMENT_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDatasetBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", trainingDatasetBase.getFeatureStoreBase().getId())
+        .set("projectId", trainingDatasetBase.getFeatureStore().getProjectId())
+        .set("fsId", trainingDatasetBase.getFeatureStore().getId())
         .set("tdId", trainingDatasetBase.getId())
         .set("batch", batch)
         .expand();
@@ -158,8 +158,8 @@ public class TrainingDatasetApi {
         + TRAINING_DATASET_ID_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDatasetBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", trainingDatasetBase.getFeatureStoreBase().getId())
+        .set("projectId", trainingDatasetBase.getFeatureStore().getProjectId())
+        .set("fsId", trainingDatasetBase.getFeatureStore().getId())
         .set("fgId", trainingDatasetBase.getId())
         .set(queryParameter, true)
         .expand();
@@ -183,8 +183,8 @@ public class TrainingDatasetApi {
         + TRAINING_DATASET_ID_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDatasetBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", trainingDatasetBase.getFeatureStoreBase().getId())
+        .set("projectId", trainingDatasetBase.getFeatureStore().getProjectId())
+        .set("fsId", trainingDatasetBase.getFeatureStore().getId())
         .set("fgId", trainingDatasetBase.getId())
         .expand();
 
@@ -202,8 +202,8 @@ public class TrainingDatasetApi {
         + TRANSFORMATION_FUNCTION_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDatasetBase.getFeatureStoreBase().getProjectId())
-        .set("fsId", trainingDatasetBase.getFeatureStoreBase().getId())
+        .set("projectId", trainingDatasetBase.getFeatureStore().getProjectId())
+        .set("fsId", trainingDatasetBase.getFeatureStore().getId())
         .set("tdId", trainingDatasetBase.getId())
         .expand();
 

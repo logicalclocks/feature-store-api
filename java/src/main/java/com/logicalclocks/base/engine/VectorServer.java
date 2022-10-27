@@ -91,7 +91,7 @@ public class VectorServer {
     if (preparedStatements == null || isBatch) {
       initPreparedStatement(trainingDatasetBase, false, external);
     }
-    return getFeatureVector(trainingDatasetBase.getFeatureStoreBase(),
+    return getFeatureVector(trainingDatasetBase.getFeatureStore(),
         trainingDatasetBase.getFeatures(), entry, external);
   }
 
@@ -172,7 +172,7 @@ public class VectorServer {
       // it was not initialized from initPreparedStatement(batchSize)
       initPreparedStatement(trainingDatasetBase, true, external);
     }
-    return getFeatureVectors(trainingDatasetBase.getFeatureStoreBase(), trainingDatasetBase.getFeatures(),
+    return getFeatureVectors(trainingDatasetBase.getFeatureStore(), trainingDatasetBase.getFeatures(),
         entry, external);
   }
 
@@ -297,7 +297,7 @@ public class VectorServer {
     }
     List<ServingPreparedStatement> servingPreparedStatements =
         trainingDatasetApi.getServingPreparedStatement(trainingDatasetBase, batch);
-    initPreparedStatement(trainingDatasetBase.getFeatureStoreBase(), servingPreparedStatements, batch, external);
+    initPreparedStatement(trainingDatasetBase.getFeatureStore(), servingPreparedStatements, batch, external);
   }
 
   public void initPreparedStatement(FeatureViewBase featureViewBase, boolean batch)

@@ -94,7 +94,7 @@ public class TagsApi {
 
   public void add(TrainingDatasetBase trainingDatasetBase, String name, Object value)
       throws FeatureStoreException, IOException {
-    add(trainingDatasetBase.getFeatureStoreBase().getProjectId(), trainingDatasetBase.getFeatureStoreBase().getId(),
+    add(trainingDatasetBase.getFeatureStore().getProjectId(), trainingDatasetBase.getFeatureStore().getId(),
         trainingDatasetBase.getId(), name, value);
   }
 
@@ -205,8 +205,8 @@ public class TagsApi {
   }
 
   public Object get(TrainingDatasetBase trainingDatasetBase, String name) throws FeatureStoreException, IOException {
-    return get(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
-        trainingDatasetBase.getFeatureStoreBase().getId(), trainingDatasetBase.getId(), Optional.of(name))
+    return get(trainingDatasetBase.getFeatureStore().getProjectId(),
+        trainingDatasetBase.getFeatureStore().getId(), trainingDatasetBase.getId(), Optional.of(name))
         .get(name);
   }
 
@@ -216,8 +216,8 @@ public class TagsApi {
   }
 
   public Map<String, Object> get(TrainingDatasetBase trainingDatasetBase) throws FeatureStoreException, IOException {
-    return get(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
-      trainingDatasetBase.getFeatureStoreBase().getId(), trainingDatasetBase.getId(), Optional.empty());
+    return get(trainingDatasetBase.getFeatureStore().getProjectId(),
+      trainingDatasetBase.getFeatureStore().getId(), trainingDatasetBase.getId(), Optional.empty());
   }
 
   public Object parseTagValue(ObjectMapper objectMapper, Object value) throws IOException {
@@ -277,8 +277,8 @@ public class TagsApi {
 
   public void deleteTag(TrainingDatasetBase trainingDatasetBase, String name)
       throws FeatureStoreException, IOException {
-    deleteTag(trainingDatasetBase.getFeatureStoreBase().getProjectId(),
-        trainingDatasetBase.getFeatureStoreBase().getId(),
+    deleteTag(trainingDatasetBase.getFeatureStore().getProjectId(),
+        trainingDatasetBase.getFeatureStore().getId(),
         trainingDatasetBase.getId(), name);
   }
 }

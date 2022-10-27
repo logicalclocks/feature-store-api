@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.logicalclocks.base.DataFormat;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.Split;
@@ -308,7 +307,7 @@ public class FeatureView extends FeatureViewBase {
       String startTime, String endTime, String description, DataFormat dataFormat
   ) throws IOException, FeatureStoreException, ParseException {
     TrainingDataset trainingDataset =
-        (TrainingDataset) this.featureStore
+        this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .eventStartTime(startTime)
@@ -349,7 +348,7 @@ public class FeatureView extends FeatureViewBase {
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainTestSplit(testSize, trainEnd, testStart);
     TrainingDataset trainingDataset =
-        (TrainingDataset) this.featureStore
+        this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .testSize(testSize)
@@ -374,7 +373,7 @@ public class FeatureView extends FeatureViewBase {
   ) throws IOException, FeatureStoreException, ParseException {
     validateTrainTestSplit(testSize, trainEnd, testStart);
     TrainingDataset trainingDataset =
-        (TrainingDataset) this.featureStore
+        this.featureStore
             .createTrainingDataset()
             .name("") // name is set in the backend
             .testSize(testSize)

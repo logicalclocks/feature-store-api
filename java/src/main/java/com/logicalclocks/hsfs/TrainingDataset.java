@@ -21,11 +21,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.logicalclocks.base.DataFormat;
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.Split;
 import com.logicalclocks.base.Storage;
+import com.logicalclocks.base.TrainingDatasetBase;
 import com.logicalclocks.base.TrainingDatasetFeature;
 import com.logicalclocks.base.TrainingDatasetType;
 import com.logicalclocks.base.constructor.Filter;
@@ -38,6 +38,7 @@ import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetEngine;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
@@ -50,7 +51,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class TrainingDataset extends com.logicalclocks.base.TrainingDatasetBase {
+@NoArgsConstructor
+public class TrainingDataset extends TrainingDatasetBase {
 
   @Getter
   @Setter

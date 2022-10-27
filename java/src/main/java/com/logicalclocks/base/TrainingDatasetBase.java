@@ -27,6 +27,7 @@ import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.engine.VectorServer;
 import com.logicalclocks.base.metadata.Statistics;
 
+import com.logicalclocks.hsfs.DataFormat;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -77,11 +78,11 @@ public abstract class TrainingDatasetBase {
   @Getter
   @Setter
   @JsonIgnore
-  private FeatureStoreBase featureStoreBase;
+  private FeatureStoreBase featureStore;
 
   @Getter
   @Setter
-  private StorageConnectorBase storageConnectorBase;
+  private StorageConnectorBase storageConnector;
 
   @Getter
   @Setter
@@ -101,7 +102,7 @@ public abstract class TrainingDatasetBase {
 
   @Getter
   @Setter
-  private StatisticsConfigBase statisticsConfigBase = new StatisticsConfigBase();
+  private StatisticsConfigBase statisticsConfig = new StatisticsConfigBase();
 
   @Getter
   @Setter

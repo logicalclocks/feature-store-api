@@ -237,8 +237,8 @@ public class FeatureViewApi {
       String featureViewName, Integer featureViewVersion, TrainingDatasetBase trainingData, Class<T> tdType)
       throws FeatureStoreException, IOException {
     String uri = UriTemplate.fromTemplate(ALL_TRAINING_DATA_PATH)
-        .set("projectId", trainingData.getFeatureStoreBase().getProjectId())
-        .set("fsId", trainingData.getFeatureStoreBase().getId())
+        .set("projectId", trainingData.getFeatureStore().getProjectId())
+        .set("fsId", trainingData.getFeatureStore().getId())
         .set("fvName", featureViewName)
         .set("fvVersion", featureViewVersion)
         .expand();

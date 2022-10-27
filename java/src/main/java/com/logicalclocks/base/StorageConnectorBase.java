@@ -127,11 +127,6 @@ public abstract class StorageConnectorBase {
 
     // this will be overridden in engines
     public void update() throws FeatureStoreException, IOException {
-      /* TODO: (davit)
-      JdbcConnectorBase updatedConnector = (JdbcConnectorBase) refetch();
-      this.connectionString = updatedConnector.connectionString;
-      this.arguments = updatedConnector.arguments;
-       */
     }
 
     @Override

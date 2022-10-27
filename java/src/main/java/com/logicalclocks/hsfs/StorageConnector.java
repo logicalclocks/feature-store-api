@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "storageConnectorType", visible = true)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = StorageConnectorBase.HopsFsConnectorBase.class, name = "HOPSFS"),
+    @JsonSubTypes.Type(value = StorageConnector.HopsFsConnector.class, name = "HOPSFS"),
     @JsonSubTypes.Type(value = StorageConnector.S3Connector.class, name = "S3"),
     @JsonSubTypes.Type(value = StorageConnector.RedshiftConnector.class, name = "REDSHIFT"),
     @JsonSubTypes.Type(value = StorageConnector.AdlsConnector.class, name = "ADLS"),
@@ -153,6 +153,24 @@ public abstract class StorageConnector extends StorageConnectorBase {
       this.accessKey = updatedConnector.getAccessKey();
       this.secretKey = updatedConnector.getSecretKey();
       this.sessionToken = updatedConnector.getSessionToken();
+    }
+  }
+
+  public static class HopsFsConnector extends StorageConnector {
+
+    @Getter @Setter
+    private String hopsfsPath;
+
+    @Getter @Setter
+    private String datasetName;
+
+    public Map<String, String> sparkOptions() {
+      return new HashMap<>();
+    }
+
+    @JsonIgnore
+    public String getPath(String subPath) {
+      return hopsfsPath + "/" + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
     }
   }
 
