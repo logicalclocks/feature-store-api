@@ -17,7 +17,6 @@
 from typing import Union, List, Optional
 from hsfs.core import validation_result_api
 import pandas as pd
-import dateutil
 
 from hsfs.ge_validation_result import ValidationResult
 
@@ -90,8 +89,7 @@ class ValidationResultEngine:
                     result._observed_value for result in validation_history
                 ],
                 "validation_time": [
-                    dateutil.parser.parseiso(result.validation_time)
-                    for result in validation_history
+                    result.validation_time for result in validation_history
                 ],
             }
         )
