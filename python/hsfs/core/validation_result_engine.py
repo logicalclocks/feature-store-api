@@ -21,7 +21,7 @@ import pandas as pd
 from hsfs.ge_validation_result import ValidationResult
 
 
-class ValidationReportEngine:
+class ValidationResultEngine:
     def __init__(self, feature_store_id: int, feature_group_id: int):
         """Validation Result engine.
 
