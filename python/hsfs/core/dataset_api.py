@@ -19,12 +19,11 @@ from hsfs.core import inode
 
 
 class DatasetApi:
-
     def upload(self, feature_group, path, dataframe):
         # Convert the dataframe into PARQUET for upload
         df_parquet = dataframe.to_parquet(index=False)
         parquet_length = len(df_parquet)
-        
+
         self._upload_request(
             path,
             util.feature_group_name(feature_group),
@@ -37,7 +36,13 @@ class DatasetApi:
         path_params = ["project", _client._project_id, "dataset", "v2", "upload", path]
 
         _client._send_request(
-            "POST", path_params, files={"file": (file_name, file), "fileName": file_name, "fileSize": file_size}
+            "POST",
+            path_params,
+            files={
+                "file": (file_name, file),
+                "fileName": file_name,
+                "fileSize": file_size,
+            },
         )
 
     def list_files(self, path, offset, limit):
