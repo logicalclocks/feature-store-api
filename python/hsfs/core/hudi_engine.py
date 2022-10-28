@@ -238,8 +238,8 @@ class HudiEngine:
     def reconcile_hudi_schema(self, spark_engine, hudi_fg_alias, read_options):
         fg_table_name = hudi_fg_alias.feature_group._get_table_name()
         if (
-                self._spark_session.table(hudi_fg_alias.alias).schema
-                != self._spark_session.table(fg_table_name).schema
+            self._spark_session.table(hudi_fg_alias.alias).schema
+            != self._spark_session.table(fg_table_name).schema
         ):
             dataframe = self._spark_session.table(fg_table_name).limit(0)
             spark_engine.save_empty_dataframe(hudi_fg_alias.feature_group, dataframe)

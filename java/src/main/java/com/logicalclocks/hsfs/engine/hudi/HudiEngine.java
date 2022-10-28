@@ -16,7 +16,11 @@
 
 package com.logicalclocks.hsfs.engine.hudi;
 
-import com.logicalclocks.hsfs.*;
+import com.logicalclocks.hsfs.Feature;
+import com.logicalclocks.hsfs.FeatureGroupCommit;
+import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.HudiOperationType;
+import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
@@ -38,18 +42,23 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+
+import org.apache.hadoop.fs.FileSystem;
 import org.json.JSONArray;
-import scala.collection.JavaConverters;
 import scala.collection.Seq;
+import scala.collection.JavaConverters;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 public class HudiEngine {
 
@@ -293,7 +302,7 @@ public class HudiEngine {
   }
 
   public void reconcileHudiSchema(SparkSession sparkSession,
-                                   HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> hudiArgs)
+                                  HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> hudiArgs)
           throws FeatureStoreException {
     String fgTableName = utils.getTableName(hudiFeatureGroupAlias.getFeatureGroup());
     StructType hudiSchema = sparkSession.table(hudiFeatureGroupAlias.getAlias()).schema();

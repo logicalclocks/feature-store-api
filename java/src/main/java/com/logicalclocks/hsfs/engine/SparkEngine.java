@@ -81,7 +81,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.Comparator;
 
 import static com.logicalclocks.hsfs.FeatureType.BIGINT;
 import static com.logicalclocks.hsfs.FeatureType.DATE;
