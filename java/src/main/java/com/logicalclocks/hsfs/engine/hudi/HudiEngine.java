@@ -262,7 +262,7 @@ public class HudiEngine {
   public Map<String, String> setupHudiReadOpts(Long startTimestamp, Long endTimestamp,
                                                 Map<String, String> readOptions) {
     Map<String, String> hudiArgs = new HashMap<>();
-    if (endTimestamp == null && startTimestamp == null) {
+    if (endTimestamp == null && (startTimestamp == null || startTimestamp == 0)) {
       // snapshot query latest state
       hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL);
     } else if (endTimestamp != null && startTimestamp == null) {
