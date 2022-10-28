@@ -714,9 +714,11 @@ class TrainingDataset:
         If `commit_time` is `None`, the most recent statistics are returned.
 
         # Arguments
-            commit_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
-                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
-                or `%Y%m%d%H%M%S%f`. Defaults to `None`.
+            commit_time: If specified will recompute statistics on
+                feature group as of specific point in time. If not specified then will compute statistics
+                as of most recent time of this feature group. Defaults to `None`. Strings should
+                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
 
         # Returns
             `Statistics`. Object with statistics information.
