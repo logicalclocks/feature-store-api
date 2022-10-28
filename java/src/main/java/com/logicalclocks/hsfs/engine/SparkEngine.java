@@ -235,53 +235,7 @@ public class SparkEngine {
         .load(hudiFeatureGroupAlias.getFeatureGroup().getLocation())
         .createOrReplaceTempView(hudiFeatureGroupAlias.getAlias());
 
-    reconcileHudiSchema(hudiFeatureGroupAlias, hudiArgs);
-  }
-
-  private void reconcileHudiSchema(HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> hudiArgs)
-          throws FeatureStoreException {
-    String fgTableName = utils.getTableName(hudiFeatureGroupAlias.getFeatureGroup());
-    StructType hudiSchema = sparkSession.table(hudiFeatureGroupAlias.getAlias()).schema();
-    StructType hiveSchema = sparkSession.table(fgTableName).schema();
-    if (!sparkSchemasMatch(hudiSchema, hiveSchema)) {
-      Dataset dataframe = sparkSession.table(fgTableName).limit(0);
-      try {
-        writeOfflineDataframe(
-                hudiFeatureGroupAlias.getFeatureGroup(), dataframe,
-                hudiFeatureGroupAlias.getFeatureGroup().getTimeTravelFormat() == TimeTravelFormat.HUDI
-                        ? HudiOperationType.BULK_INSERT : null,
-                null, null);
-      } catch (IOException | FeatureStoreException | ParseException e) {
-        throw new FeatureStoreException("Error while reconciling HUDI schema.", e);
-      }
-
-      sparkSession.read()
-              .format(HudiEngine.HUDI_SPARK_FORMAT)
-              .options(hudiArgs)
-              .load(hudiFeatureGroupAlias.getFeatureGroup().getLocation())
-              .createOrReplaceTempView(hudiFeatureGroupAlias.getAlias());
-    }
-  }
-
-  public boolean sparkSchemasMatch(StructType schema1, StructType schema2) {
-    if (schema1 == null || schema2 == null) {
-      return false;
-    }
-    if (schema1.size() != schema2.size()) {
-      return false;
-    }
-
-    ArrayList<StructField> sortedSchema1 = new ArrayList<>(JavaConverters.asJavaCollection(schema1.toSeq()));
-    sortedSchema1.sort(Comparator.comparing(StructField::name));
-    ArrayList<StructField> sortedSchema2 = new ArrayList<>(JavaConverters.asJavaCollection(schema2.toSeq()));
-    sortedSchema2.sort(Comparator.comparing(StructField::name));
-
-    for (int i = 0; i < schema1.size(); i++) {
-      if (!sortedSchema1.get(i).equals(sortedSchema2.get(i))) {
-        return false;
-      }
-    }
-    return true;
+    hudiEngine.reconcileHudiSchema(sparkSession, hudiFeatureGroupAlias, hudiArgs);
   }
 
   /**

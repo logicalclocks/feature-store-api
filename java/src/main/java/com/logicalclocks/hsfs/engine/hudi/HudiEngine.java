@@ -16,11 +16,7 @@
 
 package com.logicalclocks.hsfs.engine.hudi;
 
-import com.logicalclocks.hsfs.Feature;
-import com.logicalclocks.hsfs.FeatureGroupCommit;
-import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.HudiOperationType;
-import com.logicalclocks.hsfs.StreamFeatureGroup;
+import com.logicalclocks.hsfs.*;
 import com.logicalclocks.hsfs.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
@@ -44,15 +40,15 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 import org.json.JSONArray;
+import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class HudiEngine {
@@ -294,6 +290,50 @@ public class HudiEngine {
     properties.putAll(setupHudiWriteOpts((FeatureGroupBase) streamFeatureGroup,
         HudiOperationType.BULK_INSERT, null));
     HoodieTableMetaClient.initTableAndGetMetaClient(configuration, streamFeatureGroup.getLocation(), properties);
+  }
+
+  public void reconcileHudiSchema(SparkSession sparkSession,
+                                   HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> hudiArgs)
+          throws FeatureStoreException {
+    String fgTableName = utils.getTableName(hudiFeatureGroupAlias.getFeatureGroup());
+    StructType hudiSchema = sparkSession.table(hudiFeatureGroupAlias.getAlias()).schema();
+    StructType hiveSchema = sparkSession.table(fgTableName).schema();
+    if (!sparkSchemasMatch(hudiSchema, hiveSchema)) {
+      Dataset dataframe = sparkSession.table(fgTableName).limit(0);
+      try {
+        saveHudiFeatureGroup(sparkSession, hudiFeatureGroupAlias.getFeatureGroup(), dataframe,
+                HudiOperationType.BULK_INSERT, null, null);
+      } catch (IOException | ParseException e) {
+        throw new FeatureStoreException("Error while reconciling HUDI schema.", e);
+      }
+
+      sparkSession.read()
+              .format(HudiEngine.HUDI_SPARK_FORMAT)
+              .options(hudiArgs)
+              .load(hudiFeatureGroupAlias.getFeatureGroup().getLocation())
+              .createOrReplaceTempView(hudiFeatureGroupAlias.getAlias());
+    }
+  }
+
+  public boolean sparkSchemasMatch(StructType schema1, StructType schema2) {
+    if (schema1 == null || schema2 == null) {
+      return false;
+    }
+    if (schema1.size() != schema2.size()) {
+      return false;
+    }
+
+    ArrayList<StructField> sortedSchema1 = new ArrayList<>(JavaConverters.asJavaCollection(schema1.toSeq()));
+    sortedSchema1.sort(Comparator.comparing(StructField::name));
+    ArrayList<StructField> sortedSchema2 = new ArrayList<>(JavaConverters.asJavaCollection(schema2.toSeq()));
+    sortedSchema2.sort(Comparator.comparing(StructField::name));
+
+    for (int i = 0; i < schema1.size(); i++) {
+      if (!sortedSchema1.get(i).equals(sortedSchema2.get(i))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private String generetaInitialCheckPointStr(StreamFeatureGroup streamFeatureGroup)

@@ -143,22 +143,7 @@ class Engine:
             hudi_fg_alias,
             read_options,
         )
-
-        self._reconcile_hudi_schema(hudi_engine_instance, hudi_fg_alias, read_options)
-
-    def _reconcile_hudi_schema(self, hudi_engine_instance, hudi_fg_alias, read_options):
-        fg_table_name = hudi_fg_alias.feature_group._get_table_name()
-        if (
-            self._spark_session.table(hudi_fg_alias.alias).schema
-            != self._spark_session.table(fg_table_name).schema
-        ):
-            dataframe = self._spark_session.table(fg_table_name).limit(0)
-            self.save_empty_dataframe(hudi_fg_alias.feature_group, dataframe)
-
-            hudi_engine_instance.register_temporary_table(
-                hudi_fg_alias,
-                read_options,
-            )
+        hudi_engine_instance.reconcile_hudi_schema(self, hudi_fg_alias, read_options)
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "spark"]:
