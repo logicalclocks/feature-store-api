@@ -65,16 +65,12 @@ class HudiEngine:
     }
 
     def __init__(
-        self,
-        feature_store_id,
-        feature_store_name,
-        feature_group,
-        spark_context,
-        spark_session,
+        self, feature_store_id, feature_store_name, feature_group, spark_engine
     ):
         self._feature_group = feature_group
-        self._spark_context = spark_context
-        self._spark_session = spark_session
+        self._spark_engine = spark_engine
+        self._spark_context = spark_engine._spark_context
+        self._spark_session = spark_engine._spark_session
         self._feature_store_id = feature_store_id
         self._feature_store_name = feature_store_name
 
@@ -117,6 +113,24 @@ class HudiEngine:
         ).load(self._feature_group.location).createOrReplaceTempView(
             hudi_fg_alias.alias
         )
+
+        self._reconcile_schema(hudi_fg_alias, read_options)
+
+    def _reconcile_schema(self, hudi_fg_alias, read_options):
+        fg_table_name = hudi_fg_alias.feature_group._get_table_name()
+        if (
+            self._spark_session.table(hudi_fg_alias.alias).schema
+            != self._spark_session.table(fg_table_name).schema
+        ):
+            dataframe = self._spark_session.table(fg_table_name).limit(0)
+            self._spark_engine.save_empty_dataframe(
+                hudi_fg_alias.feature_group, dataframe
+            )
+
+            self.register_temporary_table(
+                hudi_fg_alias,
+                read_options,
+            )
 
     def _write_hudi_dataset(self, dataset, save_mode, operation, write_options):
         hudi_options = self._setup_hudi_write_opts(operation, write_options)
@@ -181,9 +195,9 @@ class HudiEngine:
         return hudi_options
 
     def _setup_hudi_read_opts(self, hudi_fg_alias, read_options):
-        if (
-            hudi_fg_alias.left_feature_group_end_timestamp is None
-            and hudi_fg_alias.left_feature_group_start_timestamp is None
+        if hudi_fg_alias.left_feature_group_end_timestamp is None and (
+            hudi_fg_alias.left_feature_group_start_timestamp is None
+            or hudi_fg_alias.left_feature_group_start_timestamp == 0
         ):
             # snapshot query latest state
             hudi_options = {

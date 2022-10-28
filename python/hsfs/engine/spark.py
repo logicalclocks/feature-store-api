@@ -133,11 +133,7 @@ class Engine:
         self, hudi_fg_alias, feature_store_id, feature_store_name, read_options
     ):
         hudi_engine_instance = hudi_engine.HudiEngine(
-            feature_store_id,
-            feature_store_name,
-            hudi_fg_alias.feature_group,
-            self._spark_context,
-            self._spark_session,
+            feature_store_id, feature_store_name, hudi_fg_alias.feature_group, self
         )
         hudi_engine_instance.register_temporary_table(
             hudi_fg_alias,
