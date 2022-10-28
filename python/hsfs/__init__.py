@@ -16,9 +16,8 @@
 
 import warnings
 
-from hsfs import util
+from hsfs import util, version
 from hsfs.connection import Connection
-from hsfs import version
 
 __version__ = version.__version__
 
