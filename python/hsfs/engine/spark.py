@@ -144,7 +144,7 @@ class Engine:
             read_options,
         )
 
-        self._reconcile_schema(hudi_fg_alias, read_options)
+        self._reconcile_hudi_schema(hudi_engine_instance, hudi_fg_alias, read_options)
 
     def _reconcile_hudi_schema(self, hudi_engine_instance, hudi_fg_alias, read_options):
         fg_table_name = hudi_fg_alias.feature_group._get_table_name()
