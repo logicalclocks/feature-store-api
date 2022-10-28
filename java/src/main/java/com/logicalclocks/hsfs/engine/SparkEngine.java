@@ -24,7 +24,6 @@ import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.Feature;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Split;
@@ -82,6 +81,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 import static com.logicalclocks.hsfs.FeatureType.BIGINT;
 import static com.logicalclocks.hsfs.FeatureType.DATE;
@@ -222,7 +222,8 @@ public class SparkEngine {
         .collect(Collectors.toMap(OnDemandOptions::getName, OnDemandOptions::getValue));
   }
 
-  public void registerHudiTemporaryTable(HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> readOptions) {
+  public void registerHudiTemporaryTable(HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> readOptions)
+          throws FeatureStoreException {
     Map<String, String> hudiArgs = hudiEngine.setupHudiReadOpts(
         hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
         hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
@@ -233,6 +234,54 @@ public class SparkEngine {
         .options(hudiArgs)
         .load(hudiFeatureGroupAlias.getFeatureGroup().getLocation())
         .createOrReplaceTempView(hudiFeatureGroupAlias.getAlias());
+
+    reconcileHudiSchema(hudiFeatureGroupAlias, hudiArgs);
+  }
+
+  private void reconcileHudiSchema(HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> hudiArgs)
+          throws FeatureStoreException {
+    String fgTableName = utils.getTableName(hudiFeatureGroupAlias.getFeatureGroup());
+    StructType hudiSchema = sparkSession.table(hudiFeatureGroupAlias.getAlias()).schema();
+    StructType hiveSchema = sparkSession.table(fgTableName).schema();
+    if (!sparkSchemasMatch(hudiSchema, hiveSchema)) {
+      Dataset dataframe = sparkSession.table(fgTableName).limit(0);
+      try {
+        writeOfflineDataframe(
+                hudiFeatureGroupAlias.getFeatureGroup(), dataframe,
+                hudiFeatureGroupAlias.getFeatureGroup().getTimeTravelFormat() == TimeTravelFormat.HUDI
+                        ? HudiOperationType.BULK_INSERT : null,
+                null, null);
+      } catch (IOException | FeatureStoreException | ParseException e) {
+        throw new FeatureStoreException("Error while reconciling HUDI schema.", e);
+      }
+
+      sparkSession.read()
+              .format(HudiEngine.HUDI_SPARK_FORMAT)
+              .options(hudiArgs)
+              .load(hudiFeatureGroupAlias.getFeatureGroup().getLocation())
+              .createOrReplaceTempView(hudiFeatureGroupAlias.getAlias());
+    }
+  }
+
+  public boolean sparkSchemasMatch(StructType schema1, StructType schema2) {
+    if (schema1 == null || schema2 == null) {
+      return false;
+    }
+    if (schema1.size() != schema2.size()) {
+      return false;
+    }
+
+    ArrayList<StructField> sortedSchema1 = new ArrayList<>(JavaConverters.asJavaCollection(schema1.toSeq()));
+    sortedSchema1.sort(Comparator.comparing(StructField::name));
+    ArrayList<StructField> sortedSchema2 = new ArrayList<>(JavaConverters.asJavaCollection(schema2.toSeq()));
+    sortedSchema2.sort(Comparator.comparing(StructField::name));
+
+    for (int i = 0; i < schema1.size(); i++) {
+      if (!sortedSchema1.get(i).equals(sortedSchema2.get(i))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -564,7 +613,7 @@ public class SparkEngine {
     hudiEngine.saveHudiFeatureGroup(sparkSession, streamFeatureGroup, dataset, operation, writeOptions, validationId);
   }
 
-  public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
+  public void writeOfflineDataframe(FeatureGroupBase featureGroup, Dataset<Row> dataset,
                                     HudiOperationType operation, Map<String, String> writeOptions, Integer validationId)
       throws IOException, FeatureStoreException, ParseException {
 
@@ -575,7 +624,8 @@ public class SparkEngine {
     }
   }
 
-  private void writeSparkDataset(FeatureGroup featureGroup, Dataset<Row> dataset, Map<String, String> writeOptions) {
+  private void writeSparkDataset(FeatureGroupBase featureGroup, Dataset<Row> dataset,
+                                 Map<String, String> writeOptions) {
     dataset
         .write()
         .format(Constants.HIVE_FORMAT)
@@ -626,7 +676,8 @@ public class SparkEngine {
     return profile(df, null, true, true);
   }
 
-  public void setupConnectorHadoopConf(StorageConnector storageConnector) throws FeatureStoreException, IOException {
+  public void setupConnectorHadoopConf(StorageConnector storageConnector)
+          throws FeatureStoreException, IOException {
     if (storageConnector == null) {
       return;
     }

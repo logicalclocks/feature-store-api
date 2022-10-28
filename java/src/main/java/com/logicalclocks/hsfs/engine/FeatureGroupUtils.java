@@ -68,7 +68,7 @@ public class FeatureGroupUtils {
   }
 
   // TODO(Fabio): this should be moved in the backend
-  public String getTableName(FeatureGroup offlineFeatureGroup) {
+  public String getTableName(FeatureGroupBase offlineFeatureGroup) {
     return offlineFeatureGroup.getFeatureStore().getName() + "."
         + offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
   }
@@ -305,4 +305,5 @@ public class FeatureGroupUtils {
       throw new FeatureStoreException("Failed to deserialize online feature group schema" + avroSchema + ".");
     }
   }
+
 }

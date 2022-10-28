@@ -87,7 +87,7 @@ public class FsQuery {
     }
   }
 
-  public void registerHudiFeatureGroups(Map<String, String> readOptions) {
+  public void registerHudiFeatureGroups(Map<String, String> readOptions) throws FeatureStoreException {
     for (HudiFeatureGroupAlias hudiFeatureGroupAlias : hudiCachedFeatureGroups) {
       SparkEngine.getInstance().registerHudiTemporaryTable(hudiFeatureGroupAlias, readOptions);
     }
