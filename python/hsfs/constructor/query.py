@@ -413,3 +413,7 @@ class Query:
             or self.left_feature_group_end_time
             or any([_join.query.is_time_travel() for _join in self._joins])
         )
+
+    @property
+    def joins(self):
+        return self._joins

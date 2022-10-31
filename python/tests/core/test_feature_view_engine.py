@@ -21,10 +21,13 @@ from hsfs import (
     training_dataset,
     split_statistics,
     feature_group,
+    feature,
 )
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import fs_query
 from hsfs.core import feature_view_engine
 from hsfs import engine
+from hsfs.core.feature_view_engine import FeatureViewEngine
 
 engine._engine_type = "python"
 fg1 = feature_group.FeatureGroup(
@@ -33,7 +36,8 @@ fg1 = feature_group.FeatureGroup(
     featurestore_id=99,
     primary_key=[],
     partition_key=[],
-    id=10,
+    features=[feature.Feature("id"), feature.Feature("label")],
+    id=11,
     stream=False,
 )
 
@@ -43,7 +47,19 @@ fg2 = feature_group.FeatureGroup(
     featurestore_id=99,
     primary_key=[],
     partition_key=[],
-    id=10,
+    features=[feature.Feature("id"), feature.Feature("label")],
+    id=12,
+    stream=False,
+)
+
+fg3 = feature_group.FeatureGroup(
+    name="test2",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    features=[feature.Feature("id"), feature.Feature("label")],
+    id=13,
     stream=False,
 )
 
@@ -71,19 +87,13 @@ class TestFeatureViewEngine:
         )
 
         fv = feature_view.FeatureView(
-            name="fv_name",
-            query=query,
-            featurestore_id=feature_store_id,
-            labels=["label1", "label2"],
+            name="fv_name", query=query, featurestore_id=feature_store_id
         )
 
         # Act
         fv_engine.save(fv)
 
         # Assert
-        assert len(fv._features) == 2
-        assert fv._features[0].name == "label1" and fv._features[0].label
-        assert fv._features[1].name == "label2" and fv._features[1].label
         assert mock_fv_api.return_value.post.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
@@ -113,19 +123,13 @@ class TestFeatureViewEngine:
         )
 
         fv = feature_view.FeatureView(
-            name="fv_name",
-            query=query.as_of(1000),
-            featurestore_id=feature_store_id,
-            labels=["label1", "label2"],
+            name="fv_name", query=query.as_of(1000), featurestore_id=feature_store_id
         )
 
         # Act
         fv_engine.save(fv)
 
         # Assert
-        assert len(fv._features) == 2
-        assert fv._features[0].name == "label1" and fv._features[0].label
-        assert fv._features[1].name == "label2" and fv._features[1].label
         assert mock_fv_api.return_value.post.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
@@ -162,16 +166,12 @@ class TestFeatureViewEngine:
             name="fv_name",
             query=fg1.select_all().join(fg2.select_all().as_of("20221010")),
             featurestore_id=feature_store_id,
-            labels=["label1", "label2"],
         )
 
         # Act
         fv_engine.save(fv)
 
         # Assert
-        assert len(fv._features) == 2
-        assert fv._features[0].name == "label1" and fv._features[0].label
-        assert fv._features[1].name == "label2" and fv._features[1].label
         assert mock_fv_api.return_value.post.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
@@ -182,6 +182,133 @@ class TestFeatureViewEngine:
         assert mock_warning.call_args[0][0] == (
             "`as_of` argument in the `Query` will be ignored because"
             + " feature view does not support time travel query."
+        )
+
+    def template_save_label_success(self, mocker, query, label, label_fg_id):
+        # Arrange
+        feature_store_id = 99
+        feature_view_url = "test_url"
+
+        mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
+        )
+        mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine._get_feature_view_url",
+            return_value=feature_view_url,
+        )
+        mock_print = mocker.patch("builtins.print")
+
+        fv_engine = feature_view_engine.FeatureViewEngine(
+            feature_store_id=feature_store_id
+        )
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=query,
+            featurestore_id=feature_store_id,
+            labels=[label],
+        )
+        # Act
+        fv_engine.save(fv)
+
+        # Assert
+        assert len(fv._features) == 1
+        assert (
+            fv._features[0].name == "label"
+            and fv._features[0].label
+            and fv._features[0].feature_group.id == label_fg_id
+        )
+        assert mock_fv_api.return_value.post.call_count == 1
+        assert mock_print.call_count == 1
+        assert mock_print.call_args[0][
+            0
+        ] == "Feature view created successfully, explore it at \n{}".format(
+            feature_view_url
+        )
+
+    def template_save_label_fail(self, mocker, query, label, msg):
+        # Arrange
+        feature_store_id = 99
+        feature_view_url = "test_url"
+
+        mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
+        )
+        mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine._get_feature_view_url",
+            return_value=feature_view_url,
+        )
+
+        fv_engine = feature_view_engine.FeatureViewEngine(
+            feature_store_id=feature_store_id
+        )
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            query=query,
+            featurestore_id=feature_store_id,
+            labels=[label],
+        )
+        # Act
+        with pytest.raises(FeatureStoreException) as e_info:
+            fv_engine.save(fv)
+
+        # Assert
+        assert str(e_info.value) == msg
+        assert mock_fv_api.return_value.post.call_count == 0
+
+    def test_save_label_selected_in_head_query_1(self, mocker):
+        _query = fg1.select_all().join(fg2.select_all(), prefix="fg2_")
+        self.template_save_label_success(mocker, _query, "label", fg1.id)
+
+    def test_save_label_selected_in_head_query_2(self, mocker):
+        _query = fg1.select_all().join(fg2.select_all(), prefix="fg2_")
+        self.template_save_label_success(mocker, _query, "fg2_label", fg2.id)
+
+    def test_save_multiple_label_selected_1(self, mocker):
+        _query = (
+            fg1.select_except(["label"])
+            .join(fg2.select_all(), prefix="fg2_")
+            .join(fg3.select_all(), prefix="fg3_")
+        )
+        self.template_save_label_fail(
+            mocker,
+            _query,
+            "label",
+            FeatureViewEngine.AMBIGUOUS_LABEL_ERROR.format("label"),
+        )
+
+    def test_save_multiple_label_selected_2(self, mocker):
+        _query = (
+            fg1.select_except(["label"])
+            .join(fg2.select_all(), prefix="fg2_")
+            .join(fg3.select_all(), prefix="fg3_")
+        )
+        self.template_save_label_success(mocker, _query, "fg2_label", fg2.id)
+
+    def test_save_multiple_label_selected_3(self, mocker):
+        _query = (
+            fg1.select_except(["label"])
+            .join(fg2.select_all(), prefix="fg2_")
+            .join(fg3.select_all(), prefix="fg3_")
+        )
+        self.template_save_label_success(mocker, _query, "fg3_label", fg3.id)
+
+    def test_save_label_selected_in_join_only_1(self, mocker):
+        _query = fg1.select_except(["label"]).join(fg2.select_all(), prefix="fg2_")
+        self.template_save_label_success(mocker, _query, "label", fg2.id)
+
+    def test_save_label_selected_in_join_only_2(self, mocker):
+        _query = fg1.select_except(["label"]).join(fg2.select_all(), prefix="fg2_")
+        self.template_save_label_success(mocker, _query, "fg2_label", fg2.id)
+
+    def test_save_label_selected_in_join_only_3(self, mocker):
+        _query = fg1.select_except(["label"]).join(fg2.select_all(), prefix="fg2_")
+        self.template_save_label_fail(
+            mocker,
+            _query,
+            "none",
+            FeatureViewEngine.LABEL_NOT_EXIST_ERROR.format("none"),
         )
 
     def test_get_name(self, mocker):
