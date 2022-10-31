@@ -222,7 +222,7 @@ def get_hostname_replaced_url(sub_path: str):
 
 
 def verify_attribute_key_names(feature_group_obj):
-    feature_names = set([feat.name for feat in feature_group_obj.features])
+    feature_names = set(feat.name for feat in feature_group_obj.features)
     if feature_group_obj.primary_key:
         diff = set(feature_group_obj.primary_key) - feature_names
         if diff:
