@@ -86,7 +86,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.logicalclocks.hsfs.FeatureType.BIGINT;
 import static com.logicalclocks.hsfs.FeatureType.DATE;
@@ -837,7 +836,7 @@ public class SparkEngine {
     // access when google.cloud.auth.service.account.enable is true.
     String localPath = addFile(storageConnector.getKeyPath());
     String fileContent = Files.lines(Paths.get(localPath), StandardCharsets.UTF_8)
-      .collect(Collectors.joining("\n"));
+        .collect(Collectors.joining("\n"));
     JSONObject jsonObject = new JSONObject(fileContent);
 
     // set the account properties instead of key file path
