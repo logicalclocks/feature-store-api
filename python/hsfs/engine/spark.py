@@ -24,7 +24,8 @@ from typing import Optional, TypeVar
 import numpy as np
 import pandas as pd
 import avro
-from datetime import datetime, timezone
+from datetime import datetime
+import tzlocal
 
 # in case importing in %%local
 
@@ -177,14 +178,16 @@ class Engine:
 
         if isinstance(dataframe, pd.DataFrame):
             # convert timestamps to current timezone
-            current_timezone = datetime.now().astimezone().tzinfo
+            local_tz = tzlocal.get_localzone()
             for c in dataframe.columns:
                 if isinstance(
                     dataframe[c].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
-                    dataframe[c] = dataframe[c].dt.tz_convert(current_timezone)
+                    dataframe[c] = dataframe[c].dt.tz_convert(local_tz)
                 elif dataframe[c].dtype == np.dtype("datetime64[ns]"):
-                    dataframe[c] = dataframe[c].dt.tz_localize(current_timezone)
+                    dataframe[c] = dataframe[c].dt.tz_localize(
+                        local_tz, ambiguous="infer", nonexistent="shift_forward"
+                    )
             dataframe = self._spark_session.createDataFrame(dataframe)
         elif isinstance(dataframe, RDD):
             dataframe = dataframe.toDF()
@@ -894,7 +897,7 @@ class Engine:
                 if transformation_fn.output_type != "TIMESTAMP":
                     return func
 
-                current_timezone = datetime.now().astimezone().tzinfo
+                local_tz = tzlocal.get_localzone()
 
                 def decorated_func(x):
                     result = func(x)
@@ -902,12 +905,10 @@ class Engine:
                         if result.tzinfo is None:
                             # if timestamp is timezone unaware, make sure it's localized to the system's timezone.
                             # otherwise, spark will implicitly convert it to the system's timezone.
-                            return result.replace(tzinfo=current_timezone)
+                            return local_tz.normalize(local_tz.localize(result))
                         else:
                             # convert to utc, then localize to system's timezone
-                            return result.astimezone(timezone.utc).replace(
-                                tzinfo=current_timezone
-                            )
+                            return local_tz.normalize(result.astimezone(local_tz))
                     return result
 
                 return decorated_func

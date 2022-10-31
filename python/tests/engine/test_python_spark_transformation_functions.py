@@ -20,6 +20,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import pytz
+import tzlocal
 
 import pytest
 from pyspark.sql.types import (
@@ -581,10 +582,10 @@ class TestPythonSparkTransformationFunctions:
             }
         )
         # convert timestamps to current timezone
-        current_timezone = datetime.datetime.now().astimezone().tzinfo
+        local_tz = tzlocal.get_localzone()
         expected_df_localized = expected_df.copy(True)
         expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
-            current_timezone
+            local_tz
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df_localized, schema=expected_schema
@@ -639,10 +640,10 @@ class TestPythonSparkTransformationFunctions:
             }
         )
         # convert timestamps to current timezone
-        current_timezone = datetime.datetime.now().astimezone().tzinfo
+        local_tz = tzlocal.get_localzone()
         expected_df_localized = expected_df.copy(True)
         expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
-            current_timezone
+            local_tz
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df_localized, schema=expected_schema
@@ -700,10 +701,10 @@ class TestPythonSparkTransformationFunctions:
             }
         )
         # convert timestamps to current timezone
-        current_timezone = datetime.datetime.now().astimezone().tzinfo
+        local_tz = tzlocal.get_localzone()
         expected_df_localized = expected_df.copy(True)
         expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
-            current_timezone
+            local_tz
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df_localized, schema=expected_schema
@@ -760,10 +761,10 @@ class TestPythonSparkTransformationFunctions:
             }
         )
         # convert timestamps to current timezone
-        current_timezone = datetime.datetime.now().astimezone().tzinfo
+        local_tz = tzlocal.get_localzone()
         expected_df_localized = expected_df.copy(True)
         expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
-            current_timezone
+            local_tz
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df_localized, schema=expected_schema
