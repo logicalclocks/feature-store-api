@@ -24,7 +24,8 @@ from typing import Optional, TypeVar
 import numpy as np
 import pandas as pd
 import avro
-from datetime import datetime
+from datetime import datetime, timezone
+
 import tzlocal
 
 # in case importing in %%local
@@ -897,7 +898,7 @@ class Engine:
                 if transformation_fn.output_type != "TIMESTAMP":
                     return func
 
-                local_tz = tzlocal.get_localzone()
+                current_timezone = datetime.now().astimezone().tzinfo
 
                 def decorated_func(x):
                     result = func(x)
@@ -905,10 +906,12 @@ class Engine:
                         if result.tzinfo is None:
                             # if timestamp is timezone unaware, make sure it's localized to the system's timezone.
                             # otherwise, spark will implicitly convert it to the system's timezone.
-                            return local_tz.normalize(local_tz.localize(result))
+                            return result.replace(tzinfo=current_timezone)
                         else:
                             # convert to utc, then localize to system's timezone
-                            return local_tz.normalize(result.astimezone(local_tz))
+                            return result.astimezone(timezone.utc).replace(
+                                tzinfo=current_timezone
+                            )
                     return result
 
                 return decorated_func
