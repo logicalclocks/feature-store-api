@@ -585,7 +585,7 @@ class TestPythonSparkTransformationFunctions:
         local_tz = tzlocal.get_localzone()
         expected_df_localized = expected_df.copy(True)
         expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
-            local_tz
+            str(local_tz)
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df_localized, schema=expected_schema
@@ -643,7 +643,7 @@ class TestPythonSparkTransformationFunctions:
         local_tz = tzlocal.get_localzone()
         expected_df_localized = expected_df.copy(True)
         expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
-            local_tz
+            str(local_tz)
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df_localized, schema=expected_schema
@@ -704,7 +704,7 @@ class TestPythonSparkTransformationFunctions:
         local_tz = tzlocal.get_localzone()
         expected_df_localized = expected_df.copy(True)
         expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
-            local_tz
+            str(local_tz)
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df_localized, schema=expected_schema
@@ -764,7 +764,7 @@ class TestPythonSparkTransformationFunctions:
         local_tz = tzlocal.get_localzone()
         expected_df_localized = expected_df.copy(True)
         expected_df_localized["col_0"] = expected_df_localized["col_0"].dt.tz_localize(
-            local_tz
+            str(local_tz)
         )
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df_localized, schema=expected_schema

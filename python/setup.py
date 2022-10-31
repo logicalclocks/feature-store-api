@@ -30,6 +30,7 @@ setup(
         "PyMySQL[rsa]",
         "great_expectations==0.14.12",
         "markupsafe<2.1.0",  # GE issue 1: jinja2==2.11.3, pulls in markupsafe 2.1.0 which is not compatible with jinja2==2.11.3.
+        "tzlocal"
     ],
     extras_require={
         "dev": [

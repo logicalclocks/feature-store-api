@@ -183,10 +183,10 @@ class Engine:
                 if isinstance(
                     dataframe[c].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
-                    dataframe[c] = dataframe[c].dt.tz_convert(local_tz)
+                    dataframe[c] = dataframe[c].dt.tz_convert(str(local_tz))
                 elif dataframe[c].dtype == np.dtype("datetime64[ns]"):
                     dataframe[c] = dataframe[c].dt.tz_localize(
-                        local_tz, ambiguous="infer", nonexistent="shift_forward"
+                        str(local_tz), ambiguous="infer", nonexistent="shift_forward"
                     )
             dataframe = self._spark_session.createDataFrame(dataframe)
         elif isinstance(dataframe, RDD):
