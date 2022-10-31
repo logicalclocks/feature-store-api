@@ -26,6 +26,8 @@ import pandas as pd
 import avro
 from datetime import datetime, timezone
 
+import tzlocal
+
 # in case importing in %%local
 
 try:
@@ -177,14 +179,16 @@ class Engine:
 
         if isinstance(dataframe, pd.DataFrame):
             # convert timestamps to current timezone
-            current_timezone = datetime.now().astimezone().tzinfo
+            local_tz = tzlocal.get_localzone()
             for c in dataframe.columns:
                 if isinstance(
                     dataframe[c].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
-                    dataframe[c] = dataframe[c].dt.tz_convert(current_timezone)
+                    dataframe[c] = dataframe[c].dt.tz_convert(str(local_tz))
                 elif dataframe[c].dtype == np.dtype("datetime64[ns]"):
-                    dataframe[c] = dataframe[c].dt.tz_localize(current_timezone)
+                    dataframe[c] = dataframe[c].dt.tz_localize(
+                        str(local_tz), ambiguous="infer", nonexistent="shift_forward"
+                    )
             dataframe = self._spark_session.createDataFrame(dataframe)
         elif isinstance(dataframe, RDD):
             dataframe = dataframe.toDF()
