@@ -308,8 +308,6 @@ public class FeatureGroupUtils {
 
   public void verifyAttributeKeyNames(FeatureGroupBase featureGroup, List<String> partitionKeyNames,
                                       String precombineKeyName) throws FeatureStoreException {
-
-
     List<String> featureNames = featureGroup.getFeatures().stream().map(Feature::getName).collect(Collectors.toList());
     if (featureGroup.getPrimaryKeys() != null && !featureGroup.getPrimaryKeys().isEmpty()) {
       checkListdiff(featureGroup.getPrimaryKeys(), featureNames, "primary");
