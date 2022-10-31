@@ -230,7 +230,7 @@ def verify_attribute_key_names(feature_group_obj):
                 f"Provided primary key(s) {','.join(diff)} doesn't exist in feature dataframe"
             )
     if feature_group_obj.partition_key:
-        diff = list(set(feature_group_obj.partition_key) - feature_names)
+        diff = set(feature_group_obj.partition_key) - feature_names
         if diff:
             raise exceptions.FeatureStoreException(
                 f"Provided partition key(s) {','.join(diff)} doesn't exist in feature dataframe"
