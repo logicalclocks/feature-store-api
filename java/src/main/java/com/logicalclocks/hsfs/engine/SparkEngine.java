@@ -836,24 +836,19 @@ public class SparkEngine {
     // The JSON key file of the service account used for GCS
     // access when google.cloud.auth.service.account.enable is true.
     String localPath = addFile(storageConnector.getKeyPath());
-    StringBuilder stringBuilder = new StringBuilder();
-    Stream<String> stream = Files.lines(Paths.get(localPath), StandardCharsets.UTF_8);
-    //Read the content with stream
-    stream.forEach(s -> stringBuilder.append(s).append("\n"));
-    String fileContent = stringBuilder.toString();
+    String fileContent = Files.lines(Paths.get(localPath), StandardCharsets.UTF_8)
+      .collect(Collectors.joining("\n"));
     JSONObject jsonObject = new JSONObject(fileContent);
-    String keyId = jsonObject.getString("private_key_id");
-    String key = jsonObject.getString("private_key");
-    String email = jsonObject.getString("client_email");
+
     // set the account properties instead of key file path
     sparkSession.sparkContext().hadoopConfiguration().set(
-        Constants.PROPERTY_GCS_ACCOUNT_EMAIL, email
+        Constants.PROPERTY_GCS_ACCOUNT_EMAIL, jsonObject.getString("client_email")
     );
     sparkSession.sparkContext().hadoopConfiguration().set(
-        Constants.PROPERTY_GCS_ACCOUNT_KEY_ID, keyId
+        Constants.PROPERTY_GCS_ACCOUNT_KEY_ID, jsonObject.getString("private_key_id")
     );
     sparkSession.sparkContext().hadoopConfiguration().set(
-        Constants.PROPERTY_GCS_ACCOUNT_KEY, key
+        Constants.PROPERTY_GCS_ACCOUNT_KEY, jsonObject.getString("private_key")
     );
 
     // if encryption fields present
