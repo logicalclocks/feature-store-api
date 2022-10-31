@@ -330,7 +330,6 @@ public class FeatureGroupUtils {
     }
   }
 
-
   private void checkListdiff(List<String> primaryPartitionKeyNames, List<String> featureNames, String attributeName)
       throws FeatureStoreException {
     List<String> differences = primaryPartitionKeyNames.stream()
