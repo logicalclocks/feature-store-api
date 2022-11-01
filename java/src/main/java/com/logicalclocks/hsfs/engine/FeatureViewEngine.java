@@ -330,7 +330,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
   private TrainingDataset getTrainingDataMetadata(
       FeatureView featureView, Integer trainingDatasetVersion) throws IOException, FeatureStoreException {
     return (TrainingDataset) featureViewApi.getTrainingData(featureView.getFeatureStore(), featureView.getName(),
-        featureView.getVersion(), trainingDatasetVersion);
+        featureView.getVersion(), trainingDatasetVersion, TrainingDataset.class);
   }
 
   public Statistics computeStatistics(FeatureView featureView, TrainingDataset trainingDataset,

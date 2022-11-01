@@ -25,7 +25,7 @@ import com.logicalclocks.base.DeltaStreamerJobConf;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreBase;
 import com.logicalclocks.base.FeatureStoreException;
-import com.logicalclocks.base.TimeTravelFormat;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.base.engine.FeatureGroupBaseEngine;
 import com.logicalclocks.hsfs.StatisticsConfig;
 import lombok.Getter;

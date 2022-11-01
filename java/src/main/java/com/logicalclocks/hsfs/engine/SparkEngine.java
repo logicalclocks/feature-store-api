@@ -28,7 +28,7 @@ import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.FeatureType;
 import com.logicalclocks.base.HudiOperationType;
 import com.logicalclocks.base.Split;
-import com.logicalclocks.base.TimeTravelFormat;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.base.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.metadata.FeatureGroupBase;
@@ -75,9 +75,13 @@ import org.apache.spark.sql.types.StringType;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.types.TimestampType;
+import org.json.JSONObject;
 import scala.collection.JavaConverters;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -823,7 +827,7 @@ public class SparkEngine {
     return (Dataset<Row>) obj;
   }
 
-  private void setupGcsConnectorHadoopConf(StorageConnector.GcsConnector storageConnector) {
+  private void setupGcsConnectorHadoopConf(StorageConnector.GcsConnector storageConnector) throws IOException {
     // The AbstractFileSystem for 'gs:' URIs
     sparkSession.sparkContext().hadoopConfiguration().set(
         Constants.PROPERTY_GCS_FS_KEY, Constants.PROPERTY_GCS_FS_VALUE
@@ -836,8 +840,19 @@ public class SparkEngine {
     // The JSON key file of the service account used for GCS
     // access when google.cloud.auth.service.account.enable is true.
     String localPath = addFile(storageConnector.getKeyPath());
+    String fileContent = Files.lines(Paths.get(localPath), StandardCharsets.UTF_8)
+        .collect(Collectors.joining("\n"));
+    JSONObject jsonObject = new JSONObject(fileContent);
+
+    // set the account properties instead of key file path
     sparkSession.sparkContext().hadoopConfiguration().set(
-        Constants.PROPERTY_KEY_FILE, localPath
+        Constants.PROPERTY_GCS_ACCOUNT_EMAIL, jsonObject.getString("client_email")
+    );
+    sparkSession.sparkContext().hadoopConfiguration().set(
+        Constants.PROPERTY_GCS_ACCOUNT_KEY_ID, jsonObject.getString("private_key_id")
+    );
+    sparkSession.sparkContext().hadoopConfiguration().set(
+        Constants.PROPERTY_GCS_ACCOUNT_KEY, jsonObject.getString("private_key")
     );
 
     // if encryption fields present

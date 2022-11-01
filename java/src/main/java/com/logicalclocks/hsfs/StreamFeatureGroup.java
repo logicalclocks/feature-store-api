@@ -25,7 +25,6 @@ import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.JobConfiguration;
 import com.logicalclocks.base.SaveMode;
-import com.logicalclocks.base.TimeTravelFormat;
 import com.logicalclocks.base.engine.CodeEngine;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.metadata.FeatureGroupBase;

@@ -15,7 +15,7 @@
  *
  */
 
-package com.logicalclocks.base;
+package com.logicalclocks.hsfs;
 
 public enum TimeTravelFormat {
   NONE,

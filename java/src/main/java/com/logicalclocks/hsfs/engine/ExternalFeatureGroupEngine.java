@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.engine.FeatureGroupBaseEngine;
+import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.metadata.FeatureGroupApi;
 import com.logicalclocks.base.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
@@ -31,6 +32,7 @@ import java.io.IOException;
 public class ExternalFeatureGroupEngine extends FeatureGroupBaseEngine {
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   public ExternalFeatureGroup saveFeatureGroup(ExternalFeatureGroup externalFeatureGroup)
       throws FeatureStoreException, IOException {
@@ -41,6 +43,9 @@ public class ExternalFeatureGroupEngine extends FeatureGroupBaseEngine {
       externalFeatureGroup.setFeatures(SparkEngine.getInstance().parseFeatureGroupSchema(onDemandDataset,
           externalFeatureGroup.getTimeTravelFormat()));
     }
+
+    // verify primary keys
+    utils.verifyAttributeKeyNames(externalFeatureGroup, null, null);
 
     /* set primary features */
     if (externalFeatureGroup.getPrimaryKeys() != null) {

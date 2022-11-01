@@ -23,7 +23,7 @@ import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.HudiOperationType;
 import com.logicalclocks.base.JobConfiguration;
 import com.logicalclocks.base.Storage;
-import com.logicalclocks.base.TimeTravelFormat;
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.metadata.FeatureGroupApi;
 import com.logicalclocks.base.metadata.FeatureGroupBase;
@@ -237,6 +237,9 @@ public class FeatureGroupEngine {
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
+    // verify primary, partition, event time or hudi precombine keys
+    utils.verifyAttributeKeyNames(featureGroup, partitionKeys, hudiPrecombineKey);
+
     FeatureGroup apiFG = (FeatureGroup) featureGroupApi.saveFeatureGroupMetaData(featureGroup, partitionKeys,
         hudiPrecombineKey, null, null, FeatureGroup.class);
 
@@ -268,6 +271,9 @@ public class FeatureGroupEngine {
     }
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
+
+    // verify primary, partition, event time or hudi precombine keys
+    utils.verifyAttributeKeyNames(featureGroup, partitionKeys, hudiPrecombineKey);
 
     StreamFeatureGroup apiFG = (StreamFeatureGroup) featureGroupApi.saveFeatureGroupMetaData(featureGroup,
         partitionKeys, hudiPrecombineKey, writeOptions, sparkJobConfiguration, StreamFeatureGroup.class);

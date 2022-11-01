@@ -253,8 +253,11 @@ public class FeatureViewApi {
     return hopsworksClient.handleRequest(request, tdType);
   }
 
-  public TrainingDatasetBase getTrainingData(FeatureStoreBase featureStoreBase, String featureViewName,
-                                             Integer featureViewVersion, Integer trainingDataVersion)
+  public <T extends TrainingDatasetBase> TrainingDatasetBase getTrainingData(FeatureStoreBase featureStoreBase,
+                                                                             String featureViewName,
+                                                                             Integer featureViewVersion,
+                                                                             Integer trainingDataVersion,
+                                                                             Class<T> tdType)
       throws FeatureStoreException, IOException {
     String uri = UriTemplate.fromTemplate(TRAINING_DATA_PATH)
         .set("projectId", featureStoreBase.getProjectId())
@@ -267,7 +270,7 @@ public class FeatureViewApi {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     HttpGet request = new HttpGet(uri);
     LOGGER.info("Sending metadata request: " + uri);
-    return hopsworksClient.handleRequest(request, TrainingDatasetBase.class);
+    return hopsworksClient.handleRequest(request, tdType);
   }
 
   public void deleteTrainingData(FeatureStoreBase featureStoreBase, String featureViewName,
