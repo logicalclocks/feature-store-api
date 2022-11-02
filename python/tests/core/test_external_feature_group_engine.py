@@ -13,8 +13,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import pytest
 
 from hsfs import feature_group, feature, storage_connector
+from hsfs.client import exceptions
 from hsfs.core import external_feature_group_engine
 
 
@@ -246,4 +248,54 @@ class TestExternalFeatureGroupEngine:
         assert (
             mock_fg_api.return_value.update_metadata.call_args[0][1].description
             == description
+        )
+
+    def test_save_feature_group_metadata_primary_partition_precombine_event_error(
+        self, mocker
+    ):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.engine.get_type")
+
+        external_fg_engine = external_feature_group_engine.ExternalFeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
+
+        f = feature.Feature(name="f", type="str")
+
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as e_pk_info:
+            fg = feature_group.ExternalFeatureGroup(
+                name="test",
+                version=1,
+                featurestore_id=feature_store_id,
+                primary_key=["feature_name"],
+                event_time="f",
+            )
+
+            external_fg_engine._save_feature_group_metadata(
+                feature_group=fg, dataframe_features=[f], write_options=None
+            )
+
+        with pytest.raises(exceptions.FeatureStoreException) as e_eventt_info:
+            fg = feature_group.ExternalFeatureGroup(
+                name="test",
+                version=1,
+                featurestore_id=feature_store_id,
+                primary_key=["feature_name"],
+                event_time="f",
+            )
+
+            external_fg_engine._save_feature_group_metadata(
+                feature_group=fg, dataframe_features=[f], write_options=None
+            )
+
+        assert (
+            str(e_pk_info.value)
+            == "Provided primary key(s) feature_name doesn't exist in feature dataframe"
+        )
+        assert (
+            str(e_eventt_info.value)
+            == "Provided event_time feature feature_name doesn't exist in feature dataframe"
         )

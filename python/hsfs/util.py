@@ -23,7 +23,7 @@ from urllib.parse import urljoin, urlparse
 
 from sqlalchemy import create_engine
 
-from hsfs import client, feature
+from hsfs import client, feature, feature_group
 from hsfs.client import exceptions
 
 
@@ -241,24 +241,27 @@ def verify_attribute_key_names(feature_group_obj):
             raise exceptions.FeatureStoreException(
                 f"Provided primary key(s) {','.join(diff)} doesn't exist in feature dataframe"
             )
-    if feature_group_obj.partition_key:
-        diff = set(feature_group_obj.partition_key) - feature_names
-        if diff:
-            raise exceptions.FeatureStoreException(
-                f"Provided partition key(s) {','.join(diff)} doesn't exist in feature dataframe"
-            )
 
-    if feature_group_obj.hudi_precombine_key:
-        if feature_group_obj.hudi_precombine_key not in feature_names:
-            raise exceptions.FeatureStoreException(
-                f"Provided hudi precombine key {feature_group_obj.hudi_precombine_key} "
-                f"doesn't exist in feature dataframe"
-            )
     if feature_group_obj.event_time:
         if feature_group_obj.event_time not in feature_names:
             raise exceptions.FeatureStoreException(
                 f"Provided event_time feature {feature_group_obj.event_time} doesn't exist in feature dataframe"
             )
+
+    if not isinstance(feature_group_obj, feature_group.ExternalFeatureGroup):
+        if feature_group_obj.partition_key:
+            diff = set(feature_group_obj.partition_key) - feature_names
+            if diff:
+                raise exceptions.FeatureStoreException(
+                    f"Provided partition key(s) {','.join(diff)} doesn't exist in feature dataframe"
+                )
+
+        if feature_group_obj.hudi_precombine_key:
+            if feature_group_obj.hudi_precombine_key not in feature_names:
+                raise exceptions.FeatureStoreException(
+                    f"Provided hudi precombine key {feature_group_obj.hudi_precombine_key} "
+                    f"doesn't exist in feature dataframe"
+                )
 
 
 class VersionWarning(Warning):
