@@ -17,7 +17,6 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
-import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import org.apache.http.client.methods.HttpGet;
 import org.slf4j.Logger;
