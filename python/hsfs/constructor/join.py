@@ -67,3 +67,7 @@ class Join:
     @query.setter
     def query(self, query):
         self._query = query
+
+    @property
+    def prefix(self):
+        return self._prefix

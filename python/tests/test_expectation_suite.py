@@ -27,17 +27,17 @@ class TestExpectationSuite:
         es = expectation_suite.ExpectationSuite.from_response_json(json)
 
         # Assert
-        assert es.id == "test_id"
+        assert es.id == 21
         assert es.expectation_suite_name == "test_expectation_suite_name"
-        assert es._featurestore_id == "test_featurestore_id"
-        assert es._featuregroup_id == "test_featuregroup_id"
+        assert es._feature_store_id == 99
+        assert es._feature_group_id == 10
         assert es.ge_cloud_id == "test_ge_cloud_id"
         assert es.data_asset_type == "test_data_asset_type"
         assert es.run_validation == "test_run_validation"
         assert es.validation_ingestion_policy == "TEST_VALIDATION_INGESTION_POLICY"
         assert len(es.expectations) == 1
         assert isinstance(es.expectations[0], ge_expectation.GeExpectation)
-        assert es.meta == {"key": "value"}
+        assert es.meta == {"great_expectations_version": "0.14.12", "key": "value"}
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
@@ -49,17 +49,17 @@ class TestExpectationSuite:
         # Assert
         assert len(es_list) == 1
         es = es_list[0]
-        assert es.id == "test_id"
+        assert es.id == 21
         assert es.expectation_suite_name == "test_expectation_suite_name"
-        assert es._featurestore_id == "test_featurestore_id"
-        assert es._featuregroup_id == "test_featuregroup_id"
+        assert es._feature_store_id == 99
+        assert es._feature_group_id == 10
         assert es.ge_cloud_id == "test_ge_cloud_id"
         assert es.data_asset_type == "test_data_asset_type"
         assert es.run_validation == "test_run_validation"
         assert es.validation_ingestion_policy == "TEST_VALIDATION_INGESTION_POLICY"
         assert len(es.expectations) == 1
         assert isinstance(es.expectations[0], ge_expectation.GeExpectation)
-        assert es.meta == {"key": "value"}
+        assert es.meta == {"great_expectations_version": "0.14.12", "key": "value"}
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -71,15 +71,15 @@ class TestExpectationSuite:
         # Assert
         assert es.id is None
         assert es.expectation_suite_name == "test_expectation_suite_name"
-        assert es._featurestore_id is None
-        assert es._featuregroup_id is None
+        assert es._feature_store_id is None
+        assert es._feature_group_id is None
         assert es.ge_cloud_id is None
         assert es.data_asset_type is None
         assert es.run_validation is True
         assert es.validation_ingestion_policy == "ALWAYS"
         assert len(es.expectations) == 1
         assert isinstance(es.expectations[0], ge_expectation.GeExpectation)
-        assert es.meta == {"key": "value"}
+        assert es.meta == {"great_expectations_version": "0.14.12", "key": "value"}
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange

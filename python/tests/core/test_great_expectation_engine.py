@@ -14,8 +14,10 @@
 #   limitations under the License.
 #
 
-from hsfs import feature_group, expectation_suite
+from hsfs import feature_group, validation_report
 from hsfs.core import great_expectation_engine
+import great_expectations as ge
+import hsfs.expectation_suite as es
 
 
 class TestCodeEngine:
@@ -74,7 +76,7 @@ class TestCodeEngine:
             name="test", version=1, featurestore_id=99, primary_key=[], partition_key=[]
         )
 
-        suite = expectation_suite.ExpectationSuite(
+        suite = es.ExpectationSuite(
             expectation_suite_name="suite_name", expectations=None, meta={}
         )
 
@@ -116,7 +118,7 @@ class TestCodeEngine:
             name="test", version=1, featurestore_id=99, primary_key=[], partition_key=[]
         )
 
-        suite = expectation_suite.ExpectationSuite(
+        suite = es.ExpectationSuite(
             expectation_suite_name="suite_name", expectations=None, meta={}
         )
 
@@ -128,13 +130,12 @@ class TestCodeEngine:
         ge_engine.validate(
             feature_group=fg,
             dataframe=None,
-            save_report=None,
             validation_options=validation_options,
         )
 
         # Assert
         assert mock_fg_save_validation_report.call_count == 0
-        assert mock_vr.call_count == 1
+        assert mock_vr.call_count == 0
 
     def test_validate_suite_validation_options_save_report(self, mocker):
         # Arrange
@@ -158,7 +159,7 @@ class TestCodeEngine:
             name="test", version=1, featurestore_id=99, primary_key=[], partition_key=[]
         )
 
-        suite = expectation_suite.ExpectationSuite(
+        suite = es.ExpectationSuite(
             expectation_suite_name="suite_name", expectations=None, meta={}
         )
 
@@ -177,3 +178,327 @@ class TestCodeEngine:
         # Assert
         assert mock_fg_save_validation_report.call_count == 1
         assert mock_vr.call_count == 0
+
+    def test_convert_expectation_suite(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        ge_engine = great_expectation_engine.GreatExpectationEngine(
+            feature_store_id=feature_store_id
+        )
+
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
+
+        suite = ge.core.ExpectationSuite(
+            expectation_suite_name="suite_name",
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+            expectation_suite=ge.core.ExpectationSuite(
+                expectation_suite_name="attached_to_feature_group",
+            ),
+        )
+
+        mock_fg_get_expectation_suite = mocker.patch(
+            "hsfs.feature_group.FeatureGroup.get_expectation_suite"
+        )
+
+        # Act
+        converted_suite = ge_engine.fetch_or_convert_expectation_suite(
+            feature_group=fg, expectation_suite=suite
+        )
+
+        # Assert
+        assert isinstance(converted_suite, es.ExpectationSuite)
+        assert converted_suite.expectation_suite_name == "suite_name"
+        assert mock_fg_get_expectation_suite.call_count == 0
+
+    def test_fake_convert_expectation_suite(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        ge_engine = great_expectation_engine.GreatExpectationEngine(
+            feature_store_id=feature_store_id
+        )
+
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
+
+        suite = es.ExpectationSuite(
+            expectation_suite_name="suite_name", expectations=[], meta={}
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+            expectation_suite=ge.core.ExpectationSuite(
+                expectation_suite_name="attached_to_feature_group",
+            ),
+        )
+
+        mock_fg_get_expectation_suite = mocker.patch(
+            "hsfs.feature_group.FeatureGroup.get_expectation_suite"
+        )
+
+        # Act
+        converted_suite = ge_engine.fetch_or_convert_expectation_suite(
+            feature_group=fg, expectation_suite=suite
+        )
+
+        # Assert
+        assert isinstance(converted_suite, es.ExpectationSuite)
+        assert converted_suite.expectation_suite_name == "suite_name"
+        assert mock_fg_get_expectation_suite.call_count == 0
+
+    def test_fetch_expectation_suite(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        ge_engine = great_expectation_engine.GreatExpectationEngine(
+            feature_store_id=feature_store_id
+        )
+
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
+
+        suite = None
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+            expectation_suite=ge.core.ExpectationSuite(
+                expectation_suite_name="attached_to_feature_group",
+            ),
+        )
+
+        mock_fg_get_expectation_suite = mocker.patch(
+            "hsfs.feature_group.FeatureGroup.get_expectation_suite"
+        )
+
+        # Act
+        ge_engine.fetch_or_convert_expectation_suite(
+            feature_group=fg, expectation_suite=suite
+        )
+
+        # Assert
+        assert mock_fg_get_expectation_suite.call_count == 1
+
+    def test_should_run_validation_based_on_suite(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        ge_engine = great_expectation_engine.GreatExpectationEngine(
+            feature_store_id=feature_store_id
+        )
+
+        suite = es.ExpectationSuite(
+            expectation_suite_name="suite_name",
+            expectations=[],
+            meta={},
+            run_validation=True,
+        )
+
+        # Act
+        run_validation = ge_engine.should_run_validation(
+            expectation_suite=suite, validation_options={}
+        )
+
+        # Assert
+        assert run_validation is True
+
+    def test_should_not_run_validation_based_on_suite(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        ge_engine = great_expectation_engine.GreatExpectationEngine(
+            feature_store_id=feature_store_id
+        )
+
+        suite = es.ExpectationSuite(
+            expectation_suite_name="suite_name",
+            expectations=[],
+            meta={},
+            run_validation=False,
+        )
+
+        # Act
+        run_validation = ge_engine.should_run_validation(
+            expectation_suite=suite, validation_options={}
+        )
+
+        # Assert
+        assert run_validation is False
+
+    def test_should_run_validation_based_validation_options(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        ge_engine = great_expectation_engine.GreatExpectationEngine(
+            feature_store_id=feature_store_id
+        )
+
+        suite = es.ExpectationSuite(
+            expectation_suite_name="suite_name",
+            expectations=[],
+            meta={},
+            run_validation=True,
+        )
+
+        # Act
+        run_validation = ge_engine.should_run_validation(
+            expectation_suite=suite, validation_options={"run_validation": False}
+        )
+
+        # Assert
+        assert run_validation is False
+
+    def test_should_not_run_validation_based_validation_options(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        ge_engine = great_expectation_engine.GreatExpectationEngine(
+            feature_store_id=feature_store_id
+        )
+
+        suite = es.ExpectationSuite(
+            expectation_suite_name="suite_name",
+            expectations=[],
+            meta={},
+            run_validation=False,
+        )
+
+        # Act
+        run_validation = ge_engine.should_run_validation(
+            expectation_suite=suite, validation_options={"run_validation": True}
+        )
+
+        # Assert
+        assert run_validation is True
+
+    def test_not_save_but_convert_report(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        save_report = False
+        ge_type = False
+        validation_options = {}
+
+        ge_engine = great_expectation_engine.GreatExpectationEngine(
+            feature_store_id=feature_store_id
+        )
+
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+        )
+
+        report = ge.core.ExpectationSuiteValidationResult()
+
+        mock_save_validation_report = mocker.patch(
+            "hsfs.feature_group.FeatureGroup.save_validation_report"
+        )
+
+        # Act
+        converted_report = ge_engine.save_or_convert_report(
+            save_report=save_report,
+            ge_type=ge_type,
+            feature_group=fg,
+            report=report,
+            validation_options=validation_options,
+        )
+
+        # Assert
+        assert isinstance(converted_report, validation_report.ValidationReport)
+        assert mock_save_validation_report.call_count == 0
+
+    def test_save_but_not_convert_report(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        save_report = True
+        ge_type = True
+        validation_options = {}
+
+        ge_engine = great_expectation_engine.GreatExpectationEngine(
+            feature_store_id=feature_store_id
+        )
+
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+        )
+
+        report = ge.core.ExpectationSuiteValidationResult()
+
+        mock_save_validation_report = mocker.patch(
+            "hsfs.feature_group.FeatureGroup.save_validation_report"
+        )
+
+        # Act
+        ge_engine.save_or_convert_report(
+            save_report=save_report,
+            ge_type=ge_type,
+            feature_group=fg,
+            report=report,
+            validation_options=validation_options,
+        )
+
+        # Assert
+        assert mock_save_validation_report.call_count == 1
+
+    def test_not_save_and_not_convert_report(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        save_report = True
+        ge_type = True
+        # This should override save_report
+        validation_options = {"save_report": False}
+
+        ge_engine = great_expectation_engine.GreatExpectationEngine(
+            feature_store_id=feature_store_id
+        )
+
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+        )
+
+        report = ge.core.ExpectationSuiteValidationResult()
+
+        mock_save_validation_report = mocker.patch(
+            "hsfs.feature_group.FeatureGroup.save_validation_report"
+        )
+
+        # Act
+        converted_report = ge_engine.save_or_convert_report(
+            save_report=save_report,
+            ge_type=ge_type,
+            feature_group=fg,
+            report=report,
+            validation_options=validation_options,
+        )
+
+        # Assert
+        assert isinstance(converted_report, ge.core.ExpectationSuiteValidationResult)
+        assert mock_save_validation_report.call_count == 0
