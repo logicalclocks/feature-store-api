@@ -250,9 +250,7 @@ class TestExternalFeatureGroupEngine:
             == description
         )
 
-    def test_save_feature_group_metadata_primary_partition_precombine_event_error(
-        self, mocker
-    ):
+    def test_save_feature_group_metadata_primary_eventtime_error(self, mocker):
         # Arrange
         feature_store_id = 99
 
