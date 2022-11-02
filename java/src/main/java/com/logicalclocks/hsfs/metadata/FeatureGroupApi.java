@@ -115,12 +115,10 @@ public class FeatureGroupApi {
   private <U> U getInternal(FeatureStore featureStore, String fgName, Integer fgVersion, Class<U> fgType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + FEATURE_GROUP_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FEATURE_GROUP_PATH;
 
     UriTemplate uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStore.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featureStore.getId())
         .set("fgName", fgName);
 
@@ -157,12 +155,11 @@ public class FeatureGroupApi {
 
   private <U> U saveInternal(FeatureGroupBase featureGroupBase,
                              StringEntity entity, Class<U> fgType) throws FeatureStoreException, IOException {
-    String pathTemplate = PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + FEATURE_GROUP_ROOT_PATH;
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FEATURE_GROUP_ROOT_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureGroupBase.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featureGroupBase.getFeatureStore().getId())
         .expand();
 
@@ -177,12 +174,10 @@ public class FeatureGroupApi {
 
   public void delete(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + FEATURE_GROUP_ID_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FEATURE_GROUP_ID_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureGroupBase.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featureGroupBase.getFeatureStore().getId())
         .set("fgId", featureGroupBase.getId())
         .expand();
@@ -195,12 +190,10 @@ public class FeatureGroupApi {
 
   public void deleteContent(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + FEATURE_GROUP_CLEAR_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FEATURE_GROUP_CLEAR_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featureGroup.getFeatureStore().getId())
         .set("fgId", featureGroup.getId())
         .expand();
@@ -220,12 +213,10 @@ public class FeatureGroupApi {
                                                        Object value, Class<T> fgType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + FEATURE_GROUP_ID_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FEATURE_GROUP_ID_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featureGroup.getFeatureStore().getId())
         .set("fgId", featureGroup.getId())
         .set(queryParameter, value)
@@ -245,12 +236,10 @@ public class FeatureGroupApi {
   public FeatureGroupCommit featureGroupCommit(FeatureGroupBase featureGroup, FeatureGroupCommit featureGroupCommit)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + FEATURE_GROUP_COMMIT_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FEATURE_GROUP_COMMIT_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureGroup.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featureGroup.getFeatureStore().getId())
         .set("fgId", featureGroup.getId())
         .expand();
@@ -267,12 +256,10 @@ public class FeatureGroupApi {
   public List<FeatureGroupCommit> getCommitDetails(FeatureGroupBase featureGroupBase, Long wallclockTimestamp,
                                                    Integer limit) throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + FEATURE_GROUP_COMMIT_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FEATURE_GROUP_COMMIT_PATH;
 
     UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureGroupBase.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featureGroupBase.getFeatureStore().getId())
         .set("fgId", featureGroupBase.getId())
         .set("sort_by", "committed_on:desc")

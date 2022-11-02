@@ -88,7 +88,7 @@ public class StreamFeatureGroupEngine {
 
     return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
       utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout, checkpointLocation,
-      utils.getKafkaConfig(streamFeatureGroup, writeOptions));
+      utils.getKafkaConfig(writeOptions));
   }
 
   public <S> void insert(StreamFeatureGroup streamFeatureGroup, S featureData,
@@ -110,7 +110,7 @@ public class StreamFeatureGroupEngine {
     }
 
     SparkEngine.getInstance().writeOnlineDataframe(streamFeatureGroup, featureData,
-        streamFeatureGroup.getOnlineTopicName(), utils.getKafkaConfig(streamFeatureGroup, writeOptions));
+        streamFeatureGroup.getOnlineTopicName(), utils.getKafkaConfig(writeOptions));
   }
 
   public <S> StreamFeatureGroup saveFeatureGroupMetaData(StreamFeatureGroup featureGroup, List<String> partitionKeys,

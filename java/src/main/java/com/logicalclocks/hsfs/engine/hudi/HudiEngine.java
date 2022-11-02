@@ -299,8 +299,7 @@ public class HudiEngine {
   private String generetaInitialCheckPointStr(StreamFeatureGroup streamFeatureGroup)
       throws FeatureStoreException, IOException {
 
-    List<PartitionDetails> partitionDetails =  kafkaApi.getTopicDetails(streamFeatureGroup.getFeatureStore(),
-        streamFeatureGroup.getOnlineTopicName());
+    List<PartitionDetails> partitionDetails =  kafkaApi.getTopicDetails(streamFeatureGroup.getOnlineTopicName());
 
     String partitionOffsets = partitionDetails.stream().map(partition -> partition.getId() + ":0")
         .collect(Collectors.joining(","));

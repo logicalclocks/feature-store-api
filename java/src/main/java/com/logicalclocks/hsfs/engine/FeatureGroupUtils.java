@@ -173,7 +173,7 @@ public class FeatureGroupUtils {
         + "/Resources/" + queryName + "-checkpoint";
   }
 
-  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
+  public Map<String, String> getKafkaConfig(Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     Map<String, String> config = new HashMap<>();
     if (writeOptions != null) {
@@ -182,7 +182,7 @@ public class FeatureGroupUtils {
     HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
     config.put("kafka.bootstrap.servers",
-        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
+        kafkaApi.getBrokerEndpoints().stream().map(broker -> broker.replaceAll(
             "INTERNAL://", "")).collect(Collectors.joining(",")));
     config.put("kafka.security.protocol", "SSL");
     config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
@@ -254,7 +254,7 @@ public class FeatureGroupUtils {
   }
 
   public String getAvroSchema(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
-    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName()).getSchema();
+    return kafkaApi.getTopicSubject(featureGroup.getOnlineTopicName()).getSchema();
   }
 
   private boolean checkIfClassExists(String className) {

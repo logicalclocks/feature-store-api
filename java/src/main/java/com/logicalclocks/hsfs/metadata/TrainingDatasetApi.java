@@ -53,12 +53,10 @@ public class TrainingDatasetApi {
   public List<TrainingDataset> get(FeatureStore featureStore, String tdName, Integer tdVersion)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + TRAINING_DATASET_PATH;
+    String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + TRAINING_DATASET_PATH;
 
     UriTemplate uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStore.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featureStore.getId())
         .set("tdName", tdName);
 
@@ -89,12 +87,10 @@ public class TrainingDatasetApi {
   public TrainingDataset createTrainingDataset(TrainingDataset trainingDataset)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + TRAINING_DATASETS_PATH;
+    String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + TRAINING_DATASETS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDataset.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", trainingDataset.getFeatureStore().getId())
         .expand();
 
@@ -111,12 +107,10 @@ public class TrainingDatasetApi {
   public FsQuery getQuery(TrainingDataset trainingDataset, boolean withLabel, boolean isHiveQuery)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + TRAINING_QUERY_PATH;
+    String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + TRAINING_QUERY_PATH;
   
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDataset.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", trainingDataset.getFeatureStore().getId())
         .set("tdId", trainingDataset.getId())
         .set("withLabel", withLabel)
@@ -131,19 +125,17 @@ public class TrainingDatasetApi {
 
   public List<ServingPreparedStatement> getServingPreparedStatement(TrainingDataset trainingDataset, boolean batch)
       throws FeatureStoreException, IOException {
-    String pathTemplate = HopsworksClient.PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + PREP_STATEMENT_PATH;
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + PREP_STATEMENT_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDataset.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", trainingDataset.getFeatureStore().getId())
         .set("tdId", trainingDataset.getId())
         .set("batch", batch)
         .expand();
     HttpGet getRequest = new HttpGet(uri);
     LOGGER.info("Sending metadata request: " + uri);
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     ServingPreparedStatement servingPreparedStatement = hopsworksClient.handleRequest(getRequest,
         ServingPreparedStatement.class);
     return servingPreparedStatement.getItems();
@@ -152,12 +144,10 @@ public class TrainingDatasetApi {
   public TrainingDataset updateMetadata(TrainingDataset trainingDataset, String queryParameter)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + TRAINING_DATASET_ID_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + TRAINING_DATASET_ID_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDataset.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", trainingDataset.getFeatureStore().getId())
         .set("fgId", trainingDataset.getId())
         .set(queryParameter, true)
@@ -177,12 +167,10 @@ public class TrainingDatasetApi {
   public void delete(TrainingDataset trainingDataset)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + TRAINING_DATASET_ID_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + TRAINING_DATASET_ID_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDataset.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", trainingDataset.getFeatureStore().getId())
         .set("fgId", trainingDataset.getId())
         .expand();
@@ -196,12 +184,10 @@ public class TrainingDatasetApi {
   public List<TransformationFunctionAttached> getTransformationFunctions(TrainingDataset trainingDataset)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + TRANSFORMATION_FUNCTION_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + TRANSFORMATION_FUNCTION_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDataset.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", trainingDataset.getFeatureStore().getId())
         .set("tdId", trainingDataset.getId())
         .expand();

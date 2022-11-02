@@ -112,7 +112,7 @@ public class HopsworksConnection implements Closeable {
    * @throws FeatureStoreException
    */
   public FeatureStore getFeatureStore(String name) throws IOException, FeatureStoreException {
-    return featureStoreApi.get(projectObj.getProjectId(), rewriteFeatureStoreName(name));
+    return featureStoreApi.get(rewriteFeatureStoreName(name));
   }
 
   private String rewriteFeatureStoreName(String name) {

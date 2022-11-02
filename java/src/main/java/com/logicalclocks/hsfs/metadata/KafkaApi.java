@@ -36,14 +36,13 @@ public class KafkaApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaApi.class);
 
-  public Subject getTopicSubject(FeatureStore featureStore, String topicName)
+  public Subject getTopicSubject(String topicName)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
-        + KAFKA_PATH + TOPIC_PATH + SUBJECT_PATH;
+    String pathTemplate = HopsworksClient.PROJECT_PATH + KAFKA_PATH + TOPIC_PATH + SUBJECT_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStore.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("topicName", topicName)
         .expand();
 
@@ -51,14 +50,13 @@ public class KafkaApi {
     return hopsworksClient.handleRequest(new HttpGet(uri), Subject.class);
   }
 
-  public List<PartitionDetails> getTopicDetails(FeatureStore featureStore, String topicName)
+  public List<PartitionDetails> getTopicDetails(String topicName)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
-        + KAFKA_PATH + TOPIC_PATH;
+    String pathTemplate = HopsworksClient.PROJECT_PATH + KAFKA_PATH + TOPIC_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStore.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("topicName", topicName)
         .expand();
 
@@ -75,13 +73,12 @@ public class KafkaApi {
     return partitionDetails;
   }
 
-  public List<String> getBrokerEndpoints(FeatureStore featureStore) throws FeatureStoreException, IOException {
+  public List<String> getBrokerEndpoints() throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
-        + KAFKA_PATH + CLUSTERINFO_PATH;
+    String pathTemplate = HopsworksClient.PROJECT_PATH + KAFKA_PATH + CLUSTERINFO_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStore.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);

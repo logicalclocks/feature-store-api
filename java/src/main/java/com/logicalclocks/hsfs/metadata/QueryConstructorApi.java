@@ -35,14 +35,14 @@ public class QueryConstructorApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(QueryConstructorApi.class);
 
-  public FsQuery constructQuery(FeatureStore featureStore, Query query) throws FeatureStoreException, IOException {
+  public FsQuery constructQuery(Query query) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_SERVICE_PATH
         + QUERY_CONSTRUCTOR_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStore.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .expand();
 
     String queryJson = hopsworksClient.getObjectMapper().writeValueAsString(query);

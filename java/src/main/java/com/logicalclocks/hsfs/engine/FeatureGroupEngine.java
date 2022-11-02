@@ -95,7 +95,7 @@ public class FeatureGroupEngine {
     }
 
     saveDataframe(featureGroup, featureData, storage, operation,
-        writeOptions, utils.getKafkaConfig(featureGroup, writeOptions), validationId);
+        writeOptions, utils.getKafkaConfig(writeOptions), validationId);
   }
 
   @Deprecated
@@ -117,7 +117,7 @@ public class FeatureGroupEngine {
 
     StreamingQuery streamingQuery = SparkEngine.getInstance().writeStreamDataframe(featureGroup,
         utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
-        checkpointLocation, utils.getKafkaConfig(featureGroup, writeOptions));
+        checkpointLocation, utils.getKafkaConfig(writeOptions));
 
     return streamingQuery;
   }

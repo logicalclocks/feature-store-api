@@ -242,7 +242,7 @@ public class Query {
   }
 
   public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
-    FsQuery fsQuery = queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this);
+    FsQuery fsQuery = queryConstructorApi.constructQuery(this);
 
     if (online) {
       LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.ONLINE));
@@ -273,9 +273,7 @@ public class Query {
 
   public String sql(Storage storage) {
     try {
-      return queryConstructorApi
-          .constructQuery(leftFeatureGroup.getFeatureStore(), this)
-          .getStorageQuery(storage);
+      return queryConstructorApi.constructQuery(this).getStorageQuery(storage);
     } catch (FeatureStoreException | IOException e) {
       return e.getMessage();
     }

@@ -37,9 +37,7 @@ public class StorageConnectorApi {
 
   public StorageConnector get(Integer featureStoreId, String name) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + CONNECTOR_TYPE_PATH;
+    String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + CONNECTOR_TYPE_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", hopsworksClient.getProject().getProjectId())
@@ -60,12 +58,10 @@ public class StorageConnectorApi {
   public StorageConnector.JdbcConnector getOnlineStorageConnector(FeatureStore featureStore)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + ONLINE_CONNECTOR_PATH;
+    String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + ONLINE_CONNECTOR_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStore.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featureStore.getId())
         .expand();
 

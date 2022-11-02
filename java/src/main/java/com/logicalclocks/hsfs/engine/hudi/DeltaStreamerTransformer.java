@@ -44,8 +44,7 @@ public class DeltaStreamerTransformer implements Transformer {
   @Override
   public Dataset<Row> apply(JavaSparkContext javaSparkContext, SparkSession sparkSession, Dataset<Row> dataset,
                             TypedProperties props) {
-    featureStore = featureStoreApi.get(Integer.parseInt(props.getString("projectId")),
-        props.getString("featureStoreName"));
+    featureStore = featureStoreApi.get(props.getString("featureStoreName"));
     featureGroup = featureGroupApi.getStreamFeatureGroup(this.featureStore, props.getString("featureGroupName"),
         Integer.parseInt(props.getString("featureGroupVersion")));
 

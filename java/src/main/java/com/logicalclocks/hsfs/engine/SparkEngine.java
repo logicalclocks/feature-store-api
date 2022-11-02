@@ -699,7 +699,7 @@ public class SparkEngine {
 
   public void streamToHudiTable(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)
       throws Exception {
-    writeOptions = utils.getKafkaConfig(streamFeatureGroup, writeOptions);
+    writeOptions = utils.getKafkaConfig(writeOptions);
     hudiEngine.streamToHoodieTable(sparkSession, streamFeatureGroup, writeOptions);
   }
 

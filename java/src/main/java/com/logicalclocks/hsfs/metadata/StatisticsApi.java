@@ -53,22 +53,23 @@ public class StatisticsApi {
 
   public Statistics post(FeatureGroupBase featureGroup, Statistics statistics)
       throws FeatureStoreException, IOException {
-    return post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
+    return post(featureGroup.getFeatureStore().getId(),
         featureGroup.getId(), statistics);
   }
 
   public Statistics post(TrainingDataset trainingDataset, Statistics statistics)
       throws FeatureStoreException, IOException {
-    return post(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
+    return post(trainingDataset.getFeatureStore().getId(),
         trainingDataset.getId(), statistics);
   }
 
-  private Statistics post(Integer projectId, Integer featurestoreId, Integer entityId, Statistics statistics)
+  private Statistics post(Integer featurestoreId, Integer entityId, Statistics statistics)
       throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", projectId)
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featurestoreId)
         .set("entityType", entityType.getValue())
         .set("entityId", entityId)
@@ -79,10 +80,11 @@ public class StatisticsApi {
   public Statistics post(FeatureView featureView,
       Integer trainingDataVersion, Statistics statistics)
       throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FV_STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureView.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featureView.getFeatureStore().getId())
         .set("fvName", featureView.getName())
         .set("fvVersion", featureView.getVersion())
@@ -107,24 +109,20 @@ public class StatisticsApi {
 
 
   public Statistics get(FeatureGroupBase featureGroup, String commitTime) throws FeatureStoreException, IOException {
-    return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-        featureGroup.getId(), commitTime);
+    return get(featureGroup.getFeatureStore().getId(), featureGroup.getId(), commitTime);
   }
 
   public Statistics get(TrainingDataset trainingDataset, String commitTime) throws FeatureStoreException, IOException {
-    return get(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
-        trainingDataset.getId(), commitTime);
+    return get(trainingDataset.getFeatureStore().getId(), trainingDataset.getId(), commitTime);
   }
 
-  private Statistics get(Integer projectId, Integer featurestoreId, Integer entityId, String commitTime)
+  private Statistics get(Integer featurestoreId, Integer entityId, String commitTime)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = getInstance();
-    String pathTemplate = PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + STATISTICS_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", projectId)
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featurestoreId)
         .set("entityType", entityType.getValue())
         .set("entityId", entityId)
@@ -144,24 +142,20 @@ public class StatisticsApi {
   }
 
   public Statistics getLast(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
-    return getLast(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
-        featureGroup.getId());
+    return getLast(featureGroup.getFeatureStore().getId(), featureGroup.getId());
   }
 
   public Statistics getLast(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
-    return getLast(trainingDataset.getFeatureStore().getProjectId(), trainingDataset.getFeatureStore().getId(),
-        trainingDataset.getId());
+    return getLast(trainingDataset.getFeatureStore().getId(), trainingDataset.getId());
   }
 
-  private Statistics getLast(Integer projectId, Integer featurestoreId, Integer entityId)
+  private Statistics getLast(Integer featurestoreId, Integer entityId)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = getInstance();
-    String pathTemplate = PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + STATISTICS_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", projectId)
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featurestoreId)
         .set("entityType", entityType.getValue())
         .set("entityId", entityId)
