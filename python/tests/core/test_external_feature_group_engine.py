@@ -258,11 +258,15 @@ class TestExternalFeatureGroupEngine:
 
         mocker.patch("hsfs.engine.get_type")
 
-        external_fg_engine = external_feature_group_engine.ExternalFeatureGroupEngine(
-            feature_store_id=feature_store_id
-        )
-
         f = feature.Feature(name="f", type="str")
+
+        jdbc_connector = storage_connector.JdbcConnector(
+            id=1,
+            name="test_connector",
+            featurestore_id=1,
+            connection_string="",
+            arguments="",
+        )
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_pk_info:
@@ -272,24 +276,22 @@ class TestExternalFeatureGroupEngine:
                 featurestore_id=feature_store_id,
                 primary_key=["feature_name"],
                 event_time="f",
+                storage_connector=jdbc_connector,
+                features=[f],
             )
-
-            external_fg_engine._save_feature_group_metadata(
-                feature_group=fg, dataframe_features=[f], write_options=None
-            )
+            fg.save()
 
         with pytest.raises(exceptions.FeatureStoreException) as e_eventt_info:
             fg = feature_group.ExternalFeatureGroup(
                 name="test",
                 version=1,
                 featurestore_id=feature_store_id,
-                primary_key=["feature_name"],
-                event_time="f",
+                primary_key=["f"],
+                event_time="feature_name",
+                storage_connector=jdbc_connector,
+                features=[f],
             )
-
-            external_fg_engine._save_feature_group_metadata(
-                feature_group=fg, dataframe_features=[f], write_options=None
-            )
+            fg.save()
 
         assert (
             str(e_pk_info.value)

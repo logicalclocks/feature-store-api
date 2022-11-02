@@ -23,7 +23,7 @@ from urllib.parse import urljoin, urlparse
 
 from sqlalchemy import create_engine
 
-from hsfs import client, feature, feature_group
+from hsfs import client, feature
 from hsfs.client import exceptions
 
 
@@ -233,7 +233,7 @@ def get_hostname_replaced_url(sub_path: str):
     return url_parsed.geturl()
 
 
-def verify_attribute_key_names(feature_group_obj):
+def verify_attribute_key_names(feature_group_obj, external_feature_group=False):
     feature_names = set(feat.name for feat in feature_group_obj.features)
     if feature_group_obj.primary_key:
         diff = set(feature_group_obj.primary_key) - feature_names
@@ -248,7 +248,7 @@ def verify_attribute_key_names(feature_group_obj):
                 f"Provided event_time feature {feature_group_obj.event_time} doesn't exist in feature dataframe"
             )
 
-    if not isinstance(feature_group_obj, feature_group.ExternalFeatureGroup):
+    if not external_feature_group:
         if feature_group_obj.partition_key:
             diff = set(feature_group_obj.partition_key) - feature_names
             if diff:
