@@ -15,6 +15,7 @@
 
 from hsfs import engine, util
 from hsfs import feature_group as fg
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_group_base_engine
 
 
@@ -25,6 +26,12 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
             external_dataset = engine.get_instance().register_external_temporary_table(
                 feature_group, "read_ondmd"
             )
+            if external_dataset is None:
+                raise FeatureStoreException(
+                    "External feature group not supported for engine "
+                    + engine.get_type()
+                )
+
             feature_group._features = engine.get_instance().parse_schema_feature_group(
                 external_dataset
             )
