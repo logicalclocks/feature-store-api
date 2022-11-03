@@ -28,7 +28,7 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
             )
             if external_dataset is None:
                 raise FeatureStoreException(
-                    "External feature group not supported for engine "
+                    "External feature group creation not supported for engine "
                     + engine.get_type()
                 )
 
