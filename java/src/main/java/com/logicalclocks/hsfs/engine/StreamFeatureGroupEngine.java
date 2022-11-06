@@ -126,6 +126,9 @@ public class StreamFeatureGroupEngine {
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
+    // verify primary, partition, event time or hudi precombine keys
+    utils.verifyAttributeKeyNames(featureGroup, partitionKeys, hudiPrecombineKey);
+
     /* set primary features */
     if (featureGroup.getPrimaryKeys() != null) {
       featureGroup.getPrimaryKeys().forEach(pk ->

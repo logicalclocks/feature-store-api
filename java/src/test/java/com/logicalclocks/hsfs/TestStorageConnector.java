@@ -18,7 +18,10 @@ package com.logicalclocks.hsfs;
 
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.util.Constants;
+
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.parquet.Strings;
+import org.apache.spark.SparkContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -31,7 +34,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.Map;
-
 
 public class TestStorageConnector {
 
@@ -64,7 +66,6 @@ public class TestStorageConnector {
 
     SparkEngine sparkEngine = Mockito.mock(SparkEngine.class);
     SparkEngine.setInstance(sparkEngine);
-
     ArgumentCaptor<Map> mapArg = ArgumentCaptor.forClass(Map.class);
     String query = "select * from dbtable";
 
@@ -75,5 +76,68 @@ public class TestStorageConnector {
     // Assert
     Assertions.assertFalse(mapArg.getValue().containsKey(Constants.SNOWFLAKE_TABLE));
     Assertions.assertEquals(query, mapArg.getValue().get("query"));
+    // clear static instance
+    SparkEngine.setInstance(null);
   }
+
+  @Test
+  public void testGcsConnectorCredentials(@TempDir Path tempDir) throws IOException, FeatureStoreException {
+    // Arrange
+    String credentials = "{\"type\": \"service_account\", \"project_id\": \"test\", \"private_key_id\": \"123456\", "+
+      "\"private_key\": \"-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----\", " +
+      "\"client_email\": \"test@project.iam.gserviceaccount.com\"}";
+    Path credentialsFile = tempDir.resolve("gcs.json");
+    Files.write(credentialsFile, credentials.getBytes());
+
+    StorageConnector.GcsConnector gcsConnector = new StorageConnector.GcsConnector();
+    gcsConnector.setKeyPath("file://" + credentialsFile);
+    gcsConnector.setStorageConnectorType(StorageConnectorType.GCS);
+    // Act
+    gcsConnector.prepareSpark();
+    SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
+    // Assert
+    Assertions.assertEquals(
+      "test@project.iam.gserviceaccount.com",
+      sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_EMAIL));
+    Assertions.assertEquals(
+      "123456",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_KEY_ID));
+    Assertions.assertEquals("-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_KEY));
+    Assertions.assertEquals(Constants.PROPERTY_GCS_FS_VALUE,sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_FS_KEY));
+    Assertions.assertEquals("true",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_ENABLE));
+    Assertions.assertTrue(Strings.isNullOrEmpty(sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_KEY)));
+    Assertions.assertTrue(Strings.isNullOrEmpty(sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_HASH)));
+    Assertions.assertTrue(Strings.isNullOrEmpty(sc.hadoopConfiguration().get(Constants.PROPERTY_ALGORITHM)));
+  }
+
+  @Test
+  public void testGcsConnectorCredentials_encrypted(@TempDir Path tempDir) throws IOException,
+    FeatureStoreException {
+    // Arrange
+    String credentials = "{\"type\": \"service_account\", \"project_id\": \"test\", \"private_key_id\": \"123456\", "+
+      "\"private_key\": \"-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----\", " +
+      "\"client_email\": \"test@project.iam.gserviceaccount.com\"}";
+    Path credentialsFile = tempDir.resolve("gcs.json");
+    Files.write(credentialsFile, credentials.getBytes());
+
+    StorageConnector.GcsConnector gcsConnector = new StorageConnector.GcsConnector();
+    gcsConnector.setKeyPath("file://" + credentialsFile);
+    gcsConnector.setStorageConnectorType(StorageConnectorType.GCS);
+    gcsConnector.setAlgorithm("AES256");
+    gcsConnector.setEncryptionKey("encryptionkey");
+    gcsConnector.setEncryptionKeyHash("encryptionkeyhash");
+    // Act
+    gcsConnector.prepareSpark();
+    SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
+
+    // Assert
+    Assertions.assertEquals("test@project.iam.gserviceaccount.com",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_EMAIL));
+    Assertions.assertEquals("123456",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_KEY_ID));
+    Assertions.assertEquals("-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_KEY));
+    Assertions.assertEquals(Constants.PROPERTY_GCS_FS_VALUE,sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_FS_KEY));
+    Assertions.assertEquals("true",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_ENABLE));
+    Assertions.assertEquals("encryptionkey",sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_KEY));
+    Assertions.assertEquals("encryptionkeyhash",sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_HASH));
+    Assertions.assertEquals("AES256",sc.hadoopConfiguration().get(Constants.PROPERTY_ALGORITHM));
+  }
+
 }

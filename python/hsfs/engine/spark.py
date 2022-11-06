@@ -26,6 +26,8 @@ import pandas as pd
 import avro
 from datetime import datetime, timezone
 
+import tzlocal
+
 # in case importing in %%local
 
 try:
@@ -177,14 +179,16 @@ class Engine:
 
         if isinstance(dataframe, pd.DataFrame):
             # convert timestamps to current timezone
-            current_timezone = datetime.now().astimezone().tzinfo
+            local_tz = tzlocal.get_localzone()
             for c in dataframe.columns:
                 if isinstance(
                     dataframe[c].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
-                    dataframe[c] = dataframe[c].dt.tz_convert(current_timezone)
+                    dataframe[c] = dataframe[c].dt.tz_convert(str(local_tz))
                 elif dataframe[c].dtype == np.dtype("datetime64[ns]"):
-                    dataframe[c] = dataframe[c].dt.tz_localize(current_timezone)
+                    dataframe[c] = dataframe[c].dt.tz_localize(
+                        str(local_tz), ambiguous="infer", nonexistent="shift_forward"
+                    )
             dataframe = self._spark_session.createDataFrame(dataframe)
         elif isinstance(dataframe, RDD):
             dataframe = dataframe.toDF()
@@ -938,13 +942,15 @@ class Engine:
 
     def _setup_gcp_hadoop_conf(self, storage_connector, path):
 
-        PROPERTY_KEY_FILE = "fs.gs.auth.service.account.json.keyfile"
         PROPERTY_ENCRYPTION_KEY = "fs.gs.encryption.key"
         PROPERTY_ENCRYPTION_HASH = "fs.gs.encryption.key.hash"
         PROPERTY_ALGORITHM = "fs.gs.encryption.algorithm"
         PROPERTY_GCS_FS_KEY = "fs.AbstractFileSystem.gs.impl"
         PROPERTY_GCS_FS_VALUE = "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS"
         PROPERTY_GCS_ACCOUNT_ENABLE = "google.cloud.auth.service.account.enable"
+        PROPERTY_ACCT_EMAIL = "fs.gs.auth.service.account.email"
+        PROPERTY_ACCT_KEY_ID = "fs.gs.auth.service.account.private.key.id"
+        PROPERTY_ACCT_KEY = "fs.gs.auth.service.account.private.key"
         # The AbstractFileSystem for 'gs:' URIs
         self._spark_context._jsc.hadoopConfiguration().setIfUnset(
             PROPERTY_GCS_FS_KEY, PROPERTY_GCS_FS_VALUE
@@ -958,8 +964,16 @@ class Engine:
         # The JSON key file of the service account used for GCS
         # access when google.cloud.auth.service.account.enable is true.
         local_path = self.add_file(storage_connector.key_path)
+        with open(local_path, "r") as f_in:
+            jsondata = json.load(f_in)
         self._spark_context._jsc.hadoopConfiguration().set(
-            PROPERTY_KEY_FILE, local_path
+            PROPERTY_ACCT_EMAIL, jsondata["client_email"]
+        )
+        self._spark_context._jsc.hadoopConfiguration().set(
+            PROPERTY_ACCT_KEY_ID, jsondata["private_key_id"]
+        )
+        self._spark_context._jsc.hadoopConfiguration().set(
+            PROPERTY_ACCT_KEY, jsondata["private_key"]
         )
 
         if storage_connector.algorithm:

@@ -16,7 +16,6 @@
 
 import json
 from typing import Optional, Union, List, Dict, Any
-import re
 
 import humps
 import great_expectations as ge
@@ -60,12 +59,8 @@ class ExpectationSuite:
         self._validation_ingestion_policy = validation_ingestion_policy.upper()
         self._expectations = []
         self._href = href
-
-        if href is not None:
-            self._init_feature_store_and_feature_group_ids_from_href(href)
-        else:
-            self._feature_store_id = feature_store_id
-            self._feature_group_id = feature_group_id
+        self._feature_store_id = feature_store_id
+        self._feature_group_id = feature_group_id
 
         # use setters because these need to be transformed from stringified json
         self.expectations = expectations
@@ -158,14 +153,6 @@ class ExpectationSuite:
             ],
             meta=self._meta,
         )
-
-    def _init_feature_store_and_feature_group_ids_from_href(self, href: str) -> None:
-        feature_store_id, feature_group_id = re.search(
-            r"\/featurestores\/([0-9]+)\/featuregroups\/([0-9]+)\/expectationsuite*",
-            href,
-        ).groups(0)
-        self._feature_store_id = int(feature_store_id)
-        self._feature_group_id = int(feature_group_id)
 
     def _init_expectation_engine(
         self, feature_store_id: int, feature_group_id: int

@@ -24,6 +24,7 @@ from urllib.parse import urljoin, urlparse
 from sqlalchemy import create_engine
 
 from hsfs import client, feature
+from hsfs.client import exceptions
 
 
 class FeatureStoreEncoder(json.JSONEncoder):
@@ -110,7 +111,11 @@ def check_timestamp_format_from_date_string(input_date):
         r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{3})$": "%Y%m%d%H%M%S%f",
     }
     normalized_date = (
-        input_date.replace("/", "").replace("-", "").replace(" ", "").replace(":", "")
+        input_date.replace("/", "")
+        .replace("-", "")
+        .replace(" ", "")
+        .replace(":", "")
+        .replace(".", "")
     )
 
     date_format = None
@@ -130,7 +135,15 @@ def check_timestamp_format_from_date_string(input_date):
 
 def get_timestamp_from_date_string(input_date):
     norm_input_date, date_format = check_timestamp_format_from_date_string(input_date)
-    date_time = datetime.strptime(norm_input_date, date_format)
+    try:
+        date_time = datetime.strptime(norm_input_date, date_format)
+    except ValueError:
+        raise ValueError(
+            "Unable to parse the normalized input date value : "
+            + norm_input_date
+            + " with format "
+            + date_format
+        )
     if date_time.tzinfo is None:
         date_time = date_time.replace(tzinfo=timezone.utc)
     return int(float(date_time.timestamp()) * 1000)
@@ -218,6 +231,37 @@ def get_hostname_replaced_url(sub_path: str):
     href = urljoin(client.get_instance()._base_url, sub_path)
     url_parsed = client.get_instance().replace_public_host(urlparse(href))
     return url_parsed.geturl()
+
+
+def verify_attribute_key_names(feature_group_obj, external_feature_group=False):
+    feature_names = set(feat.name for feat in feature_group_obj.features)
+    if feature_group_obj.primary_key:
+        diff = set(feature_group_obj.primary_key) - feature_names
+        if diff:
+            raise exceptions.FeatureStoreException(
+                f"Provided primary key(s) {','.join(diff)} doesn't exist in feature dataframe"
+            )
+
+    if feature_group_obj.event_time:
+        if feature_group_obj.event_time not in feature_names:
+            raise exceptions.FeatureStoreException(
+                f"Provided event_time feature {feature_group_obj.event_time} doesn't exist in feature dataframe"
+            )
+
+    if not external_feature_group:
+        if feature_group_obj.partition_key:
+            diff = set(feature_group_obj.partition_key) - feature_names
+            if diff:
+                raise exceptions.FeatureStoreException(
+                    f"Provided partition key(s) {','.join(diff)} doesn't exist in feature dataframe"
+                )
+
+        if feature_group_obj.hudi_precombine_key:
+            if feature_group_obj.hudi_precombine_key not in feature_names:
+                raise exceptions.FeatureStoreException(
+                    f"Provided hudi precombine key {feature_group_obj.hudi_precombine_key} "
+                    f"doesn't exist in feature dataframe"
+                )
 
 
 class VersionWarning(Warning):

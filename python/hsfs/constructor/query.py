@@ -17,6 +17,7 @@
 import json
 import humps
 from typing import Optional, List, Union
+from datetime import datetime, date
 
 from hsfs import util, engine, feature_group
 from hsfs.core import query_constructor_api, storage_connector_api
@@ -161,7 +162,11 @@ class Query:
         )
         return self
 
-    def as_of(self, wallclock_time=None, exclude_until=None):
+    def as_of(
+        self,
+        wallclock_time: Optional[Union[str, int, datetime, date]] = None,
+        exclude_until: Optional[Union[str, int, datetime, date]] = None,
+    ):
         """Perform time travel on the given Query.
 
         This method returns a new Query object at the specified point in time. Optionally, commits before a
@@ -229,10 +234,10 @@ class Query:
             when calling the `insert()` method.
 
         # Arguments
-            wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
-            exclude_until: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+            wallclock_time: Read data as of this point in time.
+                Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, or `%Y-%m-%d %H:%M:%S`.
+            exclude_until: Exclude commits until this point in time. Strings should be formatted in one of the
+                following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, or `%Y-%m-%d %H:%M:%S`.
 
         # Returns
             `Query`. The query object with the applied time travel condition.
