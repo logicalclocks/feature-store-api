@@ -2148,7 +2148,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._wait_for_job(job=None, user_write_options=None)
+        python_engine._wait_for_job(job=None, feature_store_id=1, user_write_options=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2160,7 +2160,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._wait_for_job(job=None, user_write_options={"wait_for_job": True})
+        python_engine._wait_for_job(job=None, feature_store_id=1, user_write_options={"wait_for_job": True})
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2173,7 +2173,7 @@ class TestPython:
 
         # Act
         python_engine._wait_for_job(
-            job=None, user_write_options={"wait_for_job": False}
+            job=None, feature_store_id=1, user_write_options={"wait_for_job": False}
         )
 
         # Assert
@@ -2190,7 +2190,7 @@ class TestPython:
         ]
 
         # Act
-        python_engine._wait_for_job(job=None, user_write_options=None)
+        python_engine._wait_for_job(job=None, feature_store_id=1, user_write_options=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2207,7 +2207,7 @@ class TestPython:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            python_engine._wait_for_job(job=None, user_write_options=None)
+            python_engine._wait_for_job(job=None, feature_store_id=1, user_write_options=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2228,7 +2228,7 @@ class TestPython:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            python_engine._wait_for_job(job=None, user_write_options=None)
+            python_engine._wait_for_job(job=None, feature_store_id=1, user_write_options=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
