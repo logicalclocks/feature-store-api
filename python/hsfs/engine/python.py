@@ -516,7 +516,9 @@ class Engine:
             )
         )
 
-        self._wait_for_job(ingestion_job.job, feature_group.feature_store_id, offline_write_options)
+        self._wait_for_job(
+            ingestion_job.job, feature_group.feature_store_id, offline_write_options
+        )
 
         return ingestion_job.job
 
@@ -683,7 +685,9 @@ class Engine:
 
         # If the user passed the wait_for_job option consider it,
         # otherwise use the default True
-        self._wait_for_job(td_job, training_dataset.feature_store_id, user_write_options)
+        self._wait_for_job(
+            td_job, training_dataset.feature_store_id, user_write_options
+        )
 
         return td_job
 
@@ -945,7 +949,9 @@ class Engine:
                     self._get_job_url(job.href)
                 )
             )
-            self._wait_for_job(job, feature_group.feature_store_id, offline_write_options)
+            self._wait_for_job(
+                job, feature_group.feature_store_id, offline_write_options
+            )
 
         return job
 

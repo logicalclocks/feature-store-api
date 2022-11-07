@@ -19,7 +19,6 @@ from hsfs.core import job, execution
 
 
 class JobApi:
-
     def launch(self, job, feature_store_id):
         _client = client.get_instance()
         path_params = [
@@ -29,7 +28,7 @@ class JobApi:
             feature_store_id,
             "jobs",
             job.name,
-            "executions"
+            "executions",
         ]
 
         _client._send_request("POST", path_params)
@@ -42,7 +41,7 @@ class JobApi:
             "featurestores",
             feature_store_id,
             "jobs",
-            job.name
+            job.name,
         ]
 
         return job.Job.from_response_json(_client._send_request("GET", path_params))
@@ -56,7 +55,7 @@ class JobApi:
             feature_store_id,
             "jobs",
             job.name,
-            "executions"
+            "executions",
         ]
 
         query_params = {"limit": 1, "sort_by": "submissiontime:desc"}
