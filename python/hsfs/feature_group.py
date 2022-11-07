@@ -22,14 +22,13 @@ import pandas as pd
 import numpy as np
 import great_expectations as ge
 import avro.schema
-from typing import Optional, Union, Any, Dict, List, TypeVar
+from typing import Optional, Union, Any, Dict, List, TypeVar, Tuple
 
 from datetime import datetime, date
 
 from hsfs import util, engine, feature, user, storage_connector as sc
 from hsfs.core import (
     feature_group_engine,
-    great_expectation_engine,
     statistics_engine,
     expectation_suite_engine,
     validation_report_engine,
@@ -43,6 +42,8 @@ from hsfs.expectation_suite import ExpectationSuite
 from hsfs.validation_report import ValidationReport
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core.job import Job
+from hsfs.core import great_expectation_engine
 
 
 class FeatureGroupBase:
@@ -55,6 +56,7 @@ class FeatureGroupBase:
         self._great_expectation_engine = (
             great_expectation_engine.GreatExpectationEngine(featurestore_id)
         )
+        self._feature_store_id = featurestore_id
 
     def delete(self):
         """Drop the entire feature group along with its feature data.
@@ -377,7 +379,9 @@ class FeatureGroupBase:
         self._feature_group_engine.append_features(self, new_features)
         return self
 
-    def get_expectation_suite(self, ge_type: bool = True):
+    def get_expectation_suite(
+        self, ge_type: bool = True
+    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
         """Return the expectation suite attached to the feature group if it exists.
 
         # Arguments
@@ -391,7 +395,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIException`.
         """
-        self._expectation_suite = self._expectation_suite_engine.get(self)
+        self._expectation_suite = self._expectation_suite_engine.get()
         if self._expectation_suite is not None and ge_type is True:
             return self._expectation_suite.to_ge_type()
         else:
@@ -400,19 +404,19 @@ class FeatureGroupBase:
     def save_expectation_suite(
         self,
         expectation_suite: Union[ExpectationSuite, ge.core.ExpectationSuite],
-        run_validation=True,
-        validation_ingestion_policy="ALWAYS",
-    ):
+        run_validation: bool = True,
+        validation_ingestion_policy: str = "ALWAYS",
+    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
         """Attach an expectation suite to a feature group and saves it for future use. If an expectation
         suite is already attached, it is replaced. Note that the provided expectation suite is modified
         inplace to include expectationId fields.
 
         # Arguments
-            expectation_suite: The expectation suite to attach to the featuregroup.
+            expectation_suite: The expectation suite to attach to the Feature Group.
             run_validation: Set whether the expectation_suite will run on ingestion
-            validation_ingestion_policy: Set the policy for ingestion to the featuregroup.
-                - "STRICT" only allows DataFrame passing validation to be inserted into featuregroup.
-                - "ALWAYS" always insert the DataFrame to the featuregroup, irrespective of overall validation result.
+            validation_ingestion_policy: Set the policy for ingestion to the Feature Group.
+                - "STRICT" only allows DataFrame passing validation to be inserted into Feature Group.
+                - "ALWAYS" always insert the DataFrame to the Feature Group, irrespective of overall validation result.
 
         # Raises
             `RestAPIException`.
@@ -422,6 +426,8 @@ class FeatureGroupBase:
                 ge_expectation_suite=expectation_suite,
                 run_validation=run_validation,
                 validation_ingestion_policy=validation_ingestion_policy,
+                feature_store_id=self._feature_store_id,
+                feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, ExpectationSuite):
             tmp_expectation_suite = expectation_suite
@@ -432,23 +438,29 @@ class FeatureGroupBase:
                 )
             )
 
-        self._expectation_suite = self._expectation_suite_engine.save(
-            self, tmp_expectation_suite
-        )
+        if self._id:
+            self._expectation_suite = self._expectation_suite_engine.save(
+                tmp_expectation_suite
+            )
+            expectation_suite = self._expectation_suite.to_ge_type()
+        else:
+            # Added to avoid throwing an error if Feature Group is not initialised with the backend
+            self._expectation_suite = tmp_expectation_suite
 
-        expectation_suite = self._expectation_suite.to_ge_type()
-
-    def delete_expectation_suite(self):
-        """Delete the expectation suite attached to the featuregroup.
+    def delete_expectation_suite(self) -> None:
+        """Delete the expectation suite attached to the Feature Group.
 
         # Raises
             `RestAPIException`.
         """
-        self._expectation_suite_engine.delete(self)
+        if self._expectation_suite.id:
+            self._expectation_suite_engine.delete(self._expectation_suite.id)
         self._expectation_suite = None
 
-    def get_latest_validation_report(self, ge_type: bool = True):
-        """Return the latest validation report attached to the feature group if it exists.
+    def get_latest_validation_report(
+        self, ge_type: bool = True
+    ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult, None]:
+        """Return the latest validation report attached to the Feature Group if it exists.
 
         # Arguments
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
@@ -456,7 +468,7 @@ class FeatureGroupBase:
                 method on hopsworks type. Defaults to `True`.
 
         # Returns
-            `ValidationReport`. The latest validation report attached to the feature group.
+            `ValidationReport`. The latest validation report attached to the Feature Group.
 
         # Raises
             `RestAPIException`.
@@ -466,7 +478,9 @@ class FeatureGroupBase:
         else:
             return self._validation_report_engine.get_last(self)
 
-    def get_all_validation_reports(self, ge_type: bool = True):
+    def get_all_validation_reports(
+        self, ge_type: bool = True
+    ) -> List[Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]]:
         """Return the latest validation report attached to the feature group if it exists.
 
         # Arguments
@@ -475,7 +489,7 @@ class FeatureGroupBase:
                 method on hopsworks type. Defaults to `True`.
 
         # Returns
-            `ValidationReport`. The latest validation report attached to the feature group.
+            Union[List[`ValidationReport`], `ValidationReport`]. All validation reports attached to the feature group.
 
         # Raises
             `RestAPIException`.
@@ -483,9 +497,9 @@ class FeatureGroupBase:
         if ge_type is True:
             return [
                 report.to_ge_type()
-                for report in self._validation_report_engine.get_all(self)
+                for report in self._validation_report_engine.get_all()
             ]
-        return self._validation_report_engine.get_all(self)
+        return self._validation_report_engine.get_all()
 
     def save_validation_report(
         self,
@@ -495,11 +509,11 @@ class FeatureGroupBase:
             ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
         ],
         ge_type: bool = True,
-    ):
-        """Save validation report to hopsworks platform along previous reports of the same featuregroup.
+    ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]:
+        """Save validation report to hopsworks platform along previous reports of the same Feature Group.
 
         # Arguments
-            validation_report: The validation report to attach to the featuregroup.
+            validation_report: The validation report to attach to the Feature Group.
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
                 method on hopsworks type. Defaults to `True`.
@@ -518,8 +532,8 @@ class FeatureGroupBase:
             report = validation_report
 
         if ge_type:
-            return self._validation_report_engine.save(self, report).to_ge_type()
-        return self._validation_report_engine.save(self, report)
+            return self._validation_report_engine.save(report).to_ge_type()
+        return self._validation_report_engine.save(report)
 
     def __getattr__(self, name):
         try:
@@ -580,15 +594,17 @@ class FeatureGroupBase:
     def primary_key(self, new_primary_key):
         self._primary_key = [pk.lower() for pk in new_primary_key]
 
-    def get_statistics(self, commit_time: Union[str, int, datetime, date] = None):
+    def get_statistics(
+        self, commit_time: Optional[Union[str, int, datetime, date]] = None
+    ):
         """Returns the statistics for this feature group at a specific time.
 
         If `commit_time` is `None`, the most recent statistics are returned.
 
         # Arguments
-            commit_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
-                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
-                or `%Y%m%d%H%M%S%f`. Defaults to `None`. Defaults to `None`.
+            commit_time: Date and time of the commit. Defaults to `None`. Strings should
+                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
 
         # Returns
             `Statistics`. Statistics object.
@@ -639,21 +655,34 @@ class FeatureGroupBase:
         return self._location
 
     @property
-    def expectation_suite(self):
+    def expectation_suite(
+        self,
+    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite, None]:
         """Expectation Suite configuration object defining the settings for
         data validation of the feature group."""
         return self._expectation_suite
 
     @expectation_suite.setter
-    def expectation_suite(self, expectation_suite):
+    def expectation_suite(
+        self,
+        expectation_suite: Union[
+            ExpectationSuite, ge.core.ExpectationSuite, dict, None
+        ],
+    ):
         if isinstance(expectation_suite, ExpectationSuite):
             self._expectation_suite = expectation_suite
         elif isinstance(expectation_suite, ge.core.expectation_suite.ExpectationSuite):
             self._expectation_suite = ExpectationSuite(
-                **expectation_suite.to_json_dict()
+                **expectation_suite.to_json_dict(),
+                feature_store_id=self._feature_store_id,
+                feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, dict):
-            self._expectation_suite = ExpectationSuite(**expectation_suite)
+            self._expectation_suite = ExpectationSuite(
+                **expectation_suite,
+                feature_store_id=self._feature_store_id,
+                feature_group_id=self._id,
+            )
         elif expectation_suite is None:
             self._expectation_suite = expectation_suite
         else:
@@ -694,7 +723,6 @@ class FeatureGroup(FeatureGroupBase):
     ):
         super().__init__(featurestore_id, location)
 
-        self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
@@ -742,6 +770,20 @@ class FeatureGroup(FeatureGroupBase):
 
             self.statistics_config = statistics_config
             self.expectation_suite = expectation_suite
+            if expectation_suite:
+                self._expectation_suite._init_expectation_engine(
+                    feature_store_id=featurestore_id, feature_group_id=self._id
+                )
+            self._expectation_suite_engine = (
+                expectation_suite_engine.ExpectationSuiteEngine(
+                    feature_store_id=self._feature_store_id, feature_group_id=self._id
+                )
+            )
+            self._validation_report_engine = (
+                validation_report_engine.ValidationReportEngine(
+                    self._feature_store_id, self._id
+                )
+            )
 
         else:
             # initialized by user
@@ -766,12 +808,6 @@ class FeatureGroup(FeatureGroupBase):
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
-        )
-        self._expectation_suite_engine = (
-            expectation_suite_engine.ExpectationSuiteEngine(self._feature_store_id)
-        )
-        self._validation_report_engine = (
-            validation_report_engine.ValidationReportEngine(self._feature_store_id)
         )
 
     def read(
@@ -804,11 +840,11 @@ class FeatureGroup(FeatureGroupBase):
             fg.read("2020-10-20 07:34:11")
             ```
         # Arguments
-            wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
-                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
-                or `%Y%m%d%H%M%S%f`.
-                If Specified will retrieve feature group as of specific point in time.
-                If not specified will return as of most recent time. Defaults to `None`.
+            wallclock_time: If specified will retrieve feature group as of specific point in time. Defaults to `None`.
+                If not specified, will return as of most recent time.
+                Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
+
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
             dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
@@ -871,12 +907,10 @@ class FeatureGroup(FeatureGroupBase):
             ```
 
         # Arguments
-            start_wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string.
-                The String should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`,
-                `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
-            end_wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string.
-                The String should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`,
-                `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+            start_wallclock_time: Start time of the time travel query. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
+                `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
+            end_wallclock_time: End time of the time travel query. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
+                `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
             read_options: User provided read options. Defaults to `{}`.
 
         # Returns
@@ -1016,7 +1050,7 @@ class FeatureGroup(FeatureGroupBase):
         storage: Optional[str] = None,
         write_options: Optional[Dict[Any, Any]] = {},
         validation_options: Optional[Dict[Any, Any]] = {},
-    ):
+    ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         """Persist the metadata and materialize the feature group to the feature store
         or insert data from a dataframe into the existing feature group.
 
@@ -1072,8 +1106,9 @@ class FeatureGroup(FeatureGroupBase):
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+
         # Returns
-            `FeatureGroup`. Updated feature group metadata object.
+            (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
         """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
@@ -1196,16 +1231,18 @@ class FeatureGroup(FeatureGroupBase):
             )
 
     def commit_details(
-        self, wallclock_time: Optional[str] = None, limit: Optional[int] = None
+        self,
+        wallclock_time: Optional[Union[str, int, datetime, date]] = None,
+        limit: Optional[int] = None,
     ):
         """Retrieves commit timeline for this feature group. This method can only be used
         on time travel enabled feature groups
 
         # Arguments
             wallclock_time: Commit details as of specific point in time. Defaults to `None`.
-            limit: Number of commits to retrieve. Defaults to `None`. datatime.datetime, datetime.date, unix timestamp in seconds (int), or string.
-                The String should be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`,
-                `%Y%m%d%H%M%S`, or `%Y%m%d%H%M%S%f`.
+                 Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
+                `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
+            limit: Number of commits to retrieve. Defaults to `None`.
 
         # Returns
             `Dict[str, Dict[str, str]]`. Dictionary object of commit metadata timeline, where Key is commit id and value
@@ -1234,7 +1271,11 @@ class FeatureGroup(FeatureGroupBase):
         """
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
-    def as_of(self, wallclock_time=None, exclude_until=None):
+    def as_of(
+        self,
+        wallclock_time: Optional[Union[str, int, datetime, date]] = None,
+        exclude_until: Optional[Union[str, int, datetime, date]] = None,
+    ):
         """Get Query object to retrieve all features of the group at a point in the past.
 
         This method selects all features in the feature group and returns a Query object
@@ -1303,10 +1344,10 @@ class FeatureGroup(FeatureGroupBase):
             when calling the `insert()` method.
 
         # Arguments
-            wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
-            exclude_until: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should be formatted in one of the
-                following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+            wallclock_time: Read data as of this point in time. Strings should be formatted in one of the
+                following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, or `%Y-%m-%d %H:%M:%S`.
+            exclude_until: Exclude commits until this point in time. String should be formatted in one of the
+                following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, or `%Y-%m-%d %H:%M:%S`.
 
         # Returns
             `Query`. The query object with the applied time travel condition.
@@ -1318,37 +1359,45 @@ class FeatureGroup(FeatureGroupBase):
         dataframe: Optional[
             Union[pd.DataFrame, TypeVar("pyspark.sql.DataFrame")]  # noqa: F821
         ] = None,
+        expectation_suite: Optional[ExpectationSuite] = None,
         save_report: Optional[bool] = False,
         validation_options: Optional[Dict[Any, Any]] = {},
-    ):
+        ge_type: bool = True,
+    ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
         """Run validation based on the attached expectations.
 
         Runs any expectation attached with Deequ. But also runs attached Great Expectation
         Suites.
 
         # Arguments
-            dataframe: The PySpark dataframe to run the data validation expectations against.
+            dataframe: The dataframe to run the data validation expectations against.
             expectation_suite: Optionally provide an Expectation Suite to override the
                 one that is possibly attached to the feature group. This is useful for
                 testing new Expectation suites. When an extra suite is provided, the results
                 will never be persisted. Defaults to `None`.
             validation_options: Additional validation options as key-value pairs, defaults to `{}`.
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
-                * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+            save_report: Whether to save the report to the backend. This is only possible if the Expectation suite
+                is initialised and attached to the Feature Group. Defaults to False.
+            ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.
 
 
         # Returns
-            `FeatureGroupValidation`, `ValidationReport`. The feature group validation metadata object,
-                as well as the Validation Report produced by Great Expectations.
+            A Validation Report produced by Great Expectations.
 
         """
-        # Activity is logged only if a the validation concerts the feature group and not a specific dataframe
+        # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()
 
         return self._great_expectation_engine.validate(
-            self, dataframe, save_report, validation_options
+            self,
+            dataframe=dataframe,
+            expectation_suite=expectation_suite,
+            save_report=save_report,
+            validation_options=validation_options,
+            ge_type=ge_type,
         )
 
     def compute_statistics(
@@ -1361,11 +1410,11 @@ class FeatureGroup(FeatureGroupBase):
         group.
 
         # Arguments
-            wallclock_time: datatime.datetime, datetime.date, unix timestamp in seconds (int), or string. The String should
-                be formatted in one of the following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, `%Y%m%d%H%M%S`,
-                or `%Y%m%d%H%M%S%f`. If specified will recompute statistics on
+            wallclock_time: If specified will recompute statistics on
                 feature group as of specific point in time. If not specified then will compute statistics
-                as of most recent time of this feature group. Defaults to `None`.
+                as of most recent time of this feature group. Defaults to `None`. Strings should
+                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
 
         # Returns
             `Statistics`. The statistics metadata object.
@@ -1623,7 +1672,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
     ):
         super().__init__(featurestore_id, location)
 
-        self._feature_store_id = featurestore_id
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
@@ -1731,21 +1779,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
             ),
         )
         return self.select_all().show(n)
-
-    def validate(
-        self,
-        save_report: Optional[bool] = False,
-        validation_options: Optional[Dict[Any, Any]] = {},
-    ):
-        """Run validation based on the attached expectations
-
-        # Returns
-            `FeatureGroupValidation`. The feature group validation metadata object.
-
-        """
-        return self._great_expectation_engine.validate(
-            self, self.read(), save_report, validation_options
-        )
 
     @classmethod
     def from_response_json(cls, json_dict):

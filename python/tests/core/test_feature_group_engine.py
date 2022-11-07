@@ -54,7 +54,6 @@ class TestFeatureGroupEngine:
             feature_group=fg,
             feature_dataframe=None,
             write_options=None,
-            validation_options=None,
         )
 
         # Assert
@@ -104,7 +103,6 @@ class TestFeatureGroupEngine:
             feature_group=fg,
             feature_dataframe=None,
             write_options=None,
-            validation_options=None,
         )
 
         # Assert
@@ -148,7 +146,6 @@ class TestFeatureGroupEngine:
             operation=None,
             storage=None,
             write_options=None,
-            validation_options=None,
         )
 
         # Assert
@@ -194,7 +191,6 @@ class TestFeatureGroupEngine:
             operation=None,
             storage=None,
             write_options=None,
-            validation_options=None,
         )
 
         # Assert
@@ -251,7 +247,6 @@ class TestFeatureGroupEngine:
             operation=None,
             storage=None,
             write_options=None,
-            validation_options=None,
         )
 
         # Assert
@@ -297,7 +292,6 @@ class TestFeatureGroupEngine:
                 operation=None,
                 storage="online",
                 write_options=None,
-                validation_options=None,
             )
 
         # Assert
@@ -345,7 +339,6 @@ class TestFeatureGroupEngine:
             operation=None,
             storage=None,
             write_options=None,
-            validation_options=None,
         )
 
         # Assert
@@ -1262,6 +1255,112 @@ class TestFeatureGroupEngine:
             0
         ] == "Feature Group created successfully, explore it at \n{}".format(
             feature_group_url
+        )
+
+    def test_save_feature_group_metadata_primary_partition_precombine_event_error(
+        self, mocker
+    ):
+        # Arrange
+        feature_store_id = 99
+        feature_group_url = "test_url"
+
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
+        )
+
+        mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            return_value=feature_group_url,
+        )
+
+        fg_engine = feature_group_engine.FeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
+
+        f = feature.Feature(name="f", type="str")
+
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as e_pk_info:
+            fg = feature_group.FeatureGroup(
+                name="test",
+                version=1,
+                featurestore_id=feature_store_id,
+                primary_key=["feature_name"],
+                partition_key=["f"],
+                hudi_precombine_key="f",
+                event_time="f",
+                time_travel_format="HUDI",
+            )
+
+            fg_engine._save_feature_group_metadata(
+                feature_group=fg, dataframe_features=[f], write_options=None
+            )
+
+        with pytest.raises(exceptions.FeatureStoreException) as e_partk_info:
+            fg = feature_group.FeatureGroup(
+                name="test",
+                version=1,
+                featurestore_id=feature_store_id,
+                primary_key=["f"],
+                partition_key=["feature_name"],
+                hudi_precombine_key="f",
+                event_time="f",
+                time_travel_format="HUDI",
+            )
+
+            fg_engine._save_feature_group_metadata(
+                feature_group=fg, dataframe_features=[f], write_options=None
+            )
+
+        with pytest.raises(exceptions.FeatureStoreException) as e_prekk_info:
+            fg = feature_group.FeatureGroup(
+                name="test",
+                version=1,
+                featurestore_id=feature_store_id,
+                primary_key=["f"],
+                partition_key=["f"],
+                hudi_precombine_key="feature_name",
+                event_time="f",
+                time_travel_format="HUDI",
+            )
+
+            fg_engine._save_feature_group_metadata(
+                feature_group=fg, dataframe_features=[f], write_options=None
+            )
+
+        with pytest.raises(exceptions.FeatureStoreException) as e_eventt_info:
+            fg = feature_group.FeatureGroup(
+                name="test",
+                version=1,
+                featurestore_id=feature_store_id,
+                primary_key=["f"],
+                partition_key=["f"],
+                hudi_precombine_key="f",
+                event_time="feature_name",
+                time_travel_format="HUDI",
+            )
+
+            fg_engine._save_feature_group_metadata(
+                feature_group=fg, dataframe_features=[f], write_options=None
+            )
+
+        assert (
+            str(e_pk_info.value)
+            == "Provided primary key(s) feature_name doesn't exist in feature dataframe"
+        )
+        assert (
+            str(e_partk_info.value)
+            == "Provided partition key(s) feature_name doesn't exist in feature dataframe"
+        )
+        assert (
+            str(e_prekk_info.value)
+            == "Provided hudi precombine key feature_name doesn't exist in feature "
+            "dataframe"
+        )
+        assert (
+            str(e_eventt_info.value)
+            == "Provided event_time feature feature_name doesn't exist in feature dataframe"
         )
 
     def test_save_feature_group_metadata_write_options(self, mocker):

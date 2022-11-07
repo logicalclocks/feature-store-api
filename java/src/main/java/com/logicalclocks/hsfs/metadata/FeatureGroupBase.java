@@ -53,8 +53,12 @@ public class FeatureGroupBase {
 
   @Getter
   @Setter
-  //TODO fv: featureGroupDTO does not match this class
+  @JsonIgnore
   protected FeatureStore featureStore;
+
+  @Getter
+  @Setter
+  protected String type = "featuregroupDTO";
 
   @Getter
   @Setter

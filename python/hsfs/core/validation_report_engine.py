@@ -14,61 +14,63 @@
 #   limitations under the License.
 #
 
+from typing import Union, List
 from hsfs.core import validation_report_api
 from hsfs import client, util
 
+from hsfs.validation_report import ValidationReport
+
 
 class ValidationReportEngine:
-    def __init__(self, feature_store_id):
+    def __init__(self, feature_store_id: int, feature_group_id: int):
         """Validation Report engine.
 
         :param feature_store_id: id of the respective featurestore
-        :param feature_group_id: id of the featuregroup it is attached to
         :type feature_store_id: int
+        :param feature_group_id: id of the featuregroup it is attached to
         :type feature_group_id: int
         """
         self._feature_store_id = feature_store_id
+        self._feature_group_id = feature_group_id
         self._validation_report_api = validation_report_api.ValidationReportApi(
-            feature_store_id
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
-    def save(self, feature_group, validation_report):
-        saved_report = self._validation_report_api.create(
-            feature_group.id, validation_report
-        )
-        url = self._get_validation_report_url(feature_group)
+    def save(self, validation_report: ValidationReport) -> ValidationReport:
+        saved_report = self._validation_report_api.create(validation_report)
+        url = self._get_validation_report_url()
         print(f"Validation Report saved successfully, explore a summary at {url}")
         return saved_report
 
-    def get_last(self, feature_group):
+    def get_last(self) -> ValidationReport:
         """Get the most recent Validation Report of a Feature Group."""
-        url = self._get_validation_report_url(feature_group)
+        url = self._get_validation_report_url()
         print(
             f"""Long reports can be truncated when fetching from Hopsworks.
         \nYou can download the full report at {url}"""
         )
-        return self._validation_report_api.get_last(feature_group.id)
+        return self._validation_report_api.get_last()
 
-    def get_all(self, feature_group):
+    def get_all(self) -> Union[List[ValidationReport], ValidationReport]:
         """Get all Validation Report of a FeaturevGroup."""
-        url = self._get_validation_report_url(feature_group)
+        url = self._get_validation_report_url()
         print(
             f"""Long reports can be truncated when fetching from Hopsworks.
         \nYou can download full reports at {url}"""
         )
-        return self._validation_report_api.get_all(feature_group.id)
+        return self._validation_report_api.get_all()
 
-    def delete(self, feature_group, validation_report):
-        self._validation_report_api.delete(feature_group.id, validation_report.id)
+    def delete(self, validation_report_id: int):
+        self._validation_report_api.delete(validation_report_id)
 
-    def _get_validation_report_url(self, feature_group):
+    def _get_validation_report_url(self):
         """Build url to land on Hopsworks UI page which summarizes validation results"""
         sub_path = (
             "/p/"
             + str(client.get_instance()._project_id)
             + "/fs/"
-            + str(feature_group.feature_store_id)
+            + str(self._feature_store_id)
             + "/fg/"
-            + str(feature_group.id)
+            + str(self._feature_group_id)
         )
         return util.get_hostname_replaced_url(sub_path)

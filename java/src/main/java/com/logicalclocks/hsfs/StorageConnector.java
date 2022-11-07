@@ -500,15 +500,15 @@ public abstract class StorageConnector {
   }
 
   public static class GcsConnector extends StorageConnector {
-    @Getter
+    @Getter  @Setter
     private String keyPath;
-    @Getter
+    @Getter @Setter
     private String algorithm;
-    @Getter
+    @Getter @Setter
     private String encryptionKey;
-    @Getter
+    @Getter @Setter
     private String encryptionKeyHash;
-    @Getter
+    @Getter @Setter
     private String bucket;
 
     public GcsConnector() {

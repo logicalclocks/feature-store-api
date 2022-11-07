@@ -116,7 +116,7 @@ public class StreamFeatureGroupEngine {
   public <S> StreamFeatureGroup saveFeatureGroupMetaData(StreamFeatureGroup featureGroup, List<String> partitionKeys,
                                                      String hudiPrecombineKey, Map<String, String> writeOptions,
                                                      JobConfiguration sparkJobConfiguration, S featureData)
-      throws FeatureStoreException, IOException, ParseException {
+      throws FeatureStoreException, IOException {
 
     if (featureGroup.getFeatures() == null) {
       featureGroup.setFeatures(utils
@@ -125,6 +125,9 @@ public class StreamFeatureGroupEngine {
     }
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
+
+    // verify primary, partition, event time or hudi precombine keys
+    utils.verifyAttributeKeyNames(featureGroup, partitionKeys, hudiPrecombineKey);
 
     /* set primary features */
     if (featureGroup.getPrimaryKeys() != null) {
