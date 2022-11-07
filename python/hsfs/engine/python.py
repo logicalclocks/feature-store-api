@@ -270,7 +270,7 @@ class Engine:
             )
         )
 
-        self._wait_for_job(job)
+        self._wait_for_job(job, metadata_instance.feature_store_id)
 
     def profile(
         self,
@@ -509,14 +509,14 @@ class Engine:
 
         # Launch job
         print("Launching ingestion job...")
-        self._job_api.launch(ingestion_job.job.name)
+        self._job_api.launch(ingestion_job.job, feature_group.feature_store_id)
         print(
             "Ingestion Job started successfully, you can follow the progress at \n{}".format(
                 self._get_job_url(ingestion_job.job.href)
             )
         )
 
-        self._wait_for_job(ingestion_job.job, offline_write_options)
+        self._wait_for_job(ingestion_job.job, feature_group.feature_store_id, offline_write_options)
 
         return ingestion_job.job
 
@@ -683,7 +683,7 @@ class Engine:
 
         # If the user passed the wait_for_job option consider it,
         # otherwise use the default True
-        self._wait_for_job(td_job, user_write_options)
+        self._wait_for_job(td_job, training_dataset.feature_store_id, user_write_options)
 
         return td_job
 
@@ -783,13 +783,13 @@ class Engine:
             spark_job_configuration=spark_job_configuration,
         )
 
-    def _wait_for_job(self, job, user_write_options=None):
+    def _wait_for_job(self, job, feature_store_id, user_write_options=None):
         # If the user passed the wait_for_job option consider it,
         # otherwise use the default True
         while user_write_options is None or user_write_options.get(
             "wait_for_job", True
         ):
-            executions = self._job_api.last_execution(job)
+            executions = self._job_api.last_execution(job, feature_store_id)
             if len(executions) > 0:
                 execution = executions[0]
             else:
@@ -933,19 +933,19 @@ class Engine:
         job_name = "{fg_name}_{version}_offline_fg_backfill".format(
             fg_name=feature_group.name, version=feature_group.version
         )
-        job = self._job_api.get(job_name)
+        job = self._job_api.get(job_name, feature_group.feature_store_id)
 
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
             print("Launching offline feature group backfill job...")
-            self._job_api.launch(job_name)
+            self._job_api.launch(job, feature_group.feature_store_id)
             print(
                 "Backfill Job started successfully, you can follow the progress at \n{}".format(
                     self._get_job_url(job.href)
                 )
             )
-            self._wait_for_job(job, offline_write_options)
+            self._wait_for_job(job, feature_group.feature_store_id, offline_write_options)
 
         return job
 

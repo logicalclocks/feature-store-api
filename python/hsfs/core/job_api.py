@@ -19,32 +19,45 @@ from hsfs.core import job, execution
 
 
 class JobApi:
-    def create(self, name, job_conf):
-        _client = client.get_instance()
-        path_params = ["project", _client._project_id, "jobs", name]
 
-        headers = {"content-type": "application/json"}
-        return job.Job.from_response_json(
-            _client._send_request(
-                "PUT", path_params, headers=headers, data=job_conf.json()
-            )
-        )
-
-    def launch(self, name):
+    def launch(self, job, feature_store_id):
         _client = client.get_instance()
-        path_params = ["project", _client._project_id, "jobs", name, "executions"]
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            feature_store_id,
+            "jobs",
+            job.name,
+            "executions"
+        ]
 
         _client._send_request("POST", path_params)
 
-    def get(self, name: str) -> job.Job:
+    def get(self, job, feature_store_id) -> job.Job:
         _client = client.get_instance()
-        path_params = ["project", _client._project_id, "jobs", name]
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            feature_store_id,
+            "jobs",
+            job.name
+        ]
 
         return job.Job.from_response_json(_client._send_request("GET", path_params))
 
-    def last_execution(self, job):
+    def last_execution(self, job, feature_store_id):
         _client = client.get_instance()
-        path_params = ["project", _client._project_id, "jobs", job.name, "executions"]
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            feature_store_id,
+            "jobs",
+            job.name,
+            "executions"
+        ]
 
         query_params = {"limit": 1, "sort_by": "submissiontime:desc"}
 
