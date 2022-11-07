@@ -33,7 +33,7 @@ class JobApi:
 
         _client._send_request("POST", path_params)
 
-    def get(self, job, feature_store_id) -> job.Job:
+    def get(self, name, feature_store_id) -> job.Job:
         _client = client.get_instance()
         path_params = [
             "project",
@@ -41,7 +41,7 @@ class JobApi:
             "featurestores",
             feature_store_id,
             "jobs",
-            job.name,
+            name,
         ]
 
         return job.Job.from_response_json(_client._send_request("GET", path_params))
