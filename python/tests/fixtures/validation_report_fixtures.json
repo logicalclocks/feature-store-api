@@ -5,22 +5,23 @@
       "results": [
         {
           "success": true,
-          "result": {"result_key": "result_value"},
-          "exception_info": {"exception_info_key": "exception_info_value"},
-          "expectation_config": {"expectation_config_key": "expectation_config_value"},
-          "meta": {"meta_key": "meta_value"},
+          "result": "{\"result_key\": \"result_value\"}",
+          "exception_info": "{\"exception_info_key\": \"exception_info_value\"}",
+          "expectation_config": "{\"expectation_config_key\": \"expectation_config_value\"}",
+          "meta": "{\"meta_key\": \"meta_value\"}",
           "id": 11,
           "observed_value": "test_observed_value",
           "expectation_id": 22,
           "validation_report_id": 33,
           "href": "test_href",
           "expand": "test_expand",
-          "type": "validationResultDTO"
+          "type": "validationResultDTO",
+          "ingestion_result": "INGESTED"
         }
       ],
-      "meta": {"meta_key": "meta_value"},
-      "statistics": {"statistics_key": "statistics_value"},
-      "evaluation_parameters": {"evaluation_parameters_key": "evaluation_parameters_value"},
+      "meta": "{\"meta_key\": \"meta_value\"}",
+      "statistics": "{ \"statistics_key\": \"statistics_value\" }",
+      "evaluation_parameters": "{\"evaluation_parameters_key\": \"evaluation_parameters_value\"}",
       "id": 11,
       "full_report_path": "test_full_report_path",
       "featurestore_id": "test_featurestore_id",
@@ -38,21 +39,22 @@
       "results": [
         {
           "success": true,
-          "result": {"result_key": "result_value"},
-          "exception_info": {"exception_info_key": "exception_info_value"},
-          "expectation_config": {"expectation_config_key": "expectation_config_value"},
-          "meta": {"meta_key": "meta_value"},
+          "result": "{\"result_key\": \"result_value\"}",
+          "exception_info": "{\"exception_info_key\": \"exception_info_value\"}",
+          "expectation_config": "{\"expectation_config_key\": \"expectation_config_value\"}",
+          "meta": "{\"meta_key\": \"meta_value\"}",
           "id": 11,
           "observed_value": "test_observed_value",
           "expectation_id": 22,
           "validation_report_id": 33,
           "href": "test_href",
           "expand": "test_expand",
-          "type": "validationResultDTO"
+          "type": "validationResultDTO",
+          "ingestion_result": "REJECTED"
         }
       ],
-      "meta": {"meta_key": "meta_value"},
-      "statistics": {"statistics_key": "statistics_value"}
+      "meta": "{ \"meta_key\": \"meta_value\" }",
+      "statistics": "{ \"statistics_key\": \"statistics_value\" }"
     }
   },
   "get_list": {
@@ -64,22 +66,23 @@
           "results": [
             {
               "success": true,
-              "result": {"result_key": "result_value"},
-              "exception_info": {"exception_info_key": "exception_info_value"},
-              "expectation_config": {"expectation_config_key": "expectation_config_value"},
-              "meta": {"meta_key": "meta_value"},
+              "result": "{\"result_key\": \"result_value\"}",
+              "exception_info": "{\"exception_info_key\": \"exception_info_value\"}",
+              "expectation_config": "{\"expectation_config_key\": \"expectation_config_value\"}",
+              "meta": "{\"meta_key\": \"meta_value\"}",
               "id": 11,
               "observed_value": "test_observed_value",
               "expectation_id": 22,
               "validation_report_id": 33,
               "href": "test_href",
               "expand": "test_expand",
-              "type": "validationResultDTO"
+              "type": "validationResultDTO",
+              "ingestion_result": "REJECTED"
             }
           ],
-          "meta": {"meta_key": "meta_value"},
-          "statistics": {"statistics_key": "statistics_value"},
-          "evaluation_parameters": {"evaluation_parameters_key": "evaluation_parameters_value"},
+          "meta": "{\"meta_key\": \"meta_value\"}",
+          "statistics": "{ \"statistics_key\": \"statistics_value\" }",
+          "evaluation_parameters": "{\"evaluation_parameters_key\": \"evaluation_parameters_value\"}",
           "id": 11,
           "full_report_path": "test_full_report_path",
           "featurestore_id": "test_featurestore_id",

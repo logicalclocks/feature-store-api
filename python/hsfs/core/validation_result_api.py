@@ -37,7 +37,7 @@ class ValidationResultApi:
         offset: Optional[int],
         limit: Optional[int],
         sort_by: Optional[str],
-        filter_by: Optional[str],
+        filter_by: Optional[List[str]],
     ) -> Union[List[ValidationResult], ValidationResult]:
         """Get the validation report attached to a featuregroup.
 

@@ -71,8 +71,8 @@ class ValidationResult:
             if json_decamelized["count"] == 0:
                 return []
             return [
-                cls(**validation_report)
-                for validation_report in json_decamelized["items"]
+                cls(**validation_result)
+                for validation_result in json_decamelized["items"]
             ]
         else:
             return cls(**json_decamelized)

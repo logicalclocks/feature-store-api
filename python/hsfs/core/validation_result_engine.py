@@ -16,7 +16,7 @@
 
 from typing import Union, List, Optional
 from hsfs.core import validation_result_api
-import pandas as pd
+import re
 
 from hsfs.ge_validation_result import ValidationResult
 
@@ -39,7 +39,6 @@ class ValidationResultEngine:
     def get_validation_history(
         self,
         expectation_id: int,
-        as_timeserie: bool,
         sort_by: Optional[str] = "validation_time:desc",
         filter_by: Optional[str] = None,
         offset: Optional[int] = None,
@@ -67,7 +66,7 @@ class ValidationResultEngine:
         if limit:
             self._verify_limit(limit)
 
-        validation_history = self._validation_result_api.get_validation_history(
+        return self._validation_result_api.get_validation_history(
             expectation_id=expectation_id,
             offset=offset,
             limit=limit,
@@ -75,35 +74,81 @@ class ValidationResultEngine:
             sort_by=sort_by,
         )
 
-        if as_timeserie:
-            return self.convert_history_to_timeserie(validation_history)
+    def _verify_sort_by(self, sort_by: str) -> None:
+        if isinstance(sort_by, str):
+            if sort_by.lower() not in ["validation_time:asc", "validation_time:desc"]:
+                raise ValueError(
+                    f"Illegal Value for sort_by : {sort_by}. Allowed values are validation_time:desc or validation_time:asc."
+                )
         else:
-            return validation_history
+            raise TypeError(f"sort_by must be a str. Got {type(sort_by)}")
 
-    def convert_history_to_timeserie(
-        self, validation_history: List[ValidationResult]
-    ) -> pd.DataFrame:
-        return pd.DataFrame(
-            {
-                "observed_value": [
-                    result._observed_value for result in validation_history
-                ],
-                "validation_time": [
-                    result.validation_time for result in validation_history
-                ],
-            }
+    def _verify_filter_by(self, filter_by: Union[str, List[str], None]) -> None:
+        if isinstance(filter_by, str):
+            self._match_filter_by_validation_time_or_ingestion_result(
+                filter_by=filter_by
+            )
+            return
+        elif isinstance(filter_by, List):
+            if len(filter_by) == 0:
+                filter_by = None
+                return
+            for single_filter in filter_by:
+                self._verify_filter_by(single_filter)
+            return
+
+        raise TypeError(
+            f"filter_by must be a str or list of string. Got {type(filter_by)}"
         )
 
-    def _verify_sort_by(self, sort_by: str) -> None:
-        assert type(sort_by) is str
+    def _match_filter_by_validation_time_or_ingestion_result(
+        self, filter_by: str
+    ) -> None:
+        if filter_by.upper() in [
+            "INGESTION_RESULT_EQ:REJECTED",
+            "INGESTION_RESULT_EQ:INGESTED",
+        ]:
+            return
 
-    def _verify_filter_by(self, filter_by: str) -> None:
-        assert type(filter_by) is str
+        match = re.search("([a-z,_]+):([0-9]+)$", filter_by.lower())
+        allowed_filters = [
+            "validation_time_gt",
+            "validation_time_gte",
+            "validation_time_eq",
+            "validation_time_lt",
+            "validation_time_lte",
+        ]
+
+        if match:
+            groups = match.groups(0)
+            if groups[0] in allowed_filters:
+                if int(groups[1], base=10) > 0:
+                    print(groups)
+                    return
+
+        raise ValueError(
+            f"Illegal Value for filter_by : {filter_by}."
+            + "Allowed values are validation_time_[gt/gte/eq/lt/lte]:(datetime.datetime) or ingestion_result_eq:[ingested/rejected]"
+        )
 
     def _verify_offset(self, offset: int) -> None:
-        assert type(offset) is int
-        assert offset >= 0
+        if isinstance(offset, int):
+            if offset >= 0:
+                return
+            else:
+                raise ValueError(
+                    f"offset value should be a positive integer, got {offset}"
+                )
+        else:
+            raise TypeError(f"offset should be of type int, got {type(offset)}")
 
     def _verify_limit(self, limit: int) -> None:
-        assert type(limit) is int
-        assert limit > 0
+        if isinstance(limit, int):
+            if limit >= 0:
+                return
+            else:
+                raise ValueError(
+                    f"offset value should be a positive integer, got {limit}"
+                )
+        else:
+            raise TypeError(f"offset should be of type int, got {type(limit)}")

@@ -540,17 +540,15 @@ class FeatureGroupBase:
     def get_validation_history(
         self,
         expectation_id: int,
-        as_timeserie: bool = True,
         sort_by: Optional[str] = "validation_time:desc",
         filter_by: Optional[str] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
-    ) -> Union[List[ValidationResult], pd.DataFrame]:
-        """Fetch validation history of an Expectation specified by its id. By default, the history is returned as a pandas timeserie.
+    ) -> List[ValidationResult]:
+        """Fetch validation history of an Expectation specified by its id.
 
         # Arguments
             expectation_id: id of the Expectation for which to fetch the validation history
-            as_timeserie: return validation history as timeseries or list of ValidationResult, defaults to True.
             sort_by: sort the validation results according to validation time, descending or ascending. Value can be either
                 validation_time:desc or validation_time:asc
             filter_by: filter the validation results based on validation time or ingestion result.
@@ -562,7 +560,6 @@ class FeatureGroupBase:
 
         return self._validation_result_engine.get_validation_history(
             expectation_id=expectation_id,
-            as_timeserie=as_timeserie,
             sort_by=sort_by,
             filter_by=filter_by,
             offset=offset,
