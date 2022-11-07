@@ -41,12 +41,12 @@ class GeExpectation:
         self.meta = meta
 
         # Id should be parsed from meta field if init from GE object
-        if "expectationId" in meta.keys():
+        if "expectationId" in self.meta.keys():
             self._id = meta["expectationId"]
 
         # if from_response_json meta expactationId field
         # should be fixed due to humps.decamelize
-        if "expectation_id" in meta.keys():
+        if "expectation_id" in self.meta.keys():
             self.meta["expectationId"] = self.meta.pop("expectation_id")
 
     @classmethod
