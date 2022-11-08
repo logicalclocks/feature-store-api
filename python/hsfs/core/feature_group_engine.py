@@ -19,6 +19,7 @@ from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_group_base_engine, hudi_engine
+from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
@@ -401,6 +402,19 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         if feature_group.stream:
             feature_group._options = write_options
+
+        if feature_group._stream:
+            # when creating a stream feature group, users have the possibility of passing
+            # a spark_job_configuration object as part of the write_options with the key "spark"
+            _spark_options = write_options.pop("spark", None)
+            _write_options = (
+                [{"name": k, "value": v} for k, v in write_options.items()]
+                if write_options
+                else None
+            )
+            feature_group._deltastreamer_jobconf = DeltaStreamerJobConf(
+                _write_options, _spark_options
+            )
 
         self._feature_group_api.save(feature_group)
         print(
