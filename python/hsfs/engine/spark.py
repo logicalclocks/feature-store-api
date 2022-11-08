@@ -38,7 +38,6 @@ try:
         struct,
         concat,
         col,
-        lit,
         from_json,
         unix_timestamp,
     )
@@ -861,14 +860,10 @@ class Engine:
             return True
         return False
 
-    def get_empty_appended_dataframe(self, dataframe, new_features):
-        dataframe = dataframe.limit(0)
-        for f in new_features:
-            dataframe = dataframe.withColumn(f.name, lit(None).cast(f.type))
-        return dataframe
+    def save_empty_dataframe(self, feature_group):
+        fg_table_name = feature_group._get_table_name()
+        dataframe = self._spark_session.table(fg_table_name).limit(0)
 
-    def save_empty_dataframe(self, feature_group, dataframe):
-        """Wrapper around save_dataframe in order to provide no-op in python engine."""
         self.save_dataframe(
             feature_group,
             dataframe,

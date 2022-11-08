@@ -241,8 +241,7 @@ class HudiEngine:
             self._spark_session.table(hudi_fg_alias.alias).schema
             != self._spark_session.table(fg_table_name).schema
         ):
-            dataframe = self._spark_session.table(fg_table_name).limit(0)
-            spark_engine.save_empty_dataframe(hudi_fg_alias.feature_group, dataframe)
+            spark_engine.save_empty_dataframe(hudi_fg_alias.feature_group)
 
             self.register_temporary_table(
                 hudi_fg_alias,

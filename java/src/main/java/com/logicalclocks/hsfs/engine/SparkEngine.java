@@ -95,7 +95,6 @@ import static org.apache.spark.sql.avro.functions.to_avro;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.from_json;
-import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.struct;
 
 public class SparkEngine {
@@ -562,6 +561,13 @@ public class SparkEngine {
             featureGroupBase.getEncodedAvroSchema()).alias("value"));
   }
 
+  public <S>  void writeEmptyDataframe(FeatureGroupBase featureGroup)
+          throws IOException, FeatureStoreException, ParseException {
+    String fgTableName = utils.getTableName(featureGroup);
+    Dataset emptyDf = sparkSession.table(fgTableName).limit(0);
+    writeOfflineDataframe(featureGroup, emptyDf, HudiOperationType.UPSERT, new HashMap<>(), null);
+  }
+
   public <S>  void writeOfflineDataframe(StreamFeatureGroup streamFeatureGroup, S genericDataset,
       HudiOperationType operation, Map<String, String> writeOptions, Integer validationId)
       throws IOException, FeatureStoreException, ParseException {
@@ -695,14 +701,6 @@ public class SparkEngine {
     for (Option confOption : storageConnector.getSparkOptions()) {
       sparkSession.sparkContext().hadoopConfiguration().set(confOption.getName(), confOption.getValue());
     }
-  }
-
-  public Dataset<Row> getEmptyAppendedDataframe(Dataset<Row> dataframe, List<Feature> newFeatures) {
-    Dataset<Row> emptyDataframe = dataframe.limit(0);
-    for (Feature f : newFeatures) {
-      emptyDataframe = emptyDataframe.withColumn(f.getName(), lit(null).cast(f.getType()));
-    }
-    return emptyDataframe;
   }
 
   public void streamToHudiTable(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)

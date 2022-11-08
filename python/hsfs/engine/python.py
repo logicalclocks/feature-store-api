@@ -740,12 +740,7 @@ class Engine:
             "Stream ingestion is not available on Python environments, because it requires Spark as engine."
         )
 
-    def get_empty_appended_dataframe(self, dataframe, new_features):
-        """No-op in python engine, user has to write to feature group manually for schema
-        change to take effect."""
-        return None
-
-    def save_empty_dataframe(self, feature_group, dataframe):
+    def save_empty_dataframe(self, feature_group):
         """Wrapper around save_dataframe in order to provide no-op."""
         pass
 
