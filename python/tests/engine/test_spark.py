@@ -3897,7 +3897,9 @@ class TestSpark:
         mock_spark_engine_save_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.save_dataframe"
         )
+        mock_spark_table = mocker.patch("pyspark.sql.session.SparkSession.table")
 
+        # Arrange
         spark_engine = spark.Engine()
 
         fg = feature_group.FeatureGroup(
@@ -3915,6 +3917,7 @@ class TestSpark:
 
         # Assert
         assert mock_spark_engine_save_dataframe.call_count == 1
+        assert mock_spark_table.call_count == 1
 
     def test_apply_transformation_function(self, mocker):
         # Arrange
