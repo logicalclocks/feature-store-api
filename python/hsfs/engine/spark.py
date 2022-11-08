@@ -41,6 +41,7 @@ try:
         lit,
         from_json,
         unix_timestamp,
+        udf,
     )
     from pyspark.sql.avro.functions import from_avro, to_avro
     from pyspark.sql.types import (
@@ -495,8 +496,7 @@ class Engine:
         ts_col = (
             unix_timestamp(col(event_time)) * 1000
             if ts_type in ["date", "timestamp"]
-            # jdbc supports timestamp precision up to second only.
-            else col(event_time) * 1000
+            else self._convert_event_time_to_timestamp(col(event_time))
         )
         for split in training_dataset.splits:
             result_df = dataset.filter(ts_col >= split.start_time).filter(
@@ -1008,6 +1008,10 @@ class Engine:
         return SQLContext(self._spark_context).createDataFrame(
             self._spark_context.emptyRDD(), streaming_df.schema
         )
+
+    @udf("long")
+    def _convert_event_time_to_timestamp(self, event_time):
+        return util.convert_event_time_to_timestamp(event_time)
 
 
 class SchemaError(Exception):
