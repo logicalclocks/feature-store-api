@@ -63,6 +63,17 @@ fg3 = feature_group.FeatureGroup(
     stream=False,
 )
 
+fg4 = feature_group.FeatureGroup(
+    name="test4",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    features=[feature.Feature("id4"), feature.Feature("label4")],
+    id=14,
+    stream=False,
+)
+
 query = fg1.select_all()
 
 
@@ -184,7 +195,7 @@ class TestFeatureViewEngine:
             + " feature view does not support time travel query."
         )
 
-    def template_save_label_success(self, mocker, query, label, label_fg_id):
+    def template_save_label_success(self, mocker, _query, label, label_fg_id):
         # Arrange
         feature_store_id = 99
         feature_view_url = "test_url"
@@ -204,7 +215,7 @@ class TestFeatureViewEngine:
         )
         fv = feature_view.FeatureView(
             name="fv_name",
-            query=query,
+            query=_query,
             featurestore_id=feature_store_id,
             labels=[label],
         )
@@ -226,7 +237,7 @@ class TestFeatureViewEngine:
             feature_view_url
         )
 
-    def template_save_label_fail(self, mocker, query, label, msg):
+    def template_save_label_fail(self, mocker, _query, label, msg):
         # Arrange
         feature_store_id = 99
         feature_view_url = "test_url"
@@ -245,7 +256,7 @@ class TestFeatureViewEngine:
         )
         fv = feature_view.FeatureView(
             name="fv_name",
-            query=query,
+            query=_query,
             featurestore_id=feature_store_id,
             labels=[label],
         )
@@ -256,6 +267,10 @@ class TestFeatureViewEngine:
         # Assert
         assert str(e_info.value) == msg
         assert mock_fv_api.return_value.post.call_count == 0
+
+    def test_save_label_unique_col(self, mocker):
+        _query = fg1.select_all().join(fg4.select_all())
+        self.template_save_label_success(mocker, _query, "label", fg1.id)
 
     def test_save_label_selected_in_head_query_1(self, mocker):
         _query = fg1.select_all().join(fg2.select_all(), prefix="fg2_")

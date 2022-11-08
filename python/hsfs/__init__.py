@@ -16,8 +16,10 @@
 
 import warnings
 
-from hsfs import util
+from hsfs import util, version
 from hsfs.connection import Connection
+
+__version__ = version.__version__
 
 connection = Connection.connection
 setup_databricks = Connection.setup_databricks

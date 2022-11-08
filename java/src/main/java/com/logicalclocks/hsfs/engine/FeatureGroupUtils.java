@@ -306,4 +306,37 @@ public class FeatureGroupUtils {
     }
   }
 
+  public void verifyAttributeKeyNames(FeatureGroupBase featureGroup, List<String> partitionKeyNames,
+                                      String precombineKeyName) throws FeatureStoreException {
+    List<String> featureNames = featureGroup.getFeatures().stream().map(Feature::getName).collect(Collectors.toList());
+    if (featureGroup.getPrimaryKeys() != null && !featureGroup.getPrimaryKeys().isEmpty()) {
+      checkListdiff(featureGroup.getPrimaryKeys(), featureNames, "primary");
+    }
+
+    if (partitionKeyNames != null && !partitionKeyNames.isEmpty()) {
+      checkListdiff(partitionKeyNames, featureNames, "partition");
+    }
+
+    if (precombineKeyName != null && !featureNames.contains(precombineKeyName)) {
+      throw new FeatureStoreException("Provided Hudi precombine key " + precombineKeyName
+          + " doesn't exist in feature dataframe");
+    }
+
+    if (featureGroup.getEventTime() != null && !featureNames.contains(featureGroup.getEventTime())) {
+      throw new FeatureStoreException("Provided eventTime feature name " + featureGroup.getEventTime()
+          + " doesn't exist in feature dataframe");
+    }
+  }
+
+  private void checkListdiff(List<String> primaryPartitionKeyNames, List<String> featureNames, String attributeName)
+      throws FeatureStoreException {
+    List<String> differences = primaryPartitionKeyNames.stream()
+        .filter(element -> !featureNames.contains(element))
+        .collect(Collectors.toList());
+
+    if (!differences.isEmpty()) {
+      throw new FeatureStoreException("Provided " + attributeName + " key(s) " + String.join(", ",
+          differences) +  " doesn't exist in feature dataframe");
+    }
+  }
 }
