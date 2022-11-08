@@ -3911,9 +3911,7 @@ class TestSpark:
         )
 
         # Act
-        spark_engine.save_empty_dataframe(
-            feature_group=fg
-        )
+        spark_engine.save_empty_dataframe(feature_group=fg)
 
         # Assert
         assert mock_spark_engine_save_dataframe.call_count == 1
