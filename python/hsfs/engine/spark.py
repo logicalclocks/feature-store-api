@@ -491,12 +491,17 @@ class Engine:
     def _time_series_split(
         self, training_dataset, dataset, event_time, drop_event_time=False
     ):
+        # registering the UDF
+        _convert_event_time_to_timestamp = udf(
+            util.convert_event_time_to_timestamp, LongType()
+        )
+
         result_dfs = {}
         ts_type = dataset.select(event_time).dtypes[0][1]
         ts_col = (
             unix_timestamp(col(event_time)) * 1000
             if ts_type in ["date", "timestamp"]
-            else self._convert_event_time_to_timestamp(col(event_time))
+            else _convert_event_time_to_timestamp(col(event_time))
         )
         for split in training_dataset.splits:
             result_df = dataset.filter(ts_col >= split.start_time).filter(
@@ -1008,11 +1013,6 @@ class Engine:
         return SQLContext(self._spark_context).createDataFrame(
             self._spark_context.emptyRDD(), streaming_df.schema
         )
-
-    @staticmethod
-    @udf("long")
-    def _convert_event_time_to_timestamp(event_time):
-        return util.convert_event_time_to_timestamp(event_time)
 
 
 class SchemaError(Exception):
