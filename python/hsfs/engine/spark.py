@@ -1009,8 +1009,9 @@ class Engine:
             self._spark_context.emptyRDD(), streaming_df.schema
         )
 
+    @staticmethod
     @udf("long")
-    def _convert_event_time_to_timestamp(self, event_time):
+    def _convert_event_time_to_timestamp(event_time):
         return util.convert_event_time_to_timestamp(event_time)
 
 
