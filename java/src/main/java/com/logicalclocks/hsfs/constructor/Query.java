@@ -16,6 +16,7 @@
 
 package com.logicalclocks.hsfs.constructor;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -304,6 +305,7 @@ public class Query {
     return this;
   }
 
+  @JsonIgnore
   public boolean isTimeTravel() {
     if (leftFeatureGroupStartTime != null || leftFeatureGroupEndTime != null) {
       return true;
