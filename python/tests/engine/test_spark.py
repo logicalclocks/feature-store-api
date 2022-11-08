@@ -2261,6 +2261,57 @@ class TestSpark:
             assert result[column].schema == expected[column].schema
             assert result[column].collect() == expected[column].collect()
 
+    def test_time_series_split_epoch_millisec(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+
+        spark_engine = spark.Engine()
+
+        td = training_dataset.TrainingDataset(
+            name="test",
+            version=1,
+            data_format="CSV",
+            featurestore_id=99,
+            splits={"col1": None, "col2": None},
+            id=10,
+            train_start=1,
+            train_end=1488600000001,
+            test_end=1488718800001,
+        )
+
+        d = {
+            "col_0": [1, 2],
+            "col_1": ["test_1", "test_2"],
+            "event_time": [1488600000000, 1488718800000],
+        }
+        df = pd.DataFrame(data=d)
+
+        spark_df = spark_engine._spark_session.createDataFrame(df)
+
+        train_spark_df = spark_engine._spark_session.createDataFrame(
+            df.loc[df["col_0"] == 1]
+        )
+
+        test_spark_df = spark_engine._spark_session.createDataFrame(
+            df.loc[df["col_0"] == 2]
+        )
+
+        expected = {"train": train_spark_df, "test": test_spark_df}
+
+        # Act
+        result = spark_engine._time_series_split(
+            training_dataset=td,
+            dataset=spark_df,
+            event_time="event_time",
+            drop_event_time=False,
+        )
+
+        # Assert
+        assert list(result) == list(expected)
+        for column in list(result):
+            assert result[column].schema == expected[column].schema
+            assert result[column].collect() == expected[column].collect()
+
     def test_time_series_split_drop_event_time(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
