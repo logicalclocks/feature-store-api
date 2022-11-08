@@ -15,8 +15,7 @@
 #
 
 from typing import Union, List, Optional
-from hsfs import client
-from hsfs.ge_validation_result import ValidationResult
+from hsfs import client, ge_validation_result
 
 
 class ValidationResultApi:
@@ -38,7 +37,10 @@ class ValidationResultApi:
         limit: Optional[int],
         sort_by: Optional[str],
         filter_by: Optional[List[str]],
-    ) -> Union[List[ValidationResult], ValidationResult]:
+    ) -> Union[
+        List[ge_validation_result.ValidationResult],
+        ge_validation_result.ValidationResult,
+    ]:
         """Get the validation report attached to a featuregroup.
 
         :return: validation report
@@ -68,6 +70,6 @@ class ValidationResultApi:
         if filter_by:
             query_params["filter_by"] = filter_by
 
-        return ValidationResult.from_response_json(
+        return ge_validation_result.ValidationResult.from_response_json(
             _client._send_request("GET", path_params, query_params, headers=headers)
         )

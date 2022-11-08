@@ -25,13 +25,14 @@ class TestValidationResultEngine:
         feature_store_id = 99
         feature_group_id = 10
         expectation_id = 31
-        vr_engine = validation_result_engine.ValidationResultEngine(
-            feature_store_id=feature_store_id, feature_group_id=feature_group_id
-        )
 
         mocker.patch("hsfs.client.get_instance")
         mock_validation_result_api = mocker.patch(
             "hsfs.core.validation_result_api.ValidationResultApi"
+        )
+
+        vr_engine = validation_result_engine.ValidationResultEngine(
+            feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
         # Act
