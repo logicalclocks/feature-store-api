@@ -34,7 +34,6 @@ from pyspark.sql.types import (
     StructField,
     MapType,
 )
-from pyspark.sql.functions import lit
 
 from hsfs import (
     feature_group,
