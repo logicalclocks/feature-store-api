@@ -885,6 +885,7 @@ class Engine:
                 print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
             else:
                 # update progress bar for each msg
+                # todo here it shows that there is progress even though in actuality there could have been an error
                 progress_bar.update()
 
         # initialize progress bar
