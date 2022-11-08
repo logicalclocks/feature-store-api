@@ -18,6 +18,8 @@ package com.logicalclocks.hsfs;
 
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.logicalclocks.hsfs.util.Constants;
+
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.parquet.Strings;
 import org.apache.spark.SparkContext;
 import org.junit.jupiter.api.Assertions;
@@ -43,8 +45,11 @@ public class TestStorageConnector {
     Files.write(credentialsFile, credentials.getBytes());
 
     StorageConnector.BigqueryConnector bigqueryConnector = new StorageConnector.BigqueryConnector();
-    bigqueryConnector.setKeyPath("file://" + credentialsFile);
-
+    if (SystemUtils.IS_OS_WINDOWS) {
+      bigqueryConnector.setKeyPath("file:///" + credentialsFile.toString().replace( "\\", "/" ));
+    } else {
+      bigqueryConnector.setKeyPath("file://" + credentialsFile);
+    }
     // Act
     Map<String, String> sparkOptions = bigqueryConnector.sparkOptions();
 

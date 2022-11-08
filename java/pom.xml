@@ -359,6 +359,12 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
                 <configuration>
+                    <systemProperties>
+                        <property>
+                            <name>hadoop.home.dir</name>
+                            <value>${project.basedir}/src/test/resources/hadoop/</value>
+                        </property>
+                    </systemProperties>
                     <systemPropertiesFile>src/test/resources/system.properties</systemPropertiesFile>
                 </configuration>
             </plugin>
