@@ -3907,6 +3907,7 @@ class TestSpark:
             primary_key=[],
             partition_key=[],
             id=10,
+            featurestore_name="test_featurestore",
         )
 
         # Act
