@@ -401,12 +401,10 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 feat.hudi_precombine_key = True
 
         if feature_group.stream:
-            feature_group._options = write_options
-
-        if feature_group._stream:
             # when creating a stream feature group, users have the possibility of passing
             # a spark_job_configuration object as part of the write_options with the key "spark"
             _spark_options = write_options.pop("spark", None)
+            feature_group._options = write_options
             _write_options = (
                 [{"name": k, "value": v} for k, v in write_options.items()]
                 if write_options
