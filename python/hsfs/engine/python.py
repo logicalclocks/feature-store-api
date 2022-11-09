@@ -101,8 +101,11 @@ class Engine:
                     else read_options["external"]
                 ),
             )
+        print(self._mysql_online_fs_engine)
         with self._mysql_online_fs_engine.connect() as mysql_conn:
+            print(self._mysql_online_fs_engine)
             result_df = pd.read_sql(sql_query, mysql_conn)
+        print(result_df)
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def read(self, storage_connector, data_format, read_options, location):
