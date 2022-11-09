@@ -40,7 +40,6 @@ try:
         col,
         lit,
         from_json,
-        unix_timestamp,
         udf,
     )
     from pyspark.sql.avro.functions import from_avro, to_avro
@@ -497,12 +496,7 @@ class Engine:
         )
 
         result_dfs = {}
-        ts_type = dataset.select(event_time).dtypes[0][1]
-        ts_col = (
-            unix_timestamp(col(event_time)) * 1000
-            if ts_type in ["date", "timestamp"]
-            else _convert_event_time_to_timestamp(col(event_time))
-        )
+        ts_col = _convert_event_time_to_timestamp(col(event_time))
         for split in training_dataset.splits:
             result_df = dataset.filter(ts_col >= split.start_time).filter(
                 ts_col < split.end_time
