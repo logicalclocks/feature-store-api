@@ -97,6 +97,8 @@ def create_mysql_engine(online_conn, external):
         .replace("?allowPublicKeyRetrieval=true", "")
     )
 
+    print(sql_alchemy_conn_str)
+
     # default connection pool size kept by engine is 5
     sql_alchemy_engine = create_engine(sql_alchemy_conn_str, pool_recycle=3600)
     return sql_alchemy_engine
