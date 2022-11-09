@@ -61,6 +61,11 @@ class FeatureGroupBase:
     def delete(self):
         """Drop the entire feature group along with its feature data.
 
+        !!! example
+            ```python
+            weather_fg.delete()
+            ```
+
         !!! danger "Potentially dangerous operation"
             This operation drops all metadata associated with **this version** of the
             feature group **and** all the feature data in offline and online storage
@@ -77,6 +82,20 @@ class FeatureGroupBase:
         The query can be used to construct joins of feature groups or create a
         training dataset immediately.
 
+        !!! example
+            ```python
+            store_fg = fs.get_or_create_feature_group(
+                name = "store_fg",
+                version = 1
+            )
+
+            query = sales_fg.select_all()\
+                            .join(store_fg.select_all())\
+                            .join(exogenous_fg.select(['fuel_price', 'unemployment', 'cpi']))
+
+            print(query.to_string())
+            ```
+
         # Returns
             `Query`. A query object with all features of the feature group.
         """
@@ -92,6 +111,13 @@ class FeatureGroupBase:
 
         The query can be used to construct joins of feature groups or create a training
         dataset with a subset of features of the feature group.
+
+        !!! example
+            ```python
+            sales_fg.select(['date', 'weekly_sales', 'is_holiday',
+                             'sales_last_30_days_store_dep',
+                             'sales_last_365_days_store_dep']).show(5)
+            ```
 
         # Arguments
             features: list, optional. A list of `Feature` objects or feature names as
@@ -113,6 +139,11 @@ class FeatureGroupBase:
 
         The query can be used to construct joins of feature groups or create a training
         dataset with a subset of features of the feature group.
+
+        !!! example
+            ```python
+            query = bureau_fg.select_except(['sk_id_curr','sk_id_bureau'])
+            ```
 
         # Arguments
             features: list, optional. A list of `Feature` objects or feature names as
@@ -174,6 +205,11 @@ class FeatureGroupBase:
         A tag consists of a <name,value> pair. Tag names are unique identifiers across the whole cluster.
         The value of a tag can be any valid json - primitives, arrays or json objects.
 
+        !!! example
+            ```python
+            weather_fg.add_tag(name="example_tag", value="42")
+            ```
+
         # Arguments
             name: Name of the tag to be added.
             value: Value of the tag to be added.
@@ -187,6 +223,11 @@ class FeatureGroupBase:
     def delete_tag(self, name: str):
         """Delete a tag attached to a feature group.
 
+        !!! example
+            ```python
+            weather_fg.delete_tag("example_tag")
+            ```
+
         # Arguments
             name: Name of the tag to be removed.
 
@@ -197,6 +238,12 @@ class FeatureGroupBase:
 
     def get_tag(self, name: str):
         """Get the tags of a feature group.
+
+
+        !!! example
+            ```python
+            fg_tag_value = weather_fg.get_tag("example_tag")
+            ```
 
         # Arguments
             name: Name of the tag to get.
@@ -256,6 +303,11 @@ class FeatureGroupBase:
         Change the `statistics_config` object and persist the changes by calling
         this method.
 
+        !!! example
+            ```python
+            updated_weather_fg = weather_fg.update_statistics_config()
+            ```
+
         # Returns
             `FeatureGroup`. The updated metadata object of the feature group.
 
@@ -267,6 +319,13 @@ class FeatureGroupBase:
 
     def update_description(self, description: str):
         """Update the description of the feature group.
+
+        !!! example
+            ```python
+            updated_weather_fg = weather_fg.update_description(description="Much better description.")
+
+            print(updated_weather_fg.to_dict()["description"])
+            ```
 
         !!! info "Safe update"
             This method updates the feature group description safely. In case of failure
@@ -323,6 +382,12 @@ class FeatureGroupBase:
     def update_feature_description(self, feature_name: str, description: str):
         """Update the description of a single feature in this feature group.
 
+        !!! example
+            ```python
+            updated_weather_fg = weather_fg.update_feature_description(feature_name="min_temp",
+                                                                               description="Much better feature description.")
+            ```
+
         !!! info "Safe update"
             This method updates the feature description safely. In case of failure
             your local metadata object will keep the old description.
@@ -341,6 +406,17 @@ class FeatureGroupBase:
 
     def append_features(self, features: Union[feature.Feature, List[feature.Feature]]):
         """Append features to the schema of the feature group.
+
+        !!! example
+            ```python
+            features = [
+                Feature(name="id",type="int",online_type="int"),
+                Feature(name="name",type="string",online_type="varchar(20)")
+            ]
+
+            fg = fs.get_feature_group(name="example", version=1)
+            fg.append_features(features)
+            ```
 
         !!! info "Safe append"
             This method appends the features to the feature group description safely.
@@ -384,6 +460,11 @@ class FeatureGroupBase:
     ) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
         """Return the expectation suite attached to the feature group if it exists.
 
+        !!! example
+            ```python
+            exp_suite = weather_fg.get_expectation_suite()
+            ```
+
         # Arguments
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
@@ -410,6 +491,11 @@ class FeatureGroupBase:
         """Attach an expectation suite to a feature group and saves it for future use. If an expectation
         suite is already attached, it is replaced. Note that the provided expectation suite is modified
         inplace to include expectationId fields.
+
+        !!! example
+            ```python
+            weather_fg.save_expectation_suite(expectation_suite, run_validation=True)
+            ```
 
         # Arguments
             expectation_suite: The expectation suite to attach to the Feature Group.
@@ -450,6 +536,11 @@ class FeatureGroupBase:
     def delete_expectation_suite(self) -> None:
         """Delete the expectation suite attached to the Feature Group.
 
+        !!! example
+            ```python
+            weather_fg.delete_expectation_suite()
+            ```
+
         # Raises
             `RestAPIException`.
         """
@@ -461,6 +552,11 @@ class FeatureGroupBase:
         self, ge_type: bool = True
     ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult, None]:
         """Return the latest validation report attached to the Feature Group if it exists.
+
+        !!! example
+            ```python
+            latest_val_report = weather_fg.get_latest_validation_report()
+            ```
 
         # Arguments
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
@@ -482,6 +578,11 @@ class FeatureGroupBase:
         self, ge_type: bool = True
     ) -> List[Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]]:
         """Return the latest validation report attached to the feature group if it exists.
+
+        !!! example
+            ```python
+            val_reports = weather_fg.get_all_validation_reports()
+            ```
 
         # Arguments
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
@@ -511,6 +612,12 @@ class FeatureGroupBase:
         ge_type: bool = True,
     ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]:
         """Save validation report to hopsworks platform along previous reports of the same Feature Group.
+
+
+        !!! example
+            ```python
+            weather_fg.save_validation_report(validation_report, run_validation=True)
+            ```
 
         # Arguments
             validation_report: The validation report to attach to the Feature Group.
@@ -601,6 +708,11 @@ class FeatureGroupBase:
 
         If `commit_time` is `None`, the most recent statistics are returned.
 
+        !!! example
+            ```python
+            fg_statistics = weather_fg.get_statistics(commit_time=None)
+            ```
+
         # Arguments
             commit_time: Date and time of the commit. Defaults to `None`. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
@@ -622,6 +734,12 @@ class FeatureGroupBase:
         feature store.
         Statistics are only computed for data in the offline storage of the feature
         group.
+
+        !!! example
+            ```python
+            weather_fg.compute_statistics()
+            ```
+
         # Returns
             `Statistics`. The statistics metadata object.
         # Raises
@@ -899,13 +1017,6 @@ class FeatureGroup(FeatureGroupBase):
 
         This function only works on feature groups with `HUDI` time travel format.
 
-        !!! example "Reading commits incrementally between specified points in time:"
-            ```python
-            fs = connection.get_feature_store();
-            fg = fs.get_feature_group("example_feature_group", 1)
-            fg.read_changes("2020-10-20 07:31:38", "2020-10-20 07:34:11").show()
-            ```
-
         # Arguments
             start_wallclock_time: Start time of the time travel query. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
@@ -929,6 +1040,13 @@ class FeatureGroup(FeatureGroupBase):
 
     def show(self, n: int, online: Optional[bool] = False):
         """Show the first `n` rows of the feature group.
+
+        !!! example
+            ```python
+            sales_fg.select(['date','weekly_sales','is_holiday',
+                             'sales_last_30_days_store_dep',
+                             'sales_last_365_days_store_dep']).show(5)
+            ```
 
         # Arguments
             n: int. Number of rows to show.
@@ -1071,10 +1189,22 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example "Upsert new feature data with time travel format `HUDI`:"
             ```python
-            fs = conn.get_feature_store();
-            fg = fs.get_feature_group("example_feature_group", 1)
-            upsert_df = ...
-            fg.insert(upsert_df)
+            import hopsworks
+
+            project = hopsworks.login()
+
+            fs = project.get_feature_store()
+
+            btc_price_fg = fs.get_or_create_feature_group(
+                name='bitcoin_price',
+                description='Bitcoin price aggregated for days',
+                version=1,
+                primary_key=['unix'],
+                online_enabled=True,
+                event_time=['unix']
+            )
+
+            btc_price_fg.insert(df_bitcoin_processed)
             ```
         # Arguments
             features: DataFrame, RDD, Ndarray, list. Features to be saved.
@@ -1238,6 +1368,11 @@ class FeatureGroup(FeatureGroupBase):
         """Retrieves commit timeline for this feature group. This method can only be used
         on time travel enabled feature groups
 
+        !!! example
+            ```python
+            commit_details = churn_fg.commit_details()
+            ```
+
         # Arguments
             wallclock_time: Commit details as of specific point in time. Defaults to `None`.
                  Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
@@ -1369,6 +1504,11 @@ class FeatureGroup(FeatureGroupBase):
         Runs any expectation attached with Deequ. But also runs attached Great Expectation
         Suites.
 
+        !!! example
+            ```python
+            ge_report = weather_fg.validate(df, save_report=False)
+            ```
+
         # Arguments
             dataframe: The dataframe to run the data validation expectations against.
             expectation_suite: Optionally provide an Expectation Suite to override the
@@ -1479,9 +1619,25 @@ class FeatureGroup(FeatureGroupBase):
         return self
 
     def json(self):
+        """Get specific Feature Group metadata in json format.
+
+        !!! example
+            ```python
+            citibike_usage_fg.json()
+            ```
+
+        """
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
+        """Get structured info about specific Feature Group in python dictionary format.
+
+        !!! example
+            ```python
+            citibike_usage_fg.to_dict()
+            ```
+
+        """
         fg_meta_dict = {
             "id": self._id,
             "name": self._name,
@@ -1511,6 +1667,12 @@ class FeatureGroup(FeatureGroupBase):
     def get_complex_features(self):
         """Returns the names of all features with a complex data type in this
         feature group.
+
+        !!! example
+            ```python
+            complex_dtype_features = weather_fg.get_complex_features()
+            ```
+
         """
         return [f.name for f in self.features if f.is_complex()]
 

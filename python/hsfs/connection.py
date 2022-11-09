@@ -147,6 +147,16 @@ class Connection:
         Defaulting to the project name of default feature store. To get a
         Shared feature stores, the project name of the feature store is required.
 
+        !!! example "How to get feature store instance"
+
+            ```python
+            import hopsworks
+
+            project = hopsworks.login()
+
+            fs = project.get_feature_store()
+            ```
+
         # Arguments
             name: The name of the feature store, defaults to `None`.
 
@@ -233,6 +243,11 @@ class Connection:
         external environments such as AWS SageMaker.
 
         Usage is recommended but optional.
+
+        !!! example
+            ```python
+            conn.close()
+            ```
         """
         client.stop()
         self._feature_store_api = None
