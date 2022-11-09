@@ -236,7 +236,7 @@ class HudiEngine:
         return hudi_options
 
     def reconcile_hudi_schema(
-        self, write_empty_df_callback, hudi_fg_alias, read_options
+        self, save_empty_dataframe_callback, hudi_fg_alias, read_options
     ):
         fg_table_name = hudi_fg_alias.feature_group._get_table_name()
         if sorted(self._spark_session.table(hudi_fg_alias.alias).columns) != sorted(
@@ -248,7 +248,7 @@ class HudiEngine:
                 feature_group_api.FeatureGroupApi.CACHED,
             )
 
-            write_empty_df_callback(full_fg)
+            save_empty_dataframe_callback(full_fg)
 
             self.register_temporary_table(
                 hudi_fg_alias,
