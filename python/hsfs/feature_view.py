@@ -444,7 +444,7 @@ class FeatureView:
             
             version, job = feature_view.create_training_data(
                 description='transactions_dataset_jan_feb',
-                data_format='csv'
+                data_format='csv',
                 write_options={"wait_for_job": False}
             )
 
@@ -717,7 +717,7 @@ class FeatureView:
             
                 version, job = feature_view.create_train_validation_test_split(
                     validation_size=0.3, 
-                    test_size=0.2
+                    test_size=0.2,
                     description='transactions_dataset_jan_feb',
                     data_format='csv'
                 )   
@@ -910,10 +910,7 @@ class FeatureView:
             feature_df, label_df = feature_view.training_data(
                     start_time = start_time,
                     end_time = end_time,    
-                    description = 'transactions fraud online training dataset jan/feb',
-                    data_format = "csv",
-                    coalesce = True,
-                    write_options = {'wait_for_job': True},
+                    description = 'transactions fraud online training dataset jan/feb'
                 )
 
             ```
@@ -1012,7 +1009,7 @@ class FeatureView:
             test_end= int(float(datetime.strptime("2022-06-04 23:59:59", date_format).timestamp()) * 1000)
 
             X_train, X_test, y_train, y_test = feature_view.train_test_split(
-                    test_size=0.2
+                    test_size=0.2,
                     train_start=train_start,
                     train_end=train_end,
                     test_start=test_start,
@@ -1128,7 +1125,7 @@ class FeatureView:
             
             X_train, X_val, X_test, y_train, y_val, y_test = feature_view.train_validation_test_split(
                 validation_size=0.3,
-                 test_size=0.2
+                test_size=0.2
             )
 
             ```

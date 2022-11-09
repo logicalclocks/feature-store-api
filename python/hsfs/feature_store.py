@@ -880,10 +880,11 @@ class FeatureStore:
         !!! example 
             ```python
             
-            from custom_functions import transformations
+            def plus_one(value):
+                return value + 1
 
             plus_one_meta = fs.create_transformation_function(
-                    transformation_function=transformations.plus_one,
+                    transformation_function=plus_one,
                     output_type=int,
                     version=1
                 )
@@ -934,7 +935,7 @@ class FeatureStore:
         !!! example "Get transformation function by name and version"   
             ```python
             
-            plus_one_fn = fs.get_transformation_function(name="plus_one", version=2)
+            min_max_scaler = fs.get_transformation_function(name="min_max_scaler", version=2)
 
             ```
 
@@ -944,13 +945,13 @@ class FeatureStore:
         !!! example "Attach transformation functions to the feature view"   
             ```python
             
-            plus_one_fn = fs.get_transformation_function(name="plus_one", version=1)
+            min_max_scaler = fs.get_transformation_function(name="min_max_scaler", version=1)
             feature_view = fs.create_feature_view(
                 name='transactions_view',
                 query=query,
                 labels=["fraud_label"],
                 transformation_functions={
-                    "amount_spent": plus_one_fn
+                    "amount_spent": min_max_scaler
                 }
             )
 
