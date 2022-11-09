@@ -1406,7 +1406,6 @@ class TestFeatureGroupEngine:
         assert f.primary is False
         assert f.partition is False
         assert f.hudi_precombine_key is False
-        assert fg._options == write_options
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0
