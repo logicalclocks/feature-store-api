@@ -39,21 +39,6 @@ public class TestHudiEngine {
     }
 
     @Test
-    void testSparkSchemasMatchDifferentType() throws Exception {
-        StructType schema1 = new StructType()
-                .add("id", "int")
-                .add("name", "string")
-                .add("age", "int");
-        StructType schema2 = new StructType()
-                .add("id", "int")
-                .add("name", "string")
-                .add("age", "string");
-
-        HudiEngine engine = new HudiEngine();
-        Assertions.assertFalse(engine.sparkSchemasMatch(schema1.fieldNames(), schema2.fieldNames()));
-    }
-
-    @Test
     void testSparkSchemasMatchFeatureMissing() throws Exception {
         StructType schema1 = new StructType()
                 .add("id", "int")
