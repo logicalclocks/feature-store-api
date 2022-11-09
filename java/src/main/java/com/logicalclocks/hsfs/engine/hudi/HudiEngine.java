@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs.engine.hudi;
 
 import com.logicalclocks.hsfs.Feature;
+import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
@@ -305,9 +306,14 @@ public class HudiEngine {
     String[] hiveSchema = sparkSession.table(fgTableName).columns();
     if (!sparkSchemasMatch(hudiSchema, hiveSchema)) {
       Dataset dataframe = sparkSession.table(fgTableName).limit(0);
-      try {
-        saveHudiFeatureGroup(sparkSession, hudiFeatureGroupAlias.getFeatureGroup(), dataframe,
-                HudiOperationType.UPSERT, new HashMap<>(), null);
+
+      try{
+        FeatureGroup fullFG = featureGroupApi.getFeatureGroup(
+                hudiFeatureGroupAlias.getFeatureGroup().getFeatureStore(),
+                hudiFeatureGroupAlias.getFeatureGroup().getName(),
+                hudiFeatureGroupAlias.getFeatureGroup().getVersion());
+        saveHudiFeatureGroup(sparkSession, fullFG, dataframe,
+                  HudiOperationType.UPSERT, new HashMap<>(), null);
       } catch (IOException | ParseException e) {
         throw new FeatureStoreException("Error while reconciling HUDI schema.", e);
       }
