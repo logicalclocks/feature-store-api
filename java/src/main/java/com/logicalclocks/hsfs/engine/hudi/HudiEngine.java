@@ -307,7 +307,7 @@ public class HudiEngine {
     if (!sparkSchemasMatch(hudiSchema, hiveSchema)) {
       Dataset dataframe = sparkSession.table(fgTableName).limit(0);
 
-      try{
+      try {
         FeatureGroup fullFG = featureGroupApi.getFeatureGroup(
                 hudiFeatureGroupAlias.getFeatureGroup().getFeatureStore(),
                 hudiFeatureGroupAlias.getFeatureGroup().getName(),
