@@ -144,7 +144,7 @@ class Engine:
             hudi_fg_alias,
             read_options,
         )
-        hudi_engine_instance.reconcile_hudi_schema(self, hudi_fg_alias, read_options)
+        hudi_engine_instance.reconcile_hudi_schema(hudi_fg_alias, read_options)
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "spark"]:

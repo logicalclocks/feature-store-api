@@ -42,13 +42,10 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-import org.apache.spark.sql.types.StructField;
-import org.apache.spark.sql.types.StructType;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.json.JSONArray;
 import scala.collection.Seq;
-import scala.collection.JavaConverters;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -56,9 +53,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
-import java.util.Comparator;
+import java.util.Arrays;
 
 public class HudiEngine {
 
@@ -305,13 +301,13 @@ public class HudiEngine {
                                   HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> hudiArgs)
           throws FeatureStoreException {
     String fgTableName = utils.getTableName(hudiFeatureGroupAlias.getFeatureGroup());
-    StructType hudiSchema = sparkSession.table(hudiFeatureGroupAlias.getAlias()).schema();
-    StructType hiveSchema = sparkSession.table(fgTableName).schema();
+    String[] hudiSchema = sparkSession.table(hudiFeatureGroupAlias.getAlias()).columns();
+    String[] hiveSchema = sparkSession.table(fgTableName).columns();
     if (!sparkSchemasMatch(hudiSchema, hiveSchema)) {
       Dataset dataframe = sparkSession.table(fgTableName).limit(0);
       try {
         saveHudiFeatureGroup(sparkSession, hudiFeatureGroupAlias.getFeatureGroup(), dataframe,
-                HudiOperationType.BULK_INSERT, null, null);
+                HudiOperationType.UPSERT, new HashMap<>(), null);
       } catch (IOException | ParseException e) {
         throw new FeatureStoreException("Error while reconciling HUDI schema.", e);
       }
@@ -324,21 +320,19 @@ public class HudiEngine {
     }
   }
 
-  public boolean sparkSchemasMatch(StructType schema1, StructType schema2) {
+  public boolean sparkSchemasMatch(String[] schema1, String[] schema2) {
     if (schema1 == null || schema2 == null) {
       return false;
     }
-    if (schema1.size() != schema2.size()) {
+    if (schema1.length != schema2.length) {
       return false;
     }
 
-    ArrayList<StructField> sortedSchema1 = new ArrayList<>(JavaConverters.asJavaCollection(schema1.toSeq()));
-    sortedSchema1.sort(Comparator.comparing(StructField::name));
-    ArrayList<StructField> sortedSchema2 = new ArrayList<>(JavaConverters.asJavaCollection(schema2.toSeq()));
-    sortedSchema2.sort(Comparator.comparing(StructField::name));
+    Arrays.sort(schema1);
+    Arrays.sort(schema2);
 
-    for (int i = 0; i < schema1.size(); i++) {
-      if (!sortedSchema1.get(i).equals(sortedSchema2.get(i))) {
+    for (int i = 0; i < schema1.length; i++) {
+      if (!schema1[i].equals(schema2[i])) {
         return false;
       }
     }

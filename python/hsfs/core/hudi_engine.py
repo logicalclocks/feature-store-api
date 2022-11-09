@@ -235,13 +235,13 @@ class HudiEngine:
 
         return hudi_options
 
-    def reconcile_hudi_schema(self, spark_engine, hudi_fg_alias, read_options):
+    def reconcile_hudi_schema(self, hudi_fg_alias, read_options):
         fg_table_name = hudi_fg_alias.feature_group._get_table_name()
-        if (
-            self._spark_session.table(hudi_fg_alias.alias).schema
-            != self._spark_session.table(fg_table_name).schema
+        if sorted(self._spark_session.table(hudi_fg_alias.alias).columns) != sorted(
+            self._spark_session.table(fg_table_name).columns
         ):
-            spark_engine.save_empty_dataframe(hudi_fg_alias.feature_group)
+            dataframe = self._spark_session.table(fg_table_name).limit(0)
+            self.save_hudi_fg(dataframe, "append", HudiEngine.HUDI_UPSERT, {}, None)
 
             self.register_temporary_table(
                 hudi_fg_alias,
