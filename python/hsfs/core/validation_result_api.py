@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from typing import Union, List, Optional
+from typing import Union, List, Dict
 from hsfs import client, ge_validation_result
 
 
@@ -33,10 +33,7 @@ class ValidationResultApi:
     def get_validation_history(
         self,
         expectation_id: int,
-        offset: Optional[int],
-        limit: Optional[int],
-        sort_by: Optional[str],
-        filter_by: Optional[List[str]],
+        query_params: Dict[str, str] = {},
     ) -> Union[
         List[ge_validation_result.ValidationResult],
         ge_validation_result.ValidationResult,
@@ -59,16 +56,6 @@ class ValidationResultApi:
             expectation_id,
         ]
         headers = {"content-type": "application/json"}
-
-        query_params = {}
-        if offset:
-            query_params["offset"] = offset
-        if limit:
-            query_params["limit"] = limit
-        if sort_by:
-            query_params["sort_by"] = sort_by
-        if filter_by:
-            query_params["filter_by"] = filter_by
 
         return ge_validation_result.ValidationResult.from_response_json(
             _client._send_request("GET", path_params, query_params, headers=headers)

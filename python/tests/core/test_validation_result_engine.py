@@ -15,7 +15,7 @@
 #
 
 from hsfs.core import validation_result_engine
-import pandas as pd
+from datetime import date, datetime
 import pytest
 
 
@@ -44,184 +44,122 @@ class TestValidationResultEngine:
             == 1
         )
 
-    def test_verify_sort_by(self):
+    def test_build_query_params(self):
         # Arrange
         feature_store_id = 99
         feature_group_id = 10
-        vr_engine = validation_result_engine.ValidationResultEngine(
-            feature_store_id=feature_store_id, feature_group_id=feature_group_id
-        )
+        value_error_inputs = [
+            {
+                "ingested_only": True,
+                "rejected_only": True,
+                "start_validation_time": None,
+                "end_validation_time": None,
+            },
+            {
+                "ingested_only": False,
+                "rejected_only": True,
+                "start_validation_time": datetime.now(),
+                "end_validation_time": datetime(2022, 1, 1, 0, 0, 0),
+            },
+        ]
 
-        input_with_type_error = [
-            1,
-            2.0,
-            {},
-            ["validation_time:desc"],
-            pd.Timestamp(200),
+        correct_inputs = [
+            {
+                "ingested_only": False,
+                "rejected_only": True,
+                "start_validation_time": datetime(2022, 1, 1, 0, 0, 0),
+                "end_validation_time": datetime.now(),
+            },
+            {
+                "ingested_only": True,
+                "rejected_only": False,
+                "start_validation_time": date.fromisoformat("2022-01-01"),
+                "end_validation_time": None,
+            },
+            {
+                "ingested_only": False,
+                "rejected_only": False,
+                "start_validation_time": 12,
+                "end_validation_time": "2022-01-01",
+            },
+            {
+                "ingested_only": False,
+                "rejected_only": False,
+                "start_validation_time": None,
+                "end_validation_time": None,
+            },
         ]
-        input_with_value_error = [
-            "sort_by=validation_time:desc",
-            "desc",
-            "asc",
-            "validation_time_gte:21343243",
-            "ingestion_result_eq:REJECTED" "validation_time:confused",
-        ]
-        clean_inputs = ["validation_time:desc", "validation_time:asc"]
 
         # Act
-        for failing_type_input in input_with_type_error:
-            with pytest.raises(TypeError):
-                vr_engine._verify_sort_by(failing_type_input)
+        vr_engine = validation_result_engine.ValidationResultEngine(
+            feature_group_id=feature_group_id, feature_store_id=feature_store_id
+        )
 
-        for failing_value_input in input_with_value_error:
+        for error_inputs in value_error_inputs:
             with pytest.raises(ValueError):
-                vr_engine._verify_sort_by(failing_value_input)
+                vr_engine._build_query_params(**error_inputs)
 
-        for passing_input in clean_inputs:
-            vr_engine._verify_sort_by(passing_input)
+        correct_outputs = []
+        for correct_input in correct_inputs:
+            correct_outputs.append(vr_engine._build_query_params(**correct_input))
 
         # Assert
-        assert True
+        # All cases
+        for correct_output in correct_outputs:
+            assert correct_output["sort_by"] == "validation_time:desc"
+            assert "offset" not in correct_output.keys()
+            assert "limit" not in correct_output.keys()
 
-    def test_verify_filter_by(self):
-        # Arrange
-        feature_store_id = 99
-        feature_group_id = 10
-        vr_engine = validation_result_engine.ValidationResultEngine(
-            feature_store_id=feature_store_id, feature_group_id=feature_group_id
-        )
-
-        input_with_type_error = [1, 2.0, {}, pd.Timestamp(200)]
-        input_with_value_error = [
-            "sort_by=validation_time:desc",
-            "desc",
-            "asc",
-            "validation_time_gte:2134WW243",
-            "ingestion_result_eq:REJ3CTED",
-            "validation_time:confused",
-            ["validation_time_gte:2134WW243", "validation_time_lte:2134WW243"],
-            ["validation_time_gte:2134243", "ingestion_result_eq:REJ3CTED"],
-        ]
-        clean_inputs = [
-            "ingestion_result_eq:REJECTED",
-            "ingestion_result_eq:INGESTED",
-            "iNGEstion_REsult_eQ:INGESTED",
-            "VALIDATION_time_Gte:213321",
-            "validation_time_gte:12213",
-            "validation_time_gt:12213",
-            "validation_time_eq:12213",
-            "validation_time_lte:12213",
-            "validation_time_lt:12213213",
-            [],
-        ]
-
-        # Act
-        for failing_type_input in input_with_type_error:
-            with pytest.raises(TypeError):
-                vr_engine._verify_filter_by(failing_type_input)
-
-        for failing_value_input in input_with_value_error:
-            with pytest.raises(ValueError):
-                vr_engine._verify_filter_by(failing_value_input)
-
-        for passing_input in clean_inputs:
-            vr_engine._verify_filter_by(passing_input)
-
-        # Assert
-        assert True
-
-    def test_match_filter_by_validation_time_or_ingestion_result(self):
-        # Arrange
-        feature_store_id = 99
-        feature_group_id = 10
-        vr_engine = validation_result_engine.ValidationResultEngine(
-            feature_store_id=feature_store_id, feature_group_id=feature_group_id
-        )
-        input_with_value_error = [
-            "sort_by=validation_time:desc",
-            "desc",
-            "asc",
-            "validation_time_gte:2134WW243",
-            "ingestion_result_eq:REJ3CTED",
-            "validation_time:confused",
-        ]
-        clean_inputs = [
-            "ingestion_result_eq:REJECTED",
-            "ingestion_result_eq:INGESTED",
-            "iNGEstion_REsult_eQ:INGESTED",
-            "VALIDATION_time_Gte:213321",
-            "validation_time_gte:12213",
-            "validation_time_gt:12213",
-            "validation_time_eq:12213"
-            "validation_time_lte:12213"
-            "validation_time_lt:12213213",
-        ]
-
-        # Act
-        for failing_value_input in input_with_value_error:
-            with pytest.raises(ValueError):
-                vr_engine._match_filter_by_validation_time_or_ingestion_result(
-                    failing_value_input
-                )
-
-        for passing_input in clean_inputs:
-            vr_engine._match_filter_by_validation_time_or_ingestion_result(
-                passing_input
+        # First case
+        assert len(correct_outputs[0]["filter_by"]) == 3
+        assert "ingestion_result_eq:rejected" in correct_outputs[0]["filter_by"]
+        filter_validation_gte = [
+            val
+            for val in filter(
+                lambda x: "validation_time_gte:" in x, correct_outputs[0]["filter_by"]
             )
+        ]
+        assert len(filter_validation_gte) == 1
+        assert int(filter_validation_gte[0][20:]) + 1
+        filter_validation_lte = [
+            val
+            for val in filter(
+                lambda x: "validation_time_lte:" in x, correct_outputs[0]["filter_by"]
+            )
+        ]
+        assert len(filter_validation_lte) == 1
+        assert int(filter_validation_lte[0][20:]) + 1
 
-        # Assert
-        assert True
+        # Second case
+        assert len(correct_outputs[1]["filter_by"]) == 2
+        assert "ingestion_result_eq:ingested" in correct_outputs[1]["filter_by"]
+        filter_validation_gte = [
+            val
+            for val in filter(
+                lambda x: "validation_time_gte:" in x, correct_outputs[1]["filter_by"]
+            )
+        ]
+        assert len(filter_validation_gte) == 1
+        assert int(filter_validation_gte[0][20:]) + 1
 
-    def test_verify_offset(self):
-        # Arrange
-        feature_store_id = 99
-        feature_group_id = 10
-        vr_engine = validation_result_engine.ValidationResultEngine(
-            feature_store_id=feature_store_id, feature_group_id=feature_group_id
-        )
+        # Third case
+        assert len(correct_outputs[2]["filter_by"]) == 2
+        filter_validation_gte = [
+            val
+            for val in filter(
+                lambda x: "validation_time_gte:" in x, correct_outputs[2]["filter_by"]
+            )
+        ]
+        assert len(filter_validation_gte) == 1
+        assert int(filter_validation_gte[0][20:]) + 1
+        filter_validation_lte = [
+            val
+            for val in filter(
+                lambda x: "validation_time_lte:" in x, correct_outputs[2]["filter_by"]
+            )
+        ]
+        assert len(filter_validation_lte) == 1
+        assert int(filter_validation_lte[0][20:]) + 1
 
-        input_with_type_error = ["1", 2.0, {}, ["2"]]
-        input_with_value_error = [-1]
-        clean_inputs = [0, 10]
-
-        # Act
-        for failing_type_input in input_with_type_error:
-            with pytest.raises(TypeError):
-                vr_engine._verify_offset(failing_type_input)
-
-        for failing_value_input in input_with_value_error:
-            with pytest.raises(ValueError):
-                vr_engine._verify_offset(failing_value_input)
-
-        for passing_input in clean_inputs:
-            vr_engine._verify_offset(passing_input)
-
-        # Assert
-        assert True
-
-    def test_verify_limit(self):
-        # Arrange
-        feature_store_id = 99
-        feature_group_id = 10
-        vr_engine = validation_result_engine.ValidationResultEngine(
-            feature_store_id=feature_store_id, feature_group_id=feature_group_id
-        )
-
-        input_with_type_error = ["1", 2.0, {}, ["2"]]
-        input_with_value_error = [-1]
-        clean_inputs = [0, 10]
-
-        # Act
-        for failing_type_input in input_with_type_error:
-            with pytest.raises(TypeError):
-                vr_engine._verify_limit(failing_type_input)
-
-        for failing_value_input in input_with_value_error:
-            with pytest.raises(ValueError):
-                vr_engine._verify_limit(failing_value_input)
-
-        for passing_input in clean_inputs:
-            vr_engine._verify_limit(passing_input)
-
-        # Assert
-        assert True
+        # Fourth case
+        assert len(correct_outputs[3]["filter_by"]) == 0

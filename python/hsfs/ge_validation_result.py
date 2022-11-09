@@ -15,9 +15,8 @@
 #
 
 import json
-from typing import Any, Dict, Optional
-import dateutil
-import datetime
+from typing import Any, Dict, Optional, Union
+from datetime import date, datetime
 
 import humps
 import great_expectations as ge
@@ -186,13 +185,17 @@ class ValidationResult:
             )
 
     @property
-    def validation_time(self) -> Optional[datetime.datetime]:
+    def validation_time(self) -> Optional[int]:
         return self._validation_time
 
     @validation_time.setter
-    def validation_time(self, validation_time: Optional[int]) -> None:
+    def validation_time(
+        self, validation_time: Union[str, int, datetime, date, None]
+    ) -> None:
         if validation_time:
-            self._validation_time = dateutil.parser.isoparse(validation_time)
+            self._validation_time = util.convert_event_time_to_timestamp(
+                validation_time
+            )
         else:
             self._validation_time = None
 

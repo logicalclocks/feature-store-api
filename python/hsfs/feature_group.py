@@ -540,10 +540,10 @@ class FeatureGroupBase:
     def get_validation_history(
         self,
         expectation_id: int,
-        sort_by: Optional[str] = "validation_time:desc",
-        filter_by: Optional[str] = None,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
+        start_validation_time: Union[str, int, datetime, date, None] = None,
+        end_validation_time: Union[str, int, datetime, date, None] = datetime.now(),
+        ingested_only: bool = False,
+        rejected_only: bool = False,
     ) -> List[ValidationResult]:
         """Fetch validation history of an Expectation specified by its id.
 
@@ -560,10 +560,10 @@ class FeatureGroupBase:
 
         return self._validation_result_engine.get_validation_history(
             expectation_id=expectation_id,
-            sort_by=sort_by,
-            filter_by=filter_by,
-            offset=offset,
-            limit=limit,
+            start_validation_time=start_validation_time,
+            end_validation_time=end_validation_time,
+            ingested_only=ingested_only,
+            rejected_only=rejected_only,
         )
 
     def __getattr__(self, name):

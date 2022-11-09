@@ -14,9 +14,10 @@
 #   limitations under the License.
 #
 
-from typing import Union, List, Optional
+from typing import Union, List, Dict
 from hsfs.core import validation_result_api
-import re
+from datetime import datetime, date
+from hsfs.util import convert_event_time_to_timestamp
 
 from hsfs.ge_validation_result import ValidationResult
 
@@ -30,8 +31,6 @@ class ValidationResultEngine:
         :param feature_group_id: id of the featuregroup it is attached to
         :type feature_group_id: int
         """
-        self._feature_store_id = feature_store_id
-        self._feature_group_id = feature_group_id
         self._validation_result_api = validation_result_api.ValidationResultApi(
             feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
@@ -39,116 +38,68 @@ class ValidationResultEngine:
     def get_validation_history(
         self,
         expectation_id: int,
-        sort_by: Optional[str] = "validation_time:desc",
-        filter_by: Optional[str] = None,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
+        start_validation_time: Union[str, int, datetime, date, None] = None,
+        end_validation_time: Union[str, int, datetime, date, None] = None,
+        ingested_only: bool = False,
+        rejected_only: bool = False,
     ) -> Union[List[ValidationResult], ValidationResult]:
         """Get Validation Results relevant to an Expectation specified by expectation_id.
 
         :param expectation_id: id of the expectation for which to fetch the validation history
         :type expectation_id: int
-        :param sort_by: sort the validation results according to validation_time, descending or ascending
-        :type sort_by: Optional[str]
-        :param filter_by: filter the validation results based on validation_time_(eq,gt,gte,lt,lte) or ingestion result
-        :type filter_by: Optional[str]
-        :param offset: offset for pagination
-        :type offset: Optional[int]
-        :param limit: limit for pagination
-        :type limit: int
+        :param ingestion_only: retrieve only validation result linked to data ingested in the Feature Group
+        :type ingestion_only: bool
+        :param rejected_only: retrieve only validation result linked to data not ingested in the Feature Group
+        :type rejected_only: bool
+        :param start_validation_time: retrieve validation result posterior to start_validation_time
+        :type start_validation_time: Union[str, int, datetime, date, None]
+        :param end_validation_time: retrieve validation result anterior to end_validation_time
+        :type end_validation_time: Union[str, int, datetime, date, None]
         """
-        if sort_by:
-            self._verify_sort_by(sort_by)
-        if filter_by:
-            self._verify_filter_by(filter_by)
-        if offset:
-            self._verify_offset(offset)
-        if limit:
-            self._verify_limit(limit)
+        query_params = self._build_query_params(
+            ingested_only=ingested_only,
+            rejected_only=rejected_only,
+            start_validation_time=start_validation_time,
+            end_validation_time=end_validation_time,
+        )
 
         return self._validation_result_api.get_validation_history(
-            expectation_id=expectation_id,
-            offset=offset,
-            limit=limit,
-            filter_by=filter_by,
-            sort_by=sort_by,
+            expectation_id=expectation_id, query_params=query_params
         )
 
-    def _verify_sort_by(self, sort_by: str) -> None:
-        if isinstance(sort_by, str):
-            if sort_by.lower() not in ["validation_time:asc", "validation_time:desc"]:
-                raise ValueError(
-                    f"Illegal Value for sort_by : {sort_by}. Allowed values are validation_time:desc or validation_time:asc."
-                )
-        else:
-            raise TypeError(f"sort_by must be a str. Got {type(sort_by)}")
+    def _build_query_params(
+        self,
+        ingested_only: bool = False,
+        rejected_only: bool = False,
+        start_validation_time: Union[str, int, datetime, date, None] = None,
+        end_validation_time: Union[str, int, datetime, date, None] = None,
+    ) -> Dict[str, str]:
+        query_params = {"filter_by": [], "sort_by": "validation_time:desc"}
 
-    def _verify_filter_by(self, filter_by: Union[str, List[str], None]) -> None:
-        if isinstance(filter_by, str):
-            self._match_filter_by_validation_time_or_ingestion_result(
-                filter_by=filter_by
+        if ingested_only and rejected_only:
+            raise ValueError("ingested_only and rejected_only ")
+        elif ingested_only:
+            query_params["filter_by"].append("ingestion_result_eq:ingested")
+        elif rejected_only:
+            query_params["filter_by"].append("ingestion_result_eq:rejected")
+
+        if start_validation_time and end_validation_time:
+            if convert_event_time_to_timestamp(
+                start_validation_time
+            ) > convert_event_time_to_timestamp(end_validation_time):
+                raise ValueError(
+                    f"start_validation_time : {start_validation_time} is posterior to end_validation_time : {end_validation_time}"
+                )
+
+        if start_validation_time:
+            query_params["filter_by"].append(
+                "validation_time_gte:"
+                + str(convert_event_time_to_timestamp(start_validation_time))
             )
-            return
-        elif isinstance(filter_by, List):
-            if len(filter_by) == 0:
-                filter_by = None
-                return
-            for single_filter in filter_by:
-                self._verify_filter_by(single_filter)
-            return
+        if end_validation_time:
+            query_params["filter_by"].append(
+                "validation_time_lte:"
+                + str(convert_event_time_to_timestamp(end_validation_time))
+            )
 
-        raise TypeError(
-            f"filter_by must be a str or list of string. Got {type(filter_by)}"
-        )
-
-    def _match_filter_by_validation_time_or_ingestion_result(
-        self, filter_by: str
-    ) -> None:
-        if filter_by.upper() in [
-            "INGESTION_RESULT_EQ:REJECTED",
-            "INGESTION_RESULT_EQ:INGESTED",
-        ]:
-            return
-
-        match = re.search("([a-z,_]+):([0-9]+)$", filter_by.lower())
-        allowed_filters = [
-            "validation_time_gt",
-            "validation_time_gte",
-            "validation_time_eq",
-            "validation_time_lt",
-            "validation_time_lte",
-        ]
-
-        if match:
-            groups = match.groups(0)
-            if groups[0] in allowed_filters:
-                if int(groups[1], base=10) > 0:
-                    print(groups)
-                    return
-
-        raise ValueError(
-            f"Illegal Value for filter_by : {filter_by}."
-            + "Allowed values are validation_time_[gt/gte/eq/lt/lte]:(datetime.datetime) or ingestion_result_eq:[ingested/rejected]"
-        )
-
-    def _verify_offset(self, offset: int) -> None:
-        if isinstance(offset, int):
-            if offset >= 0:
-                return
-            else:
-                raise ValueError(
-                    f"offset value should be a positive integer, got {offset}"
-                )
-        else:
-            raise TypeError(f"offset should be of type int, got {type(offset)}")
-
-    def _verify_limit(self, limit: int) -> None:
-        if isinstance(limit, int):
-            if limit >= 0:
-                return
-            else:
-                raise ValueError(
-                    f"offset value should be a positive integer, got {limit}"
-                )
-        else:
-            raise TypeError(f"offset should be of type int, got {type(limit)}")
+        return query_params
