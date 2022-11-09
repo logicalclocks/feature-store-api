@@ -117,6 +117,13 @@ class Query:
     def show(self, n: int, online: Optional[bool] = False):
         """Show the first N rows of the Query.
 
+        !!! example "Show the first 10 rows"
+            ```python
+            
+            query.show(10)
+
+            ``` 
+
         # Arguments
             n: Number of rows to show.
             online: Show from online storage. Defaults to `False`.
@@ -141,6 +148,22 @@ class Query:
         If no join keys are specified, Hopsworks will use the maximal matching subset of
         the primary keys of the feature groups you are joining.
         Joins of one level are supported, no neted joins.
+
+        !!! example "Join two feature groups"
+            ```python 
+            
+                feature_join = rain_fg.join(temperature_fg)
+
+            ```
+
+        !!! example "More complex join"
+            ```python 
+            
+                feature_join = rain_fg.select_all() 
+                    .join(temperature_fg.select_all(), on=["date", "location_id"]) 
+                    .join(location_fg.select_all(), left_on=["location_id"], right_on=["id"], how="left")
+
+            ```      
 
         # Arguments
             sub_query: Right-hand side query to join.
@@ -201,7 +224,7 @@ class Query:
         When no wallclock_time is given, the latest state of features is returned. Optionally, commits before
         a specified point in time can still be excluded.
 
-        !!! example "Reading the latest state of features, excluding commits before a specified point in time:"
+        !!! example "Reading the latest state of features, excluding commits before a specified point in time"
             ```python
             fs = connection.get_feature_store();
             query = fs.get_feature_group("example_feature_group", 1).select_all()
@@ -271,16 +294,19 @@ class Query:
         """Apply filter to the feature group.
 
         Selects all features and returns the resulting `Query` with the applied filter.
+        !!! example 
+            ```python
 
-        ```python
-        from hsfs.feature import Feature
+            from hsfs.feature import Feature
 
-        query.filter(Feature("weekly_sales") > 1000)
-        ```
+            query.filter(Feature("weekly_sales") > 1000)
 
+            ```
+        
         If you are planning to join the filtered feature group later on with another
         feature group, make sure to select the filtered feature explicitly from the
         respective feature group:
+
         ```python
         query.filter(fg.feature1 == 1).show(10)
         ```
@@ -289,6 +315,26 @@ class Query:
         ```python
         query.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
         ```
+
+        !!! example "Filters are fully compatible with joins"
+            ```python
+
+            feature_join = rain_fg.select_all() 
+                .join(temperature_fg.select_all(), on=["date", "location_id"]) 
+                .join(location_fg.select_all(), left_on=["location_id"], right_on=["id"], how="left") 
+                .filter((rain_fg.location_id == 10) | (rain_fg.location_id == 20))
+
+            ```
+
+        !!! example "Filters can be applied at any point of the query"
+            ```python
+
+            feature_join = rain_fg.select_all() 
+                .join(temperature_fg.select_all().filter(temperature_fg.avg_temp >= 22), on=["date", "location_id"]) 
+                .join(location_fg.select_all(), left_on=["location_id"], right_on=["id"], how="left") 
+                .filter(rain_fg.location_id == 10)
+
+            ```
 
         # Arguments
             f: Filter object.
@@ -378,6 +424,14 @@ class Query:
         return new
 
     def to_string(self, online=False):
+        """ 
+        !!! example 
+            ```python
+            
+            query.to_string()
+
+            ```
+        """        
         fs_query = self._query_constructor_api.construct_query(self)
 
         if online:
@@ -410,6 +464,14 @@ class Query:
         return self._left_features
 
     def append_feature(self, feature):
+        """ 
+        !!! example 
+            ```python
+            
+            query.append_feature('feature_name')
+
+            ```
+        """        
         self._left_features.append(feature)
 
     def is_time_travel(self):

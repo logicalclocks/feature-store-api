@@ -877,6 +877,20 @@ class FeatureStore:
     ):
         """Create a transformation function metadata object.
 
+        !!! example 
+            ```python
+            
+            from custom_functions import transformations
+
+            plus_one_meta = fs.create_transformation_function(
+                    transformation_function=transformations.plus_one,
+                    output_type=int,
+                    version=1
+                )
+            plus_one_meta.save()
+
+            ```
+
         !!! note "Lazy"
             This method is lazy and does not persist the transformation function in the
             feature store on its own. To materialize the transformation function and save
@@ -903,6 +917,70 @@ class FeatureStore:
     ):
         """Get  transformation function metadata object.
 
+        !!! example "Get transformation function by name. This will default to version 1"
+            ```python
+
+            plus_one_fn = fs.get_transformation_function(name="plus_one")
+
+            ```
+
+        !!! example "Get built-in transformation function min max scaler"
+            ```python
+
+            min_max_scaler_fn = fs.get_transformation_function(name="min_max_scaler")
+
+            ```
+
+        !!! example "Get transformation function by name and version"   
+            ```python
+            
+            plus_one_fn = fs.get_transformation_function(name="plus_one", version=2)
+
+            ```
+
+        You can define in the feature view transformation functions as dict, where key is feature name and value is online transformation function name.
+        Then the transformation functions are applied when you read training data, read batch data, or get feature vectors.
+        
+        !!! example "Attach transformation functions to the feature view"   
+            ```python
+            
+            plus_one_fn = fs.get_transformation_function(name="plus_one", version=1)
+            feature_view = fs.create_feature_view(
+                name='transactions_view',
+                query=query,
+                labels=["fraud_label"],
+                transformation_functions={
+                    "amount_spent": plus_one_fn
+                }
+            )
+
+            ```
+        Built-in transformation functions are attached in the same way.
+        The only difference is that it will compute the necessary statistics for the specific function in the background.
+        For example min and max values for `min_max_scaler`; mean and standard deviation for `standard_scaler` etc.
+        
+        !!! example "Attach built-in transformation functions to the feature view"   
+            ```python
+            
+            min_max_scaler = fs.get_transformation_function(name="min_max_scaler")
+            standard_scaler = fs.get_transformation_function(name="standard_scaler")
+            robust_scaler = fs.get_transformation_function(name="robust_scaler")
+            label_encoder = fs.get_transformation_function(name="label_encoder")
+
+            feature_view = fs.create_feature_view(
+                name='transactions_view',
+                query=query,
+                labels=["fraud_label"],
+                transformation_functions = {
+                    "category": label_encoder,
+                    "amount": robust_scaler,
+                    "loc_delta": min_max_scaler,
+                    "age_at_transaction": standard_scaler
+                }
+            )
+
+            ```
+
         # Arguments
             name: name of transformation function.
             version: version of transformation function. Optional, if not provided all functions that match to provided
@@ -914,6 +992,13 @@ class FeatureStore:
 
     def get_transformation_functions(self):
         """Get  all transformation functions metadata objects.
+
+        !!! example "Get all transformation functions"
+            ```python
+            
+            fs.get_transformation_functions()
+
+            ```
 
         # Returns:
              `List[TransformationFunction]`. List of transformation function instances.
@@ -931,9 +1016,20 @@ class FeatureStore:
     ):
         """Create a feature view metadata object and saved it to Hopsworks.
 
+        !!! example 
+            ```python
+
+            feature_view = fs.create_feature_view(
+                name='feature_view_name',
+                version=1,
+                transformation_functions=mapping_transformers,
+                query=query
+            )
+            ```
+
         !!! warning
-        `as_of` argument in the `Query` will be ignored because
-        feature view does not support time travel query.
+            `as_of` argument in the `Query` will be ignored because
+            feature view does not support time travel query.
 
         # Arguments
             name: Name of the feature view to create.
@@ -1022,6 +1118,15 @@ class FeatureStore:
 
         Getting a feature view from the Feature Store means getting its metadata.
 
+        !!! example 
+            ```python
+
+            feature_view = fs.get_feature_view(
+                name='feature_view_name',
+                version=1
+            )
+            ```
+
         # Arguments
             name: Name of the feature view to get.
             version: Version of the feature view to retrieve, defaults to `None` and will
@@ -1047,6 +1152,14 @@ class FeatureStore:
         """Get a list of all versions of a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
+
+        !!! example 
+            ```python
+
+            feature_view = fs.get_feature_views(
+                name='feature_view_name'
+            )
+            ```
 
         # Arguments
             name: Name of the feature view to get.

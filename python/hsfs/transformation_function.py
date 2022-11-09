@@ -79,11 +79,26 @@ class TransformationFunction:
         self._feature_group_id = None
 
     def save(self):
-        """Persist transformation function in backend."""
+        """Persist transformation function in backend.
+        !!! example 
+            ```python
+            
+            transformationfunction.save()
+
+            ```
+        """
         self._transformation_function_engine.save(self)
 
     def delete(self):
-        """Delete transformation function from backend."""
+        """Delete transformation function from backend.
+        
+        !!! example 
+            ```python
+            
+            transformationfunction.delete()
+
+            ```
+        """
         self._transformation_function_engine.delete(self)
 
     def _extract_source_code(self):

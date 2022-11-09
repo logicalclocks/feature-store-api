@@ -70,6 +70,13 @@ class FeatureView:
     def delete(self):
         """Delete current feature view and all associated metadata.
 
+        !!! example 
+            ```python
+            
+            feature_view.delete()
+
+            ```
+
         !!! danger "Potentially dangerous operation"
             This operation drops all metadata associated with **this version** of the
             feature view **and** related training dataset **and** materialized data in HopsFS.
@@ -82,6 +89,17 @@ class FeatureView:
     @staticmethod
     def clean(feature_store_id: int, feature_view_name: str, feature_view_version: str):
         """Delete the feature view and all associated metadata.
+
+        !!! example 
+            ```python
+            
+            feature_view.clean(
+                feature_store_id=1,
+                feature_view_name='featue_view_name',
+                feature_view_version=1
+            )
+
+            ```
 
         !!! danger "Potentially dangerous operation"
             This operation drops all metadata associated with **this version** of the
@@ -130,6 +148,12 @@ class FeatureView:
         """Initialise and cache parametrized prepared statement to
            retrieve feature vector from online feature store.
 
+        !!! example 
+            ```python
+            
+            feature_view.init_serving(training_dataset_version=1)
+
+            ```
         # Arguments
             training_dataset_version: int, optional. Default to be 1. Transformation statistics
                 are fetched from training dataset and apply in serving vector.
@@ -169,7 +193,14 @@ class FeatureView:
         self,
         training_dataset_version: Optional[int] = None,
     ):
-        """Initialise and cache parametrized transformation functions.
+        """Initialise and cache parametrized transformation functions. 
+
+        !!! example 
+            ```python
+            
+            feature_view.init_batch_scoring(training_dataset_version=1)
+
+            ```
 
         # Arguments
             training_dataset_version: int, optional. Default to be None. Transformation statistics
@@ -187,7 +218,17 @@ class FeatureView:
         end_time: Optional[Union[str, int, datetime, date]] = None,
     ):
         """Get a query string of batch query.
+        !!! example "Batch query for the last 24 hours"
+            ```python
+            
+                import datetime
+                start_date = (datetime.datetime.now() - datetime.timedelta(hours=24)) 
+                end_date = (datetime.datetime.now()) 
 
+                feature_view = fs.get_feature_view("cc_trans_fraud", 1)
+                transactions_df = feature_view.get_batch_query(start_time = start_date, end_time = end_date)     
+
+            ```
         # Arguments
             start_time: Start event time for the batch query. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
@@ -216,6 +257,15 @@ class FeatureView:
     ):
         """Returns assembled serving vector from online feature store.
 
+        !!! example 
+            ```python
+            
+            feature_view.get_feature_vector(
+                entry = {"pk1": 1, "pk2": 2}
+            )
+
+            ```
+
         # Arguments
             entry: dictionary of feature group primary key and values provided by serving application.
             passed_features: dictionary of feature values provided by the application at runtime.
@@ -243,6 +293,19 @@ class FeatureView:
     ):
         """Returns assembled serving vectors in batches from online feature store.
 
+        !!! example 
+            ```python
+            
+            feature_view.get_feature_vectors(
+                entry = [
+                    {"pk1": 1, "pk2": 2},
+                    {"pk1": 3, "pk2": 4},
+                    {"pk1": 5, "pk2": 6}
+                ]
+            )
+
+            ```
+
         # Arguments
             entry: a list of dictionary of feature group primary key and values provided by serving application.
             passed_features: a list of dictionary of feature values provided by the application at runtime.
@@ -269,6 +332,18 @@ class FeatureView:
     ):
         """Get a batch of data from an event time interval.
 
+        !!! example "Batch data for the last 24 hours"
+            ```python
+            
+                import datetime
+                start_date = (datetime.datetime.now() - datetime.timedelta(hours=24)) 
+                end_date = (datetime.datetime.now()) 
+
+                feature_view = fs.get_feature_view("cc_trans_fraud", 1)
+                transactions_df = feature_view.get_batch_data(start_time = start_date, end_time = end_date)
+            
+
+            ```
         # Arguments
             start_time: Start event time for the batch query. Optional. Strings should be
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
@@ -292,15 +367,60 @@ class FeatureView:
         )
 
     def add_tag(self, name: str, value):
+        """Attach a tag to a feature view.
+
+        A tag consists of a name and value pair.
+        Tag names are unique identifiers across the whole cluster.
+        The value of a tag can be any valid json - primitives, arrays or json objects.
+
+        !!! example 
+            ```python
+            
+            feature_view.add_tag(name="tag_schema", value={"key", "value"})
+
+            ```
+
+        # Arguments
+            name: Name of the tag to be added.
+            value: Value of the tag to be added.
+
+        # Raises
+            `RestAPIError` in case the backend fails to add the tag.
+        """
         return self._feature_view_engine.add_tag(self, name, value)
 
     def get_tag(self, name: str):
+        """ 
+        !!! example 
+            ```python
+            
+            feature_view.get_tag('tag_name')
+
+            ```
+        """
         return self._feature_view_engine.get_tag(self, name)
 
     def get_tags(self):
+        """ 
+        !!! example 
+            ```python
+            
+            feature_view.get_tags()
+
+            ```
+        """
         return self._feature_view_engine.get_tags(self)
 
     def delete_tag(self, name: str):
+        """
+        !!! example 
+            ```python
+            
+            feature_view.delete_tag('name_of_tag')
+
+            ```
+
+        """
         return self._feature_view_engine.delete_tag(self, name)
 
     def create_training_data(
@@ -318,6 +438,36 @@ class FeatureView:
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Create a training dataset and save data into `location`.
+
+        !!! example "Create random splits"
+            ```python
+            
+            version, job = feature_view.create_training_data(
+                description='transactions_dataset_jan_feb',
+                data_format='csv'
+                write_options={"wait_for_job": False}
+            )
+
+            ```
+
+        !!! example "Create time-series based splits"
+            ```python
+            from datetime import datetime
+            date_format = "%Y-%m-%d %H:%M:%S"
+
+            start_time = int(float(datetime.strptime("2022-05-01 00:00:00", date_format).timestamp()) * 1000)
+            end_time = int(float(datetime.strptime("2022-06-04 23:59:59", date_format).timestamp()) * 1000)
+
+            td_test_version, td_job = feature_view.create_training_data(
+                    start_time = start_time,
+                    end_time = end_time,    
+                    description = 'transactions fraud online training dataset jan/feb',
+                    data_format = "csv",
+                    coalesce = True,
+                    write_options = {'wait_for_job': True},
+                )
+
+            ```
 
         !!! info "Data Formats"
             The feature store currently supports the following data formats for
@@ -425,6 +575,17 @@ class FeatureView:
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Create a training dataset and save data into `location`.
+
+        !!! example "Create random splits"
+            ```python
+            
+            version, job = feature_view.create_train_test_split(
+                test_size=0.2,
+                description='Description of a dataset',
+                data_format='csv'
+            )
+
+            ```
 
         !!! info "Data Formats"
             The feature store currently supports the following data formats for
@@ -551,6 +712,18 @@ class FeatureView:
     ):
         """Create a training dataset and save data into `location`.
 
+        !!! example "Create random splits"
+            ```python
+            
+                version, job = feature_view.create_train_validation_test_split(
+                    validation_size=0.3, 
+                    test_size=0.2
+                    description='transactions_dataset_jan_feb',
+                    data_format='csv'
+                )   
+
+            ```
+
         !!! info "Data Formats"
             The feature store currently supports the following data formats for
             training datasets:
@@ -674,7 +847,14 @@ class FeatureView:
     ):
         """
         Recreate a training dataset.
+        
+        !!! example 
+            ```python
+            
+            feature_view.recreate_training_dataset(version=1)
 
+            ```        
+        
         !!! info
             If a materialised training data has deleted. Use `recreate_training_dataset()` to
             recreate the training data.
@@ -709,6 +889,34 @@ class FeatureView:
     ):
         """
         Get training data from feature groups.
+
+        !!! example "Create random splits"
+            ```python
+            
+            feature_df, label_df = feature_view.training_data(
+                description='Training dataset',
+            )
+
+            ```
+
+        !!! example "Create time-series based splits"
+            ```python
+            from datetime import datetime
+            date_format = "%Y-%m-%d %H:%M:%S"
+
+            start_time = int(float(datetime.strptime("2022-05-01 00:00:00", date_format).timestamp()) * 1000)
+            end_time = int(float(datetime.strptime("2022-06-04 23:59:59", date_format).timestamp()) * 1000)
+
+            feature_df, label_df = feature_view.training_data(
+                    start_time = start_time,
+                    end_time = end_time,    
+                    description = 'transactions fraud online training dataset jan/feb',
+                    data_format = "csv",
+                    coalesce = True,
+                    write_options = {'wait_for_job': True},
+                )
+
+            ```
 
         !!! info
             If a materialised training data has deleted. Use `recreate_training_dataset()` to
@@ -782,6 +990,37 @@ class FeatureView:
     ):
         """
         Get training data from feature groups.
+
+        !!! example "Create random splits"
+            ```python
+            
+            X_train, X_test, y_train, y_test = feature_view.train_test_split(
+                test_size=0.2
+            )
+
+            ```
+
+        !!! example "Create time-series based splits"
+            ```python
+            from datetime import datetime
+            date_format = "%Y-%m-%d %H:%M:%S"
+
+            train_start = int(float(datetime.strptime("2022-05-01 00:00:00", date_format).timestamp()) * 1000)
+            train_end = int(float(datetime.strptime("2022-06-04 23:59:59", date_format).timestamp()) * 1000)
+
+            test_start = int(float(datetime.strptime("2022-05-01 00:00:00", date_format).timestamp()) * 1000)
+            test_end= int(float(datetime.strptime("2022-06-04 23:59:59", date_format).timestamp()) * 1000)
+
+            X_train, X_test, y_train, y_test = feature_view.train_test_split(
+                    test_size=0.2
+                    train_start=train_start,
+                    train_end=train_end,
+                    test_start=test_start,
+                    test_end=test_end,
+                    description='transactions fraud online training dataset jan/feb'
+                )
+
+            ```
 
         !!! info
             If a materialised training data has deleted. Use `recreate_training_dataset()` to
@@ -883,6 +1122,16 @@ class FeatureView:
     ):
         """
         Get training data from feature groups.
+
+        !!! example 
+            ```python
+            
+            X_train, X_val, X_test, y_train, y_val, y_test = feature_view.train_validation_test_split(
+                validation_size=0.3,
+                 test_size=0.2
+            )
+
+            ```
 
         !!! info
             If a materialised training data has deleted. Use `recreate_training_dataset()` to
@@ -1007,6 +1256,13 @@ class FeatureView:
         """
         Get training data from storage or feature groups.
 
+        !!! example 
+            ```python
+            
+            feature_df, label_df = feature_view.get_training_data(training_dataset_version=1)
+
+            ```
+
         !!! info
             If a materialised training data has deleted. Use `recreate_training_dataset()` to
             recreate the training data.
@@ -1017,7 +1273,7 @@ class FeatureView:
             Python as Engine, instead you will have to use the storage's native client.
 
         # Arguments
-            version: training dataset version
+            training_dataset_version: training dataset version
             read_options: Additional read options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, read_options can contain the
                 following entries:
@@ -1042,12 +1298,19 @@ class FeatureView:
         """
         Get training data from storage or feature groups.
 
+        !!! example 
+            ```python
+            
+            X_train, X_test, y_train, y_test = feature_view.get_train_test_split(training_dataset_version=1)
+
+            ```
+
         !!! info
             If a materialised training data has deleted. Use `recreate_training_dataset()` to
             recreate the training data.
 
         # Arguments
-            version: training dataset version
+            training_dataset_version: training dataset version
             read_options: Additional read options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, read_options can contain the
                 following entries:
@@ -1076,12 +1339,18 @@ class FeatureView:
         """
         Get training data from storage or feature groups.
 
+        !!! example 
+            ```python
+            
+            X_train, X_val, X_test, y_train, y_val, y_test = feature_view.get_train_validation_test_splits(training_dataset_version=1)
+
+            ```
         !!! info
             If a materialised training data has deleted. Use `recreate_training_dataset()` to
             recreate the training data.
 
         # Arguments
-            version: training dataset version
+            training_dataset_version: training dataset version
             read_options: Additional read options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, read_options can contain the
                 following entries:
@@ -1107,39 +1376,120 @@ class FeatureView:
         return df
 
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
+        """Attach a tag to a training dataset.
+
+        !!! example 
+            ```python
+            
+            feature_view.add_training_dataset_tag(
+                training_dataset_version=1, 
+                name="tag_schema", 
+                value={"key", "value"}
+            )
+            ```
+        """
         return self._feature_view_engine.add_tag(
             self, name, value, training_dataset_version=training_dataset_version
         )
 
     def get_training_dataset_tag(self, training_dataset_version: int, name: str):
+        """
+        !!! example 
+            ```python
+            
+            feature_view.get_training_dataset_tag(
+                training_dataset_version=1,
+                 name="tag_schema"
+            )
+
+            ```
+        """
         return self._feature_view_engine.get_tag(
             self, name, training_dataset_version=training_dataset_version
         )
 
     def get_training_dataset_tags(self, training_dataset_version: int):
+        """
+        !!! example 
+            ```python
+            
+            feature_view.get_training_dataset_tags(
+                training_dataset_version=1
+            )
+
+            ```
+        """
         return self._feature_view_engine.get_tags(
             self, training_dataset_version=training_dataset_version
         )
 
     def delete_training_dataset_tag(self, training_dataset_version: int, name: str):
+        """
+        !!! example 
+            ```python
+            
+            feature_view.delete_training_dataset_tag(
+                training_dataset_version=1,
+                name='name_of_dataset'
+            )
+
+            ```
+
+        """
         return self._feature_view_engine.delete_tag(
             self, name, training_dataset_version=training_dataset_version
         )
 
     def purge_training_data(self, version: int):
+        """
+        !!! example 
+            ```python
+            
+            feature_view.purge_training_data(version=1)
+
+            ```        
+        """
         self._feature_view_engine.delete_training_dataset_only(
             self, training_data_version=version
         )
 
     def purge_all_training_data(self):
+        """
+        !!! example 
+            ```python
+            
+            feature_view.purge_all_training_data()
+
+            ```        
+        """
         self._feature_view_engine.delete_training_dataset_only(self)
 
     def delete_training_dataset(self, version: int):
+        """
+        !!! example 
+            ```python
+            
+            feature_view.delete_training_dataset(
+                version=1
+            )
+
+            ```
+
+        """
         self._feature_view_engine.delete_training_data(
             self, training_data_version=version
         )
 
     def delete_all_training_datasets(self):
+        """
+        !!! example 
+            ```python
+            
+            feature_view.delete_all_training_datasets()
+
+            ```
+
+        """
         self._feature_view_engine.delete_training_data(self)
 
     @classmethod

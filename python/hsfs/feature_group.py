@@ -462,6 +462,13 @@ class FeatureGroupBase:
     ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult, None]:
         """Return the latest validation report attached to the Feature Group if it exists.
 
+        !!! example "Get all transformation functions"
+            ```python
+            
+            ge_latest_report = fg.get_latest_validation_report()
+
+            ```
+
         # Arguments
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
@@ -482,6 +489,13 @@ class FeatureGroupBase:
         self, ge_type: bool = True
     ) -> List[Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]]:
         """Return the latest validation report attached to the feature group if it exists.
+
+        !!! example "Get all transformation functions"
+            ```python
+            
+            validation_history = fg.get_validation_reports()
+
+            ```
 
         # Arguments
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
@@ -1368,6 +1382,23 @@ class FeatureGroup(FeatureGroupBase):
 
         Runs any expectation attached with Deequ. But also runs attached Great Expectation
         Suites.
+
+        !!! example "Run validation using the usual Great Expectations syntax"
+            ```python
+            
+            ge_df = ge.from_pandas(df, expectation_suite=fg.get_expectation_suite())
+            ge_report = ge_df.validate()
+
+            ```
+
+        !!! example "Run validation using a convenience wrapper method provided by Hopsworks"
+            ```python
+            
+            ge_report = fg.validate(df)
+            # set the save_report parameter to False to skip uploading the report to Hopsworks
+            # ge_report = fg.validate(df, save_report=False)
+
+            ```
 
         # Arguments
             dataframe: The dataframe to run the data validation expectations against.
