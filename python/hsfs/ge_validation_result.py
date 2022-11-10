@@ -102,7 +102,7 @@ class ValidationResult:
     def to_ge_type(self) -> ge.core.ExpectationValidationResult:
         if self._validation_time:
             self.meta["validation_time"] = datetime.utcfromtimestamp(
-                self._validation_time
+                self._validation_time / 1000
             ).isoformat()
         if self._ingestion_result:
             self.meta["ingestion_result"] = self._ingestion_result
