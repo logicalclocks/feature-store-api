@@ -1505,7 +1505,7 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1, 2]}
+        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1000000000, 2000000000]}
         df = pd.DataFrame(data=d)
 
         td = training_dataset.TrainingDataset(
@@ -1516,9 +1516,9 @@ class TestPython:
             splits={"col1": None, "col2": None},
             label=["f", "f_wrong"],
             id=10,
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
         f = feature.Feature(name="col1", type="str")
@@ -1570,7 +1570,7 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1, 2]}
+        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1000000000, 2000000000]}
         df = pd.DataFrame(data=d)
 
         mock_python_engine_time_series_split.return_value = {
@@ -1586,9 +1586,9 @@ class TestPython:
             splits={"col1": None, "col2": None},
             label=["f", "f_wrong"],
             id=10,
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
         fg = feature_group.FeatureGroup(
@@ -1693,9 +1693,9 @@ class TestPython:
             splits={"col1": None, "col2": None},
             label=["f", "f_wrong"],
             id=10,
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
         expected = {"train": df.loc[df["col1"] == 1], "test": df.loc[df["col1"] == 2]}
@@ -1730,9 +1730,9 @@ class TestPython:
             splits={"col1": None, "col2": None},
             label=["f", "f_wrong"],
             id=10,
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
         expected = {"train": df.loc[df["col1"] == 1], "test": df.loc[df["col1"] == 2]}
@@ -1758,7 +1758,7 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1000, 2000]}
+        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1000000000, 2000000000]}
         df = pd.DataFrame(data=d)
 
         td = training_dataset.TrainingDataset(
@@ -1769,9 +1769,9 @@ class TestPython:
             splits={"col1": None, "col2": None},
             label=["f", "f_wrong"],
             id=10,
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
         expected = {"train": df.loc[df["col1"] == 1], "test": df.loc[df["col1"] == 2]}

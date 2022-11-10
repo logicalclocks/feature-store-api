@@ -339,7 +339,7 @@ class FeatureViewEngine:
 
     def _get_start_time(self):
         # minimum start time is 1 second
-        return 1000
+        return 1000000000
 
     def _get_end_time(self):
         # end time is current time

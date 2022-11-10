@@ -1972,9 +1972,9 @@ class TestSpark:
             data_format="CSV",
             featurestore_id=99,
             splits={"col1": 1},
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
         f = feature.Feature(name="col1", type="str")
@@ -2025,9 +2025,9 @@ class TestSpark:
             data_format="CSV",
             featurestore_id=99,
             splits={"col1": 1},
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
         f = feature.Feature(name="col1", type="str")
@@ -2107,12 +2107,16 @@ class TestSpark:
             featurestore_id=99,
             splits={"col1": None, "col2": None},
             id=10,
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
-        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"], "event_time": [1000, 2000]}
+        d = {
+            "col_0": [1, 2],
+            "col_1": ["test_1", "test_2"],
+            "event_time": [1000000000, 2000000000],
+        }
         df = pd.DataFrame(data=d)
 
         spark_df = spark_engine._spark_session.createDataFrame(df)
@@ -2154,7 +2158,7 @@ class TestSpark:
             featurestore_id=99,
             splits={"col1": None, "col2": None},
             id=10,
-            train_start=1,
+            train_start=1000000000,
             train_end=1488600000,
             test_end=1488718800,
         )
@@ -2214,7 +2218,7 @@ class TestSpark:
             featurestore_id=99,
             splits={"col1": None, "col2": None},
             id=10,
-            train_start=1,
+            train_start=1000000000,
             train_end=1488600000,
             test_end=1488718800,
         )
@@ -2261,7 +2265,7 @@ class TestSpark:
             assert result[column].schema == expected[column].schema
             assert result[column].collect() == expected[column].collect()
 
-    def test_time_series_split_epoch_millisec(self, mocker):
+    def test_time_series_split_epoch_sec(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
 
@@ -2274,15 +2278,15 @@ class TestSpark:
             featurestore_id=99,
             splits={"col1": None, "col2": None},
             id=10,
-            train_start=1,
-            train_end=1488600000001,
-            test_end=1488718800001,
+            train_start=1000000000,
+            train_end=1488600001,
+            test_end=1488718801,
         )
 
         d = {
             "col_0": [1, 2],
             "col_1": ["test_1", "test_2"],
-            "event_time": [1488600000000, 1488718800000],
+            "event_time": [1488600000, 1488718800],
         }
         df = pd.DataFrame(data=d)
 
@@ -2325,12 +2329,16 @@ class TestSpark:
             featurestore_id=99,
             splits={"col1": None, "col2": None},
             id=10,
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
-        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"], "event_time": [1000, 2000]}
+        d = {
+            "col_0": [1, 2],
+            "col_1": ["test_1", "test_2"],
+            "event_time": [1000000000, 2000000000],
+        }
         df = pd.DataFrame(data=d)
 
         spark_df = spark_engine._spark_session.createDataFrame(df)
