@@ -19,6 +19,7 @@ import json
 import pandas as pd
 
 from datetime import datetime, date, timezone
+import dateutil
 from urllib.parse import urljoin, urlparse
 
 from sqlalchemy import create_engine
@@ -102,48 +103,11 @@ def create_mysql_engine(online_conn, external):
     return sql_alchemy_engine
 
 
-def check_timestamp_format_from_date_string(input_date):
-    date_format_patterns = {
-        r"^([0-9]{4})([0-9]{2})([0-9]{2})$": "%Y%m%d",
-        r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H",
-        r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H%M",
-        r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H%M%S",
-        r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{3})$": "%Y%m%d%H%M%S%f",
-    }
-    normalized_date = (
-        input_date.replace("/", "")
-        .replace("-", "")
-        .replace(" ", "")
-        .replace(":", "")
-        .replace(".", "")
-    )
-
-    date_format = None
-    for pattern in date_format_patterns:
-        date_format_pattern = re.match(pattern, normalized_date)
-        if date_format_pattern:
-            date_format = date_format_patterns[pattern]
-            break
-
-    if date_format is None:
-        raise ValueError(
-            "Unable to identify format of the provided date value : " + input_date
-        )
-
-    return normalized_date, date_format
-
-
 def get_timestamp_from_date_string(input_date):
-    norm_input_date, date_format = check_timestamp_format_from_date_string(input_date)
     try:
-        date_time = datetime.strptime(norm_input_date, date_format)
+        date_time = dateutil.parser.parse(input_date)
     except ValueError:
-        raise ValueError(
-            "Unable to parse the normalized input date value : "
-            + norm_input_date
-            + " with format "
-            + date_format
-        )
+        raise ValueError(f"Unable to use dateutil to parse date value {input_date}.")
     if date_time.tzinfo is None:
         date_time = date_time.replace(tzinfo=timezone.utc)
     return int(float(date_time.timestamp()) * 1000)

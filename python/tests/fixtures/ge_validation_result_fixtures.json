@@ -13,7 +13,8 @@
       "href": "test_href",
       "expand": "test_expand",
       "type": "validationResultDTO",
-      "ingestion_result": "INGESTED"
+      "ingestion_result": "INGESTED",
+      "validation_time": "2022-11-10T06:47:37.000907Z"
     }
   },
   "get_basic_info": {
@@ -42,7 +43,8 @@
           "href": "test_href",
           "expand": "test_expand",
           "type": "validationResultDTO",
-          "ingestion_result": "REJECTED"
+          "ingestion_result": "REJECTED",
+          "validation_time": "2022-11-10T06:47:37.000907Z"
         }
       ]
     }

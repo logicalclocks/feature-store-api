@@ -1085,7 +1085,7 @@ class FeatureGroup(FeatureGroupBase):
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
         write_options: Optional[Dict[Any, Any]] = {},
-        validation_options: Optional[Dict[Any, Any]] = {},
+        validation_options: Optional[Dict[Any, Any]] = {"save_report": True},
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         """Persist the metadata and materialize the feature group to the feature store
         or insert data from a dataframe into the existing feature group.
