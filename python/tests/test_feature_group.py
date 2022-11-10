@@ -57,7 +57,9 @@ class TestFeatureGroup:
         assert fg._online_topic_name == "119_15_fg_test_1_onlinefs"
         assert fg.event_time is None
         assert fg.stream is False
-        assert fg.expectation_suite is None
+        assert (
+            fg.expectation_suite.expectation_suite_name == "test_expectation_suite_name"
+        )
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
@@ -92,7 +94,9 @@ class TestFeatureGroup:
         assert fg._online_topic_name == "119_15_fg_test_1_onlinefs"
         assert fg.event_time is None
         assert fg.stream is False
-        assert fg.expectation_suite is None
+        assert (
+            fg.expectation_suite.expectation_suite_name == "test_expectation_suite_name"
+        )
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -154,7 +158,9 @@ class TestFeatureGroup:
         assert fg._online_topic_name == "119_15_fg_test_1_onlinefs"
         assert fg.event_time is None
         assert fg.stream is True
-        assert fg.expectation_suite is None
+        assert (
+            fg.expectation_suite.expectation_suite_name == "test_expectation_suite_name"
+        )
 
     def test_from_response_json_stream_list(self, backend_fixtures):
         # Arrange
@@ -189,7 +195,9 @@ class TestFeatureGroup:
         assert fg._online_topic_name == "119_15_fg_test_1_onlinefs"
         assert fg.event_time is None
         assert fg.stream is True
-        assert fg.expectation_suite is None
+        assert (
+            fg.expectation_suite.expectation_suite_name == "test_expectation_suite_name"
+        )
 
     def test_from_response_json_stream_basic_info(self, backend_fixtures):
         # Arrange

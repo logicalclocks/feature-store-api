@@ -709,11 +709,14 @@ class FeatureGroupBase:
                 feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, dict):
-            self._expectation_suite = ExpectationSuite(
-                **expectation_suite,
-                feature_store_id=self._feature_store_id,
-                feature_group_id=self._id,
-            )
+            if "feature_store_id" in expectation_suite.keys():
+                self._expectation_suite = ExpectationSuite(**expectation_suite)
+            else:
+                self._expectation_suite = ExpectationSuite(
+                    **expectation_suite,
+                    feature_store_id=self._feature_store_id,
+                    feature_group_id=self._id,
+                )
         elif expectation_suite is None:
             self._expectation_suite = expectation_suite
         else:
