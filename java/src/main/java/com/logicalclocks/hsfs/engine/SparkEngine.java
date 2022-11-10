@@ -50,6 +50,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.functions;
 import org.apache.spark.sql.streaming.DataStreamReader;
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
@@ -58,6 +59,7 @@ import org.apache.spark.sql.types.ArrayType;
 import org.apache.spark.sql.types.BinaryType;
 import org.apache.spark.sql.types.BooleanType;
 import org.apache.spark.sql.types.ByteType;
+import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.DateType;
 import org.apache.spark.sql.types.DecimalType;
 import org.apache.spark.sql.types.DoubleType;
@@ -302,16 +304,30 @@ public class SparkEngine {
     int i = 0;
     for (Split split : splits) {
       if (dataset.count() > 0) {
+        String eventTime = query.getLeftFeatureGroup().getEventTime();
         String eventTimeType =
-            query.getLeftFeatureGroup().getFeature(query.getLeftFeatureGroup().getEventTime()).getType();
+            query.getLeftFeatureGroup().getFeature(eventTime).getType();
+
         if (BIGINT.getType().equals(eventTimeType)) {
+          sparkSession.sqlContext()
+              .udf()
+              .register("checkEpochUDF", (Long input) -> {
+                if (Long.toString(input).length() == 10) {
+                  return input;
+                } else {
+                  throw new FeatureStoreException("Event time should be in seconds if its unix epoch time.");
+                }
+              }, DataTypes.LongType);
+          dataset = dataset.withColumn(eventTime,functions.callUDF(
+              "checkEpochUDF", dataset.col(eventTime)));
+
           // event time in second. `getTime()` return in millisecond.
           datasetSplits[i] = dataset.filter(
               String.format(
                   "%d/1000 <= `%s` and `%s` < %d/1000",
                   split.getStartTime().getTime(),
-                  query.getLeftFeatureGroup().getEventTime(),
-                  query.getLeftFeatureGroup().getEventTime(),
+                  eventTime,
+                  eventTime,
                   split.getEndTime().getTime()
               )
           );
@@ -321,8 +337,8 @@ public class SparkEngine {
               String.format(
                   "%d/1000 <= unix_timestamp(`%s`) and unix_timestamp(`%s`) < %d/1000",
                   split.getStartTime().getTime(),
-                  query.getLeftFeatureGroup().getEventTime(),
-                  query.getLeftFeatureGroup().getEventTime(),
+                  eventTime,
+                  eventTime,
                   split.getEndTime().getTime()
               )
           );
