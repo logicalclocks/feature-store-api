@@ -225,6 +225,7 @@ class ExpectationSuite:
 
         !!! example
             ```python
+            expectation_suite = fg.get_expectation_suite()
             selected_expectation = expectation_suite.get_expectation(expectation_id=123)
             ```
 
@@ -259,6 +260,7 @@ class ExpectationSuite:
 
         !!! example
             ```python
+            # it will check if the min value of specific column is within a certain range
             expectation_suite.add_expectation(
                 ge.core.ExpectationConfiguration(
                     expectation_type="expect_column_min_to_be_between",
@@ -270,6 +272,7 @@ class ExpectationSuite:
                 )
             )
 
+            # it will check if the length of the column value is within a certain range
             expectation_suite.add_expectation(
                 ge.core.ExpectationConfiguration(
                     expectation_type="expect_column_value_lengths_to_be_between",

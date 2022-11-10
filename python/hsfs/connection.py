@@ -150,11 +150,9 @@ class Connection:
         !!! example "How to get feature store instance"
 
             ```python
-            import hopsworks
-
-            project = hopsworks.login()
-
-            fs = project.get_feature_store()
+            import hsfs
+            conn = hsfs.connection()
+            fs = conn.get_feature_store()
             ```
 
         # Arguments
@@ -246,6 +244,8 @@ class Connection:
 
         !!! example
             ```python
+            import hsfs
+            conn = hsfs.connection()
             conn.close()
             ```
         """

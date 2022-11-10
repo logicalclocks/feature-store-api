@@ -61,7 +61,7 @@ class Feature:
 
         !!! example
             ```python
-            selected_feature = fg.to_dict()["features"][2]
+            selected_feature = fg.to_dict()["features"][0]
             selected_feature.to_dict()
             ```
         """
@@ -93,7 +93,7 @@ class Feature:
 
         !!! example
             ```python
-            selected_feature = fg.to_dict()["features"][2]
+            selected_feature = fg.to_dict()["features"][0]
             print(selected_feature.is_complex())
             ```
         """

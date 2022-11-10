@@ -63,7 +63,11 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            weather_fg.delete()
+            fg = fs.get_or_create_feature_group(
+                    name='bitcoin_price',
+                    version=1
+                    )
+            fg.delete()
             ```
 
         !!! danger "Potentially dangerous operation"
@@ -84,16 +88,10 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            store_fg = fs.get_or_create_feature_group(
-                name = "store_fg",
-                version = 1
-            )
+            query = fg1.select_all()\
+                            .join(fg2.select_all())\
+                            .join(fg3.select(['fuel_price', 'unemployment', 'cpi']))
 
-            query = sales_fg.select_all()\
-                            .join(store_fg.select_all())\
-                            .join(exogenous_fg.select(['fuel_price', 'unemployment', 'cpi']))
-
-            print(query.to_string())
             ```
 
         # Returns
@@ -114,7 +112,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            sales_fg.select(['date', 'weekly_sales', 'is_holiday',
+            fg.select(['date', 'weekly_sales', 'is_holiday',
                              'sales_last_30_days_store_dep',
                              'sales_last_365_days_store_dep']).show(5)
             ```
@@ -142,7 +140,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            query = bureau_fg.select_except(['sk_id_curr','sk_id_bureau'])
+            query = fg.select_except(['sk_id_curr','sk_id_bureau'])
             ```
 
         # Arguments
@@ -207,7 +205,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            weather_fg.add_tag(name="example_tag", value="42")
+            fg.add_tag(name="example_tag", value="42")
             ```
 
         # Arguments
@@ -225,7 +223,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            weather_fg.delete_tag("example_tag")
+            fg.delete_tag("example_tag")
             ```
 
         # Arguments
@@ -242,7 +240,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            fg_tag_value = weather_fg.get_tag("example_tag")
+            fg_tag_value = fg.get_tag("example_tag")
             ```
 
         # Arguments
@@ -305,7 +303,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            updated_weather_fg = weather_fg.update_statistics_config()
+            updated_fg = fg.update_statistics_config()
             ```
 
         # Returns
@@ -322,9 +320,9 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            updated_weather_fg = weather_fg.update_description(description="Much better description.")
+            updated_fg = fg.update_description(description="Much better description.")
 
-            print(updated_weather_fg.to_dict()["description"])
+            print(updated_fg.to_dict()["description"])
             ```
 
         !!! info "Safe update"
@@ -384,8 +382,13 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            updated_weather_fg = weather_fg.update_feature_description(feature_name="min_temp",
-                                                                               description="Much better feature description.")
+            fg = fs.get_or_create_feature_group(
+                    name='weather_data',
+                    version=1
+                    )
+
+            updated_fg = fg.update_feature_description(feature_name="min_temp",
+                                                       description="Much better feature description.")
             ```
 
         !!! info "Safe update"
@@ -462,7 +465,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            exp_suite = weather_fg.get_expectation_suite()
+            exp_suite = fg.get_expectation_suite()
             ```
 
         # Arguments
@@ -494,7 +497,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            weather_fg.save_expectation_suite(expectation_suite, run_validation=True)
+            fg.save_expectation_suite(expectation_suite, run_validation=True)
             ```
 
         # Arguments
@@ -538,7 +541,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            weather_fg.delete_expectation_suite()
+            fg.delete_expectation_suite()
             ```
 
         # Raises
@@ -555,7 +558,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            latest_val_report = weather_fg.get_latest_validation_report()
+            latest_val_report = fg.get_latest_validation_report()
             ```
 
         # Arguments
@@ -581,7 +584,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            val_reports = weather_fg.get_all_validation_reports()
+            val_reports = fg.get_all_validation_reports()
             ```
 
         # Arguments
@@ -616,7 +619,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            weather_fg.save_validation_report(validation_report, run_validation=True)
+            fg.save_validation_report(validation_report, run_validation=True)
             ```
 
         # Arguments
@@ -710,7 +713,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            fg_statistics = weather_fg.get_statistics(commit_time=None)
+            fg_statistics = fg.get_statistics(commit_time=None)
             ```
 
         # Arguments
@@ -737,7 +740,7 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            weather_fg.compute_statistics()
+            fg.compute_statistics()
             ```
 
         # Returns
@@ -1043,7 +1046,7 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example
             ```python
-            sales_fg.select(['date','weekly_sales','is_holiday',
+            fg.select(['date','weekly_sales','is_holiday',
                              'sales_last_30_days_store_dep',
                              'sales_last_365_days_store_dep']).show(5)
             ```
@@ -1195,7 +1198,7 @@ class FeatureGroup(FeatureGroupBase):
 
             fs = project.get_feature_store()
 
-            btc_price_fg = fs.get_or_create_feature_group(
+            fg = fs.get_or_create_feature_group(
                 name='bitcoin_price',
                 description='Bitcoin price aggregated for days',
                 version=1,
@@ -1204,7 +1207,7 @@ class FeatureGroup(FeatureGroupBase):
                 event_time=['unix']
             )
 
-            btc_price_fg.insert(df_bitcoin_processed)
+            fg.insert(df_bitcoin_processed)
             ```
         # Arguments
             features: DataFrame, RDD, Ndarray, list. Features to be saved.
@@ -1370,7 +1373,7 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example
             ```python
-            commit_details = churn_fg.commit_details()
+            commit_details = fg.commit_details()
             ```
 
         # Arguments
@@ -1457,14 +1460,14 @@ class FeatureGroup(FeatureGroupBase):
         If you want to query different intervals for different feature groups in
         the query, you have to apply them in a nested fashion:
         ```python
-        fg_a.select_all().as_of(..., ...)
-            .join(fg_b.select_all().as_of(..., ...))
+        fg1.select_all().as_of(..., ...)
+            .join(fg2.select_all().as_of(..., ...))
         ```
         If instead you apply another `as_of` selection after the join, all
         joined feature groups will be queried with this interval:
         ```python
-        fg_a.select_all().as_of(..., ...)  # as_of is not applied
-            .join(fg_b.select_all().as_of(..., ...))  # as_of is not applied
+        fg1.select_all().as_of(..., ...)  # as_of is not applied
+            .join(fg2.select_all().as_of(..., ...))  # as_of is not applied
             .as_of(..., ...)
         ```
 
@@ -1506,7 +1509,7 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example
             ```python
-            ge_report = weather_fg.validate(df, save_report=False)
+            ge_report = fg.validate(df, save_report=False)
             ```
 
         # Arguments
@@ -1623,7 +1626,7 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example
             ```python
-            citibike_usage_fg.json()
+            fg.json()
             ```
 
         """
@@ -1634,7 +1637,7 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example
             ```python
-            citibike_usage_fg.to_dict()
+            fg.to_dict()
             ```
 
         """
@@ -1670,7 +1673,7 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example
             ```python
-            complex_dtype_features = weather_fg.get_complex_features()
+            complex_dtype_features = fg.get_complex_features()
             ```
 
         """
