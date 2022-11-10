@@ -541,21 +541,38 @@ class FeatureGroupBase:
         self,
         expectation_id: int,
         start_validation_time: Union[str, int, datetime, date, None] = None,
-        end_validation_time: Union[str, int, datetime, date, None] = datetime.now(),
+        end_validation_time: Union[str, int, datetime, date, None] = None,
         ingested_only: bool = False,
         rejected_only: bool = False,
-    ) -> List[ValidationResult]:
+        ge_type: bool = True,
+    ) -> Union[List[ValidationResult], List[ge.core.ExpectationValidationResult]]:
         """Fetch validation history of an Expectation specified by its id.
+
+        !!! example
+        ```python3
+        validation_history = fg.get_validation_history(
+            expectation_id=1,
+            ingested_only=True,
+            start_validation_time="2022-01-01 00:00:00",
+            end_validation_time=datetime.datetime.now(),
+            ge_type=False
+        )
+        ```
 
         # Arguments
             expectation_id: id of the Expectation for which to fetch the validation history
-            sort_by: sort the validation results according to validation time, descending or ascending. Value can be either
-                validation_time:desc or validation_time:asc
-            filter_by: filter the validation results based on validation time or ingestion result.
-                ingestion_result_eq:INGESTED/REJECTED
-                validation_time_(gt/gte/eq/lt/lte):<timestamp>
-            offset: offset for pagination
-            limit: limit for pagination
+            ingested_only: fetch only validation result corresponding to an insertion, defaults to False.
+            rejected_only: fetch only validation result corresponding to a rejection, defaults to False.
+            start_validation_time: fetch only validation result posterior to the provided time.
+            Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
+            end_validation_time: fetch only validation result prior to the provided time.
+            Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
+
+        # Raises
+            `RestAPIException`
+
+        # Return
+            Union[List[`ValidationResult`], List[`ExpectationValidationResult`]] A list of validation result connected to the expectation_id
         """
 
         return self._validation_result_engine.get_validation_history(
@@ -564,6 +581,7 @@ class FeatureGroupBase:
             end_validation_time=end_validation_time,
             ingested_only=ingested_only,
             rejected_only=rejected_only,
+            ge_type=ge_type,
         )
 
     def __getattr__(self, name):

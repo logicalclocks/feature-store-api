@@ -20,6 +20,7 @@ from datetime import datetime, date
 from hsfs.util import convert_event_time_to_timestamp
 
 from hsfs.ge_validation_result import ValidationResult
+from great_expectations.core import ExpectationValidationResult
 
 
 class ValidationResultEngine:
@@ -42,7 +43,8 @@ class ValidationResultEngine:
         end_validation_time: Union[str, int, datetime, date, None] = None,
         ingested_only: bool = False,
         rejected_only: bool = False,
-    ) -> Union[List[ValidationResult], ValidationResult]:
+        ge_type: bool = True,
+    ) -> Union[List[ValidationResult], List[ExpectationValidationResult]]:
         """Get Validation Results relevant to an Expectation specified by expectation_id.
 
         :param expectation_id: id of the expectation for which to fetch the validation history
@@ -51,9 +53,13 @@ class ValidationResultEngine:
         :type ingestion_only: bool
         :param rejected_only: retrieve only validation result linked to data not ingested in the Feature Group
         :type rejected_only: bool
-        :param start_validation_time: retrieve validation result posterior to start_validation_time
+        :param ge_type: whether to convert Hopsworks object to native Great Expectations object
+        :type ge_type: bool
+        :param start_validation_time: retrieve validation result posterior to start_validation_time.
+        Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable.
         :type start_validation_time: Union[str, int, datetime, date, None]
         :param end_validation_time: retrieve validation result anterior to end_validation_time
+        Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable.
         :type end_validation_time: Union[str, int, datetime, date, None]
         """
         query_params = self._build_query_params(
@@ -63,9 +69,17 @@ class ValidationResultEngine:
             end_validation_time=end_validation_time,
         )
 
-        return self._validation_result_api.get_validation_history(
+        history = self._validation_result_api.get_validation_history(
             expectation_id=expectation_id, query_params=query_params
         )
+
+        if isinstance(history, ValidationResult):
+            history = [history]
+
+        if ge_type:
+            return [result.to_ge_type() for result in history]
+        else:
+            return history
 
     def _build_query_params(
         self,
@@ -77,7 +91,7 @@ class ValidationResultEngine:
         query_params = {"filter_by": [], "sort_by": "validation_time:desc"}
 
         if ingested_only and rejected_only:
-            raise ValueError("ingested_only and rejected_only ")
+            raise ValueError("ingested_only and rejected_only cannot be both True.")
         elif ingested_only:
             query_params["filter_by"].append("ingestion_result_eq:ingested")
         elif rejected_only:

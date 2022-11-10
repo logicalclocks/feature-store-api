@@ -100,6 +100,13 @@ class ValidationResult:
         }
 
     def to_ge_type(self) -> ge.core.ExpectationValidationResult:
+        if self._validation_time:
+            self.meta["validation_time"] = datetime.utcfromtimestamp(
+                self._validation_time
+            ).isoformat()
+        if self._ingestion_result:
+            self.meta["ingestion_result"] = self._ingestion_result
+
         return ge.core.ExpectationValidationResult(
             success=self.success,
             exception_info=self.exception_info,
@@ -192,6 +199,13 @@ class ValidationResult:
     def validation_time(
         self, validation_time: Union[str, int, datetime, date, None]
     ) -> None:
+        """
+        Time at which validation was run using Great Expectations.
+
+        # Arguments
+            validation_time: The time at which validation was performed.
+            Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable.
+        """
         if validation_time:
             self._validation_time = util.convert_event_time_to_timestamp(
                 validation_time

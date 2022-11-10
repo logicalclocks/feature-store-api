@@ -15,6 +15,7 @@
 #
 
 from hsfs.core import validation_result_engine
+from hsfs.util import convert_event_time_to_timestamp
 from datetime import date, datetime
 import pytest
 
@@ -120,7 +121,9 @@ class TestValidationResultEngine:
             )
         ]
         assert len(filter_validation_gte) == 1
-        assert int(filter_validation_gte[0][20:]) + 1
+        assert int(filter_validation_gte[0][20:]) == convert_event_time_to_timestamp(
+            correct_inputs[0]["start_validation_time"]
+        )
         filter_validation_lte = [
             val
             for val in filter(
@@ -128,7 +131,9 @@ class TestValidationResultEngine:
             )
         ]
         assert len(filter_validation_lte) == 1
-        assert int(filter_validation_lte[0][20:]) + 1
+        assert int(filter_validation_lte[0][20:]) == convert_event_time_to_timestamp(
+            correct_inputs[0]["end_validation_time"]
+        )
 
         # Second case
         assert len(correct_outputs[1]["filter_by"]) == 2
@@ -140,7 +145,16 @@ class TestValidationResultEngine:
             )
         ]
         assert len(filter_validation_gte) == 1
-        assert int(filter_validation_gte[0][20:]) + 1
+        assert int(filter_validation_gte[0][20:]) == convert_event_time_to_timestamp(
+            correct_inputs[1]["start_validation_time"]
+        )
+        filter_validation_lte = [
+            val
+            for val in filter(
+                lambda x: "validation_time_lte:" in x, correct_outputs[1]["filter_by"]
+            )
+        ]
+        assert len(filter_validation_lte) == 0
 
         # Third case
         assert len(correct_outputs[2]["filter_by"]) == 2
@@ -151,7 +165,9 @@ class TestValidationResultEngine:
             )
         ]
         assert len(filter_validation_gte) == 1
-        assert int(filter_validation_gte[0][20:]) + 1
+        assert int(filter_validation_gte[0][20:]) == convert_event_time_to_timestamp(
+            correct_inputs[2]["start_validation_time"]
+        )
         filter_validation_lte = [
             val
             for val in filter(
@@ -159,7 +175,9 @@ class TestValidationResultEngine:
             )
         ]
         assert len(filter_validation_lte) == 1
-        assert int(filter_validation_lte[0][20:]) + 1
+        assert int(filter_validation_lte[0][20:]) == convert_event_time_to_timestamp(
+            correct_inputs[2]["end_validation_time"]
+        )
 
         # Fourth case
         assert len(correct_outputs[3]["filter_by"]) == 0
