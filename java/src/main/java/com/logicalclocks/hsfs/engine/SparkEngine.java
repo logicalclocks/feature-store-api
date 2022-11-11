@@ -312,10 +312,11 @@ public class SparkEngine {
           sparkSession.sqlContext()
               .udf()
               .register("checkEpochUDF", (Long input) -> {
-                if (Long.toString(input).length() == 10) {
-                  return input;
+                if (Long.toString(input).length() == 13) {
+                  input = input / 1000;
+                  return input.longValue();
                 } else {
-                  throw new FeatureStoreException("Event time should be in seconds if its unix epoch time.");
+                  return input;
                 }
               }, DataTypes.LongType);
           dataset = dataset.withColumn(eventTime,functions.callUDF(
