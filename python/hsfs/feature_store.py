@@ -653,14 +653,6 @@ class FeatureStore:
             feature store on its own. To persist the feature group metadata in the feature store,
             call the `save()` method.
 
-            stores_on_dmd = fs.create_on_demand_feature_group(name="store_features",
-                                                              version=1,
-                                                              query=query,
-                                                              storage_connector=snowflake_connector,
-                                                              statistics_config=False)
-            stores_on_dmd.save()
-            ```
-
         # Arguments
             name: Name of the external feature group to create.
             query: A string containing a SQL query valid for the target data source.
@@ -1006,7 +998,7 @@ class FeatureStore:
 
         !!! example
             ```python
-            func_list = [t_func.name for t_func in fs.get_transformation_functions()]
+            func_list = fs.get_transformation_functions()
             ```
 
         # Returns:
@@ -1027,10 +1019,15 @@ class FeatureStore:
 
         !!! example
             ```python
+            query = fg1.select_all().join(fg2.select_all())
+
+            standard_scaler = fs.get_transformation_function(name='standard_scaler')
+            transformation_functions = {col_name: standard_scaler for col_name in df.columns}
+
             feature_view = fs.create_feature_view(
                 name='air_quality_fv',
                 version=1,
-                transformation_functions=mapping_transformers,
+                transformation_functions=transformation_functions,
                 query=query
             )
             ```
@@ -1088,8 +1085,8 @@ class FeatureStore:
             feature_view = fs.get_or_create_feature_view(
                 name='bitcoin_feature_view',
                 version=1,
-                # transformation_functions=transformation_functions,
-                # query=query
+                transformation_functions=transformation_functions,
+                query=query
             )
             ```
 
