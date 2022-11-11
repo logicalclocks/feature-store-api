@@ -208,20 +208,13 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
     def append_features(self, feature_group, new_features):
         """Appends features to a feature group."""
-        # first get empty dataframe of current version and append new feature
-        # necessary to write empty df to the table in order for the parquet schema
-        # which is used by hudi to be updated
-        df = engine.get_instance().get_empty_appended_dataframe(
-            feature_group.read(), new_features
-        )
-
         self._update_features_metadata(
             feature_group,
             feature_group.features + new_features,  # todo allows for duplicates
         )
 
         # write empty dataframe to update parquet schema
-        engine.get_instance().save_empty_dataframe(feature_group, df)
+        engine.get_instance().save_empty_dataframe(feature_group)
 
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""

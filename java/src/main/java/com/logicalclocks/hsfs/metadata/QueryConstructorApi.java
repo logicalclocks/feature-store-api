@@ -53,6 +53,7 @@ public class QueryConstructorApi {
     LOGGER.info("Sending metadata request: " + uri);
     LOGGER.info("Sending query: " + queryJson);
     FsQuery fsQuery = hopsworksClient.handleRequest(putRequest, FsQuery.class);
+    fsQuery.getHudiCachedFeatureGroups().forEach(fg -> fg.getFeatureGroup().setFeatureStore(featureStore));
     fsQuery.removeNewLines();
     return fsQuery;
   }
