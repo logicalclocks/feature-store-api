@@ -67,6 +67,12 @@ class Connection:
                 hostname_verification=True)         # Disable for self-signed certificates
             )
             fs = conn.get_feature_store()           # Get the project's default feature store
+
+            # or
+
+            import hopsworks
+            project = hopsworks.login()
+            fs = project.get_feature_store()
         ```
 
     Clients in external clusters need to connect to the Hopsworks Feature Store using an
@@ -153,6 +159,12 @@ class Connection:
             import hsfs
             conn = hsfs.connection()
             fs = conn.get_feature_store()
+
+            # or
+
+            import hopsworks
+            project = hopsworks.login()
+            fs = project.get_feature_store()
             ```
 
         # Arguments
