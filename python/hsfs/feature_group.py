@@ -563,9 +563,9 @@ class FeatureGroupBase:
             expectation_id: id of the Expectation for which to fetch the validation history
             ingested_only: fetch only validation result corresponding to an insertion, defaults to False.
             rejected_only: fetch only validation result corresponding to a rejection, defaults to False.
-            start_validation_time: fetch only validation result posterior to the provided time.
+            start_validation_time: fetch only validation result posterior to the provided time, inclusive.
             Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
-            end_validation_time: fetch only validation result prior to the provided time.
+            end_validation_time: fetch only validation result prior to the provided time, inclusive.
             Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
 
         # Raises
@@ -719,7 +719,10 @@ class FeatureGroupBase:
         ],
     ):
         if isinstance(expectation_suite, ExpectationSuite):
-            self._expectation_suite = expectation_suite
+            tmp_expectation_suite = ExpectationSuite(**expectation_suite.to_json_dict())
+            tmp_expectation_suite._featuregroup_id = self._id
+            tmp_expectation_suite._featurestore_id = self._feature_store_id
+            self._expectation_suite = tmp_expectation_suite
         elif isinstance(expectation_suite, ge.core.expectation_suite.ExpectationSuite):
             self._expectation_suite = ExpectationSuite(
                 **expectation_suite.to_json_dict(),
@@ -727,14 +730,10 @@ class FeatureGroupBase:
                 feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, dict):
-            if "feature_store_id" in expectation_suite.keys():
-                self._expectation_suite = ExpectationSuite(**expectation_suite)
-            else:
-                self._expectation_suite = ExpectationSuite(
-                    **expectation_suite,
-                    feature_store_id=self._feature_store_id,
-                    feature_group_id=self._id,
-                )
+            tmp_expectation_suite = expectation_suite.copy()
+            tmp_expectation_suite["feature_store_id"] = self._feature_store_id
+            tmp_expectation_suite["feature_group_id"] = self._id
+            self._expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         elif expectation_suite is None:
             self._expectation_suite = expectation_suite
         else:
