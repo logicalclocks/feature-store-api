@@ -24,7 +24,6 @@ import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.Feature;
-import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Split;
@@ -98,7 +97,6 @@ import static org.apache.spark.sql.avro.functions.to_avro;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.from_json;
-import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.struct;
 
 public class SparkEngine {
@@ -228,7 +226,8 @@ public class SparkEngine {
         .collect(Collectors.toMap(OnDemandOptions::getName, OnDemandOptions::getValue));
   }
 
-  public void registerHudiTemporaryTable(HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> readOptions) {
+  public void registerHudiTemporaryTable(HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> readOptions)
+          throws FeatureStoreException {
     Map<String, String> hudiArgs = hudiEngine.setupHudiReadOpts(
         hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
         hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
@@ -239,6 +238,8 @@ public class SparkEngine {
         .options(hudiArgs)
         .load(hudiFeatureGroupAlias.getFeatureGroup().getLocation())
         .createOrReplaceTempView(hudiFeatureGroupAlias.getAlias());
+
+    hudiEngine.reconcileHudiSchema(sparkSession, hudiFeatureGroupAlias, hudiArgs);
   }
 
   /**
@@ -577,6 +578,13 @@ public class SparkEngine {
             featureGroupBase.getEncodedAvroSchema()).alias("value"));
   }
 
+  public <S>  void writeEmptyDataframe(FeatureGroupBase featureGroup)
+          throws IOException, FeatureStoreException, ParseException {
+    String fgTableName = utils.getTableName(featureGroup);
+    Dataset emptyDf = sparkSession.table(fgTableName).limit(0);
+    writeOfflineDataframe(featureGroup, emptyDf, HudiOperationType.UPSERT, new HashMap<>(), null);
+  }
+
   public <S>  void writeOfflineDataframe(StreamFeatureGroup streamFeatureGroup, S genericDataset,
       HudiOperationType operation, Map<String, String> writeOptions, Integer validationId)
       throws IOException, FeatureStoreException, ParseException {
@@ -585,7 +593,7 @@ public class SparkEngine {
     hudiEngine.saveHudiFeatureGroup(sparkSession, streamFeatureGroup, dataset, operation, writeOptions, validationId);
   }
 
-  public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
+  public void writeOfflineDataframe(FeatureGroupBase featureGroup, Dataset<Row> dataset,
                                     HudiOperationType operation, Map<String, String> writeOptions, Integer validationId)
       throws IOException, FeatureStoreException, ParseException {
 
@@ -596,7 +604,8 @@ public class SparkEngine {
     }
   }
 
-  private void writeSparkDataset(FeatureGroup featureGroup, Dataset<Row> dataset, Map<String, String> writeOptions) {
+  private void writeSparkDataset(FeatureGroupBase featureGroup, Dataset<Row> dataset,
+                                 Map<String, String> writeOptions) {
     dataset
         .write()
         .format(Constants.HIVE_FORMAT)
@@ -647,7 +656,8 @@ public class SparkEngine {
     return profile(df, null, true, true);
   }
 
-  public void setupConnectorHadoopConf(StorageConnector storageConnector) throws FeatureStoreException, IOException {
+  public void setupConnectorHadoopConf(StorageConnector storageConnector)
+          throws FeatureStoreException, IOException {
     if (storageConnector == null) {
       return;
     }
@@ -708,14 +718,6 @@ public class SparkEngine {
     for (Option confOption : storageConnector.getSparkOptions()) {
       sparkSession.sparkContext().hadoopConfiguration().set(confOption.getName(), confOption.getValue());
     }
-  }
-
-  public Dataset<Row> getEmptyAppendedDataframe(Dataset<Row> dataframe, List<Feature> newFeatures) {
-    Dataset<Row> emptyDataframe = dataframe.limit(0);
-    for (Feature f : newFeatures) {
-      emptyDataframe = emptyDataframe.withColumn(f.getName(), lit(null).cast(f.getType()));
-    }
-    return emptyDataframe;
   }
 
   public void streamToHudiTable(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)

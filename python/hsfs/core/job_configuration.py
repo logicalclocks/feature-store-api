@@ -40,7 +40,7 @@ class JobConfiguration:
         self._executor_cores = executor_cores
         self._executor_instances = executor_instances
         self._dynamic_allocation = dynamic_allocation
-        self._dynamic_min_executors = dynamic_max_executors
+        self._dynamic_min_executors = dynamic_min_executors
         self._dynamic_max_executors = dynamic_max_executors
 
     def to_dict(self):
