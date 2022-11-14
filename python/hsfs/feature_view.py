@@ -21,6 +21,7 @@ from typing import Optional, Union, List, Dict, Any
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 import humps
+import copy
 
 from hsfs import util, training_dataset_feature, storage_connector, training_dataset
 from hsfs.constructor import query, filter
@@ -55,7 +56,14 @@ class FeatureView:
         self._version = version
         self._description = description
         self._labels = labels
-        self._transformation_functions = transformation_functions
+        self._transformation_functions = (
+            {
+                ft_name: copy.deepcopy(transformation_functions[ft_name])
+                for ft_name in transformation_functions
+            }
+            if transformation_functions
+            else transformation_functions
+        )
         self._features = []
         self._feature_view_engine = feature_view_engine.FeatureViewEngine(
             featurestore_id
