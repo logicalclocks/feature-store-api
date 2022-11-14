@@ -647,7 +647,7 @@ class FeatureGroupBase:
         return self._event_time
 
     @event_time.setter
-    def event_time(self, feature_name: Union[None, str, List[str]]):
+    def event_time(self, feature_name: Optional[str]):
         if feature_name is None:
             self._event_time = None
             return
@@ -656,6 +656,12 @@ class FeatureGroupBase:
             return
         elif isinstance(feature_name, list) and len(feature_name) == 1:
             if isinstance(feature_name[0], str):
+                warnings.warn(
+                    "Providing event_time as a single-element list is deprecated"
+                    + " and will be dropped in future versions. Provide the feature_name string instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
                 self._event_time = feature_name[0]
                 return
 

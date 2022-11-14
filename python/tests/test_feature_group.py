@@ -27,6 +27,7 @@ from hsfs import (
 )
 from hsfs.client.exceptions import FeatureStoreException
 import pytest
+import warnings
 
 
 class TestFeatureGroup:
@@ -234,17 +235,24 @@ class TestFeatureGroup:
 
         # Act
         fs = feature_store.FeatureStore.from_response_json(json)
-        new_fg = fs.create_feature_group(
-            name="fg_name",
-            version=1,
-            description="fg_description",
-            event_time=["event_date"],
-        )
+        with warnings.catch_warnings(record=True) as warning_record:
+            new_fg = fs.create_feature_group(
+                name="fg_name",
+                version=1,
+                description="fg_description",
+                event_time=["event_date"],
+            )
         with pytest.raises(FeatureStoreException):
             util.verify_attribute_key_names(new_fg, False)
 
         # Assert
         assert new_fg.event_time == "event_date"
+        assert len(warning_record) == 1
+        assert issubclass(warning_record[0].category, DeprecationWarning)
+        assert str(warning_record[0].message) == (
+            "Providing event_time as a single-element list is deprecated"
+            + " and will be dropped in future versions. Provide the feature_name string instead."
+        )
 
 
 class TestExternalFeatureGroup:
