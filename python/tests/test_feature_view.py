@@ -63,13 +63,12 @@ class TestFeatureView:
 
     def test_transformation_function_instances(self, mocker, backend_fixtures):
         # Arrange
+        feature_store_id = 99
         mocker.patch("hsfs.core.feature_view_engine.FeatureViewEngine")
         json = backend_fixtures["fs_query"]["get"]["response"]
 
         # Act
         q = fs_query.FsQuery.from_response_json(json)
-
-        feature_store_id = 99
 
         def testFunction():
             print("Test")
