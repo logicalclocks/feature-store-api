@@ -114,7 +114,6 @@ class FeatureView:
             fs.get_feature_view("example_feature_view", 1).description
             ```
 
-        # Arguments
         # Returns
             `FeatureView` Updated feature view.
         # Raises
