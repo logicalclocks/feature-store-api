@@ -16,13 +16,17 @@
 
 
 from hsfs import (
+    feature_store,
     feature_group,
     user,
     statistics_config,
     feature,
     storage_connector,
     expectation_suite,
+    util,
 )
+from hsfs.client.exceptions import FeatureStoreException
+import pytest
 
 
 class TestFeatureGroup:
@@ -219,6 +223,28 @@ class TestFeatureGroup:
         assert fg.event_time is None
         assert fg.stream is True
         assert fg.expectation_suite is None
+
+    def test_constructor_with_list_event_time_for_compatibility(
+        self, mocker, backend_fixtures, dataframe_fixture_basic
+    ):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.engine.get_type")
+        json = backend_fixtures["feature_store"]["get"]["response"]
+
+        # Act
+        fs = feature_store.FeatureStore.from_response_json(json)
+        new_fg = fs.create_feature_group(
+            name="fg_name",
+            version=1,
+            description="fg_description",
+            event_time=["event_date"],
+        )
+        with pytest.raises(FeatureStoreException):
+            util.verify_attribute_key_names(new_fg, False)
+
+        # Assert
+        assert new_fg.event_time == "event_date"
 
 
 class TestExternalFeatureGroup:
