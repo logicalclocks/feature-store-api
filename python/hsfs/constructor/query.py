@@ -116,14 +116,15 @@ class Query:
 
     def show(self, n: int, online: Optional[bool] = False):
         """Show the first N rows of the Query.
-
         !!! example "Show the first 10 rows"
             ```python
-            
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")
+
+            query = fg1.join(fg2)
+
             query.show(10)
-
             ``` 
-
         # Arguments
             n: Number of rows to show.
             online: Show from online storage. Defaults to `False`.
@@ -151,20 +152,22 @@ class Query:
 
         !!! example "Join two feature groups"
             ```python 
-            
-                feature_join = rain_fg.join(temperature_fg)
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")
 
+            feature_join = fg1.join(fg2)            
             ```
 
         !!! example "More complex join"
             ```python 
-            
-                feature_join = rain_fg.select_all() 
-                    .join(temperature_fg.select_all(), on=["date", "location_id"]) 
-                    .join(location_fg.select_all(), left_on=["location_id"], right_on=["id"], how="left")
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")
+            fg3 = fs.get_feature_group("...") 
 
+            feature_join = fg1.select_all() 
+                    .join(fg2.select_all(), on=["date", "location_id"]) 
+                    .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
             ```      
-
         # Arguments
             sub_query: Right-hand side query to join.
             on: List of feature names to join on if they are available in both
@@ -318,21 +321,25 @@ class Query:
 
         !!! example "Filters are fully compatible with joins"
             ```python
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")       
+            fg3 = fs.get_feature_group("...")
 
-            feature_join = rain_fg.select_all() 
-                .join(temperature_fg.select_all(), on=["date", "location_id"]) 
-                .join(location_fg.select_all(), left_on=["location_id"], right_on=["id"], how="left") 
-                .filter((rain_fg.location_id == 10) | (rain_fg.location_id == 20))
-
+            feature_join = fg1.select_all() 
+                .join(fg2.select_all(), on=["date", "location_id"]) 
+                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left") 
+                .filter((fg1.location_id == 10) | (fg1.location_id == 20))
             ```
-
         !!! example "Filters can be applied at any point of the query"
             ```python
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")       
+            fg3 = fs.get_feature_group("...")
 
-            feature_join = rain_fg.select_all() 
-                .join(temperature_fg.select_all().filter(temperature_fg.avg_temp >= 22), on=["date", "location_id"]) 
-                .join(location_fg.select_all(), left_on=["location_id"], right_on=["id"], how="left") 
-                .filter(rain_fg.location_id == 10)
+            feature_join = fg1.select_all() 
+                .join(fg2.select_all().filter(fg2.avg_temp >= 22), on=["date", "location_id"]) 
+                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left") 
+                .filter(fg1.location_id == 10)
 
             ```
 
@@ -427,9 +434,12 @@ class Query:
         """ 
         !!! example 
             ```python
-            
-            query.to_string()
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")
 
+            query = fg1.join(fg2)       
+
+            query.to_string()
             ```
         """        
         fs_query = self._query_constructor_api.construct_query(self)
@@ -467,9 +477,12 @@ class Query:
         """ 
         !!! example 
             ```python
-            
-            query.append_feature('feature_name')
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")
 
+            query = fg1.join(fg2)    
+
+            query.append_feature('feature_name')
             ```
         """        
         self._left_features.append(feature)

@@ -72,9 +72,9 @@ class FeatureView:
 
         !!! example 
             ```python
-            
-            feature_view.delete()
+            feature_view = fs.get_feature_view(name="fv_name")
 
+            feature_view.delete()
             ```
 
         !!! danger "Potentially dangerous operation"
@@ -92,13 +92,13 @@ class FeatureView:
 
         !!! example 
             ```python
-            
+            feature_view = fs.get_feature_view(name="feature_view_name")
+
             feature_view.clean(
                 feature_store_id=1,
-                feature_view_name='featue_view_name',
+                feature_view_name='feature_view_name',
                 feature_view_version=1
             )
-
             ```
 
         !!! danger "Potentially dangerous operation"
@@ -150,9 +150,9 @@ class FeatureView:
 
         !!! example 
             ```python
-            
-            feature_view.init_serving(training_dataset_version=1)
+            feature_view = fs.get_feature_view(name="feature_view_name")
 
+            feature_view.init_serving(training_dataset_version=1)
             ```
         # Arguments
             training_dataset_version: int, optional. Default to be 1. Transformation statistics
@@ -197,9 +197,9 @@ class FeatureView:
 
         !!! example 
             ```python
-            
-            feature_view.init_batch_scoring(training_dataset_version=1)
+            feature_view = fs.get_feature_view(name="feature_view_name")
 
+            feature_view.init_batch_scoring(training_dataset_version=1)
             ```
 
         # Arguments
@@ -375,9 +375,9 @@ class FeatureView:
 
         !!! example 
             ```python
-            
-            feature_view.add_tag(name="tag_schema", value={"key", "value"})
+            feature_view = fs.get_feature_view(name="feature_view_name")
 
+            feature_view.add_tag(name="tag_schema", value={"key", "value"})
             ```
 
         # Arguments
@@ -393,9 +393,9 @@ class FeatureView:
         """ 
         !!! example 
             ```python
-            
-            feature_view.get_tag('tag_name')
+            feature_view = fs.get_feature_view(name="feature_view_name")
 
+            feature_view.get_tag('tag_name')
             ```
         """
         return self._feature_view_engine.get_tag(self, name)
@@ -404,9 +404,9 @@ class FeatureView:
         """ 
         !!! example 
             ```python
-            
-            feature_view.get_tags()
+            feature_view = fs.get_feature_view(name="feature_view_name")
 
+            feature_view.get_tags()
             ```
         """
         return self._feature_view_engine.get_tags(self)
@@ -415,9 +415,9 @@ class FeatureView:
         """
         !!! example 
             ```python
-            
-            feature_view.delete_tag('name_of_tag')
+            feature_view = fs.get_feature_view(name="feature_view_name")
 
+            feature_view.delete_tag('name_of_tag')
             ```
 
         """
@@ -441,13 +441,13 @@ class FeatureView:
 
         !!! example "Create random splits"
             ```python
-            
+            feature_view = fs.get_feature_view(name="feature_view_name")
+
             version, job = feature_view.create_training_data(
                 description='transactions_dataset_jan_feb',
                 data_format='csv',
                 write_options={"wait_for_job": False}
             )
-
             ```
 
         !!! example "Create time-series based splits"
@@ -1122,12 +1122,37 @@ class FeatureView:
 
         !!! example 
             ```python
-            
             X_train, X_val, X_test, y_train, y_val, y_test = feature_view.train_validation_test_split(
                 validation_size=0.3,
                 test_size=0.2
             )
+            ```
 
+        !!! example "Time Series split"
+            ```python
+            from datetime import datetime
+            date_format = '%Y-%m-%d %H:%M:%S'
+
+            start_time_train = int(float(datetime.strptime('2017-01-01 00:00:01',date_format).timestamp()) * 1000)
+            end_time_train = int(float(datetime.strptime('2018-02-01 23:59:59',date_format).timestamp()) * 1000)
+
+            start_time_val = int(float(datetime.strptime('2018-02-02 23:59:59',date_format).timestamp()) * 1000)
+            end_time_val = int(float(datetime.strptime('2019-02-01 23:59:59',date_format).timestamp()) * 1000)
+            
+            start_time_test = int(float(datetime.strptime('2019-02-02 23:59:59',date_format).timestamp()) * 1000)
+            end_time_test = int(float(datetime.strptime('2020-02-01 23:59:59',date_format).timestamp()) * 1000)
+           
+            
+            X_train, X_val, X_test, y_train, y_val, y_test = feature_view.train_validation_test_split(
+                validation_size=0.3,
+                test_size=0.2,
+                train_start=start_time_train,
+                train_end=end_time_train,
+                validation_start=start_time_val,
+                validation_end=end_time_val,
+                test_start=start_time_test,
+                test_end=end_time_test
+            )
             ```
 
         !!! info

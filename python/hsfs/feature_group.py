@@ -1384,22 +1384,15 @@ class FeatureGroup(FeatureGroupBase):
         Suites.
 
         !!! example "Run validation using the usual Great Expectations syntax"
-            ```python
-            
+            ```python  
             ge_df = ge.from_pandas(df, expectation_suite=fg.get_expectation_suite())
             ge_report = ge_df.validate()
 
             ```
-
         !!! example "Run validation using a convenience wrapper method provided by Hopsworks"
             ```python
-            
             ge_report = fg.validate(df)
-            # set the save_report parameter to False to skip uploading the report to Hopsworks
-            # ge_report = fg.validate(df, save_report=False)
-
             ```
-
         # Arguments
             dataframe: The dataframe to run the data validation expectations against.
             expectation_suite: Optionally provide an Expectation Suite to override the
