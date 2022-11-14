@@ -492,14 +492,10 @@ class Engine:
     def _time_series_split(
         self, training_dataset, dataset, event_time, drop_event_time=False
     ):
-        def _check_event_time_type(event_time):
-            # for backward compatibility
-            if isinstance(event_time, int) and len(str(event_time)) == 13:
-                event_time = int(event_time / 1000)
-            return util.convert_event_time_to_timestamp(event_time)
-
         # registering the UDF
-        _convert_event_time_to_timestamp = udf(_check_event_time_type, LongType())
+        _convert_event_time_to_timestamp = udf(
+            util.convert_event_time_to_timestamp, LongType()
+        )
 
         result_dfs = {}
         ts_col = _convert_event_time_to_timestamp(col(event_time))

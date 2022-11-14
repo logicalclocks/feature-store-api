@@ -306,6 +306,7 @@ public class SparkEngine {
     for (Split split : splits) {
       if (dataset.count() > 0) {
         String eventTime = query.getLeftFeatureGroup().getEventTime();
+        String tmpEventTime = eventTime + "_tmp";
         String eventTimeType =
             query.getLeftFeatureGroup().getFeature(eventTime).getType();
 
@@ -320,7 +321,7 @@ public class SparkEngine {
                   return input;
                 }
               }, DataTypes.LongType);
-          dataset = dataset.withColumn(eventTime,functions.callUDF(
+          dataset = dataset.withColumn(tmpEventTime,functions.callUDF(
               "checkEpochUDF", dataset.col(eventTime)));
 
           // event time in second. `getTime()` return in millisecond.
@@ -328,22 +329,22 @@ public class SparkEngine {
               String.format(
                   "%d/1000 <= `%s` and `%s` < %d/1000",
                   split.getStartTime().getTime(),
-                  eventTime,
-                  eventTime,
+                  tmpEventTime,
+                  tmpEventTime,
                   split.getEndTime().getTime()
               )
-          );
+          ).drop(tmpEventTime);
         } else if (DATE.getType().equals(eventTimeType) || TIMESTAMP.getType().equals(eventTimeType)) {
           // unix_timestamp return in second. `getTime()` return in millisecond.
           datasetSplits[i] = dataset.filter(
               String.format(
                   "%d/1000 <= unix_timestamp(`%s`) and unix_timestamp(`%s`) < %d/1000",
                   split.getStartTime().getTime(),
-                  eventTime,
-                  eventTime,
+                  tmpEventTime,
+                  tmpEventTime,
                   split.getEndTime().getTime()
               )
-          );
+          ).drop(tmpEventTime);
         } else {
           throw new FeatureStoreException("Invalid event time type");
         }
