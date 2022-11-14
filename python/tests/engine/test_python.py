@@ -2087,24 +2087,12 @@ class TestPython:
             == "Stream ingestion is not available on Python environments, because it requires Spark as engine."
         )
 
-    def test_get_empty_appended_dataframe(self):
-        # Arrange
-        python_engine = python.Engine()
-
-        # Act
-        result = python_engine.get_empty_appended_dataframe(
-            dataframe=None, new_features=None
-        )
-
-        # Assert
-        assert result is None
-
     def test_save_empty_dataframe(self):
         # Arrange
         python_engine = python.Engine()
 
         # Act
-        result = python_engine.save_empty_dataframe(feature_group=None, dataframe=None)
+        result = python_engine.save_empty_dataframe(feature_group=None)
 
         # Assert
         assert result is None

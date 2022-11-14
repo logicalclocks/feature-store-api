@@ -34,7 +34,6 @@ from pyspark.sql.types import (
     StructField,
     MapType,
 )
-from pyspark.sql.functions import lit
 
 from hsfs import (
     feature_group,
@@ -3893,40 +3892,14 @@ class TestSpark:
         # Assert
         assert result is True
 
-    def test_get_empty_appended_dataframe(self):
-        # Arrange
-        spark_engine = spark.Engine()
-
-        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"]}
-        df = pd.DataFrame(data=d)
-
-        spark_df = spark_engine._spark_session.createDataFrame(df)
-
-        f = feature.Feature(name="f", type=StringType())
-        f1 = feature.Feature(name="f1", type=StringType())
-        features = [f, f1]
-
-        expected_spark_df = spark_df.limit(0)
-        expected_spark_df = expected_spark_df.withColumn(f.name, lit(None).cast(f.type))
-        expected_spark_df = expected_spark_df.withColumn(
-            f1.name, lit(None).cast(f1.type)
-        )
-
-        # Act
-        result = spark_engine.get_empty_appended_dataframe(
-            dataframe=spark_df, new_features=features
-        )
-
-        # Assert
-        assert result.schema == expected_spark_df.schema
-        assert result.collect() == expected_spark_df.collect()
-
     def test_save_empty_dataframe(self, mocker):
         # Arrange
         mock_spark_engine_save_dataframe = mocker.patch(
             "hsfs.engine.spark.Engine.save_dataframe"
         )
+        mock_spark_table = mocker.patch("pyspark.sql.session.SparkSession.table")
 
+        # Arrange
         spark_engine = spark.Engine()
 
         fg = feature_group.FeatureGroup(
@@ -3936,16 +3909,15 @@ class TestSpark:
             primary_key=[],
             partition_key=[],
             id=10,
+            featurestore_name="test_featurestore",
         )
 
         # Act
-        spark_engine.save_empty_dataframe(
-            feature_group=fg,
-            dataframe=None,
-        )
+        spark_engine.save_empty_dataframe(feature_group=fg)
 
         # Assert
         assert mock_spark_engine_save_dataframe.call_count == 1
+        assert mock_spark_table.call_count == 1
 
     def test_apply_transformation_function(self, mocker):
         # Arrange
