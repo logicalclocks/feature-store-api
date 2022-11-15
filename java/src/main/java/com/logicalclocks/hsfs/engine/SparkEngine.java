@@ -344,7 +344,7 @@ public class SparkEngine {
                   tmpEventTime,
                   split.getEndTime().getTime()
               )
-          ).drop(tmpEventTime);
+          );
         } else {
           throw new FeatureStoreException("Invalid event time type");
         }
