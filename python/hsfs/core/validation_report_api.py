@@ -97,9 +97,14 @@ class ValidationReportApi:
             "fields": "content",
         }
 
-        return ValidationReport.from_response_json(
+        reports = ValidationReport.from_response_json(
             _client._send_request("GET", path_params, query_params, headers=headers)
-        )[0]
+        )
+
+        if len(reports) == 1:
+            return reports[0]
+        else:
+            return None
 
     def get_all(self) -> Union[List[ValidationReport], ValidationReport]:
         """Get the validation report attached to a featuregroup.
