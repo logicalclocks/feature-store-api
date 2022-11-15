@@ -26,7 +26,7 @@ class TestUtil:
         assert dt == "20220101000000000"
 
     def test_convert_event_time_to_timestamp_timestamp(self):
-        dt = util.convert_event_time_to_timestamp(1640995200000)
+        dt = util.convert_event_time_to_timestamp(1640995200)
         assert dt == 1640995200000
 
     def test_convert_event_time_to_timestamp_datetime(self):

@@ -180,7 +180,7 @@ def convert_event_time_to_timestamp(event_time):
         if event_time == 0:
             raise ValueError("Event time should be greater than 0.")
         # jdbc supports timestamp precision up to second only.
-        if len(str(event_time)) < 13:
+        if len(str(event_time)) <= 10:
             event_time = event_time * 1000
         return event_time
     else:
