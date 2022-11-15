@@ -430,7 +430,10 @@ class FeatureGroupBase:
                 feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, ExpectationSuite):
-            tmp_expectation_suite = expectation_suite
+            tmp_expectation_suite = expectation_suite.to_json_dict()
+            tmp_expectation_suite["featuregroup_id"] = self._id
+            tmp_expectation_suite["featurestore_id"] = self._feature_store_id
+            tmp_expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         else:
             raise TypeError(
                 "The provided expectation suite type `{}` is not supported. Use Great Expectation `ExpectationSuite` or HSFS' own `ExpectationSuite` object.".format(
@@ -686,7 +689,10 @@ class FeatureGroupBase:
         ],
     ):
         if isinstance(expectation_suite, ExpectationSuite):
-            self._expectation_suite = expectation_suite
+            tmp_expectation_suite = expectation_suite.to_json_dict()
+            tmp_expectation_suite["featuregroup_id"] = self._id
+            tmp_expectation_suite["featurestore_id"] = self._feature_store_id
+            self._expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         elif isinstance(expectation_suite, ge.core.expectation_suite.ExpectationSuite):
             self._expectation_suite = ExpectationSuite(
                 **expectation_suite.to_json_dict(),
@@ -694,11 +700,10 @@ class FeatureGroupBase:
                 feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, dict):
-            self._expectation_suite = ExpectationSuite(
-                **expectation_suite,
-                feature_store_id=self._feature_store_id,
-                feature_group_id=self._id,
-            )
+            tmp_expectation_suite = expectation_suite.copy()
+            tmp_expectation_suite["feature_store_id"] = self._feature_store_id
+            tmp_expectation_suite["feature_group_id"] = self._id
+            self._expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         elif expectation_suite is None:
             self._expectation_suite = expectation_suite
         else:
