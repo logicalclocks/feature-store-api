@@ -306,11 +306,11 @@ public class SparkEngine {
     for (Split split : splits) {
       if (dataset.count() > 0) {
         String eventTime = query.getLeftFeatureGroup().getEventTime();
-        String tmpEventTime = eventTime + "_tmp";
         String eventTimeType =
             query.getLeftFeatureGroup().getFeature(eventTime).getType();
 
         if (BIGINT.getType().equals(eventTimeType)) {
+          String tmpEventTime = eventTime + "_tmp";
           sparkSession.sqlContext()
               .udf()
               .register("checkEpochUDF", (Long input) -> {
@@ -340,8 +340,8 @@ public class SparkEngine {
               String.format(
                   "%d/1000 <= unix_timestamp(`%s`) and unix_timestamp(`%s`) < %d/1000",
                   split.getStartTime().getTime(),
-                  tmpEventTime,
-                  tmpEventTime,
+                  eventTime,
+                  eventTime,
                   split.getEndTime().getTime()
               )
           );
