@@ -314,7 +314,7 @@ public class SparkEngine {
           sparkSession.sqlContext()
               .udf()
               .register("checkEpochUDF", (Long input) -> {
-                if (Long.toString(input).length() == 13) {
+                if (Long.toString(input).length() > 10) {
                   input = input / 1000;
                   return input.longValue();
                 } else {
