@@ -494,6 +494,67 @@ class TestSpark:
             == "The provided dataframe type is not recognized. Supported types are: spark rdds, spark dataframes, pandas dataframes, python 2D lists, and numpy 2D arrays. The provided dataframe has type: <class 'NoneType'>"
         )
 
+    def test_convert_to_default_dataframe_nullable(self):
+        # Arrange
+        spark_engine = spark.Engine()
+
+        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"], "col_2": [None, "test_2"]}
+        data = pd.DataFrame(data=d)
+
+        schema = StructType(
+            [
+                StructField("col_0", IntegerType(), nullable=False),
+                StructField("col_1", StringType(), nullable=False),
+                StructField("col_2", StringType(), nullable=True),
+            ]
+        )
+        original_df = spark_engine._spark_session.createDataFrame(data, schema=schema)
+
+        # Act
+        result_df = spark_engine.convert_to_default_dataframe(
+            dataframe=original_df, non_nullable_columns=["col_0"]
+        )
+
+        # Assert
+        original_schema = StructType(
+            [
+                StructField("col_0", IntegerType(), nullable=False),
+                StructField("col_1", StringType(), nullable=False),
+                StructField("col_2", StringType(), nullable=True),
+            ]
+        )
+        result_schema = StructType(
+            [
+                StructField("col_0", IntegerType(), nullable=False),
+                StructField("col_1", StringType(), nullable=True),
+                StructField("col_2", StringType(), nullable=True),
+            ]
+        )
+
+        assert original_schema == original_df.schema
+        assert result_schema == result_df.schema
+
+    def test_convert_to_default_dataframe_nullable_without_non_nulls(self):
+        # Arrange
+        spark_engine = spark.Engine()
+
+        d = {"col_0": [1, 2], "col_1": ["test_1", "test_2"], "col_2": [None, "test_2"]}
+        data = pd.DataFrame(data=d)
+
+        schema = StructType(
+            [
+                StructField("col_0", IntegerType(), nullable=False),
+                StructField("col_1", StringType(), nullable=False),
+                StructField("col_2", StringType(), nullable=True),
+            ]
+        )
+        original_df = spark_engine._spark_session.createDataFrame(data, schema=schema)
+
+        # Act
+        result_df = spark_engine.convert_to_default_dataframe(dataframe=original_df)
+
+        assert result_df.schema == original_df.schema
+
     def test_save_dataframe(self, mocker):
         # Arrange
         mock_spark_engine_save_online_dataframe = mocker.patch(

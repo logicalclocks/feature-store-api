@@ -1015,7 +1015,9 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `RestAPIError`. Unable to create feature group.
         """
-        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+        feature_dataframe = engine.get_instance().convert_to_default_dataframe(
+            features, self._non_nullable_columns()
+        )
 
         user_version = self._version
 
@@ -1053,6 +1055,17 @@ class FeatureGroup(FeatureGroupBase):
         return (
             fg_job,
             ge_report.to_ge_type() if ge_report is not None else None,
+        )
+
+    def _non_nullable_columns(self):
+        return (
+            (self._primary_key if self._primary_key is not None else [])
+            + (self._partition_key if self._partition_key is not None else [])
+            + (
+                [self._hudi_precombine_key]
+                if self._hudi_precombine_key is not None
+                else []
+            )
         )
 
     def insert(
@@ -1129,7 +1142,9 @@ class FeatureGroup(FeatureGroupBase):
         # Returns
             (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
         """
-        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+        feature_dataframe = engine.get_instance().convert_to_default_dataframe(
+            features, self._non_nullable_columns()
+        )
 
         job, ge_report = self._feature_group_engine.insert(
             self,
@@ -1228,7 +1243,7 @@ class FeatureGroup(FeatureGroupBase):
         else:
             # lower casing feature names
             feature_dataframe = engine.get_instance().convert_to_default_dataframe(
-                features
+                features, self._non_nullable_columns()
             )
             warnings.warn(
                 (
