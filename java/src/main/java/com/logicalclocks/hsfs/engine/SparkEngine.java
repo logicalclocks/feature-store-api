@@ -310,7 +310,7 @@ public class SparkEngine {
             query.getLeftFeatureGroup().getFeature(eventTime).getType();
 
         if (BIGINT.getType().equals(eventTimeType)) {
-          String tmpEventTime = eventTime + "_tmp";
+          String tmpEventTime = eventTime + "_hopsworks_tmp";
           sparkSession.sqlContext()
               .udf()
               .register("checkEpochUDF", (Long input) -> {
