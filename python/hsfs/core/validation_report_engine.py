@@ -42,14 +42,18 @@ class ValidationReportEngine:
         print(f"Validation Report saved successfully, explore a summary at {url}")
         return saved_report
 
-    def get_last(self) -> ValidationReport:
+    def get_last(self, ge_type: bool = True) -> ValidationReport:
         """Get the most recent Validation Report of a Feature Group."""
         url = self._get_validation_report_url()
         print(
             f"""Long reports can be truncated when fetching from Hopsworks.
         \nYou can download the full report at {url}"""
         )
-        return self._validation_report_api.get_last()
+        report = self._validation_report_api.get_last()
+        if isinstance(report, ValidationReport) and ge_type:
+            return report.to_ge_type()
+        else:
+            return report
 
     def get_all(self) -> Union[List[ValidationReport], ValidationReport]:
         """Get all Validation Report of a FeaturevGroup."""

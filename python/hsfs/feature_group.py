@@ -473,10 +473,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIException`.
         """
-        if ge_type is True:
-            return self._validation_report_engine.get_last(self).to_ge_type()
-        else:
-            return self._validation_report_engine.get_last(self)
+        return self._validation_report_engine.get_last(ge_type=ge_type)
 
     def get_all_validation_reports(
         self, ge_type: bool = True
