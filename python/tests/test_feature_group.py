@@ -270,6 +270,22 @@ class TestFeatureGroup:
 
         assert result_non_nulltable_colums == expected_non_nullable_columns
 
+    def test_get_non_nullable_columns_uppercase(self, backend_fixtures):
+        # Arrange
+        json = backend_fixtures["feature_group"]["get"]["response"]
+
+        # Act
+        fg = feature_group.FeatureGroup.from_response_json(json)
+
+        fg.partition_key = ["COL_1"]
+        fg.primary_key = ["INTT", "col_2"]
+        fg.hudi_precombine_key = "intt2"
+
+        result_non_nulltable_colums = fg._non_nullable_columns()
+        expected_non_nullable_columns = ["intt", "col_2", "col_1", "intt2"]
+
+        assert result_non_nulltable_colums == expected_non_nullable_columns
+
     def test_get_non_nullable_columns_none(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["feature_group"]["get"]["response"]

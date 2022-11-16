@@ -209,18 +209,19 @@ class Engine:
                     util.FeatureGroupWarning,
                 )
 
+            lowercase_dataframe = dataframe.select(
+                [col(x).alias(x.lower()) for x in dataframe.columns]
+            )
             if non_nullable_columns:
-                nullable_schema = copy.deepcopy(dataframe.schema)
+                nullable_schema = copy.deepcopy(lowercase_dataframe.schema)
                 for struct_field in nullable_schema:
                     if struct_field.name not in non_nullable_columns:
                         struct_field.nullable = True
-                dataframe = self._spark_session.createDataFrame(
-                    dataframe.rdd, nullable_schema
+                lowercase_dataframe = self._spark_session.createDataFrame(
+                    lowercase_dataframe.rdd, nullable_schema
                 )
 
-            return dataframe.select(
-                [col(x).alias(x.lower()) for x in dataframe.columns]
-            )
+            return lowercase_dataframe
 
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: spark rdds, spark dataframes, "
