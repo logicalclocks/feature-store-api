@@ -46,8 +46,21 @@ public class TestSparkEngine {
 
         ArrayList<StructField> dfConvertedJava = new ArrayList<>(JavaConverters.asJavaCollection(dfConverted.schema().toSeq()));
         // Assert
-        for (int i = 0; i < expected.toList().length(); i++) {
+        for (int i = 0; i < expectedJava.size(); i++) {
             Assertions.assertEquals(expectedJava.get(i), dfConvertedJava.get(i));
+        }
+
+        StructType originalExpected = new StructType();
+        originalExpected = originalExpected.add("A", DataTypes.StringType, false);
+        originalExpected = originalExpected.add("B", DataTypes.StringType, false);
+        originalExpected = originalExpected.add("C", DataTypes.StringType, false);
+        originalExpected = originalExpected.add("D", DataTypes.StringType, false);
+        ArrayList<StructField> originalExpectedJava = new ArrayList<>(JavaConverters.asJavaCollection(originalExpected.toSeq()));
+
+        ArrayList<StructField> dfOriginalJava = new ArrayList<>(JavaConverters.asJavaCollection(dfOriginal.schema().toSeq()));
+        // Assert
+        for (int i = 0; i < originalExpectedJava.size(); i++) {
+            Assertions.assertEquals(originalExpectedJava.get(i), dfOriginalJava.get(i));
         }
     }
 }
