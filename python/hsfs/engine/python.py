@@ -958,7 +958,7 @@ class Engine:
                     key=key,
                     value=encoded_row,
                     callback=acked,
-                    headers=json.dumps(headers).encode('ascii'),
+                    headers=headers,
                 )
 
                 # Trigger internal callbacks to empty op queue
