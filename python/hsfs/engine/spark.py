@@ -163,7 +163,7 @@ class Engine:
             "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
         )
 
-    def convert_to_default_dataframe(self, dataframe, non_nullable_columns=None):
+    def convert_to_default_dataframe(self, dataframe):
         if isinstance(dataframe, list):
             dataframe = np.array(dataframe)
 
@@ -212,14 +212,12 @@ class Engine:
             lowercase_dataframe = dataframe.select(
                 [col(x).alias(x.lower()) for x in dataframe.columns]
             )
-            if non_nullable_columns:
-                nullable_schema = copy.deepcopy(lowercase_dataframe.schema)
-                for struct_field in nullable_schema:
-                    if struct_field.name not in non_nullable_columns:
-                        struct_field.nullable = True
-                lowercase_dataframe = self._spark_session.createDataFrame(
-                    lowercase_dataframe.rdd, nullable_schema
-                )
+            nullable_schema = copy.deepcopy(lowercase_dataframe.schema)
+            for struct_field in nullable_schema:
+                struct_field.nullable = True
+            lowercase_dataframe = self._spark_session.createDataFrame(
+                lowercase_dataframe.rdd, nullable_schema
+            )
 
             return lowercase_dataframe
 

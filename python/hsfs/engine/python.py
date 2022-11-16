@@ -343,7 +343,7 @@ class Engine:
     def set_job_group(self, group_id, description):
         pass
 
-    def convert_to_default_dataframe(self, dataframe, non_nullable_columns=None):
+    def convert_to_default_dataframe(self, dataframe):
         if isinstance(dataframe, pd.DataFrame):
             upper_case_features = [
                 col for col in dataframe.columns if any(re.finditer("[A-Z]", col))

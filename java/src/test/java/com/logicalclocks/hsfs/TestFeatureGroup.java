@@ -121,47 +121,4 @@ public class TestFeatureGroup {
         "Provided Hudi precombine key hudiPrecombineKey doesn't exist in feature dataframe");
   }
 
-  @Test
-  public void testFeatureGroupNonNullColumns() {
-    // Arrange
-    FeatureStore featureStore = Mockito.mock(FeatureStore.class);
-
-    // Act
-    List<Feature> features = new ArrayList<>();
-    features.add( new Feature("featureA"));
-    features.add( new Feature("featureB"));
-    features.add( new Feature("featureC"));
-    features.add( new Feature("featureD"));
-
-    FeatureGroup featureGroup = new FeatureGroup(featureStore, "fgName", 1, "description",
-        Collections.singletonList("featureA"), Collections.singletonList("featureB"), "featureC",
-        false, com.logicalclocks.hsfs.TimeTravelFormat.HUDI, features, null, "onlineTopicName", null);
-
-    List<String> nullColumnsExpectation = Arrays.asList("featurea", "featureb", "featurec");
-
-    // Assert
-    Assertions.assertArrayEquals(nullColumnsExpectation.toArray(), featureGroup.nonNullableColumns().toArray());
-  }
-
-  @Test
-  public void testStreamFeatureGroupNonNullColumns() {
-    // Arrange
-    FeatureStore featureStore = Mockito.mock(FeatureStore.class);
-
-    // Act
-    List<Feature> features = new ArrayList<>();
-    features.add( new Feature("featureA"));
-    features.add( new Feature("featureB"));
-    features.add( new Feature("featureC"));
-    features.add( new Feature("featureD"));
-
-    StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
-            Collections.singletonList("featureA"), Collections.singletonList("featureB"), "featureC",
-            false, features, null, "onlineTopicName", null);
-
-    List<String> nullColumnsExpectation = Arrays.asList("featurea", "featureb", "featurec");
-
-    // Assert
-    Assertions.assertArrayEquals(nullColumnsExpectation.toArray(), featureGroup.nonNullableColumns().toArray());
-  }
 }

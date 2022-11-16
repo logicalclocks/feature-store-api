@@ -35,10 +35,10 @@ public class TestSparkEngine {
 
         Dataset<Row> dfOriginal = sparkEngine.getSparkSession().createDataFrame(nums, structType);
 
-        Dataset<Row> dfConverted = sparkEngine.convertToDefaultDataframe(dfOriginal, nonNullColumns);
+        Dataset<Row> dfConverted = sparkEngine.convertToDefaultDataframe(dfOriginal);
 
         StructType expected = new StructType();
-        expected = expected.add("a", DataTypes.StringType, false);
+        expected = expected.add("a", DataTypes.StringType, true);
         expected = expected.add("b", DataTypes.StringType, true);
         expected = expected.add("c", DataTypes.StringType, true);
         expected = expected.add("d", DataTypes.StringType, true);

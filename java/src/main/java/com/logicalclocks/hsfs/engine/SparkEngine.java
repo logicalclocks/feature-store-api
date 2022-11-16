@@ -769,22 +769,18 @@ public class SparkEngine {
     return features;
   }
 
-  public <S> S convertToDefaultDataframe(S datasetGeneric, List<String> nonNullColumns) {
+  public <S> S convertToDefaultDataframe(S datasetGeneric) {
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
     Dataset<Row> sanitizedNamesDataset = dataset.select(Arrays.asList(dataset.columns()).stream().map(f ->
             col(f).alias(f.toLowerCase())).toArray(Column[]::new));
 
-    if (nonNullColumns != null) {
-      StructType schema = sanitizedNamesDataset.schema();
-      StructType nullableSchema = new StructType(JavaConverters.asJavaCollection(schema.toSeq()).stream().map(f ->
-              new StructField(f.name(), f.dataType(), !nonNullColumns.contains(f.name()), f.metadata())
-      ).toArray(StructField[]::new));
-      Dataset<Row> nullableDataset = sanitizedNamesDataset.sparkSession()
-              .createDataFrame(sanitizedNamesDataset.rdd(), nullableSchema);
-      return (S) nullableDataset;
-    }
-
-    return (S) sanitizedNamesDataset;
+    StructType schema = sanitizedNamesDataset.schema();
+    StructType nullableSchema = new StructType(JavaConverters.asJavaCollection(schema.toSeq()).stream().map(f ->
+            new StructField(f.name(), f.dataType(), true, f.metadata())
+    ).toArray(StructField[]::new));
+    Dataset<Row> nullableDataset = sanitizedNamesDataset.sparkSession()
+            .createDataFrame(sanitizedNamesDataset.rdd(), nullableSchema);
+    return (S) nullableDataset;
   }
 
   public String addFile(String filePath) {

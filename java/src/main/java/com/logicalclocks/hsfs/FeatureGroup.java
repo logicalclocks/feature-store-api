@@ -41,7 +41,6 @@ import org.apache.avro.Schema;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -528,17 +527,4 @@ public class FeatureGroup extends FeatureGroupBase {
     return null;
   }
 
-  public List<String> nonNullableColumns() {
-    List<String> nonNullableColumns = new ArrayList();
-    if (this.primaryKeys != null) {
-      nonNullableColumns.addAll(this.primaryKeys);
-    }
-    if (this.partitionKeys != null) {
-      nonNullableColumns.addAll(this.partitionKeys);
-    }
-    if (this.hudiPrecombineKey != null) {
-      nonNullableColumns.add(this.hudiPrecombineKey);
-    }
-    return nonNullableColumns;
-  }
 }

@@ -511,9 +511,7 @@ class TestSpark:
         original_df = spark_engine._spark_session.createDataFrame(data, schema=schema)
 
         # Act
-        result_df = spark_engine.convert_to_default_dataframe(
-            dataframe=original_df, non_nullable_columns=["col_0"]
-        )
+        result_df = spark_engine.convert_to_default_dataframe(dataframe=original_df)
 
         # Assert
         original_schema = StructType(
@@ -525,7 +523,7 @@ class TestSpark:
         )
         result_schema = StructType(
             [
-                StructField("col_0", IntegerType(), nullable=False),
+                StructField("col_0", IntegerType(), nullable=True),
                 StructField("col_1", StringType(), nullable=True),
                 StructField("col_2", StringType(), nullable=True),
             ]
@@ -551,9 +549,7 @@ class TestSpark:
         original_df = spark_engine._spark_session.createDataFrame(data, schema=schema)
 
         # Act
-        result_df = spark_engine.convert_to_default_dataframe(
-            dataframe=original_df, non_nullable_columns=["col_0"]
-        )
+        result_df = spark_engine.convert_to_default_dataframe(dataframe=original_df)
 
         # Assert
         original_schema = StructType(
@@ -565,7 +561,7 @@ class TestSpark:
         )
         result_schema = StructType(
             [
-                StructField("col_0", IntegerType(), nullable=False),
+                StructField("col_0", IntegerType(), nullable=True),
                 StructField("col_1", StringType(), nullable=True),
                 StructField("col_2", StringType(), nullable=True),
             ]

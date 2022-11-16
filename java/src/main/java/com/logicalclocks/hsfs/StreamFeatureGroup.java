@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -430,17 +429,4 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     return utils.getDeserializedAvroSchema(getAvroSchema());
   }
 
-  public List<String> nonNullableColumns() {
-    List<String> nonNullableColumns = new ArrayList();
-    if (this.primaryKeys != null) {
-      nonNullableColumns.addAll(this.primaryKeys);
-    }
-    if (this.partitionKeys != null) {
-      nonNullableColumns.addAll(this.partitionKeys);
-    }
-    if (this.hudiPrecombineKey != null) {
-      nonNullableColumns.add(this.hudiPrecombineKey);
-    }
-    return nonNullableColumns;
-  }
 }

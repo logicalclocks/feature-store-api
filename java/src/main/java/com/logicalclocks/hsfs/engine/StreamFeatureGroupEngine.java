@@ -65,7 +65,7 @@ public class StreamFeatureGroupEngine {
     StreamFeatureGroup updatedFeatureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
         writeOptions, sparkJobConfiguration, dataset);
 
-    insert(updatedFeatureGroup, utils.convertToDefaultDataframe(dataset, featureGroup.nonNullableColumns()),
+    insert(updatedFeatureGroup, utils.convertToDefaultDataframe(dataset),
         SaveMode.APPEND,  partitionKeys, hudiPrecombineKey, writeOptions, sparkJobConfiguration);
 
     return featureGroup;
@@ -87,7 +87,7 @@ public class StreamFeatureGroupEngine {
     }
 
     return SparkEngine.getInstance().writeStreamDataframe(streamFeatureGroup,
-      utils.convertToDefaultDataframe(featureData, streamFeatureGroup.nonNullableColumns()), queryName, outputMode,
+      utils.convertToDefaultDataframe(featureData), queryName, outputMode,
             awaitTermination, timeout, checkpointLocation, utils.getKafkaConfig(streamFeatureGroup, writeOptions));
   }
 
@@ -120,7 +120,7 @@ public class StreamFeatureGroupEngine {
 
     if (featureGroup.getFeatures() == null) {
       featureGroup.setFeatures(utils
-          .parseFeatureGroupSchema(utils.convertToDefaultDataframe(featureData, featureGroup.nonNullableColumns()),
+          .parseFeatureGroupSchema(utils.convertToDefaultDataframe(featureData),
             featureGroup.getTimeTravelFormat()));
     }
 
