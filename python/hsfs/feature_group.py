@@ -38,7 +38,6 @@ from hsfs.core import (
     validation_result_engine,
 )
 
-from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.validation_report import ValidationReport
@@ -1074,19 +1073,6 @@ class FeatureGroup(FeatureGroupBase):
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         user_version = self._version
-
-        if self._stream:
-            # when creating a stream feature group, users have the possibility of passing
-            # a spark_job_configuration object as part of the write_options with the key "spark"
-            _spark_options = write_options.pop("spark", None)
-            _write_options = (
-                [{"name": k, "value": v} for k, v in write_options.items()]
-                if write_options
-                else None
-            )
-            self._deltastreamer_jobconf = DeltaStreamerJobConf(
-                _write_options, _spark_options
-            )
 
         # fg_job is used only if the python engine is used
         fg_job, ge_report = self._feature_group_engine.save(

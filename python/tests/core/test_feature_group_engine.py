@@ -1367,7 +1367,7 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
         feature_group_url = "test_url"
-        write_options = "test"
+        write_options = {"spark": "test"}
 
         mocker.patch("hsfs.engine.get_type")
         mocker.patch(
@@ -1406,7 +1406,6 @@ class TestFeatureGroupEngine:
         assert f.primary is False
         assert f.partition is False
         assert f.hudi_precombine_key is False
-        assert fg._options == write_options
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0
