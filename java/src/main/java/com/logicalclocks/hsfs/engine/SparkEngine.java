@@ -775,13 +775,12 @@ public class SparkEngine {
             col(f).alias(f.toLowerCase())).toArray(Column[]::new));
 
     if (nonNullColumns != null) {
-      Dataset<Row> datasetCopy = sanitizedNamesDataset.as("df1");
-      StructType schema = datasetCopy.schema();
+      StructType schema = sanitizedNamesDataset.schema();
       StructType nullableSchema = new StructType(JavaConverters.asJavaCollection(schema.toSeq()).stream().map(f ->
               new StructField(f.name(), f.dataType(), !nonNullColumns.contains(f.name()), f.metadata())
       ).toArray(StructField[]::new));
-      Dataset<Row> nullableDataset = datasetCopy.sparkSession()
-              .createDataFrame(datasetCopy.rdd(), nullableSchema);
+      Dataset<Row> nullableDataset = sanitizedNamesDataset.sparkSession()
+              .createDataFrame(sanitizedNamesDataset.rdd(), nullableSchema);
       return (S) nullableDataset;
     }
 
