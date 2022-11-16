@@ -80,7 +80,6 @@ public class FeatureGroupEngine {
                      String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     Integer validationId = null;
-    
     if (featureGroup.getId() == null) {
       featureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys,
           hudiPrecombineKey, featureData, false);
