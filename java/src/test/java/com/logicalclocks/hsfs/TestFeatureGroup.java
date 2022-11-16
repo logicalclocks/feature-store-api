@@ -118,5 +118,4 @@ public class TestFeatureGroup {
     Assertions.assertEquals(precombineException.getMessage(),
         "Provided Hudi precombine key hudiPrecombineKey doesn't exist in feature dataframe");
   }
-
 }
