@@ -950,15 +950,13 @@ class Engine:
         while True:
             # if BufferError is thrown, we can be sure, message hasn't been send so we retry
             try:
-                headers = {"version": str(feature_group.avro_schema["version"])}
-
                 # produce
                 producer.produce(
                     topic=feature_group._online_topic_name,
                     key=key,
                     value=encoded_row,
                     callback=acked,
-                    headers=headers,
+                    headers={"version": str(feature_group.subject["version"])},
                 )
 
                 # Trigger internal callbacks to empty op queue

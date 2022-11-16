@@ -293,6 +293,7 @@ class Engine:
             )
             .options(**write_options)
             .option("topic", feature_group._online_topic_name)
+            .option("headers", [('version', str(feature_group.subject["version"]))])
             .queryName(query_name)
             .start()
         )
@@ -336,9 +337,10 @@ class Engine:
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
-        serialized_df.write.format(self.KAFKA_FORMAT).options(**write_options).option(
-            "topic", feature_group._online_topic_name
-        ).save()
+        serialized_df.write.format(self.KAFKA_FORMAT).options(**write_options)\
+            .option("topic", feature_group._online_topic_name)\
+            .option("headers", [('version', str(feature_group.subject["version"]))])\
+            .save()
 
     def _encode_complex_features(self, feature_group, dataframe):
         """Encodes all complex type features to binary using their avro type as schema."""
@@ -349,7 +351,7 @@ class Engine:
                 else to_avro(
                     field["name"], feature_group._get_feature_avro_schema(field["name"])
                 ).alias(field["name"])
-                for field in json.loads(feature_group.avro_schema["schema"])["fields"]
+                for field in json.loads(feature_group.avro_schema)["fields"]
             ]
         )
 
@@ -372,7 +374,7 @@ class Engine:
                     struct(
                         [
                             field["name"]
-                            for field in json.loads(feature_group.avro_schema["schema"])["fields"]
+                            for field in json.loads(feature_group.avro_schema)["fields"]
                         ]
                     ),
                     feature_group._get_encoded_avro_schema(),
