@@ -15,6 +15,7 @@
 #
 
 import copy
+from hsfs.ge_validation_result import ValidationResult
 import humps
 import json
 import warnings
@@ -34,6 +35,7 @@ from hsfs.core import (
     validation_report_engine,
     code_engine,
     external_feature_group_engine,
+    validation_result_engine,
 )
 
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
@@ -430,7 +432,10 @@ class FeatureGroupBase:
                 feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, ExpectationSuite):
-            tmp_expectation_suite = expectation_suite
+            tmp_expectation_suite = expectation_suite.to_json_dict()
+            tmp_expectation_suite["featuregroup_id"] = self._id
+            tmp_expectation_suite["featurestore_id"] = self._feature_store_id
+            tmp_expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         else:
             raise TypeError(
                 "The provided expectation suite type `{}` is not supported. Use Great Expectation `ExpectationSuite` or HSFS' own `ExpectationSuite` object.".format(
@@ -473,10 +478,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIException`.
         """
-        if ge_type is True:
-            return self._validation_report_engine.get_last(self).to_ge_type()
-        else:
-            return self._validation_report_engine.get_last(self)
+        return self._validation_report_engine.get_last(ge_type=ge_type)
 
     def get_all_validation_reports(
         self, ge_type: bool = True
@@ -534,6 +536,53 @@ class FeatureGroupBase:
         if ge_type:
             return self._validation_report_engine.save(report).to_ge_type()
         return self._validation_report_engine.save(report)
+
+    def get_validation_history(
+        self,
+        expectation_id: int,
+        start_validation_time: Union[str, int, datetime, date, None] = None,
+        end_validation_time: Union[str, int, datetime, date, None] = None,
+        ingested_only: bool = False,
+        rejected_only: bool = False,
+        ge_type: bool = True,
+    ) -> Union[List[ValidationResult], List[ge.core.ExpectationValidationResult]]:
+        """Fetch validation history of an Expectation specified by its id.
+
+        !!! example
+        ```python3
+        validation_history = fg.get_validation_history(
+            expectation_id=1,
+            ingested_only=True,
+            start_validation_time="2022-01-01 00:00:00",
+            end_validation_time=datetime.datetime.now(),
+            ge_type=False
+        )
+        ```
+
+        # Arguments
+            expectation_id: id of the Expectation for which to fetch the validation history
+            ingested_only: fetch only validation result corresponding to an insertion, defaults to False.
+            rejected_only: fetch only validation result corresponding to a rejection, defaults to False.
+            start_validation_time: fetch only validation result posterior to the provided time, inclusive.
+            Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
+            end_validation_time: fetch only validation result prior to the provided time, inclusive.
+            Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
+
+        # Raises
+            `RestAPIException`
+
+        # Return
+            Union[List[`ValidationResult`], List[`ExpectationValidationResult`]] A list of validation result connected to the expectation_id
+        """
+
+        return self._validation_result_engine.get_validation_history(
+            expectation_id=expectation_id,
+            start_validation_time=start_validation_time,
+            end_validation_time=end_validation_time,
+            ingested_only=ingested_only,
+            rejected_only=rejected_only,
+            ge_type=ge_type,
+        )
 
     def __getattr__(self, name):
         try:
@@ -689,7 +738,10 @@ class FeatureGroupBase:
         ],
     ):
         if isinstance(expectation_suite, ExpectationSuite):
-            self._expectation_suite = expectation_suite
+            tmp_expectation_suite = expectation_suite.to_json_dict()
+            tmp_expectation_suite["featuregroup_id"] = self._id
+            tmp_expectation_suite["featurestore_id"] = self._feature_store_id
+            self._expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         elif isinstance(expectation_suite, ge.core.expectation_suite.ExpectationSuite):
             self._expectation_suite = ExpectationSuite(
                 **expectation_suite.to_json_dict(),
@@ -697,11 +749,10 @@ class FeatureGroupBase:
                 feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, dict):
-            self._expectation_suite = ExpectationSuite(
-                **expectation_suite,
-                feature_store_id=self._feature_store_id,
-                feature_group_id=self._id,
-            )
+            tmp_expectation_suite = expectation_suite.copy()
+            tmp_expectation_suite["feature_store_id"] = self._feature_store_id
+            tmp_expectation_suite["feature_group_id"] = self._id
+            self._expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         elif expectation_suite is None:
             self._expectation_suite = expectation_suite
         else:
@@ -800,6 +851,11 @@ class FeatureGroup(FeatureGroupBase):
             )
             self._validation_report_engine = (
                 validation_report_engine.ValidationReportEngine(
+                    self._feature_store_id, self._id
+                )
+            )
+            self._validation_result_engine = (
+                validation_result_engine.ValidationResultEngine(
                     self._feature_store_id, self._id
                 )
             )
@@ -1067,8 +1123,8 @@ class FeatureGroup(FeatureGroupBase):
         overwrite: Optional[bool] = False,
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
-        validation_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[str, Any]] = {},
+        validation_options: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         """Persist the metadata and materialize the feature group to the feature store
         or insert data from a dataframe into the existing feature group.
@@ -1133,12 +1189,14 @@ class FeatureGroup(FeatureGroupBase):
 
         job, ge_report = self._feature_group_engine.insert(
             self,
-            feature_dataframe,
-            overwrite,
-            operation,
-            storage.lower() if storage is not None else None,
-            write_options,
-            validation_options,
+            feature_dataframe=feature_dataframe,
+            overwrite=overwrite,
+            operation=operation,
+            storage=storage.lower() if storage is not None else None,
+            write_options=write_options,
+            validation_options=validation_options
+            if validation_options is not None
+            else {"save_report": True},
         )
 
         if ge_report is None or ge_report.ingestion_result == "INGESTED":

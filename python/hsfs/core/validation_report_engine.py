@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from typing import Union, List
+from typing import Optional, Union, List
 from hsfs.core import validation_report_api
 from hsfs import client, util
 
@@ -42,17 +42,23 @@ class ValidationReportEngine:
         print(f"Validation Report saved successfully, explore a summary at {url}")
         return saved_report
 
-    def get_last(self) -> ValidationReport:
+    def get_last(self, ge_type: bool = True) -> Optional[ValidationReport]:
         """Get the most recent Validation Report of a Feature Group."""
         url = self._get_validation_report_url()
         print(
             f"""Long reports can be truncated when fetching from Hopsworks.
         \nYou can download the full report at {url}"""
         )
-        return self._validation_report_api.get_last()
+        reports = self._validation_report_api.get_last()
+        if len(reports) == 0:
+            return None
+        elif len(reports) == 1 and ge_type:
+            return reports[0].to_ge_type()
+        else:
+            return reports[0]
 
     def get_all(self) -> Union[List[ValidationReport], ValidationReport]:
-        """Get all Validation Report of a FeaturevGroup."""
+        """Get all Validation Report of a Feature Group."""
         url = self._get_validation_report_url()
         print(
             f"""Long reports can be truncated when fetching from Hopsworks.
