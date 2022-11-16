@@ -19,13 +19,11 @@ package com.logicalclocks.hsfs;
 
 import com.logicalclocks.hsfs.engine.StreamFeatureGroupEngine;
 
-import lombok.NonNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 

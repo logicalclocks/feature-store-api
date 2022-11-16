@@ -428,5 +428,4 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
     return utils.getDeserializedAvroSchema(getAvroSchema());
   }
-
 }
