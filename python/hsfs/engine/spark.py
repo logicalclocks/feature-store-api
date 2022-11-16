@@ -39,7 +39,7 @@ try:
         concat,
         col,
         from_json,
-        unix_timestamp,
+        udf,
     )
     from pyspark.sql.avro.functions import from_avro, to_avro
     from pyspark.sql.types import (
@@ -492,14 +492,13 @@ class Engine:
     def _time_series_split(
         self, training_dataset, dataset, event_time, drop_event_time=False
     ):
-        result_dfs = {}
-        ts_type = dataset.select(event_time).dtypes[0][1]
-        ts_col = (
-            unix_timestamp(col(event_time)) * 1000
-            if ts_type in ["date", "timestamp"]
-            # jdbc supports timestamp precision up to second only.
-            else col(event_time) * 1000
+        # registering the UDF
+        _convert_event_time_to_timestamp = udf(
+            util.convert_event_time_to_timestamp, LongType()
         )
+
+        result_dfs = {}
+        ts_col = _convert_event_time_to_timestamp(col(event_time))
         for split in training_dataset.splits:
             result_df = dataset.filter(ts_col >= split.start_time).filter(
                 ts_col < split.end_time

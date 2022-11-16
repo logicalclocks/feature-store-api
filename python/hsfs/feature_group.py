@@ -647,8 +647,27 @@ class FeatureGroupBase:
         return self._event_time
 
     @event_time.setter
-    def event_time(self, feature_name):
-        self._event_time = feature_name
+    def event_time(self, feature_name: Optional[str]):
+        if feature_name is None:
+            self._event_time = None
+            return
+        elif isinstance(feature_name, str):
+            self._event_time = feature_name
+            return
+        elif isinstance(feature_name, list) and len(feature_name) == 1:
+            if isinstance(feature_name[0], str):
+                warnings.warn(
+                    "Providing event_time as a single-element list is deprecated"
+                    + " and will be dropped in future versions. Provide the feature_name string instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+                self._event_time = feature_name[0]
+                return
+
+        raise ValueError(
+            "event_time must be a string corresponding to an existing feature name of the Feature Group."
+        )
 
     @property
     def location(self):
@@ -742,7 +761,7 @@ class FeatureGroup(FeatureGroupBase):
 
         self._avro_schema = None
         self._online_topic_name = online_topic_name
-        self._event_time = event_time
+        self.event_time = event_time
         self._stream = stream
         self._deltastreamer_jobconf = None
 
