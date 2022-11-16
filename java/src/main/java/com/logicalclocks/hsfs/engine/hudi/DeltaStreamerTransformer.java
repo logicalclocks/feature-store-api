@@ -49,6 +49,6 @@ public class DeltaStreamerTransformer implements Transformer {
     featureGroup = featureGroupApi.getStreamFeatureGroup(this.featureStore, props.getString("featureGroupName"),
         Integer.parseInt(props.getString("featureGroupVersion")));
 
-    return utils.sanitizeFeatureNames(dataset);
+    return utils.convertToDefaultDataframe(dataset);
   }
 }

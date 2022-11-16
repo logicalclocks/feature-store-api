@@ -63,8 +63,12 @@ public class FeatureGroupUtils {
     return SparkEngine.getInstance().parseFeatureGroupSchema(datasetGeneric, timeTravelFormat);
   }
 
-  public <S> S sanitizeFeatureNames(S datasetGeneric) throws FeatureStoreException {
-    return SparkEngine.getInstance().sanitizeFeatureNames(datasetGeneric);
+  public <S> S convertToDefaultDataframe(S datasetGeneric) throws FeatureStoreException {
+    return this.convertToDefaultDataframe(datasetGeneric, null);
+  }
+
+  public <S> S convertToDefaultDataframe(S datasetGeneric, List<String> nonNullColumns) throws FeatureStoreException {
+    return SparkEngine.getInstance().convertToDefaultDataframe(datasetGeneric, nonNullColumns);
   }
 
   // TODO(Fabio): this should be moved in the backend
