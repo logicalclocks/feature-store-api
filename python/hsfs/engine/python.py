@@ -950,7 +950,7 @@ class Engine:
         while True:
             # if BufferError is thrown, we can be sure, message hasn't been send so we retry
             try:
-                headers = {'version': feature_group.avro_schema["version"]}
+                headers = {"version": str(feature_group.avro_schema["version"])}
 
                 # produce
                 producer.produce(
