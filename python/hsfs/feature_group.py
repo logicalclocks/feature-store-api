@@ -478,7 +478,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIException`.
         """
-        return self._validation_report_engine.get_last()
+        return self._validation_report_engine.get_last(ge_type=ge_type)
 
     def get_all_validation_reports(
         self, ge_type: bool = True
