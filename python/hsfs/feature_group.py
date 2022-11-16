@@ -1104,8 +1104,8 @@ class FeatureGroup(FeatureGroupBase):
         overwrite: Optional[bool] = False,
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
-        validation_options: Optional[Dict[Any, Any]] = {"save_report": True},
+        write_options: Optional[Dict[str, Any]] = {},
+        validation_options: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         """Persist the metadata and materialize the feature group to the feature store
         or insert data from a dataframe into the existing feature group.
@@ -1170,12 +1170,14 @@ class FeatureGroup(FeatureGroupBase):
 
         job, ge_report = self._feature_group_engine.insert(
             self,
-            feature_dataframe,
-            overwrite,
-            operation,
-            storage.lower() if storage is not None else None,
-            write_options,
-            validation_options,
+            feature_dataframe=feature_dataframe,
+            overwrite=overwrite,
+            operation=operation,
+            storage=storage.lower() if storage is not None else None,
+            write_options=write_options,
+            validation_options=validation_options
+            if validation_options is not None
+            else {"save_report": True},
         )
 
         if ge_report is None or ge_report.ingestion_result == "INGESTED":
