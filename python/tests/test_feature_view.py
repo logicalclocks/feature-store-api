@@ -15,8 +15,8 @@
 #
 
 
-from hsfs import feature_view, training_dataset_feature
-from hsfs.constructor import query
+from hsfs import feature_view, training_dataset_feature, transformation_function
+from hsfs.constructor import query, fs_query
 
 
 class TestFeatureView:
@@ -60,3 +60,41 @@ class TestFeatureView:
         assert fv.labels == []
         assert fv.transformation_functions == {}
         assert len(fv.schema) == 0
+
+    def test_transformation_function_instances(self, mocker, backend_fixtures):
+        # Arrange
+        feature_store_id = 99
+        mocker.patch("hsfs.core.feature_view_engine.FeatureViewEngine")
+        json = backend_fixtures["fs_query"]["get"]["response"]
+
+        # Act
+        q = fs_query.FsQuery.from_response_json(json)
+
+        def testFunction():
+            print("Test")
+
+        tf = transformation_function.TransformationFunction(
+            feature_store_id,
+            transformation_fn=testFunction,
+            builtin_source_code="",
+            output_type="str",
+        )
+
+        transformation_fn_dict = dict()
+        transformation_fn_dict["tf_name"] = tf
+        transformation_fn_dict["tf1_name"] = tf
+
+        fv = feature_view.FeatureView(
+            featurestore_id=feature_store_id,
+            name="test_fv",
+            version=1,
+            query=q,
+            transformation_functions=transformation_fn_dict,
+        )
+
+        updated_transformation_fn_dict = fv.transformation_functions
+
+        assert (
+            updated_transformation_fn_dict["tf_name"]
+            != updated_transformation_fn_dict["tf1_name"]
+        )
