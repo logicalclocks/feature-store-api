@@ -293,7 +293,7 @@ class Engine:
             )
             .options(**write_options)
             .option("topic", feature_group._online_topic_name)
-            .option("headers", [('version', str(feature_group.subject["version"]))])
+            .option("headers", [('version', str(feature_group.subject["version"]).encode("utf8"))])
             .queryName(query_name)
             .start()
         )
@@ -339,7 +339,7 @@ class Engine:
         )
         serialized_df.write.format(self.KAFKA_FORMAT).options(**write_options)\
             .option("topic", feature_group._online_topic_name)\
-            .option("headers", [('version', str(feature_group.subject["version"]))])\
+            .option("headers", [('version', str(feature_group.subject["version"]).encode("utf8"))])\
             .save()
 
     def _encode_complex_features(self, feature_group, dataframe):
