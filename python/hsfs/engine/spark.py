@@ -349,7 +349,7 @@ class Engine:
                 else to_avro(
                     field["name"], feature_group._get_feature_avro_schema(field["name"])
                 ).alias(field["name"])
-                for field in json.loads(feature_group.avro_schema)["fields"]
+                for field in json.loads(feature_group.avro_schema)["schema"]["fields"]
             ]
         )
 
@@ -372,7 +372,7 @@ class Engine:
                     struct(
                         [
                             field["name"]
-                            for field in json.loads(feature_group.avro_schema)["fields"]
+                            for field in json.loads(feature_group.avro_schema)["schema"]["fields"]
                         ]
                     ),
                     feature_group._get_encoded_avro_schema(),

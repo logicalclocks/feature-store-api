@@ -1535,7 +1535,7 @@ class FeatureGroup(FeatureGroupBase):
 
     def _get_encoded_avro_schema(self):
         complex_features = self.get_complex_features()
-        schema = json.loads(self.avro_schema)
+        schema = json.loads(self.avro_schema)["schema"]
 
         for field in schema["fields"]:
             if field["name"] in complex_features:
@@ -1549,7 +1549,7 @@ class FeatureGroup(FeatureGroupBase):
         return schema_s
 
     def _get_feature_avro_schema(self, feature_name):
-        for field in json.loads(self.avro_schema)["fields"]:
+        for field in json.loads(self.avro_schema)["schema"]["fields"]:
             if field["name"] == feature_name:
                 return json.dumps(field["type"])
 
