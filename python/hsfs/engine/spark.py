@@ -16,6 +16,7 @@
 
 import os
 import json
+import copy
 import importlib.util
 import re
 import warnings
@@ -207,9 +208,18 @@ class Engine:
                     ),
                     util.FeatureGroupWarning,
                 )
-            return dataframe.select(
+
+            lowercase_dataframe = dataframe.select(
                 [col(x).alias(x.lower()) for x in dataframe.columns]
             )
+            nullable_schema = copy.deepcopy(lowercase_dataframe.schema)
+            for struct_field in nullable_schema:
+                struct_field.nullable = True
+            lowercase_dataframe = self._spark_session.createDataFrame(
+                lowercase_dataframe.rdd, nullable_schema
+            )
+
+            return lowercase_dataframe
 
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: spark rdds, spark dataframes, "
