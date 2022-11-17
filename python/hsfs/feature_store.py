@@ -1019,7 +1019,16 @@ class FeatureStore:
 
         !!! example 
             ```python
+            # get feature store instance 
+            fs = ...
 
+            # define query object 
+            query = ...
+
+            # define dictionary with column names and transformation functions pairs
+            mapping_transformers = ...
+
+            # create feature view
             feature_view = fs.create_feature_view(
                 name='feature_view_name',
                 version=1,
@@ -1121,7 +1130,10 @@ class FeatureStore:
 
         !!! example 
             ```python
+            # get feature store instance 
+            fs = ...
 
+            # get feature view instance 
             feature_view = fs.get_feature_view(
                 name='feature_view_name',
                 version=1
@@ -1156,7 +1168,10 @@ class FeatureStore:
 
         !!! example 
             ```python
+            # get feature store instance 
+            fs = ...
 
+            # get a list of all versions of a feature view
             feature_view = fs.get_feature_views(
                 name='feature_view_name'
             )
