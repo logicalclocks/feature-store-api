@@ -27,6 +27,7 @@ import com.logicalclocks.hsfs.constructor.Filter;
 import com.logicalclocks.hsfs.constructor.FilterLogic;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureGroupBaseEngine;
+import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -101,8 +102,12 @@ public class FeatureGroupBase {
   @Setter
   protected String location;
 
+  @JsonIgnore
+  private Subject subject;
+
   private FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
   protected StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
+  protected FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
 
@@ -321,6 +326,14 @@ public class FeatureGroupBase {
   @JsonIgnore
   public Statistics getStatistics(String commitTime) throws FeatureStoreException, IOException {
     return statisticsEngine.get(this, commitTime);
+  }
+
+  @JsonIgnore
+  public Subject getSubject() throws FeatureStoreException, IOException {
+    if (subject == null) {
+      subject = utils.getSubject(this);
+    }
+    return subject;
   }
 
   /**
