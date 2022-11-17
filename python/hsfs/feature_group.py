@@ -821,7 +821,7 @@ class FeatureGroup(FeatureGroupBase):
             time_travel_format.upper() if time_travel_format is not None else None
         )
 
-        self._avro_schema = None
+        self._subject = None
         self._online_topic_name = online_topic_name
         self.event_time = event_time
         self._stream = stream
@@ -1674,12 +1674,17 @@ class FeatureGroup(FeatureGroupBase):
         return self._created
 
     @property
+    def subject(self):
+        """Subject of the feature group."""
+        if self._subject is None:
+            # cache the schema
+            self._subject = self._feature_group_engine.get_subject(self)
+        return self._subject
+
+    @property
     def avro_schema(self):
         """Avro schema representation of the feature group."""
-        if self._avro_schema is None:
-            # cache the schema
-            self._avro_schema = self._feature_group_engine.get_avro_schema(self)
-        return self._avro_schema
+        return self.subject["schema"]
 
     @property
     def stream(self):

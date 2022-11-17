@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
-import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.metadata.Statistics;
@@ -74,9 +73,6 @@ public class FeatureGroup extends FeatureGroupBase {
   // This is only used in the client. In the server they are aggregated in the `features` field
   private String hudiPrecombineKey;
 
-  @JsonIgnore
-  private String avroSchema;
-
   @Getter(onMethod = @__(@Override))
   @Setter
   private String onlineTopicName;
@@ -84,7 +80,6 @@ public class FeatureGroup extends FeatureGroupBase {
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
-  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
@@ -479,10 +474,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @JsonIgnore
   public String getAvroSchema() throws FeatureStoreException, IOException {
-    if (avroSchema == null) {
-      avroSchema = utils.getAvroSchema(this);
-    }
-    return avroSchema;
+    return getSubject().getSchema();
   }
 
   @JsonIgnore
