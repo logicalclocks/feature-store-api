@@ -2335,14 +2335,26 @@ class TestPython:
 
     def test_kafka_produce(self, mocker):
         # Arrange
+        mocker.patch("hsfs.client.get_instance")
+
         python_engine = python.Engine()
 
         producer = mocker.Mock()
 
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            stream=False,
+        )
+
         # Act
         python_engine._kafka_produce(
             producer=producer,
-            feature_group=mocker.Mock(),
+            feature_group=fg,
             key=None,
             encoded_row=None,
             acked=None,
@@ -2355,6 +2367,7 @@ class TestPython:
 
     def test_kafka_produce_buffer_error(self, mocker):
         # Arrange
+        mocker.patch("hsfs.client.get_instance")
         mock_print = mocker.patch("builtins.print")
 
         python_engine = python.Engine()
@@ -2362,10 +2375,20 @@ class TestPython:
         producer = mocker.Mock()
         producer.produce.side_effect = [BufferError("test_error"), None]
 
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            stream=False,
+        )
+
         # Act
         python_engine._kafka_produce(
             producer=producer,
-            feature_group=mocker.Mock(),
+            feature_group=fg,
             key=None,
             encoded_row=None,
             acked=None,
