@@ -283,13 +283,10 @@ class Engine:
         version = str(feature_group.subject["version"]).encode("utf8")
 
         query = (
-            serialized_df
-            .withColumn("headers", array(
-                struct(
-                    lit("version").alias("key"),
-                    lit(version).alias("value")
-                )
-            ))
+            serialized_df.withColumn(
+                "headers",
+                array(struct(lit("version").alias("key"), lit(version).alias("value"))),
+            )
             .writeStream.outputMode(output_mode)
             .format(self.KAFKA_FORMAT)
             .option(
@@ -350,16 +347,12 @@ class Engine:
 
         version = str(feature_group.subject["version"]).encode("utf8")
 
-        serialized_df\
-            .withColumn("headers", array(
-                struct(
-                    lit("version").alias("key"),
-                    lit(version).alias("value")
-                )
-            ))\
-            .write.format(self.KAFKA_FORMAT).options(**write_options) \
-            .option("topic", feature_group._online_topic_name)\
-            .save()
+        serialized_df.withColumn(
+            "headers",
+            array(struct(lit("version").alias("key"), lit(version).alias("value"))),
+        ).write.format(self.KAFKA_FORMAT).options(**write_options).option(
+            "topic", feature_group._online_topic_name
+        ).save()
 
     def _encode_complex_features(self, feature_group, dataframe):
         """Encodes all complex type features to binary using their avro type as schema."""
