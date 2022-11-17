@@ -536,7 +536,9 @@ class FeatureGroupBase:
             elif isinstance(validation_report, ValidationReport):
                 report = validation_report
 
-            return self._validation_report_engine.save(report=report, ge_type=ge_type)
+            return self._validation_report_engine.save(
+                validation_report=report, ge_type=ge_type
+            )
         else:
             raise FeatureStoreException(
                 "Only Feature Group registered with Hopsworks can upload validation reports."
