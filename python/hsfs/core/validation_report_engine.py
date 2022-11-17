@@ -67,7 +67,7 @@ class ValidationReportEngine:
 
     def get_all(
         self, ge_type: bool = True
-    ) -> List[ValidationReport, ge.core.ExpectationSuiteValidationResult]:
+    ) -> Union[List[ValidationReport], List[ge.core.ExpectationSuiteValidationResult]]:
         """Get all Validation Report of a Feature Group."""
         url = self._get_validation_report_url()
         print(
