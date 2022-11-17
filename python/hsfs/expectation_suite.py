@@ -225,6 +225,12 @@ class ExpectationSuite:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             expectation_suite = fg.get_expectation_suite()
             selected_expectation = expectation_suite.get_expectation(expectation_id=123)
             ```
@@ -260,7 +266,7 @@ class ExpectationSuite:
 
         !!! example
             ```python
-            # it will check if the min value of specific column is within a certain range
+            # check if the minimum value of specific column is within a range of 0 and 1
             expectation_suite.add_expectation(
                 ge.core.ExpectationConfiguration(
                     expectation_type="expect_column_min_to_be_between",
@@ -272,7 +278,7 @@ class ExpectationSuite:
                 )
             )
 
-            # it will check if the length of the column value is within a certain range
+            # check if the length of specific column value is within a range of 3 and 10
             expectation_suite.add_expectation(
                 ge.core.ExpectationConfiguration(
                     expectation_type="expect_column_value_lengths_to_be_between",

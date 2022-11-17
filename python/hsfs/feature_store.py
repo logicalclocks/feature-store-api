@@ -117,6 +117,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             fg = fs.get_feature_group(
                     name="electricity_prices",
                     version=1,
@@ -156,6 +159,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             fgs_list = fs.get_feature_groups(
                     name="electricity_prices"
                 )
@@ -208,6 +214,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             external_fg = fs.get_external_feature_group("external_fg_test")
             ```
         # Arguments
@@ -265,6 +274,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             external_fgs_list = fs.get_external_feature_groups("external_fg_test")
             ```
         # Arguments
@@ -349,6 +361,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             sc = fs.get_storage_connector("demo_fs_meb10000_Training_Datasets")
             ```
 
@@ -371,6 +386,10 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # construct the query and show head rows
             query_res_head = fs.sql(\"SELECT * FROM `fg_1`\").head()
             ```
 
@@ -401,6 +420,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             online_storage_connector = fs.get_online_storage_connector()
             ```
 
@@ -431,6 +453,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             fg = fs.create_feature_group(
                     name='air_quality',
                     description='Air Quality characteristics of each day',
@@ -534,6 +559,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             fg = fs.get_or_create_feature_group(
                     name="electricity_prices",
                     version=1,
@@ -736,6 +764,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             external_fg = fs.create_external_feature_group(
                                 name="sales",
                                 version=1,
@@ -946,6 +977,11 @@ class FeatureStore:
         !!! example
             ```python
             from custom_functions import transformations
+
+
+            # connect to the Feature Store
+            fs = ...
+
             plus_one_meta = fs.create_transformation_function(
                                     transformation_function=transformations.plus_one,
                                     output_type=int,
@@ -981,6 +1017,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             label_encoder_obj = fs.get_transformation_function(name='label_encoder')
             ```
 
@@ -998,6 +1037,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             func_list = fs.get_transformation_functions()
             ```
 
@@ -1015,13 +1057,24 @@ class FeatureStore:
         labels: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
-        """Create a feature view metadata object and saved it to Hopsworks.
+        """Create a feature view metadata object and saved it to hopsworks.
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the feature group instances
+            fg1 = fs.get_or_create_feature_group(...)
+            fg2 = fs.get_or_create_feature_group(...)
+
+            # construct the query
             query = fg1.select_all().join(fg2.select_all())
 
+            # get the transformation functions
             standard_scaler = fs.get_transformation_function(name='standard_scaler')
+
+            # construct dictionary of "feature - transformation function" pairs
             transformation_functions = {col_name: standard_scaler for col_name in df.columns}
 
             feature_view = fs.create_feature_view(
@@ -1082,6 +1135,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             feature_view = fs.get_or_create_feature_view(
                 name='bitcoin_feature_view',
                 version=1,
@@ -1135,6 +1191,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             feature_view = fs.get_feature_view(
                 name = 'electricity_feature_view',
                 version = 1
@@ -1169,6 +1228,9 @@ class FeatureStore:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
             feature_views_list = fs.get_feature_views(
                 name = 'electricity_feature_view'
             )

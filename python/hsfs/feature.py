@@ -61,7 +61,13 @@ class Feature:
 
         !!! example
             ```python
-            selected_feature = fg.to_dict()["features"][0]
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            selected_feature = fg.get_feature("min_temp")
             selected_feature.to_dict()
             ```
         """
@@ -93,8 +99,14 @@ class Feature:
 
         !!! example
             ```python
-            selected_feature = fg.to_dict()["features"][0]
-            print(selected_feature.is_complex())
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            selected_feature = fg.get_feature("min_temp")
+            selected_feature.is_complex()
             ```
         """
         return any(map(self._type.upper().startswith, self.COMPLEX_TYPES))

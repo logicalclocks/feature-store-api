@@ -63,10 +63,16 @@ class FeatureGroupBase:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
             fg = fs.get_or_create_feature_group(
                     name='bitcoin_price',
                     version=1
                     )
+
+            # delete the feature group
             fg.delete()
             ```
 
@@ -88,10 +94,18 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            query = fg1.select_all()\
-                            .join(fg2.select_all())\
-                            .join(fg3.select(['fuel_price', 'unemployment', 'cpi']))
+            # connect to the Feature Store
+            fs = ...
 
+            # get the Feature Group instances
+            fg1 = fs.get_or_create_feature_group(...)
+            fg2 = fs.get_or_create_feature_group(...)
+
+            # construct the query
+            query = fg1.select_all().join(fg2.select_all())
+
+            # show first 5 rows
+            query.show(5)
             ```
 
         # Returns
@@ -112,9 +126,17 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            fg.select(['date', 'weekly_sales', 'is_holiday',
-                             'sales_last_30_days_store_dep',
-                             'sales_last_365_days_store_dep']).show(5)
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            # construct the query
+            query = fg.select(['date', 'weekly_sales', 'is_holiday'])
+
+            # show first 5 rows
+            query.show(5)
             ```
 
         # Arguments
@@ -140,7 +162,17 @@ class FeatureGroupBase:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            # construct the query
             query = fg.select_except(['sk_id_curr','sk_id_bureau'])
+
+            # show first 5 rows
+            query.show(5)
             ```
 
         # Arguments
@@ -170,24 +202,32 @@ class FeatureGroupBase:
         """Apply filter to the feature group.
 
         Selects all features and returns the resulting `Query` with the applied filter.
+        !!! example
+            ```python
+            from hsfs.feature import Feature
 
-        ```python
-        from hsfs.feature import Feature
+            # connect to the Feature Store
+            fs = ...
 
-        fg.filter(Feature("weekly_sales") > 1000)
-        ```
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            query = fg.filter(Feature("weekly_sales") > 1000)
+            ```
 
         If you are planning to join the filtered feature group later on with another
         feature group, make sure to select the filtered feature explicitly from the
         respective feature group:
-        ```python
-        fg.filter(fg.feature1 == 1).show(10)
-        ```
+        !!! example
+            ```python
+            query = fg.filter(fg.feature1 == 1).show(10)
+            ```
 
         Composite filters require parenthesis:
-        ```python
-        fg.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
-        ```
+        !!! example
+            ```python
+            query = fg.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
+            ```
 
         # Arguments
             f: Filter object.
@@ -205,6 +245,12 @@ class FeatureGroupBase:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             fg.add_tag(name="example_tag", value="42")
             ```
 
@@ -223,6 +269,12 @@ class FeatureGroupBase:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             fg.delete_tag("example_tag")
             ```
 
@@ -240,6 +292,12 @@ class FeatureGroupBase:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             fg_tag_value = fg.get_tag("example_tag")
             ```
 
@@ -270,11 +328,19 @@ class FeatureGroupBase:
 
         There are several ways to access features of a feature group:
 
-        ```python
-        fg.feature1
-        fg["feature1"]
-        fg.get_feature("feature1")
-        ```
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            # get Feature instanse
+            fg.feature1
+            fg["feature1"]
+            fg.get_feature("feature1")
+            ```
 
         !!! note
             Attribute access to features works only for non-reserved names. For example
@@ -303,7 +369,13 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            updated_fg = fg.update_statistics_config()
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            fg.update_statistics_config()
             ```
 
         # Returns
@@ -320,9 +392,13 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            updated_fg = fg.update_description(description="Much better description.")
+            # connect to the Feature Store
+            fs = ...
 
-            print(updated_fg.to_dict()["description"])
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            fg.update_description(description="Much better description.")
             ```
 
         !!! info "Safe update"
@@ -382,13 +458,14 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            fg = fs.get_or_create_feature_group(
-                    name='weather_data',
-                    version=1
-                    )
+            # connect to the Feature Store
+            fs = ...
 
-            updated_fg = fg.update_feature_description(feature_name="min_temp",
-                                                       description="Much better feature description.")
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            fg.update_feature_description(feature_name="min_temp",
+                                          description="Much better feature description.")
             ```
 
         !!! info "Safe update"
@@ -412,12 +489,18 @@ class FeatureGroupBase:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # define features to be inserted in the feature group
             features = [
                 Feature(name="id",type="int",online_type="int"),
                 Feature(name="name",type="string",online_type="varchar(20)")
             ]
 
-            fg = fs.get_feature_group(name="example", version=1)
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             fg.append_features(features)
             ```
 
@@ -465,6 +548,12 @@ class FeatureGroupBase:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             exp_suite = fg.get_expectation_suite()
             ```
 
@@ -497,6 +586,12 @@ class FeatureGroupBase:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             fg.save_expectation_suite(expectation_suite, run_validation=True)
             ```
 
@@ -541,6 +636,12 @@ class FeatureGroupBase:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             fg.delete_expectation_suite()
             ```
 
@@ -558,6 +659,12 @@ class FeatureGroupBase:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             latest_val_report = fg.get_latest_validation_report()
             ```
 
@@ -584,6 +691,12 @@ class FeatureGroupBase:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             val_reports = fg.get_all_validation_reports()
             ```
 
@@ -619,6 +732,12 @@ class FeatureGroupBase:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             fg.save_validation_report(validation_report, run_validation=True)
             ```
 
@@ -713,6 +832,12 @@ class FeatureGroupBase:
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             fg_statistics = fg.get_statistics(commit_time=None)
             ```
 
@@ -740,7 +865,13 @@ class FeatureGroupBase:
 
         !!! example
             ```python
-            fg.compute_statistics()
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            statistics_metadata = fg.compute_statistics()
             ```
 
         # Returns
@@ -950,14 +1081,16 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example "Read feature group as of latest state:"
             ```python
-            fs = connection.get_feature_store();
-            fg = fs.get_feature_group("example_feature_group", 1)
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
             fg.read()
             ```
         !!! example "Read feature group as of specific point in time:"
             ```python
-            fs = connection.get_feature_store();
-            fg = fs.get_feature_group("example_feature_group", 1)
+            fg = fs.get_or_create_feature_group(...)
             fg.read("2020-10-20 07:34:11")
             ```
         # Arguments
@@ -1046,9 +1179,14 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example
             ```python
-            fg.select(['date','weekly_sales','is_holiday',
-                             'sales_last_30_days_store_dep',
-                             'sales_last_365_days_store_dep']).show(5)
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            # make a query and show top 5 rows
+            fg.select(['date','weekly_sales','is_holiday']).show(5)
             ```
 
         # Arguments
@@ -1192,11 +1330,8 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example "Upsert new feature data with time travel format `HUDI`:"
             ```python
-            import hopsworks
-
-            project = hopsworks.login()
-
-            fs = project.get_feature_store()
+            # connect to the Feature Store
+            fs = ...
 
             fg = fs.get_or_create_feature_group(
                 name='bitcoin_price',
@@ -1289,6 +1424,7 @@ class FeatureGroup(FeatureGroupBase):
 
         ```python
         sqm = spark.streams
+
         # get the list of active streaming queries
         [q.name for q in sqm.active]
         ```
@@ -1373,6 +1509,12 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             commit_details = fg.commit_details()
             ```
 
@@ -1423,15 +1565,18 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example "Reading features at a specific point in time:"
             ```python
-            fs = connection.get_feature_store();
-            fg = fs.get_feature_group("example_feature_group", 1)
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            # get data at a specific point in time and show it
             fg.as_of("2020-10-20 07:34:11").read().show()
             ```
 
         !!! example "Reading commits incrementally between specified points in time:"
             ```python
-            fs = connection.get_feature_store();
-            fg = fs.get_feature_group("example_feature_group", 1)
             fg.as_of("2020-10-20 07:34:11", exclude_until="2020-10-19 07:34:11").read().show()
             ```
 
@@ -1441,8 +1586,6 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example "Reading only the changes from a single commit"
             ```python
-            fs = connection.get_feature_store();
-            fg = fs.get_feature_group("example_feature_group", 1)
             fg.as_of("2020-10-20 07:31:38", exclude_until="2020-10-20 07:31:37").read().show()
             ```
 
@@ -1451,25 +1594,33 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example "Reading the latest state of features, excluding commits before a specified point in time:"
             ```python
-            fs = connection.get_feature_store();
-            fg = fs.get_feature_group("example_feature_group", 1)
             fg.as_of(None, exclude_until="2020-10-20 07:31:38").read().show()
             ```
 
         Note that the interval will be applied to all joins in the query.
         If you want to query different intervals for different feature groups in
         the query, you have to apply them in a nested fashion:
-        ```python
-        fg1.select_all().as_of(..., ...)
-            .join(fg2.select_all().as_of(..., ...))
-        ```
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg1 = fs.get_or_create_feature_group(...)
+            fg2 = fs.get_or_create_feature_group(...)
+
+            fg1.select_all().as_of(..., ...)
+                .join(fg2.select_all().as_of(..., ...))
+            ```
+
         If instead you apply another `as_of` selection after the join, all
         joined feature groups will be queried with this interval:
-        ```python
-        fg1.select_all().as_of(..., ...)  # as_of is not applied
-            .join(fg2.select_all().as_of(..., ...))  # as_of is not applied
-            .as_of(..., ...)
-        ```
+        !!! example
+            ```python
+            fg1.select_all().as_of(..., ...)  # as_of is not applied
+                .join(fg2.select_all().as_of(..., ...))  # as_of is not applied
+                .as_of(..., ...)
+            ```
 
         !!! warning
             This function only works for feature groups with time_travel_format='HUDI'.
@@ -1509,6 +1660,12 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get feature group instance
+            fg = fs.get_or_create_feature_group(...)
+
             ge_report = fg.validate(df, save_report=False)
             ```
 
@@ -1637,6 +1794,12 @@ class FeatureGroup(FeatureGroupBase):
 
         !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
             fg.to_dict()
             ```
 
@@ -1905,6 +2068,17 @@ class ExternalFeatureGroup(FeatureGroupBase):
     def read(self, dataframe_type="default"):
         """Get the feature group as a DataFrame.
 
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            df = fg.read()
+            ```
+
         !!! warning "Engine Support"
             **Spark only**
 
@@ -1936,7 +2110,19 @@ class ExternalFeatureGroup(FeatureGroupBase):
         return self.select_all().read(dataframe_type=dataframe_type)
 
     def show(self, n):
-        """Show the first n rows of the feature group."""
+        """Show the first n rows of the feature group.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            fg.show(5)
+            ```
+        """
         engine.get_instance().set_job_group(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
