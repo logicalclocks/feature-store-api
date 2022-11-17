@@ -765,6 +765,36 @@ class FeatureView:
 
             Currently not supported petastorm, hdf5 and npy file formats.
 
+        !!! warning "Label Encoder can fail while creating training splits. Feature view is just a logical union of feature groups which stores a metadata. While creating dataset splits - label encoder fits on train split. There may be unique values in the test data. As a result Label Encoder fails in handling unique unfitted values."            
+            ```python
+            import pandas as pd
+
+            df = pd.DataFrame({
+                'category_col':['category_a','category_b','category_c','category_d'],
+                'numeric_col': [40,10,60,40]
+            })
+
+            feature_group = fs.get_or_create_feature_group(
+                name='feature_group_name',
+                version=1,
+                primary_key=['category_col']
+            )
+
+            feature_group.insert(df)
+
+            label_encoder = fs.get_transformation_function(name='label_encoder')
+
+            feature_view = fs.create_feature_view(
+                name='feature_view_name',
+                query=feature_group.select_all(),
+                transformation_functions={'category_col':label_encoder}
+            )
+
+            feature_view.create_train_test_split(
+                test_size=0.5
+            )
+            # Output: KeyError: 'category_a'
+            ```
 
         # Arguments
             test_size: size of test set.
@@ -959,6 +989,37 @@ class FeatureView:
                 # you can have different data formats such as csv, tsv, tfrecord, parquet and others
                 data_format='csv'
             )
+            ```
+        !!! warning "Label Encoder can fail while creating training splits. Feature view is just a logical union of feature groups which stores a metadata. While creating dataset splits - label encoder fits on train split. There may be unique values in the test or validation data. As a result Label Encoder fails in handling unique unfitted values."            
+            ```python
+            import pandas as pd
+
+            df = pd.DataFrame({
+                'category_col':['category_a','category_b','category_c','category_d'],
+                'numeric_col': [40,10,60,40]
+            })
+
+            feature_group = fs.get_or_create_feature_group(
+                name='feature_group_name',
+                version=1,
+                primary_key=['category_col']
+            )
+
+            feature_group.insert(df)
+
+            label_encoder = fs.get_transformation_function(name='label_encoder')
+
+            feature_view = fs.create_feature_view(
+                name='feature_view_name',
+                query=feature_group.select_all(),
+                transformation_functions={'category_col':label_encoder}
+            )
+
+            feature_view.create_train_validation_test_split(
+                validation_size=0.3,
+                test_size=0.2
+            )
+            # Output: KeyError: 'category_a'
             ```
 
         !!! info "Data Formats"
@@ -1280,6 +1341,36 @@ class FeatureView:
                 description='Description of a dataset'
             )
             ```
+        !!! warning "Label Encoder can fail while creating training splits. Feature view is just a logical union of feature groups which stores a metadata. While creating dataset splits - label encoder fits on train split. There may be unique values in the test data. As a result Label Encoder fails in handling unique unfitted values."            
+            ```python
+            import pandas as pd
+
+            df = pd.DataFrame({
+                'category_col':['category_a','category_b','category_c','category_d'],
+                'numeric_col': [40,10,60,40]
+            })
+
+            feature_group = fs.get_or_create_feature_group(
+                name='feature_group_name',
+                version=1,
+                primary_key=['category_col']
+            )
+
+            feature_group.insert(df)
+
+            label_encoder = fs.get_transformation_function(name='label_encoder')
+
+            feature_view = fs.create_feature_view(
+                name='feature_view_name',
+                query=feature_group.select_all(),
+                transformation_functions={'category_col':label_encoder}
+            )
+
+            feature_view.train_test_split(
+                test_size=0.5
+            )
+            # Output: KeyError: 'category_a'
+            ```
 
         !!! info
             If a materialised training data has deleted. Use `recreate_training_dataset()` to
@@ -1427,6 +1518,37 @@ class FeatureView:
                 test_start=start_time_test,
                 test_end=end_time_test
             )
+            ```
+        !!! warning "Label Encoder can fail while creating training splits. Feature view is just a logical union of feature groups which stores a metadata. While creating dataset splits - label encoder fits on train split. There may be unique values in the test or validation data. As a result Label Encoder fails in handling unique unfitted values."            
+            ```python
+            import pandas as pd
+
+            df = pd.DataFrame({
+                'category_col':['category_a','category_b','category_c','category_d'],
+                'numeric_col': [40,10,60,40]
+            })
+
+            feature_group = fs.get_or_create_feature_group(
+                name='feature_group_name',
+                version=1,
+                primary_key=['category_col']
+            )
+
+            feature_group.insert(df)
+
+            label_encoder = fs.get_transformation_function(name='label_encoder')
+
+            feature_view = fs.create_feature_view(
+                name='feature_view_name',
+                query=feature_group.select_all(),
+                transformation_functions={'category_col':label_encoder}
+            )
+
+            feature_view.train_validation_test_split(
+                validation_size=0.3,
+                test_size=0.2
+            )
+            # Output: KeyError: 'category_a'
             ```
 
         !!! info
