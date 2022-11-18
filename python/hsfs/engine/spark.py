@@ -270,7 +270,7 @@ class Engine:
                         feature_group, dataframe, online_write_options
                     )
         except Exception as e:
-            raise FeatureStoreException(e)
+            raise FeatureStoreException(e).with_traceback(e.__traceback__)
 
     def save_stream_dataframe(
         self,
