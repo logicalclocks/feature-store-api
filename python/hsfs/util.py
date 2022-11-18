@@ -137,7 +137,7 @@ def check_timestamp_format_from_date_string(input_date):
 def get_timestamp_from_date_string(input_date):
     norm_input_date, date_format = check_timestamp_format_from_date_string(input_date)
     try:
-        if date_format == "ISO":
+        if date_format != "ISO":
             date_time = datetime.strptime(norm_input_date, date_format)
         else:
             date_time = datetime.fromisoformat(input_date[:-1])
