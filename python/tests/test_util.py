@@ -82,3 +82,7 @@ class TestUtil:
     def test_convert_event_time_to_timestamp_yyyy_mm_dd_hh_mm_ss_error3(self):
         with pytest.raises(ValueError):
             util.get_timestamp_from_date_string("00:00:00 2022-01-01")
+
+    def test_convert_hudi_commit_time_to_timestamp(self):
+        timestamp = util.get_timestamp_from_date_string("20221118095233099")
+        assert timestamp == 1668765153099
