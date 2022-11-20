@@ -127,3 +127,6 @@ target/
 
 # mkdocs intemediate files
 docs/generated
+
+# Test artifacts
+keyFile.json
