@@ -939,7 +939,7 @@ class FeatureStore:
 
             ```
 
-        You can define in the feature view transformation functions as dict, where key is feature name and value is online transformation function name.
+        You can define in the feature view transformation functions as dict, where key is feature name and value is online transformation function instance.
         Then the transformation functions are applied when you read training data, read batch data, or get feature vectors.
         
         !!! example "Attach transformation functions to the feature view"   
