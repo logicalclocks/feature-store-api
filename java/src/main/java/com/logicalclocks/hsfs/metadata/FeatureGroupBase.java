@@ -77,7 +77,6 @@ public class FeatureGroupBase {
   protected List<String> primaryKeys;
 
   @Getter
-  @Setter
   protected List<Feature> features;
 
   @Getter
@@ -114,6 +113,11 @@ public class FeatureGroupBase {
   public FeatureGroupBase(FeatureStore featureStore, Integer id) {
     this.featureStore = featureStore;
     this.id = id;
+  }
+
+  public void setFeatures(List<Feature> features) {
+    this.features = features;
+    this.subject = null;
   }
 
   public Query selectFeatures(List<Feature> features) {
