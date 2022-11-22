@@ -1322,7 +1322,7 @@ class FeatureGroup(FeatureGroupBase):
         If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
         invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
 
-        !!! example "Upsert new feature data with time travel format `HUDI`:"
+        !!! example "Upsert new feature data with time travel format `HUDI`"
             ```python
             # connect to the Feature Store
             fs = ...
@@ -1338,6 +1338,34 @@ class FeatureGroup(FeatureGroupBase):
 
             fg.insert(df_bitcoin_processed)
             ```
+
+        !!! example "Async insert"
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            fg1 = fs.get_or_create_feature_group(
+                name='feature_group_name1',
+                description='Description of the first FG',
+                version=1,
+                primary_key=['unix'],
+                online_enabled=True,
+                event_time=['unix']
+            )
+            # async insertion in order not to wait till finish of the job 
+            fg.insert(df_for_fg1, write_options={"wait_for_job" : False})
+
+            fg2 = fs.get_or_create_feature_group(
+                name='feature_group_name2',
+                description='Description of the second FG',
+                version=1,
+                primary_key=['unix'],
+                online_enabled=True,
+                event_time=['unix']
+            )
+            fg.insert(df_for_fg2)
+            ```
+
         # Arguments
             features: DataFrame, RDD, Ndarray, list. Features to be saved.
             overwrite: Drop all data in the feature group before
@@ -1603,17 +1631,17 @@ class FeatureGroup(FeatureGroupBase):
             fg1 = fs.get_or_create_feature_group(...)
             fg2 = fs.get_or_create_feature_group(...)
 
-            fg1.select_all().as_of(..., ...)
-                .join(fg2.select_all().as_of(..., ...))
+            fg1.select_all().as_of("2020-10-20", exclude_until="2020-10-19")
+                .join(fg2.select_all().as_of("2020-10-20", exclude_until="2020-10-19"))
             ```
 
         If instead you apply another `as_of` selection after the join, all
         joined feature groups will be queried with this interval:
         !!! example
             ```python
-            fg1.select_all().as_of(..., ...)  # as_of is not applied
-                .join(fg2.select_all().as_of(..., ...))  # as_of is not applied
-                .as_of(..., ...)
+            fg1.select_all().as_of("2020-10-20", exclude_until="2020-10-19")  # as_of is not applied
+                .join(fg2.select_all().as_of("2020-10-20", exclude_until="2020-10-15"))  # as_of is not applied
+                .as_of("2020-10-20", exclude_until="2020-10-19")
             ```
 
         !!! warning
