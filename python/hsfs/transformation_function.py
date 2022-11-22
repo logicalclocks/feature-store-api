@@ -82,9 +82,19 @@ class TransformationFunction:
         """Persist transformation function in backend.
         !!! example 
             ```python
-            min_max_scaler_fn = fs.get_transformation_function(name="min_max_scaler")
+            # define function
+            def plus_one(value):
+                return value + 1
 
-            min_max_scaler_fn.save()
+            # create transformation function
+            plus_one_meta = fs.create_transformation_function(
+                    transformation_function=plus_one,
+                    output_type=int,
+                    version=1
+                )
+                
+            # persist transformation function in backend
+            plus_one_meta.save()
             ```
         """
         self._transformation_function_engine.save(self)
@@ -94,9 +104,24 @@ class TransformationFunction:
         
         !!! example 
             ```python
-            min_max_scaler_fn = fs.get_transformation_function(name="min_max_scaler")
+            # define function
+            def plus_one(value):
+                return value + 1
 
-            min_max_scaler_fn.delete()
+            # create transformation function
+            plus_one_meta = fs.create_transformation_function(
+                    transformation_function=plus_one,
+                    output_type=int,
+                    version=1
+                )
+            # persist transformation function in backend
+            plus_one_meta.save()
+
+            # retrieve transformation function
+            plus_one_fn = fs.get_transformation_function(name="plus_one")
+
+            # delete transformation function from backend
+            plus_one_fn.delete()
             ```
         """
         self._transformation_function_engine.delete(self)
