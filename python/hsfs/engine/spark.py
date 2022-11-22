@@ -60,6 +60,7 @@ try:
         StructType,
         BinaryType,
         BooleanType,
+        StructField
     )
 except ImportError:
     pass
@@ -833,6 +834,48 @@ class Engine:
             return hive_type.simpleString()
 
         raise ValueError(f"spark type {str(type(hive_type))} not supported")
+
+    @staticmethod
+    def _convert_column_type(pa_type):
+        if "array<" == pa_type[:6]:
+            return ArrayType(Engine._convert_column_type(pa_type[6: -1]))
+        elif "struct<label:string,index:int>" in pa_type:
+            return StructType([
+                StructField("label", StringType(), True),
+                StructField("index", IntegerType(), True)
+            ])
+        else:
+            return Engine._convert_basic_type(pa_type)
+
+    @staticmethod
+    def _convert_basic_type(pa_type):
+        pyarrow_2_spark_type = {
+            "string": StringType(),
+            "bigint": LongType(),
+            "int": IntegerType(),
+            "float": FloatType(),
+            "double": DoubleType(),
+            "timestamp": TimestampType(),
+            "boolean": BooleanType(),
+            "date": DateType(),
+            "binary": BinaryType()
+        }
+        if pa_type in pyarrow_2_spark_type:
+            return pyarrow_2_spark_type[pa_type]
+        else:
+            raise FeatureStoreException(
+                f"Pyarrow type {pa_type} cannot be converted to a spark type."
+            )
+
+    @staticmethod
+    def cast_column_type(df, schema):
+        pyspark_schema = dict(
+            [(_feat.name, Engine._convert_column_type(_feat.type))
+             for _feat in schema]
+        )
+        for _feat in pyspark_schema:
+            df = df.withColumn(_feat, col(_feat).cast(pyspark_schema[_feat]))
+        return df
 
     def setup_storage_connector(self, storage_connector, path=None):
         if storage_connector.type == StorageConnector.S3:

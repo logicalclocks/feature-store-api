@@ -242,6 +242,41 @@ class Engine:
     def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
 
+    @staticmethod
+    def _convert_column_type(pa_type):
+        if "array<" in pa_type or "struct<label:string,index:int>" in pa_type:
+            return object
+        else:
+            return Engine._convert_basic_type(pa_type)
+
+    @staticmethod
+    def _convert_basic_type(pa_type):
+        pyarrow_2_pd_type = {
+            "string": object,
+            "bigint": np.dtype("int64"),
+            "int": np.dtype("int32"),
+            "float": np.dtype("float32"),
+            "double": np.dtype("float64"),
+            "timestamp": np.dtype("datetime64[ns]"),
+            "boolean": np.dtype("bool"),
+            "date": np.dtype("datetime64[ns]"),
+            "binary": np.dtype("uint8")
+        }
+        if pa_type in pyarrow_2_pd_type:
+            return pyarrow_2_pd_type[pa_type]
+        else:
+            raise FeatureStoreException(
+                f"Pyarrow type {pa_type} cannot be converted to a pandas type."
+            )
+
+    @staticmethod
+    def cast_column_type(df, schema):
+        pd_schema = dict(
+            [(_feat.name, Engine._convert_column_type(_feat.type))
+             for _feat in schema]
+        )
+        return df.astype(pd_schema)
+
     def register_external_temporary_table(self, external_fg, alias):
         # No op to avoid query failure
         pass
