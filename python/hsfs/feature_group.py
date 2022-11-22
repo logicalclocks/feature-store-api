@@ -133,10 +133,7 @@ class FeatureGroupBase:
             fg = fs.get_or_create_feature_group(...)
 
             # construct the query
-            query = fg.select(['date', 'weekly_sales', 'is_holiday'])
-
-            # show first 5 rows
-            query.show(5)
+            fg.select(['date', 'weekly_sales', 'is_holiday'])
             ```
 
         # Arguments
@@ -169,10 +166,7 @@ class FeatureGroupBase:
             fg = fs.get_or_create_feature_group(...)
 
             # construct the query
-            query = fg.select_except(['sk_id_curr','sk_id_bureau'])
-
-            # show first 5 rows
-            query.show(5)
+            fg.select_except(['sk_id_curr','sk_id_bureau'])
             ```
 
         # Arguments
@@ -212,7 +206,7 @@ class FeatureGroupBase:
             # get the Feature Group instance
             fg = fs.get_or_create_feature_group(...)
 
-            query = fg.filter(Feature("weekly_sales") > 1000)
+            fg.filter(Feature("weekly_sales") > 1000)
             ```
 
         If you are planning to join the filtered feature group later on with another
@@ -220,13 +214,13 @@ class FeatureGroupBase:
         respective feature group:
         !!! example
             ```python
-            query = fg.filter(fg.feature1 == 1).show(10)
+            fg.filter(fg.feature1 == 1).show(10)
             ```
 
         Composite filters require parenthesis:
         !!! example
             ```python
-            query = fg.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
+            fg.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
             ```
 
         # Arguments
