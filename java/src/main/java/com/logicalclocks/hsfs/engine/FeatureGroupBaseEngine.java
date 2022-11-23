@@ -84,6 +84,7 @@ public class FeatureGroupBaseEngine {
     featureGroup.setFeatures(newFeatures);
     T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata", fgClass);
     featureGroup.setFeatures(apiFG.getFeatures());
+    featureGroup.unloadSubject();
   }
 
   public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features,
@@ -93,6 +94,7 @@ public class FeatureGroupBaseEngine {
     T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata",
         fgClass);
     featureGroup.setFeatures(apiFG.getFeatures());
+    featureGroup.unloadSubject();
     if (featureGroup instanceof FeatureGroup) {
       SparkEngine.getInstance().writeEmptyDataframe(featureGroup);
     }
