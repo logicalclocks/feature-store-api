@@ -103,9 +103,9 @@ public class FeatureGroupBase {
   protected String location;
 
   @JsonIgnore
-  private Subject subject;
+  protected Subject subject;
 
-  private FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
+  protected FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
   protected StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   protected FeatureGroupUtils utils = new FeatureGroupUtils();
 
