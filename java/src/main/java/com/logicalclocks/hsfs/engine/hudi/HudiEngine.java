@@ -29,8 +29,11 @@ import com.logicalclocks.base.metadata.KafkaApi;
 import com.logicalclocks.base.metadata.PartitionDetails;
 
 import com.logicalclocks.base.metadata.StorageConnectorApi;
+import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
+import com.logicalclocks.hsfs.metadata.MetaDataUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hudi.common.model.HoodieCommitMetadata;
@@ -57,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
+import java.util.Arrays;
 
 public class HudiEngine {
 
@@ -140,6 +144,7 @@ public class HudiEngine {
 
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
+  private MetaDataUtils metaDataUtils = new MetaDataUtils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
   private DeltaStreamerConfig deltaStreamerConfig = new DeltaStreamerConfig();
@@ -275,7 +280,7 @@ public class HudiEngine {
   public Map<String, String> setupHudiReadOpts(Long startTimestamp, Long endTimestamp,
                                                 Map<String, String> readOptions) {
     Map<String, String> hudiArgs = new HashMap<>();
-    if (endTimestamp == null && startTimestamp == null) {
+    if (endTimestamp == null && (startTimestamp == null || startTimestamp == 0)) {
       // snapshot query latest state
       hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL);
     } else if (endTimestamp != null && startTimestamp == null) {
@@ -307,6 +312,53 @@ public class HudiEngine {
     properties.putAll(setupHudiWriteOpts((FeatureGroupBase) streamFeatureGroup,
         HudiOperationType.BULK_INSERT, null));
     HoodieTableMetaClient.initTableAndGetMetaClient(configuration, streamFeatureGroup.getLocation(), properties);
+  }
+
+  public void reconcileHudiSchema(SparkSession sparkSession,
+                                  HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> hudiArgs)
+          throws FeatureStoreException {
+    String fgTableName = utils.getTableName(hudiFeatureGroupAlias.getFeatureGroup());
+    String[] hudiSchema = sparkSession.table(hudiFeatureGroupAlias.getAlias()).columns();
+    String[] hiveSchema = sparkSession.table(fgTableName).columns();
+    if (!sparkSchemasMatch(hudiSchema, hiveSchema)) {
+      Dataset dataframe = sparkSession.table(fgTableName).limit(0);
+
+      try {
+        FeatureGroup fullFG = metaDataUtils.getFeatureGroup(
+            (FeatureStore) hudiFeatureGroupAlias.getFeatureGroup().getFeatureStore(),
+                hudiFeatureGroupAlias.getFeatureGroup().getName(),
+                hudiFeatureGroupAlias.getFeatureGroup().getVersion());
+        saveHudiFeatureGroup(sparkSession, fullFG, dataframe,
+                  HudiOperationType.UPSERT, new HashMap<>(), null);
+      } catch (IOException | ParseException e) {
+        throw new FeatureStoreException("Error while reconciling HUDI schema.", e);
+      }
+
+      sparkSession.read()
+              .format(HudiEngine.HUDI_SPARK_FORMAT)
+              .options(hudiArgs)
+              .load(hudiFeatureGroupAlias.getFeatureGroup().getLocation())
+              .createOrReplaceTempView(hudiFeatureGroupAlias.getAlias());
+    }
+  }
+
+  public boolean sparkSchemasMatch(String[] schema1, String[] schema2) {
+    if (schema1 == null || schema2 == null) {
+      return false;
+    }
+    if (schema1.length != schema2.length) {
+      return false;
+    }
+
+    Arrays.sort(schema1);
+    Arrays.sort(schema2);
+
+    for (int i = 0; i < schema1.length; i++) {
+      if (!schema1[i].equals(schema2[i])) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private String generetaInitialCheckPointStr(StreamFeatureGroup streamFeatureGroup)

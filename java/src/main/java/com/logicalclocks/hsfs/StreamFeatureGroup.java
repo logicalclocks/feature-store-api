@@ -24,9 +24,7 @@ import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.JobConfiguration;
-import com.logicalclocks.base.SaveMode;
 import com.logicalclocks.base.engine.CodeEngine;
-import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.metadata.FeatureGroupBase;
 import com.logicalclocks.base.metadata.Statistics;
 
@@ -43,6 +41,7 @@ import lombok.Setter;
 import org.apache.avro.Schema;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,9 +95,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   // This is only used in the client. In the server they are aggregated in the `features` field
   private String hudiPrecombineKey;
 
-  @JsonIgnore
-  private String avroSchema;
-
   @Getter(onMethod = @__(@Override))
   @Setter(onMethod = @__(@Override))
   private String onlineTopicName;
@@ -113,7 +109,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
-  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StreamFeatureGroup.class);
 
@@ -261,17 +256,17 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   public void insert(Dataset<Row> featureData) throws FeatureStoreException, IOException, ParseException {
-    insert(featureData, SaveMode.APPEND, null, null);
+    insert(featureData, SaveMode.Append, null, null);
   }
 
   public void insert(Dataset<Row> featureData, Map<String, String> writeOptions) throws FeatureStoreException,
       IOException, ParseException {
-    insert(featureData, SaveMode.APPEND, writeOptions, null);
+    insert(featureData, SaveMode.Append, writeOptions, null);
   }
 
   public void insert(Dataset<Row>  featureData, JobConfiguration jobConfiguration) throws FeatureStoreException,
       IOException, ParseException {
-    insert(featureData, SaveMode.APPEND, null, jobConfiguration);
+    insert(featureData, SaveMode.Append, null, jobConfiguration);
   }
 
   public void insert(Dataset<Row> featureData, SaveMode saveMode,
@@ -402,10 +397,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   @JsonIgnore
   public String getAvroSchema() throws FeatureStoreException, IOException {
-    if (avroSchema == null) {
-      avroSchema = utils.getAvroSchema(this, this.featureStore);
-    }
-    return avroSchema;
+    return getSubject().getSchema();
   }
 
   @JsonIgnore

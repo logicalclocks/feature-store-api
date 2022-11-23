@@ -25,9 +25,13 @@ import com.logicalclocks.base.DeltaStreamerJobConf;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreBase;
 import com.logicalclocks.base.FeatureStoreException;
-import com.logicalclocks.hsfs.TimeTravelFormat;
+
 import com.logicalclocks.base.engine.FeatureGroupBaseEngine;
+import com.logicalclocks.base.engine.FeatureGroupUtils;
+
+import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.StatisticsConfig;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -104,7 +108,11 @@ public class FeatureGroupBase {
   @Setter
   protected String onlineTopicName;
 
+  @JsonIgnore
+  protected Subject subject;
+
   private FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
+  protected FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
 
@@ -297,6 +305,14 @@ public class FeatureGroupBase {
   @JsonIgnore
   public <T> T getStatistics() throws FeatureStoreException, IOException {
     return null;
+  }
+
+  @JsonIgnore
+  public Subject getSubject() throws FeatureStoreException, IOException {
+    if (subject == null) {
+      subject = utils.getSubject(this);
+    }
+    return subject;
   }
 
   /**

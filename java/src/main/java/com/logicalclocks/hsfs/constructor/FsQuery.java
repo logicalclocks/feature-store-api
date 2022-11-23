@@ -48,7 +48,7 @@ public class FsQuery extends FsQueryBase {
   }
 
   @Override
-  public void registerHudiFeatureGroups(Map<String, String> readOptions) {
+  public void registerHudiFeatureGroups(Map<String, String> readOptions) throws FeatureStoreException {
     for (HudiFeatureGroupAlias hudiFeatureGroupAlias : super.getHudiCachedFeatureGroups()) {
       SparkEngine.getInstance().registerHudiTemporaryTable(hudiFeatureGroupAlias, readOptions);
     }

@@ -23,9 +23,10 @@ import com.logicalclocks.base.metadata.FeatureGroupApi;
 import com.logicalclocks.base.metadata.FeatureGroupBase;
 import com.logicalclocks.base.metadata.HopsworksClient;
 import com.logicalclocks.base.metadata.KafkaApi;
-import com.logicalclocks.base.metadata.StorageConnectorApi;
 import com.logicalclocks.base.FeatureGroupCommit;
 import com.logicalclocks.base.FeatureStoreException;
+
+import com.logicalclocks.base.metadata.Subject;
 import lombok.SneakyThrows;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -47,10 +48,8 @@ import java.util.stream.Collectors;
 public class FeatureGroupUtils {
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private KafkaApi kafkaApi = new KafkaApi();
   private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-
 
   // TODO(Fabio): this should be moved in the backend
   public String getTableName(FeatureGroupBase offlineFeatureGroup) {
@@ -175,7 +174,6 @@ public class FeatureGroupUtils {
     return kafkaApi.getTopicSubject(featureStoreBase, featureGroup.getOnlineTopicName()).getSchema();
   }
 
-
   public List<String> getComplexFeatures(List<Feature> features) {
     return features.stream().filter(Feature::isComplex).map(Feature::getName).collect(Collectors.toList());
   }
@@ -239,5 +237,9 @@ public class FeatureGroupUtils {
       throw new FeatureStoreException("Provided " + attributeName + " key(s) " + String.join(", ",
           differences) +  " doesn't exist in feature dataframe");
     }
+  }
+
+  public Subject getSubject(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
+    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName());
   }
 }

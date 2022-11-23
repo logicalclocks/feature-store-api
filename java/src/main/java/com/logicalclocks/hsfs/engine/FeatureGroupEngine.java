@@ -27,7 +27,6 @@ import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.metadata.FeatureGroupApi;
 import com.logicalclocks.base.metadata.FeatureGroupBase;
-import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.StatisticsConfig;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroup;
@@ -35,6 +34,7 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
 
+import com.logicalclocks.hsfs.metadata.MetaDataUtils;
 import lombok.SneakyThrows;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -46,7 +46,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +54,7 @@ import java.util.concurrent.TimeoutException;
 public class FeatureGroupEngine {
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
+  private MetaDataUtils metaDataUtils = new MetaDataUtils();
   private HudiEngine hudiEngine = new HudiEngine();
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
@@ -107,7 +107,7 @@ public class FeatureGroupEngine {
         writeOptions, sparkJobConfiguration, dataset);
 
     insert(updatedFeatureGroup, SparkEngine.getInstance().sanitizeFeatureNames(dataset),
-        com.logicalclocks.base.SaveMode.APPEND,  partitionKeys, hudiPrecombineKey, writeOptions,
+        SaveMode.Append,  partitionKeys, hudiPrecombineKey, writeOptions,
         sparkJobConfiguration);
 
     return featureGroup;
@@ -118,7 +118,6 @@ public class FeatureGroupEngine {
                      String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     Integer validationId = null;
-
     if (featureGroup.getId() == null) {
       featureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys,
           hudiPrecombineKey, featureData, false);
@@ -137,7 +136,7 @@ public class FeatureGroupEngine {
   }
 
   public void insert(StreamFeatureGroup streamFeatureGroup, Dataset<Row> featureData,
-                     com.logicalclocks.base.SaveMode saveMode, List<String> partitionKeys,
+                     SaveMode saveMode, List<String> partitionKeys,
                      String hudiPrecombineKey, Map<String, String> writeOptions, JobConfiguration jobConfiguration)
       throws FeatureStoreException, IOException, ParseException {
 
@@ -146,7 +145,7 @@ public class FeatureGroupEngine {
           jobConfiguration, featureData);
     }
 
-    if (saveMode == com.logicalclocks.base.SaveMode.OVERWRITE) {
+    if (saveMode == SaveMode.Overwrite) {
       // If we set overwrite, then the directory will be removed and with it all the metadata
       // related to the feature group will be lost. We need to keep them.
       // So we call Hopsworks to manage to truncate the table and re-create the metadata
@@ -176,8 +175,9 @@ public class FeatureGroupEngine {
     }
 
     StreamingQuery streamingQuery = SparkEngine.getInstance().writeStreamDataframe(featureGroup,
-        SparkEngine.getInstance().sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
-        checkpointLocation, SparkEngine.getInstance().getKafkaConfig(featureGroup, writeOptions));
+        SparkEngine.getInstance().convertToDefaultDataframe(featureData), queryName,
+        outputMode, awaitTermination, timeout, checkpointLocation,
+        SparkEngine.getInstance().getKafkaConfig(featureGroup, writeOptions));
 
     return streamingQuery;
   }
@@ -291,7 +291,7 @@ public class FeatureGroupEngine {
 
     FeatureGroup featureGroup;
     try {
-      featureGroup =  getFeatureGroup(featureStore, name, version);
+      featureGroup =  metaDataUtils.getFeatureGroup(featureStore, name, version);
     } catch (IOException | FeatureStoreException e) {
       if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270009")) {
         featureGroup =  FeatureGroup.builder()
@@ -317,6 +317,7 @@ public class FeatureGroupEngine {
     return featureGroup;
   }
 
+  /*
   public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroupBase, List<Feature> features,
                                                           Class<T> fgClass)
       throws FeatureStoreException, IOException, ParseException {
@@ -329,6 +330,18 @@ public class FeatureGroupEngine {
       SparkEngine.getInstance().writeOfflineDataframe(featureGroup,
           SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features),
           HudiOperationType.UPSERT, new HashMap<>(), null);
+    }
+  }
+  */
+  public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features,
+                                                          Class<T> fgClass)
+      throws FeatureStoreException, IOException, ParseException {
+    featureGroup.getFeatures().addAll(features);
+    T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata",
+        fgClass);
+    featureGroup.setFeatures(apiFG.getFeatures());
+    if (featureGroup instanceof FeatureGroup) {
+      SparkEngine.getInstance().writeEmptyDataframe(featureGroup);
     }
   }
 
@@ -361,100 +374,5 @@ public class FeatureGroupEngine {
     }
     return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroupBase, genericDataset,
         writeOptions);
-  }
-
-  public List<FeatureGroup> getFeatureGroups(FeatureStore featureStore, String fgName)
-      throws FeatureStoreException, IOException {
-    FeatureGroup[] offlineFeatureGroups =
-       featureGroupApi.getInternal(featureStore, fgName, null, FeatureGroup[].class);
-
-    return Arrays.asList(offlineFeatureGroups);
-  }
-
-  public FeatureGroup getFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
-      throws IOException, FeatureStoreException {
-    FeatureGroup[] offlineFeatureGroups =
-        featureGroupApi.getInternal(featureStore, fgName, fgVersion, FeatureGroup[].class);
-
-    // There can be only one single feature group with a specific name and version in a feature store
-    // There has to be one otherwise an exception would have been thrown.
-    FeatureGroup resultFg = offlineFeatureGroups[0];
-    resultFg.setFeatureStore(featureStore);
-    return resultFg;
-  }
-
-  public StreamFeatureGroup getStreamFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
-      throws IOException, FeatureStoreException {
-    StreamFeatureGroup[] streamFeatureGroups =
-        featureGroupApi.getInternal(featureStore, fgName, fgVersion, StreamFeatureGroup[].class);
-
-    // There can be only one single feature group with a specific name and version in a feature store
-    // There has to be one otherwise an exception would have been thrown.
-    StreamFeatureGroup resultFg = streamFeatureGroups[0];
-    resultFg.setFeatureStore(featureStore);
-    return resultFg;
-  }
-
-  public List<StreamFeatureGroup> getStreamFeatureGroups(FeatureStore featureStore, String fgName)
-      throws FeatureStoreException, IOException {
-    StreamFeatureGroup[] streamFeatureGroups =
-        featureGroupApi.getInternal(featureStore, fgName, null, StreamFeatureGroup[].class);
-
-    return Arrays.asList(streamFeatureGroups);
-  }
-
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(FeatureStore featureStore, String name, Integer version,
-                                                          String description, List<String> primaryKeys,
-                                                          List<String> partitionKeys, String hudiPrecombineKey,
-                                                          boolean onlineEnabled,
-                                                          StatisticsConfig statisticsConfig,
-                                                          String eventTime) throws IOException, FeatureStoreException {
-
-
-    StreamFeatureGroup featureGroup;
-    try {
-      featureGroup = getStreamFeatureGroup(featureStore, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270009")) {
-        featureGroup = StreamFeatureGroup.builder()
-            .featureStore(featureStore)
-            .name(name)
-            .version(version)
-            .description(description)
-            .primaryKeys(primaryKeys)
-            .partitionKeys(partitionKeys)
-            .hudiPrecombineKey(hudiPrecombineKey)
-            .onlineEnabled(onlineEnabled)
-            .statisticsConfig(statisticsConfig)
-            .eventTime(eventTime)
-            .build();
-
-        featureGroup.setFeatureStore(featureStore);
-      } else {
-        throw e;
-      }
-    }
-
-    return featureGroup;
-  }
-
-  public List<ExternalFeatureGroup> getExternalFeatureGroups(FeatureStore featureStore, String fgName)
-      throws FeatureStoreException, IOException {
-    ExternalFeatureGroup[] offlineFeatureGroups =
-        featureGroupApi.getInternal(featureStore, fgName, null, ExternalFeatureGroup[].class);
-
-    return Arrays.asList(offlineFeatureGroups);
-  }
-
-  public ExternalFeatureGroup getExternalFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
-      throws IOException, FeatureStoreException {
-    ExternalFeatureGroup[] offlineFeatureGroups =
-        featureGroupApi.getInternal(featureStore, fgName, fgVersion, ExternalFeatureGroup[].class);
-
-    // There can be only one single feature group with a specific name and version in a feature store
-    // There has to be one otherwise an exception would have been thrown.
-    ExternalFeatureGroup resultFg = offlineFeatureGroups[0];
-    resultFg.setFeatureStore(featureStore);
-    return resultFg;
   }
 }

@@ -25,7 +25,6 @@ import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
-import com.logicalclocks.base.FeatureType;
 import com.logicalclocks.base.HudiOperationType;
 import com.logicalclocks.base.Split;
 import com.logicalclocks.hsfs.TimeTravelFormat;
@@ -39,7 +38,10 @@ import com.logicalclocks.base.metadata.OnDemandOptions;
 import com.logicalclocks.base.metadata.Option;
 import com.logicalclocks.base.util.Constants;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
-import com.logicalclocks.hsfs.FeatureGroup;
+import static com.logicalclocks.base.FeatureType.BIGINT;
+import static com.logicalclocks.base.FeatureType.DATE;
+import static com.logicalclocks.base.FeatureType.TIMESTAMP;
+
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.TrainingDataset;
@@ -56,6 +58,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.functions;
 import org.apache.spark.sql.streaming.DataStreamReader;
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
@@ -64,6 +67,7 @@ import org.apache.spark.sql.types.ArrayType;
 import org.apache.spark.sql.types.BinaryType;
 import org.apache.spark.sql.types.BooleanType;
 import org.apache.spark.sql.types.ByteType;
+import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.DateType;
 import org.apache.spark.sql.types.DecimalType;
 import org.apache.spark.sql.types.DoubleType;
@@ -97,6 +101,7 @@ import java.util.stream.Collectors;
 
 import static org.apache.spark.sql.avro.functions.from_avro;
 import static org.apache.spark.sql.avro.functions.to_avro;
+import static org.apache.spark.sql.functions.array;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.from_json;
@@ -231,7 +236,8 @@ public class SparkEngine {
         .collect(Collectors.toMap(OnDemandOptions::getName, OnDemandOptions::getValue));
   }
 
-  public void registerHudiTemporaryTable(HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> readOptions) {
+  public void registerHudiTemporaryTable(HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> readOptions)
+          throws FeatureStoreException {
     Map<String, String> hudiArgs = hudiEngine.setupHudiReadOpts(
         hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
         hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
@@ -242,6 +248,8 @@ public class SparkEngine {
         .options(hudiArgs)
         .load(hudiFeatureGroupAlias.getFeatureGroup().getLocation())
         .createOrReplaceTempView(hudiFeatureGroupAlias.getAlias());
+
+    hudiEngine.reconcileHudiSchema(sparkSession, hudiFeatureGroupAlias, hudiArgs);
   }
 
   /**
@@ -308,28 +316,43 @@ public class SparkEngine {
     int i = 0;
     for (Split split : splits) {
       if (dataset.count() > 0) {
+        String eventTime = query.getLeftFeatureGroup().getEventTime();
         String eventTimeType =
-            query.getLeftFeatureGroup().getFeature(query.getLeftFeatureGroup().getEventTime()).getType();
-        if (FeatureType.BIGINT.getType().equals(eventTimeType)) {
+            query.getLeftFeatureGroup().getFeature(eventTime).getType();
+
+        if (BIGINT.getType().equals(eventTimeType)) {
+          String tmpEventTime = eventTime + "_hopsworks_tmp";
+          sparkSession.sqlContext()
+              .udf()
+              .register("checkEpochUDF", (Long input) -> {
+                if (Long.toString(input).length() > 10) {
+                  input = input / 1000;
+                  return input.longValue();
+                } else {
+                  return input;
+                }
+              }, DataTypes.LongType);
+          dataset = dataset.withColumn(tmpEventTime,functions.callUDF(
+              "checkEpochUDF", dataset.col(eventTime)));
+
           // event time in second. `getTime()` return in millisecond.
           datasetSplits[i] = dataset.filter(
               String.format(
                   "%d/1000 <= `%s` and `%s` < %d/1000",
                   split.getStartTime().getTime(),
-                  query.getLeftFeatureGroup().getEventTime(),
-                  query.getLeftFeatureGroup().getEventTime(),
+                  tmpEventTime,
+                  tmpEventTime,
                   split.getEndTime().getTime()
               )
-          );
-        } else if (FeatureType.DATE.getType().equals(eventTimeType)
-            || FeatureType.TIMESTAMP.getType().equals(eventTimeType)) {
+          ).drop(tmpEventTime);
+        } else if (DATE.getType().equals(eventTimeType) || TIMESTAMP.getType().equals(eventTimeType)) {
           // unix_timestamp return in second. `getTime()` return in millisecond.
           datasetSplits[i] = dataset.filter(
               String.format(
                   "%d/1000 <= unix_timestamp(`%s`) and unix_timestamp(`%s`) < %d/1000",
                   split.getStartTime().getTime(),
-                  query.getLeftFeatureGroup().getEventTime(),
-                  query.getLeftFeatureGroup().getEventTime(),
+                  eventTime,
+                  eventTime,
                   split.getEndTime().getTime()
               )
           );
@@ -494,7 +517,16 @@ public class SparkEngine {
   public void writeOnlineDataframe(FeatureGroupBase featureGroupBase, Dataset<Row> dataset, String onlineTopicName,
                                    Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
+
+    byte[] version = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
+
     onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
+        .withColumn("headers", array(
+            struct(
+                lit("version").as("key"),
+                lit(version).as("value")
+            )
+        ))
         .write()
         .format(Constants.KAFKA_FORMAT)
         .options(writeOptions)
@@ -502,21 +534,29 @@ public class SparkEngine {
         .save();
   }
 
-  public StreamingQuery writeStreamDataframe(FeatureGroupBase featureGroupBase, Dataset<Row> dataset,
-                                             String queryName, String outputMode, boolean awaitTermination,
-                                             Long timeout, String checkpointLocation, Map<String, String> writeOptions)
+  public <S> StreamingQuery writeStreamDataframe(FeatureGroupBase featureGroupBase, Dataset<Row> dataset,
+                                                 String queryName, String outputMode, boolean awaitTermination,
+                                                 Long timeout, String checkpointLocation,
+                                                 Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
+    byte[] version = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
 
     DataStreamWriter<Row> writer =
         onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
-        .writeStream()
-        .format(Constants.KAFKA_FORMAT)
-        .outputMode(outputMode)
-        .option("checkpointLocation", checkpointLocation == null
-            ? checkpointDirPath(queryName, featureGroupBase.getOnlineTopicName())
-            : checkpointLocation)
-        .options(writeOptions)
-        .option("topic", featureGroupBase.getOnlineTopicName());
+            .withColumn("headers", array(
+                struct(
+                    lit("version").as("key"),
+                    lit(version).as("value")
+                )
+            ))
+            .writeStream()
+            .format(Constants.KAFKA_FORMAT)
+            .outputMode(outputMode)
+            .option("checkpointLocation", checkpointLocation == null
+                ? checkpointDirPath(queryName, featureGroupBase.getOnlineTopicName())
+                : checkpointLocation)
+            .options(writeOptions)
+            .option("topic", featureGroupBase.getOnlineTopicName());
 
     // start streaming to online feature group topic
     StreamingQuery query = writer.start();
@@ -566,6 +606,13 @@ public class SparkEngine {
             featureGroupBase.getEncodedAvroSchema()).alias("value"));
   }
 
+  public <S>  void writeEmptyDataframe(FeatureGroupBase featureGroup)
+          throws IOException, FeatureStoreException, ParseException {
+    String fgTableName = utils.getTableName(featureGroup);
+    Dataset emptyDf = sparkSession.table(fgTableName).limit(0);
+    writeOfflineDataframe(featureGroup, emptyDf, HudiOperationType.UPSERT, new HashMap<>(), null);
+  }
+
   public <S>  void writeOfflineDataframe(StreamFeatureGroup streamFeatureGroup, S genericDataset,
                                          HudiOperationType operation, Map<String, String> writeOptions,
                                          Integer validationId)
@@ -575,7 +622,7 @@ public class SparkEngine {
     hudiEngine.saveHudiFeatureGroup(sparkSession, streamFeatureGroup, dataset, operation, writeOptions, validationId);
   }
 
-  public void writeOfflineDataframe(FeatureGroup featureGroup, Dataset<Row> dataset,
+  public void writeOfflineDataframe(FeatureGroupBase featureGroup, Dataset<Row> dataset,
                                     HudiOperationType operation, Map<String, String> writeOptions, Integer validationId)
       throws IOException, FeatureStoreException, ParseException {
 
@@ -586,7 +633,8 @@ public class SparkEngine {
     }
   }
 
-  private void writeSparkDataset(FeatureGroup featureGroup, Dataset<Row> dataset, Map<String, String> writeOptions) {
+  private void writeSparkDataset(FeatureGroupBase featureGroup, Dataset<Row> dataset,
+                                 Map<String, String> writeOptions) {
     dataset
         .write()
         .format(Constants.HIVE_FORMAT)
@@ -637,7 +685,8 @@ public class SparkEngine {
     return profile(df, null, true, true);
   }
 
-  public void setupConnectorHadoopConf(StorageConnector storageConnector) throws FeatureStoreException, IOException {
+  public void setupConnectorHadoopConf(StorageConnector storageConnector)
+          throws FeatureStoreException, IOException {
     if (storageConnector == null) {
       return;
     }
@@ -700,14 +749,6 @@ public class SparkEngine {
     }
   }
 
-  public Dataset<Row> getEmptyAppendedDataframe(Dataset<Row> dataframe, List<Feature> newFeatures) {
-    Dataset<Row> emptyDataframe = dataframe.limit(0);
-    for (Feature f : newFeatures) {
-      emptyDataframe = emptyDataframe.withColumn(f.getName(), lit(null).cast(f.getType()));
-    }
-    return emptyDataframe;
-  }
-
   public void streamToHudiTable(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)
       throws Exception {
     writeOptions = getKafkaConfig(streamFeatureGroup, writeOptions);
@@ -758,6 +799,19 @@ public class SparkEngine {
   public Dataset<Row> sanitizeFeatureNames(Dataset<Row> dataset) {
     return dataset.select(Arrays.asList(dataset.columns()).stream().map(f -> col(f).alias(f.toLowerCase())).toArray(
         Column[]::new));
+  }
+
+  public Dataset<Row> convertToDefaultDataframe(Dataset<Row> dataset) {
+    Dataset<Row> sanitizedNamesDataset = dataset.select(Arrays.asList(dataset.columns()).stream().map(f ->
+            col(f).alias(f.toLowerCase())).toArray(Column[]::new));
+
+    StructType schema = sanitizedNamesDataset.schema();
+    StructType nullableSchema = new StructType(JavaConverters.asJavaCollection(schema.toSeq()).stream().map(f ->
+            new StructField(f.name(), f.dataType(), true, f.metadata())
+    ).toArray(StructField[]::new));
+    Dataset<Row> nullableDataset = sanitizedNamesDataset.sparkSession()
+            .createDataFrame(sanitizedNamesDataset.rdd(), nullableSchema);
+    return nullableDataset;
   }
 
   public String addFile(String filePath) {
@@ -878,8 +932,6 @@ public class SparkEngine {
   }
 
 
-  //-----------------------------------------------------------
-  // TODO (davit): this will be implemented in sparkEngine to return FeatureGroup class
   public String constructCheckpointPath(FeatureGroupBase featureGroup, String queryName, String queryPrefix)
       throws FeatureStoreException, IOException {
     if (Strings.isNullOrEmpty(queryName)) {
@@ -918,4 +970,5 @@ public class SparkEngine {
     return "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
         + "/Resources/" + queryName + "-checkpoint";
   }
+
 }

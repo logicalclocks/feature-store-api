@@ -2,8 +2,8 @@
   "get": {
     "response": {
       "expectation_type": "1",
-      "kwargs": { "kwargs_key": "kwargs_value" },
-      "meta": { "meta_key": "meta_value", "expectationId": 32 },
+      "kwargs": "{ \"kwargs_key\": \"kwargs_value\" }",
+      "meta": "{ \"meta_key\": \"meta_value\", \"expectationId\": 32 }",
       "id": 32
     }
   },
@@ -13,8 +13,8 @@
       "items": [
         {
           "expectation_type": "1",
-          "kwargs": { "kwargs_key": "kwargs_value" },
-          "meta": { "meta_key": "meta_value", "expectationId": 32 },
+          "kwargs": "{ \"kwargs_key\": \"kwargs_value\" }",
+          "meta": "{ \"meta_key\": \"meta_value\", \"expectationId\": 32 }",
           "id": 32
         }
       ]

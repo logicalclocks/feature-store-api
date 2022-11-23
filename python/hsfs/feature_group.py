@@ -15,6 +15,7 @@
 #
 
 import copy
+from hsfs.ge_validation_result import ValidationResult
 import humps
 import json
 import warnings
@@ -34,9 +35,9 @@ from hsfs.core import (
     validation_report_engine,
     code_engine,
     external_feature_group_engine,
+    validation_result_engine,
 )
 
-from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.validation_report import ValidationReport
@@ -395,7 +396,10 @@ class FeatureGroupBase:
         # Raises
             `RestAPIException`.
         """
-        self._expectation_suite = self._expectation_suite_engine.get()
+        # Avoid throwing an error if Feature Group not initialised.
+        if self._id:
+            self._expectation_suite = self._expectation_suite_engine.get()
+
         if self._expectation_suite is not None and ge_type is True:
             return self._expectation_suite.to_ge_type()
         else:
@@ -430,7 +434,10 @@ class FeatureGroupBase:
                 feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, ExpectationSuite):
-            tmp_expectation_suite = expectation_suite
+            tmp_expectation_suite = expectation_suite.to_json_dict()
+            tmp_expectation_suite["featuregroup_id"] = self._id
+            tmp_expectation_suite["featurestore_id"] = self._feature_store_id
+            tmp_expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         else:
             raise TypeError(
                 "The provided expectation suite type `{}` is not supported. Use Great Expectation `ExpectationSuite` or HSFS' own `ExpectationSuite` object.".format(
@@ -473,10 +480,7 @@ class FeatureGroupBase:
         # Raises
             `RestAPIException`.
         """
-        if ge_type is True:
-            return self._validation_report_engine.get_last(self).to_ge_type()
-        else:
-            return self._validation_report_engine.get_last(self)
+        return self._validation_report_engine.get_last(ge_type=ge_type)
 
     def get_all_validation_reports(
         self, ge_type: bool = True
@@ -492,14 +496,14 @@ class FeatureGroupBase:
             Union[List[`ValidationReport`], `ValidationReport`]. All validation reports attached to the feature group.
 
         # Raises
-            `RestAPIException`.
+            `RestAPIException`,`FeatureStoreException`.
         """
-        if ge_type is True:
-            return [
-                report.to_ge_type()
-                for report in self._validation_report_engine.get_all()
-            ]
-        return self._validation_report_engine.get_all()
+        if self._id:
+            return self._validation_report_engine.get_all(ge_type=ge_type)
+        else:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can fetch validation reports."
+            )
 
     def save_validation_report(
         self,
@@ -521,19 +525,75 @@ class FeatureGroupBase:
         # Raises
             `RestAPIException`.
         """
-        if isinstance(
-            validation_report,
-            ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
-        ):
-            report = ValidationReport(**validation_report.to_json_dict())
-        elif isinstance(validation_report, dict):
-            report = ValidationReport(**validation_report)
-        elif isinstance(validation_report, ValidationReport):
-            report = validation_report
+        if self._id:
+            if isinstance(
+                validation_report,
+                ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
+            ):
+                report = ValidationReport(**validation_report.to_json_dict())
+            elif isinstance(validation_report, dict):
+                report = ValidationReport(**validation_report)
+            elif isinstance(validation_report, ValidationReport):
+                report = validation_report
 
-        if ge_type:
-            return self._validation_report_engine.save(report).to_ge_type()
-        return self._validation_report_engine.save(report)
+            return self._validation_report_engine.save(
+                validation_report=report, ge_type=ge_type
+            )
+        else:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can upload validation reports."
+            )
+
+    def get_validation_history(
+        self,
+        expectation_id: int,
+        start_validation_time: Union[str, int, datetime, date, None] = None,
+        end_validation_time: Union[str, int, datetime, date, None] = None,
+        ingested_only: bool = False,
+        rejected_only: bool = False,
+        ge_type: bool = True,
+    ) -> Union[List[ValidationResult], List[ge.core.ExpectationValidationResult]]:
+        """Fetch validation history of an Expectation specified by its id.
+
+        !!! example
+        ```python3
+        validation_history = fg.get_validation_history(
+            expectation_id=1,
+            ingested_only=True,
+            start_validation_time="2022-01-01 00:00:00",
+            end_validation_time=datetime.datetime.now(),
+            ge_type=False
+        )
+        ```
+
+        # Arguments
+            expectation_id: id of the Expectation for which to fetch the validation history
+            ingested_only: fetch only validation result corresponding to an insertion, defaults to False.
+            rejected_only: fetch only validation result corresponding to a rejection, defaults to False.
+            start_validation_time: fetch only validation result posterior to the provided time, inclusive.
+            Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
+            end_validation_time: fetch only validation result prior to the provided time, inclusive.
+            Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
+
+        # Raises
+            `RestAPIException`
+
+        # Return
+            Union[List[`ValidationResult`], List[`ExpectationValidationResult`]] A list of validation result connected to the expectation_id
+        """
+        if self._id:
+            return self._validation_result_engine.get_validation_history(
+                expectation_id=expectation_id,
+                start_validation_time=start_validation_time,
+                end_validation_time=end_validation_time,
+                ingested_only=ingested_only,
+                rejected_only=rejected_only,
+                ge_type=ge_type,
+            )
+        else:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can fetch validation history."
+            )
 
     def __getattr__(self, name):
         try:
@@ -647,8 +707,27 @@ class FeatureGroupBase:
         return self._event_time
 
     @event_time.setter
-    def event_time(self, feature_name):
-        self._event_time = feature_name
+    def event_time(self, feature_name: Optional[str]):
+        if feature_name is None:
+            self._event_time = None
+            return
+        elif isinstance(feature_name, str):
+            self._event_time = feature_name
+            return
+        elif isinstance(feature_name, list) and len(feature_name) == 1:
+            if isinstance(feature_name[0], str):
+                warnings.warn(
+                    "Providing event_time as a single-element list is deprecated"
+                    + " and will be dropped in future versions. Provide the feature_name string instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+                self._event_time = feature_name[0]
+                return
+
+        raise ValueError(
+            "event_time must be a string corresponding to an existing feature name of the Feature Group."
+        )
 
     @property
     def location(self):
@@ -657,7 +736,7 @@ class FeatureGroupBase:
     @property
     def expectation_suite(
         self,
-    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite, None]:
+    ) -> Optional[ExpectationSuite]:
         """Expectation Suite configuration object defining the settings for
         data validation of the feature group."""
         return self._expectation_suite
@@ -670,7 +749,10 @@ class FeatureGroupBase:
         ],
     ):
         if isinstance(expectation_suite, ExpectationSuite):
-            self._expectation_suite = expectation_suite
+            tmp_expectation_suite = expectation_suite.to_json_dict()
+            tmp_expectation_suite["featuregroup_id"] = self._id
+            tmp_expectation_suite["featurestore_id"] = self._feature_store_id
+            self._expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         elif isinstance(expectation_suite, ge.core.expectation_suite.ExpectationSuite):
             self._expectation_suite = ExpectationSuite(
                 **expectation_suite.to_json_dict(),
@@ -678,13 +760,12 @@ class FeatureGroupBase:
                 feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, dict):
-            self._expectation_suite = ExpectationSuite(
-                **expectation_suite,
-                feature_store_id=self._feature_store_id,
-                feature_group_id=self._id,
-            )
+            tmp_expectation_suite = expectation_suite.copy()
+            tmp_expectation_suite["feature_store_id"] = self._feature_store_id
+            tmp_expectation_suite["feature_group_id"] = self._id
+            self._expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         elif expectation_suite is None:
-            self._expectation_suite = expectation_suite
+            self._expectation_suite = None
         else:
             raise TypeError(
                 "The argument `expectation_suite` has to be `None` of type `ExpectationSuite` or `dict`, but is of type: `{}`".format(
@@ -740,9 +821,9 @@ class FeatureGroup(FeatureGroupBase):
             time_travel_format.upper() if time_travel_format is not None else None
         )
 
-        self._avro_schema = None
+        self._subject = None
         self._online_topic_name = online_topic_name
-        self._event_time = event_time
+        self.event_time = event_time
         self._stream = stream
         self._deltastreamer_jobconf = None
 
@@ -781,6 +862,11 @@ class FeatureGroup(FeatureGroupBase):
             )
             self._validation_report_engine = (
                 validation_report_engine.ValidationReportEngine(
+                    self._feature_store_id, self._id
+                )
+            )
+            self._validation_result_engine = (
+                validation_result_engine.ValidationResultEngine(
                     self._feature_store_id, self._id
                 )
             )
@@ -1000,19 +1086,6 @@ class FeatureGroup(FeatureGroupBase):
 
         user_version = self._version
 
-        if self._stream:
-            # when creating a stream feature group, users have the possibility of passing
-            # a spark_job_configuration object as part of the write_options with the key "spark"
-            _spark_options = write_options.pop("spark", None)
-            _write_options = (
-                [{"name": k, "value": v} for k, v in write_options.items()]
-                if write_options
-                else None
-            )
-            self._deltastreamer_jobconf = DeltaStreamerJobConf(
-                _write_options, _spark_options
-            )
-
         # fg_job is used only if the python engine is used
         fg_job, ge_report = self._feature_group_engine.save(
             self, feature_dataframe, write_options, validation_options
@@ -1048,8 +1121,8 @@ class FeatureGroup(FeatureGroupBase):
         overwrite: Optional[bool] = False,
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
-        validation_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[str, Any]] = {},
+        validation_options: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         """Persist the metadata and materialize the feature group to the feature store
         or insert data from a dataframe into the existing feature group.
@@ -1114,12 +1187,14 @@ class FeatureGroup(FeatureGroupBase):
 
         job, ge_report = self._feature_group_engine.insert(
             self,
-            feature_dataframe,
-            overwrite,
-            operation,
-            storage.lower() if storage is not None else None,
-            write_options,
-            validation_options,
+            feature_dataframe=feature_dataframe,
+            overwrite=overwrite,
+            operation=operation,
+            storage=storage.lower() if storage is not None else None,
+            write_options=write_options,
+            validation_options=validation_options
+            if validation_options is not None
+            else {"save_report": True},
         )
 
         if ge_report is None or ge_report.ingestion_result == "INGESTED":
@@ -1599,12 +1674,17 @@ class FeatureGroup(FeatureGroupBase):
         return self._created
 
     @property
+    def subject(self):
+        """Subject of the feature group."""
+        if self._subject is None:
+            # cache the schema
+            self._subject = self._feature_group_engine.get_subject(self)
+        return self._subject
+
+    @property
     def avro_schema(self):
         """Avro schema representation of the feature group."""
-        if self._avro_schema is None:
-            # cache the schema
-            self._avro_schema = self._feature_group_engine.get_avro_schema(self)
-        return self._avro_schema
+        return self.subject["schema"]
 
     @property
     def stream(self):

@@ -38,6 +38,6 @@ public class DeltaStreamerTransformer implements Transformer {
   @Override
   public Dataset<Row> apply(JavaSparkContext javaSparkContext, SparkSession sparkSession, Dataset<Row> dataset,
                             TypedProperties props) {
-    return SparkEngine.getInstance().sanitizeFeatureNames(dataset);
+    return SparkEngine.getInstance().convertToDefaultDataframe(dataset);
   }
 }

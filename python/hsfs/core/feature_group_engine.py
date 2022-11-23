@@ -19,6 +19,7 @@ from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_group_base_engine, hudi_engine
+from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
@@ -208,20 +209,13 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
     def append_features(self, feature_group, new_features):
         """Appends features to a feature group."""
-        # first get empty dataframe of current version and append new feature
-        # necessary to write empty df to the table in order for the parquet schema
-        # which is used by hudi to be updated
-        df = engine.get_instance().get_empty_appended_dataframe(
-            feature_group.read(), new_features
-        )
-
         self._update_features_metadata(
             feature_group,
             feature_group.features + new_features,  # todo allows for duplicates
         )
 
         # write empty dataframe to update parquet schema
-        engine.get_instance().save_empty_dataframe(feature_group, df)
+        engine.get_instance().save_empty_dataframe(feature_group)
 
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
@@ -238,7 +232,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_group, copy_feature_group, "updateMetadata"
         )
 
-    def get_avro_schema(self, feature_group):
+    def get_subject(self, feature_group):
         return self._kafka_api.get_topic_subject(feature_group._online_topic_name)
 
     def get_kafka_config(self, online_write_options):
@@ -400,7 +394,17 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 feat.hudi_precombine_key = True
 
         if feature_group.stream:
-            feature_group._options = write_options
+            # when creating a stream feature group, users have the possibility of passing
+            # a spark_job_configuration object as part of the write_options with the key "spark"
+            _spark_options = write_options.pop("spark", None)
+            _write_options = (
+                [{"name": k, "value": v} for k, v in write_options.items()]
+                if write_options
+                else None
+            )
+            feature_group._deltastreamer_jobconf = DeltaStreamerJobConf(
+                _write_options, _spark_options
+            )
 
         self._feature_group_api.save(feature_group)
         print(

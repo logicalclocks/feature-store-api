@@ -59,7 +59,7 @@ class GreatExpectationEngine:
                 ge_validate_kwargs=validation_options.get("ge_validate_kwargs", {}),
             )
         else:
-            # if run_validation is False we skip validation
+            # if run_validation is False we skip validation and saving_report
             return
 
         return self.save_or_convert_report(

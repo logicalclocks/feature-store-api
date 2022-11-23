@@ -71,5 +71,5 @@ public abstract class FsQueryBase {
 
   public abstract void registerOnDemandFeatureGroups() throws FeatureStoreException, IOException;
 
-  public abstract void registerHudiFeatureGroups(Map<String, String> readOptions);
+  public abstract void registerHudiFeatureGroups(Map<String, String> readOptions) throws FeatureStoreException;
 }

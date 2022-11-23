@@ -26,11 +26,11 @@ import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.HudiOperationType;
 import com.logicalclocks.base.Storage;
 import com.logicalclocks.base.engine.CodeEngine;
-import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.metadata.FeatureGroupBase;
 import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
+
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -88,9 +88,6 @@ public class FeatureGroup extends FeatureGroupBase {
   // This is only used in the client. In the server they are aggregated in the `features` field
   private String hudiPrecombineKey;
 
-  @JsonIgnore
-  private String avroSchema;
-
   @Getter(onMethod = @__(@Override))
   @Setter(onMethod = @__(@Override))
   private String onlineTopicName;
@@ -98,7 +95,6 @@ public class FeatureGroup extends FeatureGroupBase {
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
-  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
@@ -585,10 +581,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @JsonIgnore
   public String getAvroSchema() throws FeatureStoreException, IOException {
-    if (avroSchema == null) {
-      avroSchema = utils.getAvroSchema(this, this.featureStore);
-    }
-    return avroSchema;
+    return getSubject().getSchema();
   }
 
   @JsonIgnore
