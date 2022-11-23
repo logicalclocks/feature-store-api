@@ -65,8 +65,7 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
   public void configure(Map<String, ?> configs, boolean isKey) {
     GenericData.get().addLogicalTypeConversion(new Conversions.DecimalConversion());
     String featureGroupSchema = (String) configs.get(HudiEngine.FEATURE_GROUP_SCHEMA);
-    String encodedFeatureGroupSchema = configs.get(HudiEngine.FEATURE_GROUP_ENCODED_SCHEMA).toString()
-        .replace("\"type\":[\"bytes\",\"null\"]", "\"type\":[\"null\",\"bytes\"]");
+    String encodedFeatureGroupSchema = configs.get(HudiEngine.FEATURE_GROUP_ENCODED_SCHEMA).toString();
     String complexFeatureString = (String) configs.get(HudiEngine.FEATURE_GROUP_COMPLEX_FEATURES);
     try {
       String[] stringArray = objectMapper.readValue(complexFeatureString, String[].class);
