@@ -33,7 +33,7 @@ from pyspark.sql.types import (
     BooleanType,
     StructField,
     MapType,
-    ArrayType
+    ArrayType,
 )
 
 from hsfs import (
@@ -3638,7 +3638,7 @@ class TestSpark:
             "date": ["2022-01-27"],
             "binary": ["1"],
             "array<string>": [["123"]],
-            "struc": [LabelIndex("0", "1")]
+            "struc": [LabelIndex("0", "1")],
         }
         df = pd.DataFrame(data=d)
         spark_df = spark_engine._spark_session.createDataFrame(df)
@@ -3653,9 +3653,7 @@ class TestSpark:
             TrainingDatasetFeature("date", type="date"),
             TrainingDatasetFeature("binary", type="binary"),
             TrainingDatasetFeature("array<string>", type="array<string>"),
-            TrainingDatasetFeature(
-                "struc", type="struct<label:string,index:int>"
-            )
+            TrainingDatasetFeature("struc", type="struct<label:string,index:int>"),
         ]
         cast_df = spark_engine.cast_column_type(spark_df, schema)
         expected = {
@@ -3674,7 +3672,7 @@ class TestSpark:
                     StructField("label", StringType(), True),
                     StructField("index", IntegerType(), True),
                 ]
-            )
+            ),
         }
         for col in cast_df.dtypes:
             assert col[1] == expected[col[0]].simpleString()

@@ -592,7 +592,7 @@ class TestPython:
             "date": ["2022-01-27"],
             "binary": ["1"],
             "array<string>": [["123"]],
-            "struc": [LabelIndex("0", "1")]
+            "struc": [LabelIndex("0", "1")],
         }
         df = pd.DataFrame(data=d)
         schema = [
@@ -606,9 +606,7 @@ class TestPython:
             TrainingDatasetFeature("date", type="date"),
             TrainingDatasetFeature("binary", type="binary"),
             TrainingDatasetFeature("array<string>", type="array<string>"),
-            TrainingDatasetFeature(
-                "struc", type="struct<label:string,index:int>"
-            )
+            TrainingDatasetFeature("struc", type="struct<label:string,index:int>"),
         ]
         cast_df = python_engine.cast_column_type(df, schema)
         expected = {
@@ -622,7 +620,7 @@ class TestPython:
             "date": np.dtype("datetime64[ns]"),
             "binary": np.dtype("uint8"),
             "array<string>": object,
-            "struc": object
+            "struc": object,
         }
         for col in cast_df.columns:
             assert cast_df[col].dtype == expected[col]
