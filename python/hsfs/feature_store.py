@@ -1021,7 +1021,7 @@ class FeatureStore:
             fs = ... 
 
             # get all transformation functions        
-            fs.get_transformation_functions()
+            list_transformation_fns = fs.get_transformation_functions()
             ```
 
         # Returns:

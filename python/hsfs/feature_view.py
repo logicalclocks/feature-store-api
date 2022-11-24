@@ -224,6 +224,9 @@ class FeatureView:
 
             # initialise and cache parametrized transformation functions
             feature_view.init_batch_scoring(training_dataset_version=1)
+
+            # get batch data
+            batch_data = feature_view.get_batch_data(...)
             ```
 
         # Arguments
@@ -256,10 +259,12 @@ class FeatureView:
                 end_date = (datetime.datetime.now()) 
 
                 # get a query string of batch query
-                df = feature_view.get_batch_query(
+                query_str = feature_view.get_batch_query(
                     start_time=start_date,
                     end_time=end_date
-                )     
+                )
+                # print query string
+                print(query_str)     
             ```
         # Arguments
             start_time: Start event time for the batch query. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
@@ -300,6 +305,23 @@ class FeatureView:
             # get a feature vector
             feature_view.get_feature_vector(
                 entry = {"pk1": 1, "pk2": 2}
+            )
+            ```
+
+        !!! example "Get feature vector with user-supplied features"
+            ```python
+            # get feature store instance 
+            fs = ...
+            # get feature view instance 
+            feature_view = fs.get_feature_view(...)
+        
+            # the application provides a feature value 'app_attr'           
+            app_attr = ...
+
+            # get a feature vector
+            feature_view.get_feature_vector(
+                entry = {"pk1": 1, "pk2": 2}, 
+                passed_features = { "app_feature" : app_attr } 
             )
             ```
 
@@ -454,7 +476,7 @@ class FeatureView:
             feature_view = fs.get_feature_view(...)
 
             # get a tag of a feature view
-            feature_view.get_tag('tag_name')
+            name = feature_view.get_tag('tag_name')
             ```
         """
         return self._feature_view_engine.get_tag(self, name)
@@ -470,7 +492,7 @@ class FeatureView:
             feature_view = fs.get_feature_view(...)
 
             # get tags
-            feature_view.get_tags()
+            list_tags = feature_view.get_tags()
             ```
         """
         return self._feature_view_engine.get_tags(self)
@@ -544,6 +566,9 @@ class FeatureView:
                 # you can have different data formats such as csv, tsv, tfrecord, parquet and others
                 data_format='csv'
             )
+
+            # When we want to read the training data, we need to supply the training data version returned by the create_training_data method:
+            X_train, X_test, y_train, y_test = feature_view.get_training_data(version)
             ```
 
         !!! example "Create time series splits by specifying date as datetime object"
@@ -1120,7 +1145,7 @@ class FeatureView:
             # get feature view instance 
             feature_view = fs.get_feature_view(...)
 
-            # recreate a training dataset
+            # recreate a training dataset that has been deleted
             feature_view.recreate_training_dataset(version=1)
             ```        
         
@@ -1168,7 +1193,7 @@ class FeatureView:
             feature_view = fs.get_feature_view(...)
 
             # get training data
-            feature_df, label_df = feature_view.training_data(
+            features_df, labels_df  = feature_view.training_data(
                 description='Descriprion of a dataset',
             )
             ```
@@ -1187,16 +1212,12 @@ class FeatureView:
             # you can also pass dates as datetime objects
             
             # get training data
-            feature_df, label_df = feature_view.training_data(
+            features_df, labels_df = feature_view.training_data(
                 start_time=start_time,
                 end_time=end_time,    
                 description='Descriprion of a dataset'
             )
             ```
-
-        !!! info
-            If a materialised training data has deleted. Use `recreate_training_dataset()` to
-            recreate the training data.
 
         # Arguments
             start_time: Start event time for the training dataset query. Strings should
@@ -1267,7 +1288,7 @@ class FeatureView:
         """
         Get training data from feature groups.
 
-        !!! example "Create random splits"
+        !!! example "Create random train/test splits"
             ```python
             # get feature store instance 
             fs = ...
@@ -1282,7 +1303,7 @@ class FeatureView:
 
             ```
 
-        !!! example "Create time-series based splits"
+        !!! example "Create time-series train/test splits"
             ```python
             # get feature store instance 
             fs = ...
@@ -1306,10 +1327,6 @@ class FeatureView:
                 description='Description of a dataset'
             )
             ```
-
-        !!! info
-            If a materialised training data has deleted. Use `recreate_training_dataset()` to
-            recreate the training data.
 
         # Arguments
             test_size: size of test set. Should be between 0 and 1.
@@ -1453,10 +1470,6 @@ class FeatureView:
             )
             ```
 
-        !!! info
-            If a materialised training data has deleted. Use `recreate_training_dataset()` to
-            recreate the training data.
-
         # Arguments
             validation_size: size of validation set. Should be between 0 and 1.
             test_size: size of test set. Should be between 0 and 1.
@@ -1585,12 +1598,8 @@ class FeatureView:
             feature_view = fs.get_feature_view(...)
 
             # get training data
-            feature_df, label_df = feature_view.get_training_data(training_dataset_version=1)
+            features_df, labels_df = feature_view.get_training_data(training_dataset_version=1)
             ```
-
-        !!! info
-            If a materialised training data has deleted. Use `recreate_training_dataset()` to
-            recreate the training data.
 
         !!! warning "External Storage Support"
             Reading training data that was written to external storage using a Storage
@@ -1635,10 +1644,6 @@ class FeatureView:
             X_train, X_test, y_train, y_test = feature_view.get_train_test_split(training_dataset_version=1)
             ```
 
-        !!! info
-            If a materialised training data has deleted. Use `recreate_training_dataset()` to
-            recreate the training data.
-
         # Arguments
             training_dataset_version: training dataset version
             read_options: Additional read options as key-value pairs, defaults to `{}`.
@@ -1680,9 +1685,6 @@ class FeatureView:
             # get training data
             X_train, X_val, X_test, y_train, y_val, y_test = feature_view.get_train_validation_test_splits(training_dataset_version=1)
             ```
-        !!! info
-            If a materialised training data has deleted. Use `recreate_training_dataset()` to
-            recreate the training data.
 
         # Arguments
             training_dataset_version: training dataset version
@@ -1744,7 +1746,7 @@ class FeatureView:
             feature_view = fs.get_feature_view(...)
 
             # get a training dataset tag
-            feature_view.get_training_dataset_tag(
+            tag_str = feature_view.get_training_dataset_tag(
                 training_dataset_version=1,
                  name="tag_schema"
             )
@@ -1765,7 +1767,7 @@ class FeatureView:
             feature_view = fs.get_feature_view(...)
 
             # get a training dataset tags           
-            feature_view.get_training_dataset_tags(
+            list_tags = feature_view.get_training_dataset_tags(
                 training_dataset_version=1
             )
             ```

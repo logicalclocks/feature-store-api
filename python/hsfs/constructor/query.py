@@ -121,7 +121,7 @@ class Query:
             fg1 = fs.get_feature_group("...")
             fg2 = fs.get_feature_group("...")
 
-            query = fg1.join(fg2)
+            query = fg1.select_all().join(fg2.select_all())
 
             query.show(10)
             ``` 
@@ -155,7 +155,7 @@ class Query:
             fg1 = fs.get_feature_group("...")
             fg2 = fs.get_feature_group("...")
 
-            feature_join = fg1.join(fg2)            
+            query = fg1.select_all().join(fg2.select_all())            
             ```
 
         !!! example "More complex join"
@@ -164,7 +164,7 @@ class Query:
             fg2 = fs.get_feature_group("...")
             fg3 = fs.get_feature_group("...") 
 
-            feature_join = fg1.select_all() 
+            query = fg1.select_all() 
                     .join(fg2.select_all(), on=["date", "location_id"]) 
                     .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
             ```      
@@ -325,7 +325,7 @@ class Query:
             fg2 = fs.get_feature_group("...")       
             fg3 = fs.get_feature_group("...")
 
-            feature_join = fg1.select_all() 
+            query = fg1.select_all() 
                 .join(fg2.select_all(), on=["date", "location_id"]) 
                 .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left") 
                 .filter((fg1.location_id == 10) | (fg1.location_id == 20))
@@ -336,11 +336,10 @@ class Query:
             fg2 = fs.get_feature_group("...")       
             fg3 = fs.get_feature_group("...")
 
-            feature_join = fg1.select_all() 
+            query = fg1.select_all() 
                 .join(fg2.select_all().filter(fg2.avg_temp >= 22), on=["date", "location_id"]) 
                 .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left") 
                 .filter(fg1.location_id == 10)
-
             ```
 
         # Arguments
@@ -437,7 +436,7 @@ class Query:
             fg1 = fs.get_feature_group("...")
             fg2 = fs.get_feature_group("...")
 
-            query = fg1.join(fg2)       
+            query = fg1.select_all().join(fg2.select_all())       
 
             query.to_string()
             ```
@@ -480,7 +479,7 @@ class Query:
             fg1 = fs.get_feature_group("...")
             fg2 = fs.get_feature_group("...")
 
-            query = fg1.join(fg2)    
+            query = fg1.select_all().join(fg2.select_all())    
 
             query.append_feature('feature_name')
             ```
