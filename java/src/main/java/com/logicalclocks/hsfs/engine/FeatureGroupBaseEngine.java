@@ -33,8 +33,19 @@ import java.util.Map;
 import java.util.Optional;
 
 public class FeatureGroupBaseEngine {
-  protected FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  protected TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
+  protected FeatureGroupApi featureGroupApi;
+  protected TagsApi tagsApi;
+
+  public FeatureGroupBaseEngine() {
+    featureGroupApi = new FeatureGroupApi();
+    tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
+  }
+
+  // for testing
+  public FeatureGroupBaseEngine(FeatureGroupApi featureGroupApi, TagsApi tagsApi) {
+    this.featureGroupApi = featureGroupApi;
+    this.tagsApi = tagsApi;
+  }
 
   public void delete(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {
     featureGroupApi.delete(featureGroupBase);
@@ -84,6 +95,7 @@ public class FeatureGroupBaseEngine {
     featureGroup.setFeatures(newFeatures);
     T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata", fgClass);
     featureGroup.setFeatures(apiFG.getFeatures());
+    featureGroup.unloadSubject();
   }
 
   public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features,
@@ -93,6 +105,7 @@ public class FeatureGroupBaseEngine {
     T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata",
         fgClass);
     featureGroup.setFeatures(apiFG.getFeatures());
+    featureGroup.unloadSubject();
     if (featureGroup instanceof FeatureGroup) {
       SparkEngine.getInstance().writeEmptyDataframe(featureGroup);
     }
