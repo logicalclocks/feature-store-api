@@ -719,7 +719,7 @@ class FeatureView:
         return td.version, td_job
 
     def recreate_training_dataset(
-        self, version: int, write_options: Optional[Dict[Any, Any]] = None
+        self, training_dataset_version: int, write_options: Optional[Dict[Any, Any]] = None
     ):
         """
         Recreate a training dataset.
@@ -729,7 +729,7 @@ class FeatureView:
             recreate the training data.
 
         # Arguments
-            version: training dataset version
+            training_dataset_version: training dataset version
             read_options: Additional read options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, read_options can contain the
                 following entries:
@@ -743,7 +743,7 @@ class FeatureView:
 
         """
         td, td_job = self._feature_view_engine.recreate_training_dataset(
-            self, version, write_options
+            self, training_dataset_version, write_options
         )
         return td_job
 
@@ -1066,7 +1066,7 @@ class FeatureView:
             Python as Engine, instead you will have to use the storage's native client.
 
         # Arguments
-            version: training dataset version
+            training_dataset_version: training dataset version
             read_options: Additional read options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, read_options can contain the
                 following entries:
@@ -1096,7 +1096,7 @@ class FeatureView:
             recreate the training data.
 
         # Arguments
-            version: training dataset version
+            training_dataset_version: training dataset version
             read_options: Additional read options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, read_options can contain the
                 following entries:
@@ -1130,7 +1130,7 @@ class FeatureView:
             recreate the training data.
 
         # Arguments
-            version: training dataset version
+            training_dataset_version: training dataset version
             read_options: Additional read options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, read_options can contain the
                 following entries:
@@ -1162,6 +1162,7 @@ class FeatureView:
         The value of a tag can be any valid json - primitives, arrays or json objects.
 
         # Arguments
+            training_dataset_version: training dataset version
             name: Name of the tag to be added.
             value: Value of the tag to be added.
 
@@ -1176,6 +1177,7 @@ class FeatureView:
         """Get the tags of a training dataset.
 
         # Arguments
+            training_dataset_version: training dataset version
             name: Name of the tag to get.
 
         # Returns
@@ -1205,6 +1207,7 @@ class FeatureView:
         """Delete a tag attached to a training dataset.
 
         # Arguments
+            training_dataset_version: training dataset version
             name: Name of the tag to be removed.
 
         # Raises
@@ -1214,17 +1217,17 @@ class FeatureView:
             self, name, training_dataset_version=training_dataset_version
         )
 
-    def purge_training_data(self, version: int):
+    def purge_training_data(self, training_dataset_version: int):
         """Delete a training dataset (data only).
 
         # Arguments
-            version: Version of the training dataset to be removed.
+            training_dataset_version: Version of the training dataset to be removed.
 
         # Raises
             `RestAPIError` in case the backend fails to delete the training dataset.
         """
         self._feature_view_engine.delete_training_dataset_only(
-            self, training_data_version=version
+            self, training_data_version=training_dataset_version
         )
 
     def purge_all_training_data(self):
@@ -1237,17 +1240,17 @@ class FeatureView:
         """
         self._feature_view_engine.delete_training_dataset_only(self)
 
-    def delete_training_dataset(self, version: int):
+    def delete_training_dataset(self, training_dataset_version: int):
         """Delete a training dataset.
 
         # Arguments
-            version: Version of the training dataset to be removed.
+            training_dataset_version: Version of the training dataset to be removed.
 
         # Raises
             `RestAPIError` in case the backend fails to delete the training dataset.
         """
         self._feature_view_engine.delete_training_data(
-            self, training_data_version=version
+            self, training_data_version=training_dataset_version
         )
 
     def delete_all_training_datasets(self):
