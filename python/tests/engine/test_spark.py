@@ -33,6 +33,7 @@ from pyspark.sql.types import (
     BooleanType,
     StructField,
     MapType,
+    ArrayType
 )
 
 from hsfs import (
@@ -49,6 +50,7 @@ from hsfs.core import training_dataset_engine
 from hsfs.engine import spark
 from hsfs.constructor import query, hudi_feature_group_alias
 from hsfs.client import exceptions
+from hsfs.training_dataset_feature import TrainingDatasetFeature
 
 engine._engine_type = "spark"
 
@@ -3617,6 +3619,65 @@ class TestSpark:
 
         # Assert
         assert result == "int"
+
+    def test_cast_column_type(self):
+        class LabelIndex:
+            def __init__(self, label, index):
+                self.label = label
+                self.index = index
+
+        spark_engine = spark.Engine()
+        d = {
+            "string": ["s"],
+            "bigint": ["1"],
+            "int": ["1"],
+            "float": ["1"],
+            "double": ["1"],
+            "timestamp": [1641340800000],
+            "boolean": ["False"],
+            "date": ["2022-01-27"],
+            "binary": ["1"],
+            "array<string>": [["123"]],
+            "struc": [LabelIndex("0", "1")]
+        }
+        df = pd.DataFrame(data=d)
+        spark_df = spark_engine._spark_session.createDataFrame(df)
+        schema = [
+            TrainingDatasetFeature("string", type="string"),
+            TrainingDatasetFeature("bigint", type="bigint"),
+            TrainingDatasetFeature("int", type="int"),
+            TrainingDatasetFeature("float", type="float"),
+            TrainingDatasetFeature("double", type="double"),
+            TrainingDatasetFeature("timestamp", type="timestamp"),
+            TrainingDatasetFeature("boolean", type="boolean"),
+            TrainingDatasetFeature("date", type="date"),
+            TrainingDatasetFeature("binary", type="binary"),
+            TrainingDatasetFeature("array<string>", type="array<string>"),
+            TrainingDatasetFeature(
+                "struc", type="struct<label:string,index:int>"
+            )
+        ]
+        cast_df = spark_engine.cast_column_type(spark_df, schema)
+        expected = {
+            "string": StringType(),
+            "bigint": LongType(),
+            "int": IntegerType(),
+            "float": FloatType(),
+            "double": DoubleType(),
+            "timestamp": TimestampType(),
+            "boolean": BooleanType(),
+            "date": DateType(),
+            "binary": BinaryType(),
+            "array<string>": ArrayType(StringType()),
+            "struc": StructType(
+                [
+                    StructField("label", StringType(), True),
+                    StructField("index", IntegerType(), True),
+                ]
+            )
+        }
+        for col in cast_df.dtypes:
+            assert col[1] == expected[col[0]].simpleString()
 
     def test_convert_spark_type_using_hudi_byte_type(self):
         # Arrange
