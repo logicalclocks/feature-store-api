@@ -3,6 +3,7 @@ package com.logicalclocks.hsfs.engine;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
@@ -227,13 +228,22 @@ public class FeatureViewEngine {
           Map<String, Dataset<Row>> datasets = Maps.newHashMap();
           for (Split split : splits) {
             datasets.put(split.getName(),
-                trainingDatasetEngine.read(trainingDatasetUpdated, split.getName(), userReadOptions));
+                castColumnType(
+                    trainingDatasetUpdated.getDataFormat(),
+                    trainingDatasetEngine.read(trainingDatasetUpdated, split.getName(), userReadOptions),
+                    featureView.getFeatures()
+                )
+            );
           }
           return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
               datasets, featureView.getLabels());
         } else {
           return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
-              trainingDatasetEngine.read(trainingDatasetUpdated, "", userReadOptions), featureView.getLabels()
+              castColumnType(
+                  trainingDatasetUpdated.getDataFormat(),
+                  trainingDatasetEngine.read(trainingDatasetUpdated, "", userReadOptions),
+                  featureView.getFeatures()),
+              featureView.getLabels()
           );
         }
       } catch (InvalidInputException e) {
@@ -259,6 +269,15 @@ public class FeatureViewEngine {
         computeStatistics(featureView, trainingDatasetUpdated, new Dataset[] {dataset});
       }
       return trainingDatasetBundle;
+    }
+  }
+
+  private Dataset<Row> castColumnType(
+      DataFormat dataFormat, Dataset<Row> dataset, List<TrainingDatasetFeature> features) throws FeatureStoreException {
+    if (DataFormat.CSV.equals(dataFormat) || DataFormat.TSV.equals(dataFormat)) {
+      return SparkEngine.getInstance().castColumnType(dataset, features);
+    } else {
+      return dataset;
     }
   }
 
