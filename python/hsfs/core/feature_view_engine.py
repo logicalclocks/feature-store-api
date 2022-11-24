@@ -277,8 +277,7 @@ class FeatureViewEngine:
 
         if td_updated.training_dataset_type != td_updated.IN_MEMORY:
             split_df = self._read_from_storage_connector(
-                td_updated, td_updated.splits, read_options,
-                feature_view_obj.schema
+                td_updated, td_updated.splits, read_options, feature_view_obj.schema
             )
         else:
             self._check_feature_group_accessibility(feature_view_obj)
@@ -371,7 +370,7 @@ class FeatureViewEngine:
                     self._read_dir_from_storage_connector(
                         training_data_obj, path, read_options
                     ),
-                    schema
+                    schema,
                 )
             return result
         else:
@@ -381,14 +380,12 @@ class FeatureViewEngine:
                 self._read_dir_from_storage_connector(
                     training_data_obj, path, read_options
                 ),
-                schema
+                schema,
             )
 
     def _cast_column_type(self, data_format, df, schema):
         if data_format == "csv" or data_format == "tsv":
-            return engine.get_instance().cast_column_type(
-                df, schema
-            )
+            return engine.get_instance().cast_column_type(df, schema)
         else:
             return df
 

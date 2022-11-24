@@ -807,7 +807,7 @@ public class SparkEngine {
     Matcher m = arrayPattern.matcher(type);
     if (m.matches()) {
       return DataTypes.createArrayType(convertColumnType(m.group(1)));
-    } else if(type.contains("struct<label:string,index:int>")) {
+    } else if (type.contains("struct<label:string,index:int>")) {
       StructField label = new StructField("label", DataTypes.StringType, true, Metadata.empty());
       StructField index = new StructField("index", DataTypes.IntegerType, true, Metadata.empty());
       return DataTypes.createStructType(new StructField[]{label, index});

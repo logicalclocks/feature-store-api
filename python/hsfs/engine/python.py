@@ -260,7 +260,7 @@ class Engine:
             "timestamp": np.dtype("datetime64[ns]"),
             "boolean": np.dtype("bool"),
             "date": np.dtype("datetime64[ns]"),
-            "binary": np.dtype("uint8")
+            "binary": np.dtype("uint8"),
         }
         if pa_type in pyarrow_2_pd_type:
             return pyarrow_2_pd_type[pa_type]
@@ -272,8 +272,7 @@ class Engine:
     @staticmethod
     def cast_column_type(df, schema):
         pd_schema = dict(
-            [(_feat.name, Engine._convert_column_type(_feat.type))
-             for _feat in schema]
+            [(_feat.name, Engine._convert_column_type(_feat.type)) for _feat in schema]
         )
         return df.astype(pd_schema)
 

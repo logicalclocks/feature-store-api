@@ -60,7 +60,7 @@ try:
         StructType,
         BinaryType,
         BooleanType,
-        StructField
+        StructField,
     )
 except ImportError:
     pass
@@ -838,12 +838,14 @@ class Engine:
     @staticmethod
     def _convert_column_type(pa_type):
         if "array<" == pa_type[:6]:
-            return ArrayType(Engine._convert_column_type(pa_type[6: -1]))
+            return ArrayType(Engine._convert_column_type(pa_type[6:-1]))
         elif "struct<label:string,index:int>" in pa_type:
-            return StructType([
-                StructField("label", StringType(), True),
-                StructField("index", IntegerType(), True)
-            ])
+            return StructType(
+                [
+                    StructField("label", StringType(), True),
+                    StructField("index", IntegerType(), True),
+                ]
+            )
         else:
             return Engine._convert_basic_type(pa_type)
 
@@ -858,7 +860,7 @@ class Engine:
             "timestamp": TimestampType(),
             "boolean": BooleanType(),
             "date": DateType(),
-            "binary": BinaryType()
+            "binary": BinaryType(),
         }
         if pa_type in pyarrow_2_spark_type:
             return pyarrow_2_spark_type[pa_type]
@@ -870,8 +872,7 @@ class Engine:
     @staticmethod
     def cast_column_type(df, schema):
         pyspark_schema = dict(
-            [(_feat.name, Engine._convert_column_type(_feat.type))
-             for _feat in schema]
+            [(_feat.name, Engine._convert_column_type(_feat.type)) for _feat in schema]
         )
         for _feat in pyspark_schema:
             df = df.withColumn(_feat, col(_feat).cast(pyspark_schema[_feat]))
