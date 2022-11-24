@@ -67,6 +67,12 @@ class Connection:
                 hostname_verification=True)         # Disable for self-signed certificates
             )
             fs = conn.get_feature_store()           # Get the project's default feature store
+
+            # or
+
+            import hopsworks
+            project = hopsworks.login()
+            fs = project.get_feature_store()
         ```
 
     Clients in external clusters need to connect to the Hopsworks Feature Store using an
@@ -146,6 +152,20 @@ class Connection:
 
         Defaulting to the project name of default feature store. To get a
         Shared feature stores, the project name of the feature store is required.
+
+        !!! example "How to get feature store instance"
+
+            ```python
+            import hsfs
+            conn = hsfs.connection()
+            fs = conn.get_feature_store()
+
+            # or
+
+            import hopsworks
+            project = hopsworks.login()
+            fs = project.get_feature_store()
+            ```
 
         # Arguments
             name: The name of the feature store, defaults to `None`.
@@ -233,6 +253,13 @@ class Connection:
         external environments such as AWS SageMaker.
 
         Usage is recommended but optional.
+
+        !!! example
+            ```python
+            import hsfs
+            conn = hsfs.connection()
+            conn.close()
+            ```
         """
         client.stop()
         self._feature_store_api = None

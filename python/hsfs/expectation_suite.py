@@ -223,6 +223,18 @@ class ExpectationSuite:
         """
         Fetch expectation with expectation_id from the backend.
 
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            expectation_suite = fg.get_expectation_suite()
+            selected_expectation = expectation_suite.get_expectation(expectation_id=123)
+            ```
+
         # Arguments
             expectation_id: Id of the expectation to fetch from the backend.
             ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
@@ -252,6 +264,32 @@ class ExpectationSuite:
         """
         Append an expectation to the local suite or in the backend if attached to a Feature Group.
 
+        !!! example
+            ```python
+            # check if the minimum value of specific column is within a range of 0 and 1
+            expectation_suite.add_expectation(
+                ge.core.ExpectationConfiguration(
+                    expectation_type="expect_column_min_to_be_between",
+                    kwargs={
+                        "column": "foo_id",
+                        "min_value": 0,
+                        "max_value": 1
+                    }
+                )
+            )
+
+            # check if the length of specific column value is within a range of 3 and 10
+            expectation_suite.add_expectation(
+                ge.core.ExpectationConfiguration(
+                    expectation_type="expect_column_value_lengths_to_be_between",
+                    kwargs={
+                        "column": "bar_name",
+                        "min_value": 3,
+                        "max_value": 10
+                    }
+                )
+            )
+            ```
         # Arguments
             expectation: The new expectation object.
             ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
@@ -286,6 +324,11 @@ class ExpectationSuite:
         """
         Update an expectation from the suite locally or from the backend if attached to a Feature Group.
 
+        !!! example
+            ```python
+            updated_expectation = expectation_suite.replace_expectation(new_expectation_object)
+            ```
+
         # Arguments
             expectation: The updated expectation object. The meta field should contain an expectationId field.
             ge_type: Whether to return native Great Expectations object or Hopsworks abstraction, defaults to True.
@@ -319,6 +362,11 @@ class ExpectationSuite:
     def remove_expectation(self, expectation_id: Optional[int] = None) -> None:
         """
         Remove an expectation from the suite locally and from the backend if attached to a Feature Group.
+
+        !!! example
+            ```python
+            expectation_suite.remove_expectation(expectation_id=123)
+            ```
 
         # Arguments
             expectation_id: Id of the expectation to remove. The expectation will be deleted both locally and from the backend.
