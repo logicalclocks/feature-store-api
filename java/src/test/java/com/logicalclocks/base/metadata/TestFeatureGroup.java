@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022. Hopsworks AB
+ *  Copyright (c) 2022-2022. Hopsworks AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -20,6 +20,10 @@ package com.logicalclocks.base.metadata;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.engine.FeatureGroupBaseEngine;
+import com.logicalclocks.base.metadata.FeatureGroupApi;
+import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.metadata.Subject;
+import com.logicalclocks.base.metadata.TagsApi;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.HopsworksConnection;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
@@ -130,7 +134,6 @@ public class TestFeatureGroup {
   @Test
   public void testFeatureGroupAppendFeaturesResetSubject() throws FeatureStoreException, IOException, ParseException {
     // Arrange
-    HopsworksClient.setInstance(new HopsworksClient(Mockito.mock(HopsworksHttpClient.class),  ""));
     FeatureStore featureStore = Mockito.mock(FeatureStore.class);
     FeatureGroupApi featureGroupApi = Mockito.mock(FeatureGroupApi.class);
     FeatureGroupBase featureGroupBase = Mockito.mock(FeatureGroupBase.class);
@@ -149,7 +152,8 @@ public class TestFeatureGroup {
 
     featureGroup.subject = new Subject();
 
-    featureGroup.featureGroupBaseEngine =  new FeatureGroupBaseEngine(featureGroupApi, Mockito.mock(TagsApi.class));
+    featureGroup.featureGroupBaseEngine = new FeatureGroupBaseEngine(
+        featureGroupApi, Mockito.mock(TagsApi.class));
 
     // Act
     featureGroup.appendFeatures(new Feature("featureD"));
