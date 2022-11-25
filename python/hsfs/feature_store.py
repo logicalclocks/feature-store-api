@@ -115,6 +115,17 @@ class FeatureStore:
         so you can subsequently read the data into a Spark or Pandas DataFrame or use
         the `Query`-API to perform joins between feature groups.
 
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            fg = fs.get_feature_group(
+                    name="electricity_prices",
+                    version=1,
+                )
+            ```
+
         # Arguments
             name: Name of the feature group to get.
             version: Version of the feature group to retrieve, defaults to `None` and will
@@ -145,6 +156,16 @@ class FeatureStore:
         Getting a feature group from the Feature Store means getting its metadata handle
         so you can subsequently read the data into a Spark or Pandas DataFrame or use
         the `Query`-API to perform joins between feature groups.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            fgs_list = fs.get_feature_groups(
+                    name="electricity_prices"
+                )
+            ```
 
         # Arguments
             name: Name of the feature group to get.
@@ -191,6 +212,13 @@ class FeatureStore:
         metadata handle so you can subsequently read the data into a Spark or
         Pandas DataFrame or use the `Query`-API to perform joins between feature groups.
 
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            external_fg = fs.get_external_feature_group("external_fg_test")
+            ```
         # Arguments
             name: Name of the external feature group to get.
             version: Version of the external feature group to retrieve,
@@ -244,6 +272,13 @@ class FeatureStore:
         metadata handle so you can subsequently read the data into a Spark or
         Pandas DataFrame or use the `Query`-API to perform joins between feature groups.
 
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            external_fgs_list = fs.get_external_feature_groups("external_fg_test")
+            ```
         # Arguments
             name: Name of the external feature group to get.
 
@@ -324,12 +359,12 @@ class FeatureStore:
         `get_online_storage_connector` method to get the JDBC connector for the Online
         Feature Store.
 
-        !!! example "Getting a Storage Connector"
+        !!! example
             ```python
+            # connect to the Feature Store
+            fs = ...
 
             sc = fs.get_storage_connector("demo_fs_meb10000_Training_Datasets")
-
-            td = fs.create_training_dataset(..., storage_connector=sc, ...)
             ```
 
         # Arguments
@@ -348,6 +383,15 @@ class FeatureStore:
         read_options: Optional[dict] = {},
     ):
         """Execute SQL command on the offline or online feature store database
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # construct the query and show head rows
+            query_res_head = fs.sql(\"SELECT * FROM `fg_1`\").head()
+            ```
 
         # Arguments
             query: The SQL query to execute.
@@ -374,6 +418,14 @@ class FeatureStore:
 
         The returned storage connector depends on the project that you are connected to.
 
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            online_storage_connector = fs.get_online_storage_connector()
+            ```
+
         # Returns
             `StorageConnector`. JDBC storage connector to the Online Feature Store.
         """
@@ -398,6 +450,21 @@ class FeatureStore:
         ] = None,
     ):
         """Create a feature group metadata object.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            fg = fs.create_feature_group(
+                    name='air_quality',
+                    description='Air Quality characteristics of each day',
+                    version=1,
+                    primary_key=['city','date'],
+                    online_enabled=True,
+                    event_time=['date']
+                )
+            ```
 
         !!! note "Lazy"
             This method is lazy and does not persist any metadata or feature data in the
@@ -489,6 +556,21 @@ class FeatureStore:
         stream: Optional[bool] = False,
     ):
         """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            fg = fs.get_or_create_feature_group(
+                    name="electricity_prices",
+                    version=1,
+                    description="Electricity prices from NORD POOL",
+                    primary_key=["day", "area"],
+                    online_enabled=True,
+                    event_time="timestamp",
+                    )
+            ```
 
         !!! note "Lazy"
             This method is lazy and does not persist any metadata or feature data in the
@@ -680,6 +762,22 @@ class FeatureStore:
     ):
         """Create a external feature group metadata object.
 
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            external_fg = fs.create_external_feature_group(
+                                name="sales",
+                                version=1,
+                                description="Physical shop sales features",
+                                query=query,
+                                storage_connector=connector,
+                                primary_key=['ss_store_sk'],
+                                event_time='sale_date'
+                                )
+            ```
+
         !!! note "Lazy"
             This method is lazy and does not persist any metadata in the
             feature store on its own. To persist the feature group metadata in the feature store,
@@ -786,7 +884,6 @@ class FeatureStore:
             6. orc
 
             Currently not supported petastorm, hdf5 and npy file formats.
-
 
         # Arguments
             name: Name of the training dataset to create.
@@ -1038,7 +1135,33 @@ class FeatureStore:
         labels: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
-        """Create a feature view metadata object and saved it to Hopsworks.
+        """Create a feature view metadata object and saved it to hopsworks.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the feature group instances
+            fg1 = fs.get_or_create_feature_group(...)
+            fg2 = fs.get_or_create_feature_group(...)
+
+            # construct the query
+            query = fg1.select_all().join(fg2.select_all())
+
+            # get the transformation functions
+            standard_scaler = fs.get_transformation_function(name='standard_scaler')
+
+            # construct dictionary of "feature - transformation function" pairs
+            transformation_functions = {col_name: standard_scaler for col_name in df.columns}
+
+            feature_view = fs.create_feature_view(
+                name='air_quality_fv',
+                version=1,
+                transformation_functions=transformation_functions,
+                query=query
+            )
+            ```
 
         !!! example 
             ```python
@@ -1107,6 +1230,19 @@ class FeatureStore:
     ):
         """Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
         existing feature view metadata object.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            feature_view = fs.get_or_create_feature_view(
+                name='bitcoin_feature_view',
+                version=1,
+                transformation_functions=transformation_functions,
+                query=query
+            )
+            ```
 
         # Arguments
             name: Name of the feature view to create.

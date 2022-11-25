@@ -19,7 +19,6 @@ import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
@@ -29,14 +28,24 @@ import com.logicalclocks.hsfs.metadata.TagsApi;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.text.ParseException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class FeatureGroupBaseEngine {
-  protected FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  protected TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
+  protected FeatureGroupApi featureGroupApi;
+  protected TagsApi tagsApi;
+
+  public FeatureGroupBaseEngine() {
+    featureGroupApi = new FeatureGroupApi();
+    tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
+  }
+
+  // for testing
+  public FeatureGroupBaseEngine(FeatureGroupApi featureGroupApi, TagsApi tagsApi) {
+    this.featureGroupApi = featureGroupApi;
+    this.tagsApi = tagsApi;
+  }
 
   public void delete(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {
     featureGroupApi.delete(featureGroupBase);
@@ -86,6 +95,7 @@ public class FeatureGroupBaseEngine {
     featureGroup.setFeatures(newFeatures);
     T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata", fgClass);
     featureGroup.setFeatures(apiFG.getFeatures());
+    featureGroup.unloadSubject();
   }
 
   public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features,
@@ -95,10 +105,9 @@ public class FeatureGroupBaseEngine {
     T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata",
         fgClass);
     featureGroup.setFeatures(apiFG.getFeatures());
+    featureGroup.unloadSubject();
     if (featureGroup instanceof FeatureGroup) {
-      SparkEngine.getInstance().writeOfflineDataframe((FeatureGroup) featureGroup,
-          SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features),
-          HudiOperationType.UPSERT, new HashMap<>(), null);
+      SparkEngine.getInstance().writeEmptyDataframe(featureGroup);
     }
   }
 

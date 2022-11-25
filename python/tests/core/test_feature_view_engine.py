@@ -134,7 +134,9 @@ class TestFeatureViewEngine:
         )
 
         fv = feature_view.FeatureView(
-            name="fv_name", query=query.as_of(1000), featurestore_id=feature_store_id
+            name="fv_name",
+            query=query.as_of(1000000000),
+            featurestore_id=feature_store_id,
         )
 
         # Act
@@ -449,7 +451,10 @@ class TestFeatureViewEngine:
 
         # Act
         fv_engine.get_batch_query(
-            feature_view_obj=fv, start_time=1, end_time=2, with_label=False
+            feature_view_obj=fv,
+            start_time=1000000000,
+            end_time=2000000000,
+            with_label=False,
         )
 
         # Assert
@@ -486,7 +491,7 @@ class TestFeatureViewEngine:
 
         # Act
         result = fv_engine.get_batch_query_string(
-            feature_view_obj=fv, start_time=1, end_time=2
+            feature_view_obj=fv, start_time=1000000000, end_time=2000000000
         )
 
         # Assert
@@ -526,7 +531,7 @@ class TestFeatureViewEngine:
 
         # Act
         result = fv_engine.get_batch_query_string(
-            feature_view_obj=fv, start_time=1, end_time=2
+            feature_view_obj=fv, start_time=1000000000, end_time=2000000000
         )
 
         # Assert

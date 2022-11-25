@@ -57,6 +57,20 @@ class Feature:
             self._feature_group_id = feature_group_id
 
     def to_dict(self):
+        """Get structured info about specific Feature in python dictionary format.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            selected_feature = fg.get_feature("min_temp")
+            selected_feature.to_dict()
+            ```
+        """
         return {
             "name": self._name,
             "type": self._type,
@@ -81,7 +95,20 @@ class Feature:
         return cls(**json_decamelized)
 
     def is_complex(self):
-        """Returns true if the feature has a complex type."""
+        """Returns true if the feature has a complex type.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            selected_feature = fg.get_feature("min_temp")
+            selected_feature.is_complex()
+            ```
+        """
         return any(map(self._type.upper().startswith, self.COMPLEX_TYPES))
 
     @property

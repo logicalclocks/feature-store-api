@@ -181,9 +181,9 @@ class HudiEngine:
         return hudi_options
 
     def _setup_hudi_read_opts(self, hudi_fg_alias, read_options):
-        if (
-            hudi_fg_alias.left_feature_group_end_timestamp is None
-            and hudi_fg_alias.left_feature_group_start_timestamp is None
+        if hudi_fg_alias.left_feature_group_end_timestamp is None and (
+            hudi_fg_alias.left_feature_group_start_timestamp is None
+            or hudi_fg_alias.left_feature_group_start_timestamp == 0
         ):
             # snapshot query latest state
             hudi_options = {
@@ -234,6 +234,26 @@ class HudiEngine:
             hudi_options.update(read_options)
 
         return hudi_options
+
+    def reconcile_hudi_schema(
+        self, save_empty_dataframe_callback, hudi_fg_alias, read_options
+    ):
+        fg_table_name = hudi_fg_alias.feature_group._get_table_name()
+        if sorted(self._spark_session.table(hudi_fg_alias.alias).columns) != sorted(
+            self._spark_session.table(fg_table_name).columns
+        ):
+            full_fg = self._feature_group_api.get(
+                hudi_fg_alias.feature_group.name,
+                hudi_fg_alias.feature_group.version,
+                feature_group_api.FeatureGroupApi.CACHED,
+            )
+
+            save_empty_dataframe_callback(full_fg)
+
+            self.register_temporary_table(
+                hudi_fg_alias,
+                read_options,
+            )
 
     @staticmethod
     def _get_last_commit_metadata(spark_context, base_path):

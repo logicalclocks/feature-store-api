@@ -1505,7 +1505,7 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1, 2]}
+        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1000000000, 2000000000]}
         df = pd.DataFrame(data=d)
 
         td = training_dataset.TrainingDataset(
@@ -1516,9 +1516,9 @@ class TestPython:
             splits={"col1": None, "col2": None},
             label=["f", "f_wrong"],
             id=10,
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
         f = feature.Feature(name="col1", type="str")
@@ -1570,7 +1570,7 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1, 2]}
+        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1000000000, 2000000000]}
         df = pd.DataFrame(data=d)
 
         mock_python_engine_time_series_split.return_value = {
@@ -1586,9 +1586,9 @@ class TestPython:
             splits={"col1": None, "col2": None},
             label=["f", "f_wrong"],
             id=10,
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
         fg = feature_group.FeatureGroup(
@@ -1693,9 +1693,9 @@ class TestPython:
             splits={"col1": None, "col2": None},
             label=["f", "f_wrong"],
             id=10,
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
         expected = {"train": df.loc[df["col1"] == 1], "test": df.loc[df["col1"] == 2]}
@@ -1730,9 +1730,9 @@ class TestPython:
             splits={"col1": None, "col2": None},
             label=["f", "f_wrong"],
             id=10,
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
         expected = {"train": df.loc[df["col1"] == 1], "test": df.loc[df["col1"] == 2]}
@@ -1758,7 +1758,7 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1000, 2000]}
+        d = {"col1": [1, 2], "col2": [3, 4], "event_time": [1000000000, 2000000000]}
         df = pd.DataFrame(data=d)
 
         td = training_dataset.TrainingDataset(
@@ -1769,9 +1769,9 @@ class TestPython:
             splits={"col1": None, "col2": None},
             label=["f", "f_wrong"],
             id=10,
-            train_start=1,
-            train_end=2,
-            test_end=3,
+            train_start=1000000000,
+            train_end=2000000000,
+            test_end=3000000000,
         )
 
         expected = {"train": df.loc[df["col1"] == 1], "test": df.loc[df["col1"] == 2]}
@@ -2087,24 +2087,12 @@ class TestPython:
             == "Stream ingestion is not available on Python environments, because it requires Spark as engine."
         )
 
-    def test_get_empty_appended_dataframe(self):
-        # Arrange
-        python_engine = python.Engine()
-
-        # Act
-        result = python_engine.get_empty_appended_dataframe(
-            dataframe=None, new_features=None
-        )
-
-        # Assert
-        assert result is None
-
     def test_save_empty_dataframe(self):
         # Arrange
         python_engine = python.Engine()
 
         # Act
-        result = python_engine.save_empty_dataframe(feature_group=None, dataframe=None)
+        result = python_engine.save_empty_dataframe(feature_group=None)
 
         # Assert
         assert result is None
@@ -2347,14 +2335,26 @@ class TestPython:
 
     def test_kafka_produce(self, mocker):
         # Arrange
+        mocker.patch("hsfs.client.get_instance")
+
         python_engine = python.Engine()
 
         producer = mocker.Mock()
 
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            stream=False,
+        )
+
         # Act
         python_engine._kafka_produce(
             producer=producer,
-            feature_group=mocker.Mock(),
+            feature_group=fg,
             key=None,
             encoded_row=None,
             acked=None,
@@ -2367,6 +2367,7 @@ class TestPython:
 
     def test_kafka_produce_buffer_error(self, mocker):
         # Arrange
+        mocker.patch("hsfs.client.get_instance")
         mock_print = mocker.patch("builtins.print")
 
         python_engine = python.Engine()
@@ -2374,10 +2375,20 @@ class TestPython:
         producer = mocker.Mock()
         producer.produce.side_effect = [BufferError("test_error"), None]
 
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            stream=False,
+        )
+
         # Act
         python_engine._kafka_produce(
             producer=producer,
-            feature_group=mocker.Mock(),
+            feature_group=fg,
             key=None,
             encoded_row=None,
             acked=None,

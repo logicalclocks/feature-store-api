@@ -90,7 +90,11 @@ public class TestStorageConnector {
     Files.write(credentialsFile, credentials.getBytes());
 
     StorageConnector.GcsConnector gcsConnector = new StorageConnector.GcsConnector();
-    gcsConnector.setKeyPath("file://" + credentialsFile);
+    if (SystemUtils.IS_OS_WINDOWS) {
+      gcsConnector.setKeyPath("file:///" + credentialsFile.toString().replace( "\\", "/" ));
+    } else {
+      gcsConnector.setKeyPath("file://" + credentialsFile);
+    }
     gcsConnector.setStorageConnectorType(StorageConnectorType.GCS);
     // Act
     gcsConnector.prepareSpark();
@@ -120,7 +124,11 @@ public class TestStorageConnector {
     Files.write(credentialsFile, credentials.getBytes());
 
     StorageConnector.GcsConnector gcsConnector = new StorageConnector.GcsConnector();
-    gcsConnector.setKeyPath("file://" + credentialsFile);
+    if (SystemUtils.IS_OS_WINDOWS) {
+      gcsConnector.setKeyPath("file:///" + credentialsFile.toString().replace( "\\", "/" ));
+    } else {
+      gcsConnector.setKeyPath("file://" + credentialsFile);
+    }
     gcsConnector.setStorageConnectorType(StorageConnectorType.GCS);
     gcsConnector.setAlgorithm("AES256");
     gcsConnector.setEncryptionKey("encryptionkey");

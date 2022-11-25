@@ -26,7 +26,7 @@ class TestUtil:
         assert dt == "20220101000000000"
 
     def test_convert_event_time_to_timestamp_timestamp(self):
-        dt = util.convert_event_time_to_timestamp(1640995200000)
+        dt = util.convert_event_time_to_timestamp(1640995200)
         assert dt == 1640995200000
 
     def test_convert_event_time_to_timestamp_datetime(self):
@@ -45,6 +45,10 @@ class TestUtil:
 
     def test_convert_event_time_to_timestamp_string(self):
         dt = util.convert_event_time_to_timestamp("2022-01-01 00:00:00")
+        assert dt == 1640995200000
+
+    def test_convert_iso_event_time_to_timestamp_string(self):
+        dt = util.convert_event_time_to_timestamp("2022-01-01T00:00:00.000000Z")
         assert dt == 1640995200000
 
     def test_convert_event_time_to_timestamp_yyyy_mm_dd(self):
@@ -78,3 +82,7 @@ class TestUtil:
     def test_convert_event_time_to_timestamp_yyyy_mm_dd_hh_mm_ss_error3(self):
         with pytest.raises(ValueError):
             util.get_timestamp_from_date_string("00:00:00 2022-01-01")
+
+    def test_convert_hudi_commit_time_to_timestamp(self):
+        timestamp = util.get_timestamp_from_date_string("20221118095233099")
+        assert timestamp == 1668765153099

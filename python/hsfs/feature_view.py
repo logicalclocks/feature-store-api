@@ -21,6 +21,7 @@ from typing import Optional, Union, List, Dict, Any
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 import humps
+import copy
 
 from hsfs import util, training_dataset_feature, storage_connector, training_dataset
 from hsfs.constructor import query, filter
@@ -55,7 +56,14 @@ class FeatureView:
         self._version = version
         self._description = description
         self._labels = labels
-        self._transformation_functions = transformation_functions
+        self._transformation_functions = (
+            {
+                ft_name: copy.deepcopy(transformation_functions[ft_name])
+                for ft_name in transformation_functions
+            }
+            if transformation_functions
+            else transformation_functions
+        )
         self._features = []
         self._feature_view_engine = feature_view_engine.FeatureViewEngine(
             featurestore_id
@@ -146,7 +154,6 @@ class FeatureView:
             fs.get_feature_view("feature_view_name", 1).description
             ```
 
-        # Arguments
         # Returns
             `FeatureView` Updated feature view.
         # Raises
@@ -268,9 +275,9 @@ class FeatureView:
             ```
         # Arguments
             start_time: Start event time for the batch query. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
-                `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
+                `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             end_time: End event time for the batch query. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
-                `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
+                `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
 
         # Returns
             `str`: batch query
@@ -418,11 +425,14 @@ class FeatureView:
         # Arguments
             start_time: Start event time for the batch query. Optional. Strings should be
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             end_time: End event time for the batch query. Optional. Strings should be
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             read_options: User provided read options. Defaults to `{}`.
+
+        # Returns
+            `DataFrame`: A dataframe
         """
 
         if self._batch_scoring_server is None:
@@ -455,7 +465,7 @@ class FeatureView:
             # attach a tag to a feature view
             feature_view.add_tag(name="tag_schema", value={"key", "value"})
             ```
-
+            
         # Arguments
             name: Name of the tag to be added.
             value: Value of the tag to be added.
@@ -466,7 +476,8 @@ class FeatureView:
         return self._feature_view_engine.add_tag(self, name, value)
 
     def get_tag(self, name: str):
-        """ 
+        """Get the tags of a feature view.
+        
         !!! example 
             ```python
             # get feature store instance 
@@ -477,12 +488,22 @@ class FeatureView:
 
             # get a tag of a feature view
             name = feature_view.get_tag('tag_name')
-            ```
+            ```        
+          
+        # Arguments
+            name: Name of the tag to get.
+
+        # Returns
+            tag value
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tag.
         """
         return self._feature_view_engine.get_tag(self, name)
 
     def get_tags(self):
-        """ 
+        """ Returns all tags attached to a training dataset.
+        
         !!! example 
             ```python
             # get feature store instance 
@@ -494,11 +515,18 @@ class FeatureView:
             # get tags
             list_tags = feature_view.get_tags()
             ```
+            
+        # Returns
+            `Dict[str, obj]` of tags.
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._feature_view_engine.get_tags(self)
 
     def delete_tag(self, name: str):
-        """
+        """Delete a tag attached to a feature view.
+        
         !!! example 
             ```python
             # get feature store instance 
@@ -510,6 +538,12 @@ class FeatureView:
             # delete a tag
             feature_view.delete_tag('name_of_tag')
             ```
+
+        # Arguments
+            name: Name of the tag to be removed.
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the tag.
         """
         return self._feature_view_engine.delete_tag(self, name)
 
@@ -613,10 +647,10 @@ class FeatureView:
         # Arguments
             start_time: Start event time for the training dataset query. Optional. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             end_time: End event time for the training dataset query. Optional. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -824,16 +858,16 @@ class FeatureView:
             test_size: size of test set.
             train_start: Start event time for the train split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             train_end: End event time for the train split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             test_start: Start event time for the test split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             test_end: End event time for the test split query. Strings should
                 be  formatted in one of the following ormats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -1032,22 +1066,22 @@ class FeatureView:
             test_size: size of test set.
             train_start: Start event time for the train split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             train_end: End event time for the train split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             validation_start: Start event time for the validation split query. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             validation_end: End event time for the validation split query. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             test_start: Start event time for the test split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             test_end: End event time for the test split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             storage_connector: Storage connector defining the sink location for the
                 training dataset, defaults to `None`, and materializes training dataset
                 on HopsFS.
@@ -1223,11 +1257,11 @@ class FeatureView:
             start_time: Start event time for the training dataset query. Strings should
             be formatted in one of the following
                 formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             end_time: End event time for the training dataset query. Strings should be
             formatted in one of the following
                 formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -1335,13 +1369,13 @@ class FeatureView:
                 or `%Y-%m-%d %H:%M:%S.%f`.
             train_end: End event time for the train split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             test_start: Start event time for the test split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             test_end: End event time for the test split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -1475,22 +1509,22 @@ class FeatureView:
             test_size: size of test set. Should be between 0 and 1.
             train_start: Start event time for the train split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             train_end: End event time for the train split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             validation_start: Start event time for the validation split query. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             validation_end: End event time for the validation split query. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             test_start: Start event time for the test split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             test_end: End event time for the test split query. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+                or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
@@ -1730,13 +1764,21 @@ class FeatureView:
                 value={"key", "value"}
             )
             ```
+            
+        # Arguments
+            name: Name of the tag to be added.
+            value: Value of the tag to be added.
+
+        # Raises
+            `RestAPIError` in case the backend fails to add the tag.
         """
         return self._feature_view_engine.add_tag(
             self, name, value, training_dataset_version=training_dataset_version
         )
 
     def get_training_dataset_tag(self, training_dataset_version: int, name: str):
-        """
+        """Get the tags of a training dataset.
+        
         !!! example 
             ```python
             # get feature store instance 
@@ -1751,13 +1793,23 @@ class FeatureView:
                  name="tag_schema"
             )
             ```
+            
+        # Arguments
+            name: Name of the tag to get.
+
+        # Returns
+            tag value
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tag.
         """
         return self._feature_view_engine.get_tag(
             self, name, training_dataset_version=training_dataset_version
         )
 
     def get_training_dataset_tags(self, training_dataset_version: int):
-        """
+        """Returns all tags attached to a training dataset.
+        
         !!! example 
             ```python
             # get feature store instance 
@@ -1771,13 +1823,20 @@ class FeatureView:
                 training_dataset_version=1
             )
             ```
+
+        # Returns
+            `Dict[str, obj]` of tags.
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._feature_view_engine.get_tags(
             self, training_dataset_version=training_dataset_version
         )
 
     def delete_training_dataset_tag(self, training_dataset_version: int, name: str):
-        """
+        """Delete a tag attached to a training dataset.
+        
         !!! example 
             ```python
             # get feature store instance 
@@ -1792,13 +1851,20 @@ class FeatureView:
                 name='name_of_dataset'
             )
             ```
+
+        # Arguments
+            name: Name of the tag to be removed.
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the tag.
         """
         return self._feature_view_engine.delete_tag(
             self, name, training_dataset_version=training_dataset_version
         )
 
     def purge_training_data(self, version: int):
-        """
+        """Delete a training dataset (data only).
+        
         !!! example 
             ```python
             # get feature store instance 
@@ -1811,13 +1877,20 @@ class FeatureView:
             feature_view.purge_training_data(version=1)
 
             ```        
+            
+        # Arguments
+            version: Version of the training dataset to be removed.
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the training dataset.
         """
         self._feature_view_engine.delete_training_dataset_only(
             self, training_data_version=version
         )
 
     def purge_all_training_data(self):
-        """
+        """Delete all training datasets (data only).
+        
         !!! example 
             ```python
             # get feature store instance 
@@ -1829,11 +1902,17 @@ class FeatureView:
             # purge all training data
             feature_view.purge_all_training_data()
             ```        
+
+        # Arguments
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the training datasets.
         """
         self._feature_view_engine.delete_training_dataset_only(self)
 
     def delete_training_dataset(self, version: int):
-        """
+        """Delete a training dataset.
+        
         !!! example 
             ```python
             # get feature store instance 
@@ -1847,13 +1926,20 @@ class FeatureView:
                 version=1
             )
             ```
+
+        # Arguments
+            version: Version of the training dataset to be removed.
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the training dataset.
         """
         self._feature_view_engine.delete_training_data(
             self, training_data_version=version
         )
 
     def delete_all_training_datasets(self):
-        """
+        """Delete all training datasets.
+        
         !!! example 
             ```python
             # get feature store instance 
@@ -1865,6 +1951,11 @@ class FeatureView:
             # delete all training datasets
             feature_view.delete_all_training_datasets()
             ```
+
+        # Arguments
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the training datasets.
         """
         self._feature_view_engine.delete_training_data(self)
 

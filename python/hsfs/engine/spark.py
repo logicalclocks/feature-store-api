@@ -16,6 +16,7 @@
 
 import os
 import json
+import copy
 import importlib.util
 import re
 import warnings
@@ -39,8 +40,9 @@ try:
         concat,
         col,
         lit,
+        array,
         from_json,
-        unix_timestamp,
+        udf,
     )
     from pyspark.sql.avro.functions import from_avro, to_avro
     from pyspark.sql.types import (
@@ -145,6 +147,9 @@ class Engine:
             hudi_fg_alias,
             read_options,
         )
+        hudi_engine_instance.reconcile_hudi_schema(
+            self.save_empty_dataframe, hudi_fg_alias, read_options
+        )
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "spark"]:
@@ -205,9 +210,18 @@ class Engine:
                     ),
                     util.FeatureGroupWarning,
                 )
-            return dataframe.select(
+
+            lowercase_dataframe = dataframe.select(
                 [col(x).alias(x.lower()) for x in dataframe.columns]
             )
+            nullable_schema = copy.deepcopy(lowercase_dataframe.schema)
+            for struct_field in nullable_schema:
+                struct_field.nullable = True
+            lowercase_dataframe = self._spark_session.createDataFrame(
+                lowercase_dataframe.rdd, nullable_schema
+            )
+
+            return lowercase_dataframe
 
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: spark rdds, spark dataframes, "
@@ -256,7 +270,7 @@ class Engine:
                         feature_group, dataframe, online_write_options
                     )
         except Exception as e:
-            raise FeatureStoreException(e)
+            raise FeatureStoreException(e).with_traceback(e.__traceback__)
 
     def save_stream_dataframe(
         self,
@@ -276,8 +290,14 @@ class Engine:
         if query_name is None:
             query_name = "insert_stream_" + feature_group._online_topic_name
 
+        version = str(feature_group.subject["version"]).encode("utf8")
+
         query = (
-            serialized_df.writeStream.outputMode(output_mode)
+            serialized_df.withColumn(
+                "headers",
+                array(struct(lit("version").alias("key"), lit(version).alias("value"))),
+            )
+            .writeStream.outputMode(output_mode)
             .format(self.KAFKA_FORMAT)
             .option(
                 "checkpointLocation",
@@ -334,7 +354,13 @@ class Engine:
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
-        serialized_df.write.format(self.KAFKA_FORMAT).options(**write_options).option(
+
+        version = str(feature_group.subject["version"]).encode("utf8")
+
+        serialized_df.withColumn(
+            "headers",
+            array(struct(lit("version").alias("key"), lit(version).alias("value"))),
+        ).write.format(self.KAFKA_FORMAT).options(**write_options).option(
             "topic", feature_group._online_topic_name
         ).save()
 
@@ -490,14 +516,13 @@ class Engine:
     def _time_series_split(
         self, training_dataset, dataset, event_time, drop_event_time=False
     ):
-        result_dfs = {}
-        ts_type = dataset.select(event_time).dtypes[0][1]
-        ts_col = (
-            unix_timestamp(col(event_time)) * 1000
-            if ts_type in ["date", "timestamp"]
-            # jdbc supports timestamp precision up to second only.
-            else col(event_time) * 1000
+        # registering the UDF
+        _convert_event_time_to_timestamp = udf(
+            util.convert_event_time_to_timestamp, LongType()
         )
+
+        result_dfs = {}
+        ts_col = _convert_event_time_to_timestamp(col(event_time))
         for split in training_dataset.splits:
             result_df = dataset.filter(ts_col >= split.start_time).filter(
                 ts_col < split.end_time
@@ -860,14 +885,10 @@ class Engine:
             return True
         return False
 
-    def get_empty_appended_dataframe(self, dataframe, new_features):
-        dataframe = dataframe.limit(0)
-        for f in new_features:
-            dataframe = dataframe.withColumn(f.name, lit(None).cast(f.type))
-        return dataframe
+    def save_empty_dataframe(self, feature_group):
+        fg_table_name = feature_group._get_table_name()
+        dataframe = self._spark_session.table(fg_table_name).limit(0)
 
-    def save_empty_dataframe(self, feature_group, dataframe):
-        """Wrapper around save_dataframe in order to provide no-op in python engine."""
         self.save_dataframe(
             feature_group,
             dataframe,
