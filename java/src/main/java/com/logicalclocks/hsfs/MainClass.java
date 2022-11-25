@@ -35,7 +35,7 @@ public class MainClass {
 
     HopsworksConnection connection = HopsworksConnection.builder().build();
 
-    FeatureStore fs = (FeatureStore) connection.getFeatureStore();
+    FeatureStore fs = connection.getFeatureStore();
     LOGGER.info("Feature Store " + fs);
 
     FeatureGroup housingFeatureGroup = fs.createFeatureGroup()

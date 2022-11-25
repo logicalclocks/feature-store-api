@@ -106,7 +106,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   @Setter
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
 
-  private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
+  public final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
 

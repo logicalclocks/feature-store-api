@@ -111,7 +111,7 @@ public class FeatureGroupBase {
   @JsonIgnore
   protected Subject subject;
 
-  private FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
+  protected FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
   protected FeatureGroupUtils utils = new FeatureGroupUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
@@ -313,6 +313,11 @@ public class FeatureGroupBase {
       subject = utils.getSubject(this);
     }
     return subject;
+  }
+
+  @JsonIgnore
+  public void unloadSubject() {
+    this.subject = null;
   }
 
   /**
