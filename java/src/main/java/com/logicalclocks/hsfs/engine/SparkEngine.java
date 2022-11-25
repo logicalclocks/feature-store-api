@@ -94,9 +94,11 @@ import static com.logicalclocks.hsfs.FeatureType.TIMESTAMP;
 import static com.logicalclocks.hsfs.Split.SplitType.TIME_SERIES_SPLIT;
 import static org.apache.spark.sql.avro.functions.from_avro;
 import static org.apache.spark.sql.avro.functions.to_avro;
+import static org.apache.spark.sql.functions.array;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.from_json;
+import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.struct;
 
 public class SparkEngine {
@@ -506,7 +508,15 @@ public class SparkEngine {
   public <S> void writeOnlineDataframe(FeatureGroupBase featureGroupBase, S dataset, String onlineTopicName,
                                          Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
+    byte[] version = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
+
     onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, (Dataset<Row>) dataset))
+        .withColumn("headers", array(
+            struct(
+                lit("version").as("key"),
+                lit(version).as("value")
+            )
+        ))
         .write()
         .format(Constants.KAFKA_FORMAT)
         .options(writeOptions)
@@ -518,10 +528,17 @@ public class SparkEngine {
                                              String outputMode, boolean awaitTermination, Long timeout,
                                              String checkpointLocation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
+    byte[] version = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
 
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
     DataStreamWriter<Row> writer =
         onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
+        .withColumn("headers", array(
+            struct(
+                lit("version").as("key"),
+                lit(version).as("value")
+            )
+        ))
         .writeStream()
         .format(Constants.KAFKA_FORMAT)
         .outputMode(outputMode)
@@ -769,10 +786,18 @@ public class SparkEngine {
     return features;
   }
 
-  public <S> S sanitizeFeatureNames(S datasetGeneric) {
+  public <S> S convertToDefaultDataframe(S datasetGeneric) {
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
-    return (S) dataset.select(Arrays.asList(dataset.columns()).stream().map(f -> col(f).alias(f.toLowerCase())).toArray(
-        Column[]::new));
+    Dataset<Row> sanitizedNamesDataset = dataset.select(Arrays.asList(dataset.columns()).stream().map(f ->
+            col(f).alias(f.toLowerCase())).toArray(Column[]::new));
+
+    StructType schema = sanitizedNamesDataset.schema();
+    StructType nullableSchema = new StructType(JavaConverters.asJavaCollection(schema.toSeq()).stream().map(f ->
+            new StructField(f.name(), f.dataType(), true, f.metadata())
+    ).toArray(StructField[]::new));
+    Dataset<Row> nullableDataset = sanitizedNamesDataset.sparkSession()
+            .createDataFrame(sanitizedNamesDataset.rdd(), nullableSchema);
+    return (S) nullableDataset;
   }
 
   public String addFile(String filePath) {

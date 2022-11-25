@@ -25,9 +25,9 @@ class JobConfiguration:
 
     def __init__(
         self,
-        am_memory=1024,
+        am_memory=2048,
         am_cores=1,
-        executor_memory=2048,
+        executor_memory=4096,
         executor_cores=1,
         executor_instances=1,
         dynamic_allocation=True,

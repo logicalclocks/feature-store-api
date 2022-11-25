@@ -14,9 +14,10 @@
 #   limitations under the License.
 #
 
-from typing import Union, List
+from typing import List, Union
 from hsfs.core import validation_report_api
 from hsfs import client, util
+import great_expectations as ge
 
 from hsfs.validation_report import ValidationReport
 
@@ -36,34 +37,53 @@ class ValidationReportEngine:
             feature_store_id=feature_store_id, feature_group_id=feature_group_id
         )
 
-    def save(self, validation_report: ValidationReport) -> ValidationReport:
+    def save(
+        self, validation_report: ValidationReport, ge_type: bool = True
+    ) -> ValidationReport:
         saved_report = self._validation_report_api.create(validation_report)
         url = self._get_validation_report_url()
         print(f"Validation Report saved successfully, explore a summary at {url}")
-        return saved_report
+        if ge_type:
+            return saved_report.to_ge_type()
+        else:
+            return saved_report
 
-    def get_last(self) -> ValidationReport:
+    def get_last(
+        self, ge_type: bool = True
+    ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult, None]:
         """Get the most recent Validation Report of a Feature Group."""
         url = self._get_validation_report_url()
         print(
             f"""Long reports can be truncated when fetching from Hopsworks.
         \nYou can download the full report at {url}"""
         )
-        return self._validation_report_api.get_last()
+        reports = self._validation_report_api.get_last()
+        if len(reports) == 0:
+            return None
+        elif len(reports) == 1 and ge_type:
+            return reports[0].to_ge_type()
+        else:
+            return reports[0]
 
-    def get_all(self) -> Union[List[ValidationReport], ValidationReport]:
-        """Get all Validation Report of a FeaturevGroup."""
+    def get_all(
+        self, ge_type: bool = True
+    ) -> Union[List[ValidationReport], List[ge.core.ExpectationSuiteValidationResult]]:
+        """Get all Validation Report of a Feature Group."""
         url = self._get_validation_report_url()
         print(
             f"""Long reports can be truncated when fetching from Hopsworks.
         \nYou can download full reports at {url}"""
         )
-        return self._validation_report_api.get_all()
+        reports = self._validation_report_api.get_all()
+        if ge_type:
+            return [report.to_ge_type() for report in reports]
+        else:
+            return reports
 
     def delete(self, validation_report_id: int):
         self._validation_report_api.delete(validation_report_id)
 
-    def _get_validation_report_url(self):
+    def _get_validation_report_url(self) -> str:
         """Build url to land on Hopsworks UI page which summarizes validation results"""
         sub_path = (
             "/p/"

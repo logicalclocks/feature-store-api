@@ -109,6 +109,7 @@ def check_timestamp_format_from_date_string(input_date):
         r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H%M",
         r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})$": "%Y%m%d%H%M%S",
         r"^([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{3})$": "%Y%m%d%H%M%S%f",
+        r"^([0-9]{4})([0-9]{2})([0-9]{2})T([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{6})Z$": "ISO",
     }
     normalized_date = (
         input_date.replace("/", "")
@@ -136,7 +137,10 @@ def check_timestamp_format_from_date_string(input_date):
 def get_timestamp_from_date_string(input_date):
     norm_input_date, date_format = check_timestamp_format_from_date_string(input_date)
     try:
-        date_time = datetime.strptime(norm_input_date, date_format)
+        if date_format != "ISO":
+            date_time = datetime.strptime(norm_input_date, date_format)
+        else:
+            date_time = datetime.fromisoformat(input_date[:-1])
     except ValueError:
         raise ValueError(
             "Unable to parse the normalized input date value : "

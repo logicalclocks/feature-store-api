@@ -16,6 +16,7 @@
 
 import os
 import json
+import copy
 import importlib.util
 import re
 import warnings
@@ -38,6 +39,8 @@ try:
         struct,
         concat,
         col,
+        lit,
+        array,
         from_json,
         udf,
     )
@@ -207,9 +210,18 @@ class Engine:
                     ),
                     util.FeatureGroupWarning,
                 )
-            return dataframe.select(
+
+            lowercase_dataframe = dataframe.select(
                 [col(x).alias(x.lower()) for x in dataframe.columns]
             )
+            nullable_schema = copy.deepcopy(lowercase_dataframe.schema)
+            for struct_field in nullable_schema:
+                struct_field.nullable = True
+            lowercase_dataframe = self._spark_session.createDataFrame(
+                lowercase_dataframe.rdd, nullable_schema
+            )
+
+            return lowercase_dataframe
 
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: spark rdds, spark dataframes, "
@@ -258,7 +270,7 @@ class Engine:
                         feature_group, dataframe, online_write_options
                     )
         except Exception as e:
-            raise FeatureStoreException(e)
+            raise FeatureStoreException(e).with_traceback(e.__traceback__)
 
     def save_stream_dataframe(
         self,
@@ -278,8 +290,14 @@ class Engine:
         if query_name is None:
             query_name = "insert_stream_" + feature_group._online_topic_name
 
+        version = str(feature_group.subject["version"]).encode("utf8")
+
         query = (
-            serialized_df.writeStream.outputMode(output_mode)
+            serialized_df.withColumn(
+                "headers",
+                array(struct(lit("version").alias("key"), lit(version).alias("value"))),
+            )
+            .writeStream.outputMode(output_mode)
             .format(self.KAFKA_FORMAT)
             .option(
                 "checkpointLocation",
@@ -336,7 +354,13 @@ class Engine:
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
-        serialized_df.write.format(self.KAFKA_FORMAT).options(**write_options).option(
+
+        version = str(feature_group.subject["version"]).encode("utf8")
+
+        serialized_df.withColumn(
+            "headers",
+            array(struct(lit("version").alias("key"), lit(version).alias("value"))),
+        ).write.format(self.KAFKA_FORMAT).options(**write_options).option(
             "topic", feature_group._online_topic_name
         ).save()
 

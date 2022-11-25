@@ -21,6 +21,7 @@ from typing import Optional, Union, List, Dict, Any
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 import humps
+import copy
 
 from hsfs import util, training_dataset_feature, storage_connector, training_dataset
 from hsfs.constructor import query, filter
@@ -55,7 +56,14 @@ class FeatureView:
         self._version = version
         self._description = description
         self._labels = labels
-        self._transformation_functions = transformation_functions
+        self._transformation_functions = (
+            {
+                ft_name: copy.deepcopy(transformation_functions[ft_name])
+                for ft_name in transformation_functions
+            }
+            if transformation_functions
+            else transformation_functions
+        )
         self._features = []
         self._feature_view_engine = feature_view_engine.FeatureViewEngine(
             featurestore_id
@@ -114,7 +122,6 @@ class FeatureView:
             fs.get_feature_view("example_feature_view", 1).description
             ```
 
-        # Arguments
         # Returns
             `FeatureView` Updated feature view.
         # Raises
@@ -277,6 +284,9 @@ class FeatureView:
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             read_options: User provided read options. Defaults to `{}`.
+
+        # Returns
+            `DataFrame`: A dataframe
         """
 
         if self._batch_scoring_server is None:
@@ -292,15 +302,54 @@ class FeatureView:
         )
 
     def add_tag(self, name: str, value):
+        """Attach a tag to a feature view.
+
+        A tag consists of a <name,value> pair. Tag names are unique identifiers across the whole cluster.
+        The value of a tag can be any valid json - primitives, arrays or json objects.
+
+        # Arguments
+            name: Name of the tag to be added.
+            value: Value of the tag to be added.
+
+        # Raises
+            `RestAPIError` in case the backend fails to add the tag.
+        """
         return self._feature_view_engine.add_tag(self, name, value)
 
     def get_tag(self, name: str):
+        """Get the tags of a feature view.
+
+        # Arguments
+            name: Name of the tag to get.
+
+        # Returns
+            tag value
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tag.
+        """
         return self._feature_view_engine.get_tag(self, name)
 
     def get_tags(self):
+        """Returns all tags attached to a training dataset.
+
+        # Returns
+            `Dict[str, obj]` of tags.
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tags.
+        """
         return self._feature_view_engine.get_tags(self)
 
     def delete_tag(self, name: str):
+        """Delete a tag attached to a feature view.
+
+        # Arguments
+            name: Name of the tag to be removed.
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the tag.
+        """
         return self._feature_view_engine.delete_tag(self, name)
 
     def create_training_data(
@@ -1107,39 +1156,108 @@ class FeatureView:
         return df
 
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
+        """Attach a tag to a training dataset.
+
+        A tag consists of a <name,value> pair. Tag names are unique identifiers across the whole cluster.
+        The value of a tag can be any valid json - primitives, arrays or json objects.
+
+        # Arguments
+            name: Name of the tag to be added.
+            value: Value of the tag to be added.
+
+        # Raises
+            `RestAPIError` in case the backend fails to add the tag.
+        """
         return self._feature_view_engine.add_tag(
             self, name, value, training_dataset_version=training_dataset_version
         )
 
     def get_training_dataset_tag(self, training_dataset_version: int, name: str):
+        """Get the tags of a training dataset.
+
+        # Arguments
+            name: Name of the tag to get.
+
+        # Returns
+            tag value
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tag.
+        """
         return self._feature_view_engine.get_tag(
             self, name, training_dataset_version=training_dataset_version
         )
 
     def get_training_dataset_tags(self, training_dataset_version: int):
+        """Returns all tags attached to a training dataset.
+
+        # Returns
+            `Dict[str, obj]` of tags.
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tags.
+        """
         return self._feature_view_engine.get_tags(
             self, training_dataset_version=training_dataset_version
         )
 
     def delete_training_dataset_tag(self, training_dataset_version: int, name: str):
+        """Delete a tag attached to a training dataset.
+
+        # Arguments
+            name: Name of the tag to be removed.
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the tag.
+        """
         return self._feature_view_engine.delete_tag(
             self, name, training_dataset_version=training_dataset_version
         )
 
     def purge_training_data(self, version: int):
+        """Delete a training dataset (data only).
+
+        # Arguments
+            version: Version of the training dataset to be removed.
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the training dataset.
+        """
         self._feature_view_engine.delete_training_dataset_only(
             self, training_data_version=version
         )
 
     def purge_all_training_data(self):
+        """Delete all training datasets (data only).
+
+        # Arguments
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the training datasets.
+        """
         self._feature_view_engine.delete_training_dataset_only(self)
 
     def delete_training_dataset(self, version: int):
+        """Delete a training dataset.
+
+        # Arguments
+            version: Version of the training dataset to be removed.
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the training dataset.
+        """
         self._feature_view_engine.delete_training_data(
             self, training_data_version=version
         )
 
     def delete_all_training_datasets(self):
+        """Delete all training datasets.
+
+        # Arguments
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the training datasets.
+        """
         self._feature_view_engine.delete_training_data(self)
 
     @classmethod
