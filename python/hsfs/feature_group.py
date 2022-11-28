@@ -1128,8 +1128,8 @@ class FeatureGroup(FeatureGroupBase):
                 if self._time_travel_format != expected_format:
                     self._time_travel_format = expected_format
                     warnings.warn(
-                        "Stream feature group time travel format is always `{}`".format(expected_format),
-                        util.StorageWarning,
+                        "Stream feature group time travel format should always be `{}`".format(expected_format),
+                        util.FeatureGroupWarning,
                     )
 
             self.primary_key = primary_key
