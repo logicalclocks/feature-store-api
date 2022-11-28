@@ -99,6 +99,7 @@ class FeatureView:
             feature_store_id: int. Id of feature store.
             feature_view_name: str. Name of feature view.
             feature_view_version: str. Version of feature view.
+
         # Raises
             `RestAPIError`.
         """
@@ -124,6 +125,7 @@ class FeatureView:
 
         # Returns
             `FeatureView` Updated feature view.
+
         # Raises
             `RestAPIError`.
         """
@@ -234,6 +236,7 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+        
         # Returns
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in the feature view query.
@@ -261,6 +264,7 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+        
         # Returns
             `List[list]` List of lists of feature values related to provided primary keys, ordered according to positions of this features in the feature view query.
         """
@@ -381,7 +385,6 @@ class FeatureView:
 
             Currently not supported petastorm, hdf5 and npy file formats.
 
-
         # Arguments
             start_time: Start event time for the training dataset query. Optional. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
@@ -487,7 +490,6 @@ class FeatureView:
             6. orc
 
             Currently not supported petastorm, hdf5 and npy file formats.
-
 
         # Arguments
             test_size: size of test set.
@@ -612,7 +614,6 @@ class FeatureView:
             6. orc
 
             Currently not supported petastorm, hdf5 and npy file formats.
-
 
         # Arguments
             validation_size: size of validation set.
@@ -740,7 +741,6 @@ class FeatureView:
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
-
         """
         td, td_job = self._feature_view_engine.recreate_training_dataset(
             self, training_dataset_version, write_options
@@ -791,7 +791,6 @@ class FeatureView:
 
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
-
         """
         td = training_dataset.TrainingDataset(
             name=self.name,
@@ -870,7 +869,6 @@ class FeatureView:
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
-
         """
         self._validate_train_test_split(
             test_size=test_size, train_end=train_end, test_start=test_start
@@ -978,7 +976,6 @@ class FeatureView:
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
-
         """
 
         self._validate_train_validation_test_split(
@@ -1076,7 +1073,6 @@ class FeatureView:
 
         # Returns
             (X, y): Tuple of dataframe of features and labels
-
         """
         td, df = self._feature_view_engine.get_training_data(
             self, read_options, training_dataset_version=training_dataset_version
@@ -1107,7 +1103,6 @@ class FeatureView:
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
-
         """
         td, df = self._feature_view_engine.get_training_data(
             self,
@@ -1141,7 +1136,6 @@ class FeatureView:
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
-
         """
         td, df = self._feature_view_engine.get_training_data(
             self,
