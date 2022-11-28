@@ -1124,7 +1124,13 @@ class FeatureGroup(FeatureGroupBase):
                 self._stream = True
             # for stream feature group time travel format is always HUDI
             if self._stream:
-                self._time_travel_format = "HUDI"
+                expected_format = "HUDI"
+                if self._time_travel_format != expected_format:
+                    self._time_travel_format = expected_format
+                    warnings.warn(
+                        "Stream feature group time travel format is always `{}`".format(expected_format),
+                        util.StorageWarning,
+                    )
 
             self.primary_key = primary_key
             self.partition_key = partition_key
