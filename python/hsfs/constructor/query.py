@@ -116,6 +116,7 @@ class Query:
 
     def show(self, n: int, online: Optional[bool] = False):
         """Show the first N rows of the Query.
+
         !!! example "Show the first 10 rows"
             ```python
             fg1 = fs.get_feature_group("...")
@@ -125,6 +126,7 @@ class Query:
 
             query.show(10)
             ``` 
+
         # Arguments
             n: Number of rows to show.
             online: Show from online storage. Defaults to `False`.
@@ -167,7 +169,8 @@ class Query:
             query = fg1.select_all() 
                     .join(fg2.select_all(), on=["date", "location_id"]) 
                     .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
-            ```      
+            ```     
+
         # Arguments
             sub_query: Right-hand side query to join.
             on: List of feature names to join on if they are available in both
@@ -180,6 +183,7 @@ class Query:
                 `"right"`. Defaults to "inner".
             prefix: User provided prefix to avoid feature name clash. Prefix is applied to the right
                 feature group of the query. Defaults to `None`.
+
         # Returns
             `Query`: A new Query object representing the join.
         """
@@ -241,6 +245,7 @@ class Query:
         query1.as_of(..., ...)
             .join(query2.as_of(..., ...))
         ```
+
         If instead you apply another `as_of` selection after the join, all
         joined feature groups will be queried with this interval:
         ```python
@@ -309,7 +314,6 @@ class Query:
         If you are planning to join the filtered feature group later on with another
         feature group, make sure to select the filtered feature explicitly from the
         respective feature group:
-
         ```python
         query.filter(fg.feature1 == 1).show(10)
         ```
@@ -330,6 +334,7 @@ class Query:
                 .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left") 
                 .filter((fg1.location_id == 10) | (fg1.location_id == 20))
             ```
+            
         !!! example "Filters can be applied at any point of the query"
             ```python
             fg1 = fs.get_feature_group("...")

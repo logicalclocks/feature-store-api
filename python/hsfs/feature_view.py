@@ -127,6 +127,7 @@ class FeatureView:
             feature_store_id: int. Id of feature store.
             feature_view_name: str. Name of feature view.
             feature_view_version: str. Version of feature view.
+
         # Raises
             `RestAPIError`.
         """
@@ -156,6 +157,7 @@ class FeatureView:
 
         # Returns
             `FeatureView` Updated feature view.
+
         # Raises
             `RestAPIError`.
         """
@@ -180,6 +182,7 @@ class FeatureView:
             # initialise and cache parametrized prepared statement to retrieve a feature vector
             feature_view.init_serving(training_dataset_version=1)
             ```
+
         # Arguments
             training_dataset_version: int, optional. Default to be 1. Transformation statistics
                 are fetched from training dataset and apply in serving vector.
@@ -252,6 +255,7 @@ class FeatureView:
         end_time: Optional[Union[str, int, datetime, date]] = None,
     ):
         """Get a query string of batch query.
+
         !!! example "Batch query for the last 24 hours"
             ```python
                 # get feature store instance 
@@ -273,6 +277,7 @@ class FeatureView:
                 # print query string
                 print(query_str)     
             ```
+
         # Arguments
             start_time: Start event time for the batch query. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
@@ -343,6 +348,7 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+        
         # Returns
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in the feature view query.
@@ -388,6 +394,7 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+        
         # Returns
             `List[list]` List of lists of feature values related to provided primary keys, ordered according to positions of this features in the feature view query.
         """
@@ -422,6 +429,7 @@ class FeatureView:
                     end_time=end_date
                 )
             ```
+
         # Arguments
             start_time: Start event time for the batch query. Optional. Strings should be
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
@@ -1199,7 +1207,6 @@ class FeatureView:
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
-
         """
         td, td_job = self._feature_view_engine.recreate_training_dataset(
             self, version, write_options
@@ -1281,7 +1288,6 @@ class FeatureView:
 
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
-
         """
         td = training_dataset.TrainingDataset(
             name=self.name,
@@ -1334,7 +1340,6 @@ class FeatureView:
             X_train, X_test, y_train, y_test = feature_view.train_test_split(
                 test_size=0.2
             )
-
             ```
 
         !!! example "Create time-series train/test splits"
@@ -1396,7 +1401,6 @@ class FeatureView:
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
-
         """
         self._validate_train_test_split(
             test_size=test_size, train_end=train_end, test_start=test_start
@@ -1545,7 +1549,6 @@ class FeatureView:
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
-
         """
 
         self._validate_train_validation_test_split(
@@ -1651,7 +1654,6 @@ class FeatureView:
 
         # Returns
             (X, y): Tuple of dataframe of features and labels
-
         """
         td, df = self._feature_view_engine.get_training_data(
             self, read_options, training_dataset_version=training_dataset_version
@@ -1690,7 +1692,6 @@ class FeatureView:
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
-
         """
         td, df = self._feature_view_engine.get_training_data(
             self,
@@ -1732,7 +1733,6 @@ class FeatureView:
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
-
         """
         td, df = self._feature_view_engine.get_training_data(
             self,
@@ -1875,7 +1875,6 @@ class FeatureView:
 
             # purge training data
             feature_view.purge_training_data(version=1)
-
             ```        
             
         # Arguments
@@ -1902,8 +1901,6 @@ class FeatureView:
             # purge all training data
             feature_view.purge_all_training_data()
             ```        
-
-        # Arguments
 
         # Raises
             `RestAPIError` in case the backend fails to delete the training datasets.
@@ -1951,9 +1948,7 @@ class FeatureView:
             # delete all training datasets
             feature_view.delete_all_training_datasets()
             ```
-
-        # Arguments
-
+            
         # Raises
             `RestAPIError` in case the backend fails to delete the training datasets.
         """

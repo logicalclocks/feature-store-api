@@ -136,7 +136,6 @@ class FeatureStore:
 
         # Raises
             `RestAPIError`: If unable to retrieve feature group from the feature store.
-
         """
         if version is None:
             warnings.warn(
@@ -175,7 +174,6 @@ class FeatureStore:
 
         # Raises
             `RestAPIError`: If unable to retrieve feature group from the feature store.
-
         """
         return self._feature_group_api.get(
             name, None, feature_group_api.FeatureGroupApi.CACHED
@@ -201,7 +199,6 @@ class FeatureStore:
 
         # Raises
             `RestAPIError`: If unable to retrieve feature group from the feature store.
-
         """
         return self.get_external_feature_group(name, version)
 
@@ -229,7 +226,6 @@ class FeatureStore:
 
         # Raises
             `RestAPIError`: If unable to retrieve feature group from the feature store.
-
         """
 
         if version is None:
@@ -279,6 +275,7 @@ class FeatureStore:
 
             external_fgs_list = fs.get_external_feature_groups("external_fg_test")
             ```
+
         # Arguments
             name: Name of the external feature group to get.
 
@@ -1068,6 +1065,7 @@ class FeatureStore:
                 }
             )
             ```
+
         Built-in transformation functions are attached in the same way.
         The only difference is that it will compute the necessary statistics for the specific function in the background.
         For example min and max values for `min_max_scaler`; mean and standard deviation for `standard_scaler` etc.
@@ -1103,7 +1101,8 @@ class FeatureStore:
         # Arguments
             name: name of transformation function.
             version: version of transformation function. Optional, if not provided all functions that match to provided
-                name will be retrieved .
+                name will be retrieved.
+
         # Returns:
             `TransformationFunction`: The TransformationFunction metadata object.
         """
