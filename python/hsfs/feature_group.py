@@ -1127,10 +1127,10 @@ class FeatureGroup(FeatureGroupBase):
                 expected_format = "HUDI"
                 if self._time_travel_format != expected_format:
                     warnings.warn(
-                        "The provided time travel format \"`{}`\" has been overwritten because Stream enabled feature "
-                        "groups only support \"`{}`\"".format(
-                            self._time_travel_format, expected_format
-                        ),
+                        (
+                            "The provided time travel format `{}` has been overwritten "
+                            "because Stream enabled feature groups only support `{}`"
+                        ).format(self._time_travel_format, expected_format),
                         util.FeatureGroupWarning,
                     )
                     self._time_travel_format = expected_format
