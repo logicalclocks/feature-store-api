@@ -16,6 +16,7 @@
 
 from hsfs import client, util
 from hsfs.core import inode
+from requests_toolbelt import MultipartEncoder
 
 
 class DatasetApi:
@@ -34,15 +35,19 @@ class DatasetApi:
     def _upload_request(self, path, file_name, file, file_size):
         _client = client.get_instance()
         path_params = ["project", _client._project_id, "dataset", "v2", "upload", path]
-
+        m = MultipartEncoder(
+            fields={
+                "file": (file_name, file),
+                "fileName": file_name,
+                "fileSize": str(file_size),
+            }
+        )
         _client._send_request(
             "POST",
             path_params,
-            files={
-                "file": (file_name, file),
-                "fileName": file_name,
-                "fileSize": file_size,
-            },
+            data=m,
+            headers={"Content-Type": m.content_type},
+            stream=True,
         )
 
     def list_files(self, path, offset, limit):
