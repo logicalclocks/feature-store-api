@@ -1128,7 +1128,9 @@ class FeatureGroup(FeatureGroupBase):
                 if self._time_travel_format != expected_format:
                     self._time_travel_format = expected_format
                     warnings.warn(
-                        "Stream feature group time travel format should always be `{}`".format(expected_format),
+                        "Stream feature group time travel format should always be `{}`".format(
+                            expected_format
+                        ),
                         util.FeatureGroupWarning,
                     )
 
@@ -1431,7 +1433,7 @@ class FeatureGroup(FeatureGroupBase):
                 online_enabled=True,
                 event_time=['unix']
             )
-            # async insertion in order not to wait till finish of the job 
+            # async insertion in order not to wait till finish of the job
             fg.insert(df_for_fg1, write_options={"wait_for_job" : False})
 
             fg2 = fs.get_or_create_feature_group(
