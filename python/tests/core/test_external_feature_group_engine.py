@@ -13,8 +13,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import pytest
 
 from hsfs import feature_group, feature, storage_connector
+from hsfs.client import exceptions
 from hsfs.core import external_feature_group_engine
 
 
@@ -246,4 +248,54 @@ class TestExternalFeatureGroupEngine:
         assert (
             mock_fg_api.return_value.update_metadata.call_args[0][1].description
             == description
+        )
+
+    def test_save_feature_group_metadata_primary_eventtime_error(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.engine.get_type")
+
+        f = feature.Feature(name="f", type="str")
+
+        jdbc_connector = storage_connector.JdbcConnector(
+            id=1,
+            name="test_connector",
+            featurestore_id=1,
+            connection_string="",
+            arguments="",
+        )
+
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as e_pk_info:
+            fg = feature_group.ExternalFeatureGroup(
+                name="test",
+                version=1,
+                featurestore_id=feature_store_id,
+                primary_key=["feature_name"],
+                event_time="f",
+                storage_connector=jdbc_connector,
+                features=[f],
+            )
+            fg.save()
+
+        with pytest.raises(exceptions.FeatureStoreException) as e_eventt_info:
+            fg = feature_group.ExternalFeatureGroup(
+                name="test",
+                version=1,
+                featurestore_id=feature_store_id,
+                primary_key=["f"],
+                event_time="feature_name",
+                storage_connector=jdbc_connector,
+                features=[f],
+            )
+            fg.save()
+
+        assert (
+            str(e_pk_info.value)
+            == "Provided primary key(s) feature_name doesn't exist in feature dataframe"
+        )
+        assert (
+            str(e_eventt_info.value)
+            == "Provided event_time feature feature_name doesn't exist in feature dataframe"
         )

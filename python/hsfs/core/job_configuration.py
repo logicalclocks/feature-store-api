@@ -25,9 +25,9 @@ class JobConfiguration:
 
     def __init__(
         self,
-        am_memory=1024,
+        am_memory=2048,
         am_cores=1,
-        executor_memory=2048,
+        executor_memory=4096,
         executor_cores=1,
         executor_instances=1,
         dynamic_allocation=True,
@@ -40,7 +40,7 @@ class JobConfiguration:
         self._executor_cores = executor_cores
         self._executor_instances = executor_instances
         self._dynamic_allocation = dynamic_allocation
-        self._dynamic_min_executors = dynamic_max_executors
+        self._dynamic_min_executors = dynamic_min_executors
         self._dynamic_max_executors = dynamic_max_executors
 
     def to_dict(self):

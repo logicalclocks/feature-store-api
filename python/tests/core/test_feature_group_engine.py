@@ -707,7 +707,7 @@ class TestFeatureGroupEngine:
         # Assert
         assert mock_fg_api.return_value.update_metadata.call_count == 1
 
-    def test_get_avro_schema(self, mocker):
+    def test_get_subject(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -728,7 +728,7 @@ class TestFeatureGroupEngine:
         )
 
         # Act
-        fg_engine.get_avro_schema(feature_group=fg)
+        fg_engine.get_subject(feature_group=fg)
 
         # Assert
         assert mock_kafka_api.return_value.get_topic_subject.call_count == 1
@@ -1367,7 +1367,7 @@ class TestFeatureGroupEngine:
         # Arrange
         feature_store_id = 99
         feature_group_url = "test_url"
-        write_options = "test"
+        write_options = {"spark": "test"}
 
         mocker.patch("hsfs.engine.get_type")
         mocker.patch(
@@ -1406,7 +1406,6 @@ class TestFeatureGroupEngine:
         assert f.primary is False
         assert f.partition is False
         assert f.hudi_precombine_key is False
-        assert fg._options == write_options
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0

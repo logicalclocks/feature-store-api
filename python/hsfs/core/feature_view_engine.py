@@ -89,10 +89,11 @@ class FeatureViewEngine:
                 )
             for join in feature_view_obj.query.joins:
                 for feat in join.query.features:
-                    prefix_feature_map[join.prefix + feat.name] = (
-                        feat.name,
-                        join.query._left_feature_group,
-                    )
+                    if join.prefix:
+                        prefix_feature_map[join.prefix + feat.name] = (
+                            feat.name,
+                            join.query._left_feature_group,
+                        )
                     feature_map[feat.name] = feature_map.get(feat.name, []) + [
                         join.query._left_feature_group
                     ]

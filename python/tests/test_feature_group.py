@@ -16,13 +16,18 @@
 
 
 from hsfs import (
+    feature_store,
     feature_group,
     user,
     statistics_config,
     feature,
     storage_connector,
     expectation_suite,
+    util,
 )
+from hsfs.client.exceptions import FeatureStoreException
+import pytest
+import warnings
 
 
 class TestFeatureGroup:
@@ -57,7 +62,9 @@ class TestFeatureGroup:
         assert fg._online_topic_name == "119_15_fg_test_1_onlinefs"
         assert fg.event_time is None
         assert fg.stream is False
-        assert fg.expectation_suite is None
+        assert (
+            fg.expectation_suite.expectation_suite_name == "test_expectation_suite_name"
+        )
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
@@ -92,7 +99,9 @@ class TestFeatureGroup:
         assert fg._online_topic_name == "119_15_fg_test_1_onlinefs"
         assert fg.event_time is None
         assert fg.stream is False
-        assert fg.expectation_suite is None
+        assert (
+            fg.expectation_suite.expectation_suite_name == "test_expectation_suite_name"
+        )
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -154,7 +163,9 @@ class TestFeatureGroup:
         assert fg._online_topic_name == "119_15_fg_test_1_onlinefs"
         assert fg.event_time is None
         assert fg.stream is True
-        assert fg.expectation_suite is None
+        assert (
+            fg.expectation_suite.expectation_suite_name == "test_expectation_suite_name"
+        )
 
     def test_from_response_json_stream_list(self, backend_fixtures):
         # Arrange
@@ -189,7 +200,9 @@ class TestFeatureGroup:
         assert fg._online_topic_name == "119_15_fg_test_1_onlinefs"
         assert fg.event_time is None
         assert fg.stream is True
-        assert fg.expectation_suite is None
+        assert (
+            fg.expectation_suite.expectation_suite_name == "test_expectation_suite_name"
+        )
 
     def test_from_response_json_stream_basic_info(self, backend_fixtures):
         # Arrange
@@ -219,6 +232,35 @@ class TestFeatureGroup:
         assert fg.event_time is None
         assert fg.stream is True
         assert fg.expectation_suite is None
+
+    def test_constructor_with_list_event_time_for_compatibility(
+        self, mocker, backend_fixtures, dataframe_fixture_basic
+    ):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.engine.get_type")
+        json = backend_fixtures["feature_store"]["get"]["response"]
+
+        # Act
+        fs = feature_store.FeatureStore.from_response_json(json)
+        with warnings.catch_warnings(record=True) as warning_record:
+            new_fg = fs.create_feature_group(
+                name="fg_name",
+                version=1,
+                description="fg_description",
+                event_time=["event_date"],
+            )
+        with pytest.raises(FeatureStoreException):
+            util.verify_attribute_key_names(new_fg, False)
+
+        # Assert
+        assert new_fg.event_time == "event_date"
+        assert len(warning_record) == 1
+        assert issubclass(warning_record[0].category, DeprecationWarning)
+        assert str(warning_record[0].message) == (
+            "Providing event_time as a single-element list is deprecated"
+            + " and will be dropped in future versions. Provide the feature_name string instead."
+        )
 
 
 class TestExternalFeatureGroup:
