@@ -971,7 +971,7 @@ class FeatureStore:
     ):
         """Create a transformation function metadata object.
 
-        !!! example 
+        !!! example
             ```python
             # define function
             def plus_one(value):
@@ -1016,7 +1016,7 @@ class FeatureStore:
 
         !!! example "Get transformation function by name. This will default to version 1"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
             # get transformation function metadata object
@@ -1025,34 +1025,34 @@ class FeatureStore:
 
         !!! example "Get built-in transformation function min max scaler"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
             # get transformation function metadata object
             min_max_scaler_fn = fs.get_transformation_function(name="min_max_scaler")
             ```
 
-        !!! example "Get transformation function by name and version"   
+        !!! example "Get transformation function by name and version"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get transformation function metadata object 
+            # get transformation function metadata object
             min_max_scaler = fs.get_transformation_function(name="min_max_scaler", version=2)
             ```
 
         You can define in the feature view transformation functions as dict, where key is feature name and value is online transformation function instance.
         Then the transformation functions are applied when you read training data, get batch data, or get feature vector(s).
-        
-        !!! example "Attach transformation functions to the feature view"   
+
+        !!! example "Attach transformation functions to the feature view"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # define query object 
+            # define query object
             query = ...
 
-            # get transformation function metadata object 
+            # get transformation function metadata object
             min_max_scaler = fs.get_transformation_function(name="min_max_scaler", version=1)
 
             # attach transformation functions
@@ -1069,13 +1069,13 @@ class FeatureStore:
         Built-in transformation functions are attached in the same way.
         The only difference is that it will compute the necessary statistics for the specific function in the background.
         For example min and max values for `min_max_scaler`; mean and standard deviation for `standard_scaler` etc.
-        
-        !!! example "Attach built-in transformation functions to the feature view"   
-            ```python
-            # get feature store instance 
-            fs = ... 
 
-            # define query object 
+        !!! example "Attach built-in transformation functions to the feature view"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # define query object
             query = ...
 
             # retrieve transformation functions
@@ -1113,10 +1113,10 @@ class FeatureStore:
 
         !!! example "Get all transformation functions"
             ```python
-            # get feature store instance 
-            fs = ... 
+            # get feature store instance
+            fs = ...
 
-            # get all transformation functions        
+            # get all transformation functions
             list_transformation_fns = fs.get_transformation_functions()
             ```
 
@@ -1162,12 +1162,12 @@ class FeatureStore:
             )
             ```
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # define query object 
+            # define query object
             query = ...
 
             # define dictionary with column names and transformation functions pairs
@@ -1286,12 +1286,12 @@ class FeatureStore:
 
         Getting a feature view from the Feature Store means getting its metadata.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(
                 name='feature_view_name',
                 version=1
@@ -1324,9 +1324,9 @@ class FeatureStore:
 
         Getting a feature view from the Feature Store means getting its metadata.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
             # get a list of all versions of a feature view

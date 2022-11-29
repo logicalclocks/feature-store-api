@@ -80,8 +80,8 @@ class TransformationFunction:
 
     def save(self):
         """Persist transformation function in backend.
-        
-        !!! example 
+
+        !!! example
             ```python
             # define function
             def plus_one(value):
@@ -93,7 +93,7 @@ class TransformationFunction:
                     output_type=int,
                     version=1
                 )
-                
+
             # persist transformation function in backend
             plus_one_meta.save()
             ```
@@ -102,8 +102,8 @@ class TransformationFunction:
 
     def delete(self):
         """Delete transformation function from backend.
-        
-        !!! example 
+
+        !!! example
             ```python
             # define function
             def plus_one(value):

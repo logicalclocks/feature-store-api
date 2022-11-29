@@ -125,7 +125,7 @@ class Query:
             query = fg1.select_all().join(fg2.select_all())
 
             query.show(10)
-            ``` 
+            ```
 
         # Arguments
             n: Number of rows to show.
@@ -153,23 +153,23 @@ class Query:
         Joins of one level are supported, no neted joins.
 
         !!! example "Join two feature groups"
-            ```python 
+            ```python
             fg1 = fs.get_feature_group("...")
             fg2 = fs.get_feature_group("...")
 
-            query = fg1.select_all().join(fg2.select_all())            
+            query = fg1.select_all().join(fg2.select_all())
             ```
 
         !!! example "More complex join"
-            ```python 
+            ```python
             fg1 = fs.get_feature_group("...")
             fg2 = fs.get_feature_group("...")
-            fg3 = fs.get_feature_group("...") 
+            fg3 = fs.get_feature_group("...")
 
-            query = fg1.select_all() 
-                    .join(fg2.select_all(), on=["date", "location_id"]) 
+            query = fg1.select_all()
+                    .join(fg2.select_all(), on=["date", "location_id"])
                     .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
-            ```     
+            ```
 
         # Arguments
             sub_query: Right-hand side query to join.
@@ -302,7 +302,7 @@ class Query:
         """Apply filter to the feature group.
 
         Selects all features and returns the resulting `Query` with the applied filter.
-        !!! example 
+        !!! example
             ```python
 
             from hsfs.feature import Feature
@@ -310,7 +310,7 @@ class Query:
             query.filter(Feature("weekly_sales") > 1000)
 
             ```
-        
+
         If you are planning to join the filtered feature group later on with another
         feature group, make sure to select the filtered feature explicitly from the
         respective feature group:
@@ -326,24 +326,24 @@ class Query:
         !!! example "Filters are fully compatible with joins"
             ```python
             fg1 = fs.get_feature_group("...")
-            fg2 = fs.get_feature_group("...")       
+            fg2 = fs.get_feature_group("...")
             fg3 = fs.get_feature_group("...")
 
-            query = fg1.select_all() 
-                .join(fg2.select_all(), on=["date", "location_id"]) 
-                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left") 
+            query = fg1.select_all()
+                .join(fg2.select_all(), on=["date", "location_id"])
+                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
                 .filter((fg1.location_id == 10) | (fg1.location_id == 20))
             ```
-            
+
         !!! example "Filters can be applied at any point of the query"
             ```python
             fg1 = fs.get_feature_group("...")
-            fg2 = fs.get_feature_group("...")       
+            fg2 = fs.get_feature_group("...")
             fg3 = fs.get_feature_group("...")
 
-            query = fg1.select_all() 
-                .join(fg2.select_all().filter(fg2.avg_temp >= 22), on=["date", "location_id"]) 
-                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left") 
+            query = fg1.select_all()
+                .join(fg2.select_all().filter(fg2.avg_temp >= 22), on=["date", "location_id"])
+                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
                 .filter(fg1.location_id == 10)
             ```
 
@@ -435,17 +435,17 @@ class Query:
         return new
 
     def to_string(self, online=False):
-        """ 
-        !!! example 
+        """
+        !!! example
             ```python
             fg1 = fs.get_feature_group("...")
             fg2 = fs.get_feature_group("...")
 
-            query = fg1.select_all().join(fg2.select_all())       
+            query = fg1.select_all().join(fg2.select_all())
 
             query.to_string()
             ```
-        """        
+        """
         fs_query = self._query_constructor_api.construct_query(self)
 
         if online:
@@ -478,17 +478,17 @@ class Query:
         return self._left_features
 
     def append_feature(self, feature):
-        """ 
-        !!! example 
+        """
+        !!! example
             ```python
             fg1 = fs.get_feature_group("...")
             fg2 = fs.get_feature_group("...")
 
-            query = fg1.select_all().join(fg2.select_all())    
+            query = fg1.select_all().join(fg2.select_all())
 
             query.append_feature('feature_name')
             ```
-        """        
+        """
         self._left_features.append(feature)
 
     def is_time_travel(self):
