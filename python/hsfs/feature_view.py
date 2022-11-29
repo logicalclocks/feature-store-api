@@ -1186,7 +1186,7 @@ class FeatureView:
             feature_view = fs.get_feature_view(...)
 
             # recreate a training dataset that has been deleted
-            feature_view.recreate_training_dataset(version=1)
+            feature_view.recreate_training_dataset(training_dataset_version=1)
             ```        
         
         !!! info
