@@ -962,7 +962,7 @@ class Engine:
                 producer.poll(0)
                 break
             except BufferError as e:
-                if e.code() == KafkaError.TOPIC_AUTHORIZATION_FAILED:
+                if e.args[0].code() == KafkaError.TOPIC_AUTHORIZATION_FAILED:
                     raise e  # Stop producing, the user is not authorized
                 if offline_write_options.get("debug_kafka", False):
                     print("Caught: {}".format(e))
