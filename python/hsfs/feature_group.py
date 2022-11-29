@@ -1425,7 +1425,7 @@ class FeatureGroup(FeatureGroupBase):
                 online_enabled=True,
                 event_time=['unix']
             )
-            # async insertion in order not to wait till finish of the job 
+            # async insertion in order not to wait till finish of the job
             fg.insert(df_for_fg1, write_options={"wait_for_job" : False})
 
             fg2 = fs.get_or_create_feature_group(
