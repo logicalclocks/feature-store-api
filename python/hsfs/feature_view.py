@@ -1978,7 +1978,7 @@ class FeatureView:
         fv.labels = [feature.name for feature in features if feature.label]
         return fv
 
-    def update_from_response_json(self, json_dict):
+    def _update_from_response_json(self, json_dict):
         other = self.from_response_json(json_dict)
         for key in [
             "name",
