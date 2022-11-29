@@ -78,12 +78,12 @@ class FeatureView:
     def delete(self):
         """Delete current feature view and all associated metadata.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # delete a feature view
@@ -103,12 +103,12 @@ class FeatureView:
     def clean(feature_store_id: int, feature_view_name: str, feature_view_version: str):
         """Delete the feature view and all associated metadata.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # delete a feature view and all associated metadata
@@ -142,10 +142,10 @@ class FeatureView:
 
         !!! example "Update the feature view with a new description."
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             feature_view.description = "new description"
@@ -171,12 +171,12 @@ class FeatureView:
         """Initialise and cache parametrized prepared statement to
            retrieve feature vector from online feature store.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # initialise and cache parametrized prepared statement to retrieve a feature vector
@@ -222,14 +222,14 @@ class FeatureView:
         self,
         training_dataset_version: Optional[int] = None,
     ):
-        """Initialise and cache parametrized transformation functions. 
+        """Initialise and cache parametrized transformation functions.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # initialise and cache parametrized transformation functions
@@ -258,16 +258,16 @@ class FeatureView:
 
         !!! example "Batch query for the last 24 hours"
             ```python
-                # get feature store instance 
+                # get feature store instance
                 fs = ...
 
-                # get feature view instance 
+                # get feature view instance
                 feature_view = fs.get_feature_view(...)
 
                 # set up dates
                 import datetime
-                start_date = (datetime.datetime.now() - datetime.timedelta(hours=24)) 
-                end_date = (datetime.datetime.now()) 
+                start_date = (datetime.datetime.now() - datetime.timedelta(hours=24))
+                end_date = (datetime.datetime.now())
 
                 # get a query string of batch query
                 query_str = feature_view.get_batch_query(
@@ -275,7 +275,7 @@ class FeatureView:
                     end_time=end_date
                 )
                 # print query string
-                print(query_str)     
+                print(query_str)
             ```
 
         # Arguments
@@ -306,12 +306,12 @@ class FeatureView:
     ):
         """Returns assembled serving vector from online feature store.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # get a feature vector
@@ -322,18 +322,18 @@ class FeatureView:
 
         !!! example "Get feature vector with user-supplied features"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
-        
-            # the application provides a feature value 'app_attr'           
+
+            # the application provides a feature value 'app_attr'
             app_attr = ...
 
             # get a feature vector
             feature_view.get_feature_vector(
-                entry = {"pk1": 1, "pk2": 2}, 
-                passed_features = { "app_feature" : app_attr } 
+                entry = {"pk1": 1, "pk2": 2},
+                passed_features = { "app_feature" : app_attr }
             )
             ```
 
@@ -348,7 +348,7 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-        
+
         # Returns
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in the feature view query.
@@ -365,12 +365,12 @@ class FeatureView:
     ):
         """Returns assembled serving vectors in batches from online feature store.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # get assembled serving vectors
@@ -394,7 +394,7 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-        
+
         # Returns
             `List[list]` List of lists of feature values related to provided primary keys, ordered according to positions of this features in the feature view query.
         """
@@ -412,16 +412,16 @@ class FeatureView:
 
         !!! example "Batch data for the last 24 hours"
             ```python
-                # get feature store instance 
+                # get feature store instance
                 fs = ...
 
-                # get feature view instance 
+                # get feature view instance
                 feature_view = fs.get_feature_view(...)
 
                 # set up dates
                 import datetime
-                start_date = (datetime.datetime.now() - datetime.timedelta(hours=24)) 
-                end_date = (datetime.datetime.now()) 
+                start_date = (datetime.datetime.now() - datetime.timedelta(hours=24))
+                end_date = (datetime.datetime.now())
 
                 # get a batch of data
                 df = feature_view.get_batch_data(
@@ -462,18 +462,18 @@ class FeatureView:
         Tag names are unique identifiers across the whole cluster.
         The value of a tag can be any valid json - primitives, arrays or json objects.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # attach a tag to a feature view
             feature_view.add_tag(name="tag_schema", value={"key", "value"})
             ```
-            
+
         # Arguments
             name: Name of the tag to be added.
             value: Value of the tag to be added.
@@ -485,19 +485,19 @@ class FeatureView:
 
     def get_tag(self, name: str):
         """Get the tags of a feature view.
-        
-        !!! example 
+
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # get a tag of a feature view
             name = feature_view.get_tag('tag_name')
-            ```        
-          
+            ```
+
         # Arguments
             name: Name of the tag to get.
 
@@ -510,20 +510,20 @@ class FeatureView:
         return self._feature_view_engine.get_tag(self, name)
 
     def get_tags(self):
-        """ Returns all tags attached to a training dataset.
-        
-        !!! example 
+        """Returns all tags attached to a training dataset.
+
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # get tags
             list_tags = feature_view.get_tags()
             ```
-            
+
         # Returns
             `Dict[str, obj]` of tags.
 
@@ -534,13 +534,13 @@ class FeatureView:
 
     def delete_tag(self, name: str):
         """Delete a tag attached to a feature view.
-        
-        !!! example 
+
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # delete a tag
@@ -573,32 +573,32 @@ class FeatureView:
 
         !!! example "Create random splits"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # create a training dataset
             version, job = feature_view.create_training_data(
                 description='Description of a dataset',
                 data_format='csv',
-                # async creation in order not to wait till finish of the job 
+                # async creation in order not to wait till finish of the job
                 write_options={"wait_for_job": False}
             )
             ```
 
         !!! example "Create time series splits by specifying date as string"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # set up dates
             start_time = "2022-01-01 00:00:00"
-            end_time = "2022-06-06 23:59:59"    
+            end_time = "2022-06-06 23:59:59"
 
             # create a training dataset
             version, job = feature_view.create_training_data(
@@ -615,10 +615,10 @@ class FeatureView:
 
         !!! example "Create time series splits by specifying date as datetime object"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # set up dates
@@ -626,7 +626,7 @@ class FeatureView:
             date_format = "%Y-%m-%d %H:%M:%S"
 
             start_time = datetime.strptime("2022-01-01 00:00:00", date_format)
-            end_time = datetime.strptime("2022-06-06 23:59:59", date_format)    
+            end_time = datetime.strptime("2022-06-06 23:59:59", date_format)
 
             # create a training dataset
             version, job = feature_view.create_training_data(
@@ -747,10 +747,10 @@ class FeatureView:
 
         !!! example "Create random splits"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # create a train-test split dataset
@@ -764,17 +764,17 @@ class FeatureView:
 
         !!! example "Create time series splits by specifying date as string"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # set up dates
             train_start = "2022-01-01 00:00:00"
-            train_end = "2022-06-06 23:59:59"    
+            train_end = "2022-06-06 23:59:59"
             test_start = "2022-06-07 00:00:00"
-            test_end = "2022-12-25 23:59:59" 
+            test_end = "2022-12-25 23:59:59"
 
             # create a train-test split dataset
             version, job = feature_view.create_train_test_split(
@@ -790,10 +790,10 @@ class FeatureView:
 
         !!! example "Create time series splits by specifying date as datetime object"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # set up dates
@@ -801,7 +801,7 @@ class FeatureView:
             date_format = "%Y-%m-%d %H:%M:%S"
 
             train_start = datetime.strptime("2022-01-01 00:00:00", date_format)
-            train_end = datetime.strptime("2022-06-06 23:59:59", date_format)    
+            train_end = datetime.strptime("2022-06-06 23:59:59", date_format)
             test_start = datetime.strptime("2022-06-07 00:00:00", date_format)
             test_end = datetime.strptime("2022-12-25 23:59:59" , date_format)
 
@@ -831,7 +831,7 @@ class FeatureView:
 
             Currently not supported petastorm, hdf5 and npy file formats.
 
-        !!! warning "Warning, the following code will fail because category column contains sparse values and training dataset may not have all values available in test split."            
+        !!! warning "Warning, the following code will fail because category column contains sparse values and training dataset may not have all values available in test split."
             ```python
             import pandas as pd
 
@@ -975,36 +975,36 @@ class FeatureView:
 
         !!! example "Create random splits"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # create a train-validation-test split dataset
             version, job = feature_view.create_train_validation_test_split(
-                validation_size=0.3, 
+                validation_size=0.3,
                 test_size=0.2,
                 description='Description of a dataset',
                 data_format='csv'
-            )   
+            )
             ```
 
         !!! example "Create time series splits by specifying date as string"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # set up dates
             train_start = "2022-01-01 00:00:00"
-            train_end = "2022-06-01 23:59:59" 
+            train_end = "2022-06-01 23:59:59"
             validation_start = "2022-06-02 00:00:00"
-            validation_end = "2022-07-01 23:59:59"    
+            validation_end = "2022-07-01 23:59:59"
             test_start = "2022-07-02 00:00:00"
-            test_end = "2022-08-01 23:59:59" 
+            test_end = "2022-08-01 23:59:59"
 
             # create a train-validation-test split dataset
             version, job = feature_view.create_train_validation_test_split(
@@ -1022,10 +1022,10 @@ class FeatureView:
 
         !!! example "Create time series splits by specifying date as datetime object"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # set up dates
@@ -1033,9 +1033,9 @@ class FeatureView:
             date_format = "%Y-%m-%d %H:%M:%S"
 
             train_start = datetime.strptime("2022-01-01 00:00:00", date_format)
-            train_end = datetime.strptime("2022-06-06 23:59:59", date_format)  
-            validation_start = datetime.strptime("2022-06-02 00:00:00", date_format) 
-            validation_end = datetime.strptime("2022-07-01 23:59:59", date_format)    
+            train_end = datetime.strptime("2022-06-06 23:59:59", date_format)
+            validation_start = datetime.strptime("2022-06-02 00:00:00", date_format)
+            validation_end = datetime.strptime("2022-07-01 23:59:59", date_format)
             test_start = datetime.strptime("2022-06-07 00:00:00", date_format)
             test_end = datetime.strptime("2022-12-25 23:59:59", date_format)
 
@@ -1178,19 +1178,19 @@ class FeatureView:
     ):
         """
         Recreate a training dataset.
-        
-        !!! example 
+
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # recreate a training dataset that has been deleted
             feature_view.recreate_training_dataset(version=1)
-            ```        
-        
+            ```
+
         !!! info
             If a materialised training data has deleted. Use `recreate_training_dataset()` to
             recreate the training data.
@@ -1227,10 +1227,10 @@ class FeatureView:
 
         !!! example "Create random splits"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # get training data
@@ -1241,21 +1241,21 @@ class FeatureView:
 
         !!! example "Create time-series based splits"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # set up a date
             start_time = "2022-05-01 00:00:00"
             end_time = "2022-06-04 23:59:59"
             # you can also pass dates as datetime objects
-            
+
             # get training data
             features_df, labels_df = feature_view.training_data(
                 start_time=start_time,
-                end_time=end_time,    
+                end_time=end_time,
                 description='Descriprion of a dataset'
             )
             ```
@@ -1330,10 +1330,10 @@ class FeatureView:
 
         !!! example "Create random train/test splits"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # get training data
@@ -1344,10 +1344,10 @@ class FeatureView:
 
         !!! example "Create time-series train/test splits"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # set up dates
@@ -1463,12 +1463,12 @@ class FeatureView:
         """
         Get training data from feature groups.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # get training data
@@ -1480,10 +1480,10 @@ class FeatureView:
 
         !!! example "Time Series split"
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # set up dates
@@ -1492,7 +1492,7 @@ class FeatureView:
 
             start_time_val = '2018-02-02 23:59:59'
             end_time_val = '2019-02-01 23:59:59'
-            
+
             start_time_test = '2019-02-02 23:59:59'
             end_time_test = '2020-02-01 23:59:59'
             # you can also pass dates as datetime objects
@@ -1626,12 +1626,12 @@ class FeatureView:
         """
         Get training data from storage or feature groups.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # get training data
@@ -1668,12 +1668,12 @@ class FeatureView:
         """
         Get training data from storage or feature groups.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # get training data
@@ -1709,12 +1709,12 @@ class FeatureView:
         """
         Get training data from storage or feature groups.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # get training data
@@ -1749,22 +1749,22 @@ class FeatureView:
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
         """Attach a tag to a training dataset.
 
-        !!! example 
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature feature view instance 
+            # get feature feature view instance
             feature_view = fs.get_feature_view(...)
 
             # attach a tag to a training dataset
             feature_view.add_training_dataset_tag(
-                training_dataset_version=1, 
-                name="tag_schema", 
+                training_dataset_version=1,
+                name="tag_schema",
                 value={"key", "value"}
             )
             ```
-            
+
         # Arguments
             name: Name of the tag to be added.
             value: Value of the tag to be added.
@@ -1778,13 +1778,13 @@ class FeatureView:
 
     def get_training_dataset_tag(self, training_dataset_version: int, name: str):
         """Get the tags of a training dataset.
-        
-        !!! example 
+
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # get a training dataset tag
@@ -1793,7 +1793,7 @@ class FeatureView:
                  name="tag_schema"
             )
             ```
-            
+
         # Arguments
             name: Name of the tag to get.
 
@@ -1809,16 +1809,16 @@ class FeatureView:
 
     def get_training_dataset_tags(self, training_dataset_version: int):
         """Returns all tags attached to a training dataset.
-        
-        !!! example 
+
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # get a training dataset tags           
+            # get a training dataset tags
             list_tags = feature_view.get_training_dataset_tags(
                 training_dataset_version=1
             )
@@ -1836,16 +1836,16 @@ class FeatureView:
 
     def delete_training_dataset_tag(self, training_dataset_version: int, name: str):
         """Delete a tag attached to a training dataset.
-        
-        !!! example 
+
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # delete training dataset tag        
+            # delete training dataset tag
             feature_view.delete_training_dataset_tag(
                 training_dataset_version=1,
                 name='name_of_dataset'
@@ -1864,19 +1864,19 @@ class FeatureView:
 
     def purge_training_data(self, version: int):
         """Delete a training dataset (data only).
-        
-        !!! example 
+
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # purge training data
             feature_view.purge_training_data(version=1)
-            ```        
-            
+            ```
+
         # Arguments
             version: Version of the training dataset to be removed.
 
@@ -1889,18 +1889,18 @@ class FeatureView:
 
     def purge_all_training_data(self):
         """Delete all training datasets (data only).
-        
-        !!! example 
+
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # purge all training data
             feature_view.purge_all_training_data()
-            ```        
+            ```
 
         # Raises
             `RestAPIError` in case the backend fails to delete the training datasets.
@@ -1909,16 +1909,16 @@ class FeatureView:
 
     def delete_training_dataset(self, version: int):
         """Delete a training dataset.
-        
-        !!! example 
+
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # delete a training dataset            
+            # delete a training dataset
             feature_view.delete_training_dataset(
                 version=1
             )
@@ -1936,19 +1936,19 @@ class FeatureView:
 
     def delete_all_training_datasets(self):
         """Delete all training datasets.
-        
-        !!! example 
+
+        !!! example
             ```python
-            # get feature store instance 
+            # get feature store instance
             fs = ...
 
-            # get feature view instance 
+            # get feature view instance
             feature_view = fs.get_feature_view(...)
 
             # delete all training datasets
             feature_view.delete_all_training_datasets()
             ```
-            
+
         # Raises
             `RestAPIError` in case the backend fails to delete the training datasets.
         """
