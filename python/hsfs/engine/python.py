@@ -872,6 +872,9 @@ class Engine:
         writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
 
         def acked(err, msg):
+            if err.code() == KafkaError.TOPIC_AUTHORIZATION_FAILED:
+                raise err  # Stop producing, the user is not authorized
+
             if err is not None and offline_write_options.get("debug_kafka", False):
                 print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
             else:
@@ -962,8 +965,6 @@ class Engine:
                 producer.poll(0)
                 break
             except BufferError as e:
-                if e.args[0].code() == KafkaError.TOPIC_AUTHORIZATION_FAILED:
-                    raise e  # Stop producing, the user is not authorized
                 if offline_write_options.get("debug_kafka", False):
                     print("Caught: {}".format(e))
                 # backoff for 1 second
