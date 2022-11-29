@@ -696,7 +696,7 @@ class FeatureGroupBase:
 
             val_reports = fg.get_all_validation_reports()
             ```
-            
+
         # Arguments
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
@@ -1338,11 +1338,11 @@ class FeatureGroup(FeatureGroupBase):
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
-        
+
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to ingest the feature group data.
-        
+
         # Raises
             `RestAPIError`. Unable to create feature group.
         """
@@ -1776,7 +1776,7 @@ class FeatureGroup(FeatureGroupBase):
 
             ge_report = fg.validate(df, save_report=False)
             ```
-            
+
         # Arguments
             dataframe: The dataframe to run the data validation expectations against.
             expectation_suite: Optionally provide an Expectation Suite to override the
