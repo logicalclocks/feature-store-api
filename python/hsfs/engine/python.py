@@ -34,7 +34,7 @@ from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
 from typing import TypeVar, Optional, Dict, Any
-from confluent_kafka import Producer
+from confluent_kafka import Producer, KafkaError
 from tqdm.auto import tqdm
 from botocore.response import StreamingBody
 
@@ -962,6 +962,8 @@ class Engine:
                 producer.poll(0)
                 break
             except BufferError as e:
+                if e.code() == KafkaError.TOPIC_AUTHORIZATION_FAILED:
+                    raise e  # Stop producing, the user is not authorized
                 if offline_write_options.get("debug_kafka", False):
                     print("Caught: {}".format(e))
                 # backoff for 1 second
