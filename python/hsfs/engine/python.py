@@ -959,6 +959,9 @@ class Engine:
                     key=key,
                     value=encoded_row,
                     callback=acked,
+                    headers={
+                        "version": str(feature_group.subject["version"]).encode("utf8")
+                    },
                 )
 
                 # Trigger internal callbacks to empty op queue

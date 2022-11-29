@@ -62,7 +62,7 @@ public class FeatureGroupEngine {
   public FeatureGroup save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> partitionKeys,
                            String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
-    dataset = utils.sanitizeFeatureNames(dataset);
+    dataset = utils.convertToDefaultDataframe(dataset);
 
     featureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys, hudiPrecombineKey,
         dataset, false);
@@ -80,7 +80,6 @@ public class FeatureGroupEngine {
                      String hudiPrecombineKey, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     Integer validationId = null;
-
     if (featureGroup.getId() == null) {
       featureGroup = saveFeatureGroupMetaData(featureGroup, partitionKeys,
           hudiPrecombineKey, featureData, false);
@@ -94,8 +93,8 @@ public class FeatureGroupEngine {
       featureGroupApi.deleteContent(featureGroup);
     }
 
-    saveDataframe(featureGroup, featureData, storage, operation,
-        writeOptions, utils.getKafkaConfig(featureGroup, writeOptions), validationId);
+    saveDataframe(featureGroup, utils.convertToDefaultDataframe(featureData),
+            storage, operation, writeOptions, utils.getKafkaConfig(featureGroup, writeOptions), validationId);
   }
 
   @Deprecated
@@ -116,8 +115,9 @@ public class FeatureGroupEngine {
     }
 
     StreamingQuery streamingQuery = SparkEngine.getInstance().writeStreamDataframe(featureGroup,
-        utils.sanitizeFeatureNames(featureData), queryName, outputMode, awaitTermination, timeout,
-        checkpointLocation, utils.getKafkaConfig(featureGroup, writeOptions));
+        utils.convertToDefaultDataframe(featureData), queryName,
+            outputMode, awaitTermination, timeout, checkpointLocation,
+            utils.getKafkaConfig(featureGroup, writeOptions));
 
     return streamingQuery;
   }

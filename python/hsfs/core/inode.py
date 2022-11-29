@@ -24,7 +24,7 @@ class Inode:
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)["items"]
         for inode in json_decamelized:
-            _ = inode.pop("type")
+            _ = inode.pop("type", None)
         return [cls(**inode) for inode in json_decamelized]
 
     @property

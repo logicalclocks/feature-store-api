@@ -49,6 +49,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.functions;
 import org.apache.spark.sql.streaming.DataStreamReader;
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
@@ -57,6 +58,7 @@ import org.apache.spark.sql.types.ArrayType;
 import org.apache.spark.sql.types.BinaryType;
 import org.apache.spark.sql.types.BooleanType;
 import org.apache.spark.sql.types.ByteType;
+import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.DateType;
 import org.apache.spark.sql.types.DecimalType;
 import org.apache.spark.sql.types.DoubleType;
@@ -92,9 +94,11 @@ import static com.logicalclocks.hsfs.FeatureType.TIMESTAMP;
 import static com.logicalclocks.hsfs.Split.SplitType.TIME_SERIES_SPLIT;
 import static org.apache.spark.sql.avro.functions.from_avro;
 import static org.apache.spark.sql.avro.functions.to_avro;
+import static org.apache.spark.sql.functions.array;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.concat;
 import static org.apache.spark.sql.functions.from_json;
+import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.struct;
 
 public class SparkEngine {
@@ -303,27 +307,43 @@ public class SparkEngine {
     int i = 0;
     for (Split split : splits) {
       if (dataset.count() > 0) {
+        String eventTime = query.getLeftFeatureGroup().getEventTime();
         String eventTimeType =
-            query.getLeftFeatureGroup().getFeature(query.getLeftFeatureGroup().getEventTime()).getType();
+            query.getLeftFeatureGroup().getFeature(eventTime).getType();
+
         if (BIGINT.getType().equals(eventTimeType)) {
+          String tmpEventTime = eventTime + "_hopsworks_tmp";
+          sparkSession.sqlContext()
+              .udf()
+              .register("checkEpochUDF", (Long input) -> {
+                if (Long.toString(input).length() > 10) {
+                  input = input / 1000;
+                  return input.longValue();
+                } else {
+                  return input;
+                }
+              }, DataTypes.LongType);
+          dataset = dataset.withColumn(tmpEventTime,functions.callUDF(
+              "checkEpochUDF", dataset.col(eventTime)));
+
           // event time in second. `getTime()` return in millisecond.
           datasetSplits[i] = dataset.filter(
               String.format(
                   "%d/1000 <= `%s` and `%s` < %d/1000",
                   split.getStartTime().getTime(),
-                  query.getLeftFeatureGroup().getEventTime(),
-                  query.getLeftFeatureGroup().getEventTime(),
+                  tmpEventTime,
+                  tmpEventTime,
                   split.getEndTime().getTime()
               )
-          );
+          ).drop(tmpEventTime);
         } else if (DATE.getType().equals(eventTimeType) || TIMESTAMP.getType().equals(eventTimeType)) {
           // unix_timestamp return in second. `getTime()` return in millisecond.
           datasetSplits[i] = dataset.filter(
               String.format(
                   "%d/1000 <= unix_timestamp(`%s`) and unix_timestamp(`%s`) < %d/1000",
                   split.getStartTime().getTime(),
-                  query.getLeftFeatureGroup().getEventTime(),
-                  query.getLeftFeatureGroup().getEventTime(),
+                  eventTime,
+                  eventTime,
                   split.getEndTime().getTime()
               )
           );
@@ -488,7 +508,15 @@ public class SparkEngine {
   public <S> void writeOnlineDataframe(FeatureGroupBase featureGroupBase, S dataset, String onlineTopicName,
                                          Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
+    byte[] version = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
+
     onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, (Dataset<Row>) dataset))
+        .withColumn("headers", array(
+            struct(
+                lit("version").as("key"),
+                lit(version).as("value")
+            )
+        ))
         .write()
         .format(Constants.KAFKA_FORMAT)
         .options(writeOptions)
@@ -500,10 +528,17 @@ public class SparkEngine {
                                              String outputMode, boolean awaitTermination, Long timeout,
                                              String checkpointLocation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
+    byte[] version = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
 
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
     DataStreamWriter<Row> writer =
         onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
+        .withColumn("headers", array(
+            struct(
+                lit("version").as("key"),
+                lit(version).as("value")
+            )
+        ))
         .writeStream()
         .format(Constants.KAFKA_FORMAT)
         .outputMode(outputMode)
@@ -751,10 +786,18 @@ public class SparkEngine {
     return features;
   }
 
-  public <S> S sanitizeFeatureNames(S datasetGeneric) {
+  public <S> S convertToDefaultDataframe(S datasetGeneric) {
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
-    return (S) dataset.select(Arrays.asList(dataset.columns()).stream().map(f -> col(f).alias(f.toLowerCase())).toArray(
-        Column[]::new));
+    Dataset<Row> sanitizedNamesDataset = dataset.select(Arrays.asList(dataset.columns()).stream().map(f ->
+            col(f).alias(f.toLowerCase())).toArray(Column[]::new));
+
+    StructType schema = sanitizedNamesDataset.schema();
+    StructType nullableSchema = new StructType(JavaConverters.asJavaCollection(schema.toSeq()).stream().map(f ->
+            new StructField(f.name(), f.dataType(), true, f.metadata())
+    ).toArray(StructField[]::new));
+    Dataset<Row> nullableDataset = sanitizedNamesDataset.sparkSession()
+            .createDataFrame(sanitizedNamesDataset.rdd(), nullableSchema);
+    return (S) nullableDataset;
   }
 
   public String addFile(String filePath) {

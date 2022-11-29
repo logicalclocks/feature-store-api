@@ -238,8 +238,8 @@ class TrainingDataset:
                 TrainingDatasetSplit(
                     name=split_name,
                     split_type=TrainingDatasetSplit.TIME_SERIES_SPLIT,
-                    start_time=util.convert_event_time_to_timestamp(start_time),
-                    end_time=util.convert_event_time_to_timestamp(end_time),
+                    start_time=start_time,
+                    end_time=end_time,
                 )
             )
 
