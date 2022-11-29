@@ -27,7 +27,6 @@ import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
@@ -136,23 +135,19 @@ public class FeatureGroupApi {
   public ExternalFeatureGroup save(ExternalFeatureGroup externalFeatureGroup)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(externalFeatureGroup);
-
-    return saveInternal(externalFeatureGroup, new StringEntity(featureGroupJson), ExternalFeatureGroup.class);
+    return saveInternal(externalFeatureGroup,
+        hopsworksClient.buildStringEntity(externalFeatureGroup),
+        ExternalFeatureGroup.class);
   }
 
   public FeatureGroup save(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
-
-    return saveInternal(featureGroup, new StringEntity(featureGroupJson), FeatureGroup.class);
+    return saveInternal(featureGroup, hopsworksClient.buildStringEntity(featureGroup), FeatureGroup.class);
   }
 
   public StreamFeatureGroup save(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
-
-    return saveInternal(featureGroup, new StringEntity(featureGroupJson), StreamFeatureGroup.class);
+    return saveInternal(featureGroup, hopsworksClient.buildStringEntity(featureGroup), StreamFeatureGroup.class);
   }
 
   private <U> U saveInternal(FeatureGroupBase featureGroupBase,
@@ -167,7 +162,6 @@ public class FeatureGroupApi {
         .expand();
 
     HttpPost postRequest = new HttpPost(uri);
-    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
     postRequest.setEntity(entity);
 
     LOGGER.info("Sending metadata request: " + uri);
@@ -231,14 +225,9 @@ public class FeatureGroupApi {
         .set(queryParameter, value)
         .expand();
 
-    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
-    HttpPut putRequest = new HttpPut(uri);
-    putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    putRequest.setEntity(new StringEntity(featureGroupJson));
-
     LOGGER.info("Sending metadata request: " + uri);
-    LOGGER.info(featureGroupJson);
-
+    HttpPut putRequest = new HttpPut(uri);
+    putRequest.setEntity(hopsworksClient.buildStringEntity(featureGroup));
     return hopsworksClient.handleRequest(putRequest, fgType);
   }
 
@@ -255,12 +244,9 @@ public class FeatureGroupApi {
         .set("fgId", featureGroup.getId())
         .expand();
 
-    String featureGroupCommitJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroupCommit);
-    HttpPost postRequest = new HttpPost(uri);
-    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    postRequest.setEntity(new StringEntity(featureGroupCommitJson));
-
     LOGGER.info("Sending metadata request: " + uri);
+    HttpPost postRequest = new HttpPost(uri);
+    postRequest.setEntity(hopsworksClient.buildStringEntity(featureGroupCommit));
     return hopsworksClient.handleRequest(postRequest, FeatureGroupCommit.class);
   }
 
