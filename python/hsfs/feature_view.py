@@ -1875,7 +1875,7 @@ class FeatureView:
             feature_view = fs.get_feature_view(...)
 
             # purge training data
-            feature_view.purge_training_data(version=1)
+            feature_view.purge_training_data(training_dataset_version=1)
             ```        
             
         # Arguments
@@ -1921,7 +1921,7 @@ class FeatureView:
 
             # delete a training dataset            
             feature_view.delete_training_dataset(
-                version=1
+                training_dataset_version=1
             )
             ```
 
