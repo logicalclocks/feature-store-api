@@ -34,7 +34,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
-import static com.logicalclocks.hsfs.metadata.HopsworksClient.getInstance;
 
 public class TrainingDatasetApi {
 
@@ -160,7 +159,7 @@ public class TrainingDatasetApi {
 
     LOGGER.info("Sending metadata request: " + uri);
     HttpPut putRequest = new HttpPut(uri);
-    putRequest.setEntity(getInstance().buildStringEntity(trainingDataset));
+    putRequest.setEntity(hopsworksClient.buildStringEntity(trainingDataset));
     return hopsworksClient.handleRequest(putRequest, TrainingDataset.class);
   }
 
