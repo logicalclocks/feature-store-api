@@ -696,7 +696,7 @@ class FeatureGroupBase:
 
             val_reports = fg.get_all_validation_reports()
             ```
-
+            
         # Arguments
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
@@ -1767,7 +1767,7 @@ class FeatureGroup(FeatureGroupBase):
 
             ge_report = fg.validate(df, save_report=False)
             ```
-
+            
         # Arguments
             dataframe: The dataframe to run the data validation expectations against.
             expectation_suite: Optionally provide an Expectation Suite to override the
@@ -1780,7 +1780,6 @@ class FeatureGroup(FeatureGroupBase):
             save_report: Whether to save the report to the backend. This is only possible if the Expectation suite
                 is initialised and attached to the Feature Group. Defaults to False.
             ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.
-
 
         # Returns
             A Validation Report produced by Great Expectations.
