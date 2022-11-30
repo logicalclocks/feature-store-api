@@ -102,6 +102,10 @@ public class FeatureGroupBase {
   @Setter
   protected String location;
 
+  @Getter
+  @Setter
+  protected TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
+
   @JsonIgnore
   protected Subject subject;
 
@@ -414,11 +418,6 @@ public class FeatureGroupBase {
   @JsonIgnore
   public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
     // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
-    return null;
-  }
-
-  public TimeTravelFormat getTimeTravelFormat() {
-    // This method should be overridden by the FeatureGroup classes
     return null;
   }
 }

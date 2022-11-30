@@ -284,7 +284,6 @@ class FeatureGroupBase:
     def get_tag(self, name: str):
         """Get the tags of a feature group.
 
-
         !!! example
             ```python
             # connect to the Feature Store
@@ -727,7 +726,6 @@ class FeatureGroupBase:
     ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]:
         """Save validation report to hopsworks platform along previous reports of the same Feature Group.
 
-
         !!! example
             ```python
             # connect to the Feature Store
@@ -930,6 +928,7 @@ class FeatureGroupBase:
 
         # Returns
             `Statistics`. The statistics metadata object.
+
         # Raises
             `RestAPIError`. Unable to persist the statistics.
         """
@@ -1124,7 +1123,16 @@ class FeatureGroup(FeatureGroupBase):
                 self._stream = True
             # for stream feature group time travel format is always HUDI
             if self._stream:
-                self._time_travel_format = "HUDI"
+                expected_format = "HUDI"
+                if self._time_travel_format != expected_format:
+                    warnings.warn(
+                        (
+                            "The provided time travel format `{}` has been overwritten "
+                            "because Stream enabled feature groups only support `{}`"
+                        ).format(self._time_travel_format, expected_format),
+                        util.FeatureGroupWarning,
+                    )
+                    self._time_travel_format = expected_format
 
             self.primary_key = primary_key
             self.partition_key = partition_key
@@ -1168,17 +1176,18 @@ class FeatureGroup(FeatureGroupBase):
             fg = fs.get_or_create_feature_group(...)
             fg.read()
             ```
+
         !!! example "Read feature group as of specific point in time:"
             ```python
             fg = fs.get_or_create_feature_group(...)
             fg.read("2020-10-20 07:34:11")
             ```
+
         # Arguments
             wallclock_time: If specified will retrieve feature group as of specific point in time. Defaults to `None`.
                 If not specified, will return as of most recent time.
                 Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
             dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
@@ -1329,9 +1338,11 @@ class FeatureGroup(FeatureGroupBase):
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to ingest the feature group data.
+
         # Raises
             `RestAPIError`. Unable to create feature group.
         """
@@ -1425,7 +1436,7 @@ class FeatureGroup(FeatureGroupBase):
                 online_enabled=True,
                 event_time=['unix']
             )
-            # async insertion in order not to wait till finish of the job 
+            # async insertion in order not to wait till finish of the job
             fg.insert(df_for_fg1, write_options={"wait_for_job" : False})
 
             fg2 = fs.get_or_create_feature_group(
@@ -1779,10 +1790,8 @@ class FeatureGroup(FeatureGroupBase):
                 is initialised and attached to the Feature Group. Defaults to False.
             ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.
 
-
         # Returns
             A Validation Report produced by Great Expectations.
-
         """
         # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
@@ -1882,7 +1891,6 @@ class FeatureGroup(FeatureGroupBase):
             ```python
             fg.json()
             ```
-
         """
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
@@ -1899,7 +1907,6 @@ class FeatureGroup(FeatureGroupBase):
 
             fg.to_dict()
             ```
-
         """
         fg_meta_dict = {
             "id": self._id,
@@ -1935,7 +1942,6 @@ class FeatureGroup(FeatureGroupBase):
             ```python
             complex_dtype_features = fg.get_complex_features()
             ```
-
         """
         return [f.name for f in self.features if f.is_complex()]
 
