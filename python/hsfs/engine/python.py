@@ -872,14 +872,13 @@ class Engine:
         writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
 
         def acked(err, msg):
-            if err.code() == KafkaError.TOPIC_AUTHORIZATION_FAILED:
-                raise err  # Stop producing, the user is not authorized
-
-            if err is not None and offline_write_options.get("debug_kafka", False):
-                print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
-            else:
-                # update progress bar for each msg
-                progress_bar.update()
+            if err is not None:
+                if err.code() == KafkaError.TOPIC_AUTHORIZATION_FAILED:
+                    raise err  # Stop producing, the user is not authorized
+                if offline_write_options.get("debug_kafka", False):
+                    print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
+            # update progress bar for each msg
+            progress_bar.update()
 
         # initialize progress bar
         progress_bar = tqdm(
