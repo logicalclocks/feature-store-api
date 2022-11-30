@@ -15,14 +15,22 @@
  *
  */
 
-package com.logicalclocks.hsfs;
+package com.logicalclocks.hsfs.metadata;
 
+import com.logicalclocks.hsfs.Feature;
+import com.logicalclocks.hsfs.FeatureStore;
+import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.StreamFeatureGroup;
+import com.logicalclocks.hsfs.engine.FeatureGroupBaseEngine;
 import com.logicalclocks.hsfs.engine.StreamFeatureGroupEngine;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -117,5 +125,36 @@ public class TestFeatureGroup {
 
     Assertions.assertEquals(precombineException.getMessage(),
         "Provided Hudi precombine key hudiPrecombineKey doesn't exist in feature dataframe");
+  }
+
+  @Test
+  public void testFeatureGroupAppendFeaturesResetSubject() throws FeatureStoreException, IOException, ParseException {
+    // Arrange
+    FeatureStore featureStore = Mockito.mock(FeatureStore.class);
+    FeatureGroupApi featureGroupApi = Mockito.mock(FeatureGroupApi.class);
+    FeatureGroupBase featureGroupBase = Mockito.mock(FeatureGroupBase.class);
+    Mockito.when(featureGroupBase.getFeatures()).thenReturn(new ArrayList<>());
+    Mockito.when(featureGroupApi.updateMetadata(Mockito.any(), Mockito.anyString(), Mockito.any()))
+        .thenReturn(featureGroupBase);
+
+    List<Feature> features = new ArrayList<>();
+    features.add( new Feature("featureA"));
+    features.add( new Feature("featureB"));
+    features.add( new Feature("featureC"));
+
+    StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
+        Collections.singletonList("featureA"), null, null,
+        true, features, null, "onlineTopicName", "eventTime");
+
+    featureGroup.subject = new Subject();
+
+    featureGroup.featureGroupBaseEngine = new FeatureGroupBaseEngine(
+        featureGroupApi, Mockito.mock(TagsApi.class));
+
+    // Act
+    featureGroup.appendFeatures(new Feature("featureD"));
+
+    // Assert
+    Assertions.assertNull(featureGroup.subject);
   }
 }

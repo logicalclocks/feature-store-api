@@ -78,6 +78,18 @@ class FeatureView:
     def delete(self):
         """Delete current feature view and all associated metadata.
 
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # delete a feature view
+            feature_view.delete()
+            ```
+
         !!! danger "Potentially dangerous operation"
             This operation drops all metadata associated with **this version** of the
             feature view **and** related training dataset **and** materialized data in HopsFS.
@@ -91,6 +103,22 @@ class FeatureView:
     def clean(feature_store_id: int, feature_view_name: str, feature_view_version: str):
         """Delete the feature view and all associated metadata.
 
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # delete a feature view and all associated metadata
+            feature_view.clean(
+                feature_store_id=1,
+                feature_view_name='feature_view_name',
+                feature_view_version=1
+            )
+            ```
+
         !!! danger "Potentially dangerous operation"
             This operation drops all metadata associated with **this version** of the
             feature view **and** related training dataset **and** materialized data in HopsFS.
@@ -99,6 +127,7 @@ class FeatureView:
             feature_store_id: int. Id of feature store.
             feature_view_name: str. Name of feature view.
             feature_view_version: str. Version of feature view.
+
         # Raises
             `RestAPIError`.
         """
@@ -113,18 +142,22 @@ class FeatureView:
 
         !!! example "Update the feature view with a new description."
             ```python
-            fs = connection.get_feature_store();
-            fv = fs.get_feature_view("example_feature_view", 1)
-            fv.description = "new description"
-            fv.update()
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            feature_view.description = "new description"
+            feature_view.update()
 
             # Description is updated in the metadata. Below should return "new description".
-            fs.get_feature_view("example_feature_view", 1).description
+            fs.get_feature_view("feature_view_name", 1).description
             ```
 
-        # Arguments
         # Returns
             `FeatureView` Updated feature view.
+
         # Raises
             `RestAPIError`.
         """
@@ -137,6 +170,18 @@ class FeatureView:
     ):
         """Initialise and cache parametrized prepared statement to
            retrieve feature vector from online feature store.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # initialise and cache parametrized prepared statement to retrieve a feature vector
+            feature_view.init_serving(training_dataset_version=1)
+            ```
 
         # Arguments
             training_dataset_version: int, optional. Default to be 1. Transformation statistics
@@ -179,6 +224,21 @@ class FeatureView:
     ):
         """Initialise and cache parametrized transformation functions.
 
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # initialise and cache parametrized transformation functions
+            feature_view.init_batch_scoring(training_dataset_version=1)
+
+            # get batch data
+            batch_data = feature_view.get_batch_data(...)
+            ```
+
         # Arguments
             training_dataset_version: int, optional. Default to be None. Transformation statistics
                 are fetched from training dataset and apply in serving vector.
@@ -195,6 +255,28 @@ class FeatureView:
         end_time: Optional[Union[str, int, datetime, date]] = None,
     ):
         """Get a query string of batch query.
+
+        !!! example "Batch query for the last 24 hours"
+            ```python
+                # get feature store instance
+                fs = ...
+
+                # get feature view instance
+                feature_view = fs.get_feature_view(...)
+
+                # set up dates
+                import datetime
+                start_date = (datetime.datetime.now() - datetime.timedelta(hours=24))
+                end_date = (datetime.datetime.now())
+
+                # get a query string of batch query
+                query_str = feature_view.get_batch_query(
+                    start_time=start_date,
+                    end_time=end_date
+                )
+                # print query string
+                print(query_str)
+            ```
 
         # Arguments
             start_time: Start event time for the batch query. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
@@ -224,6 +306,37 @@ class FeatureView:
     ):
         """Returns assembled serving vector from online feature store.
 
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get a feature vector
+            feature_view.get_feature_vector(
+                entry = {"pk1": 1, "pk2": 2}
+            )
+            ```
+
+        !!! example "Get feature vector with user-supplied features"
+            ```python
+            # get feature store instance
+            fs = ...
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # the application provides a feature value 'app_attr'
+            app_attr = ...
+
+            # get a feature vector
+            feature_view.get_feature_vector(
+                entry = {"pk1": 1, "pk2": 2},
+                passed_features = { "app_feature" : app_attr }
+            )
+            ```
+
         # Arguments
             entry: dictionary of feature group primary key and values provided by serving application.
             passed_features: dictionary of feature values provided by the application at runtime.
@@ -235,6 +348,7 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+
         # Returns
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in the feature view query.
@@ -251,6 +365,24 @@ class FeatureView:
     ):
         """Returns assembled serving vectors in batches from online feature store.
 
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get assembled serving vectors
+            feature_view.get_feature_vectors(
+                entry = [
+                    {"pk1": 1, "pk2": 2},
+                    {"pk1": 3, "pk2": 4},
+                    {"pk1": 5, "pk2": 6}
+                ]
+            )
+            ```
+
         # Arguments
             entry: a list of dictionary of feature group primary key and values provided by serving application.
             passed_features: a list of dictionary of feature values provided by the application at runtime.
@@ -262,6 +394,7 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+
         # Returns
             `List[list]` List of lists of feature values related to provided primary keys, ordered according to positions of this features in the feature view query.
         """
@@ -277,6 +410,26 @@ class FeatureView:
     ):
         """Get a batch of data from an event time interval.
 
+        !!! example "Batch data for the last 24 hours"
+            ```python
+                # get feature store instance
+                fs = ...
+
+                # get feature view instance
+                feature_view = fs.get_feature_view(...)
+
+                # set up dates
+                import datetime
+                start_date = (datetime.datetime.now() - datetime.timedelta(hours=24))
+                end_date = (datetime.datetime.now())
+
+                # get a batch of data
+                df = feature_view.get_batch_data(
+                    start_time=start_date,
+                    end_time=end_date
+                )
+            ```
+
         # Arguments
             start_time: Start event time for the batch query. Optional. Strings should be
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
@@ -285,6 +438,9 @@ class FeatureView:
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             read_options: User provided read options. Defaults to `{}`.
+
+        # Returns
+            `DataFrame`: A dataframe
         """
 
         if self._batch_scoring_server is None:
@@ -300,15 +456,103 @@ class FeatureView:
         )
 
     def add_tag(self, name: str, value):
+        """Attach a tag to a feature view.
+
+        A tag consists of a name and value pair.
+        Tag names are unique identifiers across the whole cluster.
+        The value of a tag can be any valid json - primitives, arrays or json objects.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # attach a tag to a feature view
+            feature_view.add_tag(name="tag_schema", value={"key", "value"})
+            ```
+
+        # Arguments
+            name: Name of the tag to be added.
+            value: Value of the tag to be added.
+
+        # Raises
+            `RestAPIError` in case the backend fails to add the tag.
+        """
         return self._feature_view_engine.add_tag(self, name, value)
 
     def get_tag(self, name: str):
+        """Get the tags of a feature view.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get a tag of a feature view
+            name = feature_view.get_tag('tag_name')
+            ```
+
+        # Arguments
+            name: Name of the tag to get.
+
+        # Returns
+            tag value
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tag.
+        """
         return self._feature_view_engine.get_tag(self, name)
 
     def get_tags(self):
+        """Returns all tags attached to a training dataset.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get tags
+            list_tags = feature_view.get_tags()
+            ```
+
+        # Returns
+            `Dict[str, obj]` of tags.
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tags.
+        """
         return self._feature_view_engine.get_tags(self)
 
     def delete_tag(self, name: str):
+        """Delete a tag attached to a feature view.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # delete a tag
+            feature_view.delete_tag('name_of_tag')
+            ```
+
+        # Arguments
+            name: Name of the tag to be removed.
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the tag.
+        """
         return self._feature_view_engine.delete_tag(self, name)
 
     def create_training_data(
@@ -326,6 +570,73 @@ class FeatureView:
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Create a training dataset and save data into `location`.
+
+        !!! example "Create random splits"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # create a training dataset
+            version, job = feature_view.create_training_data(
+                description='Description of a dataset',
+                data_format='csv',
+                # async creation in order not to wait till finish of the job
+                write_options={"wait_for_job": False}
+            )
+            ```
+
+        !!! example "Create time series splits by specifying date as string"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # set up dates
+            start_time = "2022-01-01 00:00:00"
+            end_time = "2022-06-06 23:59:59"
+
+            # create a training dataset
+            version, job = feature_view.create_training_data(
+                start_time=start_time,
+                end_time=end_time,
+                description='Description of a dataset',
+                # you can have different data formats such as csv, tsv, tfrecord, parquet and others
+                data_format='csv'
+            )
+
+            # When we want to read the training data, we need to supply the training data version returned by the create_training_data method:
+            X_train, X_test, y_train, y_test = feature_view.get_training_data(version)
+            ```
+
+        !!! example "Create time series splits by specifying date as datetime object"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # set up dates
+            from datetime import datetime
+            date_format = "%Y-%m-%d %H:%M:%S"
+
+            start_time = datetime.strptime("2022-01-01 00:00:00", date_format)
+            end_time = datetime.strptime("2022-06-06 23:59:59", date_format)
+
+            # create a training dataset
+            version, job = feature_view.create_training_data(
+                start_time=start_time,
+                end_time=end_time,
+                description='Description of a dataset',
+                # you can have different data formats such as csv, tsv, tfrecord, parquet and others
+                data_format='csv'
+            )
+            ```
 
         !!! info "Data Formats"
             The feature store currently supports the following data formats for
@@ -434,6 +745,79 @@ class FeatureView:
     ):
         """Create a training dataset and save data into `location`.
 
+        !!! example "Create random splits"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # create a train-test split dataset
+            version, job = feature_view.create_train_test_split(
+                test_size=0.2,
+                description='Description of a dataset',
+                # you can have different data formats such as csv, tsv, tfrecord, parquet and others
+                data_format='csv'
+            )
+            ```
+
+        !!! example "Create time series splits by specifying date as string"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # set up dates
+            train_start = "2022-01-01 00:00:00"
+            train_end = "2022-06-06 23:59:59"
+            test_start = "2022-06-07 00:00:00"
+            test_end = "2022-12-25 23:59:59"
+
+            # create a train-test split dataset
+            version, job = feature_view.create_train_test_split(
+                train_start=train_start,
+                train_end=train_end,
+                test_start=test_start,
+                test_end=test_end,
+                description='Description of a dataset',
+                # you can have different data formats such as csv, tsv, tfrecord, parquet and others
+                data_format='csv'
+            )
+            ```
+
+        !!! example "Create time series splits by specifying date as datetime object"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # set up dates
+            from datetime import datetime
+            date_format = "%Y-%m-%d %H:%M:%S"
+
+            train_start = datetime.strptime("2022-01-01 00:00:00", date_format)
+            train_end = datetime.strptime("2022-06-06 23:59:59", date_format)
+            test_start = datetime.strptime("2022-06-07 00:00:00", date_format)
+            test_end = datetime.strptime("2022-12-25 23:59:59" , date_format)
+
+            # create a train-test split dataset
+            version, job = feature_view.create_train_test_split(
+                test_size=0.2,
+                train_start=train_start,
+                train_end=train_end,
+                test_start=test_start,
+                test_end=test_end,
+                description='Description of a dataset',
+                # you can have different data formats such as csv, tsv, tfrecord, parquet and others
+                data_format='csv'
+            )
+            ```
+
         !!! info "Data Formats"
             The feature store currently supports the following data formats for
             training datasets:
@@ -447,6 +831,36 @@ class FeatureView:
 
             Currently not supported petastorm, hdf5 and npy file formats.
 
+        !!! warning "Warning, the following code will fail because category column contains sparse values and training dataset may not have all values available in test split."
+            ```python
+            import pandas as pd
+
+            df = pd.DataFrame({
+                'category_col':['category_a','category_b','category_c','category_d'],
+                'numeric_col': [40,10,60,40]
+            })
+
+            feature_group = fs.get_or_create_feature_group(
+                name='feature_group_name',
+                version=1,
+                primary_key=['category_col']
+            )
+
+            feature_group.insert(df)
+
+            label_encoder = fs.get_transformation_function(name='label_encoder')
+
+            feature_view = fs.create_feature_view(
+                name='feature_view_name',
+                query=feature_group.select_all(),
+                transformation_functions={'category_col':label_encoder}
+            )
+
+            feature_view.create_train_test_split(
+                test_size=0.5
+            )
+            # Output: KeyError: 'category_c'
+            ```
 
         # Arguments
             test_size: size of test set.
@@ -558,6 +972,88 @@ class FeatureView:
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Create a training dataset and save data into `location`.
+
+        !!! example "Create random splits"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # create a train-validation-test split dataset
+            version, job = feature_view.create_train_validation_test_split(
+                validation_size=0.3,
+                test_size=0.2,
+                description='Description of a dataset',
+                data_format='csv'
+            )
+            ```
+
+        !!! example "Create time series splits by specifying date as string"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # set up dates
+            train_start = "2022-01-01 00:00:00"
+            train_end = "2022-06-01 23:59:59"
+            validation_start = "2022-06-02 00:00:00"
+            validation_end = "2022-07-01 23:59:59"
+            test_start = "2022-07-02 00:00:00"
+            test_end = "2022-08-01 23:59:59"
+
+            # create a train-validation-test split dataset
+            version, job = feature_view.create_train_validation_test_split(
+                train_start=train_start,
+                train_end=train_end,
+                validation_start=validation_start,
+                validation_end=validation_end,
+                test_start=test_start,
+                test_end=test_end,
+                description='Description of a dataset',
+                # you can have different data formats such as csv, tsv, tfrecord, parquet and others
+                data_format='csv'
+            )
+            ```
+
+        !!! example "Create time series splits by specifying date as datetime object"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # set up dates
+            from datetime import datetime
+            date_format = "%Y-%m-%d %H:%M:%S"
+
+            train_start = datetime.strptime("2022-01-01 00:00:00", date_format)
+            train_end = datetime.strptime("2022-06-06 23:59:59", date_format)
+            validation_start = datetime.strptime("2022-06-02 00:00:00", date_format)
+            validation_end = datetime.strptime("2022-07-01 23:59:59", date_format)
+            test_start = datetime.strptime("2022-06-07 00:00:00", date_format)
+            test_end = datetime.strptime("2022-12-25 23:59:59", date_format)
+
+            # create a train-validation-test split dataset
+            version, job = feature_view.create_train_validation_test_split(
+                validation_size=0.3,
+                test_size=0.2,
+                train_start=train_start,
+                train_end=train_end,
+                validation_start=validation_start,
+                validation_end=validation_end,
+                test_start=test_start,
+                test_end=test_end,
+                description='Description of a dataset',
+                # you can have different data formats such as csv, tsv, tfrecord, parquet and others
+                data_format='csv'
+            )
+            ```
 
         !!! info "Data Formats"
             The feature store currently supports the following data formats for
@@ -683,6 +1179,18 @@ class FeatureView:
         """
         Recreate a training dataset.
 
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # recreate a training dataset that has been deleted
+            feature_view.recreate_training_dataset(version=1)
+            ```
+
         !!! info
             If a materialised training data has deleted. Use `recreate_training_dataset()` to
             recreate the training data.
@@ -699,7 +1207,6 @@ class FeatureView:
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
-
         """
         td, td_job = self._feature_view_engine.recreate_training_dataset(
             self, version, write_options
@@ -718,9 +1225,40 @@ class FeatureView:
         """
         Get training data from feature groups.
 
-        !!! info
-            If a materialised training data has deleted. Use `recreate_training_dataset()` to
-            recreate the training data.
+        !!! example "Create random splits"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get training data
+            features_df, labels_df  = feature_view.training_data(
+                description='Descriprion of a dataset',
+            )
+            ```
+
+        !!! example "Create time-series based splits"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # set up a date
+            start_time = "2022-05-01 00:00:00"
+            end_time = "2022-06-04 23:59:59"
+            # you can also pass dates as datetime objects
+
+            # get training data
+            features_df, labels_df = feature_view.training_data(
+                start_time=start_time,
+                end_time=end_time,
+                description='Descriprion of a dataset'
+            )
+            ```
 
         # Arguments
             start_time: Start event time for the training dataset query. Strings should
@@ -750,7 +1288,6 @@ class FeatureView:
 
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
-
         """
         td = training_dataset.TrainingDataset(
             name=self.name,
@@ -791,9 +1328,44 @@ class FeatureView:
         """
         Get training data from feature groups.
 
-        !!! info
-            If a materialised training data has deleted. Use `recreate_training_dataset()` to
-            recreate the training data.
+        !!! example "Create random train/test splits"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get training data
+            X_train, X_test, y_train, y_test = feature_view.train_test_split(
+                test_size=0.2
+            )
+            ```
+
+        !!! example "Create time-series train/test splits"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # set up dates
+            train_start = "2022-05-01 00:00:00"
+            train_end = "2022-06-04 23:59:59"
+            test_start = "2022-07-01 00:00:00"
+            test_end= "2022-08-04 23:59:59"
+            # you can also pass dates as datetime objects
+
+            # get training data
+            X_train, X_test, y_train, y_test = feature_view.train_test_split(
+                train_start=train_start,
+                train_end=train_end,
+                test_start=test_start,
+                test_end=test_end,
+                description='Description of a dataset'
+            )
+            ```
 
         # Arguments
             test_size: size of test set. Should be between 0 and 1.
@@ -829,7 +1401,6 @@ class FeatureView:
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
-
         """
         self._validate_train_test_split(
             test_size=test_size, train_end=train_end, test_start=test_start
@@ -892,9 +1463,50 @@ class FeatureView:
         """
         Get training data from feature groups.
 
-        !!! info
-            If a materialised training data has deleted. Use `recreate_training_dataset()` to
-            recreate the training data.
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get training data
+            X_train, X_val, X_test, y_train, y_val, y_test = feature_view.train_validation_test_split(
+                validation_size=0.3,
+                test_size=0.2
+            )
+            ```
+
+        !!! example "Time Series split"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # set up dates
+            start_time_train = '2017-01-01 00:00:01'
+            end_time_train = '2018-02-01 23:59:59'
+
+            start_time_val = '2018-02-02 23:59:59'
+            end_time_val = '2019-02-01 23:59:59'
+
+            start_time_test = '2019-02-02 23:59:59'
+            end_time_test = '2020-02-01 23:59:59'
+            # you can also pass dates as datetime objects
+
+            # get training data
+            X_train, X_val, X_test, y_train, y_val, y_test = feature_view.train_validation_test_split(
+                train_start=start_time_train,
+                train_end=end_time_train,
+                validation_start=start_time_val,
+                validation_end=end_time_val,
+                test_start=start_time_test,
+                test_end=end_time_test
+            )
+            ```
 
         # Arguments
             validation_size: size of validation set. Should be between 0 and 1.
@@ -937,7 +1549,6 @@ class FeatureView:
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
-
         """
 
         self._validate_train_validation_test_split(
@@ -1015,9 +1626,17 @@ class FeatureView:
         """
         Get training data from storage or feature groups.
 
-        !!! info
-            If a materialised training data has deleted. Use `recreate_training_dataset()` to
-            recreate the training data.
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get training data
+            features_df, labels_df = feature_view.get_training_data(training_dataset_version=1)
+            ```
 
         !!! warning "External Storage Support"
             Reading training data that was written to external storage using a Storage
@@ -1025,7 +1644,7 @@ class FeatureView:
             Python as Engine, instead you will have to use the storage's native client.
 
         # Arguments
-            version: training dataset version
+            training_dataset_version: training dataset version
             read_options: Additional read options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, read_options can contain the
                 following entries:
@@ -1035,7 +1654,6 @@ class FeatureView:
 
         # Returns
             (X, y): Tuple of dataframe of features and labels
-
         """
         td, df = self._feature_view_engine.get_training_data(
             self, read_options, training_dataset_version=training_dataset_version
@@ -1050,12 +1668,20 @@ class FeatureView:
         """
         Get training data from storage or feature groups.
 
-        !!! info
-            If a materialised training data has deleted. Use `recreate_training_dataset()` to
-            recreate the training data.
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get training data
+            X_train, X_test, y_train, y_test = feature_view.get_train_test_split(training_dataset_version=1)
+            ```
 
         # Arguments
-            version: training dataset version
+            training_dataset_version: training dataset version
             read_options: Additional read options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, read_options can contain the
                 following entries:
@@ -1066,7 +1692,6 @@ class FeatureView:
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
-
         """
         td, df = self._feature_view_engine.get_training_data(
             self,
@@ -1084,12 +1709,20 @@ class FeatureView:
         """
         Get training data from storage or feature groups.
 
-        !!! info
-            If a materialised training data has deleted. Use `recreate_training_dataset()` to
-            recreate the training data.
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get training data
+            X_train, X_val, X_test, y_train, y_val, y_test = feature_view.get_train_validation_test_splits(training_dataset_version=1)
+            ```
 
         # Arguments
-            version: training dataset version
+            training_dataset_version: training dataset version
             read_options: Additional read options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, read_options can contain the
                 following entries:
@@ -1100,7 +1733,6 @@ class FeatureView:
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
-
         """
         td, df = self._feature_view_engine.get_training_data(
             self,
@@ -1115,39 +1747,211 @@ class FeatureView:
         return df
 
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
+        """Attach a tag to a training dataset.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # attach a tag to a training dataset
+            feature_view.add_training_dataset_tag(
+                training_dataset_version=1,
+                name="tag_schema",
+                value={"key", "value"}
+            )
+            ```
+
+        # Arguments
+            name: Name of the tag to be added.
+            value: Value of the tag to be added.
+
+        # Raises
+            `RestAPIError` in case the backend fails to add the tag.
+        """
         return self._feature_view_engine.add_tag(
             self, name, value, training_dataset_version=training_dataset_version
         )
 
     def get_training_dataset_tag(self, training_dataset_version: int, name: str):
+        """Get the tags of a training dataset.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get a training dataset tag
+            tag_str = feature_view.get_training_dataset_tag(
+                training_dataset_version=1,
+                 name="tag_schema"
+            )
+            ```
+
+        # Arguments
+            name: Name of the tag to get.
+
+        # Returns
+            tag value
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tag.
+        """
         return self._feature_view_engine.get_tag(
             self, name, training_dataset_version=training_dataset_version
         )
 
     def get_training_dataset_tags(self, training_dataset_version: int):
+        """Returns all tags attached to a training dataset.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get a training dataset tags
+            list_tags = feature_view.get_training_dataset_tags(
+                training_dataset_version=1
+            )
+            ```
+
+        # Returns
+            `Dict[str, obj]` of tags.
+
+        # Raises
+            `RestAPIError` in case the backend fails to retrieve the tags.
+        """
         return self._feature_view_engine.get_tags(
             self, training_dataset_version=training_dataset_version
         )
 
     def delete_training_dataset_tag(self, training_dataset_version: int, name: str):
+        """Delete a tag attached to a training dataset.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # delete training dataset tag
+            feature_view.delete_training_dataset_tag(
+                training_dataset_version=1,
+                name='name_of_dataset'
+            )
+            ```
+
+        # Arguments
+            name: Name of the tag to be removed.
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the tag.
+        """
         return self._feature_view_engine.delete_tag(
             self, name, training_dataset_version=training_dataset_version
         )
 
     def purge_training_data(self, version: int):
+        """Delete a training dataset (data only).
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # purge training data
+            feature_view.purge_training_data(version=1)
+            ```
+
+        # Arguments
+            version: Version of the training dataset to be removed.
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the training dataset.
+        """
         self._feature_view_engine.delete_training_dataset_only(
             self, training_data_version=version
         )
 
     def purge_all_training_data(self):
+        """Delete all training datasets (data only).
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # purge all training data
+            feature_view.purge_all_training_data()
+            ```
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the training datasets.
+        """
         self._feature_view_engine.delete_training_dataset_only(self)
 
     def delete_training_dataset(self, version: int):
+        """Delete a training dataset.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # delete a training dataset
+            feature_view.delete_training_dataset(
+                version=1
+            )
+            ```
+
+        # Arguments
+            version: Version of the training dataset to be removed.
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the training dataset.
+        """
         self._feature_view_engine.delete_training_data(
             self, training_data_version=version
         )
 
     def delete_all_training_datasets(self):
+        """Delete all training datasets.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # delete all training datasets
+            feature_view.delete_all_training_datasets()
+            ```
+
+        # Raises
+            `RestAPIError` in case the backend fails to delete the training datasets.
+        """
         self._feature_view_engine.delete_training_data(self)
 
     @classmethod

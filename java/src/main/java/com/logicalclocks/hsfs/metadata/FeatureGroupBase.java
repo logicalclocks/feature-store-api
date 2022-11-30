@@ -102,10 +102,14 @@ public class FeatureGroupBase {
   @Setter
   protected String location;
 
-  @JsonIgnore
-  private Subject subject;
+  @Getter
+  @Setter
+  protected TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
 
-  private FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
+  @JsonIgnore
+  protected Subject subject;
+
+  protected FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
   protected StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   protected FeatureGroupUtils utils = new FeatureGroupUtils();
 
@@ -336,6 +340,11 @@ public class FeatureGroupBase {
     return subject;
   }
 
+  @JsonIgnore
+  public void unloadSubject() {
+    this.subject = null;
+  }
+
   /**
    * Filter the query based on a condition for a feature or a conjunction of multiple filters.
    *
@@ -409,11 +418,6 @@ public class FeatureGroupBase {
   @JsonIgnore
   public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
     // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
-    return null;
-  }
-
-  public TimeTravelFormat getTimeTravelFormat() {
-    // This method should be overridden by the FeatureGroup classes
     return null;
   }
 }
