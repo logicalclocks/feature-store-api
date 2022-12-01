@@ -322,7 +322,7 @@ class TrainingDataset:
         """Insert additional feature data into the training dataset.
 
         !!! warning "Deprecated"
-        `insert` method is deprecated.
+            `insert` method is deprecated.
 
         This method appends data to the training dataset either from a Feature Store
         `Query`, a Spark or Pandas `DataFrame`, a Spark RDD, two-dimensional Python
