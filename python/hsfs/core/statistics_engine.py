@@ -32,7 +32,6 @@ class StatisticsEngine:
     def compute_statistics(
         self,
         metadata_instance,
-        feature_dataframe=None,
         feature_group_commit_id=None,
         feature_view_obj=None,
     ):
@@ -41,19 +40,16 @@ class StatisticsEngine:
             # If the feature dataframe is None, then trigger a read on the metadata instance
             # We do it here to avoid making a useless request when using the Python engine
             # and calling compute_statistics
-            if feature_dataframe is None:
-                if feature_group_commit_id is not None:
-                    feature_dataframe = (
-                        metadata_instance.select_all()
-                        .as_of(
-                            util.get_hudi_datestr_from_timestamp(
-                                feature_group_commit_id
-                            )
-                        )
-                        .read(online=False, dataframe_type="default", read_options={})
+            if feature_group_commit_id is not None:
+                feature_dataframe = (
+                    metadata_instance.select_all()
+                    .as_of(
+                        util.get_hudi_datestr_from_timestamp(feature_group_commit_id)
                     )
-                else:
-                    feature_dataframe = metadata_instance.read()
+                    .read(online=False, dataframe_type="default", read_options={})
+                )
+            else:
+                feature_dataframe = metadata_instance.read()
 
             commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
 

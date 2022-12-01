@@ -26,10 +26,12 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
             external_dataset = engine.get_instance().register_external_temporary_table(
                 feature_group, "read_ondmd"
             )
+            # if python engine user should pass features as we do not parse it in this case
             if external_dataset is None:
                 raise FeatureStoreException(
-                    "External feature group creation not supported for engine "
+                    "Features need to be set incase of creating external feature groups with engine "
                     + engine.get_type()
+                    + ". Alternatively use Spark kernel."
                 )
 
             feature_group._features = engine.get_instance().parse_schema_feature_group(
