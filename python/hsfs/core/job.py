@@ -15,6 +15,7 @@
 #
 
 import humps
+from hsfs import engine
 
 
 class Job:
@@ -58,3 +59,6 @@ class Job:
     @property
     def href(self):
         return self._href
+
+    def run(self, write_options=None):
+        engine.get_instance().run_job(self, write_options)

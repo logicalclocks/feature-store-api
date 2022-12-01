@@ -507,16 +507,8 @@ class Engine:
         print("Uploading Pandas dataframe...")
         self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
 
-        # Launch job
-        print("Launching ingestion job...")
-        self._job_api.launch(ingestion_job.job.name)
-        print(
-            "Ingestion Job started successfully, you can follow the progress at \n{}".format(
-                self._get_job_url(ingestion_job.job.href)
-            )
-        )
-
-        self._wait_for_job(ingestion_job.job, offline_write_options)
+        # run job
+        self.run_job(ingestion_job.job, offline_write_options)
 
         return ingestion_job.job
 
@@ -933,16 +925,19 @@ class Engine:
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
-            print("Launching offline feature group backfill job...")
-            self._job_api.launch(job_name)
-            print(
-                "Backfill Job started successfully, you can follow the progress at \n{}".format(
-                    self._get_job_url(job.href)
-                )
-            )
-            self._wait_for_job(job, offline_write_options)
+            self.run_job(self, job, offline_write_options)
 
         return job
+
+    def run_job(self, job, write_options=None):
+        print(f"Launching job: {job.name}")
+        self._job_api.launch(job.name)
+        print(
+            "Job started successfully, you can follow the progress at \n{}".format(
+                self._get_job_url(job.href)
+            )
+        )
+        self._wait_for_job(job, write_options)
 
     def _kafka_produce(
         self, producer, feature_group, key, encoded_row, acked, offline_write_options
