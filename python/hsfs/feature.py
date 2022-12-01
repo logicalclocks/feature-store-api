@@ -215,6 +215,9 @@ class Feature:
     def contains(self, other):
         return filter.Filter(self, filter.Filter.IN, json.dumps(other))
 
+    def like(self, other):
+        return filter.Filter(self, filter.Filter.LK, other)
+
     def __str__(self):
         return self.json()
 
