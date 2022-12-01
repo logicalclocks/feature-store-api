@@ -821,12 +821,15 @@ public class SparkEngine {
     pyarrowToSparkType.put("string", DataTypes.StringType);
     pyarrowToSparkType.put("bigint", DataTypes.LongType);
     pyarrowToSparkType.put("int", DataTypes.IntegerType);
+    pyarrowToSparkType.put("smallint", DataTypes.ShortType);
+    pyarrowToSparkType.put("tinyint", DataTypes.ByteType);
     pyarrowToSparkType.put("float", DataTypes.FloatType);
     pyarrowToSparkType.put("double", DataTypes.DoubleType);
     pyarrowToSparkType.put("timestamp", DataTypes.TimestampType);
     pyarrowToSparkType.put("boolean", DataTypes.BooleanType);
     pyarrowToSparkType.put("date", DataTypes.DateType);
     pyarrowToSparkType.put("binary", DataTypes.BinaryType);
+    pyarrowToSparkType.put("decimal", DataTypes.createDecimalType());
     if (pyarrowToSparkType.containsKey(type)) {
       return pyarrowToSparkType.get(type);
     } else {
