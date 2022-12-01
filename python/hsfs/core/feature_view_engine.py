@@ -386,9 +386,7 @@ class FeatureViewEngine:
     def _cast_column_type(self, data_format, df, schema):
         if data_format == "csv" or data_format == "tsv":
             if not schema:
-                raise FeatureStoreException(
-                    "Reading csv, tsv requires a schema."
-                )
+                raise FeatureStoreException("Reading csv, tsv requires a schema.")
             return engine.get_instance().cast_column_type(df, schema)
         else:
             return df

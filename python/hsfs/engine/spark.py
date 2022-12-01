@@ -805,7 +805,7 @@ class Engine:
             )
             for feat in dataframe.schema
         ]
-    
+
     @staticmethod
     def _convert_spark_string_to_type(spark_type_string):
         if spark_type_string == "STRING":
@@ -833,8 +833,9 @@ class Engine:
             return BooleanType()
         else:
             raise ValueError(
-                f"Spark type {str(type(spark_type_string))} not supported.")
-        
+                f"Spark type {str(type(spark_type_string))} not supported."
+            )
+
     @staticmethod
     def convert_spark_type(spark_type, using_hudi):
         # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to

@@ -3641,7 +3641,7 @@ class TestSpark:
             "binary": ["1"],
             "array<string>": [["123"]],
             "struc": [LabelIndex("0", "1")],
-            "decimal": ["1.1"]
+            "decimal": ["1.1"],
         }
         df = pd.DataFrame(data=d)
         spark_df = spark_engine._spark_session.createDataFrame(df)
@@ -3681,7 +3681,7 @@ class TestSpark:
                     StructField("index", IntegerType(), True),
                 ]
             ),
-            "decimal": DecimalType()
+            "decimal": DecimalType(),
         }
         for col in cast_df.dtypes:
             assert col[1] == expected[col[0]].simpleString()

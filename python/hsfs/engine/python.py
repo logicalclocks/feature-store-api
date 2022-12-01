@@ -882,7 +882,7 @@ class Engine:
             else:
                 return casted_feature
         except FeatureStoreException:
-            return feature_column # handle gracefully, just return the column as-is
+            return feature_column  # handle gracefully, just return the column as-is
 
     @staticmethod
     def get_unique_values(feature_dataframe, feature_name):

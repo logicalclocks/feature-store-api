@@ -596,7 +596,7 @@ class TestPython:
             "binary": ["1"],
             "array<string>": [["123"]],
             "struc": [LabelIndex("0", "1")],
-            "decimal": ["1.1"]
+            "decimal": ["1.1"],
         }
         df = pd.DataFrame(data=d)
         schema = [
@@ -627,7 +627,7 @@ class TestPython:
             "timestamp": np.dtype("datetime64[ns]"),
             "boolean": np.dtype("bool"),
             "date": np.dtype(date),
-            "binary": np.dtype('S1'), # pandas converted string to bytes8 == 'S1'
+            "binary": np.dtype("S1"),  # pandas converted string to bytes8 == 'S1'
             "array<string>": object,
             "struc": object,
             "decimal": np.dtype(decimal.Decimal),
