@@ -95,7 +95,7 @@ class FeatureView:
             feature view **and** related training dataset **and** materialized data in HopsFS.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         self._feature_view_engine.delete(self.name, self.version)
 
@@ -129,7 +129,7 @@ class FeatureView:
             feature_view_version: str. Version of feature view.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         if not isinstance(feature_store_id, int):
             raise ValueError("`feature_store_id` should be an integer.")
@@ -159,7 +159,7 @@ class FeatureView:
             `FeatureView` Updated feature view.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_view_engine.update(self)
 
@@ -479,7 +479,7 @@ class FeatureView:
             value: Value of the tag to be added.
 
         # Raises
-            `RestAPIError` in case the backend fails to add the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to add the tag.
         """
         return self._feature_view_engine.add_tag(self, name, value)
 
@@ -505,7 +505,7 @@ class FeatureView:
             tag value
 
         # Raises
-            `RestAPIError` in case the backend fails to retrieve the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tag.
         """
         return self._feature_view_engine.get_tag(self, name)
 
@@ -528,7 +528,7 @@ class FeatureView:
             `Dict[str, obj]` of tags.
 
         # Raises
-            `RestAPIError` in case the backend fails to retrieve the tags.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._feature_view_engine.get_tags(self)
 
@@ -551,7 +551,7 @@ class FeatureView:
             name: Name of the tag to be removed.
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the tag.
         """
         return self._feature_view_engine.delete_tag(self, name)
 
@@ -1770,7 +1770,7 @@ class FeatureView:
             value: Value of the tag to be added.
 
         # Raises
-            `RestAPIError` in case the backend fails to add the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to add the tag.
         """
         return self._feature_view_engine.add_tag(
             self, name, value, training_dataset_version=training_dataset_version
@@ -1801,7 +1801,7 @@ class FeatureView:
             tag value
 
         # Raises
-            `RestAPIError` in case the backend fails to retrieve the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tag.
         """
         return self._feature_view_engine.get_tag(
             self, name, training_dataset_version=training_dataset_version
@@ -1828,7 +1828,7 @@ class FeatureView:
             `Dict[str, obj]` of tags.
 
         # Raises
-            `RestAPIError` in case the backend fails to retrieve the tags.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._feature_view_engine.get_tags(
             self, training_dataset_version=training_dataset_version
@@ -1856,7 +1856,7 @@ class FeatureView:
             name: Name of the tag to be removed.
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the tag.
         """
         return self._feature_view_engine.delete_tag(
             self, name, training_dataset_version=training_dataset_version
@@ -1881,7 +1881,7 @@ class FeatureView:
             version: Version of the training dataset to be removed.
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the training dataset.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training dataset.
         """
         self._feature_view_engine.delete_training_dataset_only(
             self, training_data_version=version
@@ -1903,7 +1903,7 @@ class FeatureView:
             ```
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the training datasets.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training datasets.
         """
         self._feature_view_engine.delete_training_dataset_only(self)
 
@@ -1928,7 +1928,7 @@ class FeatureView:
             version: Version of the training dataset to be removed.
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the training dataset.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training dataset.
         """
         self._feature_view_engine.delete_training_data(
             self, training_data_version=version
@@ -1950,7 +1950,7 @@ class FeatureView:
             ```
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the training datasets.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training datasets.
         """
         self._feature_view_engine.delete_training_data(self)
 
