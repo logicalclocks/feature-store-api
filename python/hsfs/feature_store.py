@@ -135,7 +135,7 @@ class FeatureStore:
             `FeatureGroup`: The feature group metadata object.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         if version is None:
             warnings.warn(
@@ -173,7 +173,7 @@ class FeatureStore:
             `FeatureGroup`: List of feature group metadata objects.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         return self._feature_group_api.get(
             name, None, feature_group_api.FeatureGroupApi.CACHED
@@ -198,7 +198,7 @@ class FeatureStore:
             `ExternalFeatureGroup`: The external feature group metadata object.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         return self.get_external_feature_group(name, version)
 
@@ -225,7 +225,7 @@ class FeatureStore:
             `ExternalFeatureGroup`: The external feature group metadata object.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
 
         if version is None:
@@ -257,7 +257,7 @@ class FeatureStore:
             `ExternalFeatureGroup`: List of external feature group metadata objects.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         return self.get_external_feature_groups(name)
 
@@ -283,7 +283,7 @@ class FeatureStore:
             `ExternalFeatureGroup`: List of external feature group metadata objects.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         return self._feature_group_api.get(
             name, None, feature_group_api.FeatureGroupApi.ONDEMAND
@@ -312,7 +312,7 @@ class FeatureStore:
             `TrainingDataset`: The training dataset metadata object.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
 
         if version is None:
@@ -341,7 +341,7 @@ class FeatureStore:
             `TrainingDataset`: List of training dataset metadata objects.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         return self._training_dataset_api.get(name, None)
 
@@ -1307,7 +1307,7 @@ class FeatureStore:
             `FeatureView`: The feature view metadata object.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature view from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature view from the feature store.
         """
         if version is None:
             warnings.warn(
@@ -1342,7 +1342,7 @@ class FeatureStore:
             `FeatureView`: List of feature view metadata objects.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature view from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature view from the feature store.
         """
         return self._feature_view_engine.get(name)
 
