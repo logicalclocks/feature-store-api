@@ -244,7 +244,7 @@ class ExpectationSuite:
 
         # Raises
             `RestAPIException`
-            `FeatureStoreException`
+            `hsfs.client.exceptions.FeatureStoreException`
         """
         if self.id and self._expectation_engine:
             if ge_type:
@@ -299,7 +299,7 @@ class ExpectationSuite:
 
         # Raises
             `RestAPIException`
-            `FeatureStoreException`
+            `hsfs.client.exceptions.FeatureStoreException`
         """
         if self.id:
             converted_expectation = self._convert_expectation(expectation=expectation)
@@ -338,7 +338,7 @@ class ExpectationSuite:
 
         # Raises
             `RestAPIException`
-            `FeatureStoreException`
+            `hsfs.client.exceptions.FeatureStoreException`
         """
         if self.id:
             converted_expectation = self._convert_expectation(expectation=expectation)
@@ -373,7 +373,7 @@ class ExpectationSuite:
 
         # Raises
             `RestAPIException`
-            `FeatureStoreException`
+            `hsfs.client.exceptions.FeatureStoreException`
         """
         if self.id:
             self._expectation_engine.delete(expectation_id=expectation_id)
