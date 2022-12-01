@@ -791,13 +791,18 @@ public class SparkEngine {
     Dataset<Row> sanitizedNamesDataset = dataset.select(Arrays.asList(dataset.columns()).stream().map(f ->
             col(f).alias(f.toLowerCase())).toArray(Column[]::new));
 
-    StructType schema = sanitizedNamesDataset.schema();
-    StructType nullableSchema = new StructType(JavaConverters.asJavaCollection(schema.toSeq()).stream().map(f ->
-            new StructField(f.name(), f.dataType(), true, f.metadata())
-    ).toArray(StructField[]::new));
-    Dataset<Row> nullableDataset = sanitizedNamesDataset.sparkSession()
-            .createDataFrame(sanitizedNamesDataset.rdd(), nullableSchema);
-    return (S) nullableDataset;
+    // for streaming dataframes this will be handled in DeltaStreamerTransformer.java class
+    if (!dataset.isStreaming()) {
+      StructType schema = sanitizedNamesDataset.schema();
+      StructType nullableSchema = new StructType(JavaConverters.asJavaCollection(schema.toSeq()).stream().map(f ->
+          new StructField(f.name(), f.dataType(), true, f.metadata())
+      ).toArray(StructField[]::new));
+      Dataset<Row> nullableDataset = sanitizedNamesDataset.sparkSession()
+          .createDataFrame(sanitizedNamesDataset.rdd(), nullableSchema);
+      return (S) nullableDataset;
+    } else {
+      return (S) sanitizedNamesDataset;
+    }
   }
 
   public String addFile(String filePath) {
