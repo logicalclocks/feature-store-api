@@ -359,7 +359,7 @@ class FeatureViewEngine:
         return training_dataset_obj, td_job
 
     def _read_from_storage_connector(
-        self, training_data_obj, splits, read_options, schema
+        self, training_data_obj, splits, read_options, schema=None
     ):
         if splits:
             result = {}
@@ -385,6 +385,10 @@ class FeatureViewEngine:
 
     def _cast_column_type(self, data_format, df, schema):
         if data_format == "csv" or data_format == "tsv":
+            if not schema:
+                raise FeatureStoreException(
+                    "Reading csv, tsv requires a schema."
+                )
             return engine.get_instance().cast_column_type(df, schema)
         else:
             return df

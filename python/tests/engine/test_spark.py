@@ -3613,7 +3613,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=IntegerType(),
+            spark_type=IntegerType(),
             using_hudi=False,
         )
 
@@ -3631,6 +3631,8 @@ class TestSpark:
             "string": ["s"],
             "bigint": ["1"],
             "int": ["1"],
+            "smallint": ["1"],
+            "tinyint": ["1"],
             "float": ["1"],
             "double": ["1"],
             "timestamp": [1641340800000],
@@ -3639,6 +3641,7 @@ class TestSpark:
             "binary": ["1"],
             "array<string>": [["123"]],
             "struc": [LabelIndex("0", "1")],
+            "decimal": ["1.1"]
         }
         df = pd.DataFrame(data=d)
         spark_df = spark_engine._spark_session.createDataFrame(df)
@@ -3646,6 +3649,8 @@ class TestSpark:
             TrainingDatasetFeature("string", type="string"),
             TrainingDatasetFeature("bigint", type="bigint"),
             TrainingDatasetFeature("int", type="int"),
+            TrainingDatasetFeature("smallint", type="smallint"),
+            TrainingDatasetFeature("tinyint", type="tinyint"),
             TrainingDatasetFeature("float", type="float"),
             TrainingDatasetFeature("double", type="double"),
             TrainingDatasetFeature("timestamp", type="timestamp"),
@@ -3654,12 +3659,15 @@ class TestSpark:
             TrainingDatasetFeature("binary", type="binary"),
             TrainingDatasetFeature("array<string>", type="array<string>"),
             TrainingDatasetFeature("struc", type="struct<label:string,index:int>"),
+            TrainingDatasetFeature("decimal", type="decimal"),
         ]
         cast_df = spark_engine.cast_column_type(spark_df, schema)
         expected = {
             "string": StringType(),
             "bigint": LongType(),
             "int": IntegerType(),
+            "smallint": ShortType(),
+            "tinyint": ByteType(),
             "float": FloatType(),
             "double": DoubleType(),
             "timestamp": TimestampType(),
@@ -3673,6 +3681,7 @@ class TestSpark:
                     StructField("index", IntegerType(), True),
                 ]
             ),
+            "decimal": DecimalType()
         }
         for col in cast_df.dtypes:
             assert col[1] == expected[col[0]].simpleString()
@@ -3683,7 +3692,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=ByteType(),
+            spark_type=ByteType(),
             using_hudi=True,
         )
 
@@ -3696,7 +3705,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=ShortType(),
+            spark_type=ShortType(),
             using_hudi=True,
         )
 
@@ -3709,7 +3718,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=BooleanType(),
+            spark_type=BooleanType(),
             using_hudi=True,
         )
 
@@ -3722,7 +3731,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=IntegerType(),
+            spark_type=IntegerType(),
             using_hudi=True,
         )
 
@@ -3735,7 +3744,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=LongType(),
+            spark_type=LongType(),
             using_hudi=True,
         )
 
@@ -3748,7 +3757,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=FloatType(),
+            spark_type=FloatType(),
             using_hudi=True,
         )
 
@@ -3761,7 +3770,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=DoubleType(),
+            spark_type=DoubleType(),
             using_hudi=True,
         )
 
@@ -3774,7 +3783,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=DecimalType(),
+            spark_type=DecimalType(),
             using_hudi=True,
         )
 
@@ -3787,7 +3796,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=TimestampType(),
+            spark_type=TimestampType(),
             using_hudi=True,
         )
 
@@ -3800,7 +3809,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=DateType(),
+            spark_type=DateType(),
             using_hudi=True,
         )
 
@@ -3813,7 +3822,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=StringType(),
+            spark_type=StringType(),
             using_hudi=True,
         )
 
@@ -3826,7 +3835,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=StructType(),
+            spark_type=StructType(),
             using_hudi=True,
         )
 
@@ -3839,7 +3848,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_spark_type(
-            hive_type=BinaryType(),
+            spark_type=BinaryType(),
             using_hudi=True,
         )
 
@@ -3853,7 +3862,7 @@ class TestSpark:
         # Act
         with pytest.raises(ValueError) as e_info:
             spark_engine.convert_spark_type(
-                hive_type=MapType(StringType(), StringType()),
+                spark_type=MapType(StringType(), StringType()),
                 using_hudi=True,
             )
 

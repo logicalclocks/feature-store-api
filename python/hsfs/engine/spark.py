@@ -788,7 +788,7 @@ class Engine:
         for feat in dataframe.schema:
             name = feat.name.lower()
             try:
-                converted_type = self.convert_spark_type(feat.dataType, using_hudi)
+                converted_type = Engine.convert_spark_type(feat.dataType, using_hudi)
             except ValueError as e:
                 raise FeatureStoreException(f"Feature '{name}': {str(e)}")
             features.append(
@@ -805,19 +805,49 @@ class Engine:
             )
             for feat in dataframe.schema
         ]
-
-    def convert_spark_type(self, hive_type, using_hudi):
+    
+    @staticmethod
+    def _convert_spark_string_to_type(spark_type_string):
+        if spark_type_string == "STRING":
+            return StringType()
+        elif spark_type_string == "BINARY":
+            return BooleanType()
+        elif spark_type_string == "BYTE":
+            return ByteType()
+        elif spark_type_string == "SHORT":
+            return ShortType()
+        elif spark_type_string == "INT":
+            return IntegerType()
+        elif spark_type_string == "LONG":
+            return LongType()
+        elif spark_type_string == "FLOAT":
+            return FloatType()
+        elif spark_type_string == "DOUBLE":
+            return DoubleType()
+        elif spark_type_string == "TIMESTAMP":
+            # convert (if tz!=UTC) to utc, then make timezone unaware
+            return TimestampType()
+        elif spark_type_string == "DATE":
+            return DateType()
+        elif spark_type_string == "BOOLEAN":
+            return BooleanType()
+        else:
+            raise ValueError(
+                f"Spark type {str(type(spark_type_string))} not supported.")
+        
+    @staticmethod
+    def convert_spark_type(spark_type, using_hudi):
         # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to
         # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
         # to Hive. Therefore, we need to force Hive to create int-typed columns in the first place.
 
         if not using_hudi:
-            return hive_type.simpleString()
-        elif type(hive_type) == ByteType:
+            return spark_type.simpleString()
+        elif type(spark_type) == ByteType:
             return "int"
-        elif type(hive_type) == ShortType:
+        elif type(spark_type) == ShortType:
             return "int"
-        elif type(hive_type) in [
+        elif type(spark_type) in [
             BooleanType,
             IntegerType,
             LongType,
@@ -831,9 +861,9 @@ class Engine:
             StructType,
             BinaryType,
         ]:
-            return hive_type.simpleString()
+            return spark_type.simpleString()
 
-        raise ValueError(f"spark type {str(type(hive_type))} not supported")
+        raise ValueError(f"spark type {str(type(spark_type))} not supported")
 
     @staticmethod
     def _convert_column_type(pa_type):
@@ -847,20 +877,23 @@ class Engine:
                 ]
             )
         else:
-            return Engine._convert_basic_type(pa_type)
+            return Engine.convert_offline_basic_type_to_spark(pa_type)
 
     @staticmethod
-    def _convert_basic_type(pa_type):
+    def convert_offline_basic_type_to_spark(pa_type):
         pyarrow_2_spark_type = {
             "string": StringType(),
             "bigint": LongType(),
             "int": IntegerType(),
+            "smallint": ShortType(),
+            "tinyint": ByteType(),
             "float": FloatType(),
             "double": DoubleType(),
             "timestamp": TimestampType(),
             "boolean": BooleanType(),
             "date": DateType(),
             "binary": BinaryType(),
+            "decimal": DecimalType(),
         }
         if pa_type in pyarrow_2_spark_type:
             return pyarrow_2_spark_type[pa_type]
