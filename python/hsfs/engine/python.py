@@ -873,10 +873,10 @@ class Engine:
 
         def acked(err, msg):
             if err is not None:
-                if err.code() == KafkaError.TOPIC_AUTHORIZATION_FAILED:
-                    raise err  # Stop producing, the user is not authorized
                 if offline_write_options.get("debug_kafka", False):
                     print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
+                if err.code() == KafkaError.TOPIC_AUTHORIZATION_FAILED:
+                    raise err  # Stop producing, the user is not authorized
             # update progress bar for each msg
             progress_bar.update()
 
