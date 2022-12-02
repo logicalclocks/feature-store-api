@@ -192,6 +192,8 @@ public class Feature {
   }
 
   /**
+   * check if a value exists in a group of values.
+   * 
    * @deprecated
    * `in` method is deprecated. Use `isin` instead.
    */
