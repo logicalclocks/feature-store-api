@@ -213,6 +213,13 @@ class Feature:
         return filter.Filter(self, filter.Filter.GT, other)
 
     def contains(self, other):
+        """
+        !!! warning "Deprecated"
+            `contains` method is deprecated. Use `in(other) instead.
+        """
+        return filter.Filter(self, filter.Filter.IN, json.dumps(other))
+
+    def in(self, other):
         return filter.Filter(self, filter.Filter.IN, json.dumps(other))
 
     def like(self, other):
