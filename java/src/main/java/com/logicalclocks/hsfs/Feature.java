@@ -191,9 +191,23 @@ public class Feature {
     return new Filter(this, SqlFilterCondition.GREATER_THAN_OR_EQUAL, value.toJson());
   }
 
+  /**
+   * check if a value exists in a group of values.
+   * 
+   * @deprecated
+   * `in` method is deprecated. Use `isin` instead.
+   */
   public Filter in(Collection<?> collection) {
+    return isin(collection);
+  }
+
+  public Filter isin(Collection<?> collection) {
     JSONArray jsonArray = new JSONArray(collection);
     return new Filter(this, SqlFilterCondition.IN, jsonArray.toString());
+  }
+
+  public Filter like(Object value) {
+    return new Filter(this, SqlFilterCondition.LIKE, value.toString());
   }
 
   public String toJson() {

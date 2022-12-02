@@ -54,3 +54,15 @@ class TestFeature:
         assert f.online_type is None
         assert f.default_value is None
         assert f._feature_group_id is None
+
+    def test_like(self, backend_fixtures):
+        # Arrange
+        f = feature.Feature("feature_name")
+
+        # Act
+        filter = f.like("max%")
+
+        # Assert
+        assert filter._feature == f
+        assert filter._condition == filter.LK
+        assert filter._value == "max%"
