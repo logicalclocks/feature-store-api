@@ -83,7 +83,7 @@ class FeatureGroupBase:
             associated with it.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         self._feature_group_engine.delete(self)
 
@@ -254,7 +254,7 @@ class FeatureGroupBase:
             value: Value of the tag to be added.
 
         # Raises
-            `RestAPIError` in case the backend fails to add the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to add the tag.
         """
 
         self._feature_group_engine.add_tag(self, name, value)
@@ -277,7 +277,7 @@ class FeatureGroupBase:
             name: Name of the tag to be removed.
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the tag.
         """
         self._feature_group_engine.delete_tag(self, name)
 
@@ -302,7 +302,7 @@ class FeatureGroupBase:
             tag value
 
         # Raises
-            `RestAPIError` in case the backend fails to retrieve the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tag.
         """
         return self._feature_group_engine.get_tag(self, name)
 
@@ -313,7 +313,7 @@ class FeatureGroupBase:
             `Dict[str, obj]` of tags.
 
         # Raises
-            `RestAPIError` in case the backend fails to retrieve the tags.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._feature_group_engine.get_tags(self)
 
@@ -376,7 +376,7 @@ class FeatureGroupBase:
             `FeatureGroup`. The updated metadata object of the feature group.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         self._feature_group_engine.update_statistics_config(self)
         return self
@@ -706,7 +706,7 @@ class FeatureGroupBase:
             Union[List[`ValidationReport`], `ValidationReport`]. All validation reports attached to the feature group.
 
         # Raises
-            `RestAPIException`,`FeatureStoreException`.
+            `RestAPIException`,`hsfs.client.exceptions.FeatureStoreException`.
         """
         if self._id:
             return self._validation_report_engine.get_all(ge_type=ge_type)
@@ -902,7 +902,7 @@ class FeatureGroupBase:
             `Statistics`. Statistics object.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         if commit_time is None:
             return self.statistics
@@ -930,7 +930,7 @@ class FeatureGroupBase:
             `Statistics`. The statistics metadata object.
 
         # Raises
-            `RestAPIError`. Unable to persist the statistics.
+            `hsfs.client.exceptions.RestAPIError`. Unable to persist the statistics.
         """
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation
@@ -1202,7 +1202,7 @@ class FeatureGroup(FeatureGroupBase):
             `list`. A two-dimensional Python list.
 
         # Raises
-            `RestAPIError`. No data is available for feature group with this commit date, If time travel enabled.
+            `hsfs.client.exceptions.RestAPIError`. No data is available for feature group with this commit date, If time travel enabled.
         """
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -1254,8 +1254,8 @@ class FeatureGroup(FeatureGroupBase):
             feature data.
 
         # Raises
-            `RestAPIError`.  No data is available for feature group with this commit date.
-            `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
+            `hsfs.client.exceptions.RestAPIError`.  No data is available for feature group with this commit date.
+            `hsfs.client.exceptions.FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
         return (
             self.select_all()
@@ -1344,7 +1344,7 @@ class FeatureGroup(FeatureGroupBase):
                 that was launched to ingest the feature group data.
 
         # Raises
-            `RestAPIError`. Unable to create feature group.
+            `hsfs.client.exceptions.RestAPIError`. Unable to create feature group.
         """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
@@ -1637,8 +1637,8 @@ class FeatureGroup(FeatureGroupBase):
             is `Dict[str, str]` with key value pairs of date committed on, number of rows updated, inserted and deleted.
 
         # Raises
-            `RestAPIError`.
-            `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
         return self._feature_group_engine.commit_details(self, wallclock_time, limit)
 
@@ -1655,7 +1655,7 @@ class FeatureGroup(FeatureGroupBase):
             write_options: User provided write options. Defaults to `{}`.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
@@ -1826,7 +1826,7 @@ class FeatureGroup(FeatureGroupBase):
             `Statistics`. The statistics metadata object.
 
         # Raises
-            `RestAPIError`. Unable to persist the statistics.
+            `hsfs.client.exceptions.RestAPIError`. Unable to persist the statistics.
         """
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation
@@ -2207,7 +2207,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             `list`. A two-dimensional Python list.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         engine.get_instance().set_job_group(
             "Fetching Feature group",
