@@ -196,8 +196,8 @@ public class Feature {
     return new Filter(this, SqlFilterCondition.IN, jsonArray.toString());
   }
 
-  public Filter like(Feature value) {
-    return new Filter(this, SqlFilterCondition.LIKE, value.toJson());
+  public Filter like(Object value) {
+    return new Filter(this, SqlFilterCondition.LIKE, value.toString());
   }
 
   public String toJson() {
