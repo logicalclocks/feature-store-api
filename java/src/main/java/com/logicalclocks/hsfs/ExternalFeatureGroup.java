@@ -89,9 +89,9 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
   @Builder
   public ExternalFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String query,
                               ExternalDataFormat dataFormat, String path, Map<String, String> options,
-                              @NonNull StorageConnector storageConnector, String description,
-                              List<String> primaryKeys, List<Feature> features, StatisticsConfig statisticsConfig,
-                              String eventTime) {
+                              @NonNull StorageConnector storageConnector, String description, List<String> primaryKeys,
+                              List<Feature> features, StatisticsConfig statisticsConfig, String eventTime) {
+    this.timeTravelFormat = null;
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;

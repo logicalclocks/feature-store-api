@@ -23,14 +23,15 @@ import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.TrainingDatasetBase;
 import lombok.NonNull;
-import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+
+import static com.logicalclocks.base.metadata.HopsworksClient.PROJECT_PATH;
+import static com.logicalclocks.base.metadata.HopsworksClient.getInstance;
 
 public class StatisticsApi {
 
@@ -64,7 +65,7 @@ public class StatisticsApi {
 
   private Statistics post(Integer projectId, Integer featurestoreId, Integer entityId, Statistics statistics)
       throws FeatureStoreException, IOException {
-    String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + STATISTICS_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", projectId)
@@ -78,7 +79,7 @@ public class StatisticsApi {
   public Statistics post(FeatureViewBase featureViewBase,
                          Integer trainingDataVersion, Statistics statistics)
       throws FeatureStoreException, IOException {
-    String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FV_STATISTICS_PATH;
+    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FV_STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureViewBase.getFeatureStore().getProjectId())
@@ -91,15 +92,10 @@ public class StatisticsApi {
   }
 
   private Statistics post(String uri, Statistics statistics) throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String statisticsJson = hopsworksClient.getObjectMapper().writeValueAsString(statistics);
-    HttpPost postRequest = new HttpPost(uri);
-    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    postRequest.setEntity(new StringEntity(statisticsJson));
-
+    HopsworksClient hopsworksClient = getInstance();
     LOGGER.info("Sending metadata request: " + uri);
-    LOGGER.info(statisticsJson);
-
+    HttpPost postRequest = new HttpPost(uri);
+    postRequest.setEntity(hopsworksClient.buildStringEntity(statistics));
     return hopsworksClient.handleRequest(postRequest, Statistics.class);
   }
 
@@ -120,7 +116,7 @@ public class StatisticsApi {
   private Statistics get(Integer projectId, Integer featurestoreId, Integer entityId, String commitTime)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
+    String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + STATISTICS_PATH;
 
@@ -158,7 +154,7 @@ public class StatisticsApi {
   private Statistics getLast(Integer projectId, Integer featurestoreId, Integer entityId)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
+    String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + STATISTICS_PATH;
 

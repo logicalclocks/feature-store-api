@@ -21,18 +21,18 @@ import com.damnhandy.uri.template.UriTemplate;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import com.logicalclocks.base.constructor.QueryBase;
 import com.logicalclocks.base.constructor.ServingPreparedStatement;
 import com.logicalclocks.base.FeatureStoreBase;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.TrainingDatasetBase;
-import org.apache.http.HttpHeaders;
+
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,13 +67,9 @@ public class FeatureViewApi {
         .set("projectId", featureViewBase.getFeatureStore().getProjectId())
         .set("fsId", featureViewBase.getFeatureStore().getId())
         .expand();
-    String featureViewJson = hopsworksClient.getObjectMapper().writeValueAsString(featureViewBase);
-    HttpPost postRequest = new HttpPost(uri);
-    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    postRequest.setEntity(new StringEntity(featureViewJson));
-
     LOGGER.info("Sending metadata request: " + uri);
-    LOGGER.info(featureViewJson);
+    HttpPost postRequest = new HttpPost(uri);
+    postRequest.setEntity(hopsworksClient.buildStringEntity(featureViewBase));
     return hopsworksClient.handleRequest(postRequest, fvType);
   }
 
@@ -163,11 +159,9 @@ public class FeatureViewApi {
         .set("fvVersion", featureViewBase.getVersion())
         .expand();
 
-    HttpPut request = new HttpPut(uri);
-    String featureViewJson = hopsworksClient.getObjectMapper().writeValueAsString(featureViewBase);
-    request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    request.setEntity(new StringEntity(featureViewJson));
     LOGGER.info("Sending metadata request: " + uri);
+    HttpPut request = new HttpPut(uri);
+    request.setEntity(hopsworksClient.buildStringEntity(featureViewBase));
     return hopsworksClient.handleRequest(request, fvType);
   }
 
@@ -244,12 +238,9 @@ public class FeatureViewApi {
         .expand();
 
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String trainingDataJson = hopsworksClient.getObjectMapper().writeValueAsString(trainingData);
-    HttpPost request = new HttpPost(uri);
-    request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    request.setEntity(new StringEntity(trainingDataJson));
-
     LOGGER.info("Sending metadata request: " + uri);
+    HttpPost request = new HttpPost(uri);
+    request.setEntity(hopsworksClient.buildStringEntity(trainingData));
     return hopsworksClient.handleRequest(request, tdType);
   }
 
@@ -361,5 +352,4 @@ public class FeatureViewApi {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     return hopsworksClient.handleRequest(request, queryType);
   }
-
 }

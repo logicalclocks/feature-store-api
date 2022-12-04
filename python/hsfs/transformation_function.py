@@ -79,11 +79,52 @@ class TransformationFunction:
         self._feature_group_id = None
 
     def save(self):
-        """Persist transformation function in backend."""
+        """Persist transformation function in backend.
+
+        !!! example
+            ```python
+            # define function
+            def plus_one(value):
+                return value + 1
+
+            # create transformation function
+            plus_one_meta = fs.create_transformation_function(
+                    transformation_function=plus_one,
+                    output_type=int,
+                    version=1
+                )
+
+            # persist transformation function in backend
+            plus_one_meta.save()
+            ```
+        """
         self._transformation_function_engine.save(self)
 
     def delete(self):
-        """Delete transformation function from backend."""
+        """Delete transformation function from backend.
+
+        !!! example
+            ```python
+            # define function
+            def plus_one(value):
+                return value + 1
+
+            # create transformation function
+            plus_one_meta = fs.create_transformation_function(
+                    transformation_function=plus_one,
+                    output_type=int,
+                    version=1
+                )
+            # persist transformation function in backend
+            plus_one_meta.save()
+
+            # retrieve transformation function
+            plus_one_fn = fs.get_transformation_function(name="plus_one")
+
+            # delete transformation function from backend
+            plus_one_fn.delete()
+            ```
+        """
         self._transformation_function_engine.delete(self)
 
     def _extract_source_code(self):

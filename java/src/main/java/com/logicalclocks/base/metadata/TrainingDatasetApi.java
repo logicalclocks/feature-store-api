@@ -23,12 +23,11 @@ import com.logicalclocks.base.constructor.ServingPreparedStatement;
 import com.logicalclocks.base.FeatureStoreBase;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.TrainingDatasetBase;
-import org.apache.http.HttpHeaders;
+
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,13 +97,9 @@ public class TrainingDatasetApi {
         .set("fsId", trainingDatasetBase.getFeatureStore().getId())
         .expand();
 
-    String trainingDatasetJson = hopsworksClient.getObjectMapper().writeValueAsString(trainingDatasetBase);
-    HttpPost postRequest = new HttpPost(uri);
-    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    postRequest.setEntity(new StringEntity(trainingDatasetJson));
-
     LOGGER.info("Sending metadata request: " + uri);
-    LOGGER.info(trainingDatasetJson);
+    HttpPost postRequest = new HttpPost(uri);
+    postRequest.setEntity(hopsworksClient.buildStringEntity(trainingDatasetBase));
     return hopsworksClient.handleRequest(postRequest, TrainingDatasetBase.class);
   }
 
@@ -164,14 +159,10 @@ public class TrainingDatasetApi {
         .set(queryParameter, true)
         .expand();
 
-    String trainingDatasetJson = hopsworksClient.getObjectMapper().writeValueAsString(trainingDatasetBase);
-    HttpPut putRequest = new HttpPut(uri);
-    putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    putRequest.setEntity(new StringEntity(trainingDatasetJson));
 
     LOGGER.info("Sending metadata request: " + uri);
-    LOGGER.info(trainingDatasetJson);
-
+    HttpPut putRequest = new HttpPut(uri);
+    putRequest.setEntity(hopsworksClient.buildStringEntity(trainingDatasetBase));
     return hopsworksClient.handleRequest(putRequest, TrainingDatasetBase.class);
   }
 

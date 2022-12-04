@@ -26,11 +26,9 @@ import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.TrainingDatasetBase;
 import lombok.NonNull;
-import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,21 +37,22 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.logicalclocks.base.metadata.HopsworksClient.PROJECT_PATH;
+
 public class TagsApi {
 
   public static final String ENTITY_ROOT_PATH = "{/entityType}";
   public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
   public static final String TAGS_PATH = ENTITY_ID_PATH + "/tags{/name}{?value}";
-  public static final String FV_TAGS_PATH = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH
+  public static final String FV_TAGS_PATH = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH
       + "/featureview{/fvName}/version{/fvVersion}/tags{/name}";
-  public static final String FV_TD_TAGS_PATH = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH
+  public static final String FV_TD_TAGS_PATH = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH
       + "/featureview{/fvName}/version{/fvVersion}"
       + "/trainingdatasets/version{/tdVersion}/tags{/name}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TagsApi.class);
 
   private EntityEndpointType entityType;
-  private ObjectMapper objectMapper = new ObjectMapper();
 
   public TagsApi(@NonNull EntityEndpointType entityType) {
     this.entityType = entityType;
@@ -62,7 +61,7 @@ public class TagsApi {
   private void add(Integer projectId, Integer featurestoreId, Integer entityId, String name, Object value)
       throws FeatureStoreException, IOException {
 
-    String pathTemplate = HopsworksClient.PROJECT_PATH
+    String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + TAGS_PATH;
 
@@ -78,11 +77,11 @@ public class TagsApi {
 
   private void add(UriTemplate uriTemplate, Object value)
       throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+
     LOGGER.info("Sending metadata request: " + uriTemplate.expand());
     HttpPut putRequest = new HttpPut(uriTemplate.expand());
-    putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    putRequest.setEntity(new StringEntity(objectMapper.writeValueAsString(value)));
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    putRequest.setEntity(hopsworksClient.buildStringEntity(value));
     hopsworksClient.handleRequest(putRequest);
   }
 
@@ -147,7 +146,7 @@ public class TagsApi {
 
   private Map<String, Object> get(Integer projectId, Integer featurestoreId, Integer entityId, Optional<String> name)
       throws FeatureStoreException, IOException {
-    String pathTemplate = HopsworksClient.PROJECT_PATH
+    String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + TAGS_PATH;
 
@@ -173,7 +172,7 @@ public class TagsApi {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     Map<String, Object> tags = new HashMap<>();
     for (Tags tag : hopsworksClient.handleRequest(getRequest, Tags.class).getItems()) {
-      tags.put(tag.getName(), parseTagValue(objectMapper, tag.getValue()));
+      tags.put(tag.getName(), parseTagValue(hopsworksClient.getObjectMapper(), tag.getValue()));
     }
     return tags;
   }
@@ -238,7 +237,7 @@ public class TagsApi {
 
   private void deleteTag(Integer projectId, Integer featurestoreId, Integer entityId, String name)
       throws FeatureStoreException, IOException {
-    String pathTemplate = HopsworksClient.PROJECT_PATH
+    String pathTemplate = PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + TAGS_PATH;
 

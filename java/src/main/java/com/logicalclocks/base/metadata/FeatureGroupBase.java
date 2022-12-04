@@ -106,6 +106,10 @@ public class FeatureGroupBase {
 
   @Getter
   @Setter
+  protected TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
+
+  @Getter
+  @Setter
   protected String onlineTopicName;
 
   @JsonIgnore

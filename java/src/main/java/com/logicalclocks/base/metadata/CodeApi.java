@@ -22,9 +22,7 @@ import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.TrainingDatasetBase;
 import lombok.NonNull;
-import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,14 +71,9 @@ public class CodeApi {
             .set("databricksClusterId", browserHostName)
             .expand();
 
-    String codeJson = hopsworksClient.getObjectMapper().writeValueAsString(code);
-    HttpPost postRequest = new HttpPost(uri);
-    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    postRequest.setEntity(new StringEntity(codeJson));
-
     LOGGER.info("Sending metadata request: " + uri);
-    LOGGER.info(codeJson);
-
+    HttpPost postRequest = new HttpPost(uri);
+    postRequest.setEntity(hopsworksClient.buildStringEntity(code));
     hopsworksClient.handleRequest(postRequest);
   }
 }

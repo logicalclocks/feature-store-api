@@ -17,7 +17,7 @@
 
 package com.logicalclocks.hsfs.engine.hudi;
 
-import com.logicalclocks.base.metadata.FeatureStoreApi;
+import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import lombok.SneakyThrows;
 import org.apache.hudi.common.config.TypedProperties;
@@ -28,8 +28,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 public class DeltaStreamerTransformer implements Transformer {
-
-  private final FeatureStoreApi featureStoreApi = new FeatureStoreApi();
+  private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   public DeltaStreamerTransformer() {
   }

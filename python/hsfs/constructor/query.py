@@ -117,6 +117,16 @@ class Query:
     def show(self, n: int, online: Optional[bool] = False):
         """Show the first N rows of the Query.
 
+        !!! example "Show the first 10 rows"
+            ```python
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")
+
+            query = fg1.select_all().join(fg2.select_all())
+
+            query.show(10)
+            ```
+
         # Arguments
             n: Number of rows to show.
             online: Show from online storage. Defaults to `False`.
@@ -142,6 +152,25 @@ class Query:
         the primary keys of the feature groups you are joining.
         Joins of one level are supported, no neted joins.
 
+        !!! example "Join two feature groups"
+            ```python
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")
+
+            query = fg1.select_all().join(fg2.select_all())
+            ```
+
+        !!! example "More complex join"
+            ```python
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")
+            fg3 = fs.get_feature_group("...")
+
+            query = fg1.select_all()
+                    .join(fg2.select_all(), on=["date", "location_id"])
+                    .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
+            ```
+
         # Arguments
             sub_query: Right-hand side query to join.
             on: List of feature names to join on if they are available in both
@@ -154,6 +183,7 @@ class Query:
                 `"right"`. Defaults to "inner".
             prefix: User provided prefix to avoid feature name clash. Prefix is applied to the right
                 feature group of the query. Defaults to `None`.
+
         # Returns
             `Query`: A new Query object representing the join.
         """
@@ -201,7 +231,7 @@ class Query:
         When no wallclock_time is given, the latest state of features is returned. Optionally, commits before
         a specified point in time can still be excluded.
 
-        !!! example "Reading the latest state of features, excluding commits before a specified point in time:"
+        !!! example "Reading the latest state of features, excluding commits before a specified point in time"
             ```python
             fs = connection.get_feature_store();
             query = fs.get_feature_group("example_feature_group", 1).select_all()
@@ -215,6 +245,7 @@ class Query:
         query1.as_of(..., ...)
             .join(query2.as_of(..., ...))
         ```
+
         If instead you apply another `as_of` selection after the join, all
         joined feature groups will be queried with this interval:
         ```python
@@ -271,12 +302,15 @@ class Query:
         """Apply filter to the feature group.
 
         Selects all features and returns the resulting `Query` with the applied filter.
+        !!! example
+            ```python
 
-        ```python
-        from hsfs.feature import Feature
+            from hsfs.feature import Feature
 
-        query.filter(Feature("weekly_sales") > 1000)
-        ```
+            query.filter(Feature("weekly_sales") > 1000)
+            query.filter(Feature("name").like("max%"))
+
+            ```
 
         If you are planning to join the filtered feature group later on with another
         feature group, make sure to select the filtered feature explicitly from the
@@ -289,6 +323,30 @@ class Query:
         ```python
         query.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
         ```
+
+        !!! example "Filters are fully compatible with joins"
+            ```python
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")
+            fg3 = fs.get_feature_group("...")
+
+            query = fg1.select_all()
+                .join(fg2.select_all(), on=["date", "location_id"])
+                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
+                .filter((fg1.location_id == 10) | (fg1.location_id == 20))
+            ```
+
+        !!! example "Filters can be applied at any point of the query"
+            ```python
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")
+            fg3 = fs.get_feature_group("...")
+
+            query = fg1.select_all()
+                .join(fg2.select_all().filter(fg2.avg_temp >= 22), on=["date", "location_id"])
+                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
+                .filter(fg1.location_id == 10)
+            ```
 
         # Arguments
             f: Filter object.
@@ -378,6 +436,17 @@ class Query:
         return new
 
     def to_string(self, online=False):
+        """
+        !!! example
+            ```python
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")
+
+            query = fg1.select_all().join(fg2.select_all())
+
+            query.to_string()
+            ```
+        """
         fs_query = self._query_constructor_api.construct_query(self)
 
         if online:
@@ -410,6 +479,17 @@ class Query:
         return self._left_features
 
     def append_feature(self, feature):
+        """
+        !!! example
+            ```python
+            fg1 = fs.get_feature_group("...")
+            fg2 = fs.get_feature_group("...")
+
+            query = fg1.select_all().join(fg2.select_all())
+
+            query.append_feature('feature_name')
+            ```
+        """
         self._left_features.append(feature)
 
     def is_time_travel(self):
