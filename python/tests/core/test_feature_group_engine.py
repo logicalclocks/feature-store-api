@@ -870,7 +870,8 @@ class TestFeatureGroupEngine:
         )
         assert (
             mock_warnings_warn.call_args[0][0]
-            == "`insert_stream` method in the next release be available only for feature groups created with `stream=True`."
+            == "`insert_stream` method in the next release will be available only for feature groups created with "
+            "`stream=True`."
         )
 
     def test_insert_stream_stream(self, mocker):
@@ -970,7 +971,8 @@ class TestFeatureGroupEngine:
         )
         assert (
             mock_warnings_warn.call_args[0][0]
-            == "`insert_stream` method in the next release be available only for feature groups created with `stream=True`."
+            == "`insert_stream` method in the next release will be available only for feature groups created with "
+            "`stream=True`."
         )
 
     def test_verify_schema_compatibility(self):

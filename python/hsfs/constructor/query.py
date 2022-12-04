@@ -308,6 +308,7 @@ class Query:
             from hsfs.feature import Feature
 
             query.filter(Feature("weekly_sales") > 1000)
+            query.filter(Feature("name").like("max%"))
 
             ```
 
