@@ -925,7 +925,7 @@ class Engine:
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
-            self.run_job(self, job, offline_write_options)
+            self.run_job(job, offline_write_options)
 
         return job
 
