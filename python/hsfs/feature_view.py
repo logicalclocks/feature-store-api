@@ -638,6 +638,28 @@ class FeatureView:
             )
             ```
 
+        !!! example "Write training dataset to external storage"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get storage connector object
+            external_storage_connector = fs.get_storage_connector("storage_connector_name")
+
+            # create a train-test split dataset
+            version, job = feature_view.create_training_data(
+                start_time=...,
+                end_time=...,
+                storage_connector = external_storage_connector,
+                description=...,
+                # you can have different data formats such as csv, tsv, tfrecord, parquet and others
+                data_format=...
+            )
+            ```
+
         !!! info "Data Formats"
             The feature store currently supports the following data formats for
             training datasets:
@@ -806,7 +828,6 @@ class FeatureView:
 
             # create a train-test split dataset
             version, job = feature_view.create_train_test_split(
-                test_size=0.2,
                 train_start=train_start,
                 train_end=train_end,
                 test_start=test_start,
@@ -814,6 +835,30 @@ class FeatureView:
                 description='Description of a dataset',
                 # you can have different data formats such as csv, tsv, tfrecord, parquet and others
                 data_format='csv'
+            )
+            ```
+
+        !!! example "Write training dataset to external storage"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get storage connector object
+            external_storage_connector = fs.get_storage_connector("storage_connector_name")
+
+            # create a train-test split dataset
+            version, job = feature_view.create_train_test_split(
+                train_start=...,
+                train_end=...,
+                test_start=...,
+                test_end=...,
+                storage_connector = external_storage_connector,
+                description=...,
+                # you can have different data formats such as csv, tsv, tfrecord, parquet and others
+                data_format=...
             )
             ```
 
@@ -1040,8 +1085,6 @@ class FeatureView:
 
             # create a train-validation-test split dataset
             version, job = feature_view.create_train_validation_test_split(
-                validation_size=0.3,
-                test_size=0.2,
                 train_start=train_start,
                 train_end=train_end,
                 validation_start=validation_start,
@@ -1051,6 +1094,32 @@ class FeatureView:
                 description='Description of a dataset',
                 # you can have different data formats such as csv, tsv, tfrecord, parquet and others
                 data_format='csv'
+            )
+            ```
+
+        !!! example "Write training dataset to external storage"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get storage connector object
+            external_storage_connector = fs.get_storage_connector("storage_connector_name")
+
+            # create a train-validation-test split dataset
+            version, job = feature_view.create_train_validation_test_split(
+                train_start=...,
+                train_end=...,
+                validation_start=...,
+                validation_end=...,
+                test_start=...,
+                test_end=...,
+                description=...,
+                storage_connector = external_storage_connector,
+                # you can have different data formats such as csv, tsv, tfrecord, parquet and others
+                data_format=...
             )
             ```
 
