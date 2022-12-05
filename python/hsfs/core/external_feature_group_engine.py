@@ -29,7 +29,7 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
             # if python engine user should pass features as we do not parse it in this case
             if external_dataset is None:
                 raise FeatureStoreException(
-                    "Features need to be set incase of creating external feature groups with engine "
+                    "Features (schema) need to be set incase of creating external feature groups with engine "
                     + engine.get_type()
                     + ". Alternatively use Spark kernel."
                 )
