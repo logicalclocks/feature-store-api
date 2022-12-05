@@ -111,7 +111,7 @@ class Links:
     def __feature_group(link_json: dict):
         if link_json["artifact_type"] == "FEATURE_GROUP":
             return feature_group.FeatureGroup.from_response_json(link_json["artifact"])
-        elif link_json["artifact_type"] == "ON_DEMAND_FEATURE_GROUP":
+        elif link_json["artifact_type"] == "EXTERNAL_FEATURE_GROUP":
             return feature_group.ExternalFeatureGroup.from_response_json(
                 link_json["artifact"]
             )
@@ -169,7 +169,7 @@ class Links:
                 links_json["upstream"],
                 {
                     "FEATURE_GROUP",
-                    "ON_DEMAND_FEATURE_GROUP",
+                    "EXTERNAL_FEATURE_GROUP",
                 },
             )
 
@@ -179,7 +179,7 @@ class Links:
                     links_json["downstream"],
                     {
                         "FEATURE_GROUP",
-                        "ON_DEMAND_FEATURE_GROUP",
+                        "EXTERNAL_FEATURE_GROUP",
                     },
                 )
             else:
