@@ -571,7 +571,7 @@ class FeatureView:
     ):
         """Create a training dataset and save data into `location`.
 
-        !!! example "Create random splits"
+        !!! example "Create training dataset"
             ```python
             # get feature store instance
             fs = ...
@@ -588,7 +588,7 @@ class FeatureView:
             )
             ```
 
-        !!! example "Create time series splits by specifying date as string"
+        !!! example "Create training data specifying date range  with dates as strings"
             ```python
             # get feature store instance
             fs = ...
@@ -613,7 +613,7 @@ class FeatureView:
             X_train, X_test, y_train, y_test = feature_view.get_training_data(version)
             ```
 
-        !!! example "Create time series splits by specifying date as datetime object"
+        !!! example "Create training data specifying date range  with dates as datetime objects"
             ```python
             # get feature store instance
             fs = ...
