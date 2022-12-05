@@ -646,7 +646,7 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # get storage connector object
+            # get storage connector instance
             external_storage_connector = fs.get_storage_connector("storage_connector_name")
 
             # create a train-test split dataset
@@ -846,7 +846,7 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # get storage connector object
+            # get storage connector instance
             external_storage_connector = fs.get_storage_connector("storage_connector_name")
 
             # create a train-test split dataset
@@ -1105,7 +1105,7 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # get storage connector object
+            # get storage connector instance
             external_storage_connector = fs.get_storage_connector("storage_connector_name")
 
             # create a train-validation-test split dataset
