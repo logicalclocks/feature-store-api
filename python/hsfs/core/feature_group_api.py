@@ -268,7 +268,7 @@ class FeatureGroupApi:
 
     def get_parent_feature_groups(self, feature_group_instance):
         """Get the parents of this feature group, based on explicit provenance.
-        Parents are feature groups: cached, streaming or external. These feature
+        Parents are feature groups or external feature groups. These feature
         groups can be accessible, deleted or inaccessible.
         For deleted and inaccessible feature groups, only a minimal information is
         returned.

@@ -109,13 +109,12 @@ class Links:
 
     @staticmethod
     def __feature_group(link_json: dict):
-        if (
-            link_json["type"] == "cachedFeaturegroupDTO"
-            or link_json["type"] == "streamFeatureGroupDTO"
-        ):
-            return feature_group.FeatureGroup.from_response_json(link_json)
-        elif link_json["type"] == "onDemandFeaturegroupDTO":
-            return feature_group.ExternalFeatureGroup.from_response_json(link_json)
+        if link_json["artifact_type"] == "FEATURE_GROUP":
+            return feature_group.FeatureGroup.from_response_json(link_json["artifact"])
+        elif link_json["artifact_type"] == "ON_DEMAND_FEATURE_GROUP":
+            return feature_group.ExternalFeatureGroup.from_response_json(
+                link_json["artifact"]
+            )
 
     @staticmethod
     def __parse_feature_groups(links_json: dict, artifacts: Set[str]):
@@ -123,9 +122,7 @@ class Links:
         for link_json in links_json:
             if link_json["node"]["artifact_type"] in artifacts:
                 if bool(link_json["node"]["accessible"]):
-                    links.accessible.append(
-                        Links.__feature_group(link_json["node"]["artifact"])
-                    )
+                    links.accessible.append(Links.__feature_group(link_json["node"]))
                 elif bool(link_json["node"]["deleted"]):
                     links.deleted.append(Artifact.from_response_json(link_json["node"]))
                 else:
@@ -160,7 +157,7 @@ class Links:
 
         # Arguments
             links_json: json response from the explicit provenance endpoint
-            direction: subset of links to parse - UPTREAM/DOWNSTREAM
+            direction: subset of links to parse - UPSTREAM/DOWNSTREAM
             type: subset of links to parse - FEATURE_GROUP/FEATURE_VIEW
 
         # Returns
@@ -172,8 +169,6 @@ class Links:
                 links_json["upstream"],
                 {
                     "FEATURE_GROUP",
-                    "CACHED_FEATURE_GROUP",
-                    "STREAMING_FEATURE_GROUP",
                     "ON_DEMAND_FEATURE_GROUP",
                 },
             )
@@ -184,8 +179,6 @@ class Links:
                     links_json["downstream"],
                     {
                         "FEATURE_GROUP",
-                        "CACHED_FEATURE_GROUP",
-                        "STREAMING_FEATURE_GROUP",
                         "ON_DEMAND_FEATURE_GROUP",
                     },
                 )
