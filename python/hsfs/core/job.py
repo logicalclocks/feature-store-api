@@ -60,5 +60,5 @@ class Job:
     def href(self):
         return self._href
 
-    def run(self, write_options=None):
-        engine.get_instance().run_job(self, write_options)
+    def run(self, await_termination=True):
+        engine.get_instance().run_job(self, await_termination)

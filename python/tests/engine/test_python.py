@@ -2136,7 +2136,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._wait_for_job(job=None, user_write_options=None)
+        python_engine._wait_for_job(job=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2148,7 +2148,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._wait_for_job(job=None, user_write_options={"wait_for_job": True})
+        python_engine._wait_for_job(job=None, await_termination=True)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2160,9 +2160,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._wait_for_job(
-            job=None, user_write_options={"wait_for_job": False}
-        )
+        python_engine._wait_for_job(job=None, await_termination=False)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 0
@@ -2178,7 +2176,7 @@ class TestPython:
         ]
 
         # Act
-        python_engine._wait_for_job(job=None, user_write_options=None)
+        python_engine._wait_for_job(job=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2195,7 +2193,7 @@ class TestPython:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            python_engine._wait_for_job(job=None, user_write_options=None)
+            python_engine._wait_for_job(job=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2216,7 +2214,7 @@ class TestPython:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            python_engine._wait_for_job(job=None, user_write_options=None)
+            python_engine._wait_for_job(job=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1

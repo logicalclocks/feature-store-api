@@ -508,7 +508,8 @@ class Engine:
         self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
 
         # run job
-        self.run_job(ingestion_job.job, offline_write_options)
+        self.run_job(ingestion_job.job,
+            await_termination=offline_write_options is None or offline_write_options.get("wait_for_job", True))
 
         return ingestion_job.job
 
@@ -673,9 +674,8 @@ class Engine:
             )
         )
 
-        # If the user passed the wait_for_job option consider it,
-        # otherwise use the default True
-        self._wait_for_job(td_job, user_write_options)
+        self._wait_for_job(td_job,
+            await_termination=user_write_options is None or user_write_options.get("wait_for_job", True))
 
         return td_job
 
@@ -770,12 +770,10 @@ class Engine:
             spark_job_configuration=spark_job_configuration,
         )
 
-    def _wait_for_job(self, job, user_write_options=None):
+    def _wait_for_job(self, job, await_termination=True):
         # If the user passed the wait_for_job option consider it,
         # otherwise use the default True
-        while user_write_options is None or user_write_options.get(
-            "wait_for_job", True
-        ):
+        while await_termination:
             executions = self._job_api.last_execution(job)
             if len(executions) > 0:
                 execution = executions[0]
@@ -925,11 +923,12 @@ class Engine:
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
-            self.run_job(job, offline_write_options)
+            self.run_job(job,
+                await_termination=offline_write_options is None or offline_write_options.get("wait_for_job", True))
 
         return job
 
-    def run_job(self, job, write_options=None):
+    def run_job(self, job, await_termination=True):
         print(f"Launching job: {job.name}")
         self._job_api.launch(job.name)
         print(
@@ -937,7 +936,7 @@ class Engine:
                 self._get_job_url(job.href)
             )
         )
-        self._wait_for_job(job, write_options)
+        self._wait_for_job(job, await_termination)
 
     def _kafka_produce(
         self, producer, feature_group, key, encoded_row, acked, offline_write_options
