@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 class TestFeatureViewEngine {
@@ -58,6 +59,17 @@ class TestFeatureViewEngine {
   void makeLabelFeatures_queryLabelInLeftFg_leftLabel() throws Exception {
     List<TrainingDatasetFeature> tdFeatures = FeatureViewEngine.makeLabelFeatures(queryLabelInLeftFg,
         Lists.newArrayList(label));
+    Assertions.assertEquals(tdFeatures.size(), 1);
+    TrainingDatasetFeature labelFeature = tdFeatures.get(0);
+    Assertions.assertTrue(labelFeature.getLabel());
+    Assertions.assertEquals(labelFeature.getFeaturegroup().getId(), fg1.getId());
+    Assertions.assertEquals(labelFeature.getName(), label);
+  }
+
+  @Test
+  void makeLabelFeatures_queryLabelInLeftFg_noSelectAll() throws Exception {
+    List<TrainingDatasetFeature> tdFeatures = FeatureViewEngine.makeLabelFeatures(fg1.select(Arrays.asList("label")),
+      Lists.newArrayList(label));
     Assertions.assertEquals(tdFeatures.size(), 1);
     TrainingDatasetFeature labelFeature = tdFeatures.get(0);
     Assertions.assertTrue(labelFeature.getLabel());
