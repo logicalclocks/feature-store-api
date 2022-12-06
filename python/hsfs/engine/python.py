@@ -307,11 +307,11 @@ class Engine:
         job = stat_api.compute(metadata_instance)
         print(
             "Statistics Job started successfully, you can follow the progress at \n{}".format(
-                self._get_job_url(job.href)
+                self.get_job_url(job.href)
             )
         )
 
-        self._wait_for_job(job)
+        self.wait_for_job(job)
 
     def profile(
         self,
@@ -548,16 +548,11 @@ class Engine:
         print("Uploading Pandas dataframe...")
         self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
 
-        # Launch job
-        print("Launching ingestion job...")
-        self._job_api.launch(ingestion_job.job.name)
-        print(
-            "Ingestion Job started successfully, you can follow the progress at \n{}".format(
-                self._get_job_url(ingestion_job.job.href)
-            )
+        # run job
+        ingestion_job.job.run(
+            await_termination=offline_write_options is None
+            or offline_write_options.get("wait_for_job", True)
         )
-
-        self._wait_for_job(ingestion_job.job, offline_write_options)
 
         return ingestion_job.job
 
@@ -718,13 +713,14 @@ class Engine:
             td_job = td_api.compute(training_dataset, td_app_conf)
         print(
             "Training dataset job started successfully, you can follow the progress at \n{}".format(
-                self._get_job_url(td_job.href)
+                self.get_job_url(td_job.href)
             )
         )
 
-        # If the user passed the wait_for_job option consider it,
-        # otherwise use the default True
-        self._wait_for_job(td_job, user_write_options)
+        self.wait_for_job(
+            td_job,
+            await_termination=user_write_options.get("wait_for_job", True),
+        )
 
         return td_job
 
@@ -785,7 +781,7 @@ class Engine:
         """Wrapper around save_dataframe in order to provide no-op."""
         pass
 
-    def _get_job_url(self, href: str):
+    def get_job_url(self, href: str):
         """Use the endpoint returned by the API to construct the UI url for jobs
 
         Args:
@@ -819,12 +815,10 @@ class Engine:
             spark_job_configuration=spark_job_configuration,
         )
 
-    def _wait_for_job(self, job, user_write_options=None):
+    def wait_for_job(self, job, await_termination=True):
         # If the user passed the wait_for_job option consider it,
         # otherwise use the default True
-        while user_write_options is None or user_write_options.get(
-            "wait_for_job", True
-        ):
+        while await_termination:
             executions = self._job_api.last_execution(job)
             if len(executions) > 0:
                 execution = executions[0]
@@ -970,14 +964,7 @@ class Engine:
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
-            print("Launching offline feature group backfill job...")
-            self._job_api.launch(job_name)
-            print(
-                "Backfill Job started successfully, you can follow the progress at \n{}".format(
-                    self._get_job_url(job.href)
-                )
-            )
-            self._wait_for_job(job, offline_write_options)
+            job.run(await_termination=offline_write_options.get("wait_for_job", True))
 
         return job
 
