@@ -107,7 +107,7 @@ class Query:
         sql_query, online_conn = self._prep_read(online, read_options)
 
         schema = self._collect_features()
-        
+
         return engine.get_instance().sql(
             sql_query,
             self._feature_store_name,
@@ -122,7 +122,6 @@ class Query:
         for j in self.joins:
             features += j._collect_features()
         return features
-
 
     def show(self, n: int, online: Optional[bool] = False):
         """Show the first N rows of the Query.

@@ -101,7 +101,15 @@ class Engine:
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             util.setup_pydoop()
 
-    def sql(self, sql_query, feature_store, connector, dataframe_type, read_options, schema=None):
+    def sql(
+        self,
+        sql_query,
+        feature_store,
+        connector,
+        dataframe_type,
+        read_options,
+        schema=None,
+    ):
         if not connector:
             result_df = self._sql_offline(sql_query, feature_store)
         else:
@@ -790,7 +798,9 @@ class Engine:
         for feat in dataframe.schema:
             name = feat.name.lower()
             try:
-                converted_type = Engine.convert_spark_type_to_offline_type(feat.dataType, using_hudi)
+                converted_type = Engine.convert_spark_type_to_offline_type(
+                    feat.dataType, using_hudi
+                )
             except ValueError as e:
                 raise FeatureStoreException(f"Feature '{name}': {str(e)}")
             features.append(
@@ -994,7 +1004,6 @@ class Engine:
 
         return path
 
-
     def create_empty_df(self, streaming_df):
         return SQLContext(self._spark_context).createDataFrame(
             self._spark_context.emptyRDD(), streaming_df.schema
@@ -1068,7 +1077,9 @@ class Engine:
     @staticmethod
     def _convert_offline_type_to_spark_type(offline_type):
         if "array<" == offline_type[:6]:
-            return ArrayType(Engine._convert_offline_type_to_spark_type(offline_type[6:-1]))
+            return ArrayType(
+                Engine._convert_offline_type_to_spark_type(offline_type[6:-1])
+            )
         elif "struct<label:string,index:int>" in offline_type:
             return StructType(
                 [
@@ -1105,7 +1116,10 @@ class Engine:
     @staticmethod
     def cast_columns(df, schema):
         pyspark_schema = dict(
-            [(_feat.name, Engine._convert_offline_type_to_spark_type(_feat.type)) for _feat in schema]
+            [
+                (_feat.name, Engine._convert_offline_type_to_spark_type(_feat.type))
+                for _feat in schema
+            ]
         )
         for _feat in pyspark_schema:
             df = df.withColumn(_feat, col(_feat).cast(pyspark_schema[_feat]))

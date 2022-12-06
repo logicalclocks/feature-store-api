@@ -82,11 +82,21 @@ class Engine:
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None
 
-    def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options, schema=None):
+    def sql(
+        self,
+        sql_query,
+        feature_store,
+        online_conn,
+        dataframe_type,
+        read_options,
+        schema=None,
+    ):
         if not online_conn:
             return self._sql_offline(sql_query, feature_store, dataframe_type, schema)
         else:
-            return self._jdbc(sql_query, online_conn, dataframe_type, read_options, schema)
+            return self._jdbc(
+                sql_query, online_conn, dataframe_type, read_options, schema
+            )
 
     def _sql_offline(self, sql_query, feature_store, dataframe_type, schema=None):
         with self._create_hive_connection(feature_store) as hive_conn:
@@ -973,7 +983,9 @@ class Engine:
             # figure out sub type
             sub_arrow_type = arrow_type.value_type
             sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
-            subtype = Engine._convert_pandas_dtype_to_offline_type(sub_dtype, sub_arrow_type)
+            subtype = Engine._convert_pandas_dtype_to_offline_type(
+                sub_dtype, sub_arrow_type
+            )
             return "array<{}>".format(subtype)
         if pa.types.is_struct(arrow_type):
             # best effort, based on pyarrow's string representation
@@ -1051,4 +1063,3 @@ class Engine:
                 _feat.type, df[_feat.name]
             )
         return df
-
