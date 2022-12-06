@@ -400,7 +400,13 @@ class ExpectationSuite:
         return self.json()
 
     def __repr__(self):
-        return json.dumps(self.to_json_dict())
+        suite = self.to_dict()
+
+        if hasattr(self, "_feature_group_id"):
+            suite["feature_group_id"] = self._feature_group_id
+            suite["feature_store_id"] = self._feature_store_id
+
+        return f"ExpectationSuite({suite})"
 
     @property
     def id(self) -> Optional[int]:
