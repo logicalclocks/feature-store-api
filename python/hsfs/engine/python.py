@@ -19,6 +19,7 @@ import numpy as np
 import boto3
 import time
 import re
+import ast
 import warnings
 import avro
 import socket
@@ -27,7 +28,7 @@ import json
 import random
 import uuid
 import decimal
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 import great_expectations as ge
 
@@ -962,13 +963,21 @@ class Engine:
             return "int"
         elif dtype == np.dtype("int8"):
             return "int"
+        elif dtype == pd.Int8Dtype():
+            return "int"
         elif dtype == np.dtype("int16"):
             return "int"
+        elif dtype == pd.Int16Dtype():
+            return "int"
         elif dtype == np.dtype("int32"):
+            return "int"
+        elif dtype == pd.Int32Dtype():
             return "int"
         elif dtype == np.dtype("uint32"):
             return "bigint"
         elif dtype == np.dtype("int64"):
+            return "bigint"
+        elif dtype == pd.Int64Dtype():
             return "bigint"
         elif dtype == np.dtype("float16"):
             return "float"
@@ -979,6 +988,8 @@ class Engine:
         elif dtype == np.dtype("datetime64[ns]"):
             return "timestamp"
         elif dtype == np.dtype("bool"):
+            return "boolean"
+        elif dtype == pd.BooleanDtype():
             return "boolean"
         elif dtype == "category":
             return "string"
@@ -1011,98 +1022,70 @@ class Engine:
         raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
 
     @staticmethod
-    def _convert_offline_type_to_pandas_dtype(offline_type):
-        if "array<" in offline_type or "struct<label:string,index:int>" in offline_type:
-            return object
-        else:
-            return Engine._convert_offline_type_to_pandas_dtype_simple(offline_type)
-
-    @staticmethod
-    def _convert_offline_type_to_pandas_dtype_simple(offline_type):
-        offline_type = offline_type.lower()
-        offline_dtype_mapping = {
-            "string": np.dtype(str),
-            "bigint": np.dtype("int64"),
-            "int": np.dtype("int32"),
-            "smallint": np.dtype("int16"),
-            "tinyint": np.dtype("int8"),
-            "float": np.dtype("float32"),
-            "double": np.dtype("float64"),
-            "timestamp": np.dtype("datetime64[ns]"),
-            "boolean": np.dtype("bool"),
-            "date": np.dtype(date),
-            "binary": np.dtype(bytes),
-            "decimal": np.dtype(decimal.Decimal),
-        }
-        if offline_type in offline_dtype_mapping:
-            return offline_dtype_mapping[offline_type]
-        else:
-            raise FeatureStoreException(
-                f"Offline type {offline_type} cannot be converted to a pandas type."
-            )
-
-    @staticmethod
     def _cast_column_to_offline_type(feature_column, offline_type):
-        try:
-            if offline_type == "TIMESTAMP":
-                # convert (if tz!=UTC) to utc, then make timezone unaware
-                return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
-            elif offline_type == "DATE":
-                return pd.to_datetime(feature_column, utc=True).dt.date
-            else:
+        offline_type = offline_type.lower()
+        if offline_type == "timestamp":
+            # convert (if tz!=UTC) to utc, then make timezone unaware
+            return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
+        elif offline_type == "date":
+            return pd.to_datetime(feature_column, utc=True).dt.date
+        elif offline_type.startswith("array<") or offline_type.startswith("struct<"):
+            feature_column.apply(
+                lambda x: ast.literal_eval(x) if x is not None else None
+            )
+        elif offline_type.startswith("decimal"):
+            feature_column.astype(np.dtype(decimal.Decimal))
+        else:
+            offline_dtype_mapping = {
+                "string": np.dtype("str"),
+                "bigint": pd.Int64Dtype(),
+                "int": pd.Int32Dtype(),
+                "smallint": pd.Int16Dtype(),
+                "tinyint": pd.Int8Dtype(),
+                "float": np.dtype("float32"),
+                "double": np.dtype("float64"),
+                "boolean": pd.BooleanDtype(),
+                "binary": np.dtype(bytes),
+            }
+            if offline_type in offline_dtype_mapping:
                 casted_feature = feature_column.astype(
-                    Engine._convert_offline_type_to_pandas_dtype(offline_type)
+                    offline_dtype_mapping[offline_type]
                 )
                 return casted_feature
-        except FeatureStoreException:
-            return feature_column  # handle gracefully, just return the column as-is
-
-    @staticmethod
-    def _convert_online_type_to_pandas_dtype(online_type):
-        if "array<" in online_type or "struct<label:string,index:int>" in online_type:
-            return object
-        else:
-            return Engine._convert_online_type_to_pandas_dtype_simple(online_type)
-
-    @staticmethod
-    def _convert_online_type_to_pandas_dtype_simple(online_type):
-        online_type = online_type.lower()
-        online_type_mapping = {
-            "string": np.dtype(str),
-            "bigint": np.dtype("int64"),
-            "int": np.dtype("int32"),
-            "smallint": np.dtype("int16"),
-            "tinyint": np.dtype("int8"),
-            "float": np.dtype("float32"),
-            "double": np.dtype("float64"),
-            "timestamp": np.dtype("datetime64[ns]"),
-            "boolean": np.dtype("bool"),
-            "date": np.dtype(date),
-            "binary": np.dtype(bytes),
-            "decimal": np.dtype(decimal.Decimal),
-        }
-        if online_type in online_type_mapping:
-            return online_type_mapping[online_type]
-        else:
-            raise FeatureStoreException(
-                f"Online type {online_type} cannot be converted to a pandas type."
-            )
+            else:
+                return feature_column  # handle gracefully, just return the column as-is
 
     @staticmethod
     def _cast_column_to_online_type(feature_column, online_type):
-        try:
-            if online_type == "TIMESTAMP":
-                # convert (if tz!=UTC) to utc, then make timezone unaware
-                return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
-            elif online_type == "DATE":
-                return pd.to_datetime(feature_column, utc=True).dt.date
-            else:
+        online_type = online_type.lower()
+        if online_type == "timestamp":
+            # convert (if tz!=UTC) to utc, then make timezone unaware
+            return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
+        elif online_type == "date":
+            return pd.to_datetime(feature_column, utc=True).dt.date
+        elif online_type.startswith("varbinary") or online_type == "blob":
+            feature_column.astype(np.dtype(bytes))
+        elif online_type.startswith("varchar") or online_type == "text":
+            feature_column.astype(np.dtype("str"))
+        elif online_type.startswith("decimal"):
+            feature_column.astype(np.dtype(decimal.Decimal))
+        else:
+            online_dtype_mapping = {
+                "bigint": pd.Int64Dtype(),
+                "int": pd.Int32Dtype(),
+                "smallint": pd.Int16Dtype(),
+                "tinyint": pd.Int8Dtype(),
+                "float": np.dtype("float32"),
+                "double": np.dtype("float64"),
+                "boolean": pd.BooleanDtype(),
+            }
+            if online_type in online_dtype_mapping:
                 casted_feature = feature_column.astype(
-                    Engine._convert_online_type_to_pandas_dtype(online_type)
+                    online_dtype_mapping[online_type]
                 )
                 return casted_feature
-        except FeatureStoreException:
-            return feature_column  # handle gracefully, just return the column as-is
+            else:
+                return feature_column  # handle gracefully, just return the column as-is
 
     @staticmethod
     def cast_columns(df, schema, online=False):
