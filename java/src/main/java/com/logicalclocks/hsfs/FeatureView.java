@@ -141,7 +141,7 @@ public class FeatureView {
   }
 
   public void delete() throws FeatureStoreException, IOException {
-    LOGGER.info("JobWarning: All jobs associated to feature view `" + name + "`, version `"
+    LOGGER.warn("JobWarning: All jobs associated to feature view `" + name + "`, version `"
         + version + "` will be removed.");
     featureViewEngine.delete(this.featureStore, this.name, this.version);
   }

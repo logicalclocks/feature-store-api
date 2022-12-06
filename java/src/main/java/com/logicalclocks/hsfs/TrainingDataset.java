@@ -527,7 +527,7 @@ public class TrainingDataset {
    * @throws IOException
    */
   public void delete() throws FeatureStoreException, IOException {
-    LOGGER.info("JobWarning: All jobs associated to training dataset `" + name + "`, version `"
+    LOGGER.warn("JobWarning: All jobs associated to training dataset `" + name + "`, version `"
         + version + "` will be removed.");
     trainingDatasetEngine.delete(this);
   }
