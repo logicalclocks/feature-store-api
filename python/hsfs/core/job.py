@@ -84,7 +84,7 @@ class Job:
             ```
 
         # Arguments
-            await_termination: bool. Identifies if the client should wait for the job to complete.
+            await_termination: bool. Identifies if the client should wait for the job to complete, defaults to True.
         """
         print(f"Launching job: {self.name}")
         self._job_api.launch(self.name)
