@@ -63,7 +63,7 @@ class Job:
     def href(self):
         return self._href
 
-    def run(self, await_termination=True):
+    def run(self, await_termination: bool = True):
         """Run the job.
 
         Runs the job, by default awaiting its completion.
@@ -84,7 +84,7 @@ class Job:
             ```
 
         # Arguments
-            await_termination: bool. Identifies if the client should wait for the job to complete, defaults to True.
+            await_termination: Identifies if the client should wait for the job to complete, defaults to True.
         """
         print(f"Launching job: {self.name}")
         self._job_api.launch(self.name)
