@@ -127,7 +127,7 @@ public class FeatureGroupBase {
   public Query select(List<String> features) {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
-    List<Feature> featureObjList = features.stream().map(Feature::new).collect(Collectors.toList());
+    List<Feature> featureObjList = features.stream().map(f -> new Feature(f, id)).collect(Collectors.toList());
     return selectFeatures(featureObjList);
   }
 
