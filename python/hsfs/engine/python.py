@@ -764,9 +764,14 @@ class Engine:
                 transformation_fn.transformation_fn
             )
             offline_type = SparkEngine.convert_spark_type_to_offline_type(
-                SparkEngine.convert_spark_type_string_to_spark_type(transformation_fn.output_type), True
+                SparkEngine.convert_spark_type_string_to_spark_type(
+                    transformation_fn.output_type
+                ),
+                True,
             )
-            dataset[feature_name] = Engine._cast_column_to_offline_type(dataset[feature_name], offline_type)
+            dataset[feature_name] = Engine._cast_column_to_offline_type(
+                dataset[feature_name], offline_type
+            )
 
         return dataset
 
