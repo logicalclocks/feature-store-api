@@ -1015,7 +1015,7 @@ class Engine:
         return [field[feature_name] for field in unique_values]
 
     @staticmethod
-    def _convert_spark_type_string_to_spark_type(spark_type_string):
+    def convert_spark_type_string_to_spark_type(spark_type_string):
         if spark_type_string == "STRING":
             return StringType()
         elif spark_type_string == "BINARY":

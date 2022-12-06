@@ -763,9 +763,10 @@ class Engine:
             dataset[feature_name] = dataset[feature_name].map(
                 transformation_fn.transformation_fn
             )
-            dataset[feature_name] = Engine._convert_spark_type_to_pandas_dtype(
-                transformation_fn.output_type, dataset[feature_name]
+            offline_type = SparkEngine.convert_spark_type_to_offline_type(
+                SparkEngine.convert_spark_type_string_to_spark_type(transformation_fn.output_type), True
             )
+            dataset[feature_name] = Engine._cast_column_to_offline_type(dataset[feature_name], offline_type)
 
         return dataset
 
@@ -1034,13 +1035,6 @@ class Engine:
             raise FeatureStoreException(
                 f"Type {offline_type} cannot be converted to a pandas type."
             )
-
-    @staticmethod
-    def _convert_spark_type_to_pandas_dtype(feature_column, output_type):
-        offline_type = SparkEngine.convert_spark_type_to_offline_type(
-            SparkEngine._convert_spark_type_string_to_spark_type(output_type), True
-        )
-        return Engine._cast_column_to_offline_type(offline_type, feature_column)
 
     @staticmethod
     def _cast_column_to_offline_type(feature_column, offline_type):
