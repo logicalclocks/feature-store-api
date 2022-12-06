@@ -85,6 +85,12 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
+        warnings.warn(
+            "All jobs associated to feature group `{}`, version `{}` will be removed.".format(
+                self._name, self._version
+            ),
+            util.JobWarning,
+        )
         self._feature_group_engine.delete(self)
 
     def select_all(self):
