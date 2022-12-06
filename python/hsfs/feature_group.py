@@ -1093,6 +1093,7 @@ class FeatureGroup(FeatureGroupBase):
         stream=False,
         expectation_suite=None,
         parents=None,
+        href=None,
     ):
         super().__init__(featurestore_id, location)
 
@@ -1188,6 +1189,7 @@ class FeatureGroup(FeatureGroupBase):
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
         )
+        self._href = href
 
     def read(
         self,
@@ -1472,7 +1474,7 @@ class FeatureGroup(FeatureGroupBase):
                 online_enabled=True,
                 event_time=['unix']
             )
-            # async insertion in order not to wait till finish of the job 
+            # async insertion in order not to wait till finish of the job
             fg.insert(df_for_fg1, write_options={"wait_for_job" : False})
 
             fg2 = fs.get_or_create_feature_group(
@@ -2157,6 +2159,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         statistics_config=None,
         event_time=None,
         expectation_suite=None,
+        href=None,
     ):
         super().__init__(featurestore_id, location)
 
@@ -2217,6 +2220,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             self._storage_connector = storage_connector
 
         self.expectation_suite = expectation_suite
+        self._href = href
 
     def save(self):
         self._feature_group_engine.save(self)
