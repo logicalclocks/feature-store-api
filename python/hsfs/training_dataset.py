@@ -482,6 +482,7 @@ class TrainingDataset:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
+
         self._training_dataset_api.delete(self)
 
     @classmethod

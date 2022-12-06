@@ -70,7 +70,6 @@ except ImportError:
 
 
 class Engine:
-
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
