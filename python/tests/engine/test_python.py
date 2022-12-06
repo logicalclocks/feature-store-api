@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import decimal
 
 import pytest
 import pandas as pd
@@ -30,10 +31,11 @@ from hsfs import (
     util,
 )
 from hsfs.engine import python
-from hsfs.core import inode, execution
+from hsfs.core import inode, execution, job
 from hsfs.constructor import query
 from hsfs.client import exceptions
 from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
+from hsfs.training_dataset_feature import TrainingDatasetFeature
 
 
 class TestPython:
@@ -572,6 +574,66 @@ class TestPython:
 
         # Assert
         assert mock_python_engine_sql.call_count == 1
+
+    def test_cast_column_type(self, mocker):
+        class LabelIndex:
+            def __init__(self, label, index):
+                self.label = label
+                self.index = index
+
+        python_engine = python.Engine()
+        d = {
+            "string": ["s"],
+            "bigint": ["1"],
+            "int": ["1"],
+            "smallint": ["1"],
+            "tinyint": ["1"],
+            "float": ["1"],
+            "double": ["1"],
+            "timestamp": [1641340800000],
+            "boolean": ["False"],
+            "date": ["2022-01-27"],
+            "binary": ["1"],
+            "array<string>": [["123"]],
+            "struc": [LabelIndex("0", "1")],
+            "decimal": ["1.1"],
+        }
+        df = pd.DataFrame(data=d)
+        schema = [
+            TrainingDatasetFeature("string", type="string"),
+            TrainingDatasetFeature("bigint", type="bigint"),
+            TrainingDatasetFeature("int", type="int"),
+            TrainingDatasetFeature("smallint", type="smallint"),
+            TrainingDatasetFeature("tinyint", type="tinyint"),
+            TrainingDatasetFeature("float", type="float"),
+            TrainingDatasetFeature("double", type="double"),
+            TrainingDatasetFeature("timestamp", type="timestamp"),
+            TrainingDatasetFeature("boolean", type="boolean"),
+            TrainingDatasetFeature("date", type="date"),
+            TrainingDatasetFeature("binary", type="binary"),
+            TrainingDatasetFeature("array<string>", type="array<string>"),
+            TrainingDatasetFeature("struc", type="struct<label:string,index:int>"),
+            TrainingDatasetFeature("decimal", type="decimal"),
+        ]
+        cast_df = python_engine.cast_column_type(df, schema)
+        expected = {
+            "string": object,
+            "bigint": np.dtype("int64"),
+            "int": np.dtype("int32"),
+            "smallint": np.dtype("int16"),
+            "tinyint": np.dtype("int8"),
+            "float": np.dtype("float32"),
+            "double": np.dtype("float64"),
+            "timestamp": np.dtype("datetime64[ns]"),
+            "boolean": np.dtype("bool"),
+            "date": np.dtype(date),
+            "binary": np.dtype("S1"),  # pandas converted string to bytes8 == 'S1'
+            "array<string>": object,
+            "struc": object,
+            "decimal": np.dtype(decimal.Decimal),
+        }
+        for col in cast_df.columns:
+            assert cast_df[col].dtype == expected[col]
 
     def test_register_external_temporary_table(self, mocker):
         # Arrange
@@ -1325,12 +1387,14 @@ class TestPython:
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mock_dataset_api = mocker.patch("hsfs.core.dataset_api.DatasetApi")
         mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-        mocker.patch("hsfs.engine.python.Engine._get_job_url")
-        mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine._wait_for_job"
-        )
+        mocker.patch("hsfs.engine.python.Engine.get_job_url")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
 
         python_engine = python.Engine()
+
+        mock_fg_api.return_value.ingestion.return_value.job = job.Job(
+            1, "test_job", None, None, None, None
+        )
 
         # Act
         python_engine.legacy_save_dataframe(
@@ -1339,7 +1403,7 @@ class TestPython:
             operation=None,
             online_enabled=None,
             storage=None,
-            offline_write_options=None,
+            offline_write_options={},
             online_write_options=None,
             validation_id=None,
         )
@@ -1348,7 +1412,7 @@ class TestPython:
         assert mock_fg_api.return_value.ingestion.call_count == 1
         assert mock_dataset_api.return_value.upload.call_count == 1
         assert mock_job_api.return_value.launch.call_count == 1
-        assert mock_python_engine_wait_for_job.call_count == 1
+        assert mock_engine_get_instance.return_value.get_job_url.call_count == 1
 
     def test_get_training_data(self, mocker):
         # Arrange
@@ -1850,9 +1914,9 @@ class TestPython:
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mocker.patch("hsfs.engine.python.Engine._get_job_url")
+        mocker.patch("hsfs.engine.python.Engine.get_job_url")
         mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine._wait_for_job"
+            "hsfs.engine.python.Engine.wait_for_job"
         )
 
         python_engine = python.Engine()
@@ -1883,9 +1947,9 @@ class TestPython:
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mocker.patch("hsfs.engine.python.Engine._get_job_url")
+        mocker.patch("hsfs.engine.python.Engine.get_job_url")
         mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine._wait_for_job"
+            "hsfs.engine.python.Engine.wait_for_job"
         )
 
         python_engine = python.Engine()
@@ -1923,9 +1987,9 @@ class TestPython:
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mocker.patch("hsfs.engine.python.Engine._get_job_url")
+        mocker.patch("hsfs.engine.python.Engine.get_job_url")
         mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine._wait_for_job"
+            "hsfs.engine.python.Engine.wait_for_job"
         )
 
         python_engine = python.Engine()
@@ -2104,7 +2168,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._get_job_url(href="1/2/3/4/5/6/7/8")
+        python_engine.get_job_url(href="1/2/3/4/5/6/7/8")
 
         # Assert
         assert (
@@ -2136,7 +2200,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._wait_for_job(job=None, user_write_options=None)
+        python_engine.wait_for_job(job=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2148,7 +2212,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._wait_for_job(job=None, user_write_options={"wait_for_job": True})
+        python_engine.wait_for_job(job=None, await_termination=True)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2160,9 +2224,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._wait_for_job(
-            job=None, user_write_options={"wait_for_job": False}
-        )
+        python_engine.wait_for_job(job=None, await_termination=False)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 0
@@ -2178,7 +2240,7 @@ class TestPython:
         ]
 
         # Act
-        python_engine._wait_for_job(job=None, user_write_options=None)
+        python_engine.wait_for_job(job=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2195,7 +2257,7 @@ class TestPython:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            python_engine._wait_for_job(job=None, user_write_options=None)
+            python_engine.wait_for_job(job=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2216,7 +2278,7 @@ class TestPython:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            python_engine._wait_for_job(job=None, user_write_options=None)
+            python_engine.wait_for_job(job=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2302,10 +2364,12 @@ class TestPython:
         mock_python_engine_kafka_produce = mocker.patch(
             "hsfs.engine.python.Engine._kafka_produce"
         )
-        mocker.patch("hsfs.core.job_api.JobApi")  # get, launch
-        mocker.patch("hsfs.engine.python.Engine._get_job_url")
-        mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine._wait_for_job"
+        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
+        mocker.patch("hsfs.engine.python.Engine.get_job_url")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+
+        mock_job_api.return_value.get.return_value = job.Job(
+            1, "test_job", None, None, None, None
         )
 
         python_engine = python.Engine()
@@ -2331,7 +2395,7 @@ class TestPython:
 
         # Assert
         assert mock_python_engine_kafka_produce.call_count == 4
-        assert mock_python_engine_wait_for_job.call_count == 1
+        assert mock_engine_get_instance.return_value.wait_for_job.call_count == 1
 
     def test_kafka_produce(self, mocker):
         # Arrange

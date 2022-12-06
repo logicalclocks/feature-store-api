@@ -15,6 +15,8 @@
 #
 
 import humps
+from hsfs import engine
+from hsfs.core import job_api
 
 
 class Job:
@@ -38,6 +40,8 @@ class Job:
         self._executions = executions
         self._href = href
 
+        self._job_api = job_api.JobApi()
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -58,3 +62,35 @@ class Job:
     @property
     def href(self):
         return self._href
+
+    def run(self, await_termination: bool = True):
+        """Run the job.
+
+        Runs the job, by default awaiting its completion.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instances
+            fg = fs.get_or_create_feature_group(...)
+
+            # insert in to feature group
+            job, _ = fg.insert(df, write_options={"start_offline_backfill": False})
+
+            # run job
+            job.run()
+            ```
+
+        # Arguments
+            await_termination: Identifies if the client should wait for the job to complete, defaults to True.
+        """
+        print(f"Launching job: {self.name}")
+        self._job_api.launch(self.name)
+        print(
+            "Job started successfully, you can follow the progress at \n{}".format(
+                engine.get_instance().get_job_url(self.href)
+            )
+        )
+        engine.get_instance().wait_for_job(self, await_termination=await_termination)

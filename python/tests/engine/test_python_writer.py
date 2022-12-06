@@ -47,8 +47,8 @@ class TestPythonWriter:
             "hsfs.engine.python.Engine._kafka_produce"
         )
         mocker.patch("hsfs.core.job_api.JobApi")  # get, launch
-        mocker.patch("hsfs.engine.python.Engine._get_job_url")
-        mocker.patch("hsfs.engine.python.Engine._wait_for_job")
+        mocker.patch("hsfs.engine.python.Engine.get_job_url")
+        mocker.patch("hsfs.engine.python.Engine.wait_for_job")
 
         python_engine = python.Engine()
 
