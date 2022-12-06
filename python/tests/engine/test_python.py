@@ -575,7 +575,7 @@ class TestPython:
         # Assert
         assert mock_python_engine_sql.call_count == 1
 
-    def test_cast_column_type(self, mocker):
+    def test_cast_columns(self, mocker):
         class LabelIndex:
             def __init__(self, label, index):
                 self.label = label
@@ -615,7 +615,7 @@ class TestPython:
             TrainingDatasetFeature("struc", type="struct<label:string,index:int>"),
             TrainingDatasetFeature("decimal", type="decimal"),
         ]
-        cast_df = python_engine.cast_column_type(df, schema)
+        cast_df = python_engine.cast_columns(df, schema)
         expected = {
             "string": object,
             "bigint": np.dtype("int64"),
@@ -1027,7 +1027,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._convert_pandas_type(dtype=None, arrow_type=None)
+        python_engine._convert_pandas_dtype_to_offline_type(dtype=None, arrow_type=None)
 
         # Assert
         assert mock_python_engine_infer_type_pyarrow.call_count == 0
@@ -1045,7 +1045,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._convert_pandas_type(dtype=np.dtype("O"), arrow_type=None)
+        python_engine._convert_pandas_dtype_to_offline_type(dtype=np.dtype("O"), arrow_type=None)
 
         # Assert
         assert mock_python_engine_infer_type_pyarrow.call_count == 1
@@ -1056,7 +1056,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("uint8"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(dtype=np.dtype("uint8"))
 
         # Assert
         assert result == "int"
@@ -1066,7 +1066,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("uint16"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(dtype=np.dtype("uint16"))
 
         # Assert
         assert result == "int"
@@ -1076,7 +1076,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("int8"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(dtype=np.dtype("int8"))
 
         # Assert
         assert result == "int"
@@ -1086,7 +1086,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("int16"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(dtype=np.dtype("int16"))
 
         # Assert
         assert result == "int"
@@ -1096,7 +1096,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("int32"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(dtype=np.dtype("int32"))
 
         # Assert
         assert result == "int"
@@ -1106,7 +1106,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("uint32"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(dtype=np.dtype("uint32"))
 
         # Assert
         assert result == "bigint"
@@ -1116,7 +1116,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("int64"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(dtype=np.dtype("int64"))
 
         # Assert
         assert result == "bigint"
@@ -1126,7 +1126,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("float16"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(dtype=np.dtype("float16"))
 
         # Assert
         assert result == "float"
@@ -1136,7 +1136,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("float32"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(dtype=np.dtype("float32"))
 
         # Assert
         assert result == "float"
@@ -1146,7 +1146,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("float64"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(dtype=np.dtype("float64"))
 
         # Assert
         assert result == "double"
@@ -1156,7 +1156,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
             dtype=np.dtype("datetime64[ns]")
         )
 
@@ -1168,7 +1168,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("bool"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(dtype=np.dtype("bool"))
 
         # Assert
         assert result == "boolean"
@@ -1178,7 +1178,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype="category")
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(dtype="category")
 
         # Assert
         assert result == "string"
@@ -1189,7 +1189,7 @@ class TestPython:
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            python_engine._convert_simple_pandas_type(dtype="other")
+            python_engine._convert_simple_pandas_dtype_to_offline_type(dtype="other")
 
         # Assert
         assert str(e_info.value) == "dtype 'other' not supported"
@@ -1205,7 +1205,7 @@ class TestPython:
         mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
-        result = python_engine._infer_type_pyarrow(arrow_type=pa.list_(pa.int8()))
+        result = python_engine._convert_pandas_object_type_to_offline_type(arrow_type=pa.list_(pa.int8()))
 
         # Assert
         assert result == "array<test>"
@@ -1221,7 +1221,7 @@ class TestPython:
         mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
-        result = python_engine._infer_type_pyarrow(arrow_type=pa.struct({}))
+        result = python_engine._convert_pandas_object_type_to_offline_type(arrow_type=pa.struct({}))
 
         # Assert
         assert result == "struct<>"
@@ -1237,7 +1237,7 @@ class TestPython:
         mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
-        result = python_engine._infer_type_pyarrow(arrow_type=pa.date32())
+        result = python_engine._convert_pandas_object_type_to_offline_type(arrow_type=pa.date32())
 
         # Assert
         assert result == "date"
@@ -1253,7 +1253,7 @@ class TestPython:
         mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
-        result = python_engine._infer_type_pyarrow(arrow_type=pa.binary())
+        result = python_engine._convert_pandas_object_type_to_offline_type(arrow_type=pa.binary())
 
         # Assert
         assert result == "binary"
@@ -1269,7 +1269,7 @@ class TestPython:
         mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
-        result = python_engine._infer_type_pyarrow(arrow_type=pa.string())
+        result = python_engine._convert_pandas_object_type_to_offline_type(arrow_type=pa.string())
 
         # Assert
         assert result == "string"
@@ -1285,7 +1285,7 @@ class TestPython:
         mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
-        result = python_engine._infer_type_pyarrow(arrow_type=pa.utf8())
+        result = python_engine._convert_pandas_object_type_to_offline_type(arrow_type=pa.utf8())
 
         # Assert
         assert result == "string"
@@ -1302,7 +1302,7 @@ class TestPython:
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            python_engine._infer_type_pyarrow(arrow_type=pa.bool_())
+            python_engine._convert_pandas_object_type_to_offline_type(arrow_type=pa.bool_())
 
         # Assert
         assert str(e_info.value) == "dtype 'O' (arrow_type 'bool') not supported"

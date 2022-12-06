@@ -3515,7 +3515,7 @@ class TestSpark:
     def test_parse_schema_feature_group(self, mocker):
         # Arrange
         mock_spark_engine_convert_spark_type = mocker.patch(
-            "hsfs.engine.spark.Engine.convert_spark_type"
+            "hsfs.engine.spark.Engine.convert_spark_type_to_offline_type"
         )
 
         spark_engine = spark.Engine()
@@ -3540,7 +3540,7 @@ class TestSpark:
     def test_parse_schema_feature_group_hudi(self, mocker):
         # Arrange
         mock_spark_engine_convert_spark_type = mocker.patch(
-            "hsfs.engine.spark.Engine.convert_spark_type"
+            "hsfs.engine.spark.Engine.convert_spark_type_to_offline_type"
         )
 
         spark_engine = spark.Engine()
@@ -3565,7 +3565,7 @@ class TestSpark:
     def test_parse_schema_feature_group_value_error(self, mocker):
         # Arrange
         mock_spark_engine_convert_spark_type = mocker.patch(
-            "hsfs.engine.spark.Engine.convert_spark_type"
+            "hsfs.engine.spark.Engine.convert_spark_type_to_offline_type"
         )
 
         spark_engine = spark.Engine()
@@ -3612,7 +3612,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=IntegerType(),
             using_hudi=False,
         )
@@ -3620,7 +3620,7 @@ class TestSpark:
         # Assert
         assert result == "int"
 
-    def test_cast_column_type(self):
+    def test_cast_columns(self):
         class LabelIndex:
             def __init__(self, label, index):
                 self.label = label
@@ -3661,7 +3661,7 @@ class TestSpark:
             TrainingDatasetFeature("struc", type="struct<label:string,index:int>"),
             TrainingDatasetFeature("decimal", type="decimal"),
         ]
-        cast_df = spark_engine.cast_column_type(spark_df, schema)
+        cast_df = spark_engine.cast_columns(spark_df, schema)
         expected = {
             "string": StringType(),
             "bigint": LongType(),
@@ -3691,7 +3691,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=ByteType(),
             using_hudi=True,
         )
@@ -3704,7 +3704,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=ShortType(),
             using_hudi=True,
         )
@@ -3717,7 +3717,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=BooleanType(),
             using_hudi=True,
         )
@@ -3730,7 +3730,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=IntegerType(),
             using_hudi=True,
         )
@@ -3743,7 +3743,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=LongType(),
             using_hudi=True,
         )
@@ -3756,7 +3756,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=FloatType(),
             using_hudi=True,
         )
@@ -3769,7 +3769,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=DoubleType(),
             using_hudi=True,
         )
@@ -3782,7 +3782,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=DecimalType(),
             using_hudi=True,
         )
@@ -3795,7 +3795,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=TimestampType(),
             using_hudi=True,
         )
@@ -3808,7 +3808,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=DateType(),
             using_hudi=True,
         )
@@ -3821,7 +3821,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=StringType(),
             using_hudi=True,
         )
@@ -3834,7 +3834,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=StructType(),
             using_hudi=True,
         )
@@ -3847,7 +3847,7 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
+        result = spark_engine.convert_spark_type_to_offline_type(
             spark_type=BinaryType(),
             using_hudi=True,
         )
@@ -3861,7 +3861,7 @@ class TestSpark:
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            spark_engine.convert_spark_type(
+            spark_engine.convert_spark_type_to_offline_type(
                 spark_type=MapType(StringType(), StringType()),
                 using_hudi=True,
             )
