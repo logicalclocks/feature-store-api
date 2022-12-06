@@ -389,14 +389,24 @@ class ExpectationSuite:
         return self.json()
 
     def __repr__(self):
-        suite = self.to_dict()
-        suite["meta"] = json.loads(suite["meta"])
+        es = "ExpectationSuite("
+
+        if hasattr(self, "id"):
+            es += f"id={self._id}, "
+
+        es += f"expectation_suite_name='{self._expectation_suite_name}', "
+        es += f"expectations={self._expectations}, "
+        es += f"data_asset_type='{self._data_asset_type}', "
+        es += f"ge_cloud_id={self._ge_cloud_id}, "
+        es += f"run_validation={self._run_validation}, "
+        es += f"validation_ingestion_policy='{self._validation_ingestion_policy}'"
 
         if hasattr(self, "_feature_group_id"):
-            suite["feature_group_id"] = self._feature_group_id
-            suite["feature_store_id"] = self._feature_store_id
+            es += f", feature_group_id={self._feature_group_id}, "
+            es += f"feature_store_id={self._feature_store_id}"
 
-        return f"ExpectationSuite({suite.__repr__()[1:-1]})"
+        es += ")"
+        return es
 
     @property
     def id(self) -> Optional[int]:
