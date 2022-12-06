@@ -70,7 +70,6 @@ except ImportError:
 
 
 class Engine:
-    APP_OP_INSERT_FG = "insert_fg"
 
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
@@ -925,7 +924,7 @@ class Engine:
         progress_bar.close()
 
         # start backfilling job
-        job_name = "{fg_name}_{version}_offline_fg_backfill".format(
+        job_name = "{fg_name}_{version}_fg_offline_fg_backfill".format(
             fg_name=feature_group.name, version=feature_group.version
         )
         job = self._job_api.get(job_name)
