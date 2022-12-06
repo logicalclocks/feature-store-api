@@ -140,6 +140,17 @@ class ExpectationSuite:
             "validationIngestionPolicy": self._validation_ingestion_policy,
         }
 
+    def to_metadata_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "feature_group_id": self._feature_group_id,
+            "feature_store_id": self._feature_store_id,
+            "meta": json.dumps(self.meta),
+            "run_validation": self.run_validation,
+            "validation_ingestion_policy": self.validation_ingestion_policy,
+            "expectation_suite_name": self.expectation_suite_name,
+        }
+
     def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
@@ -389,7 +400,7 @@ class ExpectationSuite:
         return self.json()
 
     def __repr__(self):
-        return f"ExpectationSuite({self._expectation_suite_name}, {len(self._expectations)} expectations , {self._meta})"
+        return json.dumps(self.to_json_dict())
 
     @property
     def id(self) -> Optional[int]:
@@ -408,6 +419,10 @@ class ExpectationSuite:
     @expectation_suite_name.setter
     def expectation_suite_name(self, expectation_suite_name: str):
         self._expectation_suite_name = expectation_suite_name
+        if self.id:
+            self._expectation_suite_engine.update_metadata_from_fields(
+                **self.to_metadata_dict()
+            )
 
     @property
     def data_asset_type(self) -> str:
@@ -435,6 +450,10 @@ class ExpectationSuite:
     @run_validation.setter
     def run_validation(self, run_validation: bool):
         self._run_validation = run_validation
+        if self.id:
+            self._expectation_suite_engine.update_metadata_from_fields(
+                **self.to_metadata_dict()
+            )
 
     @property
     def validation_ingestion_policy(self) -> str:
@@ -448,6 +467,10 @@ class ExpectationSuite:
     @validation_ingestion_policy.setter
     def validation_ingestion_policy(self, validation_ingestion_policy: str):
         self._validation_ingestion_policy = validation_ingestion_policy.upper()
+        if self.id:
+            self._expectation_suite_engine.update_metadata_from_fields(
+                **self.to_metadata_dict()
+            )
 
     @property
     def expectations(self) -> List[GeExpectation]:
@@ -488,3 +511,8 @@ class ExpectationSuite:
             self._meta = json.loads(meta)
         else:
             raise ValueError("Meta field must be stringified json or dict.")
+
+        if self.id:
+            self._expectation_suite_engine.update_metadata_from_fields(
+                **self.to_metadata_dict()
+            )
