@@ -508,9 +508,7 @@ class Engine:
         self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
 
         # run job
-        ingestion_job.job.run(
-            write_options=offline_write_options
-        )
+        ingestion_job.job.run(write_options=offline_write_options)
 
         return ingestion_job.job
 
@@ -776,9 +774,7 @@ class Engine:
     def wait_for_job(self, job, write_options=None):
         # If the user passed the wait_for_job option consider it,
         # otherwise use the default True
-        while write_options is None or write_options.get(
-                "wait_for_job", True
-        ):
+        while write_options is None or write_options.get("wait_for_job", True):
             executions = self._job_api.last_execution(job)
             if len(executions) > 0:
                 execution = executions[0]
@@ -928,9 +924,7 @@ class Engine:
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
-            job.run(
-                write_options=offline_write_options
-            )
+            job.run(write_options=offline_write_options)
 
         return job
 
