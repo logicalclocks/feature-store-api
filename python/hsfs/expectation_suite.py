@@ -406,7 +406,7 @@ class ExpectationSuite:
             suite["feature_group_id"] = self._feature_group_id
             suite["feature_store_id"] = self._feature_store_id
 
-        return f"ExpectationSuite({suite})"
+        return f"ExpectationSuite({suite.__repr__()[1:-1]})"
 
     @property
     def id(self) -> Optional[int]:

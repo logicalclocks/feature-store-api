@@ -91,7 +91,7 @@ class GeExpectation:
     def __repr__(self):
         return (
             f"GeExpectation(id={self._id},"
-            + f"expectation_type={self._expectation_type}, "
+            + f"expectation_type='{self._expectation_type}', "
             + f"kwargs={self._kwargs}, meta={self._meta})"
         )
 
