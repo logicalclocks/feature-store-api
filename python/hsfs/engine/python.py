@@ -101,7 +101,8 @@ class Engine:
     def _sql_offline(self, sql_query, feature_store, dataframe_type, schema=None):
         with self._create_hive_connection(feature_store) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
-            result_df = Engine.cast_columns(result_df, schema)
+            if schema:
+                result_df = Engine.cast_columns(result_df, schema)
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def _jdbc(self, sql_query, connector, dataframe_type, read_options, schema=None):
@@ -116,7 +117,8 @@ class Engine:
             )
         with self._mysql_online_fs_engine.connect() as mysql_conn:
             result_df = pd.read_sql(sql_query, mysql_conn)
-            result_df = Engine.cast_columns(result_df, schema)
+            if schema:
+                result_df = Engine.cast_columns(result_df, schema)
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def read(self, storage_connector, data_format, read_options, location):
@@ -1060,6 +1062,6 @@ class Engine:
     def cast_columns(df, schema):
         for _feat in schema:
             df[_feat.name] = Engine._cast_column_to_offline_type(
-                _feat.type, df[_feat.name]
+                df[_feat.name], _feat.type
             )
         return df

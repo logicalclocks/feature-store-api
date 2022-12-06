@@ -984,7 +984,7 @@ class TestPython:
 
     def test_parse_schema_feature_group(self, mocker):
         # Arrange
-        mocker.patch("hsfs.engine.python.Engine._convert_pandas_type")
+        mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
 
         python_engine = python.Engine()
 
@@ -1018,10 +1018,10 @@ class TestPython:
     def test_convert_pandas_type(self, mocker):
         # Arrange
         mock_python_engine_infer_type_pyarrow = mocker.patch(
-            "hsfs.engine.python.Engine._infer_type_pyarrow"
+            "hsfs.engine.python.Engine._convert_pandas_object_type_to_offline_type"
         )
         mock_python_engine_convert_simple_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_simple_pandas_type"
+            "hsfs.engine.python.Engine._convert_simple_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1036,10 +1036,10 @@ class TestPython:
     def test_convert_pandas_type_object(self, mocker):
         # Arrange
         mock_python_engine_infer_type_pyarrow = mocker.patch(
-            "hsfs.engine.python.Engine._infer_type_pyarrow"
+            "hsfs.engine.python.Engine._convert_pandas_object_type_to_offline_type"
         )
         mock_python_engine_convert_simple_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_simple_pandas_type"
+            "hsfs.engine.python.Engine._convert_simple_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1223,7 +1223,7 @@ class TestPython:
     def test_infer_type_pyarrow_list(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1241,7 +1241,7 @@ class TestPython:
     def test_infer_type_pyarrow_struct(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1259,7 +1259,7 @@ class TestPython:
     def test_infer_type_pyarrow_date(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1277,7 +1277,7 @@ class TestPython:
     def test_infer_type_pyarrow_binary(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1295,7 +1295,7 @@ class TestPython:
     def test_infer_type_pyarrow_string(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1313,7 +1313,7 @@ class TestPython:
     def test_infer_type_pyarrow_utf8(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1331,7 +1331,7 @@ class TestPython:
     def test_infer_type_pyarrow_other(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
