@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import decimal
 
 import pytest
 import pandas as pd
@@ -34,6 +35,7 @@ from hsfs.core import inode, execution, job
 from hsfs.constructor import query
 from hsfs.client import exceptions
 from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
+from hsfs.training_dataset_feature import TrainingDatasetFeature
 
 
 class TestPython:
@@ -572,6 +574,66 @@ class TestPython:
 
         # Assert
         assert mock_python_engine_sql.call_count == 1
+
+    def test_cast_column_type(self, mocker):
+        class LabelIndex:
+            def __init__(self, label, index):
+                self.label = label
+                self.index = index
+
+        python_engine = python.Engine()
+        d = {
+            "string": ["s"],
+            "bigint": ["1"],
+            "int": ["1"],
+            "smallint": ["1"],
+            "tinyint": ["1"],
+            "float": ["1"],
+            "double": ["1"],
+            "timestamp": [1641340800000],
+            "boolean": ["False"],
+            "date": ["2022-01-27"],
+            "binary": ["1"],
+            "array<string>": [["123"]],
+            "struc": [LabelIndex("0", "1")],
+            "decimal": ["1.1"],
+        }
+        df = pd.DataFrame(data=d)
+        schema = [
+            TrainingDatasetFeature("string", type="string"),
+            TrainingDatasetFeature("bigint", type="bigint"),
+            TrainingDatasetFeature("int", type="int"),
+            TrainingDatasetFeature("smallint", type="smallint"),
+            TrainingDatasetFeature("tinyint", type="tinyint"),
+            TrainingDatasetFeature("float", type="float"),
+            TrainingDatasetFeature("double", type="double"),
+            TrainingDatasetFeature("timestamp", type="timestamp"),
+            TrainingDatasetFeature("boolean", type="boolean"),
+            TrainingDatasetFeature("date", type="date"),
+            TrainingDatasetFeature("binary", type="binary"),
+            TrainingDatasetFeature("array<string>", type="array<string>"),
+            TrainingDatasetFeature("struc", type="struct<label:string,index:int>"),
+            TrainingDatasetFeature("decimal", type="decimal"),
+        ]
+        cast_df = python_engine.cast_column_type(df, schema)
+        expected = {
+            "string": object,
+            "bigint": np.dtype("int64"),
+            "int": np.dtype("int32"),
+            "smallint": np.dtype("int16"),
+            "tinyint": np.dtype("int8"),
+            "float": np.dtype("float32"),
+            "double": np.dtype("float64"),
+            "timestamp": np.dtype("datetime64[ns]"),
+            "boolean": np.dtype("bool"),
+            "date": np.dtype(date),
+            "binary": np.dtype("S1"),  # pandas converted string to bytes8 == 'S1'
+            "array<string>": object,
+            "struc": object,
+            "decimal": np.dtype(decimal.Decimal),
+        }
+        for col in cast_df.columns:
+            assert cast_df[col].dtype == expected[col]
 
     def test_register_external_temporary_table(self, mocker):
         # Arrange

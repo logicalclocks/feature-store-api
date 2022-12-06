@@ -26,7 +26,8 @@ import pyarrow as pa
 import json
 import random
 import uuid
-from datetime import datetime, timezone
+import decimal
+from datetime import date, datetime, timezone
 
 import great_expectations as ge
 
@@ -58,6 +59,7 @@ from hsfs.client import exceptions, hopsworks
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
+from hsfs.engine.spark import Engine as SparkEngine
 
 HAS_FAST = False
 try:
@@ -241,6 +243,45 @@ class Engine:
 
     def show(self, sql_query, feature_store, n, online_conn):
         return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
+
+    @staticmethod
+    def _convert_offline_type_to_pd(pa_type):
+        if "array<" in pa_type or "struct<label:string,index:int>" in pa_type:
+            return object
+        else:
+            return Engine._convert_offline_basic_type_to_pd(pa_type)
+
+    @staticmethod
+    def _convert_offline_basic_type_to_pd(pa_type):
+        pa_type = pa_type.lower()
+        pyarrow_2_pd_type = {
+            "string": np.dtype(str),
+            "bigint": np.dtype("int64"),
+            "int": np.dtype("int32"),
+            "smallint": np.dtype("int16"),
+            "tinyint": np.dtype("int8"),
+            "float": np.dtype("float32"),
+            "double": np.dtype("float64"),
+            "timestamp": np.dtype("datetime64[ns]"),
+            "boolean": np.dtype("bool"),
+            "date": np.dtype(date),
+            "binary": np.dtype(bytes),
+            "decimal": np.dtype(decimal.Decimal),
+        }
+        if pa_type in pyarrow_2_pd_type:
+            return pyarrow_2_pd_type[pa_type]
+        else:
+            raise FeatureStoreException(
+                f"Pyarrow type {pa_type} cannot be converted to a pandas type."
+            )
+
+    @staticmethod
+    def cast_column_type(df, schema):
+        for _feat in schema:
+            df[_feat.name] = Engine.convert_offline_type_to_pd(
+                _feat.type, df[_feat.name]
+            )
+        return df
 
     def register_external_temporary_table(self, external_fg, alias):
         # No op to avoid query failure
@@ -808,37 +849,33 @@ class Engine:
             dataset[feature_name] = dataset[feature_name].map(
                 transformation_fn.transformation_fn
             )
-            dataset[feature_name] = self.convert_column(
+            dataset[feature_name] = Engine.convert_spark_type_to_pd(
                 transformation_fn.output_type, dataset[feature_name]
             )
 
         return dataset
 
-    def convert_column(self, output_type, feature_column):
-        if output_type == "STRING":
-            return feature_column.astype(str)
-        elif output_type == "BINARY":
-            return feature_column.astype(bytes)
-        elif output_type == "BYTE":
-            return feature_column.astype(np.int8)
-        elif output_type == "SHORT":
-            return feature_column.astype(np.int16)
-        elif output_type == "INT":
-            return feature_column.astype(int)
-        elif output_type == "LONG":
-            return feature_column.astype(np.int64)
-        elif output_type == "FLOAT":
-            return feature_column.astype(float)
-        elif output_type == "DOUBLE":
-            return feature_column.astype(np.float64)
-        elif output_type == "TIMESTAMP":
-            # convert (if tz!=UTC) to utc, then make timezone unaware
-            return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
-        elif output_type == "DATE":
-            return pd.to_datetime(feature_column, utc=True).dt.date
-        elif output_type == "BOOLEAN":
-            return feature_column.astype(bool)
-        else:
+    @staticmethod
+    def convert_spark_type_to_pd(output_type, feature_column):
+        offline_type = SparkEngine.convert_spark_type(
+            SparkEngine._convert_spark_string_to_type(output_type), True
+        )
+        return Engine.convert_offline_type_to_pd(offline_type, feature_column)
+
+    @staticmethod
+    def convert_offline_type_to_pd(offline_type, feature_column):
+        try:
+            if offline_type == "TIMESTAMP":
+                # convert (if tz!=UTC) to utc, then make timezone unaware
+                return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
+            elif offline_type == "DATE":
+                return pd.to_datetime(feature_column, utc=True).dt.date
+            else:
+                casted_feature = feature_column.astype(
+                    Engine._convert_offline_type_to_pd(offline_type)
+                )
+                return casted_feature
+        except FeatureStoreException:
             return feature_column  # handle gracefully, just return the column as-is
 
     @staticmethod
