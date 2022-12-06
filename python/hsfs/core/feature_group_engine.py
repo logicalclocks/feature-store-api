@@ -304,7 +304,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         if not feature_group.stream:
             warnings.warn(
-                "`insert_stream` method in the next release be available only for feature groups created with "
+                "`insert_stream` method in the next release will be available only for feature groups created with "
                 "`stream=True`."
             )
 
