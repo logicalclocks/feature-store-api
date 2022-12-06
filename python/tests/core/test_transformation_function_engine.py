@@ -19,12 +19,42 @@ import numpy
 import datetime
 
 from hsfs import (
+    feature,
+    feature_group,
     training_dataset,
     transformation_function,
     transformation_function_attached,
     feature_view,
 )
 from hsfs.core import transformation_function_engine
+
+fg1 = feature_group.FeatureGroup(
+    name="test1",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    features=[
+        feature.Feature("id"),
+        feature.Feature("label"),
+        feature.Feature("tf_name"),
+    ],
+    id=11,
+    stream=False,
+)
+
+fg2 = feature_group.FeatureGroup(
+    name="test2",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    features=[feature.Feature("id"), feature.Feature("tf1_name")],
+    id=12,
+    stream=False,
+)
+
+query = fg1.select_all().join(fg2.select(["tf1_name"]), on=["id"])
 
 
 class TestTransformationFunctionEngine:
@@ -241,6 +271,7 @@ class TestTransformationFunctionEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.constructor.fs_query.FsQuery")
 
         tf_engine = transformation_function_engine.TransformationFunctionEngine(
             feature_store_id
@@ -307,7 +338,7 @@ class TestTransformationFunctionEngine:
 
         fv = feature_view.FeatureView(
             name="test",
-            query="",
+            query=query,
             featurestore_id=99,
             transformation_functions=transformation_fn_dict,
             labels=[],
@@ -350,7 +381,7 @@ class TestTransformationFunctionEngine:
 
         fv = feature_view.FeatureView(
             name="test",
-            query="",
+            query=query,
             featurestore_id=99,
             transformation_functions=transformation_fn_dict,
             labels=["tf_name"],
