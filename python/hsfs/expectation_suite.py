@@ -145,7 +145,7 @@ class ExpectationSuite:
             "id": self.id,
             "feature_group_id": self._feature_group_id,
             "feature_store_id": self._feature_store_id,
-            "meta": json.dumps(self.meta),
+            "meta": json.dumps(self._meta),
             "run_validation": self.run_validation,
             "validation_ingestion_policy": self.validation_ingestion_policy,
             "expectation_suite_name": self.expectation_suite_name,
@@ -512,7 +512,8 @@ class ExpectationSuite:
         else:
             raise ValueError("Meta field must be stringified json or dict.")
 
-        if self.id:
+        if self._id and hasattr(self, "_expectation_suite_engine"):
+            # Adding test on suite_engine allows to not run it on init
             self._expectation_suite_engine.update_metadata_from_fields(
                 **self.to_metadata_dict()
             )
