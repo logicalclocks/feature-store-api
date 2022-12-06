@@ -1034,7 +1034,7 @@ class Engine:
             )
 
     @staticmethod
-    def _convert_spark_type_to_pandas_dtype(output_type, feature_column):
+    def _convert_spark_type_to_pandas_dtype(feature_column, output_type):
         offline_type = SparkEngine.convert_spark_type_to_offline_type(
             SparkEngine._convert_spark_type_string_to_spark_type(output_type), True
         )
