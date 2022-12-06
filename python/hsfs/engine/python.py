@@ -508,7 +508,7 @@ class Engine:
         self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
 
         # run job
-        ingestion_job.job.run(write_options=offline_write_options)
+        ingestion_job.job.run(await_termination=offline_write_options is None or offline_write_options.get("wait_for_job", True))
 
         return ingestion_job.job
 
@@ -675,7 +675,7 @@ class Engine:
 
         self.wait_for_job(
             td_job,
-            write_options=user_write_options,
+            await_termination=user_write_options is None or user_write_options.get("wait_for_job", True),
         )
 
         return td_job
@@ -771,10 +771,10 @@ class Engine:
             spark_job_configuration=spark_job_configuration,
         )
 
-    def wait_for_job(self, job, write_options=None):
+    def wait_for_job(self, job, await_termination=True):
         # If the user passed the wait_for_job option consider it,
         # otherwise use the default True
-        while write_options is None or write_options.get("wait_for_job", True):
+        while await_termination:
             executions = self._job_api.last_execution(job)
             if len(executions) > 0:
                 execution = executions[0]
@@ -924,7 +924,7 @@ class Engine:
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
-            job.run(write_options=offline_write_options)
+            job.run(await_termination=offline_write_options is None or offline_write_options.get("wait_for_job", True))
 
         return job
 

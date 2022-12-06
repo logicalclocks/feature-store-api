@@ -2150,7 +2150,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine.wait_for_job(job=None, write_options={"wait_for_job": True})
+        python_engine.wait_for_job(job=None, await_termination=True)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2162,7 +2162,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine.wait_for_job(job=None, write_options={"wait_for_job": False})
+        python_engine.wait_for_job(job=None, await_termination=False)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 0

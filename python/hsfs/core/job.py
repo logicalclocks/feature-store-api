@@ -63,7 +63,7 @@ class Job:
     def href(self):
         return self._href
 
-    def run(self, write_options=None):
+    def run(self, await_termination=True):
         print(f"Launching job: {self.name}")
         self._job_api.launch(self.name)
         print(
@@ -71,4 +71,4 @@ class Job:
                 engine.get_instance().get_job_url(self.href)
             )
         )
-        engine.get_instance().wait_for_job(self, write_options=write_options)
+        engine.get_instance().wait_for_job(self, await_termination=await_termination)
