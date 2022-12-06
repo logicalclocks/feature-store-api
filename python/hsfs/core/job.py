@@ -64,6 +64,28 @@ class Job:
         return self._href
 
     def run(self, await_termination=True):
+        """Run the job.
+
+        Runs the job, by default awaiting its completion.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instances
+            fg = fs.get_or_create_feature_group(...)
+
+            # insert in to feature group
+            job, _ = fg.insert(df, write_options={"start_offline_backfill": False})
+
+            # run job
+            job.run()
+            ```
+
+        # Arguments
+            await_termination: bool. Identifies if the client should wait for the job to complete.
+        """
         print(f"Launching job: {self.name}")
         self._job_api.launch(self.name)
         print(
