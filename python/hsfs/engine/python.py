@@ -118,7 +118,7 @@ class Engine:
         with self._mysql_online_fs_engine.connect() as mysql_conn:
             result_df = pd.read_sql(sql_query, mysql_conn)
             if schema:
-                result_df = Engine.cast_columns(result_df, schema)
+                result_df = Engine.cast_columns(result_df, schema, online=True)
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def read(self, storage_connector, data_format, read_options, location):
@@ -1011,11 +1011,11 @@ class Engine:
         raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
 
     @staticmethod
-    def _convert_offline_type_to_pandas_dtype(pa_type):
-        if "array<" in pa_type or "struct<label:string,index:int>" in pa_type:
+    def _convert_offline_type_to_pandas_dtype(offline_type):
+        if "array<" in offline_type or "struct<label:string,index:int>" in offline_type:
             return object
         else:
-            return Engine._convert_offline_type_to_pandas_dtype_simple(pa_type)
+            return Engine._convert_offline_type_to_pandas_dtype_simple(offline_type)
 
     @staticmethod
     def _convert_offline_type_to_pandas_dtype_simple(offline_type):
@@ -1038,7 +1038,7 @@ class Engine:
             return offline_dtype_mapping[offline_type]
         else:
             raise FeatureStoreException(
-                f"Type {offline_type} cannot be converted to a pandas type."
+                f"Offline type {offline_type} cannot be converted to a pandas type."
             )
 
     @staticmethod
@@ -1058,9 +1058,61 @@ class Engine:
             return feature_column  # handle gracefully, just return the column as-is
 
     @staticmethod
-    def cast_columns(df, schema):
-        for _feat in schema:
-            df[_feat.name] = Engine._cast_column_to_offline_type(
-                df[_feat.name], _feat.type
+    def _convert_online_type_to_pandas_dtype(online_type):
+        if "array<" in online_type or "struct<label:string,index:int>" in online_type:
+            return object
+        else:
+            return Engine._convert_online_type_to_pandas_dtype_simple(online_type)
+
+    @staticmethod
+    def _convert_online_type_to_pandas_dtype_simple(online_type):
+        online_type = online_type.lower()
+        online_type_mapping = {
+            "string": np.dtype(str),
+            "bigint": np.dtype("int64"),
+            "int": np.dtype("int32"),
+            "smallint": np.dtype("int16"),
+            "tinyint": np.dtype("int8"),
+            "float": np.dtype("float32"),
+            "double": np.dtype("float64"),
+            "timestamp": np.dtype("datetime64[ns]"),
+            "boolean": np.dtype("bool"),
+            "date": np.dtype(date),
+            "binary": np.dtype(bytes),
+            "decimal": np.dtype(decimal.Decimal),
+        }
+        if online_type in online_type_mapping:
+            return online_type_mapping[online_type]
+        else:
+            raise FeatureStoreException(
+                f"Online type {online_type} cannot be converted to a pandas type."
             )
+
+    @staticmethod
+    def _cast_column_to_online_type(feature_column, online_type):
+        try:
+            if online_type == "TIMESTAMP":
+                # convert (if tz!=UTC) to utc, then make timezone unaware
+                return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
+            elif online_type == "DATE":
+                return pd.to_datetime(feature_column, utc=True).dt.date
+            else:
+                casted_feature = feature_column.astype(
+                    Engine._convert_online_type_to_pandas_dtype(online_type)
+                )
+                return casted_feature
+        except FeatureStoreException:
+            return feature_column  # handle gracefully, just return the column as-is
+
+    @staticmethod
+    def cast_columns(df, schema, online=False):
+        for _feat in schema:
+            if not online:
+                df[_feat.name] = Engine._cast_column_to_offline_type(
+                    df[_feat.name], _feat.type
+                )
+            else:
+                df[_feat.name] = Engine._cast_column_to_online_type(
+                    df[_feat.name], _feat.online_type
+                )
         return df

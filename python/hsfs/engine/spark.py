@@ -1114,7 +1114,7 @@ class Engine:
             )
 
     @staticmethod
-    def cast_columns(df, schema):
+    def cast_columns(df, schema, online=False):
         pyspark_schema = dict(
             [
                 (_feat.name, Engine._convert_offline_type_to_spark_type(_feat.type))
