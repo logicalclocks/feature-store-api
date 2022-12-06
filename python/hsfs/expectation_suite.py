@@ -140,17 +140,6 @@ class ExpectationSuite:
             "validationIngestionPolicy": self._validation_ingestion_policy,
         }
 
-    def to_metadata_dict(self) -> Dict[str, Any]:
-        return {
-            "id": self.id,
-            "feature_group_id": self._feature_group_id,
-            "feature_store_id": self._feature_store_id,
-            "meta": json.dumps(self._meta),
-            "run_validation": self.run_validation,
-            "validation_ingestion_policy": self.validation_ingestion_policy,
-            "expectation_suite_name": self.expectation_suite_name,
-        }
-
     def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
@@ -427,9 +416,7 @@ class ExpectationSuite:
     def expectation_suite_name(self, expectation_suite_name: str):
         self._expectation_suite_name = expectation_suite_name
         if self.id:
-            self._expectation_suite_engine.update_metadata_from_fields(
-                **self.to_metadata_dict()
-            )
+            self._expectation_suite_engine.update_metadata_from_fields(**self.to_dict())
 
     @property
     def data_asset_type(self) -> str:
@@ -458,9 +445,7 @@ class ExpectationSuite:
     def run_validation(self, run_validation: bool):
         self._run_validation = run_validation
         if self.id:
-            self._expectation_suite_engine.update_metadata_from_fields(
-                **self.to_metadata_dict()
-            )
+            self._expectation_suite_engine.update_metadata_from_fields(**self.to_dict())
 
     @property
     def validation_ingestion_policy(self) -> str:
@@ -475,9 +460,7 @@ class ExpectationSuite:
     def validation_ingestion_policy(self, validation_ingestion_policy: str):
         self._validation_ingestion_policy = validation_ingestion_policy.upper()
         if self.id:
-            self._expectation_suite_engine.update_metadata_from_fields(
-                **self.to_metadata_dict()
-            )
+            self._expectation_suite_engine.update_metadata_from_fields(**self.to_dict())
 
     @property
     def expectations(self) -> List[GeExpectation]:
@@ -521,6 +504,4 @@ class ExpectationSuite:
 
         if self._id and hasattr(self, "_expectation_suite_engine"):
             # Adding test on suite_engine allows to not run it on init
-            self._expectation_suite_engine.update_metadata_from_fields(
-                **self.to_metadata_dict()
-            )
+            self._expectation_suite_engine.update_metadata_from_fields(**self.to_dict())
