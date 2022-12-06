@@ -927,9 +927,7 @@ class Engine:
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
-            job.run(
-                await_termination=offline_write_options.get("wait_for_job", True)
-            )
+            job.run(await_termination=offline_write_options.get("wait_for_job", True))
 
         return job
 
