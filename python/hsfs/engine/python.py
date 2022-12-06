@@ -508,7 +508,10 @@ class Engine:
         self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
 
         # run job
-        ingestion_job.job.run(await_termination=offline_write_options is None or offline_write_options.get("wait_for_job", True))
+        ingestion_job.job.run(
+            await_termination=offline_write_options is None
+            or offline_write_options.get("wait_for_job", True)
+        )
 
         return ingestion_job.job
 
@@ -675,7 +678,8 @@ class Engine:
 
         self.wait_for_job(
             td_job,
-            await_termination=user_write_options is None or user_write_options.get("wait_for_job", True),
+            await_termination=user_write_options is None
+            or user_write_options.get("wait_for_job", True),
         )
 
         return td_job
@@ -924,7 +928,10 @@ class Engine:
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
-            job.run(await_termination=offline_write_options is None or offline_write_options.get("wait_for_job", True))
+            job.run(
+                await_termination=offline_write_options is None
+                or offline_write_options.get("wait_for_job", True)
+            )
 
         return job
 
