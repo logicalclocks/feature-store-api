@@ -401,6 +401,7 @@ class ExpectationSuite:
 
     def __repr__(self):
         suite = self.to_dict()
+        suite["meta"] = json.loads(suite["meta"])
 
         if hasattr(self, "_feature_group_id"):
             suite["feature_group_id"] = self._feature_group_id
