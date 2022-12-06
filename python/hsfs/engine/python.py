@@ -678,8 +678,7 @@ class Engine:
 
         self.wait_for_job(
             td_job,
-            await_termination=user_write_options is None
-            or user_write_options.get("wait_for_job", True),
+            await_termination=user_write_options.get("wait_for_job", True),
         )
 
         return td_job
@@ -929,8 +928,7 @@ class Engine:
             "start_offline_backfill", True
         ):
             job.run(
-                await_termination=offline_write_options is None
-                or offline_write_options.get("wait_for_job", True)
+                await_termination=offline_write_options.get("wait_for_job", True)
             )
 
         return job

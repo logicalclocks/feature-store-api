@@ -1341,7 +1341,7 @@ class TestPython:
             operation=None,
             online_enabled=None,
             storage=None,
-            offline_write_options=None,
+            offline_write_options={},
             online_write_options=None,
             validation_id=None,
         )
