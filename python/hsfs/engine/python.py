@@ -865,15 +865,15 @@ class Engine:
     @staticmethod
     def convert_offline_type_to_pd(offline_type, feature_column):
         try:
-            casted_feature = feature_column.astype(
-                Engine._convert_offline_type_to_pd(offline_type)
-            )
             if offline_type == "TIMESTAMP":
                 # convert (if tz!=UTC) to utc, then make timezone unaware
-                return casted_feature.dt.tz_localize(None)
+                return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
             elif offline_type == "DATE":
-                return casted_feature.dt.date
+                return pd.to_datetime(feature_column, utc=True).dt.date
             else:
+                casted_feature = feature_column.astype(
+                    Engine._convert_offline_type_to_pd(offline_type)
+                )
                 return casted_feature
         except FeatureStoreException:
             return feature_column  # handle gracefully, just return the column as-is
