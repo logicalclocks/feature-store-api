@@ -16,6 +16,7 @@
 
 import humps
 from hsfs import engine
+from hsfs.core import job_api
 
 
 class Job:
@@ -39,6 +40,8 @@ class Job:
         self._executions = executions
         self._href = href
 
+        self._job_api = job_api.JobApi()
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -60,5 +63,12 @@ class Job:
     def href(self):
         return self._href
 
-    def run(self, await_termination=True):
-        engine.get_instance().run_job(self, await_termination)
+    def run(self, write_options=None):
+        print(f"Launching job: {self.name}")
+        self._job_api.launch(self.name)
+        print(
+            "Job started successfully, you can follow the progress at \n{}".format(
+                engine.get_instance().get_job_url(self.href)
+            )
+        )
+        engine.get_instance().wait_for_job(self, write_options=write_options)
