@@ -396,6 +396,7 @@ class ExpectationSuite:
 
         es += f"expectation_suite_name='{self._expectation_suite_name}', "
         es += f"expectations={self._expectations}, "
+        es += f"meta={self._meta}, "
         es += f"data_asset_type='{self._data_asset_type}', "
         es += f"ge_cloud_id={self._ge_cloud_id}, "
         es += f"run_validation={self._run_validation}, "
