@@ -67,7 +67,10 @@ class GreatExpectationEngine:
             print("Validation succeeded.")
         else:
             print("Validation failed.")
-            if suite.validation_ingestion_policy == "STRICT":
+            if (
+                suite.validation_ingestion_policy == "STRICT"
+                and ingestion_result == "INGESTED"
+            ):
                 ingestion_result = "REJECTED"
 
         return self.save_or_convert_report(

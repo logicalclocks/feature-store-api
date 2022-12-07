@@ -1777,6 +1777,7 @@ class FeatureGroup(FeatureGroupBase):
         expectation_suite: Optional[ExpectationSuite] = None,
         save_report: Optional[bool] = False,
         validation_options: Optional[Dict[Any, Any]] = {},
+        ingestion_result: str = "UNKNOWN",
         ge_type: bool = True,
     ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
         """Run validation based on the attached expectations.
@@ -1804,6 +1805,12 @@ class FeatureGroup(FeatureGroupBase):
             validation_options: Additional validation options as key-value pairs, defaults to `{}`.
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+            ingestion_result: Specify the fate of the associated data, defaults
+                to "UNKNOWN". Supported options are  "UNKNOWN", "INGESTED", "REJECTED",
+                "EXPERIMENT", "FG_DATA". Use "INGESTED" or "REJECTED" for validation
+                of DataFrames to be inserted in the Feature Group. Use "EXPERIMENT"
+                for testing and development and "FG_DATA" when validating data
+                already in the Feature Group.
             save_report: Whether to save the report to the backend. This is only possible if the Expectation suite
                 is initialised and attached to the Feature Group. Defaults to False.
             ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.
@@ -1814,6 +1821,7 @@ class FeatureGroup(FeatureGroupBase):
         # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()
+            ingestion_result = "FG_DATA"
 
         return self._great_expectation_engine.validate(
             self,
@@ -1821,6 +1829,7 @@ class FeatureGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             save_report=save_report,
             validation_options=validation_options,
+            ingestion_result=ingestion_result,
             ge_type=ge_type,
         )
 
