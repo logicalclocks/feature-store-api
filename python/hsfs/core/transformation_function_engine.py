@@ -32,12 +32,10 @@ class TransformationFunctionEngine:
         "label_encoder",
     ]
     AMBIGUOUS_FEATURE_ERROR = (
-        "Provided feature '{}' is ambiguous and exists in more than one feature groups. "
-        "You can provide the feature with the prefix you specify in the join."
+        "Provided feature '{}' in transformation functions is ambiguous and exists in more than one feature groups."
+        "You can provide the feature with the prefix that was specified in the join."
     )
-    FEATURE_NOT_EXIST_ERROR = (
-        "Provided feature '{}' do not exist in any of the feature groups."
-    )
+    FEATURE_NOT_EXIST_ERROR = "Provided feature '{}' in transformation functions do not exist in any of the feature groups."
 
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
@@ -101,9 +99,9 @@ class TransformationFunctionEngine:
             target_obj = training_dataset_obj  # todo why provide td and fv just to convert to target_obj?
         else:
             target_obj = feature_view_obj
-        # If provided feature matches column with prefix, then attach label.
-        # If provided feature matches only one column without prefix, then attach label. (For
-        # backward compatibility purpose, as of v3.0, labels are matched to columns without prefix.)
+        # If provided feature matches column with prefix, then attach transformation function.
+        # If provided feature matches only one column without prefix, then attach transformation function. (For
+        # backward compatibility purpose, as of v3.0, features are matched to columns without prefix.)
         # If provided feature matches multiple columns without prefix, then raise exception because it is ambiguous.
         prefix_feature_map = {}
         feature_map = {}
