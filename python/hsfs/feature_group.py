@@ -2397,3 +2397,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
     @features.setter
     def features(self, new_features):
         self._features = new_features
+
+    @property
+    def feature_store_name(self):
+        """Name of the feature store in which the feature group is located."""
+        return self._feature_store_name

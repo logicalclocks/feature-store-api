@@ -101,6 +101,7 @@ class TrainingDataset:
         self._from_query = from_query
         self._querydto = querydto
         self._feature_store_id = featurestore_id
+        self._feature_store_name = featurestore_name
         self._transformation_functions = transformation_functions
         self._train_split = train_split
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
@@ -828,6 +829,11 @@ class TrainingDataset:
     @property
     def feature_store_id(self):
         return self._feature_store_id
+
+    @property
+    def feature_store_name(self):
+        """Name of the feature store in which the feature group is located."""
+        return self._feature_store_name
 
     @property
     def train_split(self):

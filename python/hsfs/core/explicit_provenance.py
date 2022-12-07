@@ -14,10 +14,10 @@
 #   limitations under the License.
 #
 
-
+import json
 from enum import Enum
 from typing import Set
-from hsfs import feature_group, feature_view
+from hsfs import feature_group, feature_view, training_dataset
 
 
 class Artifact:
@@ -41,8 +41,27 @@ class Artifact:
         self._meta_type = meta_type
         self._href = href
 
+    @property
+    def feature_store_name(self):
+        """Name of the feature store in which the artifact is located."""
+        return self._feature_store_name
+
+    @property
+    def name(self):
+        """Name of the artifact."""
+        return self._name
+
+    @property
+    def version(self):
+        """Version of the artifact"""
+        return self._version
+
     def __str__(self):
-        return self.json()
+        return {
+            "feature_store_name": self._feature_store_name,
+            "name": self._name,
+            "version": self._version,
+        }
 
     def __repr__(self):
         return (
@@ -98,12 +117,12 @@ class Links:
         FEATURE_GROUP = 1
         FEATURE_VIEW = 2
 
-    def __str__(self):
-        return self.json()
+    def __str__(self, indent=None):
+        return json.dumps(self, cls=ProvenanceEncoder, indent=indent)
 
     def __repr__(self):
         return (
-            f"Artifact({self._accessible!r}, {self._deleted!r}"
+            f"Links({self._accessible!r}, {self._deleted!r}"
             f", {self._inaccessible!r})"
         )
 
@@ -186,3 +205,29 @@ class Links:
                 return Links.__parse_feature_views(
                     links_json["downstream"], {"FEATURE_VIEW"}
                 )
+
+
+class ProvenanceEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Links):
+            return {
+                "accessible": obj.accessible,
+                "inaccessible": obj.inaccessible,
+                "deleted": obj.deleted,
+            }
+        elif isinstance(
+            obj,
+            (
+                feature_group.FeatureGroup,
+                feature_group.ExternalFeatureGroup,
+                feature_view.FeatureView,
+                training_dataset.TrainingDataset,
+                Artifact,
+            ),
+        ):
+            return {
+                "feature_store_name": obj.feature_store_name,
+                "name": obj.name,
+                "version": obj.version,
+            }
+        return json.JSONEncoder.default(self, obj)
