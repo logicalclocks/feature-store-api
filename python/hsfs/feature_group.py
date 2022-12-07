@@ -1821,7 +1821,8 @@ class FeatureGroup(FeatureGroupBase):
         # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()
-            ingestion_result = "FG_DATA"
+            if ingestion_result == "UNKNOWN":
+                ingestion_result = "FG_DATA"
 
         return self._great_expectation_engine.validate(
             self,
