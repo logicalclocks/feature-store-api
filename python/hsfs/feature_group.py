@@ -733,9 +733,13 @@ class FeatureGroupBase:
             fs = ...
 
             # get the Feature Group instance
-            fg = fs.get_or_create_feature_group(...)
+            fg = fs.get_or_create_feature_group(..., expectation_suite=expectation_suite)
 
-            fg.save_validation_report(validation_report, run_validation=True)
+            validation_report = great_expectations.from_pandas(
+                my_experimental_features_df,
+                fg.get_expectation_suite()).validate()
+
+            fg.save_validation_report(validation_report, ingestion_result="EXPERIMENT")
             ```
 
         # Arguments
