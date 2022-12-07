@@ -2150,7 +2150,7 @@ class FeatureView:
 
     @property
     def transformation_functions(self):
-        """Set transformation functions."""
+        """Get transformation functions."""
         return self._transformation_functions
 
     @transformation_functions.setter
