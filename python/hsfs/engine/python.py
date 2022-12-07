@@ -981,8 +981,6 @@ class Engine:
             return "timestamp"
         elif dtype == np.dtype("bool"):
             return "boolean"
-        elif dtype == pd.BooleanDtype():
-            return "boolean"
         elif dtype == "category":
             return "string"
         elif not isinstance(dtype, np.dtype):
@@ -1076,6 +1074,12 @@ class Engine:
             return pd.to_datetime(feature_column, utc=True).dt.date
         elif online_type.startswith("varchar") or online_type == "text":
             return feature_column.astype(np.dtype("str"))
+        elif online_type == "boolean":
+            return feature_column.apply(
+                lambda x: (ast.literal_eval(x) if type(x) is str else x)
+                if (x is not None and x != "")
+                else None
+            ).astype(pd.BooleanDtype())
         elif online_type.startswith("decimal"):
             return feature_column.apply(
                 lambda x: decimal.Decimal(x) if (x is not None) else None
@@ -1088,7 +1092,6 @@ class Engine:
                 "tinyint": pd.Int8Dtype(),
                 "float": np.dtype("float32"),
                 "double": np.dtype("float64"),
-                "boolean": pd.BooleanDtype(),
             }
             if online_type in online_dtype_mapping:
                 casted_feature = feature_column.astype(
