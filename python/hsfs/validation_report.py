@@ -206,7 +206,7 @@ class ValidationReport:
     def ingestion_result(self, ingestion_result: str):
         allowed_values = ["INGESTED", "REJECTED", "UNKNOWN", "EXPERIMENT", "FG_DATA"]
         if ingestion_result.upper() in allowed_values:
-            self.ingestion_result = ingestion_result
+            self._ingestion_result = ingestion_result
         else:
             raise ValueError(
                 f"Invalid Value {ingestion_result} for ingestion_result."
