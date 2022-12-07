@@ -62,6 +62,11 @@ class GreatExpectationEngine:
             # if run_validation is False we skip validation and saving_report
             return
 
+        if report.success:
+            print("Validation succeeded.")
+        else:
+            print("Validation failed.")
+
         return self.save_or_convert_report(
             feature_group=feature_group,
             report=report,
