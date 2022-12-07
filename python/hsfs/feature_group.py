@@ -722,6 +722,7 @@ class FeatureGroupBase:
             ValidationReport,
             ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
         ],
+        ingestion_result: str = "UNKNOWN",
         ge_type: bool = True,
     ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]:
         """Save validation report to hopsworks platform along previous reports of the same Feature Group.
@@ -739,6 +740,12 @@ class FeatureGroupBase:
 
         # Arguments
             validation_report: The validation report to attach to the Feature Group.
+            ingestion_result: Specify the fate of the associated data, defaults
+                to "UNKNOWN". Supported options are  "UNKNOWN", "INGESTED", "REJECTED",
+                "EXPERIMENT", "FG_DATA". Use "INGESTED" or "REJECTED" for validation
+                of DataFrames to be inserted in the Feature Group. Use "EXPERIMENT"
+                for testing and development and "FG_DATA" when validating data
+                already in the Feature Group.
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
                 method on hopsworks type. Defaults to `True`.
@@ -751,11 +758,18 @@ class FeatureGroupBase:
                 validation_report,
                 ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
             ):
-                report = ValidationReport(**validation_report.to_json_dict())
+                report = ValidationReport(
+                    **validation_report.to_json_dict(),
+                    ingestion_result=ingestion_result,
+                )
             elif isinstance(validation_report, dict):
-                report = ValidationReport(**validation_report)
+                report = ValidationReport(
+                    **validation_report, ingestion_result=ingestion_result
+                )
             elif isinstance(validation_report, ValidationReport):
                 report = validation_report
+                if ingestion_result != "UNKNOWN":
+                    report.ingestion_result = ingestion_result
 
             return self._validation_report_engine.save(
                 validation_report=report, ge_type=ge_type
