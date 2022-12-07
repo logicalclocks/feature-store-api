@@ -84,6 +84,7 @@ class ValidationReport:
             "statistics": json.dumps(self._statistics),
             "results": self._results,
             "meta": json.dumps(self._meta),
+            "ingestionResult": self._ingestion_result,
         }
 
     def to_json_dict(self):
