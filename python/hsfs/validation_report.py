@@ -43,7 +43,7 @@ class ValidationReport:
         count=None,
         type=None,
         validation_time=None,
-        ingestion_result=None,
+        ingestion_result="UNKNOWN",
     ):
         self._id = id
         self._success = success
@@ -200,6 +200,17 @@ class ValidationReport:
         """Overall success of the validation run together with the ingestion
         validation policy. Indicating if dataframe was ingested or rejected."""
         return self._ingestion_result
+
+    @ingestion_result.setter
+    def ingestion_result(self, ingestion_result: str):
+        allowed_values = ["INGESTED", "REJECTED", "UNKNOWN", "EXPERIMENT", "FG_DATA"]
+        if ingestion_result.upper() in allowed_values:
+            self.ingestion_result = ingestion_result
+        else:
+            raise ValueError(
+                f"Invalid Value {ingestion_result} for ingestion_result."
+                + f"Allowed values are {', '.join(allowed_values)}."
+            )
 
     def __str__(self):
         return self.json()
