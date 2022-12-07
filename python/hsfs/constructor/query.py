@@ -118,9 +118,10 @@ class Query:
         )
 
     def _collect_features(self):
-        features = self.left_features
+        features = []
+        features.extend(self._left_features)
         for j in self.joins:
-            features += j._collect_features()
+            features.extend(j._collect_features())
         return features
 
     def show(self, n: int, online: Optional[bool] = False):

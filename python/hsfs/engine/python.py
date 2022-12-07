@@ -963,21 +963,13 @@ class Engine:
             return "int"
         elif dtype == np.dtype("int8"):
             return "int"
-        elif dtype == pd.Int8Dtype():
-            return "int"
         elif dtype == np.dtype("int16"):
             return "int"
-        elif dtype == pd.Int16Dtype():
-            return "int"
         elif dtype == np.dtype("int32"):
-            return "int"
-        elif dtype == pd.Int32Dtype():
             return "int"
         elif dtype == np.dtype("uint32"):
             return "bigint"
         elif dtype == np.dtype("int64"):
-            return "bigint"
-        elif dtype == pd.Int64Dtype():
             return "bigint"
         elif dtype == np.dtype("float16"):
             return "float"
@@ -993,6 +985,17 @@ class Engine:
             return "boolean"
         elif dtype == "category":
             return "string"
+        elif not isinstance(dtype, np.dtype):
+            if dtype == pd.Int8Dtype():
+                return "int"
+            elif dtype == pd.Int16Dtype():
+                return "int"
+            elif dtype == pd.Int32Dtype():
+                return "int"
+            elif dtype == pd.Int64Dtype():
+                return "bigint"
+            elif dtype == pd.BooleanDtype():
+                return "boolean"
 
         raise ValueError(f"dtype '{dtype}' not supported")
 
@@ -1042,7 +1045,9 @@ class Engine:
                 else None
             ).astype(pd.BooleanDtype())
         elif offline_type.startswith("decimal"):
-            return feature_column.astype(np.dtype(decimal.Decimal))
+            return feature_column.apply(
+                lambda x: decimal.Decimal(x) if (x is not None) else None
+            )
         else:
             offline_dtype_mapping = {
                 "string": np.dtype("str"),
@@ -1072,7 +1077,9 @@ class Engine:
         elif online_type.startswith("varchar") or online_type == "text":
             return feature_column.astype(np.dtype("str"))
         elif online_type.startswith("decimal"):
-            return feature_column.astype(np.dtype(decimal.Decimal))
+            return feature_column.apply(
+                lambda x: decimal.Decimal(x) if (x is not None) else None
+            )
         else:
             online_dtype_mapping = {
                 "bigint": pd.Int64Dtype(),
