@@ -1030,11 +1030,19 @@ class Engine:
         elif offline_type == "date":
             return pd.to_datetime(feature_column, utc=True).dt.date
         elif offline_type.startswith("array<") or offline_type.startswith("struct<"):
-            feature_column.apply(
-                lambda x: ast.literal_eval(x) if x is not None else None
+            return feature_column.apply(
+                lambda x: (ast.literal_eval(x) if type(x) is str else x)
+                if (x is not None and x != "")
+                else None
             )
+        elif offline_type == "boolean":
+            return feature_column.apply(
+                lambda x: (ast.literal_eval(x) if type(x) is str else x)
+                if (x is not None and x != "")
+                else None
+            ).astype(pd.BooleanDtype())
         elif offline_type.startswith("decimal"):
-            feature_column.astype(np.dtype(decimal.Decimal))
+            return feature_column.astype(np.dtype(decimal.Decimal))
         else:
             offline_dtype_mapping = {
                 "string": np.dtype("str"),
@@ -1044,8 +1052,6 @@ class Engine:
                 "tinyint": pd.Int8Dtype(),
                 "float": np.dtype("float32"),
                 "double": np.dtype("float64"),
-                "boolean": pd.BooleanDtype(),
-                "binary": np.dtype(bytes),
             }
             if offline_type in offline_dtype_mapping:
                 casted_feature = feature_column.astype(
@@ -1063,12 +1069,10 @@ class Engine:
             return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
         elif online_type == "date":
             return pd.to_datetime(feature_column, utc=True).dt.date
-        elif online_type.startswith("varbinary") or online_type == "blob":
-            feature_column.astype(np.dtype(bytes))
         elif online_type.startswith("varchar") or online_type == "text":
-            feature_column.astype(np.dtype("str"))
+            return feature_column.astype(np.dtype("str"))
         elif online_type.startswith("decimal"):
-            feature_column.astype(np.dtype(decimal.Decimal))
+            return feature_column.astype(np.dtype(decimal.Decimal))
         else:
             online_dtype_mapping = {
                 "bigint": pd.Int64Dtype(),

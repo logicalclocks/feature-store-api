@@ -1088,30 +1088,26 @@ class Engine:
                 ]
             )
         else:
-            return Engine._convert_offline_type_to_spark_type_simple(offline_type)
-
-    @staticmethod
-    def _convert_offline_type_to_spark_type_simple(offline_type):
-        offline_type_spark_type_mapping = {
-            "string": StringType(),
-            "bigint": LongType(),
-            "int": IntegerType(),
-            "smallint": ShortType(),
-            "tinyint": ByteType(),
-            "float": FloatType(),
-            "double": DoubleType(),
-            "timestamp": TimestampType(),
-            "boolean": BooleanType(),
-            "date": DateType(),
-            "binary": BinaryType(),
-            "decimal": DecimalType(),
-        }
-        if offline_type in offline_type_spark_type_mapping:
-            return offline_type_spark_type_mapping[offline_type]
-        else:
-            raise FeatureStoreException(
-                f"Pyarrow type {offline_type} cannot be converted to a spark type."
-            )
+            offline_type_spark_type_mapping = {
+                "string": StringType(),
+                "bigint": LongType(),
+                "int": IntegerType(),
+                "smallint": ShortType(),
+                "tinyint": ByteType(),
+                "float": FloatType(),
+                "double": DoubleType(),
+                "timestamp": TimestampType(),
+                "boolean": BooleanType(),
+                "date": DateType(),
+                "binary": BinaryType(),
+                "decimal": DecimalType(),
+            }
+            if offline_type in offline_type_spark_type_mapping:
+                return offline_type_spark_type_mapping[offline_type]
+            else:
+                raise FeatureStoreException(
+                    f"Pyarrow type {offline_type} cannot be converted to a spark type."
+                )
 
     @staticmethod
     def cast_columns(df, schema, online=False):

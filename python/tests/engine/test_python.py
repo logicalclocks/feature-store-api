@@ -584,18 +584,18 @@ class TestPython:
         python_engine = python.Engine()
         d = {
             "string": ["s"],
-            "bigint": ["1"],
-            "int": ["1"],
-            "smallint": ["1"],
-            "tinyint": ["1"],
-            "float": ["1"],
-            "double": ["1"],
+            "bigint": [1],
+            "int": [1],
+            "smallint": [1],
+            "tinyint": [1],
+            "float": [1],
+            "double": [1],
             "timestamp": [1641340800000],
             "boolean": ["False"],
             "date": ["2022-01-27"],
             "binary": ["1"],
-            "array<string>": [["123"]],
-            "struc": [LabelIndex("0", "1")],
+            "array<string>": ["['123']"],
+            "struc": ["{'label':'blue','index':45}"],
             "decimal": ["1.1"],
         }
         df = pd.DataFrame(data=d)
