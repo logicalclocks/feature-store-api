@@ -692,7 +692,7 @@ class FeatureView:
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
             data_format: The data format used to save the training dataset,
-                defaults to `"csv"`-format.
+                defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
                 a single partition before writing. The resulting training dataset
                 will be a single file per split. Default False.
@@ -932,7 +932,7 @@ class FeatureView:
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
             data_format: The data format used to save the training dataset,
-                defaults to `"csv"`-format.
+                defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
                 a single partition before writing. The resulting training dataset
                 will be a single file per split. Default False.
@@ -1169,7 +1169,7 @@ class FeatureView:
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
             data_format: The data format used to save the training dataset,
-                defaults to `"csv"`-format.
+                defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
                 a single partition before writing. The resulting training dataset
                 will be a single file per split. Default False.
