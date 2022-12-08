@@ -24,7 +24,7 @@ from hsfs import (
     storage_connector,
     expectation_suite,
     util,
-    engine
+    engine,
 )
 from hsfs.client.exceptions import FeatureStoreException
 import pytest
@@ -32,27 +32,28 @@ import warnings
 
 engine.init("python")
 test_feature_group = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            description="description",
-            online_enabled=False,
-            time_travel_format="HUDI",
-            partition_key=[],
-            primary_key=["pk"],
-            hudi_precombine_key="pk",
-            featurestore_id=1,
-            featurestore_name="fs",
-            features=[
-                feature.Feature("pk", primary=True),
-                feature.Feature("ts", primary=False),
-                feature.Feature("f1", primary=False),
-                feature.Feature("f2", primary=False)
-            ],
-            statistics_config={},
-            event_time="ts",
-            stream=False,
-            expectation_suite=None,
-        )
+    name="test",
+    version=1,
+    description="description",
+    online_enabled=False,
+    time_travel_format="HUDI",
+    partition_key=[],
+    primary_key=["pk"],
+    hudi_precombine_key="pk",
+    featurestore_id=1,
+    featurestore_name="fs",
+    features=[
+        feature.Feature("pk", primary=True),
+        feature.Feature("ts", primary=False),
+        feature.Feature("f1", primary=False),
+        feature.Feature("f2", primary=False),
+    ],
+    statistics_config={},
+    event_time="ts",
+    stream=False,
+    expectation_suite=None,
+)
+
 
 class TestFeatureGroup:
     def test_from_response_json(self, backend_fixtures):
