@@ -41,6 +41,7 @@ class GreatExpectationEngine:
         save_report: bool = False,
         validation_options: Dict[str, Any] = {},
         ge_type: bool = True,
+        ingestion_result: str = "UNKNOWN",
     ) -> Union[
         ge.core.ExpectationSuiteValidationResult,
         validation_report.ValidationReport,
@@ -66,12 +67,18 @@ class GreatExpectationEngine:
             print("Validation succeeded.")
         else:
             print("Validation failed.")
+            if (
+                suite.validation_ingestion_policy == "STRICT"
+                and ingestion_result == "INGESTED"
+            ):
+                ingestion_result = "REJECTED"
 
         return self.save_or_convert_report(
             feature_group=feature_group,
             report=report,
             save_report=save_report,
             validation_options=validation_options,
+            ingestion_result=ingestion_result,
             ge_type=ge_type,
         )
 
@@ -115,15 +122,20 @@ class GreatExpectationEngine:
         save_report: bool,
         ge_type: bool,
         validation_options: Dict[str, Any],
+        ingestion_result: str = "UNKNOWN",
     ) -> Union[
         ge.core.ExpectationSuiteValidationResult, validation_report.ValidationReport
     ]:
 
         save_report = validation_options.get("save_report", save_report)
         if save_report:
-            return feature_group.save_validation_report(report, ge_type=ge_type)
+            return feature_group.save_validation_report(
+                report, ingestion_result=ingestion_result, ge_type=ge_type
+            )
 
         if ge_type:
             return report
         else:
-            return validation_report.ValidationReport(**report.to_json_dict())
+            return validation_report.ValidationReport(
+                **report.to_json_dict(), ingestion_result=ingestion_result
+            )
