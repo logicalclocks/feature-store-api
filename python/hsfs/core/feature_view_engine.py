@@ -365,7 +365,7 @@ class FeatureViewEngine:
             result = {}
             for split in splits:
                 path = training_data_obj.location + "/" + str(split.name)
-                result[split.name] = self._cast_column_type(
+                result[split.name] = self._cast_columns(
                     training_data_obj.data_format,
                     self._read_dir_from_storage_connector(
                         training_data_obj, path, read_options
@@ -375,7 +375,7 @@ class FeatureViewEngine:
             return result
         else:
             path = training_data_obj.location + "/" + training_data_obj.name
-            return self._cast_column_type(
+            return self._cast_columns(
                 training_data_obj.data_format,
                 self._read_dir_from_storage_connector(
                     training_data_obj, path, read_options
@@ -383,11 +383,11 @@ class FeatureViewEngine:
                 schema,
             )
 
-    def _cast_column_type(self, data_format, df, schema):
+    def _cast_columns(self, data_format, df, schema):
         if data_format == "csv" or data_format == "tsv":
             if not schema:
                 raise FeatureStoreException("Reading csv, tsv requires a schema.")
-            return engine.get_instance().cast_column_type(df, schema)
+            return engine.get_instance().cast_columns(df, schema)
         else:
             return df
 

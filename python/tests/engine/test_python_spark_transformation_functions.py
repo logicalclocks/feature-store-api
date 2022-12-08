@@ -99,8 +99,8 @@ class TestPythonSparkTransformationFunctions:
             dataset=df,
         )
 
-        assert sorted(result.columns) == sorted(expected_df.columns)
-        assert sorted(result.dtypes) == sorted(expected_df.dtypes)
+        assert list(result.columns) == list(expected_df.columns)
+        assert list(result.dtypes) == list(expected_df.dtypes)
         assert result.equals(expected_df)
 
     def _validate_on_spark_engine(self, td, spark_df, expected_spark_df):
@@ -225,7 +225,7 @@ class TestPythonSparkTransformationFunctions:
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df, schema=expected_schema
         )
-        expected_df["col_1"] = expected_df["col_1"].astype(np.dtype("int32"))
+        expected_df["col_1"] = expected_df["col_1"].astype(pd.Int32Dtype())
 
         # Arrange
         tf_fun = (
@@ -432,7 +432,7 @@ class TestPythonSparkTransformationFunctions:
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df, schema=expected_schema
         )
-        expected_df["col_0"] = expected_df["col_0"].astype(np.dtype("int32"))
+        expected_df["col_0"] = expected_df["col_0"].astype(pd.Int32Dtype())
 
         # Arrange
         def tf_fun(a) -> int:

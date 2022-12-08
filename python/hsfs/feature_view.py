@@ -563,7 +563,7 @@ class FeatureView:
         location: Optional[str] = "",
         description: Optional[str] = "",
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
-        data_format: Optional[str] = "csv",
+        data_format: Optional[str] = "parquet",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
@@ -692,7 +692,7 @@ class FeatureView:
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
             data_format: The data format used to save the training dataset,
-                defaults to `"csv"`-format.
+                defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
                 a single partition before writing. The resulting training dataset
                 will be a single file per split. Default False.
@@ -758,7 +758,7 @@ class FeatureView:
         location: Optional[str] = "",
         description: Optional[str] = "",
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
-        data_format: Optional[str] = "csv",
+        data_format: Optional[str] = "parquet",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
@@ -932,7 +932,7 @@ class FeatureView:
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
             data_format: The data format used to save the training dataset,
-                defaults to `"csv"`-format.
+                defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
                 a single partition before writing. The resulting training dataset
                 will be a single file per split. Default False.
@@ -1009,7 +1009,7 @@ class FeatureView:
         location: Optional[str] = "",
         description: Optional[str] = "",
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
-        data_format: Optional[str] = "csv",
+        data_format: Optional[str] = "parquet",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
@@ -1169,7 +1169,7 @@ class FeatureView:
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
             data_format: The data format used to save the training dataset,
-                defaults to `"csv"`-format.
+                defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
                 a single partition before writing. The resulting training dataset
                 will be a single file per split. Default False.
