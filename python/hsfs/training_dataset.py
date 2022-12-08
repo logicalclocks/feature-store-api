@@ -486,6 +486,12 @@ class TrainingDataset:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
+        warnings.warn(
+            "All jobs associated to training dataset `{}`, version `{}` will be removed.".format(
+                self._name, self._version
+            ),
+            util.JobWarning,
+        )
         self._training_dataset_api.delete(self)
 
     @classmethod

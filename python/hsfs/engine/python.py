@@ -73,8 +73,6 @@ except ImportError:
 
 
 class Engine:
-    APP_OP_INSERT_FG = "insert_fg"
-
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
