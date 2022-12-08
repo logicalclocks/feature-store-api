@@ -1033,7 +1033,6 @@ class Engine:
         elif spark_type_string == "DOUBLE":
             return DoubleType()
         elif spark_type_string == "TIMESTAMP":
-            # convert (if tz!=UTC) to utc, then make timezone unaware
             return TimestampType()
         elif spark_type_string == "DATE":
             return DateType()
@@ -1106,7 +1105,7 @@ class Engine:
                 return offline_type_spark_type_mapping[offline_type]
             else:
                 raise FeatureStoreException(
-                    f"Pyarrow type {offline_type} cannot be converted to a spark type."
+                    f"Offline type {offline_type} cannot be converted to a spark type."
                 )
 
     @staticmethod
