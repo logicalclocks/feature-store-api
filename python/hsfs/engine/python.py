@@ -19,6 +19,7 @@ import numpy as np
 import boto3
 import time
 import re
+import ast
 import warnings
 import avro
 import socket
@@ -26,6 +27,7 @@ import pyarrow as pa
 import json
 import random
 import uuid
+import decimal
 from datetime import datetime, timezone
 
 import great_expectations as ge
@@ -58,6 +60,7 @@ from hsfs.client import exceptions, hopsworks
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
+from hsfs.engine.spark import Engine as SparkEngine
 
 HAS_FAST = False
 try:
@@ -80,18 +83,30 @@ class Engine:
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None
 
-    def sql(self, sql_query, feature_store, online_conn, dataframe_type, read_options):
+    def sql(
+        self,
+        sql_query,
+        feature_store,
+        online_conn,
+        dataframe_type,
+        read_options,
+        schema=None,
+    ):
         if not online_conn:
-            return self._sql_offline(sql_query, feature_store, dataframe_type)
+            return self._sql_offline(sql_query, feature_store, dataframe_type, schema)
         else:
-            return self._jdbc(sql_query, online_conn, dataframe_type, read_options)
+            return self._jdbc(
+                sql_query, online_conn, dataframe_type, read_options, schema
+            )
 
-    def _sql_offline(self, sql_query, feature_store, dataframe_type):
+    def _sql_offline(self, sql_query, feature_store, dataframe_type, schema=None):
         with self._create_hive_connection(feature_store) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
+            if schema:
+                result_df = Engine.cast_columns(result_df, schema)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def _jdbc(self, sql_query, connector, dataframe_type, read_options):
+    def _jdbc(self, sql_query, connector, dataframe_type, read_options, schema=None):
         if self._mysql_online_fs_engine is None:
             self._mysql_online_fs_engine = util.create_mysql_engine(
                 connector,
@@ -103,6 +118,8 @@ class Engine:
             )
         with self._mysql_online_fs_engine.connect() as mysql_conn:
             result_df = pd.read_sql(sql_query, mysql_conn)
+            if schema:
+                result_df = Engine.cast_columns(result_df, schema, online=True)
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def read(self, storage_connector, data_format, read_options, location):
@@ -266,11 +283,11 @@ class Engine:
         job = stat_api.compute(metadata_instance)
         print(
             "Statistics Job started successfully, you can follow the progress at \n{}".format(
-                self._get_job_url(job.href)
+                self.get_job_url(job.href)
             )
         )
 
-        self._wait_for_job(job)
+        self.wait_for_job(job)
 
     def profile(
         self,
@@ -380,7 +397,7 @@ class Engine:
         for feat_name, feat_type in dataframe.dtypes.items():
             name = feat_name.lower()
             try:
-                converted_type = self._convert_pandas_type(
+                converted_type = self._convert_pandas_dtype_to_offline_type(
                     feat_type, arrow_schema.field(feat_name).type
                 )
             except ValueError as e:
@@ -393,67 +410,6 @@ class Engine:
             "Training dataset creation from Dataframes is not "
             + "supported in Python environment. Use HSFS Query object instead."
         )
-
-    def _convert_pandas_type(self, dtype, arrow_type):
-        # This is a simple type conversion between pandas dtypes and pyspark (hive) types,
-        # using pyarrow types to convert "O (object)"-typed fields.
-        # In the backend, the types specified here will also be used for mapping to Avro types.
-        if dtype == np.dtype("O"):
-            return self._infer_type_pyarrow(arrow_type)
-
-        return self._convert_simple_pandas_type(dtype)
-
-    def _convert_simple_pandas_type(self, dtype):
-        if dtype == np.dtype("uint8"):
-            return "int"
-        elif dtype == np.dtype("uint16"):
-            return "int"
-        elif dtype == np.dtype("int8"):
-            return "int"
-        elif dtype == np.dtype("int16"):
-            return "int"
-        elif dtype == np.dtype("int32"):
-            return "int"
-        elif dtype == np.dtype("uint32"):
-            return "bigint"
-        elif dtype == np.dtype("int64"):
-            return "bigint"
-        elif dtype == np.dtype("float16"):
-            return "float"
-        elif dtype == np.dtype("float32"):
-            return "float"
-        elif dtype == np.dtype("float64"):
-            return "double"
-        elif dtype == np.dtype("datetime64[ns]"):
-            return "timestamp"
-        elif dtype == np.dtype("bool"):
-            return "boolean"
-        elif dtype == "category":
-            return "string"
-
-        raise ValueError(f"dtype '{dtype}' not supported")
-
-    def _infer_type_pyarrow(self, arrow_type):
-        if pa.types.is_list(arrow_type):
-            # figure out sub type
-            sub_arrow_type = arrow_type.value_type
-            sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
-            subtype = self._convert_pandas_type(sub_dtype, sub_arrow_type)
-            return "array<{}>".format(subtype)
-        if pa.types.is_struct(arrow_type):
-            # best effort, based on pyarrow's string representation
-            return str(arrow_type)
-        # Currently not supported
-        # elif pa.types.is_decimal(arrow_type):
-        #    return str(arrow_type).replace("decimal128", "decimal")
-        elif pa.types.is_date(arrow_type):
-            return "date"
-        elif pa.types.is_binary(arrow_type):
-            return "binary"
-        elif pa.types.is_string(arrow_type) or pa.types.is_unicode(arrow_type):
-            return "string"
-
-        raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
 
     def save_dataframe(
         self,
@@ -507,16 +463,11 @@ class Engine:
         print("Uploading Pandas dataframe...")
         self._dataset_api.upload(feature_group, ingestion_job.data_path, dataframe)
 
-        # Launch job
-        print("Launching ingestion job...")
-        self._job_api.launch(ingestion_job.job.name)
-        print(
-            "Ingestion Job started successfully, you can follow the progress at \n{}".format(
-                self._get_job_url(ingestion_job.job.href)
-            )
+        # run job
+        ingestion_job.job.run(
+            await_termination=offline_write_options is None
+            or offline_write_options.get("wait_for_job", True)
         )
-
-        self._wait_for_job(ingestion_job.job, offline_write_options)
 
         return ingestion_job.job
 
@@ -677,13 +628,14 @@ class Engine:
             td_job = td_api.compute(training_dataset, td_app_conf)
         print(
             "Training dataset job started successfully, you can follow the progress at \n{}".format(
-                self._get_job_url(td_job.href)
+                self.get_job_url(td_job.href)
             )
         )
 
-        # If the user passed the wait_for_job option consider it,
-        # otherwise use the default True
-        self._wait_for_job(td_job, user_write_options)
+        self.wait_for_job(
+            td_job,
+            await_termination=user_write_options.get("wait_for_job", True),
+        )
 
         return td_job
 
@@ -744,7 +696,7 @@ class Engine:
         """Wrapper around save_dataframe in order to provide no-op."""
         pass
 
-    def _get_job_url(self, href: str):
+    def get_job_url(self, href: str):
         """Use the endpoint returned by the API to construct the UI url for jobs
 
         Args:
@@ -778,12 +730,10 @@ class Engine:
             spark_job_configuration=spark_job_configuration,
         )
 
-    def _wait_for_job(self, job, user_write_options=None):
+    def wait_for_job(self, job, await_termination=True):
         # If the user passed the wait_for_job option consider it,
         # otherwise use the default True
-        while user_write_options is None or user_write_options.get(
-            "wait_for_job", True
-        ):
+        while await_termination:
             executions = self._job_api.last_execution(job)
             if len(executions) > 0:
                 execution = executions[0]
@@ -814,38 +764,17 @@ class Engine:
             dataset[feature_name] = dataset[feature_name].map(
                 transformation_fn.transformation_fn
             )
-            dataset[feature_name] = self.convert_column(
-                transformation_fn.output_type, dataset[feature_name]
+            offline_type = SparkEngine.convert_spark_type_to_offline_type(
+                SparkEngine.convert_spark_type_string_to_spark_type(
+                    transformation_fn.output_type
+                ),
+                True,
+            )
+            dataset[feature_name] = Engine._cast_column_to_offline_type(
+                dataset[feature_name], offline_type
             )
 
         return dataset
-
-    def convert_column(self, output_type, feature_column):
-        if output_type == "STRING":
-            return feature_column.astype(str)
-        elif output_type == "BINARY":
-            return feature_column.astype(bytes)
-        elif output_type == "BYTE":
-            return feature_column.astype(np.int8)
-        elif output_type == "SHORT":
-            return feature_column.astype(np.int16)
-        elif output_type == "INT":
-            return feature_column.astype(int)
-        elif output_type == "LONG":
-            return feature_column.astype(np.int64)
-        elif output_type == "FLOAT":
-            return feature_column.astype(float)
-        elif output_type == "DOUBLE":
-            return feature_column.astype(np.float64)
-        elif output_type == "TIMESTAMP":
-            # convert (if tz!=UTC) to utc, then make timezone unaware
-            return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
-        elif output_type == "DATE":
-            return pd.to_datetime(feature_column, utc=True).dt.date
-        elif output_type == "BOOLEAN":
-            return feature_column.astype(bool)
-        else:
-            return feature_column  # handle gracefully, just return the column as-is
 
     @staticmethod
     def get_unique_values(feature_dataframe, feature_name):
@@ -935,14 +864,7 @@ class Engine:
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
-            print("Launching offline feature group backfill job...")
-            self._job_api.launch(job_name)
-            print(
-                "Backfill Job started successfully, you can follow the progress at \n{}".format(
-                    self._get_job_url(job.href)
-                )
-            )
-            self._wait_for_job(job, offline_write_options)
+            job.run(await_termination=offline_write_options.get("wait_for_job", True))
 
         return job
 
@@ -1024,3 +946,172 @@ class Engine:
                 ]
             )
         return config
+
+    @staticmethod
+    def _convert_pandas_dtype_to_offline_type(dtype, arrow_type):
+        # This is a simple type conversion between pandas dtypes and pyspark (hive) types,
+        # using pyarrow types to convert "O (object)"-typed fields.
+        # In the backend, the types specified here will also be used for mapping to Avro types.
+        if dtype == np.dtype("O"):
+            return Engine._convert_pandas_object_type_to_offline_type(arrow_type)
+
+        return Engine._convert_simple_pandas_dtype_to_offline_type(dtype)
+
+    @staticmethod
+    def _convert_simple_pandas_dtype_to_offline_type(dtype):
+        if dtype == np.dtype("uint8"):
+            return "int"
+        elif dtype == np.dtype("uint16"):
+            return "int"
+        elif dtype == np.dtype("int8"):
+            return "int"
+        elif dtype == np.dtype("int16"):
+            return "int"
+        elif dtype == np.dtype("int32"):
+            return "int"
+        elif dtype == np.dtype("uint32"):
+            return "bigint"
+        elif dtype == np.dtype("int64"):
+            return "bigint"
+        elif dtype == np.dtype("float16"):
+            return "float"
+        elif dtype == np.dtype("float32"):
+            return "float"
+        elif dtype == np.dtype("float64"):
+            return "double"
+        elif dtype == np.dtype("datetime64[ns]"):
+            return "timestamp"
+        elif dtype == np.dtype("bool"):
+            return "boolean"
+        elif dtype == "category":
+            return "string"
+        elif not isinstance(dtype, np.dtype):
+            if dtype == pd.Int8Dtype():
+                return "int"
+            elif dtype == pd.Int16Dtype():
+                return "int"
+            elif dtype == pd.Int32Dtype():
+                return "int"
+            elif dtype == pd.Int64Dtype():
+                return "bigint"
+            elif dtype == pd.BooleanDtype():
+                return "boolean"
+
+        raise ValueError(f"dtype '{dtype}' not supported")
+
+    @staticmethod
+    def _convert_pandas_object_type_to_offline_type(arrow_type):
+        if pa.types.is_list(arrow_type):
+            # figure out sub type
+            sub_arrow_type = arrow_type.value_type
+            sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            subtype = Engine._convert_pandas_dtype_to_offline_type(
+                sub_dtype, sub_arrow_type
+            )
+            return "array<{}>".format(subtype)
+        if pa.types.is_struct(arrow_type):
+            # best effort, based on pyarrow's string representation
+            return str(arrow_type)
+        # Currently not supported
+        # elif pa.types.is_decimal(arrow_type):
+        #    return str(arrow_type).replace("decimal128", "decimal")
+        elif pa.types.is_date(arrow_type):
+            return "date"
+        elif pa.types.is_binary(arrow_type):
+            return "binary"
+        elif pa.types.is_string(arrow_type) or pa.types.is_unicode(arrow_type):
+            return "string"
+
+        raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
+
+    @staticmethod
+    def _cast_column_to_offline_type(feature_column, offline_type):
+        offline_type = offline_type.lower()
+        if offline_type == "timestamp":
+            # convert (if tz!=UTC) to utc, then make timezone unaware
+            return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
+        elif offline_type == "date":
+            return pd.to_datetime(feature_column, utc=True).dt.date
+        elif offline_type.startswith("array<") or offline_type.startswith("struct<"):
+            return feature_column.apply(
+                lambda x: (ast.literal_eval(x) if type(x) is str else x)
+                if (x is not None and x != "")
+                else None
+            )
+        elif offline_type == "boolean":
+            return feature_column.apply(
+                lambda x: (ast.literal_eval(x) if type(x) is str else x)
+                if (x is not None and x != "")
+                else None
+            ).astype(pd.BooleanDtype())
+        elif offline_type.startswith("decimal"):
+            return feature_column.apply(
+                lambda x: decimal.Decimal(x) if (x is not None) else None
+            )
+        else:
+            offline_dtype_mapping = {
+                "string": np.dtype("str"),
+                "bigint": pd.Int64Dtype(),
+                "int": pd.Int32Dtype(),
+                "smallint": pd.Int16Dtype(),
+                "tinyint": pd.Int8Dtype(),
+                "float": np.dtype("float32"),
+                "double": np.dtype("float64"),
+            }
+            if offline_type in offline_dtype_mapping:
+                casted_feature = feature_column.astype(
+                    offline_dtype_mapping[offline_type]
+                )
+                return casted_feature
+            else:
+                return feature_column  # handle gracefully, just return the column as-is
+
+    @staticmethod
+    def _cast_column_to_online_type(feature_column, online_type):
+        online_type = online_type.lower()
+        if online_type == "timestamp":
+            # convert (if tz!=UTC) to utc, then make timezone unaware
+            return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
+        elif online_type == "date":
+            return pd.to_datetime(feature_column, utc=True).dt.date
+        elif online_type.startswith("varchar") or online_type == "text":
+            return feature_column.astype(np.dtype("str"))
+        elif online_type == "boolean":
+            return feature_column.apply(
+                lambda x: (ast.literal_eval(x) if type(x) is str else x)
+                if (x is not None and x != "")
+                else None
+            ).astype(pd.BooleanDtype())
+        elif online_type.startswith("decimal"):
+            return feature_column.apply(
+                lambda x: decimal.Decimal(x) if (x is not None) else None
+            )
+        else:
+            online_dtype_mapping = {
+                "bigint": pd.Int64Dtype(),
+                "int": pd.Int32Dtype(),
+                "smallint": pd.Int16Dtype(),
+                "tinyint": pd.Int8Dtype(),
+                "float": np.dtype("float32"),
+                "double": np.dtype("float64"),
+            }
+            if online_type in online_dtype_mapping:
+                casted_feature = feature_column.astype(
+                    online_dtype_mapping[online_type]
+                )
+                return casted_feature
+            else:
+                return feature_column  # handle gracefully, just return the column as-is
+
+    @staticmethod
+    def cast_columns(df, schema, online=False):
+        for _feat in schema:
+            if not online:
+                df[_feat.name] = Engine._cast_column_to_offline_type(
+                    df[_feat.name], _feat.type
+                )
+            else:
+                df[_feat.name] = Engine._cast_column_to_online_type(
+                    df[_feat.name], _feat.online_type
+                )
+        return df

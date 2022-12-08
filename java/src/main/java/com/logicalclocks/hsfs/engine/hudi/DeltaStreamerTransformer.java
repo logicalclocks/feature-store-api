@@ -16,11 +16,7 @@
 
 package com.logicalclocks.hsfs.engine.hudi;
 
-import com.logicalclocks.hsfs.FeatureStore;
-import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
-import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.FeatureStoreApi;
 import lombok.SneakyThrows;
 import org.apache.hudi.common.config.TypedProperties;
 import org.apache.hudi.utilities.transform.Transformer;
@@ -30,11 +26,6 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 public class DeltaStreamerTransformer implements Transformer {
-  private FeatureStore featureStore;
-  private StreamFeatureGroup featureGroup;
-
-  private final FeatureStoreApi featureStoreApi = new FeatureStoreApi();
-  private final FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   public DeltaStreamerTransformer() {
@@ -44,11 +35,6 @@ public class DeltaStreamerTransformer implements Transformer {
   @Override
   public Dataset<Row> apply(JavaSparkContext javaSparkContext, SparkSession sparkSession, Dataset<Row> dataset,
                             TypedProperties props) {
-    featureStore = featureStoreApi.get(Integer.parseInt(props.getString("projectId")),
-        props.getString("featureStoreName"));
-    featureGroup = featureGroupApi.getStreamFeatureGroup(this.featureStore, props.getString("featureGroupName"),
-        Integer.parseInt(props.getString("featureGroupVersion")));
-
     return utils.convertToDefaultDataframe(dataset);
   }
 }

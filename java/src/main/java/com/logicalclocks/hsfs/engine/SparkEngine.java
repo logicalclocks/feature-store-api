@@ -21,6 +21,7 @@ import com.amazon.deequ.profiles.ColumnProfilerRunner;
 import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.Feature;
@@ -31,6 +32,7 @@ import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.TrainingDataset;
+import com.logicalclocks.hsfs.TrainingDatasetFeature;
 import com.logicalclocks.hsfs.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
@@ -58,6 +60,7 @@ import org.apache.spark.sql.types.ArrayType;
 import org.apache.spark.sql.types.BinaryType;
 import org.apache.spark.sql.types.BooleanType;
 import org.apache.spark.sql.types.ByteType;
+import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.DateType;
 import org.apache.spark.sql.types.DecimalType;
@@ -65,6 +68,7 @@ import org.apache.spark.sql.types.DoubleType;
 import org.apache.spark.sql.types.FloatType;
 import org.apache.spark.sql.types.IntegerType;
 import org.apache.spark.sql.types.LongType;
+import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.ShortType;
 import org.apache.spark.sql.types.StringType;
 import org.apache.spark.sql.types.StructField;
@@ -786,18 +790,70 @@ public class SparkEngine {
     return features;
   }
 
+  public Dataset<Row> castColumnType(Dataset<Row> dataset, List<TrainingDatasetFeature> features)
+      throws FeatureStoreException {
+    for (TrainingDatasetFeature feature: features) {
+      dataset = dataset.withColumn(
+          feature.getName(),
+          dataset.col(feature.getName()).cast(convertColumnType(feature.getType()))
+      );
+    }
+    return dataset;
+  }
+
+  private static Pattern arrayPattern = Pattern.compile("^array<(.*)>$");
+
+  private DataType convertColumnType(String type) throws FeatureStoreException {
+    Matcher m = arrayPattern.matcher(type);
+    if (m.matches()) {
+      return DataTypes.createArrayType(convertColumnType(m.group(1)));
+    } else if (type.contains("struct<label:string,index:int>")) {
+      StructField label = new StructField("label", DataTypes.StringType, true, Metadata.empty());
+      StructField index = new StructField("index", DataTypes.IntegerType, true, Metadata.empty());
+      return DataTypes.createStructType(new StructField[]{label, index});
+    } else {
+      return convertBasicType(type);
+    }
+  }
+
+  private DataType convertBasicType(String type) throws FeatureStoreException {
+    Map<String, DataType> pyarrowToSparkType = Maps.newHashMap();
+    pyarrowToSparkType.put("string", DataTypes.StringType);
+    pyarrowToSparkType.put("bigint", DataTypes.LongType);
+    pyarrowToSparkType.put("int", DataTypes.IntegerType);
+    pyarrowToSparkType.put("smallint", DataTypes.ShortType);
+    pyarrowToSparkType.put("tinyint", DataTypes.ByteType);
+    pyarrowToSparkType.put("float", DataTypes.FloatType);
+    pyarrowToSparkType.put("double", DataTypes.DoubleType);
+    pyarrowToSparkType.put("timestamp", DataTypes.TimestampType);
+    pyarrowToSparkType.put("boolean", DataTypes.BooleanType);
+    pyarrowToSparkType.put("date", DataTypes.DateType);
+    pyarrowToSparkType.put("binary", DataTypes.BinaryType);
+    pyarrowToSparkType.put("decimal", DataTypes.createDecimalType());
+    if (pyarrowToSparkType.containsKey(type)) {
+      return pyarrowToSparkType.get(type);
+    } else {
+      throw new FeatureStoreException(String.format("Pyarrow type %s cannot be converted to a spark type.", type));
+    }
+  }
+
   public <S> S convertToDefaultDataframe(S datasetGeneric) {
     Dataset<Row> dataset = (Dataset<Row>) datasetGeneric;
     Dataset<Row> sanitizedNamesDataset = dataset.select(Arrays.asList(dataset.columns()).stream().map(f ->
             col(f).alias(f.toLowerCase())).toArray(Column[]::new));
 
-    StructType schema = sanitizedNamesDataset.schema();
-    StructType nullableSchema = new StructType(JavaConverters.asJavaCollection(schema.toSeq()).stream().map(f ->
-            new StructField(f.name(), f.dataType(), true, f.metadata())
-    ).toArray(StructField[]::new));
-    Dataset<Row> nullableDataset = sanitizedNamesDataset.sparkSession()
-            .createDataFrame(sanitizedNamesDataset.rdd(), nullableSchema);
-    return (S) nullableDataset;
+    // for streaming dataframes this will be handled in DeltaStreamerTransformer.java class
+    if (!dataset.isStreaming()) {
+      StructType schema = sanitizedNamesDataset.schema();
+      StructType nullableSchema = new StructType(JavaConverters.asJavaCollection(schema.toSeq()).stream().map(f ->
+          new StructField(f.name(), f.dataType(), true, f.metadata())
+      ).toArray(StructField[]::new));
+      Dataset<Row> nullableDataset = sanitizedNamesDataset.sparkSession()
+          .createDataFrame(sanitizedNamesDataset.rdd(), nullableSchema);
+      return (S) nullableDataset;
+    } else {
+      return (S) sanitizedNamesDataset;
+    }
   }
 
   public String addFile(String filePath) {

@@ -95,7 +95,7 @@ class FeatureView:
             feature view **and** related training dataset **and** materialized data in HopsFS.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         self._feature_view_engine.delete(self.name, self.version)
 
@@ -129,7 +129,7 @@ class FeatureView:
             feature_view_version: str. Version of feature view.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         if not isinstance(feature_store_id, int):
             raise ValueError("`feature_store_id` should be an integer.")
@@ -159,7 +159,7 @@ class FeatureView:
             `FeatureView` Updated feature view.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_view_engine.update(self)
 
@@ -479,7 +479,7 @@ class FeatureView:
             value: Value of the tag to be added.
 
         # Raises
-            `RestAPIError` in case the backend fails to add the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to add the tag.
         """
         return self._feature_view_engine.add_tag(self, name, value)
 
@@ -505,7 +505,7 @@ class FeatureView:
             tag value
 
         # Raises
-            `RestAPIError` in case the backend fails to retrieve the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tag.
         """
         return self._feature_view_engine.get_tag(self, name)
 
@@ -528,7 +528,7 @@ class FeatureView:
             `Dict[str, obj]` of tags.
 
         # Raises
-            `RestAPIError` in case the backend fails to retrieve the tags.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._feature_view_engine.get_tags(self)
 
@@ -551,7 +551,7 @@ class FeatureView:
             name: Name of the tag to be removed.
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the tag.
         """
         return self._feature_view_engine.delete_tag(self, name)
 
@@ -563,7 +563,7 @@ class FeatureView:
         location: Optional[str] = "",
         description: Optional[str] = "",
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
-        data_format: Optional[str] = "csv",
+        data_format: Optional[str] = "parquet",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
@@ -571,7 +571,7 @@ class FeatureView:
     ):
         """Create a training dataset and save data into `location`.
 
-        !!! example "Create random splits"
+        !!! example "Create training dataset"
             ```python
             # get feature store instance
             fs = ...
@@ -588,7 +588,7 @@ class FeatureView:
             )
             ```
 
-        !!! example "Create time series splits by specifying date as string"
+        !!! example "Create training data specifying date range  with dates as strings"
             ```python
             # get feature store instance
             fs = ...
@@ -613,7 +613,7 @@ class FeatureView:
             X_train, X_test, y_train, y_test = feature_view.get_training_data(version)
             ```
 
-        !!! example "Create time series splits by specifying date as datetime object"
+        !!! example "Create training data specifying date range  with dates as datetime objects"
             ```python
             # get feature store instance
             fs = ...
@@ -638,6 +638,28 @@ class FeatureView:
             )
             ```
 
+        !!! example "Write training dataset to external storage"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get storage connector instance
+            external_storage_connector = fs.get_storage_connector("storage_connector_name")
+
+            # create a train-test split dataset
+            version, job = feature_view.create_training_data(
+                start_time=...,
+                end_time=...,
+                storage_connector = external_storage_connector,
+                description=...,
+                # you can have different data formats such as csv, tsv, tfrecord, parquet and others
+                data_format=...
+            )
+            ```
+
         !!! info "Data Formats"
             The feature store currently supports the following data formats for
             training datasets:
@@ -650,7 +672,6 @@ class FeatureView:
             6. orc
 
             Currently not supported petastorm, hdf5 and npy file formats.
-
 
         # Arguments
             start_time: Start event time for the training dataset query. Optional. Strings should
@@ -671,7 +692,7 @@ class FeatureView:
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
             data_format: The data format used to save the training dataset,
-                defaults to `"csv"`-format.
+                defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
                 a single partition before writing. The resulting training dataset
                 will be a single file per split. Default False.
@@ -737,7 +758,7 @@ class FeatureView:
         location: Optional[str] = "",
         description: Optional[str] = "",
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
-        data_format: Optional[str] = "csv",
+        data_format: Optional[str] = "parquet",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
@@ -807,7 +828,6 @@ class FeatureView:
 
             # create a train-test split dataset
             version, job = feature_view.create_train_test_split(
-                test_size=0.2,
                 train_start=train_start,
                 train_end=train_end,
                 test_start=test_start,
@@ -815,6 +835,30 @@ class FeatureView:
                 description='Description of a dataset',
                 # you can have different data formats such as csv, tsv, tfrecord, parquet and others
                 data_format='csv'
+            )
+            ```
+
+        !!! example "Write training dataset to external storage"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get storage connector instance
+            external_storage_connector = fs.get_storage_connector("storage_connector_name")
+
+            # create a train-test split dataset
+            version, job = feature_view.create_train_test_split(
+                train_start=...,
+                train_end=...,
+                test_start=...,
+                test_end=...,
+                storage_connector = external_storage_connector,
+                description=...,
+                # you can have different data formats such as csv, tsv, tfrecord, parquet and others
+                data_format=...
             )
             ```
 
@@ -888,7 +932,7 @@ class FeatureView:
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
             data_format: The data format used to save the training dataset,
-                defaults to `"csv"`-format.
+                defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
                 a single partition before writing. The resulting training dataset
                 will be a single file per split. Default False.
@@ -965,7 +1009,7 @@ class FeatureView:
         location: Optional[str] = "",
         description: Optional[str] = "",
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
-        data_format: Optional[str] = "csv",
+        data_format: Optional[str] = "parquet",
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
@@ -1041,8 +1085,6 @@ class FeatureView:
 
             # create a train-validation-test split dataset
             version, job = feature_view.create_train_validation_test_split(
-                validation_size=0.3,
-                test_size=0.2,
                 train_start=train_start,
                 train_end=train_end,
                 validation_start=validation_start,
@@ -1052,6 +1094,32 @@ class FeatureView:
                 description='Description of a dataset',
                 # you can have different data formats such as csv, tsv, tfrecord, parquet and others
                 data_format='csv'
+            )
+            ```
+
+        !!! example "Write training dataset to external storage"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get storage connector instance
+            external_storage_connector = fs.get_storage_connector("storage_connector_name")
+
+            # create a train-validation-test split dataset
+            version, job = feature_view.create_train_validation_test_split(
+                train_start=...,
+                train_end=...,
+                validation_start=...,
+                validation_end=...,
+                test_start=...,
+                test_end=...,
+                description=...,
+                storage_connector = external_storage_connector,
+                # you can have different data formats such as csv, tsv, tfrecord, parquet and others
+                data_format=...
             )
             ```
 
@@ -1067,7 +1135,6 @@ class FeatureView:
             6. orc
 
             Currently not supported petastorm, hdf5 and npy file formats.
-
 
         # Arguments
             validation_size: size of validation set.
@@ -1102,7 +1169,7 @@ class FeatureView:
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
             data_format: The data format used to save the training dataset,
-                defaults to `"csv"`-format.
+                defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
                 a single partition before writing. The resulting training dataset
                 will be a single file per split. Default False.
@@ -1174,7 +1241,9 @@ class FeatureView:
         return td.version, td_job
 
     def recreate_training_dataset(
-        self, version: int, write_options: Optional[Dict[Any, Any]] = None
+        self,
+        training_dataset_version: int,
+        write_options: Optional[Dict[Any, Any]] = None,
     ):
         """
         Recreate a training dataset.
@@ -1188,7 +1257,7 @@ class FeatureView:
             feature_view = fs.get_feature_view(...)
 
             # recreate a training dataset that has been deleted
-            feature_view.recreate_training_dataset(version=1)
+            feature_view.recreate_training_dataset(training_dataset_version=1)
             ```
 
         !!! info
@@ -1196,7 +1265,7 @@ class FeatureView:
             recreate the training data.
 
         # Arguments
-            version: training dataset version
+            training_dataset_version: training dataset version
             read_options: Additional read options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, read_options can contain the
                 following entries:
@@ -1209,7 +1278,7 @@ class FeatureView:
                 that was launched to create the training dataset.
         """
         td, td_job = self._feature_view_engine.recreate_training_dataset(
-            self, version, write_options
+            self, training_dataset_version, write_options
         )
         return td_job
 
@@ -1766,11 +1835,12 @@ class FeatureView:
             ```
 
         # Arguments
+            training_dataset_version: training dataset version
             name: Name of the tag to be added.
             value: Value of the tag to be added.
 
         # Raises
-            `RestAPIError` in case the backend fails to add the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to add the tag.
         """
         return self._feature_view_engine.add_tag(
             self, name, value, training_dataset_version=training_dataset_version
@@ -1795,13 +1865,14 @@ class FeatureView:
             ```
 
         # Arguments
+            training_dataset_version: training dataset version
             name: Name of the tag to get.
 
         # Returns
             tag value
 
         # Raises
-            `RestAPIError` in case the backend fails to retrieve the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tag.
         """
         return self._feature_view_engine.get_tag(
             self, name, training_dataset_version=training_dataset_version
@@ -1828,7 +1899,7 @@ class FeatureView:
             `Dict[str, obj]` of tags.
 
         # Raises
-            `RestAPIError` in case the backend fails to retrieve the tags.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._feature_view_engine.get_tags(
             self, training_dataset_version=training_dataset_version
@@ -1853,16 +1924,17 @@ class FeatureView:
             ```
 
         # Arguments
+            training_dataset_version: training dataset version
             name: Name of the tag to be removed.
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the tag.
         """
         return self._feature_view_engine.delete_tag(
             self, name, training_dataset_version=training_dataset_version
         )
 
-    def purge_training_data(self, version: int):
+    def purge_training_data(self, training_dataset_version: int):
         """Delete a training dataset (data only).
 
         !!! example
@@ -1874,17 +1946,17 @@ class FeatureView:
             feature_view = fs.get_feature_view(...)
 
             # purge training data
-            feature_view.purge_training_data(version=1)
+            feature_view.purge_training_data(training_dataset_version=1)
             ```
 
         # Arguments
-            version: Version of the training dataset to be removed.
+            training_dataset_version: Version of the training dataset to be removed.
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the training dataset.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training dataset.
         """
         self._feature_view_engine.delete_training_dataset_only(
-            self, training_data_version=version
+            self, training_data_version=training_dataset_version
         )
 
     def purge_all_training_data(self):
@@ -1903,11 +1975,11 @@ class FeatureView:
             ```
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the training datasets.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training datasets.
         """
         self._feature_view_engine.delete_training_dataset_only(self)
 
-    def delete_training_dataset(self, version: int):
+    def delete_training_dataset(self, training_dataset_version: int):
         """Delete a training dataset.
 
         !!! example
@@ -1920,18 +1992,18 @@ class FeatureView:
 
             # delete a training dataset
             feature_view.delete_training_dataset(
-                version=1
+                training_dataset_version=1
             )
             ```
 
         # Arguments
-            version: Version of the training dataset to be removed.
+            training_dataset_version: Version of the training dataset to be removed.
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the training dataset.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training dataset.
         """
         self._feature_view_engine.delete_training_data(
-            self, training_data_version=version
+            self, training_data_version=training_dataset_version
         )
 
     def delete_all_training_datasets(self):
@@ -1950,7 +2022,7 @@ class FeatureView:
             ```
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the training datasets.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training datasets.
         """
         self._feature_view_engine.delete_training_data(self)
 
