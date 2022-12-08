@@ -48,11 +48,13 @@ class FeatureView:
         description: Optional[str] = "",
         labels: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
+        featurestore_name=None,
     ):
         self._name = name
         self._id = id
         self._query = query
         self._featurestore_id = featurestore_id
+        self._feature_store_name = featurestore_name
         self._version = version
         self._description = description
         self._labels = labels
@@ -537,6 +539,21 @@ class FeatureView:
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._feature_view_engine.get_tags(self)
+
+    def get_parent_feature_groups(self):
+        """Get the parents of this feature view, based on explicit provenance.
+        Parents are feature groups or external feature groups. These feature
+        groups can be accessible, deleted or inaccessible.
+        For deleted and inaccessible feature groups, only a minimal information is
+        returned.
+
+        # Arguments
+            feature_view_obj: Metadata object of feature view.
+
+        # Returns
+            `ProvenanceLinks`:  the feature groups used to generated this feature view
+        """
+        return self._feature_view_engine.get_parent_feature_groups(self)
 
     def delete_tag(self, name: str):
         """Delete a tag attached to a feature view.
@@ -2042,6 +2059,7 @@ class FeatureView:
             featurestore_id=json_decamelized["featurestore_id"],
             version=json_decamelized.get("version", None),
             description=json_decamelized.get("description", None),
+            featurestore_name=json_decamelized.get("featurestore_name", None),
         )
         features = json_decamelized.get("features", [])
         if features:
@@ -2105,6 +2123,11 @@ class FeatureView:
     @featurestore_id.setter
     def featurestore_id(self, id):
         self._featurestore_id = id
+
+    @property
+    def feature_store_name(self):
+        """Name of the feature store in which the feature group is located."""
+        return self._feature_store_name
 
     @property
     def name(self):
