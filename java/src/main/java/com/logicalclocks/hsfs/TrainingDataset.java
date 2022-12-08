@@ -155,7 +155,7 @@ public class TrainingDataset {
     this.name = name;
     this.version = version;
     this.description = description;
-    this.dataFormat = dataFormat != null ? dataFormat : DataFormat.CSV;
+    this.dataFormat = dataFormat != null ? dataFormat : DataFormat.PARQUET;
     this.coalesce = coalesce != null ? coalesce : false;
     this.location = location;
     this.storageConnector = storageConnector;

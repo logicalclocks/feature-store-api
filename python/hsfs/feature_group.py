@@ -728,6 +728,7 @@ class FeatureGroupBase:
             ValidationReport,
             ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
         ],
+        ingestion_result: str = "UNKNOWN",
         ge_type: bool = True,
     ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]:
         """Save validation report to hopsworks platform along previous reports of the same Feature Group.
@@ -738,13 +739,23 @@ class FeatureGroupBase:
             fs = ...
 
             # get the Feature Group instance
-            fg = fs.get_or_create_feature_group(...)
+            fg = fs.get_or_create_feature_group(..., expectation_suite=expectation_suite)
 
-            fg.save_validation_report(validation_report, run_validation=True)
+            validation_report = great_expectations.from_pandas(
+                my_experimental_features_df,
+                fg.get_expectation_suite()).validate()
+
+            fg.save_validation_report(validation_report, ingestion_result="EXPERIMENT")
             ```
 
         # Arguments
             validation_report: The validation report to attach to the Feature Group.
+            ingestion_result: Specify the fate of the associated data, defaults
+                to "UNKNOWN". Supported options are  "UNKNOWN", "INGESTED", "REJECTED",
+                "EXPERIMENT", "FG_DATA". Use "INGESTED" or "REJECTED" for validation
+                of DataFrames to be inserted in the Feature Group. Use "EXPERIMENT"
+                for testing and development and "FG_DATA" when validating data
+                already in the Feature Group.
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
                 method on hopsworks type. Defaults to `True`.
@@ -757,11 +768,18 @@ class FeatureGroupBase:
                 validation_report,
                 ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
             ):
-                report = ValidationReport(**validation_report.to_json_dict())
+                report = ValidationReport(
+                    **validation_report.to_json_dict(),
+                    ingestion_result=ingestion_result,
+                )
             elif isinstance(validation_report, dict):
-                report = ValidationReport(**validation_report)
+                report = ValidationReport(
+                    **validation_report, ingestion_result=ingestion_result
+                )
             elif isinstance(validation_report, ValidationReport):
                 report = validation_report
+                if ingestion_result != "UNKNOWN":
+                    report.ingestion_result = ingestion_result
 
             return self._validation_report_engine.save(
                 validation_report=report, ge_type=ge_type
@@ -776,8 +794,7 @@ class FeatureGroupBase:
         expectation_id: int,
         start_validation_time: Union[str, int, datetime, date, None] = None,
         end_validation_time: Union[str, int, datetime, date, None] = None,
-        ingested_only: bool = False,
-        rejected_only: bool = False,
+        filter_by: List[str] = [],
         ge_type: bool = True,
     ) -> Union[List[ValidationResult], List[ge.core.ExpectationValidationResult]]:
         """Fetch validation history of an Expectation specified by its id.
@@ -786,7 +803,7 @@ class FeatureGroupBase:
         ```python3
         validation_history = fg.get_validation_history(
             expectation_id=1,
-            ingested_only=True,
+            fliter_by=["REJECTED", "UNKNOWN"],
             start_validation_time="2022-01-01 00:00:00",
             end_validation_time=datetime.datetime.now(),
             ge_type=False
@@ -795,8 +812,7 @@ class FeatureGroupBase:
 
         # Arguments
             expectation_id: id of the Expectation for which to fetch the validation history
-            ingested_only: fetch only validation result corresponding to an insertion, defaults to False.
-            rejected_only: fetch only validation result corresponding to a rejection, defaults to False.
+            filter_by: list of ingestion_result category to keep. Ooptions are "INGESTED", "REJECTED", "FG_DATA", "EXPERIMENT", "UNKNOWN".
             start_validation_time: fetch only validation result posterior to the provided time, inclusive.
             Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
             end_validation_time: fetch only validation result prior to the provided time, inclusive.
@@ -813,8 +829,7 @@ class FeatureGroupBase:
                 expectation_id=expectation_id,
                 start_validation_time=start_validation_time,
                 end_validation_time=end_validation_time,
-                ingested_only=ingested_only,
-                rejected_only=rejected_only,
+                filter_by=filter_by,
                 ge_type=ge_type,
             )
         else:
@@ -1765,6 +1780,7 @@ class FeatureGroup(FeatureGroupBase):
         expectation_suite: Optional[ExpectationSuite] = None,
         save_report: Optional[bool] = False,
         validation_options: Optional[Dict[Any, Any]] = {},
+        ingestion_result: str = "UNKNOWN",
         ge_type: bool = True,
     ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
         """Run validation based on the attached expectations.
@@ -1792,6 +1808,12 @@ class FeatureGroup(FeatureGroupBase):
             validation_options: Additional validation options as key-value pairs, defaults to `{}`.
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+            ingestion_result: Specify the fate of the associated data, defaults
+                to "UNKNOWN". Supported options are  "UNKNOWN", "INGESTED", "REJECTED",
+                "EXPERIMENT", "FG_DATA". Use "INGESTED" or "REJECTED" for validation
+                of DataFrames to be inserted in the Feature Group. Use "EXPERIMENT"
+                for testing and development and "FG_DATA" when validating data
+                already in the Feature Group.
             save_report: Whether to save the report to the backend. This is only possible if the Expectation suite
                 is initialised and attached to the Feature Group. Defaults to False.
             ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.
@@ -1802,6 +1824,8 @@ class FeatureGroup(FeatureGroupBase):
         # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()
+            if ingestion_result == "UNKNOWN":
+                ingestion_result = "FG_DATA"
 
         return self._great_expectation_engine.validate(
             self,
@@ -1809,6 +1833,7 @@ class FeatureGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             save_report=save_report,
             validation_options=validation_options,
+            ingestion_result=ingestion_result,
             ge_type=ge_type,
         )
 
