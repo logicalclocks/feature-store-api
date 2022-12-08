@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import decimal
 
 import pytest
 import pandas as pd
@@ -30,10 +31,11 @@ from hsfs import (
     util,
 )
 from hsfs.engine import python
-from hsfs.core import inode, execution
+from hsfs.core import inode, execution, job
 from hsfs.constructor import query
 from hsfs.client import exceptions
 from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
+from hsfs.training_dataset_feature import TrainingDatasetFeature
 
 
 class TestPython:
@@ -573,6 +575,66 @@ class TestPython:
         # Assert
         assert mock_python_engine_sql.call_count == 1
 
+    def test_cast_columns(self, mocker):
+        class LabelIndex:
+            def __init__(self, label, index):
+                self.label = label
+                self.index = index
+
+        python_engine = python.Engine()
+        d = {
+            "string": ["s"],
+            "bigint": [1],
+            "int": [1],
+            "smallint": [1],
+            "tinyint": [1],
+            "float": [1],
+            "double": [1],
+            "timestamp": [1641340800000],
+            "boolean": ["False"],
+            "date": ["2022-01-27"],
+            "binary": [b"1"],
+            "array<string>": ["['123']"],
+            "struc": ["{'label':'blue','index':45}"],
+            "decimal": ["1.1"],
+        }
+        df = pd.DataFrame(data=d)
+        schema = [
+            TrainingDatasetFeature("string", type="string"),
+            TrainingDatasetFeature("bigint", type="bigint"),
+            TrainingDatasetFeature("int", type="int"),
+            TrainingDatasetFeature("smallint", type="smallint"),
+            TrainingDatasetFeature("tinyint", type="tinyint"),
+            TrainingDatasetFeature("float", type="float"),
+            TrainingDatasetFeature("double", type="double"),
+            TrainingDatasetFeature("timestamp", type="timestamp"),
+            TrainingDatasetFeature("boolean", type="boolean"),
+            TrainingDatasetFeature("date", type="date"),
+            TrainingDatasetFeature("binary", type="binary"),
+            TrainingDatasetFeature("array<string>", type="array<string>"),
+            TrainingDatasetFeature("struc", type="struct<label:string,index:int>"),
+            TrainingDatasetFeature("decimal", type="decimal"),
+        ]
+        cast_df = python_engine.cast_columns(df, schema)
+        expected = {
+            "string": object,
+            "bigint": pd.Int64Dtype(),
+            "int": pd.Int32Dtype(),
+            "smallint": pd.Int16Dtype(),
+            "tinyint": pd.Int8Dtype(),
+            "float": np.dtype("float32"),
+            "double": np.dtype("float64"),
+            "timestamp": np.dtype("datetime64[ns]"),
+            "boolean": pd.BooleanDtype(),
+            "date": np.dtype(date),
+            "binary": object,
+            "array<string>": object,
+            "struc": object,
+            "decimal": np.dtype(decimal.Decimal),
+        }
+        for col in cast_df.columns:
+            assert cast_df[col].dtype == expected[col]
+
     def test_register_external_temporary_table(self, mocker):
         # Arrange
         python_engine = python.Engine()
@@ -922,7 +984,7 @@ class TestPython:
 
     def test_parse_schema_feature_group(self, mocker):
         # Arrange
-        mocker.patch("hsfs.engine.python.Engine._convert_pandas_type")
+        mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
 
         python_engine = python.Engine()
 
@@ -956,16 +1018,16 @@ class TestPython:
     def test_convert_pandas_type(self, mocker):
         # Arrange
         mock_python_engine_infer_type_pyarrow = mocker.patch(
-            "hsfs.engine.python.Engine._infer_type_pyarrow"
+            "hsfs.engine.python.Engine._convert_pandas_object_type_to_offline_type"
         )
         mock_python_engine_convert_simple_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_simple_pandas_type"
+            "hsfs.engine.python.Engine._convert_simple_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
 
         # Act
-        python_engine._convert_pandas_type(dtype=None, arrow_type=None)
+        python_engine._convert_pandas_dtype_to_offline_type(dtype=None, arrow_type=None)
 
         # Assert
         assert mock_python_engine_infer_type_pyarrow.call_count == 0
@@ -974,16 +1036,18 @@ class TestPython:
     def test_convert_pandas_type_object(self, mocker):
         # Arrange
         mock_python_engine_infer_type_pyarrow = mocker.patch(
-            "hsfs.engine.python.Engine._infer_type_pyarrow"
+            "hsfs.engine.python.Engine._convert_pandas_object_type_to_offline_type"
         )
         mock_python_engine_convert_simple_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_simple_pandas_type"
+            "hsfs.engine.python.Engine._convert_simple_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
 
         # Act
-        python_engine._convert_pandas_type(dtype=np.dtype("O"), arrow_type=None)
+        python_engine._convert_pandas_dtype_to_offline_type(
+            dtype=np.dtype("O"), arrow_type=None
+        )
 
         # Assert
         assert mock_python_engine_infer_type_pyarrow.call_count == 1
@@ -994,7 +1058,9 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("uint8"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            dtype=np.dtype("uint8")
+        )
 
         # Assert
         assert result == "int"
@@ -1004,7 +1070,9 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("uint16"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            dtype=np.dtype("uint16")
+        )
 
         # Assert
         assert result == "int"
@@ -1014,7 +1082,9 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("int8"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            dtype=np.dtype("int8")
+        )
 
         # Assert
         assert result == "int"
@@ -1024,7 +1094,9 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("int16"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            dtype=np.dtype("int16")
+        )
 
         # Assert
         assert result == "int"
@@ -1034,7 +1106,9 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("int32"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            dtype=np.dtype("int32")
+        )
 
         # Assert
         assert result == "int"
@@ -1044,7 +1118,9 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("uint32"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            dtype=np.dtype("uint32")
+        )
 
         # Assert
         assert result == "bigint"
@@ -1054,7 +1130,9 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("int64"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            dtype=np.dtype("int64")
+        )
 
         # Assert
         assert result == "bigint"
@@ -1064,7 +1142,9 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("float16"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            dtype=np.dtype("float16")
+        )
 
         # Assert
         assert result == "float"
@@ -1074,7 +1154,9 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("float32"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            dtype=np.dtype("float32")
+        )
 
         # Assert
         assert result == "float"
@@ -1084,7 +1166,9 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("float64"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            dtype=np.dtype("float64")
+        )
 
         # Assert
         assert result == "double"
@@ -1094,7 +1178,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
             dtype=np.dtype("datetime64[ns]")
         )
 
@@ -1106,7 +1190,9 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype=np.dtype("bool"))
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            dtype=np.dtype("bool")
+        )
 
         # Assert
         assert result == "boolean"
@@ -1116,7 +1202,9 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_simple_pandas_type(dtype="category")
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            dtype="category"
+        )
 
         # Assert
         assert result == "string"
@@ -1127,7 +1215,7 @@ class TestPython:
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            python_engine._convert_simple_pandas_type(dtype="other")
+            python_engine._convert_simple_pandas_dtype_to_offline_type(dtype="other")
 
         # Assert
         assert str(e_info.value) == "dtype 'other' not supported"
@@ -1135,7 +1223,7 @@ class TestPython:
     def test_infer_type_pyarrow_list(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1143,7 +1231,9 @@ class TestPython:
         mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
-        result = python_engine._infer_type_pyarrow(arrow_type=pa.list_(pa.int8()))
+        result = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_type=pa.list_(pa.int8())
+        )
 
         # Assert
         assert result == "array<test>"
@@ -1151,7 +1241,7 @@ class TestPython:
     def test_infer_type_pyarrow_struct(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1159,7 +1249,9 @@ class TestPython:
         mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
-        result = python_engine._infer_type_pyarrow(arrow_type=pa.struct({}))
+        result = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_type=pa.struct({})
+        )
 
         # Assert
         assert result == "struct<>"
@@ -1167,7 +1259,7 @@ class TestPython:
     def test_infer_type_pyarrow_date(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1175,7 +1267,9 @@ class TestPython:
         mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
-        result = python_engine._infer_type_pyarrow(arrow_type=pa.date32())
+        result = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_type=pa.date32()
+        )
 
         # Assert
         assert result == "date"
@@ -1183,7 +1277,7 @@ class TestPython:
     def test_infer_type_pyarrow_binary(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1191,7 +1285,9 @@ class TestPython:
         mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
-        result = python_engine._infer_type_pyarrow(arrow_type=pa.binary())
+        result = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_type=pa.binary()
+        )
 
         # Assert
         assert result == "binary"
@@ -1199,7 +1295,7 @@ class TestPython:
     def test_infer_type_pyarrow_string(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1207,7 +1303,9 @@ class TestPython:
         mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
-        result = python_engine._infer_type_pyarrow(arrow_type=pa.string())
+        result = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_type=pa.string()
+        )
 
         # Assert
         assert result == "string"
@@ -1215,7 +1313,7 @@ class TestPython:
     def test_infer_type_pyarrow_utf8(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1223,7 +1321,9 @@ class TestPython:
         mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
-        result = python_engine._infer_type_pyarrow(arrow_type=pa.utf8())
+        result = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_type=pa.utf8()
+        )
 
         # Assert
         assert result == "string"
@@ -1231,7 +1331,7 @@ class TestPython:
     def test_infer_type_pyarrow_other(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_type"
+            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
         )
 
         python_engine = python.Engine()
@@ -1240,7 +1340,9 @@ class TestPython:
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            python_engine._infer_type_pyarrow(arrow_type=pa.bool_())
+            python_engine._convert_pandas_object_type_to_offline_type(
+                arrow_type=pa.bool_()
+            )
 
         # Assert
         assert str(e_info.value) == "dtype 'O' (arrow_type 'bool') not supported"
@@ -1325,12 +1427,14 @@ class TestPython:
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mock_dataset_api = mocker.patch("hsfs.core.dataset_api.DatasetApi")
         mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-        mocker.patch("hsfs.engine.python.Engine._get_job_url")
-        mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine._wait_for_job"
-        )
+        mocker.patch("hsfs.engine.python.Engine.get_job_url")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
 
         python_engine = python.Engine()
+
+        mock_fg_api.return_value.ingestion.return_value.job = job.Job(
+            1, "test_job", None, None, None, None
+        )
 
         # Act
         python_engine.legacy_save_dataframe(
@@ -1339,7 +1443,7 @@ class TestPython:
             operation=None,
             online_enabled=None,
             storage=None,
-            offline_write_options=None,
+            offline_write_options={},
             online_write_options=None,
             validation_id=None,
         )
@@ -1348,7 +1452,7 @@ class TestPython:
         assert mock_fg_api.return_value.ingestion.call_count == 1
         assert mock_dataset_api.return_value.upload.call_count == 1
         assert mock_job_api.return_value.launch.call_count == 1
-        assert mock_python_engine_wait_for_job.call_count == 1
+        assert mock_engine_get_instance.return_value.get_job_url.call_count == 1
 
     def test_get_training_data(self, mocker):
         # Arrange
@@ -1850,9 +1954,9 @@ class TestPython:
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mocker.patch("hsfs.engine.python.Engine._get_job_url")
+        mocker.patch("hsfs.engine.python.Engine.get_job_url")
         mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine._wait_for_job"
+            "hsfs.engine.python.Engine.wait_for_job"
         )
 
         python_engine = python.Engine()
@@ -1883,9 +1987,9 @@ class TestPython:
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mocker.patch("hsfs.engine.python.Engine._get_job_url")
+        mocker.patch("hsfs.engine.python.Engine.get_job_url")
         mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine._wait_for_job"
+            "hsfs.engine.python.Engine.wait_for_job"
         )
 
         python_engine = python.Engine()
@@ -1923,9 +2027,9 @@ class TestPython:
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mocker.patch("hsfs.engine.python.Engine._get_job_url")
+        mocker.patch("hsfs.engine.python.Engine.get_job_url")
         mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine._wait_for_job"
+            "hsfs.engine.python.Engine.wait_for_job"
         )
 
         python_engine = python.Engine()
@@ -2104,7 +2208,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._get_job_url(href="1/2/3/4/5/6/7/8")
+        python_engine.get_job_url(href="1/2/3/4/5/6/7/8")
 
         # Assert
         assert (
@@ -2136,7 +2240,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._wait_for_job(job=None, user_write_options=None)
+        python_engine.wait_for_job(job=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2148,7 +2252,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._wait_for_job(job=None, user_write_options={"wait_for_job": True})
+        python_engine.wait_for_job(job=None, await_termination=True)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2160,9 +2264,7 @@ class TestPython:
         python_engine = python.Engine()
 
         # Act
-        python_engine._wait_for_job(
-            job=None, user_write_options={"wait_for_job": False}
-        )
+        python_engine.wait_for_job(job=None, await_termination=False)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 0
@@ -2178,7 +2280,7 @@ class TestPython:
         ]
 
         # Act
-        python_engine._wait_for_job(job=None, user_write_options=None)
+        python_engine.wait_for_job(job=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2195,7 +2297,7 @@ class TestPython:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            python_engine._wait_for_job(job=None, user_write_options=None)
+            python_engine.wait_for_job(job=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2216,7 +2318,7 @@ class TestPython:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            python_engine._wait_for_job(job=None, user_write_options=None)
+            python_engine.wait_for_job(job=None)
 
         # Assert
         assert mock_job_api.return_value.last_execution.call_count == 1
@@ -2302,10 +2404,12 @@ class TestPython:
         mock_python_engine_kafka_produce = mocker.patch(
             "hsfs.engine.python.Engine._kafka_produce"
         )
-        mocker.patch("hsfs.core.job_api.JobApi")  # get, launch
-        mocker.patch("hsfs.engine.python.Engine._get_job_url")
-        mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine._wait_for_job"
+        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
+        mocker.patch("hsfs.engine.python.Engine.get_job_url")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+
+        mock_job_api.return_value.get.return_value = job.Job(
+            1, "test_job", None, None, None, None
         )
 
         python_engine = python.Engine()
@@ -2331,7 +2435,7 @@ class TestPython:
 
         # Assert
         assert mock_python_engine_kafka_produce.call_count == 4
-        assert mock_python_engine_wait_for_job.call_count == 1
+        assert mock_engine_get_instance.return_value.wait_for_job.call_count == 1
 
     def test_kafka_produce(self, mocker):
         # Arrange

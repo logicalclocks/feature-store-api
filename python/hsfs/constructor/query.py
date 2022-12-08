@@ -106,13 +106,23 @@ class Query:
         """
         sql_query, online_conn = self._prep_read(online, read_options)
 
+        schema = self._collect_features()
+
         return engine.get_instance().sql(
             sql_query,
             self._feature_store_name,
             online_conn,
             dataframe_type,
             read_options,
+            schema,
         )
+
+    def _collect_features(self):
+        features = []
+        features.extend(self._left_features)
+        for j in self.joins:
+            features.extend(j._collect_features())
+        return features
 
     def show(self, n: int, online: Optional[bool] = False):
         """Show the first N rows of the Query.

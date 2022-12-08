@@ -51,14 +51,12 @@ class TestValidationResultEngine:
         feature_group_id = 10
         value_error_inputs = [
             {
-                "ingested_only": True,
-                "rejected_only": True,
+                "filter_by": ["UNKNOWN", "INSERTED"],
                 "start_validation_time": None,
                 "end_validation_time": None,
             },
             {
-                "ingested_only": False,
-                "rejected_only": True,
+                "filter_by": ["ingested", "EXPEIRMENT"],
                 "start_validation_time": datetime.now(),
                 "end_validation_time": datetime(2022, 1, 1, 0, 0, 0),
             },
@@ -66,26 +64,22 @@ class TestValidationResultEngine:
 
         correct_inputs = [
             {
-                "ingested_only": False,
-                "rejected_only": True,
+                "filter_by": ["ingested", "EXPERIMENT"],
                 "start_validation_time": datetime(2022, 1, 1, 0, 0, 0),
                 "end_validation_time": datetime.now(),
             },
             {
-                "ingested_only": True,
-                "rejected_only": False,
+                "filter_by": ["UNKNOWN"],
                 "start_validation_time": date.fromisoformat("2022-01-01"),
                 "end_validation_time": None,
             },
             {
-                "ingested_only": False,
-                "rejected_only": False,
+                "filter_by": ["REJECTED", "FG_DATA"],
                 "start_validation_time": 12,
                 "end_validation_time": "2022-01-01",
             },
             {
-                "ingested_only": False,
-                "rejected_only": False,
+                "filter_by": [],
                 "start_validation_time": None,
                 "end_validation_time": None,
             },
@@ -112,8 +106,9 @@ class TestValidationResultEngine:
             assert "limit" not in correct_output.keys()
 
         # First case
-        assert len(correct_outputs[0]["filter_by"]) == 3
-        assert "ingestion_result_eq:rejected" in correct_outputs[0]["filter_by"]
+        assert len(correct_outputs[0]["filter_by"]) == 4
+        assert "ingestion_result_eq:INGESTED" in correct_outputs[0]["filter_by"]
+        assert "ingestion_result_eq:EXPERIMENT" in correct_outputs[0]["filter_by"]
         filter_validation_gte = [
             val
             for val in filter(
@@ -137,7 +132,7 @@ class TestValidationResultEngine:
 
         # Second case
         assert len(correct_outputs[1]["filter_by"]) == 2
-        assert "ingestion_result_eq:ingested" in correct_outputs[1]["filter_by"]
+        assert "ingestion_result_eq:UNKNOWN" in correct_outputs[1]["filter_by"]
         filter_validation_gte = [
             val
             for val in filter(
@@ -157,7 +152,9 @@ class TestValidationResultEngine:
         assert len(filter_validation_lte) == 0
 
         # Third case
-        assert len(correct_outputs[2]["filter_by"]) == 2
+        assert len(correct_outputs[2]["filter_by"]) == 4
+        assert "ingestion_result_eq:REJECTED" in correct_outputs[2]["filter_by"]
+        assert "ingestion_result_eq:FG_DATA" in correct_outputs[2]["filter_by"]
         filter_validation_gte = [
             val
             for val in filter(
