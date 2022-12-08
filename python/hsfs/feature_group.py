@@ -788,8 +788,7 @@ class FeatureGroupBase:
         expectation_id: int,
         start_validation_time: Union[str, int, datetime, date, None] = None,
         end_validation_time: Union[str, int, datetime, date, None] = None,
-        ingested_only: bool = False,
-        rejected_only: bool = False,
+        filter_by: List[str] = [],
         ge_type: bool = True,
     ) -> Union[List[ValidationResult], List[ge.core.ExpectationValidationResult]]:
         """Fetch validation history of an Expectation specified by its id.
@@ -798,7 +797,7 @@ class FeatureGroupBase:
         ```python3
         validation_history = fg.get_validation_history(
             expectation_id=1,
-            ingested_only=True,
+            fliter_by=["REJECTED", "UNKNOWN"],
             start_validation_time="2022-01-01 00:00:00",
             end_validation_time=datetime.datetime.now(),
             ge_type=False
@@ -807,8 +806,7 @@ class FeatureGroupBase:
 
         # Arguments
             expectation_id: id of the Expectation for which to fetch the validation history
-            ingested_only: fetch only validation result corresponding to an insertion, defaults to False.
-            rejected_only: fetch only validation result corresponding to a rejection, defaults to False.
+            filter_by: list of ingestion_result category to keep. Ooptions are "INGESTED", "REJECTED", "FG_DATA", "EXPERIMENT", "UNKNOWN".
             start_validation_time: fetch only validation result posterior to the provided time, inclusive.
             Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
             end_validation_time: fetch only validation result prior to the provided time, inclusive.
@@ -825,8 +823,7 @@ class FeatureGroupBase:
                 expectation_id=expectation_id,
                 start_validation_time=start_validation_time,
                 end_validation_time=end_validation_time,
-                ingested_only=ingested_only,
-                rejected_only=rejected_only,
+                filter_by=filter_by,
                 ge_type=ge_type,
             )
         else:
