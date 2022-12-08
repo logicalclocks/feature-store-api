@@ -97,6 +97,12 @@ class FeatureView:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
+        warnings.warn(
+            "All jobs associated to feature view `{}`, version `{}` will be removed.".format(
+                self._name, self._version
+            ),
+            util.JobWarning,
+        )
         self._feature_view_engine.delete(self.name, self.version)
 
     @staticmethod
