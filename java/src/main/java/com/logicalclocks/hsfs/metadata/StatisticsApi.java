@@ -22,10 +22,8 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureView;
 import com.logicalclocks.hsfs.TrainingDataset;
 import lombok.NonNull;
-import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,14 +91,10 @@ public class StatisticsApi {
 
   private Statistics post(String uri, Statistics statistics) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = getInstance();
-    String statisticsJson = hopsworksClient.getObjectMapper().writeValueAsString(statistics);
-    HttpPost postRequest = new HttpPost(uri);
-    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    postRequest.setEntity(new StringEntity(statisticsJson));
 
     LOGGER.info("Sending metadata request: " + uri);
-    LOGGER.info(statisticsJson);
-
+    HttpPost postRequest = new HttpPost(uri);
+    postRequest.setEntity(hopsworksClient.buildStringEntity(statistics));
     return hopsworksClient.handleRequest(postRequest, Statistics.class);
   }
 

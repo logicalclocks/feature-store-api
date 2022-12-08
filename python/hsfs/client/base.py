@@ -137,7 +137,7 @@ class Client(ABC):
         :type stream: boolean, optional
         :param files: dictionary for multipart encoding upload
         :type files: dict, optional
-        :raises RestAPIError: Raised when request wasn't correctly received, understood or accepted
+        :raises hsfs.client.exceptions.RestAPIError: Raised when request wasn't correctly received, understood or accepted
         :return: Response json
         :rtype: dict
         """

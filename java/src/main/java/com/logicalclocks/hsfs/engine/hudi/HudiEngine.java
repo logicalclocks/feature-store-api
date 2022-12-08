@@ -75,8 +75,9 @@ public class HudiEngine {
   protected static final String HUDI_HIVE_SYNC_ENABLE = "hoodie.datasource.hive_sync.enable";
   protected static final String HUDI_HIVE_SYNC_TABLE = "hoodie.datasource.hive_sync.table";
   protected static final String HUDI_HIVE_SYNC_DB = "hoodie.datasource.hive_sync.database";
-  protected static final String HUDI_HIVE_SYNC_JDBC_URL =
-      "hoodie.datasource.hive_sync.jdbcurl";
+  protected static final String HUDI_HIVE_SYNC_MODE =
+      "hoodie.datasource.hive_sync.mode";
+  protected static final String HUDI_HIVE_SYNC_MODE_VAL = "hms";
   protected static final String HUDI_HIVE_SYNC_PARTITION_FIELDS =
       "hoodie.datasource.hive_sync.partition_fields";
   protected static final String HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY =
@@ -245,8 +246,8 @@ public class HudiEngine {
 
     // Hive args
     hudiArgs.put(HUDI_HIVE_SYNC_ENABLE, "true");
+    hudiArgs.put(HUDI_HIVE_SYNC_MODE, HUDI_HIVE_SYNC_MODE_VAL);
     hudiArgs.put(HUDI_HIVE_SYNC_TABLE, tableName);
-    hudiArgs.put(HUDI_HIVE_SYNC_JDBC_URL, utils.getHiveServerConnection(featureGroup));
     hudiArgs.put(HUDI_HIVE_SYNC_DB, featureGroup.getFeatureStore().getName());
     hudiArgs.put(HIVE_AUTO_CREATE_DATABASE_OPT_KEY, HIVE_AUTO_CREATE_DATABASE_OPT_VAL);
     hudiArgs.put(HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP, "true");

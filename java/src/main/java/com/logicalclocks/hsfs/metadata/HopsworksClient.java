@@ -31,6 +31,8 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,5 +162,11 @@ public class HopsworksClient {
 
   public <T> T handleRequest(HttpRequest request) throws IOException, FeatureStoreException {
     return hopsworksHttpClient.handleRequest(request, null);
+  }
+
+  public StringEntity buildStringEntity(Object object) throws IOException {
+    String jsonStrRepresentation = objectMapper.writeValueAsString(object);
+    LOGGER.debug("Request content: " + jsonStrRepresentation);
+    return new StringEntity(jsonStrRepresentation, ContentType.APPLICATION_JSON);
   }
 }

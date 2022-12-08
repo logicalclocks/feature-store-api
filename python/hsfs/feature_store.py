@@ -135,8 +135,7 @@ class FeatureStore:
             `FeatureGroup`: The feature group metadata object.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
-
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         if version is None:
             warnings.warn(
@@ -174,8 +173,7 @@ class FeatureStore:
             `FeatureGroup`: List of feature group metadata objects.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
-
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         return self._feature_group_api.get(
             name, None, feature_group_api.FeatureGroupApi.CACHED
@@ -200,8 +198,7 @@ class FeatureStore:
             `ExternalFeatureGroup`: The external feature group metadata object.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
-
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         return self.get_external_feature_group(name, version)
 
@@ -228,8 +225,7 @@ class FeatureStore:
             `ExternalFeatureGroup`: The external feature group metadata object.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
-
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
 
         if version is None:
@@ -261,7 +257,7 @@ class FeatureStore:
             `ExternalFeatureGroup`: List of external feature group metadata objects.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         return self.get_external_feature_groups(name)
 
@@ -279,6 +275,7 @@ class FeatureStore:
 
             external_fgs_list = fs.get_external_feature_groups("external_fg_test")
             ```
+
         # Arguments
             name: Name of the external feature group to get.
 
@@ -286,7 +283,7 @@ class FeatureStore:
             `ExternalFeatureGroup`: List of external feature group metadata objects.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         return self._feature_group_api.get(
             name, None, feature_group_api.FeatureGroupApi.ONDEMAND
@@ -315,7 +312,7 @@ class FeatureStore:
             `TrainingDataset`: The training dataset metadata object.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
 
         if version is None:
@@ -344,7 +341,7 @@ class FeatureStore:
             `TrainingDataset`: List of training dataset metadata objects.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
         return self._training_dataset_api.get(name, None)
 
@@ -984,16 +981,18 @@ class FeatureStore:
 
         !!! example
             ```python
-            from custom_functions import transformations
+            # define function
+            def plus_one(value):
+                return value + 1
 
-
-            # connect to the Feature Store
-            fs = ...
-
+            # create transformation function
             plus_one_meta = fs.create_transformation_function(
-                                    transformation_function=transformations.plus_one,
-                                    output_type=int,
-                                    version=1)
+                    transformation_function=plus_one,
+                    output_type=int,
+                    version=1
+                )
+
+            # persist transformation function in backend
             plus_one_meta.save()
             ```
 
@@ -1023,18 +1022,95 @@ class FeatureStore:
     ):
         """Get  transformation function metadata object.
 
-        !!! example
+        !!! example "Get transformation function by name. This will default to version 1"
             ```python
-            # connect to the Feature Store
+            # get feature store instance
             fs = ...
 
-            label_encoder_obj = fs.get_transformation_function(name='label_encoder')
+            # get transformation function metadata object
+            plus_one_fn = fs.get_transformation_function(name="plus_one")
+            ```
+
+        !!! example "Get built-in transformation function min max scaler"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get transformation function metadata object
+            min_max_scaler_fn = fs.get_transformation_function(name="min_max_scaler")
+            ```
+
+        !!! example "Get transformation function by name and version"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get transformation function metadata object
+            min_max_scaler = fs.get_transformation_function(name="min_max_scaler", version=2)
+            ```
+
+        You can define in the feature view transformation functions as dict, where key is feature name and value is online transformation function instance.
+        Then the transformation functions are applied when you read training data, get batch data, or get feature vector(s).
+
+        !!! example "Attach transformation functions to the feature view"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # define query object
+            query = ...
+
+            # get transformation function metadata object
+            min_max_scaler = fs.get_transformation_function(name="min_max_scaler", version=1)
+
+            # attach transformation functions
+            feature_view = fs.create_feature_view(
+                name='feature_view_name',
+                query=query,
+                labels=["target_column"],
+                transformation_functions={
+                    "column_to_transform": min_max_scaler
+                }
+            )
+            ```
+
+        Built-in transformation functions are attached in the same way.
+        The only difference is that it will compute the necessary statistics for the specific function in the background.
+        For example min and max values for `min_max_scaler`; mean and standard deviation for `standard_scaler` etc.
+
+        !!! example "Attach built-in transformation functions to the feature view"
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # define query object
+            query = ...
+
+            # retrieve transformation functions
+            min_max_scaler = fs.get_transformation_function(name="min_max_scaler")
+            standard_scaler = fs.get_transformation_function(name="standard_scaler")
+            robust_scaler = fs.get_transformation_function(name="robust_scaler")
+            label_encoder = fs.get_transformation_function(name="label_encoder")
+
+            # attach built-in transformation functions while creating feature view
+            feature_view = fs.create_feature_view(
+                name='transactions_view',
+                query=query,
+                labels=["fraud_label"],
+                transformation_functions = {
+                    "category_column": label_encoder,
+                    "weight": robust_scaler,
+                    "age": min_max_scaler,
+                    "salary": standard_scaler
+                }
+            )
             ```
 
         # Arguments
             name: name of transformation function.
             version: version of transformation function. Optional, if not provided all functions that match to provided
-                name will be retrieved .
+                name will be retrieved.
+
         # Returns:
             `TransformationFunction`: The TransformationFunction metadata object.
         """
@@ -1043,12 +1119,13 @@ class FeatureStore:
     def get_transformation_functions(self):
         """Get  all transformation functions metadata objects.
 
-        !!! example
+        !!! example "Get all transformation functions"
             ```python
-            # connect to the Feature Store
+            # get feature store instance
             fs = ...
 
-            func_list = fs.get_transformation_functions()
+            # get all transformation functions
+            list_transformation_fns = fs.get_transformation_functions()
             ```
 
         # Returns:
@@ -1093,9 +1170,29 @@ class FeatureStore:
             )
             ```
 
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # define query object
+            query = ...
+
+            # define dictionary with column names and transformation functions pairs
+            mapping_transformers = ...
+
+            # create feature view
+            feature_view = fs.create_feature_view(
+                name='feature_view_name',
+                version=1,
+                transformation_functions=mapping_transformers,
+                query=query
+            )
+            ```
+
         !!! warning
-        `as_of` argument in the `Query` will be ignored because
-        feature view does not support time travel query.
+            `as_of` argument in the `Query` will be ignored because
+            feature view does not support time travel query.
 
         # Arguments
             name: Name of the feature view to create.
@@ -1199,12 +1296,13 @@ class FeatureStore:
 
         !!! example
             ```python
-            # connect to the Feature Store
+            # get feature store instance
             fs = ...
 
+            # get feature view instance
             feature_view = fs.get_feature_view(
-                name = 'electricity_feature_view',
-                version = 1
+                name='feature_view_name',
+                version=1
             )
             ```
 
@@ -1217,7 +1315,7 @@ class FeatureStore:
             `FeatureView`: The feature view metadata object.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature view from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature view from the feature store.
         """
         if version is None:
             warnings.warn(
@@ -1236,11 +1334,12 @@ class FeatureStore:
 
         !!! example
             ```python
-            # connect to the Feature Store
+            # get feature store instance
             fs = ...
 
-            feature_views_list = fs.get_feature_views(
-                name = 'electricity_feature_view'
+            # get a list of all versions of a feature view
+            feature_view = fs.get_feature_views(
+                name='feature_view_name'
             )
             ```
 
@@ -1251,7 +1350,7 @@ class FeatureStore:
             `FeatureView`: List of feature view metadata objects.
 
         # Raises
-            `RestAPIError`: If unable to retrieve feature view from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature view from the feature store.
         """
         return self._feature_view_engine.get(name)
 

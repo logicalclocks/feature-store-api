@@ -21,7 +21,6 @@ import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.TimeTravelFormat;
 import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
@@ -30,7 +29,6 @@ import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
-import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.Subject;
 import lombok.SneakyThrows;
 import org.apache.avro.Schema;
@@ -55,7 +53,6 @@ import java.util.stream.Collectors;
 public class FeatureGroupUtils {
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private KafkaApi kafkaApi = new KafkaApi();
   private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 
@@ -98,22 +95,6 @@ public class FeatureGroupUtils {
 
   public String getFgName(FeatureGroupBase featureGroup) {
     return featureGroup.getName() + "_" + featureGroup.getVersion();
-  }
-
-  public String getHiveServerConnection(FeatureGroupBase featureGroup) throws IOException, FeatureStoreException {
-    Map<String, String> credentials = new HashMap<>();
-    credentials.put("sslTrustStore", HopsworksClient.getInstance().getHopsworksHttpClient().getTrustStorePath());
-    credentials.put("trustStorePassword", HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey());
-    credentials.put("sslKeyStore", HopsworksClient.getInstance().getHopsworksHttpClient().getKeyStorePath());
-    credentials.put("keyStorePassword", HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey());
-
-    StorageConnector.JdbcConnector storageConnector =
-        (StorageConnector.JdbcConnector) storageConnectorApi.getByName(featureGroup.getFeatureStore(),
-            featureGroup.getFeatureStore().getName());
-
-    return storageConnector.getConnectionString()
-        + credentials.entrySet().stream().map(cred -> cred.getKey() + "=" + cred.getValue())
-        .collect(Collectors.joining(";"));
   }
 
   public static Date getDateFromDateString(String inputDate) throws FeatureStoreException, ParseException {
@@ -256,15 +237,6 @@ public class FeatureGroupUtils {
 
   public Subject getSubject(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
     return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName());
-  }
-
-  private boolean checkIfClassExists(String className) {
-    try  {
-      Class.forName(className, true, this.getClass().getClassLoader());
-      return true;
-    }  catch (ClassNotFoundException e) {
-      return false;
-    }
   }
 
   public String checkpointDirPath(String queryName, String onlineTopicName) throws FeatureStoreException {

@@ -57,10 +57,6 @@ public class FeatureGroup extends FeatureGroupBase {
   @Setter
   private String type = "cachedFeaturegroupDTO";
 
-  @Getter(onMethod = @__(@Override))
-  @Setter
-  private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
-
   @Getter
   @Setter
   private List<String> statisticColumns;

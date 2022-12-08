@@ -179,9 +179,6 @@ class TestHudiEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mock_hudi_engine_get_conn_str = mocker.patch(
-            "hsfs.core.hudi_engine.HudiEngine._get_conn_str"
-        )
 
         fg = feature_group.FeatureGroup(
             name="test",
@@ -200,8 +197,6 @@ class TestHudiEngine:
             spark_session=None,
         )
 
-        mock_hudi_engine_get_conn_str.return_value = "test_conn_str"
-
         # Act
         result = h_engine._setup_hudi_write_opts(
             operation="test", write_options={"test_name": "test_value"}
@@ -212,7 +207,7 @@ class TestHudiEngine:
             "hoodie.bulkinsert.shuffle.parallelism": "5",
             "hoodie.datasource.hive_sync.database": None,
             "hoodie.datasource.hive_sync.enable": "true",
-            "hoodie.datasource.hive_sync.jdbcurl": "test_conn_str",
+            "hoodie.datasource.hive_sync.mode": "hms",
             "hoodie.datasource.hive_sync.partition_extractor_class": "org.apache.hudi.hive.MultiPartKeysValueExtractor",
             "hoodie.datasource.hive_sync.partition_fields": "key3,key4",
             "hoodie.datasource.hive_sync.support_timestamp": "true",
@@ -233,9 +228,6 @@ class TestHudiEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.engine.get_type")
-        mock_hudi_engine_get_conn_str = mocker.patch(
-            "hsfs.core.hudi_engine.HudiEngine._get_conn_str"
-        )
 
         fg = feature_group.FeatureGroup(
             name="test",
@@ -255,8 +247,6 @@ class TestHudiEngine:
             spark_session=None,
         )
 
-        mock_hudi_engine_get_conn_str.return_value = "test_conn_str"
-
         # Act
         result = h_engine._setup_hudi_write_opts(
             operation="test", write_options={"test_name": "test_value"}
@@ -267,7 +257,7 @@ class TestHudiEngine:
             "hoodie.bulkinsert.shuffle.parallelism": "5",
             "hoodie.datasource.hive_sync.database": None,
             "hoodie.datasource.hive_sync.enable": "true",
-            "hoodie.datasource.hive_sync.jdbcurl": "test_conn_str",
+            "hoodie.datasource.hive_sync.mode": "hms",
             "hoodie.datasource.hive_sync.partition_extractor_class": "org.apache.hudi.hive.MultiPartKeysValueExtractor",
             "hoodie.datasource.hive_sync.partition_fields": "key3,key4",
             "hoodie.datasource.hive_sync.support_timestamp": "true",
@@ -400,34 +390,3 @@ class TestHudiEngine:
         assert result.rows_updated == 3
         assert result.rows_deleted == 4
         assert result.commit_time == 5
-
-    def test_get_conn_str_connstr(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-
-        h_engine = hudi_engine.HudiEngine(
-            feature_store_id=feature_store_id,
-            feature_store_name=None,
-            feature_group=None,
-            spark_context=None,
-            spark_session=None,
-        )
-        h_engine._connstr = "test_url;"
-
-        mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
-            "1"
-        )
-        mock_client_get_instance.return_value._cert_key = "2"
-        mock_client_get_instance.return_value._get_jks_key_store_path.return_value = "3"
-        mock_client_get_instance.return_value._cert_key = "4"
-
-        # Act
-        result = h_engine._get_conn_str()
-
-        # Assert
-        assert (
-            result
-            == "test_url;sslTrustStore=1;trustStorePassword=4;sslKeyStore=3;keyStorePassword=4"
-        )

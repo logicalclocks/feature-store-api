@@ -14,10 +14,11 @@
 #   limitations under the License.
 #
 
-from typing import Optional
+from typing import Optional, List
 from hsfs.core import expectation_suite_api
 from hsfs import client, util
 from hsfs import expectation_suite as es
+from hsfs.ge_expectation import GeExpectation
 
 
 class ExpectationSuiteEngine:
@@ -61,6 +62,31 @@ class ExpectationSuiteEngine:
         self, expectation_suite: es.ExpectationSuite
     ) -> es.ExpectationSuite:
         return self._expectation_suite_api.update_metadata(expectation_suite)
+
+    def update_metadata_from_fields(
+        self,
+        id: int,
+        feature_group_id: int,
+        feature_store_id: int,
+        expectation_suite_name: str,
+        run_validation: bool,
+        validation_ingestion_policy: str,
+        meta: str,
+        expectations: List[GeExpectation],
+    ):
+
+        self._expectation_suite_api.update_metadata(
+            es.ExpectationSuite(
+                id=id,
+                expectation_suite_name=expectation_suite_name,
+                run_validation=run_validation,
+                validation_ingestion_policy=validation_ingestion_policy,
+                meta=meta,
+                feature_group_id=feature_group_id,
+                feature_store_id=feature_store_id,
+                expectations=[],
+            )
+        )
 
     def get(self) -> Optional[es.ExpectationSuite]:
         return self._expectation_suite_api.get()

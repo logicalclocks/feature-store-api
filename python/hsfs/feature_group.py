@@ -83,7 +83,7 @@ class FeatureGroupBase:
             associated with it.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         self._feature_group_engine.delete(self)
 
@@ -254,7 +254,7 @@ class FeatureGroupBase:
             value: Value of the tag to be added.
 
         # Raises
-            `RestAPIError` in case the backend fails to add the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to add the tag.
         """
 
         self._feature_group_engine.add_tag(self, name, value)
@@ -277,13 +277,12 @@ class FeatureGroupBase:
             name: Name of the tag to be removed.
 
         # Raises
-            `RestAPIError` in case the backend fails to delete the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the tag.
         """
         self._feature_group_engine.delete_tag(self, name)
 
     def get_tag(self, name: str):
         """Get the tags of a feature group.
-
 
         !!! example
             ```python
@@ -303,7 +302,7 @@ class FeatureGroupBase:
             tag value
 
         # Raises
-            `RestAPIError` in case the backend fails to retrieve the tag.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tag.
         """
         return self._feature_group_engine.get_tag(self, name)
 
@@ -314,7 +313,7 @@ class FeatureGroupBase:
             `Dict[str, obj]` of tags.
 
         # Raises
-            `RestAPIError` in case the backend fails to retrieve the tags.
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._feature_group_engine.get_tags(self)
 
@@ -422,7 +421,7 @@ class FeatureGroupBase:
             `FeatureGroup`. The updated metadata object of the feature group.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         self._feature_group_engine.update_statistics_config(self)
         return self
@@ -752,7 +751,7 @@ class FeatureGroupBase:
             Union[List[`ValidationReport`], `ValidationReport`]. All validation reports attached to the feature group.
 
         # Raises
-            `RestAPIException`,`FeatureStoreException`.
+            `RestAPIException`,`hsfs.client.exceptions.FeatureStoreException`.
         """
         if self._id:
             return self._validation_report_engine.get_all(ge_type=ge_type)
@@ -768,10 +767,10 @@ class FeatureGroupBase:
             ValidationReport,
             ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
         ],
+        ingestion_result: str = "UNKNOWN",
         ge_type: bool = True,
     ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]:
         """Save validation report to hopsworks platform along previous reports of the same Feature Group.
-
 
         !!! example
             ```python
@@ -779,13 +778,23 @@ class FeatureGroupBase:
             fs = ...
 
             # get the Feature Group instance
-            fg = fs.get_or_create_feature_group(...)
+            fg = fs.get_or_create_feature_group(..., expectation_suite=expectation_suite)
 
-            fg.save_validation_report(validation_report, run_validation=True)
+            validation_report = great_expectations.from_pandas(
+                my_experimental_features_df,
+                fg.get_expectation_suite()).validate()
+
+            fg.save_validation_report(validation_report, ingestion_result="EXPERIMENT")
             ```
 
         # Arguments
             validation_report: The validation report to attach to the Feature Group.
+            ingestion_result: Specify the fate of the associated data, defaults
+                to "UNKNOWN". Supported options are  "UNKNOWN", "INGESTED", "REJECTED",
+                "EXPERIMENT", "FG_DATA". Use "INGESTED" or "REJECTED" for validation
+                of DataFrames to be inserted in the Feature Group. Use "EXPERIMENT"
+                for testing and development and "FG_DATA" when validating data
+                already in the Feature Group.
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
                 method on hopsworks type. Defaults to `True`.
@@ -798,11 +807,18 @@ class FeatureGroupBase:
                 validation_report,
                 ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
             ):
-                report = ValidationReport(**validation_report.to_json_dict())
+                report = ValidationReport(
+                    **validation_report.to_json_dict(),
+                    ingestion_result=ingestion_result,
+                )
             elif isinstance(validation_report, dict):
-                report = ValidationReport(**validation_report)
+                report = ValidationReport(
+                    **validation_report, ingestion_result=ingestion_result
+                )
             elif isinstance(validation_report, ValidationReport):
                 report = validation_report
+                if ingestion_result != "UNKNOWN":
+                    report.ingestion_result = ingestion_result
 
             return self._validation_report_engine.save(
                 validation_report=report, ge_type=ge_type
@@ -817,8 +833,7 @@ class FeatureGroupBase:
         expectation_id: int,
         start_validation_time: Union[str, int, datetime, date, None] = None,
         end_validation_time: Union[str, int, datetime, date, None] = None,
-        ingested_only: bool = False,
-        rejected_only: bool = False,
+        filter_by: List[str] = [],
         ge_type: bool = True,
     ) -> Union[List[ValidationResult], List[ge.core.ExpectationValidationResult]]:
         """Fetch validation history of an Expectation specified by its id.
@@ -827,7 +842,7 @@ class FeatureGroupBase:
         ```python3
         validation_history = fg.get_validation_history(
             expectation_id=1,
-            ingested_only=True,
+            fliter_by=["REJECTED", "UNKNOWN"],
             start_validation_time="2022-01-01 00:00:00",
             end_validation_time=datetime.datetime.now(),
             ge_type=False
@@ -836,8 +851,7 @@ class FeatureGroupBase:
 
         # Arguments
             expectation_id: id of the Expectation for which to fetch the validation history
-            ingested_only: fetch only validation result corresponding to an insertion, defaults to False.
-            rejected_only: fetch only validation result corresponding to a rejection, defaults to False.
+            filter_by: list of ingestion_result category to keep. Ooptions are "INGESTED", "REJECTED", "FG_DATA", "EXPERIMENT", "UNKNOWN".
             start_validation_time: fetch only validation result posterior to the provided time, inclusive.
             Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
             end_validation_time: fetch only validation result prior to the provided time, inclusive.
@@ -854,8 +868,7 @@ class FeatureGroupBase:
                 expectation_id=expectation_id,
                 start_validation_time=start_validation_time,
                 end_validation_time=end_validation_time,
-                ingested_only=ingested_only,
-                rejected_only=rejected_only,
+                filter_by=filter_by,
                 ge_type=ge_type,
             )
         else:
@@ -949,7 +962,7 @@ class FeatureGroupBase:
             `Statistics`. Statistics object.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         if commit_time is None:
             return self.statistics
@@ -975,8 +988,9 @@ class FeatureGroupBase:
 
         # Returns
             `Statistics`. The statistics metadata object.
+
         # Raises
-            `RestAPIError`. Unable to persist the statistics.
+            `hsfs.client.exceptions.RestAPIError`. Unable to persist the statistics.
         """
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation
@@ -1172,7 +1186,16 @@ class FeatureGroup(FeatureGroupBase):
                 self._stream = True
             # for stream feature group time travel format is always HUDI
             if self._stream:
-                self._time_travel_format = "HUDI"
+                expected_format = "HUDI"
+                if self._time_travel_format != expected_format:
+                    warnings.warn(
+                        (
+                            "The provided time travel format `{}` has been overwritten "
+                            "because Stream enabled feature groups only support `{}`"
+                        ).format(self._time_travel_format, expected_format),
+                        util.FeatureGroupWarning,
+                    )
+                    self._time_travel_format = expected_format
 
             self.primary_key = primary_key
             self.partition_key = partition_key
@@ -1217,17 +1240,18 @@ class FeatureGroup(FeatureGroupBase):
             fg = fs.get_or_create_feature_group(...)
             fg.read()
             ```
+
         !!! example "Read feature group as of specific point in time:"
             ```python
             fg = fs.get_or_create_feature_group(...)
             fg.read("2020-10-20 07:34:11")
             ```
+
         # Arguments
             wallclock_time: If specified will retrieve feature group as of specific point in time. Defaults to `None`.
                 If not specified, will return as of most recent time.
                 Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
             dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
@@ -1242,7 +1266,7 @@ class FeatureGroup(FeatureGroupBase):
             `list`. A two-dimensional Python list.
 
         # Raises
-            `RestAPIError`. No data is available for feature group with this commit date, If time travel enabled.
+            `hsfs.client.exceptions.RestAPIError`. No data is available for feature group with this commit date, If time travel enabled.
         """
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -1294,8 +1318,8 @@ class FeatureGroup(FeatureGroupBase):
             feature data.
 
         # Raises
-            `RestAPIError`.  No data is available for feature group with this commit date.
-            `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
+            `hsfs.client.exceptions.RestAPIError`.  No data is available for feature group with this commit date.
+            `hsfs.client.exceptions.FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
         return (
             self.select_all()
@@ -1378,11 +1402,13 @@ class FeatureGroup(FeatureGroupBase):
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to ingest the feature group data.
+
         # Raises
-            `RestAPIError`. Unable to create feature group.
+            `hsfs.client.exceptions.RestAPIError`. Unable to create feature group.
         """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
@@ -1675,8 +1701,8 @@ class FeatureGroup(FeatureGroupBase):
             is `Dict[str, str]` with key value pairs of date committed on, number of rows updated, inserted and deleted.
 
         # Raises
-            `RestAPIError`.
-            `FeatureStoreException`. If the feature group does not have `HUDI` time travel format
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`. If the feature group does not have `HUDI` time travel format
         """
         return self._feature_group_engine.commit_details(self, wallclock_time, limit)
 
@@ -1693,7 +1719,7 @@ class FeatureGroup(FeatureGroupBase):
             write_options: User provided write options. Defaults to `{}`.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         self._feature_group_engine.commit_delete(self, delete_df, write_options)
 
@@ -1797,6 +1823,7 @@ class FeatureGroup(FeatureGroupBase):
         expectation_suite: Optional[ExpectationSuite] = None,
         save_report: Optional[bool] = False,
         validation_options: Optional[Dict[Any, Any]] = {},
+        ingestion_result: str = "UNKNOWN",
         ge_type: bool = True,
     ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
         """Run validation based on the attached expectations.
@@ -1824,18 +1851,24 @@ class FeatureGroup(FeatureGroupBase):
             validation_options: Additional validation options as key-value pairs, defaults to `{}`.
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+            ingestion_result: Specify the fate of the associated data, defaults
+                to "UNKNOWN". Supported options are  "UNKNOWN", "INGESTED", "REJECTED",
+                "EXPERIMENT", "FG_DATA". Use "INGESTED" or "REJECTED" for validation
+                of DataFrames to be inserted in the Feature Group. Use "EXPERIMENT"
+                for testing and development and "FG_DATA" when validating data
+                already in the Feature Group.
             save_report: Whether to save the report to the backend. This is only possible if the Expectation suite
                 is initialised and attached to the Feature Group. Defaults to False.
             ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.
 
-
         # Returns
             A Validation Report produced by Great Expectations.
-
         """
         # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()
+            if ingestion_result == "UNKNOWN":
+                ingestion_result = "FG_DATA"
 
         return self._great_expectation_engine.validate(
             self,
@@ -1843,6 +1876,7 @@ class FeatureGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             save_report=save_report,
             validation_options=validation_options,
+            ingestion_result=ingestion_result,
             ge_type=ge_type,
         )
 
@@ -1866,7 +1900,7 @@ class FeatureGroup(FeatureGroupBase):
             `Statistics`. The statistics metadata object.
 
         # Raises
-            `RestAPIError`. Unable to persist the statistics.
+            `hsfs.client.exceptions.RestAPIError`. Unable to persist the statistics.
         """
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation
@@ -1931,7 +1965,6 @@ class FeatureGroup(FeatureGroupBase):
             ```python
             fg.json()
             ```
-
         """
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
@@ -1948,7 +1981,6 @@ class FeatureGroup(FeatureGroupBase):
 
             fg.to_dict()
             ```
-
         """
         fg_meta_dict = {
             "id": self._id,
@@ -1985,7 +2017,6 @@ class FeatureGroup(FeatureGroupBase):
             ```python
             complex_dtype_features = fg.get_complex_features()
             ```
-
         """
         return [f.name for f in self.features if f.is_complex()]
 
@@ -2263,7 +2294,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             `list`. A two-dimensional Python list.
 
         # Raises
-            `RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         engine.get_instance().set_job_group(
             "Fetching Feature group",

@@ -197,8 +197,8 @@ class Client(base.Client):
         :type secret_key: str, optional
         :param api_key_file: path to a file containing an api key, defaults to None
         :type api_key_file: str optional
-        :raises ExternalClientError: `api_key_file` needs to be set for local mode
-        :raises UnkownSecretStorageError: Provided secrets storage not supported
+        :raises hsfs.client.exceptions.ExternalClientError: `api_key_file` needs to be set for local mode
+        :raises hsfs.client.exceptions.UnknownSecretStorageError: Provided secrets storage not supported
         :return: secret
         :rtype: str
         """

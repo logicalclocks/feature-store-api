@@ -102,6 +102,10 @@ public class FeatureGroupBase {
   @Setter
   protected String location;
 
+  @Getter
+  @Setter
+  protected TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
+
   @JsonIgnore
   protected Subject subject;
 
@@ -123,7 +127,7 @@ public class FeatureGroupBase {
   public Query select(List<String> features) {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
-    List<Feature> featureObjList = features.stream().map(Feature::new).collect(Collectors.toList());
+    List<Feature> featureObjList = features.stream().map(f -> new Feature(f, id)).collect(Collectors.toList());
     return selectFeatures(featureObjList);
   }
 
@@ -414,11 +418,6 @@ public class FeatureGroupBase {
   @JsonIgnore
   public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
     // This method should be overridden by the FeatureGroup/StreamFeatureGroup classes
-    return null;
-  }
-
-  public TimeTravelFormat getTimeTravelFormat() {
-    // This method should be overridden by the FeatureGroup classes
     return null;
   }
 }

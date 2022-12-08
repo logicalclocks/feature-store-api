@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import feature_group_commit, util, client
-from hsfs.core import feature_group_api, storage_connector_api
+from hsfs import feature_group_commit, util
+from hsfs.core import feature_group_api
 
 
 class HudiEngine:
@@ -30,7 +30,8 @@ class HudiEngine:
     HUDI_HIVE_SYNC_ENABLE = "hoodie.datasource.hive_sync.enable"
     HUDI_HIVE_SYNC_TABLE = "hoodie.datasource.hive_sync.table"
     HUDI_HIVE_SYNC_DB = "hoodie.datasource.hive_sync.database"
-    HUDI_HIVE_SYNC_JDBC_URL = "hoodie.datasource.hive_sync.jdbcurl"
+    HUDI_HIVE_SYNC_MODE = "hoodie.datasource.hive_sync.mode"
+    HUDI_HIVE_SYNC_MODE_VAL = "hms"  # Connect directly with the Hive Metastore
     HUDI_HIVE_SYNC_PARTITION_FIELDS = "hoodie.datasource.hive_sync.partition_fields"
     HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP = "hoodie.datasource.hive_sync.support_timestamp"
 
@@ -79,18 +80,6 @@ class HudiEngine:
         self._feature_store_name = feature_store_name
 
         self._feature_group_api = feature_group_api.FeatureGroupApi(feature_store_id)
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
-            self._feature_store_id
-        )
-
-        if self._feature_store_name:
-            # For read operations we don't actually need the connector
-            # Only to sync write operations
-            self._connstr = self._storage_connector_api.get(
-                self._feature_store_name
-            ).connection_string
-        else:
-            self._connstr = None
 
     def save_hudi_fg(
         self, dataset, save_mode, operation, write_options, validation_id=None
@@ -155,7 +144,6 @@ class HudiEngine:
             else self._feature_group.primary_key[0]
         )
 
-        jdbc_url = self._get_conn_str()
         hudi_options = {
             self.HUDI_KEY_GENERATOR_OPT_KEY: self.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL,
             self.HUDI_PRECOMBINE_FIELD: pre_combine_key,
@@ -166,9 +154,9 @@ class HudiEngine:
             if len(partition_key) >= 1
             else self.HIVE_NON_PARTITION_EXTRACTOR_CLASS_OPT_VAL,
             self.HUDI_HIVE_SYNC_ENABLE: "true",
-            self.HUDI_HIVE_SYNC_TABLE: table_name,
-            self.HUDI_HIVE_SYNC_JDBC_URL: jdbc_url,
+            self.HUDI_HIVE_SYNC_MODE: self.HUDI_HIVE_SYNC_MODE_VAL,
             self.HUDI_HIVE_SYNC_DB: self._feature_store_name,
+            self.HUDI_HIVE_SYNC_TABLE: table_name,
             self.HUDI_HIVE_SYNC_PARTITION_FIELDS: partition_key,
             self.HUDI_TABLE_OPERATION: operation,
             self.HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP: "true",
@@ -281,18 +269,3 @@ class HudiEngine:
             rows_updated=commit_metadata.fetchTotalUpdateRecordsWritten(),
             rows_deleted=commit_metadata.getTotalRecordsDeleted(),
         )
-
-    def _get_conn_str(self):
-        if not self._connstr:
-            return ""
-
-        credentials = {
-            "sslTrustStore": client.get_instance()._get_jks_trust_store_path(),
-            "trustStorePassword": client.get_instance()._cert_key,
-            "sslKeyStore": client.get_instance()._get_jks_key_store_path(),
-            "keyStorePassword": client.get_instance()._cert_key,
-        }
-
-        return self._connstr + ";".join(
-            ["{}={}".format(option[0], option[1]) for option in credentials.items()]
-        )  # todo this method assumes that _connstr ends with ";", but is it a fair assumption (since the generated results doesnt end with ";")?
