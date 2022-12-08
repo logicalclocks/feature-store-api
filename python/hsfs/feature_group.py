@@ -48,7 +48,8 @@ from hsfs.core import great_expectation_engine
 
 
 class FeatureGroupBase:
-    def __init__(self, featurestore_id, location):
+    def __init__(self, featurestore_id, location, event_time=None):
+        self.event_time = event_time
         self._location = location
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
@@ -87,7 +88,7 @@ class FeatureGroupBase:
         """
         self._feature_group_engine.delete(self)
 
-    def select_all(self):
+    def select_all(self, include_primary_key=True, include_event_time=True):
         """Select all features in the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
@@ -112,12 +113,19 @@ class FeatureGroupBase:
         # Returns
             `Query`. A query object with all features of the feature group.
         """
-        return query.Query(
-            left_feature_group=self,
-            left_features=self._features,
-            feature_store_name=self._feature_store_name,
-            feature_store_id=self._feature_store_id,
-        )
+        if include_event_time and include_primary_key:
+            return query.Query(
+                left_feature_group=self,
+                left_features=self._features,
+                feature_store_name=self._feature_store_name,
+                feature_store_id=self._feature_store_id,
+            )
+        elif include_event_time:
+            return self.select_except(self.primary_key)
+        elif include_primary_key:
+            return self.select_except([self.event_time])
+        else:
+            return self.select_except(self.primary_key + [self.event_time])
 
     def select(self, features: List[Union[str, feature.Feature]] = []):
         """Select a subset of features of the feature group and return a query object.
@@ -1047,7 +1055,7 @@ class FeatureGroup(FeatureGroupBase):
         stream=False,
         expectation_suite=None,
     ):
-        super().__init__(featurestore_id, location)
+        super().__init__(featurestore_id, location, event_time=event_time)
 
         self._feature_store_name = featurestore_name
         self._description = description
@@ -1068,7 +1076,6 @@ class FeatureGroup(FeatureGroupBase):
 
         self._subject = None
         self._online_topic_name = online_topic_name
-        self.event_time = event_time
         self._stream = stream
         self._deltastreamer_jobconf = None
 
@@ -1921,7 +1928,7 @@ class FeatureGroup(FeatureGroupBase):
             if not self._stream
             else "streamFeatureGroupDTO",
             "statisticsConfig": self._statistics_config,
-            "eventTime": self._event_time,
+            "eventTime": self.event_time,
             "expectationSuite": self._expectation_suite,
         }
         if self._stream:
@@ -2106,8 +2113,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         event_time=None,
         expectation_suite=None,
     ):
-        super().__init__(featurestore_id, location)
-
+        super().__init__(featurestore_id, location, event_time=event_time)
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
@@ -2118,7 +2124,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._data_format = data_format.upper() if data_format else None
         self._path = path
         self._id = id
-        self._event_time = event_time
         self._expectation_suite = expectation_suite
 
         self._features = [
