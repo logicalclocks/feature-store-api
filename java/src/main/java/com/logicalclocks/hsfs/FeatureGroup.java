@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.base.DeltaStreamerJobConf;
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.Feature;
+
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.HudiOperationType;
 import com.logicalclocks.base.Storage;
@@ -119,6 +120,11 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   public FeatureGroup() {
+  }
+
+  public FeatureGroup(FeatureStore featureStore, Integer id) {
+    this.featureStore = featureStore;
+    this.id = id;
   }
 
   // used for updates

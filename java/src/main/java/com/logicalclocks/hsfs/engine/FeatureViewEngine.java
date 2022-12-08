@@ -34,6 +34,7 @@ import com.logicalclocks.base.metadata.FeatureViewApi;
 import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.base.metadata.TagsApi;
 
+import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureView;
 import com.logicalclocks.hsfs.constructor.Query;
@@ -240,13 +241,22 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
           Map<String, Dataset<Row>> datasets = Maps.newHashMap();
           for (Split split : splits) {
             datasets.put(split.getName(),
-                trainingDatasetEngine.read(trainingDatasetUpdated, split.getName(), userReadOptions));
+                castColumnType(
+                    trainingDatasetUpdated.getDataFormat(),
+                    trainingDatasetEngine.read(trainingDatasetUpdated, split.getName(), userReadOptions),
+                    featureView.getFeatures()
+                )
+            );
           }
           return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
               datasets, featureView.getLabels());
         } else {
           return new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
-              trainingDatasetEngine.read(trainingDatasetUpdated, "", userReadOptions), featureView.getLabels()
+              castColumnType(
+                  trainingDatasetUpdated.getDataFormat(),
+                  trainingDatasetEngine.read(trainingDatasetUpdated, "", userReadOptions),
+                  featureView.getFeatures()),
+              featureView.getLabels()
           );
         }
       } catch (InvalidInputException e) {
@@ -272,6 +282,15 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
         computeStatistics(featureView, trainingDatasetUpdated, new Dataset[] {dataset});
       }
       return trainingDatasetBundle;
+    }
+  }
+
+  private Dataset<Row> castColumnType(
+      DataFormat dataFormat, Dataset<Row> dataset, List<TrainingDatasetFeature> features) throws FeatureStoreException {
+    if (DataFormat.CSV.equals(dataFormat) || DataFormat.TSV.equals(dataFormat)) {
+      return SparkEngine.getInstance().castColumnType(dataset, features);
+    } else {
+      return dataset;
     }
   }
 

@@ -225,7 +225,7 @@ class TestPythonSparkTransformationFunctions:
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df, schema=expected_schema
         )
-        expected_df["col_1"] = expected_df["col_1"].astype(int)
+        expected_df["col_1"] = expected_df["col_1"].astype(np.dtype("int32"))
 
         # Arrange
         tf_fun = (
@@ -432,7 +432,7 @@ class TestPythonSparkTransformationFunctions:
         expected_spark_df = spark_engine._spark_session.createDataFrame(
             expected_df, schema=expected_schema
         )
-        expected_df["col_0"] = expected_df["col_0"].astype(int)
+        expected_df["col_0"] = expected_df["col_0"].astype(np.dtype("int32"))
 
         # Arrange
         def tf_fun(a) -> int:

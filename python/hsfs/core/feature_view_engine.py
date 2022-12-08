@@ -277,7 +277,7 @@ class FeatureViewEngine:
 
         if td_updated.training_dataset_type != td_updated.IN_MEMORY:
             split_df = self._read_from_storage_connector(
-                td_updated, td_updated.splits, read_options
+                td_updated, td_updated.splits, read_options, feature_view_obj.schema
             )
         else:
             self._check_feature_group_accessibility(feature_view_obj)
@@ -358,20 +358,38 @@ class FeatureViewEngine:
         )
         return training_dataset_obj, td_job
 
-    def _read_from_storage_connector(self, training_data_obj, splits, read_options):
+    def _read_from_storage_connector(
+        self, training_data_obj, splits, read_options, schema=None
+    ):
         if splits:
             result = {}
             for split in splits:
                 path = training_data_obj.location + "/" + str(split.name)
-                result[split.name] = self._read_dir_from_storage_connector(
-                    training_data_obj, path, read_options
+                result[split.name] = self._cast_column_type(
+                    training_data_obj.data_format,
+                    self._read_dir_from_storage_connector(
+                        training_data_obj, path, read_options
+                    ),
+                    schema,
                 )
             return result
         else:
             path = training_data_obj.location + "/" + training_data_obj.name
-            return self._read_dir_from_storage_connector(
-                training_data_obj, path, read_options
+            return self._cast_column_type(
+                training_data_obj.data_format,
+                self._read_dir_from_storage_connector(
+                    training_data_obj, path, read_options
+                ),
+                schema,
             )
+
+    def _cast_column_type(self, data_format, df, schema):
+        if data_format == "csv" or data_format == "tsv":
+            if not schema:
+                raise FeatureStoreException("Reading csv, tsv requires a schema.")
+            return engine.get_instance().cast_column_type(df, schema)
+        else:
+            return df
 
     def _read_dir_from_storage_connector(self, training_data_obj, path, read_options):
         try:
