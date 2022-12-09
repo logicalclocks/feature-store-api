@@ -365,7 +365,7 @@ class FeatureViewEngine:
             result = {}
             for split in splits:
                 path = training_data_obj.location + "/" + str(split.name)
-                result[split.name] = self._cast_column_type(
+                result[split.name] = self._cast_columns(
                     training_data_obj.data_format,
                     self._read_dir_from_storage_connector(
                         training_data_obj, path, read_options
@@ -375,7 +375,7 @@ class FeatureViewEngine:
             return result
         else:
             path = training_data_obj.location + "/" + training_data_obj.name
-            return self._cast_column_type(
+            return self._cast_columns(
                 training_data_obj.data_format,
                 self._read_dir_from_storage_connector(
                     training_data_obj, path, read_options
@@ -383,11 +383,11 @@ class FeatureViewEngine:
                 schema,
             )
 
-    def _cast_column_type(self, data_format, df, schema):
+    def _cast_columns(self, data_format, df, schema):
         if data_format == "csv" or data_format == "tsv":
             if not schema:
                 raise FeatureStoreException("Reading csv, tsv requires a schema.")
-            return engine.get_instance().cast_column_type(df, schema)
+            return engine.get_instance().cast_columns(df, schema)
         else:
             return df
 
@@ -578,6 +578,23 @@ class FeatureViewEngine:
     def get_tags(self, feature_view_obj, training_dataset_version=None):
         return self._tags_api.get(
             feature_view_obj, training_dataset_version=training_dataset_version
+        )
+
+    def get_parent_feature_groups(self, feature_view_obj):
+        """Get the parents of this feature view, based on explicit provenance.
+        Parents are feature groups or external feature groups. These feature
+        groups can be accessible, deleted or inaccessible.
+        For deleted and inaccessible feature groups, only a minimal information is
+        returned.
+
+        # Arguments
+            feature_view_obj: Metadata object of feature view.
+
+        # Returns
+            `ProvenanceLinks`:  the feature groups used to generated this feature view
+        """
+        return self._feature_view_api.get_parent_feature_groups(
+            feature_view_obj.name, feature_view_obj.version
         )
 
     def _check_feature_group_accessibility(self, feature_view_obj):

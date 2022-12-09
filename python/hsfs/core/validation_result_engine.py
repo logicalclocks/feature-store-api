@@ -41,8 +41,7 @@ class ValidationResultEngine:
         expectation_id: int,
         start_validation_time: Union[str, int, datetime, date, None] = None,
         end_validation_time: Union[str, int, datetime, date, None] = None,
-        ingested_only: bool = False,
-        rejected_only: bool = False,
+        filter_by: List[str] = [],
         ge_type: bool = True,
     ) -> Union[List[ValidationResult], List[ExpectationValidationResult]]:
         """Get Validation Results relevant to an Expectation specified by expectation_id.
@@ -63,8 +62,7 @@ class ValidationResultEngine:
         :type end_validation_time: Union[str, int, datetime, date, None]
         """
         query_params = self._build_query_params(
-            ingested_only=ingested_only,
-            rejected_only=rejected_only,
+            filter_by=filter_by,
             start_validation_time=start_validation_time,
             end_validation_time=end_validation_time,
         )
@@ -83,19 +81,31 @@ class ValidationResultEngine:
 
     def _build_query_params(
         self,
-        ingested_only: bool = False,
-        rejected_only: bool = False,
+        filter_by: List[str] = [],
         start_validation_time: Union[str, int, datetime, date, None] = None,
         end_validation_time: Union[str, int, datetime, date, None] = None,
     ) -> Dict[str, str]:
         query_params = {"filter_by": [], "sort_by": "validation_time:desc"}
+        allowed_ingestion_filters = [
+            "INGESTED",
+            "REJECTED",
+            "UNKNOWN",
+            "EXPERIMENT",
+            "FG_DATA",
+        ]
+        ingestion_filters = []
+        for ingestion_filter in filter_by:
+            if ingestion_filter.upper() in allowed_ingestion_filters:
+                ingestion_filters.append(
+                    f"ingestion_result_eq:{ingestion_filter.upper()}"
+                )
+            else:
+                raise ValueError(
+                    f"Illegal Value {ingestion_filter} in filter_by."
+                    + f"Allowed values are {', '.join(allowed_ingestion_filters)}"
+                )
 
-        if ingested_only and rejected_only:
-            raise ValueError("ingested_only and rejected_only cannot be both True.")
-        elif ingested_only:
-            query_params["filter_by"].append("ingestion_result_eq:ingested")
-        elif rejected_only:
-            query_params["filter_by"].append("ingestion_result_eq:rejected")
+        query_params["filter_by"].extend(ingestion_filters)
 
         if start_validation_time and end_validation_time:
             if convert_event_time_to_timestamp(

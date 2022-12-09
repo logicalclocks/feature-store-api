@@ -18,6 +18,8 @@ from hsfs import client
 from hsfs import feature_group, feature_group_commit
 from hsfs.core import ingestion_job
 
+from hsfs.core import explicit_provenance
+
 
 class FeatureGroupApi:
     CACHED = "cached"
@@ -262,4 +264,115 @@ class FeatureGroupApi:
             _client._send_request(
                 "POST", path_params, headers=headers, data=ingestion_conf.json()
             ),
+        )
+
+    def get_parent_feature_groups(self, feature_group_instance):
+        """Get the parents of this feature group, based on explicit provenance.
+        Parents are feature groups or external feature groups. These feature
+        groups can be accessible, deleted or inaccessible.
+        For deleted and inaccessible feature groups, only a minimal information is
+        returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ExplicitProvenance.Links`:  the feature groups used to generated this
+            feature group
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "provenance",
+            "links",
+        ]
+        query_params = {
+            "expand": "provenance_artifacts",
+            "upstreamLvls": 1,
+            "downstreamLvls": 0,
+        }
+        links_json = _client._send_request("GET", path_params, query_params)
+        return explicit_provenance.Links.from_response_json(
+            links_json,
+            explicit_provenance.Links.Direction.UPSTREAM,
+            explicit_provenance.Links.Type.FEATURE_GROUP,
+        )
+
+    def get_generated_feature_views(self, feature_group_instance):
+        """Get the generated feature view using this feature group, based on explicit
+        provenance. These feature views can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated feature view links, so deleted
+        will always be empty.
+        For inaccessible feature views, only a minimal information is returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ExplicitProvenance.Links`: the feature views generated using this feature
+            group
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "provenance",
+            "links",
+        ]
+        query_params = {
+            "expand": "provenance_artifacts",
+            "upstreamLvls": 0,
+            "downstreamLvls": 1,
+        }
+        links_json = _client._send_request("GET", path_params, query_params)
+        return explicit_provenance.Links.from_response_json(
+            links_json,
+            explicit_provenance.Links.Direction.DOWNSTREAM,
+            explicit_provenance.Links.Type.FEATURE_VIEW,
+        )
+
+    def get_generated_feature_groups(self, feature_group_instance):
+        """Get the generated feature groups using this feature group, based on explicit
+        provenance. These feature groups can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated feature group links, so deleted
+        will always be empty.
+        For inaccessible feature groups, only a minimal information is returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ExplicitProvenance.Links`: the feature groups generated using this
+            feature group
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            self._feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "provenance",
+            "links",
+        ]
+        query_params = {
+            "expand": "provenance_artifacts",
+            "upstreamLvls": 0,
+            "downstreamLvls": 1,
+        }
+        links_json = _client._send_request("GET", path_params, query_params)
+        return explicit_provenance.Links.from_response_json(
+            links_json,
+            explicit_provenance.Links.Direction.DOWNSTREAM,
+            explicit_provenance.Links.Type.FEATURE_GROUP,
         )

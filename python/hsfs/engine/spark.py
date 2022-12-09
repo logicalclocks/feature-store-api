@@ -101,7 +101,15 @@ class Engine:
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             util.setup_pydoop()
 
-    def sql(self, sql_query, feature_store, connector, dataframe_type, read_options):
+    def sql(
+        self,
+        sql_query,
+        feature_store,
+        connector,
+        dataframe_type,
+        read_options,
+        schema=None,
+    ):
         if not connector:
             result_df = self._sql_offline(sql_query, feature_store)
         else:
@@ -790,7 +798,9 @@ class Engine:
         for feat in dataframe.schema:
             name = feat.name.lower()
             try:
-                converted_type = Engine.convert_spark_type(feat.dataType, using_hudi)
+                converted_type = Engine.convert_spark_type_to_offline_type(
+                    feat.dataType, using_hudi
+                )
             except ValueError as e:
                 raise FeatureStoreException(f"Feature '{name}': {str(e)}")
             features.append(
@@ -807,112 +817,6 @@ class Engine:
             )
             for feat in dataframe.schema
         ]
-
-    @staticmethod
-    def _convert_spark_string_to_type(spark_type_string):
-        if spark_type_string == "STRING":
-            return StringType()
-        elif spark_type_string == "BINARY":
-            return BooleanType()
-        elif spark_type_string == "BYTE":
-            return ByteType()
-        elif spark_type_string == "SHORT":
-            return ShortType()
-        elif spark_type_string == "INT":
-            return IntegerType()
-        elif spark_type_string == "LONG":
-            return LongType()
-        elif spark_type_string == "FLOAT":
-            return FloatType()
-        elif spark_type_string == "DOUBLE":
-            return DoubleType()
-        elif spark_type_string == "TIMESTAMP":
-            # convert (if tz!=UTC) to utc, then make timezone unaware
-            return TimestampType()
-        elif spark_type_string == "DATE":
-            return DateType()
-        elif spark_type_string == "BOOLEAN":
-            return BooleanType()
-        else:
-            raise ValueError(
-                f"Spark type {str(type(spark_type_string))} not supported."
-            )
-
-    @staticmethod
-    def convert_spark_type(spark_type, using_hudi):
-        # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to
-        # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
-        # to Hive. Therefore, we need to force Hive to create int-typed columns in the first place.
-
-        if not using_hudi:
-            return spark_type.simpleString()
-        elif type(spark_type) == ByteType:
-            return "int"
-        elif type(spark_type) == ShortType:
-            return "int"
-        elif type(spark_type) in [
-            BooleanType,
-            IntegerType,
-            LongType,
-            FloatType,
-            DoubleType,
-            DecimalType,
-            TimestampType,
-            DateType,
-            StringType,
-            ArrayType,
-            StructType,
-            BinaryType,
-        ]:
-            return spark_type.simpleString()
-
-        raise ValueError(f"spark type {str(type(spark_type))} not supported")
-
-    @staticmethod
-    def _convert_column_type(pa_type):
-        if "array<" == pa_type[:6]:
-            return ArrayType(Engine._convert_column_type(pa_type[6:-1]))
-        elif "struct<label:string,index:int>" in pa_type:
-            return StructType(
-                [
-                    StructField("label", StringType(), True),
-                    StructField("index", IntegerType(), True),
-                ]
-            )
-        else:
-            return Engine.convert_offline_basic_type_to_spark(pa_type)
-
-    @staticmethod
-    def convert_offline_basic_type_to_spark(pa_type):
-        pyarrow_2_spark_type = {
-            "string": StringType(),
-            "bigint": LongType(),
-            "int": IntegerType(),
-            "smallint": ShortType(),
-            "tinyint": ByteType(),
-            "float": FloatType(),
-            "double": DoubleType(),
-            "timestamp": TimestampType(),
-            "boolean": BooleanType(),
-            "date": DateType(),
-            "binary": BinaryType(),
-            "decimal": DecimalType(),
-        }
-        if pa_type in pyarrow_2_spark_type:
-            return pyarrow_2_spark_type[pa_type]
-        else:
-            raise FeatureStoreException(
-                f"Pyarrow type {pa_type} cannot be converted to a spark type."
-            )
-
-    @staticmethod
-    def cast_column_type(df, schema):
-        pyspark_schema = dict(
-            [(_feat.name, Engine._convert_column_type(_feat.type)) for _feat in schema]
-        )
-        for _feat in pyspark_schema:
-            df = df.withColumn(_feat, col(_feat).cast(pyspark_schema[_feat]))
-        return df
 
     def setup_storage_connector(self, storage_connector, path=None):
         if storage_connector.type == StorageConnector.S3:
@@ -1100,15 +1004,121 @@ class Engine:
 
         return path
 
+    def create_empty_df(self, streaming_df):
+        return SQLContext(self._spark_context).createDataFrame(
+            self._spark_context.emptyRDD(), streaming_df.schema
+        )
+
     @staticmethod
     def get_unique_values(feature_dataframe, feature_name):
         unique_values = feature_dataframe.select(feature_name).distinct().collect()
         return [field[feature_name] for field in unique_values]
 
-    def create_empty_df(self, streaming_df):
-        return SQLContext(self._spark_context).createDataFrame(
-            self._spark_context.emptyRDD(), streaming_df.schema
+    @staticmethod
+    def convert_spark_type_string_to_spark_type(spark_type_string):
+        if spark_type_string == "STRING":
+            return StringType()
+        elif spark_type_string == "BINARY":
+            return BooleanType()
+        elif spark_type_string == "BYTE":
+            return ByteType()
+        elif spark_type_string == "SHORT":
+            return ShortType()
+        elif spark_type_string == "INT":
+            return IntegerType()
+        elif spark_type_string == "LONG":
+            return LongType()
+        elif spark_type_string == "FLOAT":
+            return FloatType()
+        elif spark_type_string == "DOUBLE":
+            return DoubleType()
+        elif spark_type_string == "TIMESTAMP":
+            return TimestampType()
+        elif spark_type_string == "DATE":
+            return DateType()
+        elif spark_type_string == "BOOLEAN":
+            return BooleanType()
+        else:
+            raise ValueError(
+                f"Spark type {str(type(spark_type_string))} not supported."
+            )
+
+    @staticmethod
+    def convert_spark_type_to_offline_type(spark_type, using_hudi):
+        # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to
+        # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
+        # to Hive. Therefore, we need to force Hive to create int-typed columns in the first place.
+
+        if not using_hudi:
+            return spark_type.simpleString()
+        elif type(spark_type) == ByteType:
+            return "int"
+        elif type(spark_type) == ShortType:
+            return "int"
+        elif type(spark_type) in [
+            BooleanType,
+            IntegerType,
+            LongType,
+            FloatType,
+            DoubleType,
+            DecimalType,
+            TimestampType,
+            DateType,
+            StringType,
+            ArrayType,
+            StructType,
+            BinaryType,
+        ]:
+            return spark_type.simpleString()
+
+        raise ValueError(f"spark type {str(type(spark_type))} not supported")
+
+    @staticmethod
+    def _convert_offline_type_to_spark_type(offline_type):
+        if "array<" == offline_type[:6]:
+            return ArrayType(
+                Engine._convert_offline_type_to_spark_type(offline_type[6:-1])
+            )
+        elif "struct<label:string,index:int>" in offline_type:
+            return StructType(
+                [
+                    StructField("label", StringType(), True),
+                    StructField("index", IntegerType(), True),
+                ]
+            )
+        else:
+            offline_type_spark_type_mapping = {
+                "string": StringType(),
+                "bigint": LongType(),
+                "int": IntegerType(),
+                "smallint": ShortType(),
+                "tinyint": ByteType(),
+                "float": FloatType(),
+                "double": DoubleType(),
+                "timestamp": TimestampType(),
+                "boolean": BooleanType(),
+                "date": DateType(),
+                "binary": BinaryType(),
+                "decimal": DecimalType(),
+            }
+            if offline_type in offline_type_spark_type_mapping:
+                return offline_type_spark_type_mapping[offline_type]
+            else:
+                raise FeatureStoreException(
+                    f"Offline type {offline_type} cannot be converted to a spark type."
+                )
+
+    @staticmethod
+    def cast_columns(df, schema, online=False):
+        pyspark_schema = dict(
+            [
+                (_feat.name, Engine._convert_offline_type_to_spark_type(_feat.type))
+                for _feat in schema
+            ]
         )
+        for _feat in pyspark_schema:
+            df = df.withColumn(_feat, col(_feat).cast(pyspark_schema[_feat]))
+        return df
 
 
 class SchemaError(Exception):
