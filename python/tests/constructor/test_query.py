@@ -152,3 +152,14 @@ class TestQuery:
         assert q.left_feature_group_start_time is None
         assert q._joins[0].query.left_feature_group_end_time is None
         assert q._joins[0].query.left_feature_group_start_time is None
+
+    def test_collect_feature(self, mocker, backend_fixtures):
+        mocker.patch("hsfs.engine.get_type", return_value="python")
+        q = query.Query.from_response_json(backend_fixtures["query"]["get"]["response"])
+
+        features = q._collect_features()
+        feature_names = [feature.name for feature in features]
+
+        expected_feature_names = ["test_left_features", "test_left_features2"]
+        assert len(feature_names) == len(expected_feature_names)
+        assert feature_names == expected_feature_names
