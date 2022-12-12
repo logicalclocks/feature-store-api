@@ -86,6 +86,12 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
+        warnings.warn(
+            "All jobs associated to feature group `{}`, version `{}` will be removed.".format(
+                self._name, self._version
+            ),
+            util.JobWarning,
+        )
         self._feature_group_engine.delete(self)
 
     def select_all(self, include_primary_key=True, include_event_time=True):
@@ -324,6 +330,51 @@ class FeatureGroupBase:
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._feature_group_engine.get_tags(self)
+
+    def get_parent_feature_groups(self):
+        """Get the parents of this feature group, based on explicit provenance.
+        Parents are feature groups or external feature groups. These feature
+        groups can be accessible, deleted or inaccessible.
+        For deleted and inaccessible feature groups, only a minimal information is
+        returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ProvenanceLinks`:  the feature groups used to generated this feature group
+        """
+        return self._feature_group_engine.get_parent_feature_groups(self)
+
+    def get_generated_feature_views(self):
+        """Get the generated feature view using this feature group, based on explicit
+        provenance. These feature views can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated feature view links, so deleted
+        will always be empty.
+        For inaccessible feature views, only a minimal information is returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ProvenanceLinks`:  the feature views generated using this feature group
+        """
+        return self._feature_group_engine.get_generated_feature_views(self)
+
+    def get_generated_feature_groups(self):
+        """Get the generated feature groups using this feature group, based on explicit
+        provenance. These feature groups can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated feature group links, so deleted
+        will always be empty.
+        For inaccessible feature groups, only a minimal information is returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ProvenanceLinks`:  the feature groups generated using this feature group
+        """
+        return self._feature_group_engine.get_generated_feature_groups(self)
 
     def get_feature(self, name: str):
         """Retrieve a `Feature` object from the schema of the feature group.
@@ -1069,6 +1120,8 @@ class FeatureGroup(FeatureGroupBase):
         event_time=None,
         stream=False,
         expectation_suite=None,
+        parents=None,
+        href=None,
     ):
         super().__init__(featurestore_id, location, event_time=event_time)
 
@@ -1092,6 +1145,7 @@ class FeatureGroup(FeatureGroupBase):
         self._subject = None
         self._online_topic_name = online_topic_name
         self._stream = stream
+        self._parents = parents
         self._deltastreamer_jobconf = None
 
         if self._id:
@@ -1171,6 +1225,7 @@ class FeatureGroup(FeatureGroupBase):
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
         )
+        self._href = href
 
     def read(
         self,
@@ -1955,6 +2010,7 @@ class FeatureGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
             "eventTime": self.event_time,
             "expectationSuite": self._expectation_suite,
+            "parents": self._parents,
         }
         if self._stream:
             fg_meta_dict["deltaStreamerJobConf"] = self._deltastreamer_jobconf
@@ -2079,6 +2135,12 @@ class FeatureGroup(FeatureGroupBase):
         """Whether to enable real time stream writing capabilities."""
         return self._stream
 
+    @property
+    def parents(self):
+        """Parent feature groups as origin of the data in the current feature group.
+        This is part of explicit provenance"""
+        return self._parents
+
     @version.setter
     def version(self, version):
         self._version = version
@@ -2111,6 +2173,10 @@ class FeatureGroup(FeatureGroupBase):
     def stream(self, stream):
         self._stream = stream
 
+    @parents.setter
+    def parents(self, new_parents):
+        self._parents = new_parents
+
 
 class ExternalFeatureGroup(FeatureGroupBase):
     EXTERNAL_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
@@ -2137,6 +2203,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         statistics_config=None,
         event_time=None,
         expectation_suite=None,
+        href=None,
     ):
         super().__init__(featurestore_id, location, event_time=event_time)
         self._feature_store_name = featurestore_name
@@ -2195,6 +2262,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             self._storage_connector = storage_connector
 
         self.expectation_suite = expectation_suite
+        self._href = href
 
     def save(self):
         self._feature_group_engine.save(self)
@@ -2371,3 +2439,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
     @features.setter
     def features(self, new_features):
         self._features = new_features
+
+    @property
+    def feature_store_name(self):
+        """Name of the feature store in which the feature group is located."""
+        return self._feature_store_name

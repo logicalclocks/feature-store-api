@@ -84,7 +84,7 @@ public class MainClass {
 
     // get feature store handle
     HopsworksConnection connection = HopsworksConnection.builder().build();
-    FeatureStore fs = connection.getFeatureStore();
+    FeatureStore fs = connection.getFeatureStore((String) jobConf.get("feature_store"));
 
     // get feature group handle
     StreamFeatureGroup streamFeatureGroup = fs.getStreamFeatureGroup((String) jobConf.get("name"),

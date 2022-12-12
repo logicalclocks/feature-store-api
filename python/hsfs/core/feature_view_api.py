@@ -24,6 +24,8 @@ from hsfs.core import job
 from hsfs.constructor import serving_prepared_statement, query
 from hsfs.client.exceptions import RestAPIError
 
+from hsfs.core import explicit_provenance
+
 
 class FeatureViewApi:
     _POST = "POST"
@@ -38,6 +40,8 @@ class FeatureViewApi:
     _TRANSFORMATION = "transformation"
     _TRAINING_DATASET = "trainingdatasets"
     _COMPUTE = "compute"
+    _PROVENANCE = "provenance"
+    _LINKS = "links"
 
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
@@ -232,3 +236,37 @@ class FeatureViewApi:
                 version,
                 self._TRAINING_DATASET,
             ]
+
+    def get_parent_feature_groups(self, name, version):
+        """Get the parents of this feature view, based on explicit provenance.
+        Parents are feature groups or external feature groups. These feature
+        groups can be accessible, deleted or inaccessible.
+        For deleted and inaccessible feature groups, only a minimal information is
+        returned.
+
+        # Arguments
+            feature_view_instance: Metadata object of feature view.
+
+        # Returns
+            `ExplicitProvenance.Links`: the feature groups used to generated this
+            feature view
+        """
+        _client = client.get_instance()
+        path_params = self._base_path + [
+            name,
+            self._VERSION,
+            version,
+            self._PROVENANCE,
+            self._LINKS,
+        ]
+        query_params = {
+            "expand": "provenance_artifacts",
+            "upstreamLvls": 1,
+            "downstreamLvls": 0,
+        }
+        links_json = _client._send_request("GET", path_params, query_params)
+        return explicit_provenance.Links.from_response_json(
+            links_json,
+            explicit_provenance.Links.Direction.UPSTREAM,
+            explicit_provenance.Links.Type.FEATURE_GROUP,
+        )

@@ -161,6 +161,8 @@ public class FeatureGroupBase {
   }
 
   public void delete() throws FeatureStoreException, IOException {
+    LOGGER.warn("JobWarning: All jobs associated to feature group `" + name + "`, version `"
+        + version + "` will be removed.");
     featureGroupBaseEngine.delete(this);
   }
 

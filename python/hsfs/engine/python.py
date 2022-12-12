@@ -36,7 +36,7 @@ from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
 from typing import TypeVar, Optional, Dict, Any
-from confluent_kafka import Producer
+from confluent_kafka import Producer, KafkaError
 from tqdm.auto import tqdm
 from botocore.response import StreamingBody
 
@@ -73,8 +73,6 @@ except ImportError:
 
 
 class Engine:
-    APP_OP_INSERT_FG = "insert_fg"
-
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
@@ -801,11 +799,13 @@ class Engine:
         writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
 
         def acked(err, msg):
-            if err is not None and offline_write_options.get("debug_kafka", False):
-                print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
-            else:
-                # update progress bar for each msg
-                progress_bar.update()
+            if err is not None:
+                if offline_write_options.get("debug_kafka", False):
+                    print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
+                if err.code() == KafkaError.TOPIC_AUTHORIZATION_FAILED:
+                    raise err  # Stop producing, the user is not authorized
+            # update progress bar for each msg
+            progress_bar.update()
 
         # initialize progress bar
         progress_bar = tqdm(
