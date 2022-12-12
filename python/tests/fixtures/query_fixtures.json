@@ -125,7 +125,7 @@
               "onlineEnabled": true,
               "timeTravelFormat": "HUDI"
             },
-            "left_features": "test_left_features",
+            "left_features": "test_left_features2",
             "feature_store_name": "test_feature_store_name",
             "feature_store_id": "test_feature_store_id",
             "left_feature_group_start_time": "test_left_feature_group_start_time",
