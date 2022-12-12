@@ -30,6 +30,7 @@ class FeatureStoreApi:
         :return: the featurestore metadata
         :rtype: FeatureStore
         """
+        print("identifier {}".format(identifier))
         _client = client.get_instance()
         path_params = ["project", _client._project_id, "featurestores", identifier]
         return FeatureStore.from_response_json(
