@@ -1270,6 +1270,10 @@ class FeatureGroup(FeatureGroupBase):
             dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
                 `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
             read_options: Additional read options as key/value pairs, defaults to `{}`.
+                Only for Python engine: Set `read_options={"pandas_types": True}`
+                to retrieve columns as Pandas nullable types
+                rather than numpy/object(string) types (experimental).
+                (see https://pandas.pydata.org/docs/user_guide/integer_na.html).
 
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
