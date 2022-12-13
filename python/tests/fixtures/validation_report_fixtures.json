@@ -30,7 +30,7 @@
       "expand": "test_expand",
       "type": "validationReportDTO",
       "validation_time": "test_validation_time",
-      "ingestion_result": "test_ingestion_result"
+      "ingestion_result": "INGESTED"
     }
   },
   "get_basic_info": {

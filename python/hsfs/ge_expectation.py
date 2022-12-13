@@ -89,7 +89,11 @@ class GeExpectation:
         return self.json()
 
     def __repr__(self):
-        return f"Expectation({self._expectation_type}, {self._kwargs}, {self._meta})"
+        return (
+            f"GeExpectation(id={self._id},"
+            + f"expectation_type='{self._expectation_type}', "
+            + f"kwargs={self._kwargs}, meta={self._meta})"
+        )
 
     def to_ge_type(self) -> ge.core.ExpectationConfiguration:
         return ge.core.ExpectationConfiguration(

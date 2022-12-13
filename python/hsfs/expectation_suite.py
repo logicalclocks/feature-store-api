@@ -389,7 +389,25 @@ class ExpectationSuite:
         return self.json()
 
     def __repr__(self):
-        return f"ExpectationSuite({self._expectation_suite_name}, {len(self._expectations)} expectations , {self._meta})"
+        es = "ExpectationSuite("
+
+        if hasattr(self, "id"):
+            es += f"id={self._id}, "
+
+        es += f"expectation_suite_name='{self._expectation_suite_name}', "
+        es += f"expectations={self._expectations}, "
+        es += f"meta={self._meta}, "
+        es += f"data_asset_type='{self._data_asset_type}', "
+        es += f"ge_cloud_id={self._ge_cloud_id}, "
+        es += f"run_validation={self._run_validation}, "
+        es += f"validation_ingestion_policy='{self._validation_ingestion_policy}'"
+
+        if hasattr(self, "_feature_group_id"):
+            es += f", feature_group_id={self._feature_group_id}, "
+            es += f"feature_store_id={self._feature_store_id}"
+
+        es += ")"
+        return es
 
     @property
     def id(self) -> Optional[int]:
@@ -408,6 +426,8 @@ class ExpectationSuite:
     @expectation_suite_name.setter
     def expectation_suite_name(self, expectation_suite_name: str):
         self._expectation_suite_name = expectation_suite_name
+        if self.id:
+            self._expectation_suite_engine.update_metadata_from_fields(**self.to_dict())
 
     @property
     def data_asset_type(self) -> str:
@@ -435,6 +455,8 @@ class ExpectationSuite:
     @run_validation.setter
     def run_validation(self, run_validation: bool):
         self._run_validation = run_validation
+        if self.id:
+            self._expectation_suite_engine.update_metadata_from_fields(**self.to_dict())
 
     @property
     def validation_ingestion_policy(self) -> str:
@@ -448,6 +470,8 @@ class ExpectationSuite:
     @validation_ingestion_policy.setter
     def validation_ingestion_policy(self, validation_ingestion_policy: str):
         self._validation_ingestion_policy = validation_ingestion_policy.upper()
+        if self.id:
+            self._expectation_suite_engine.update_metadata_from_fields(**self.to_dict())
 
     @property
     def expectations(self) -> List[GeExpectation]:
@@ -488,3 +512,7 @@ class ExpectationSuite:
             self._meta = json.loads(meta)
         else:
             raise ValueError("Meta field must be stringified json or dict.")
+
+        if self._id and hasattr(self, "_expectation_suite_engine"):
+            # Adding test on suite_engine allows to not run it on init
+            self._expectation_suite_engine.update_metadata_from_fields(**self.to_dict())

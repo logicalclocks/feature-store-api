@@ -37,6 +37,8 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -139,6 +141,7 @@ public class TrainingDataset {
   private CodeEngine codeEngine = new CodeEngine(EntityEndpointType.TRAINING_DATASET);
   private TrainingDatasetUtils utils = new TrainingDatasetUtils();
   private VectorServer vectorServer = new VectorServer();
+  private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDataset.class);
 
   @Builder
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
@@ -152,7 +155,7 @@ public class TrainingDataset {
     this.name = name;
     this.version = version;
     this.description = description;
-    this.dataFormat = dataFormat != null ? dataFormat : DataFormat.CSV;
+    this.dataFormat = dataFormat != null ? dataFormat : DataFormat.PARQUET;
     this.coalesce = coalesce != null ? coalesce : false;
     this.location = location;
     this.storageConnector = storageConnector;
@@ -524,6 +527,8 @@ public class TrainingDataset {
    * @throws IOException
    */
   public void delete() throws FeatureStoreException, IOException {
+    LOGGER.warn("JobWarning: All jobs associated to training dataset `" + name + "`, version `"
+        + version + "` will be removed.");
     trainingDatasetEngine.delete(this);
   }
 
