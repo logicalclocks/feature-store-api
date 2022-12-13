@@ -39,7 +39,7 @@ class ValidationResult:
         expectation_id: Optional[int] = None,
         validation_report_id: Optional[int] = None,
         validation_time: Optional[int] = None,
-        ingestion_result: Optional[str] = None,
+        ingestion_result: Optional[str] = "UNKNOWN",
         href=None,
         expand=None,
         items=None,
@@ -211,17 +211,15 @@ class ValidationResult:
         return self._ingestion_result
 
     @ingestion_result.setter
-    def ingestion_result(self, ingestion_result: Optional[str]) -> None:
-        if ingestion_result:
-            if ingestion_result == "INGESTED" or ingestion_result == "REJECTED":
-                self._ingestion_result = ingestion_result
-            else:
-                raise ValueError(
-                    f"Illegal value for ingestion_result: {ingestion_result}."
-                    + "Choose either 'INGESTED' or 'REJECTED'"
-                )
+    def ingestion_result(self, ingestion_result: str = "UNKNOWN"):
+        allowed_values = ["INGESTED", "REJECTED", "UNKNOWN", "EXPERIMENT", "FG_DATA"]
+        if ingestion_result.upper() in allowed_values:
+            self._ingestion_result = ingestion_result
         else:
-            self._ingestion_result = None
+            raise ValueError(
+                f"Invalid Value {ingestion_result} for ingestion_result."
+                + f"Allowed values are {', '.join(allowed_values)}."
+            )
 
     def __str__(self) -> str:
         return self.json()

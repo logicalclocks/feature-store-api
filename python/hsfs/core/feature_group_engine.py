@@ -50,6 +50,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_group=feature_group,
             dataframe=feature_dataframe,
             validation_options=validation_options,
+            ingestion_result="INGESTED",
         )
 
         if ge_report is not None and ge_report.ingestion_result == "REJECTED":
@@ -104,6 +105,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_group=feature_group,
             dataframe=feature_dataframe,
             validation_options=validation_options,
+            ingestion_result="INGESTED",
             ge_type=False,
         )
 

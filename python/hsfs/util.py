@@ -272,6 +272,10 @@ class VersionWarning(Warning):
     pass
 
 
+class JobWarning(Warning):
+    pass
+
+
 class StorageWarning(Warning):
     pass
 

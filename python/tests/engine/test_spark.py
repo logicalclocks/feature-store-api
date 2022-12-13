@@ -33,6 +33,7 @@ from pyspark.sql.types import (
     BooleanType,
     StructField,
     MapType,
+    ArrayType,
 )
 
 from hsfs import (
@@ -49,6 +50,7 @@ from hsfs.core import training_dataset_engine
 from hsfs.engine import spark
 from hsfs.constructor import query, hudi_feature_group_alias
 from hsfs.client import exceptions
+from hsfs.training_dataset_feature import TrainingDatasetFeature
 
 engine._engine_type = "spark"
 
@@ -3513,7 +3515,7 @@ class TestSpark:
     def test_parse_schema_feature_group(self, mocker):
         # Arrange
         mock_spark_engine_convert_spark_type = mocker.patch(
-            "hsfs.engine.spark.Engine.convert_spark_type"
+            "hsfs.engine.spark.Engine.convert_spark_type_to_offline_type"
         )
 
         spark_engine = spark.Engine()
@@ -3538,7 +3540,7 @@ class TestSpark:
     def test_parse_schema_feature_group_hudi(self, mocker):
         # Arrange
         mock_spark_engine_convert_spark_type = mocker.patch(
-            "hsfs.engine.spark.Engine.convert_spark_type"
+            "hsfs.engine.spark.Engine.convert_spark_type_to_offline_type"
         )
 
         spark_engine = spark.Engine()
@@ -3563,7 +3565,7 @@ class TestSpark:
     def test_parse_schema_feature_group_value_error(self, mocker):
         # Arrange
         mock_spark_engine_convert_spark_type = mocker.patch(
-            "hsfs.engine.spark.Engine.convert_spark_type"
+            "hsfs.engine.spark.Engine.convert_spark_type_to_offline_type"
         )
 
         spark_engine = spark.Engine()
@@ -3610,21 +3612,87 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=IntegerType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=IntegerType(),
             using_hudi=False,
         )
 
         # Assert
         assert result == "int"
 
+    def test_cast_columns(self):
+        class LabelIndex:
+            def __init__(self, label, index):
+                self.label = label
+                self.index = index
+
+        spark_engine = spark.Engine()
+        d = {
+            "string": ["s"],
+            "bigint": ["1"],
+            "int": ["1"],
+            "smallint": ["1"],
+            "tinyint": ["1"],
+            "float": ["1"],
+            "double": ["1"],
+            "timestamp": [1641340800000],
+            "boolean": ["False"],
+            "date": ["2022-01-27"],
+            "binary": ["1"],
+            "array<string>": [["123"]],
+            "struc": [LabelIndex("0", "1")],
+            "decimal": ["1.1"],
+        }
+        df = pd.DataFrame(data=d)
+        spark_df = spark_engine._spark_session.createDataFrame(df)
+        schema = [
+            TrainingDatasetFeature("string", type="string"),
+            TrainingDatasetFeature("bigint", type="bigint"),
+            TrainingDatasetFeature("int", type="int"),
+            TrainingDatasetFeature("smallint", type="smallint"),
+            TrainingDatasetFeature("tinyint", type="tinyint"),
+            TrainingDatasetFeature("float", type="float"),
+            TrainingDatasetFeature("double", type="double"),
+            TrainingDatasetFeature("timestamp", type="timestamp"),
+            TrainingDatasetFeature("boolean", type="boolean"),
+            TrainingDatasetFeature("date", type="date"),
+            TrainingDatasetFeature("binary", type="binary"),
+            TrainingDatasetFeature("array<string>", type="array<string>"),
+            TrainingDatasetFeature("struc", type="struct<label:string,index:int>"),
+            TrainingDatasetFeature("decimal", type="decimal"),
+        ]
+        cast_df = spark_engine.cast_columns(spark_df, schema)
+        expected = {
+            "string": StringType(),
+            "bigint": LongType(),
+            "int": IntegerType(),
+            "smallint": ShortType(),
+            "tinyint": ByteType(),
+            "float": FloatType(),
+            "double": DoubleType(),
+            "timestamp": TimestampType(),
+            "boolean": BooleanType(),
+            "date": DateType(),
+            "binary": BinaryType(),
+            "array<string>": ArrayType(StringType()),
+            "struc": StructType(
+                [
+                    StructField("label", StringType(), True),
+                    StructField("index", IntegerType(), True),
+                ]
+            ),
+            "decimal": DecimalType(),
+        }
+        for col in cast_df.dtypes:
+            assert col[1] == expected[col[0]].simpleString()
+
     def test_convert_spark_type_using_hudi_byte_type(self):
         # Arrange
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=ByteType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=ByteType(),
             using_hudi=True,
         )
 
@@ -3636,8 +3704,8 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=ShortType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=ShortType(),
             using_hudi=True,
         )
 
@@ -3649,8 +3717,8 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=BooleanType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=BooleanType(),
             using_hudi=True,
         )
 
@@ -3662,8 +3730,8 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=IntegerType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=IntegerType(),
             using_hudi=True,
         )
 
@@ -3675,8 +3743,8 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=LongType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=LongType(),
             using_hudi=True,
         )
 
@@ -3688,8 +3756,8 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=FloatType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=FloatType(),
             using_hudi=True,
         )
 
@@ -3701,8 +3769,8 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=DoubleType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=DoubleType(),
             using_hudi=True,
         )
 
@@ -3714,8 +3782,8 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=DecimalType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=DecimalType(),
             using_hudi=True,
         )
 
@@ -3727,8 +3795,8 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=TimestampType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=TimestampType(),
             using_hudi=True,
         )
 
@@ -3740,8 +3808,8 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=DateType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=DateType(),
             using_hudi=True,
         )
 
@@ -3753,8 +3821,8 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=StringType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=StringType(),
             using_hudi=True,
         )
 
@@ -3766,8 +3834,8 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=StructType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=StructType(),
             using_hudi=True,
         )
 
@@ -3779,8 +3847,8 @@ class TestSpark:
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.convert_spark_type(
-            hive_type=BinaryType(),
+        result = spark_engine.convert_spark_type_to_offline_type(
+            spark_type=BinaryType(),
             using_hudi=True,
         )
 
@@ -3793,8 +3861,8 @@ class TestSpark:
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            spark_engine.convert_spark_type(
-                hive_type=MapType(StringType(), StringType()),
+            spark_engine.convert_spark_type_to_offline_type(
+                spark_type=MapType(StringType(), StringType()),
                 using_hudi=True,
             )
 

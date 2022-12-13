@@ -24,10 +24,35 @@ from hsfs import (
     storage_connector,
     expectation_suite,
     util,
+    engine,
 )
 from hsfs.client.exceptions import FeatureStoreException
 import pytest
 import warnings
+
+engine.init("python")
+test_feature_group = feature_group.FeatureGroup(
+    name="test",
+    version=1,
+    description="description",
+    online_enabled=False,
+    time_travel_format="HUDI",
+    partition_key=[],
+    primary_key=["pk"],
+    hudi_precombine_key="pk",
+    featurestore_id=1,
+    featurestore_name="fs",
+    features=[
+        feature.Feature("pk", primary=True),
+        feature.Feature("ts", primary=False),
+        feature.Feature("f1", primary=False),
+        feature.Feature("f2", primary=False),
+    ],
+    statistics_config={},
+    event_time="ts",
+    stream=False,
+    expectation_suite=None,
+)
 
 
 class TestFeatureGroup:
@@ -261,6 +286,32 @@ class TestFeatureGroup:
             "Providing event_time as a single-element list is deprecated"
             + " and will be dropped in future versions. Provide the feature_name string instead."
         )
+
+    def test_select_all(self):
+        query = test_feature_group.select_all()
+        features = query.features
+        assert len(features) == 4
+        assert set([f.name for f in features]) == {"pk", "ts", "f1", "f2"}
+
+    def test_select_all_exclude_pk(self):
+        query = test_feature_group.select_all(include_primary_key=False)
+        features = query.features
+        assert len(features) == 3
+        assert set([f.name for f in features]) == {"ts", "f1", "f2"}
+
+    def test_select_all_exclude_ts(self):
+        query = test_feature_group.select_all(include_event_time=False)
+        features = query.features
+        assert len(features) == 3
+        assert set([f.name for f in features]) == {"pk", "f1", "f2"}
+
+    def test_select_all_exclude_pk_ts(self):
+        query = test_feature_group.select_all(
+            include_primary_key=False, include_event_time=False
+        )
+        features = query.features
+        assert len(features) == 2
+        assert set([f.name for f in features]) == {"f1", "f2"}
 
 
 class TestExternalFeatureGroup:

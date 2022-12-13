@@ -48,7 +48,8 @@ from hsfs.core import great_expectation_engine
 
 
 class FeatureGroupBase:
-    def __init__(self, featurestore_id, location):
+    def __init__(self, featurestore_id, location, event_time=None):
+        self.event_time = event_time
         self._location = location
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
@@ -85,9 +86,15 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
+        warnings.warn(
+            "All jobs associated to feature group `{}`, version `{}` will be removed.".format(
+                self._name, self._version
+            ),
+            util.JobWarning,
+        )
         self._feature_group_engine.delete(self)
 
-    def select_all(self):
+    def select_all(self, include_primary_key=True, include_event_time=True):
         """Select all features in the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
@@ -112,12 +119,19 @@ class FeatureGroupBase:
         # Returns
             `Query`. A query object with all features of the feature group.
         """
-        return query.Query(
-            left_feature_group=self,
-            left_features=self._features,
-            feature_store_name=self._feature_store_name,
-            feature_store_id=self._feature_store_id,
-        )
+        if include_event_time and include_primary_key:
+            return query.Query(
+                left_feature_group=self,
+                left_features=self._features,
+                feature_store_name=self._feature_store_name,
+                feature_store_id=self._feature_store_id,
+            )
+        elif include_event_time:
+            return self.select_except(self.primary_key)
+        elif include_primary_key:
+            return self.select_except([self.event_time])
+        else:
+            return self.select_except(self.primary_key + [self.event_time])
 
     def select(self, features: List[Union[str, feature.Feature]] = []):
         """Select a subset of features of the feature group and return a query object.
@@ -316,6 +330,51 @@ class FeatureGroupBase:
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the tags.
         """
         return self._feature_group_engine.get_tags(self)
+
+    def get_parent_feature_groups(self):
+        """Get the parents of this feature group, based on explicit provenance.
+        Parents are feature groups or external feature groups. These feature
+        groups can be accessible, deleted or inaccessible.
+        For deleted and inaccessible feature groups, only a minimal information is
+        returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ProvenanceLinks`:  the feature groups used to generated this feature group
+        """
+        return self._feature_group_engine.get_parent_feature_groups(self)
+
+    def get_generated_feature_views(self):
+        """Get the generated feature view using this feature group, based on explicit
+        provenance. These feature views can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated feature view links, so deleted
+        will always be empty.
+        For inaccessible feature views, only a minimal information is returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ProvenanceLinks`:  the feature views generated using this feature group
+        """
+        return self._feature_group_engine.get_generated_feature_views(self)
+
+    def get_generated_feature_groups(self):
+        """Get the generated feature groups using this feature group, based on explicit
+        provenance. These feature groups can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated feature group links, so deleted
+        will always be empty.
+        For inaccessible feature groups, only a minimal information is returned.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `ProvenanceLinks`:  the feature groups generated using this feature group
+        """
+        return self._feature_group_engine.get_generated_feature_groups(self)
 
     def get_feature(self, name: str):
         """Retrieve a `Feature` object from the schema of the feature group.
@@ -722,6 +781,7 @@ class FeatureGroupBase:
             ValidationReport,
             ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
         ],
+        ingestion_result: str = "UNKNOWN",
         ge_type: bool = True,
     ) -> Union[ValidationReport, ge.core.ExpectationSuiteValidationResult]:
         """Save validation report to hopsworks platform along previous reports of the same Feature Group.
@@ -732,13 +792,23 @@ class FeatureGroupBase:
             fs = ...
 
             # get the Feature Group instance
-            fg = fs.get_or_create_feature_group(...)
+            fg = fs.get_or_create_feature_group(..., expectation_suite=expectation_suite)
 
-            fg.save_validation_report(validation_report, run_validation=True)
+            validation_report = great_expectations.from_pandas(
+                my_experimental_features_df,
+                fg.get_expectation_suite()).validate()
+
+            fg.save_validation_report(validation_report, ingestion_result="EXPERIMENT")
             ```
 
         # Arguments
             validation_report: The validation report to attach to the Feature Group.
+            ingestion_result: Specify the fate of the associated data, defaults
+                to "UNKNOWN". Supported options are  "UNKNOWN", "INGESTED", "REJECTED",
+                "EXPERIMENT", "FG_DATA". Use "INGESTED" or "REJECTED" for validation
+                of DataFrames to be inserted in the Feature Group. Use "EXPERIMENT"
+                for testing and development and "FG_DATA" when validating data
+                already in the Feature Group.
             ge_type: If `True` returns a native Great Expectation type, Hopsworks
                 custom type otherwise. Conversion can be performed via the `to_ge_type()`
                 method on hopsworks type. Defaults to `True`.
@@ -751,11 +821,18 @@ class FeatureGroupBase:
                 validation_report,
                 ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
             ):
-                report = ValidationReport(**validation_report.to_json_dict())
+                report = ValidationReport(
+                    **validation_report.to_json_dict(),
+                    ingestion_result=ingestion_result,
+                )
             elif isinstance(validation_report, dict):
-                report = ValidationReport(**validation_report)
+                report = ValidationReport(
+                    **validation_report, ingestion_result=ingestion_result
+                )
             elif isinstance(validation_report, ValidationReport):
                 report = validation_report
+                if ingestion_result != "UNKNOWN":
+                    report.ingestion_result = ingestion_result
 
             return self._validation_report_engine.save(
                 validation_report=report, ge_type=ge_type
@@ -770,8 +847,7 @@ class FeatureGroupBase:
         expectation_id: int,
         start_validation_time: Union[str, int, datetime, date, None] = None,
         end_validation_time: Union[str, int, datetime, date, None] = None,
-        ingested_only: bool = False,
-        rejected_only: bool = False,
+        filter_by: List[str] = [],
         ge_type: bool = True,
     ) -> Union[List[ValidationResult], List[ge.core.ExpectationValidationResult]]:
         """Fetch validation history of an Expectation specified by its id.
@@ -780,7 +856,7 @@ class FeatureGroupBase:
         ```python3
         validation_history = fg.get_validation_history(
             expectation_id=1,
-            ingested_only=True,
+            fliter_by=["REJECTED", "UNKNOWN"],
             start_validation_time="2022-01-01 00:00:00",
             end_validation_time=datetime.datetime.now(),
             ge_type=False
@@ -789,8 +865,7 @@ class FeatureGroupBase:
 
         # Arguments
             expectation_id: id of the Expectation for which to fetch the validation history
-            ingested_only: fetch only validation result corresponding to an insertion, defaults to False.
-            rejected_only: fetch only validation result corresponding to a rejection, defaults to False.
+            filter_by: list of ingestion_result category to keep. Ooptions are "INGESTED", "REJECTED", "FG_DATA", "EXPERIMENT", "UNKNOWN".
             start_validation_time: fetch only validation result posterior to the provided time, inclusive.
             Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
             end_validation_time: fetch only validation result prior to the provided time, inclusive.
@@ -807,8 +882,7 @@ class FeatureGroupBase:
                 expectation_id=expectation_id,
                 start_validation_time=start_validation_time,
                 end_validation_time=end_validation_time,
-                ingested_only=ingested_only,
-                rejected_only=rejected_only,
+                filter_by=filter_by,
                 ge_type=ge_type,
             )
         else:
@@ -1046,8 +1120,10 @@ class FeatureGroup(FeatureGroupBase):
         event_time=None,
         stream=False,
         expectation_suite=None,
+        parents=None,
+        href=None,
     ):
-        super().__init__(featurestore_id, location)
+        super().__init__(featurestore_id, location, event_time=event_time)
 
         self._feature_store_name = featurestore_name
         self._description = description
@@ -1068,8 +1144,8 @@ class FeatureGroup(FeatureGroupBase):
 
         self._subject = None
         self._online_topic_name = online_topic_name
-        self.event_time = event_time
         self._stream = stream
+        self._parents = parents
         self._deltastreamer_jobconf = None
 
         if self._id:
@@ -1149,6 +1225,7 @@ class FeatureGroup(FeatureGroupBase):
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
         )
+        self._href = href
 
     def read(
         self,
@@ -1759,6 +1836,7 @@ class FeatureGroup(FeatureGroupBase):
         expectation_suite: Optional[ExpectationSuite] = None,
         save_report: Optional[bool] = False,
         validation_options: Optional[Dict[Any, Any]] = {},
+        ingestion_result: str = "UNKNOWN",
         ge_type: bool = True,
     ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
         """Run validation based on the attached expectations.
@@ -1786,6 +1864,12 @@ class FeatureGroup(FeatureGroupBase):
             validation_options: Additional validation options as key-value pairs, defaults to `{}`.
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+            ingestion_result: Specify the fate of the associated data, defaults
+                to "UNKNOWN". Supported options are  "UNKNOWN", "INGESTED", "REJECTED",
+                "EXPERIMENT", "FG_DATA". Use "INGESTED" or "REJECTED" for validation
+                of DataFrames to be inserted in the Feature Group. Use "EXPERIMENT"
+                for testing and development and "FG_DATA" when validating data
+                already in the Feature Group.
             save_report: Whether to save the report to the backend. This is only possible if the Expectation suite
                 is initialised and attached to the Feature Group. Defaults to False.
             ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.
@@ -1796,6 +1880,8 @@ class FeatureGroup(FeatureGroupBase):
         # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
         if dataframe is None:
             dataframe = self.read()
+            if ingestion_result == "UNKNOWN":
+                ingestion_result = "FG_DATA"
 
         return self._great_expectation_engine.validate(
             self,
@@ -1803,6 +1889,7 @@ class FeatureGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             save_report=save_report,
             validation_options=validation_options,
+            ingestion_result=ingestion_result,
             ge_type=ge_type,
         )
 
@@ -1921,8 +2008,9 @@ class FeatureGroup(FeatureGroupBase):
             if not self._stream
             else "streamFeatureGroupDTO",
             "statisticsConfig": self._statistics_config,
-            "eventTime": self._event_time,
+            "eventTime": self.event_time,
             "expectationSuite": self._expectation_suite,
+            "parents": self._parents,
         }
         if self._stream:
             fg_meta_dict["deltaStreamerJobConf"] = self._deltastreamer_jobconf
@@ -2047,6 +2135,12 @@ class FeatureGroup(FeatureGroupBase):
         """Whether to enable real time stream writing capabilities."""
         return self._stream
 
+    @property
+    def parents(self):
+        """Parent feature groups as origin of the data in the current feature group.
+        This is part of explicit provenance"""
+        return self._parents
+
     @version.setter
     def version(self, version):
         self._version = version
@@ -2079,6 +2173,10 @@ class FeatureGroup(FeatureGroupBase):
     def stream(self, stream):
         self._stream = stream
 
+    @parents.setter
+    def parents(self, new_parents):
+        self._parents = new_parents
+
 
 class ExternalFeatureGroup(FeatureGroupBase):
     EXTERNAL_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
@@ -2105,9 +2203,9 @@ class ExternalFeatureGroup(FeatureGroupBase):
         statistics_config=None,
         event_time=None,
         expectation_suite=None,
+        href=None,
     ):
-        super().__init__(featurestore_id, location)
-
+        super().__init__(featurestore_id, location, event_time=event_time)
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
@@ -2118,7 +2216,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._data_format = data_format.upper() if data_format else None
         self._path = path
         self._id = id
-        self._event_time = event_time
         self._expectation_suite = expectation_suite
 
         self._features = [
@@ -2165,6 +2262,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             self._storage_connector = storage_connector
 
         self.expectation_suite = expectation_suite
+        self._href = href
 
     def save(self):
         self._feature_group_engine.save(self)
@@ -2341,3 +2439,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
     @features.setter
     def features(self, new_features):
         self._features = new_features
+
+    @property
+    def feature_store_name(self):
+        """Name of the feature store in which the feature group is located."""
+        return self._feature_store_name

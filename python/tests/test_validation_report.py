@@ -33,7 +33,7 @@ class TestValidationReport:
         assert vr._validation_time == "test_validation_time"
         assert vr._featurestore_id == "test_featurestore_id"
         assert vr._featuregroup_id == "test_featuregroup_id"
-        assert vr.ingestion_result == "test_ingestion_result"
+        assert vr.ingestion_result == "INGESTED"
         assert len(vr.results) == 1
         assert isinstance(vr.results[0], ge_validation_result.ValidationResult)
         assert vr.meta == {"meta_key": "meta_value"}
@@ -56,7 +56,7 @@ class TestValidationReport:
         assert vr._validation_time is None
         assert vr._featurestore_id is None
         assert vr._featuregroup_id is None
-        assert vr.ingestion_result is None
+        assert vr.ingestion_result == "UNKNOWN"
         assert len(vr.results) == 1
         assert isinstance(vr.results[0], ge_validation_result.ValidationResult)
         assert vr.meta == {"meta_key": "meta_value"}
