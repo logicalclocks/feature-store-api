@@ -104,15 +104,15 @@ class Query:
         # Returns
             `DataFrame`: DataFrame depending on the chosen type.
         """
+        sql_query, online_conn = self._prep_read(online, read_options)
+
         schema = None
         if "pandas_types" in read_options and read_options["pandas_types"]:
             schema = self._collect_features()
-            if None in [f.type for f in schema]:
+            if len(self.joins) > 0 or None in [f.type for f in schema]:
                 raise ValueError(
                     "Pandas types casting only supported for feature_group.read()/query.select_all()"
                 )
-
-        sql_query, online_conn = self._prep_read(online, read_options)
 
         return engine.get_instance().sql(
             sql_query,
