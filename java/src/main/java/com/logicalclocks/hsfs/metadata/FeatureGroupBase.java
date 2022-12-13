@@ -17,6 +17,7 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStore;
@@ -132,7 +133,21 @@ public class FeatureGroupBase {
   }
 
   public Query selectAll() {
-    return new Query(this, getFeatures());
+    return selectAll(true, true);
+  }
+
+  public Query selectAll(boolean includePrimaryKey, boolean includeEventTime) {
+    if (includePrimaryKey && includeEventTime) {
+      return new Query(this, getFeatures());
+    } else if (includePrimaryKey) {
+      return selectExcept(Lists.newArrayList(eventTime));
+    } else if (includeEventTime) {
+      return selectExcept(primaryKeys);
+    } else {
+      List<String> features = Lists.newArrayList(eventTime);
+      features.addAll(primaryKeys);
+      return selectExcept(features);
+    }
   }
 
   public Query selectExceptFeatures(List<Feature> features) {
