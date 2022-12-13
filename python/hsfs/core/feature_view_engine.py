@@ -365,22 +365,14 @@ class FeatureViewEngine:
             result = {}
             for split in splits:
                 path = training_data_obj.location + "/" + str(split.name)
-                result[split.name] = self._cast_columns(
-                    training_data_obj.data_format,
-                    self._read_dir_from_storage_connector(
-                        training_data_obj, path, read_options
-                    ),
-                    schema,
+                result[split.name] = self._read_dir_from_storage_connector(
+                    training_data_obj, path, read_options
                 )
             return result
         else:
             path = training_data_obj.location + "/" + training_data_obj.name
-            return self._cast_columns(
-                training_data_obj.data_format,
-                self._read_dir_from_storage_connector(
-                    training_data_obj, path, read_options
-                ),
-                schema,
+            return self._read_dir_from_storage_connector(
+                training_data_obj, path, read_options
             )
 
     def _cast_columns(self, data_format, df, schema):
