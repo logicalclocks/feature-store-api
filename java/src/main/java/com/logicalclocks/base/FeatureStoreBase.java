@@ -21,13 +21,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.base.engine.FeatureViewEngineBase;
 import com.logicalclocks.base.metadata.FeatureGroupApi;
 import com.logicalclocks.base.metadata.StorageConnectorApi;
-import com.logicalclocks.hsfs.TrainingDataset;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.collection.Seq;
 
 import java.io.IOException;
 import java.util.List;
@@ -211,7 +209,7 @@ public abstract class FeatureStoreBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public abstract Seq<TrainingDataset> getTrainingDatasets(@NonNull String name)
+  public abstract Object getTrainingDatasets(@NonNull String name)
       throws FeatureStoreException, IOException;
 
   @Override

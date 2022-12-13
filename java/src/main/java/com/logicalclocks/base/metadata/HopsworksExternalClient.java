@@ -114,6 +114,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     this.httpHost = httpHost;
   }
 
+  // TODO (davit): this needs to move to hsfs
   HopsworksExternalClient(String host, int port, Region region,
                           SecretStore secretStore, boolean hostnameVerification,
                           String trustStorePath, String apiKeyFilepath, String apiKeyValue)

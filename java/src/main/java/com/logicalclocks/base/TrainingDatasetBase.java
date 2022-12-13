@@ -27,7 +27,6 @@ import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.engine.VectorServer;
 import com.logicalclocks.base.metadata.Statistics;
 
-import com.logicalclocks.hsfs.DataFormat;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -58,10 +57,6 @@ public abstract class TrainingDatasetBase {
   @Getter
   @Setter
   private String description;
-
-  @Getter
-  @Setter
-  private DataFormat dataFormat;
 
   @Getter
   @Setter

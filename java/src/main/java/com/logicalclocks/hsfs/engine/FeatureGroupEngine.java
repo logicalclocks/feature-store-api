@@ -317,7 +317,7 @@ public class FeatureGroupEngine {
     return featureGroup;
   }
 
-  /*
+  /* TODO (davit):
   public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroupBase, List<Feature> features,
                                                           Class<T> fgClass)
       throws FeatureStoreException, IOException, ParseException {
