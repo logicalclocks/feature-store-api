@@ -1015,35 +1015,6 @@ class Engine:
         return [field[feature_name] for field in unique_values]
 
     @staticmethod
-    def convert_spark_type_string_to_spark_type(spark_type_string):
-        if spark_type_string == "STRING":
-            return StringType()
-        elif spark_type_string == "BINARY":
-            return BooleanType()
-        elif spark_type_string == "BYTE":
-            return ByteType()
-        elif spark_type_string == "SHORT":
-            return ShortType()
-        elif spark_type_string == "INT":
-            return IntegerType()
-        elif spark_type_string == "LONG":
-            return LongType()
-        elif spark_type_string == "FLOAT":
-            return FloatType()
-        elif spark_type_string == "DOUBLE":
-            return DoubleType()
-        elif spark_type_string == "TIMESTAMP":
-            return TimestampType()
-        elif spark_type_string == "DATE":
-            return DateType()
-        elif spark_type_string == "BOOLEAN":
-            return BooleanType()
-        else:
-            raise ValueError(
-                f"Spark type {str(type(spark_type_string))} not supported."
-            )
-
-    @staticmethod
     def convert_spark_type_to_offline_type(spark_type, using_hudi):
         # The HiveSyncTool is strict and does not support schema evolution from tinyint/short to
         # int. Avro, on the other hand, does not support tinyint/short and delivers them as int
