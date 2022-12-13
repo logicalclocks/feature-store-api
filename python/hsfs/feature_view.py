@@ -308,7 +308,7 @@ class FeatureView:
 
     def get_feature_vector(
         self,
-        entry: List[Dict[str, Any]],
+        entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]] = {},
         external: Optional[bool] = None,
     ):

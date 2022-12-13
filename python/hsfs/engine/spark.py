@@ -1086,6 +1086,8 @@ class Engine:
                     StructField("index", IntegerType(), True),
                 ]
             )
+        elif offline_type.startswith("decimal"):
+            return DecimalType()
         else:
             offline_type_spark_type_mapping = {
                 "string": StringType(),
@@ -1099,7 +1101,6 @@ class Engine:
                 "boolean": BooleanType(),
                 "date": DateType(),
                 "binary": BinaryType(),
-                "decimal": DecimalType(),
             }
             if offline_type in offline_type_spark_type_mapping:
                 return offline_type_spark_type_mapping[offline_type]

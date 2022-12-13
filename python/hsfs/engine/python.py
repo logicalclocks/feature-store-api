@@ -1042,13 +1042,14 @@ class Engine:
                 if (x is not None and x != "")
                 else None
             ).astype(pd.BooleanDtype())
+        elif offline_type == "string":
+            return feature_column.apply(lambda x: str(x) if x is not None else None)
         elif offline_type.startswith("decimal"):
             return feature_column.apply(
                 lambda x: decimal.Decimal(x) if (x is not None) else None
             )
         else:
             offline_dtype_mapping = {
-                "string": np.dtype("str"),
                 "bigint": pd.Int64Dtype(),
                 "int": pd.Int32Dtype(),
                 "smallint": pd.Int16Dtype(),
@@ -1073,7 +1074,7 @@ class Engine:
         elif online_type == "date":
             return pd.to_datetime(feature_column, utc=True).dt.date
         elif online_type.startswith("varchar") or online_type == "text":
-            return feature_column.astype(np.dtype("str"))
+            return feature_column.apply(lambda x: str(x) if x is not None else None)
         elif online_type == "boolean":
             return feature_column.apply(
                 lambda x: (ast.literal_eval(x) if type(x) is str else x)
