@@ -2179,11 +2179,7 @@ class FeatureView:
 
     @property
     def transformation_functions(self):
-        """Set transformation functions."""
-        if self._id is not None and self._transformation_functions is None:
-            self._transformation_functions = (
-                self._transformation_function_engine.get_td_transformation_fn(self)
-            )
+        """Get transformation functions."""
         return self._transformation_functions
 
     @transformation_functions.setter

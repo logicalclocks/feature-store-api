@@ -19,12 +19,64 @@ import numpy
 import datetime
 
 from hsfs import (
+    feature,
+    feature_group,
     training_dataset,
     transformation_function,
     transformation_function_attached,
     feature_view,
 )
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import transformation_function_engine
+
+fg1 = feature_group.FeatureGroup(
+    name="test1",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    features=[
+        feature.Feature("id"),
+        feature.Feature("label"),
+        feature.Feature("tf_name"),
+    ],
+    id=11,
+    stream=False,
+)
+
+fg2 = feature_group.FeatureGroup(
+    name="test2",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    features=[feature.Feature("id"), feature.Feature("tf1_name")],
+    id=12,
+    stream=False,
+)
+
+fg3 = feature_group.FeatureGroup(
+    name="test3",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    features=[
+        feature.Feature("id"),
+        feature.Feature("tf_name"),
+        feature.Feature("tf1_name"),
+        feature.Feature("tf3_name"),
+    ],
+    id=12,
+    stream=False,
+)
+
+query = fg1.select_all().join(fg2.select(["tf1_name"]), on=["id"])
+query_prefix = (
+    fg1.select_all()
+    .join(fg2.select(["tf1_name"]), on=["id"], prefix="second_")
+    .join(fg3.select(["tf_name", "tf1_name"]), on=["id"], prefix="third_")
+)
 
 
 class TestTransformationFunctionEngine:
@@ -241,6 +293,7 @@ class TestTransformationFunctionEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.constructor.fs_query.FsQuery")
 
         tf_engine = transformation_function_engine.TransformationFunctionEngine(
             feature_store_id
@@ -307,7 +360,7 @@ class TestTransformationFunctionEngine:
 
         fv = feature_view.FeatureView(
             name="test",
-            query="",
+            query=query,
             featurestore_id=99,
             transformation_functions=transformation_fn_dict,
             labels=[],
@@ -322,6 +375,104 @@ class TestTransformationFunctionEngine:
         assert len(fv._features) == 2
         assert fv._features[0].name == "tf_name"
         assert fv._features[1].name == "tf1_name"
+
+    def test_attach_transformation_fn_fv_q_prefix(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.client.get_instance")
+
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
+
+        def testFunction():
+            print("Test")
+
+        tf = transformation_function.TransformationFunction(
+            feature_store_id,
+            transformation_fn=testFunction,
+            builtin_source_code="",
+            output_type="str",
+        )
+
+        transformation_fn_dict = dict()
+
+        transformation_fn_dict["tf_name"] = tf
+        transformation_fn_dict["second_tf1_name"] = tf
+        transformation_fn_dict["third_tf_name"] = tf
+        transformation_fn_dict["third_tf1_name"] = tf
+
+        fv = feature_view.FeatureView(
+            name="test",
+            query=query_prefix,
+            featurestore_id=99,
+            transformation_functions=transformation_fn_dict,
+            labels=[],
+        )
+
+        # Act
+        tf_engine.attach_transformation_fn(
+            training_dataset_obj=None, feature_view_obj=fv
+        )
+
+        # Assert
+        assert len(fv._features) == 4
+        assert fv._features[0].name == "tf_name"
+        assert fv._features[1].name == "second_tf1_name"
+        assert fv._features[2].name == "third_tf_name"
+        assert fv._features[3].name == "third_tf1_name"
+
+    def test_attach_transformation_fn_fv_q_prefix_fail(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.client.get_instance")
+
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
+
+        def testFunction():
+            print("Test")
+
+        query_no_prefix = (
+            fg1.select_all()
+            .join(fg2.select(["tf1_name"]), on=["id"])
+            .join(fg3.select(["tf_name", "tf1_name"]), on=["id"])
+        )
+
+        tf = transformation_function.TransformationFunction(
+            feature_store_id,
+            transformation_fn=testFunction,
+            builtin_source_code="",
+            output_type="str",
+        )
+
+        transformation_fn_dict = dict()
+        transformation_fn_dict["tf_name"] = tf
+        transformation_fn_dict["tf1_name"] = tf
+
+        fv = feature_view.FeatureView(
+            name="test",
+            query=query_no_prefix,
+            featurestore_id=99,
+            transformation_functions=transformation_fn_dict,
+            labels=[],
+        )
+
+        # Act
+        with pytest.raises(FeatureStoreException) as e_info:
+            tf_engine.attach_transformation_fn(
+                training_dataset_obj=None, feature_view_obj=fv
+            )
+
+        # Assert
+        assert (
+            str(e_info.value)
+            == "Provided feature 'tf1_name' in transformation functions is ambiguous and exists in more than one "
+            "feature groups.You can provide the feature with the prefix that was specified in the join."
+        )
 
     def test_attach_transformation_fn_fv_labels(self, mocker):
         # Arrange
@@ -350,7 +501,7 @@ class TestTransformationFunctionEngine:
 
         fv = feature_view.FeatureView(
             name="test",
-            query="",
+            query=query,
             featurestore_id=99,
             transformation_functions=transformation_fn_dict,
             labels=["tf_name"],
