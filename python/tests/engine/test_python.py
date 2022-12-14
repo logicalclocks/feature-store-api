@@ -583,20 +583,20 @@ class TestPython:
 
         python_engine = python.Engine()
         d = {
-            "string": ["s"],
-            "bigint": [1],
-            "int": [1],
-            "smallint": [1],
-            "tinyint": [1],
-            "float": [1],
-            "double": [1],
-            "timestamp": [1641340800000],
-            "boolean": ["False"],
-            "date": ["2022-01-27"],
-            "binary": [b"1"],
-            "array<string>": ["['123']"],
-            "struc": ["{'label':'blue','index':45}"],
-            "decimal": ["1.1"],
+            "string": ["s", "s"],
+            "bigint": [1, 2],
+            "int": [1, 2],
+            "smallint": [1, 2],
+            "tinyint": [1, 2],
+            "float": [1.0, 2.2],
+            "double": [1.0, 2.2],
+            "timestamp": [1641340800000, 1641340800000],
+            "boolean": ["False", None],
+            "date": ["2022-01-27", "2022-01-28"],
+            "binary": [b"1", b"2"],
+            "array<string>": ["['123']", "['1234']"],
+            "struc": ["{'label':'blue','index':45}", "{'label':'blue','index':46}"],
+            "decimal": ["1.1", "1.2"],
         }
         df = pd.DataFrame(data=d)
         schema = [
@@ -616,6 +616,7 @@ class TestPython:
             TrainingDatasetFeature("decimal", type="decimal"),
         ]
         cast_df = python_engine.cast_columns(df, schema)
+        arrow_schema = pa.Schema.from_pandas(cast_df)
         expected = {
             "string": object,
             "bigint": pd.Int64Dtype(),
@@ -625,13 +626,18 @@ class TestPython:
             "float": np.dtype("float32"),
             "double": np.dtype("float64"),
             "timestamp": np.dtype("datetime64[ns]"),
-            "boolean": pd.BooleanDtype(),
+            "boolean": object,
             "date": np.dtype(date),
             "binary": object,
             "array<string>": object,
             "struc": object,
             "decimal": np.dtype(decimal.Decimal),
         }
+        assert pa.types.is_string(arrow_schema.field("string").type)
+        assert pa.types.is_boolean(arrow_schema.field("boolean").type)
+        assert pa.types.is_binary(arrow_schema.field("binary").type)
+        assert pa.types.is_list(arrow_schema.field("array<string>").type)
+        assert pa.types.is_struct(arrow_schema.field("struc").type)
         for col in cast_df.columns:
             assert cast_df[col].dtype == expected[col]
 
