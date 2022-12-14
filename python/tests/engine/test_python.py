@@ -1347,11 +1347,11 @@ class TestPython:
         # Act
         with pytest.raises(ValueError) as e_info:
             python_engine._convert_pandas_object_type_to_offline_type(
-                arrow_type=pa.bool_()
+                arrow_type=pa.time32("s")
             )
 
         # Assert
-        assert str(e_info.value) == "dtype 'O' (arrow_type 'bool') not supported"
+        assert str(e_info.value) == "dtype 'O' (arrow_type 'time32[s]') not supported"
 
     def test_save_dataframe(self, mocker):
         # Arrange
