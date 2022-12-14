@@ -1017,8 +1017,6 @@ class Engine:
                 return "int"
             elif dtype == pd.Int64Dtype():
                 return "bigint"
-            elif dtype == pd.BooleanDtype():
-                return "boolean"
 
         raise ValueError(f"dtype '{dtype}' not supported")
 
@@ -1044,6 +1042,8 @@ class Engine:
             return "binary"
         elif pa.types.is_string(arrow_type) or pa.types.is_unicode(arrow_type):
             return "string"
+        elif pa.types.is_boolean(arrow_type):
+            return "boolean"
 
         raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
 
@@ -1066,7 +1066,7 @@ class Engine:
                 lambda x: (ast.literal_eval(x) if type(x) is str else x)
                 if (x is not None and x != "")
                 else None
-            ).astype(pd.BooleanDtype())
+            )
         elif offline_type == "string":
             return feature_column.apply(lambda x: str(x) if x is not None else None)
         elif offline_type.startswith("decimal"):
@@ -1105,7 +1105,7 @@ class Engine:
                 lambda x: (ast.literal_eval(x) if type(x) is str else x)
                 if (x is not None and x != "")
                 else None
-            ).astype(pd.BooleanDtype())
+            )
         elif online_type.startswith("decimal"):
             return feature_column.apply(
                 lambda x: decimal.Decimal(x) if (x is not None) else None
