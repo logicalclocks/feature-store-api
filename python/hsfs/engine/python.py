@@ -829,8 +829,6 @@ class Engine:
                     row[k] = row[k].to_pydatetime()
                 if isinstance(row[k], datetime) and row[k].tzinfo is None:
                     row[k] = row[k].replace(tzinfo=timezone.utc)
-                if isinstance(row[k], pd._libs.missing.NAType):
-                    row[k] = None
 
             # encode complex features
             row = self._encode_complex_features(feature_writers, row)
