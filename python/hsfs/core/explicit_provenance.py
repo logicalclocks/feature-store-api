@@ -33,6 +33,7 @@ class Artifact:
         type,
         meta_type,
         href=None,
+        exception_cause=None,
     ):
         self._feature_store_name = feature_store_name
         self._name = name
@@ -40,6 +41,7 @@ class Artifact:
         self._type = type
         self._meta_type = meta_type
         self._href = href
+        self._exception_cause = exception_cause
 
     @property
     def feature_store_name(self):
@@ -67,7 +69,7 @@ class Artifact:
         return (
             f"Artifact({self._feature_store_name!r}, {self._name!r}, "
             f"{self._version!r}, {self._type!r}, {self._meta_type!r}, "
-            f"{self._href!r})"
+            f"{self._href!r}, {self._exception_cause!r})"
         )
 
     @staticmethod
