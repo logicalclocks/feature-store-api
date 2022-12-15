@@ -24,6 +24,7 @@ class Artifact:
     class MetaType(Enum):
         DELETED = 1
         INACCESSIBLE = 2
+        FAULTY = 3
 
     def __init__(
         self,
@@ -74,7 +75,15 @@ class Artifact:
 
     @staticmethod
     def from_response_json(link_json: dict):
-        if bool(link_json["deleted"]):
+        if bool(link_json["exception_cause"]):
+            return Artifact(
+                link_json["artifact"]["project"],
+                link_json["artifact"]["name"],
+                link_json["artifact"]["version"],
+                link_json["artifact_type"],
+                Artifact.MetaType.FAULTY,
+            )
+        elif bool(link_json["deleted"]):
             return Artifact(
                 link_json["artifact"]["project"],
                 link_json["artifact"]["name"],
@@ -98,6 +107,7 @@ class Links:
         self._accessible = []
         self._deleted = []
         self._inaccessible = []
+        self._faulty = []
 
     @property
     def deleted(self):
@@ -110,6 +120,10 @@ class Links:
     @property
     def accessible(self):
         return self._accessible
+
+    @property
+    def faulty(self):
+        return self._faulty
 
     class Direction(Enum):
         UPSTREAM = 1
@@ -125,7 +139,7 @@ class Links:
     def __repr__(self):
         return (
             f"Links({self._accessible!r}, {self._deleted!r}"
-            f", {self._inaccessible!r})"
+            f", {self._inaccessible!r}, {self._faulty!r})"
         )
 
     @staticmethod
@@ -142,7 +156,9 @@ class Links:
         links = Links()
         for link_json in links_json:
             if link_json["node"]["artifact_type"] in artifacts:
-                if bool(link_json["node"]["accessible"]):
+                if bool(link_json["node"]["exception_cause"]):
+                    links._faulty.append(Artifact.from_response_json(link_json["node"]))
+                elif bool(link_json["node"]["accessible"]):
                     links.accessible.append(Links.__feature_group(link_json["node"]))
                 elif bool(link_json["node"]["deleted"]):
                     links.deleted.append(Artifact.from_response_json(link_json["node"]))
@@ -157,7 +173,9 @@ class Links:
         links = Links()
         for link_json in links_json:
             if link_json["node"]["artifact_type"] in artifacts:
-                if bool(link_json["node"]["accessible"]):
+                if bool(link_json["node"]["exception_cause"]):
+                    links._faulty.append(Artifact.from_response_json(link_json["node"]))
+                elif bool(link_json["node"]["accessible"]):
                     links.accessible.append(
                         feature_view.FeatureView.from_response_json(
                             link_json["node"]["artifact"]
