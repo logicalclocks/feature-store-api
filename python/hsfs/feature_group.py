@@ -655,7 +655,7 @@ class FeatureGroupBase:
         # Arguments
             expectation_suite: The expectation suite to attach to the Feature Group.
             overwrite: If an Expectation Suite is already attached, overwrite it.
-            The new suite will have its own validation history, but former reports are preserved.
+                The new suite will have its own validation history, but former reports are preserved.
             run_validation: Set whether the expectation_suite will run on ingestion
             validation_ingestion_policy: Set the policy for ingestion to the Feature Group.
                 - "STRICT" only allows DataFrame passing validation to be inserted into Feature Group.
