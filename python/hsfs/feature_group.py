@@ -635,6 +635,7 @@ class FeatureGroupBase:
         expectation_suite: Union[ExpectationSuite, ge.core.ExpectationSuite],
         run_validation: bool = True,
         validation_ingestion_policy: str = "ALWAYS",
+        overwrite: bool = False,
     ) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
         """Attach an expectation suite to a feature group and saves it for future use. If an expectation
         suite is already attached, it is replaced. Note that the provided expectation suite is modified
@@ -653,6 +654,8 @@ class FeatureGroupBase:
 
         # Arguments
             expectation_suite: The expectation suite to attach to the Feature Group.
+            overwrite: If an Expectation Suite is already attached, overwrite it.
+                The new suite will have its own validation history, but former reports are preserved.
             run_validation: Set whether the expectation_suite will run on ingestion
             validation_ingestion_policy: Set the policy for ingestion to the Feature Group.
                 - "STRICT" only allows DataFrame passing validation to be inserted into Feature Group.
@@ -680,6 +683,9 @@ class FeatureGroupBase:
                     type(expectation_suite)
                 )
             )
+
+        if overwrite:
+            self.delete_expectation_suite()
 
         if self._id:
             self._expectation_suite = self._expectation_suite_engine.save(
