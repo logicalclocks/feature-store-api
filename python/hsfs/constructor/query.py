@@ -107,7 +107,7 @@ class Query:
         sql_query, online_conn = self._prep_read(online, read_options)
 
         schema = None
-        if "pandas_types" in read_options and read_options["pandas_types"]:
+        if read_options and "pandas_types" in read_options and read_options["pandas_types"]:
             schema = self._collect_features()
             if len(self.joins) > 0 or None in [f.type for f in schema]:
                 raise ValueError(
