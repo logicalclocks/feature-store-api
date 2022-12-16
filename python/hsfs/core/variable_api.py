@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hopsworks import client
+from hsfs import client
 import re
 
 
