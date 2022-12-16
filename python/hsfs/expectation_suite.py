@@ -19,11 +19,12 @@ from typing import Optional, Union, List, Dict, Any
 
 import humps
 import great_expectations as ge
+import re
 
 from hsfs import util
 from hsfs.ge_expectation import GeExpectation
 from hsfs.core.expectation_engine import ExpectationEngine
-from hsfs.core import expectation_suite_engine
+from hsfs.core import expectation_suite_engine, variable_api
 from hsfs.client.exceptions import FeatureStoreException
 
 
@@ -59,8 +60,15 @@ class ExpectationSuite:
         self._validation_ingestion_policy = validation_ingestion_policy.upper()
         self._expectations = []
         self._href = href
-        self._feature_store_id = feature_store_id
-        self._feature_group_id = feature_group_id
+
+        if feature_store_id is not None and feature_group_id is not None:
+            self._feature_store_id = feature_store_id
+            self._feature_group_id = feature_group_id
+        elif href is not None:
+            self._init_feature_store_and_feature_group_ids_from_href(href)
+        else:
+            self._feature_group_id = None
+            self._feature_store_id = None
 
         # use setters because these need to be transformed from stringified json
         self.expectations = expectations
@@ -154,6 +162,14 @@ class ExpectationSuite:
             meta=self._meta,
         )
 
+    def _init_feature_store_and_feature_group_ids_from_href(self, href: str) -> None:
+        feature_store_id, feature_group_id = re.search(
+            r"\/featurestores\/([0-9]+)\/featuregroups\/([0-9]+)\/expectationsuite*",
+            href,
+        ).groups(0)
+        self._feature_store_id = int(feature_store_id)
+        self._feature_group_id = int(feature_group_id)
+
     def _init_expectation_engine(
         self, feature_store_id: int, feature_group_id: int
     ) -> None:
@@ -246,6 +262,11 @@ class ExpectationSuite:
             `RestAPIException`
             `hsfs.client.exceptions.FeatureStoreException`
         """
+        _, minor = variable_api.get_version("hopsworks")
+        if minor == "0":
+            raise FeatureStoreException(
+                "The hopsworks server does not support this operation. Update server to hopsworks >3.1 to enable support."
+            )
         if self.id and self._expectation_engine:
             if ge_type:
                 return self._expectation_engine.get(expectation_id).to_ge_type()
@@ -301,6 +322,12 @@ class ExpectationSuite:
             `RestAPIException`
             `hsfs.client.exceptions.FeatureStoreException`
         """
+        _, minor = variable_api.get_version("hopsworks")
+        if minor == "0":
+            raise FeatureStoreException(
+                "The hopsworks server does not support this operation. Update server to hopsworks >3.1 to enable support."
+            )
+
         if self.id:
             converted_expectation = self._convert_expectation(expectation=expectation)
             converted_expectation = self._expectation_engine.create(
@@ -340,6 +367,12 @@ class ExpectationSuite:
             `RestAPIException`
             `hsfs.client.exceptions.FeatureStoreException`
         """
+        _, minor = variable_api.get_version("hopsworks")
+        if minor == "0":
+            raise FeatureStoreException(
+                "The hopsworks server does not support this operation. Update server to hopsworks >3.1 to enable support."
+            )
+
         if self.id:
             converted_expectation = self._convert_expectation(expectation=expectation)
             # To update an expectation we need an id either from meta field or from self.id
@@ -375,6 +408,12 @@ class ExpectationSuite:
             `RestAPIException`
             `hsfs.client.exceptions.FeatureStoreException`
         """
+        _, minor = variable_api.get_version("hopsworks")
+        if minor == "0":
+            raise FeatureStoreException(
+                "The hopsworks server does not support this operation. Update server to hopsworks >3.1 to enable support."
+            )
+
         if self.id:
             self._expectation_engine.delete(expectation_id=expectation_id)
             self.expectations = self._expectation_engine.get_expectations_by_suite_id()

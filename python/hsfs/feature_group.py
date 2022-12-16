@@ -36,6 +36,7 @@ from hsfs.core import (
     code_engine,
     external_feature_group_engine,
     validation_result_engine,
+    variable_api,
 )
 
 from hsfs.statistics_config import StatisticsConfig
@@ -883,6 +884,12 @@ class FeatureGroupBase:
         # Return
             Union[List[`ValidationResult`], List[`ExpectationValidationResult`]] A list of validation result connected to the expectation_id
         """
+        _, minor = variable_api.get_version("hopsworks")
+        if minor == "0":
+            raise FeatureStoreException(
+                "The hopsworks server does not support this operation. Update server to hopsworks >3.1 to enable support."
+            )
+
         if self._id:
             return self._validation_result_engine.get_validation_history(
                 expectation_id=expectation_id,

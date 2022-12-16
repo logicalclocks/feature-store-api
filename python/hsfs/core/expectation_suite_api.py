@@ -17,6 +17,7 @@
 from typing import Optional
 from hsfs import client
 from hsfs import expectation_suite as es
+from hsfs.core import variable_api
 
 
 class ExpectationSuiteApi:
@@ -50,10 +51,18 @@ class ExpectationSuiteApi:
             "expectationsuite",
         ]
 
+        _, minor = variable_api.parse_major_and_minor(
+            variable_api.get_version("hopsworks")
+        )
+
+        method = "POST"
+        if minor == "0":
+            method = "PUT"
+
         headers = {"content-type": "application/json"}
         payload = expectation_suite.json()
         return es.ExpectationSuite.from_response_json(
-            _client._send_request("POST", path_params, headers=headers, data=payload)
+            _client._send_request(method, path_params, headers=headers, data=payload)
         )
 
     def update(self, expectation_suite: es.ExpectationSuite) -> es.ExpectationSuite:
@@ -78,8 +87,17 @@ class ExpectationSuiteApi:
 
         headers = {"content-type": "application/json"}
         payload = expectation_suite.json()
+
+        _, minor = variable_api.parse_major_and_minor(
+            variable_api.get_version("hopsworks")
+        )
+        method = "PUT"
+        if minor == "0":
+            method = "POST"
+            del path_params[-1]
+
         return es.ExpectationSuite.from_response_json(
-            _client._send_request("PUT", path_params, headers=headers, data=payload)
+            _client._send_request(method, path_params, headers=headers, data=payload)
         )
 
     def update_metadata(
@@ -107,8 +125,18 @@ class ExpectationSuiteApi:
 
         headers = {"content-type": "application/json"}
         payload = expectation_suite.json()
+
+        _, minor = variable_api.parse_major_and_minor(
+            variable_api.get_version("hopsworks")
+        )
+        method = "PUT"
+        if minor == "0":
+            method = "POST"
+            del path_params[-1]
+            del path_params[-1]
+
         return es.ExpectationSuite.from_response_json(
-            _client._send_request("PUT", path_params, headers=headers, data=payload)
+            _client._send_request(method, path_params, headers=headers, data=payload)
         )
 
     def delete(self, expectation_suite_id: int) -> None:
@@ -124,6 +152,12 @@ class ExpectationSuiteApi:
             "expectationsuite",
             expectation_suite_id,
         ]
+
+        _, minor = variable_api.parse_major_and_minor(
+            variable_api.get_version("hopsworks")
+        )
+        if minor == "0":
+            del path_params[-1]
 
         _client._send_request("DELETE", path_params)
 
