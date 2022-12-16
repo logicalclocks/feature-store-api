@@ -51,12 +51,11 @@ class ExpectationSuiteApi:
             "expectationsuite",
         ]
 
-        _, minor = variable_api.parse_major_and_minor(
+        major, minor = variable_api.parse_major_and_minor(
             variable_api.get_version("hopsworks")
         )
-
         method = "POST"
-        if minor == "0":
+        if major == "3" and minor == "0":
             method = "PUT"
 
         headers = {"content-type": "application/json"}
@@ -88,11 +87,11 @@ class ExpectationSuiteApi:
         headers = {"content-type": "application/json"}
         payload = expectation_suite.json()
 
-        _, minor = variable_api.parse_major_and_minor(
+        major, minor = variable_api.parse_major_and_minor(
             variable_api.get_version("hopsworks")
         )
         method = "PUT"
-        if minor == "0":
+        if major == "3" and minor == "0":
             method = "POST"
             del path_params[-1]
 
@@ -126,11 +125,11 @@ class ExpectationSuiteApi:
         headers = {"content-type": "application/json"}
         payload = expectation_suite.json()
 
-        _, minor = variable_api.parse_major_and_minor(
+        major, minor = variable_api.parse_major_and_minor(
             variable_api.get_version("hopsworks")
         )
         method = "PUT"
-        if minor == "0":
+        if major == "3" and minor == "0":
             method = "POST"
             del path_params[-1]
             del path_params[-1]
@@ -153,10 +152,10 @@ class ExpectationSuiteApi:
             expectation_suite_id,
         ]
 
-        _, minor = variable_api.parse_major_and_minor(
+        major, minor = variable_api.parse_major_and_minor(
             variable_api.get_version("hopsworks")
         )
-        if minor == "0":
+        if major == "3" and minor == "0":
             del path_params[-1]
 
         _client._send_request("DELETE", path_params)

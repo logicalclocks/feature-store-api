@@ -17,6 +17,7 @@
 from typing import Union, List
 from hsfs import client
 from hsfs.validation_report import ValidationReport
+from hsfs.core import variable_api
 
 
 class ValidationReportApi:
@@ -51,8 +52,15 @@ class ValidationReportApi:
             "validationreport",
         ]
 
+        major, minor = variable_api.parse_major_and_minor(
+            variable_api.get_version("hopsworks")
+        )
+        if major == "3" and minor == "0":
+            validation_report.ingestion_result = None
+
         headers = {"content-type": "application/json"}
         payload = validation_report.json()
+
         return ValidationReport.from_response_json(
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )

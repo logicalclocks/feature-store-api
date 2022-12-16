@@ -884,8 +884,10 @@ class FeatureGroupBase:
         # Return
             Union[List[`ValidationResult`], List[`ExpectationValidationResult`]] A list of validation result connected to the expectation_id
         """
-        _, minor = variable_api.get_version("hopsworks")
-        if minor == "0":
+        major, minor = variable_api.parse_major_and_minor(
+            variable_api.get_version("hopsworks")
+        )
+        if major == "3" and minor == "0":
             raise FeatureStoreException(
                 "The hopsworks server does not support this operation. Update server to hopsworks >3.1 to enable support."
             )
