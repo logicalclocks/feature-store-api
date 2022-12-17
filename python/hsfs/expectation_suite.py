@@ -24,7 +24,8 @@ import re
 from hsfs import util
 from hsfs.ge_expectation import GeExpectation
 from hsfs.core.expectation_engine import ExpectationEngine
-from hsfs.core import expectation_suite_engine, variable_api
+from hsfs.core.variable_api import VariableApi
+from hsfs.core import expectation_suite_engine
 from hsfs.client.exceptions import FeatureStoreException
 
 
@@ -262,8 +263,8 @@ class ExpectationSuite:
             `RestAPIException`
             `hsfs.client.exceptions.FeatureStoreException`
         """
-        major, minor = variable_api.parse_major_and_minor(
-            variable_api.get_version("hopsworks")
+        major, minor = VariableApi.parse_major_and_minor(
+            VariableApi.get_version("hopsworks")
         )
         if major == "3" and minor == "0":
             raise FeatureStoreException(
@@ -324,8 +325,8 @@ class ExpectationSuite:
             `RestAPIException`
             `hsfs.client.exceptions.FeatureStoreException`
         """
-        major, minor = variable_api.parse_major_and_minor(
-            variable_api.get_version("hopsworks")
+        major, minor = VariableApi.parse_major_and_minor(
+            VariableApi.get_version("hopsworks")
         )
         if major == "3" and minor == "0":
             raise FeatureStoreException(
@@ -371,8 +372,8 @@ class ExpectationSuite:
             `RestAPIException`
             `hsfs.client.exceptions.FeatureStoreException`
         """
-        major, minor = variable_api.parse_major_and_minor(
-            variable_api.get_version("hopsworks")
+        major, minor = VariableApi.parse_major_and_minor(
+            VariableApi.get_version("hopsworks")
         )
         if major == "3" and minor == "0":
             raise FeatureStoreException(
@@ -414,8 +415,8 @@ class ExpectationSuite:
             `RestAPIException`
             `hsfs.client.exceptions.FeatureStoreException`
         """
-        major, minor = variable_api.parse_major_and_minor(
-            variable_api.get_version("hopsworks")
+        major, minor = VariableApi.parse_major_and_minor(
+            VariableApi.get_version("hopsworks")
         )
         if major == "3" and minor == "0":
             raise FeatureStoreException(

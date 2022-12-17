@@ -17,7 +17,7 @@
 from typing import Union, List
 from hsfs import client
 from hsfs.validation_report import ValidationReport
-from hsfs.core import variable_api
+from hsfs.core.variable_api import VariableApi
 
 
 class ValidationReportApi:
@@ -52,8 +52,8 @@ class ValidationReportApi:
             "validationreport",
         ]
 
-        major, minor = variable_api.parse_major_and_minor(
-            variable_api.get_version("hopsworks")
+        major, minor = VariableApi.parse_major_and_minor(
+            VariableApi.get_version("hopsworks")
         )
         if major == "3" and minor == "0":
             validation_report.ingestion_result = None

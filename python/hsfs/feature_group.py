@@ -36,7 +36,6 @@ from hsfs.core import (
     code_engine,
     external_feature_group_engine,
     validation_result_engine,
-    variable_api,
 )
 
 from hsfs.statistics_config import StatisticsConfig
@@ -45,6 +44,7 @@ from hsfs.validation_report import ValidationReport
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.job import Job
+from hsfs.core.variable_api import VariableApi
 from hsfs.core import great_expectation_engine
 
 
@@ -884,8 +884,8 @@ class FeatureGroupBase:
         # Return
             Union[List[`ValidationResult`], List[`ExpectationValidationResult`]] A list of validation result connected to the expectation_id
         """
-        major, minor = variable_api.parse_major_and_minor(
-            variable_api.get_version("hopsworks")
+        major, minor = VariableApi.parse_major_and_minor(
+            VariableApi.get_version("hopsworks")
         )
         if major == "3" and minor == "0":
             raise FeatureStoreException(
