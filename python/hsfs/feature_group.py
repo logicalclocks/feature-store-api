@@ -60,6 +60,7 @@ class FeatureGroupBase:
             great_expectation_engine.GreatExpectationEngine(featurestore_id)
         )
         self._feature_store_id = featurestore_id
+        self._variable_api = VariableApi()
 
     def delete(self):
         """Drop the entire feature group along with its feature data.
@@ -884,8 +885,8 @@ class FeatureGroupBase:
         # Return
             Union[List[`ValidationResult`], List[`ExpectationValidationResult`]] A list of validation result connected to the expectation_id
         """
-        major, minor = VariableApi.parse_major_and_minor(
-            VariableApi.get_version("hopsworks")
+        major, minor = self._variable_api.parse_major_and_minor(
+            self._variable_api.get_version("hopsworks")
         )
         if major == "3" and minor == "0":
             raise FeatureStoreException(

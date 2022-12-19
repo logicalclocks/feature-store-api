@@ -31,6 +31,7 @@ class ValidationReportApi:
         """
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
+        self._variable_api = VariableApi()
 
     def create(self, validation_report: ValidationReport) -> ValidationReport:
         """Create an validation report attached to a featuregroup.
@@ -52,8 +53,8 @@ class ValidationReportApi:
             "validationreport",
         ]
 
-        major, minor = VariableApi.parse_major_and_minor(
-            VariableApi.get_version("hopsworks")
+        major, minor = self._variable_api.parse_major_and_minor(
+            self._variable_api.get_version("hopsworks")
         )
         if major == "3" and minor == "0":
             validation_report.ingestion_result = None

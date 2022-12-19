@@ -31,6 +31,7 @@ class ExpectationSuiteApi:
         """
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
+        self._variable_api = VariableApi()
 
     def create(self, expectation_suite: es.ExpectationSuite) -> es.ExpectationSuite:
         """Create an expectation suite attached to a Feature Group.
@@ -51,8 +52,8 @@ class ExpectationSuiteApi:
             "expectationsuite",
         ]
 
-        major, minor = VariableApi.parse_major_and_minor(
-            VariableApi.get_version("hopsworks")
+        major, minor = self._variable_api.parse_major_and_minor(
+            self._variable_api.get_version("hopsworks")
         )
         method = "POST"
         if major == "3" and minor == "0":
@@ -87,8 +88,8 @@ class ExpectationSuiteApi:
         headers = {"content-type": "application/json"}
         payload = expectation_suite.json()
 
-        major, minor = VariableApi.parse_major_and_minor(
-            VariableApi.get_version("hopsworks")
+        major, minor = self._variable_api.parse_major_and_minor(
+            self._variable_api.get_version("hopsworks")
         )
         method = "PUT"
         if major == "3" and minor == "0":
@@ -125,8 +126,8 @@ class ExpectationSuiteApi:
         headers = {"content-type": "application/json"}
         payload = expectation_suite.json()
 
-        major, minor = VariableApi.parse_major_and_minor(
-            VariableApi.get_version("hopsworks")
+        major, minor = self._variable_api.parse_major_and_minor(
+            self._variable_api.get_version("hopsworks")
         )
         method = "PUT"
         if major == "3" and minor == "0":
@@ -152,8 +153,8 @@ class ExpectationSuiteApi:
             expectation_suite_id,
         ]
 
-        major, minor = VariableApi.parse_major_and_minor(
-            VariableApi.get_version("hopsworks")
+        major, minor = self._variable_api.parse_major_and_minor(
+            self._variable_api.get_version("hopsworks")
         )
         if major == "3" and minor == "0":
             del path_params[-1]
