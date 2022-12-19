@@ -57,7 +57,8 @@ class ValidationReportApi:
             self._variable_api.get_version("hopsworks")
         )
         if major == "3" and minor == "0":
-            validation_report.ingestion_result = None
+            # You must bypass the setter otherwise it ends up as "UNKNOWN"
+            validation_report._ingestion_result = None
 
         headers = {"content-type": "application/json"}
         payload = validation_report.json()
