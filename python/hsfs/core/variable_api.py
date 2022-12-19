@@ -38,7 +38,7 @@ class VariableApi:
 
     def parse_major_and_minor(self, backend_version):
 
-        versionPattern = r"\d+\.\d+"
-        regexMatcher = re.compile(versionPattern)
+        version_pattern = r"(\d+)\.(\d+)"
+        matches = re.match(version_pattern, backend_version)
 
-        return regexMatcher.search(backend_version).group(0)
+        return matches.group(1), matches.group(2)
