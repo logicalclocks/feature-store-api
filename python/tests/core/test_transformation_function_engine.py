@@ -1049,20 +1049,6 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(numpy.int)
-
-        # Assert
-        assert result == "INT"
-
-    def test_infer_spark_type_int_type_4(self):
-        # Arrange
-        feature_store_id = 99
-
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(
-            feature_store_id
-        )
-
-        # Act
         result = tf_engine.infer_spark_type(numpy.int32)
 
         # Assert
@@ -1148,20 +1134,6 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("float")
-
-        # Assert
-        assert result == "FLOAT"
-
-    def test_infer_spark_type_float_type_3(self):
-        # Arrange
-        feature_store_id = 99
-
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(
-            feature_store_id
-        )
-
-        # Act
-        result = tf_engine.infer_spark_type(numpy.float)
 
         # Assert
         assert result == "FLOAT"
@@ -1288,20 +1260,6 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("bool")
-
-        # Assert
-        assert result == "BOOLEAN"
-
-    def test_infer_spark_type_bool_type_4(self):
-        # Arrange
-        feature_store_id = 99
-
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(
-            feature_store_id
-        )
-
-        # Act
-        result = tf_engine.infer_spark_type(numpy.bool)
 
         # Assert
         assert result == "BOOLEAN"

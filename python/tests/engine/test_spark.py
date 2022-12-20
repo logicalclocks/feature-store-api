@@ -16,7 +16,7 @@
 
 import pytest
 import pandas as pd
-import numpy as np
+import numpy
 from pyspark.sql.types import (
     ByteType,
     ShortType,
@@ -390,7 +390,7 @@ class TestSpark:
 
         # Act
         result = spark_engine.convert_to_default_dataframe(
-            dataframe=np.array([[1, "test_1"], [2, "test_2"]]),
+            dataframe=numpy.array([[1, "test_1"], [2, "test_2"]]),
         )
 
         # Assert

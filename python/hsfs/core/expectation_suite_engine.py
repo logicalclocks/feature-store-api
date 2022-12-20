@@ -84,7 +84,7 @@ class ExpectationSuiteEngine:
                 meta=meta,
                 feature_group_id=feature_group_id,
                 feature_store_id=feature_store_id,
-                expectations=[],
+                expectations=expectations,
             )
         )
 

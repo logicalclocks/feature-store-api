@@ -261,7 +261,7 @@ class TransformationFunctionEngine:
             return "TIMESTAMP"
         elif output_type in (datetime.date, "date"):
             return "DATE"
-        elif output_type in (bool, "boolean", "bool", numpy.bool):
+        elif output_type in (bool, "boolean", "bool"):
             return "BOOLEAN"
         else:
             raise TypeError("Not supported type %s." % output_type)

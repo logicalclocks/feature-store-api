@@ -44,6 +44,7 @@ from hsfs.validation_report import ValidationReport
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.job import Job
+from hsfs.core.variable_api import VariableApi
 from hsfs.core import great_expectation_engine
 
 
@@ -59,6 +60,7 @@ class FeatureGroupBase:
             great_expectation_engine.GreatExpectationEngine(featurestore_id)
         )
         self._feature_store_id = featurestore_id
+        self._variable_api = VariableApi()
 
     def delete(self):
         """Drop the entire feature group along with its feature data.
@@ -862,7 +864,7 @@ class FeatureGroupBase:
         ```python3
         validation_history = fg.get_validation_history(
             expectation_id=1,
-            fliter_by=["REJECTED", "UNKNOWN"],
+            filter_by=["REJECTED", "UNKNOWN"],
             start_validation_time="2022-01-01 00:00:00",
             end_validation_time=datetime.datetime.now(),
             ge_type=False
@@ -883,6 +885,14 @@ class FeatureGroupBase:
         # Return
             Union[List[`ValidationResult`], List[`ExpectationValidationResult`]] A list of validation result connected to the expectation_id
         """
+        major, minor = self._variable_api.parse_major_and_minor(
+            self._variable_api.get_version("hopsworks")
+        )
+        if major == "3" and minor == "0":
+            raise FeatureStoreException(
+                "The hopsworks server does not support this operation. Update server to hopsworks >3.1 to enable support."
+            )
+
         if self._id:
             return self._validation_result_engine.get_validation_history(
                 expectation_id=expectation_id,
