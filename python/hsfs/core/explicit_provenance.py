@@ -234,6 +234,7 @@ class ProvenanceEncoder(json.JSONEncoder):
                 "accessible": obj.accessible,
                 "inaccessible": obj.inaccessible,
                 "deleted": obj.deleted,
+                "faulty": obj.faulty,
             }
         elif isinstance(
             obj,
