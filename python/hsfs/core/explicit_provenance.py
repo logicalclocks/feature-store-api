@@ -75,14 +75,14 @@ class Artifact:
         )
 
     @staticmethod
-    def from_response_json(json_dict: dict):
-        link_json = humps.decamelize(json_dict)
+    def from_response_json(link_json: dict):
+
         if bool(link_json["exception_cause"]):
             return Artifact(
                 link_json["artifact"]["project"],
                 link_json["artifact"]["name"],
                 link_json["artifact"]["version"],
-                link_json["artifactType"],
+                link_json["artifact_type"],
                 Artifact.MetaType.FAULTY,
             )
         elif bool(link_json["deleted"]):
@@ -146,9 +146,9 @@ class Links:
 
     @staticmethod
     def __feature_group(link_json: dict):
-        if link_json["artifactType"] == "FEATURE_GROUP":
+        if link_json["artifact_type"] == "FEATURE_GROUP":
             return feature_group.FeatureGroup.from_response_json(link_json["artifact"])
-        elif link_json["artifactType"] == "EXTERNAL_FEATURE_GROUP":
+        elif link_json["artifact_type"] == "EXTERNAL_FEATURE_GROUP":
             return feature_group.ExternalFeatureGroup.from_response_json(
                 link_json["artifact"]
             )
@@ -157,8 +157,8 @@ class Links:
     def __parse_feature_groups(links_json: dict, artifacts: Set[str]):
         links = Links()
         for link_json in links_json:
-            if link_json["node"]["artifactType"] in artifacts:
-                if bool(link_json["node"]["exceptionCause"]):
+            if link_json["node"]["artifact_type"] in artifacts:
+                if bool(link_json["node"]["exception_cause"]):
                     links._faulty.append(Artifact.from_response_json(link_json["node"]))
                 elif bool(link_json["node"]["accessible"]):
                     links.accessible.append(Links.__feature_group(link_json["node"]))
@@ -174,8 +174,8 @@ class Links:
     def __parse_feature_views(links_json: dict, artifacts: Set[str]):
         links = Links()
         for link_json in links_json:
-            if link_json["node"]["artifactType"] in artifacts:
-                if bool(link_json["node"]["exceptionCause"]):
+            if link_json["node"]["artifact_type"] in artifacts:
+                if bool(link_json["node"]["exception_cause"]):
                     links._faulty.append(Artifact.from_response_json(link_json["node"]))
                 elif bool(link_json["node"]["accessible"]):
                     links.accessible.append(
@@ -192,7 +192,7 @@ class Links:
         return links
 
     @staticmethod
-    def from_response_json(links_json: dict, direction: Direction, artifact: Type):
+    def from_response_json(json_dict: dict, direction: Direction, artifact: Type):
         """Parse explicit links from json response. There are three types of
         Links: UpstreamFeatureGroups, DownstreamFeatureGroups, DownstreamFeatureViews
 
@@ -204,6 +204,9 @@ class Links:
         # Returns
             A ProvenanceLink object for the selected parse type.
         """
+
+        links_json = humps.decamelize(json_dict)
+
         if direction == Links.Direction.UPSTREAM:
             # upstream is currently, always, only feature groups
             return Links.__parse_feature_groups(
