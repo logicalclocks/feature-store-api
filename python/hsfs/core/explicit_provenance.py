@@ -18,6 +18,7 @@ import json
 from enum import Enum
 from typing import Set
 from hsfs import feature_group, feature_view, training_dataset
+import humps
 
 
 class Artifact:
@@ -74,8 +75,9 @@ class Artifact:
         )
 
     @staticmethod
-    def from_response_json(link_json: dict):
-        if bool(link_json["exceptionCause"]):
+    def from_response_json(json_dict: dict):
+        link_json = humps.decamelize(json_dict)
+        if bool(link_json["exception_cause"]):
             return Artifact(
                 link_json["artifact"]["project"],
                 link_json["artifact"]["name"],
@@ -88,7 +90,7 @@ class Artifact:
                 link_json["artifact"]["project"],
                 link_json["artifact"]["name"],
                 link_json["artifact"]["version"],
-                link_json["artifactType"],
+                link_json["artifact_type"],
                 Artifact.MetaType.DELETED,
             )
         elif not bool(link_json["accessible"]):
@@ -96,7 +98,7 @@ class Artifact:
                 link_json["artifact"]["project"],
                 link_json["artifact"]["name"],
                 link_json["artifact"]["version"],
-                link_json["artifactType"],
+                link_json["artifact_type"],
                 Artifact.MetaType.INACCESSIBLE,
                 link_json["artifact"]["href"],
             )
