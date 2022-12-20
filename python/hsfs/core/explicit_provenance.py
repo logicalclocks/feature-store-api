@@ -77,7 +77,7 @@ class Artifact:
     @staticmethod
     def from_response_json(json_dict: dict):
         link_json = humps.decamelize(json_dict)
-        if "exception_cause" in link_json.keys():
+        if link_json.get("exception_cause") is not None:
             return Artifact(
                 link_json["artifact"]["project"],
                 link_json["artifact"]["name"],
@@ -158,7 +158,7 @@ class Links:
         links = Links()
         for link_json in links_json:
             if link_json["node"]["artifact_type"] in artifacts:
-                if "exception_cause" in links_json["node"].keys():
+                if links_json["node"].get("exception_cause") is not None:
                     links._faulty.append(Artifact.from_response_json(link_json["node"]))
                 elif bool(link_json["node"]["accessible"]):
                     links.accessible.append(Links.__feature_group(link_json["node"]))
@@ -175,7 +175,7 @@ class Links:
         links = Links()
         for link_json in links_json:
             if link_json["node"]["artifact_type"] in artifacts:
-                if "exception_cause" in links_json["node"].keys():
+                if links_json["node"].get("exception_cause") is not None:
                     links._faulty.append(Artifact.from_response_json(link_json["node"]))
                 elif bool(link_json["node"]["accessible"]):
                     links.accessible.append(
