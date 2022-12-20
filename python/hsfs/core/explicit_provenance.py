@@ -158,7 +158,7 @@ class Links:
         links = Links()
         for link_json in links_json:
             if link_json["node"]["artifact_type"] in artifacts:
-                if links_json["node"].get("exception_cause") is not None:
+                if link_json["node"].get("exception_cause") is not None:
                     links._faulty.append(Artifact.from_response_json(link_json["node"]))
                 elif bool(link_json["node"]["accessible"]):
                     links.accessible.append(Links.__feature_group(link_json["node"]))
@@ -175,7 +175,7 @@ class Links:
         links = Links()
         for link_json in links_json:
             if link_json["node"]["artifact_type"] in artifacts:
-                if links_json["node"].get("exception_cause") is not None:
+                if link_json["node"].get("exception_cause") is not None:
                     links._faulty.append(Artifact.from_response_json(link_json["node"]))
                 elif bool(link_json["node"]["accessible"]):
                     links.accessible.append(
