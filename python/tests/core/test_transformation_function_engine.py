@@ -924,9 +924,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type(bytes)
+        result1 = tf_engine.infer_spark_type("BinaryType()")
 
         # Assert
         assert result == "BINARY"
+        assert result1 == "BINARY"
 
     def test_infer_spark_type_int8_type_1(self):
         # Arrange
@@ -966,9 +968,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("byte")
+        result1 = tf_engine.infer_spark_type("ByteType()")
 
         # Assert
         assert result == "BYTE"
+        assert result1 == "BYTE"
 
     def test_infer_spark_type_int16_type_1(self):
         # Arrange
@@ -1008,9 +1012,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("short")
+        result1 = tf_engine.infer_spark_type("ShortType()")
 
         # Assert
         assert result == "SHORT"
+        assert result1 == "SHORT"
 
     def test_infer_spark_type_int_type_1(self):
         # Arrange
@@ -1050,9 +1056,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type(numpy.int32)
+        result1 = tf_engine.infer_spark_type("IntegerType()")
 
         # Assert
         assert result == "INT"
+        assert result1 == "INT"
 
     def test_infer_spark_type_int64_type_1(self):
         # Arrange
@@ -1106,9 +1114,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("bigint")
+        result1 = tf_engine.infer_spark_type("LongType()")
 
         # Assert
         assert result == "LONG"
+        assert result1 == "LONG"
 
     def test_infer_spark_type_float_type_1(self):
         # Arrange
@@ -1134,9 +1144,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("float")
+        result1 = tf_engine.infer_spark_type("FloatType()")
 
         # Assert
         assert result == "FLOAT"
+        assert result1 == "FLOAT"
 
     def test_infer_spark_type_double_type_1(self):
         # Arrange
@@ -1176,9 +1188,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("double")
+        result1 = tf_engine.infer_spark_type("DoubleType()")
 
         # Assert
         assert result == "DOUBLE"
+        assert result1 == "DOUBLE"
 
     def test_infer_spark_type_timestamp_type_1(self):
         # Arrange
@@ -1204,9 +1218,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type(numpy.datetime64)
+        result1 = tf_engine.infer_spark_type("TimestampType()")
 
         # Assert
         assert result == "TIMESTAMP"
+        assert result1 == "TIMESTAMP"
 
     def test_infer_spark_type_date_type_1(self):
         # Arrange
@@ -1218,9 +1234,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type(datetime.date)
+        result1 = tf_engine.infer_spark_type("DateType()")
 
         # Assert
         assert result == "DATE"
+        assert result1 == "DATE"
 
     def test_infer_spark_type_bool_type_1(self):
         # Arrange
@@ -1260,9 +1278,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("bool")
+        result1 = tf_engine.infer_spark_type("BooleanType()")
 
         # Assert
         assert result == "BOOLEAN"
+        assert result1 == "BOOLEAN"
 
     def test_infer_spark_type_wrong_type(self):
         # Arrange

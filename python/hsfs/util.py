@@ -268,6 +268,33 @@ def verify_attribute_key_names(feature_group_obj, external_feature_group=False):
                 )
 
 
+def translate_legacy_spark_type(output_type):
+    if output_type == "StringType()":
+        return "STRING"
+    elif output_type == "BinaryType()":
+        return "BINARY"
+    elif output_type == "ByteType()":
+        return "BYTE"
+    elif output_type == "ShortType()":
+        return "SHORT"
+    elif output_type == "IntegerType()":
+        return "INT"
+    elif output_type == "LongType()":
+        return "LONG"
+    elif output_type == "FloatType()":
+        return "FLOAT"
+    elif output_type == "DoubleType()":
+        return "DOUBLE"
+    elif output_type == "TimestampType()":
+        return "TIMESTAMP"
+    elif output_type == "DateType()":
+        return "DATE"
+    elif output_type == "BooleanType()":
+        return "BOOLEAN"
+    else:
+        return "STRING"  # handle gracefully, and return STRING type, the default for spark udfs
+
+
 class VersionWarning(Warning):
     pass
 
