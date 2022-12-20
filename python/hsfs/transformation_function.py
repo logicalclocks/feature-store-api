@@ -51,7 +51,7 @@ class TransformationFunction:
             )
         )
 
-        # set up depending on user initialized or coming from backend response
+        # set up depending on user initialized
         if self._transformation_fn is not None:
             # type -> user init coming from user
             self._transformer_code = None
@@ -71,8 +71,11 @@ class TransformationFunction:
                 }
             )
         else:
+            # load backend response
             # load original source code
-            self._output_type = output_type
+            self._output_type = self._transformation_function_engine.infer_spark_type(
+                output_type
+            )
             self._load_source_code(self._source_code_content)
 
         self._feature_group_feature_name = None

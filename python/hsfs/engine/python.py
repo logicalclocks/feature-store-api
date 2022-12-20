@@ -953,6 +953,8 @@ class Engine:
 
     @staticmethod
     def convert_spark_type_to_offline_type(spark_type_string):
+        if spark_type_string.endswith("Type()"):
+            spark_type_string = util.translate_legacy_spark_type(spark_type_string)
         if spark_type_string == "STRING":
             return "STRING"
         elif spark_type_string == "BINARY":

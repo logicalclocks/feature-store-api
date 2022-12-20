@@ -22,6 +22,7 @@ from hsfs import training_dataset, training_dataset_feature
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import transformation_function_api, statistics_api
 from hsfs.core.builtin_transformation_function import BuiltInTransformationFunction
+from hsfs import util
 
 
 class TransformationFunctionEngine:
@@ -234,6 +235,8 @@ class TransformationFunctionEngine:
             return "STRING"  # STRING is default type for spark udfs
 
         if isinstance(output_type, str):
+            if output_type.endswith("Type()"):
+                return util.translate_legacy_spark_type(output_type)
             output_type = output_type.lower()
 
         if output_type in (str, "str", "string"):
