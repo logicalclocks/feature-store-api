@@ -75,12 +75,12 @@ class Artifact:
 
     @staticmethod
     def from_response_json(link_json: dict):
-        if bool(link_json["exception_cause"]):
+        if bool(link_json["exceptionCause"]):
             return Artifact(
                 link_json["artifact"]["project"],
                 link_json["artifact"]["name"],
                 link_json["artifact"]["version"],
-                link_json["artifact_type"],
+                link_json["artifactType"],
                 Artifact.MetaType.FAULTY,
             )
         elif bool(link_json["deleted"]):
@@ -88,7 +88,7 @@ class Artifact:
                 link_json["artifact"]["project"],
                 link_json["artifact"]["name"],
                 link_json["artifact"]["version"],
-                link_json["artifact_type"],
+                link_json["artifactType"],
                 Artifact.MetaType.DELETED,
             )
         elif not bool(link_json["accessible"]):
@@ -96,7 +96,7 @@ class Artifact:
                 link_json["artifact"]["project"],
                 link_json["artifact"]["name"],
                 link_json["artifact"]["version"],
-                link_json["artifact_type"],
+                link_json["artifactType"],
                 Artifact.MetaType.INACCESSIBLE,
                 link_json["artifact"]["href"],
             )
@@ -144,9 +144,9 @@ class Links:
 
     @staticmethod
     def __feature_group(link_json: dict):
-        if link_json["artifact_type"] == "FEATURE_GROUP":
+        if link_json["artifactType"] == "FEATURE_GROUP":
             return feature_group.FeatureGroup.from_response_json(link_json["artifact"])
-        elif link_json["artifact_type"] == "EXTERNAL_FEATURE_GROUP":
+        elif link_json["artifactType"] == "EXTERNAL_FEATURE_GROUP":
             return feature_group.ExternalFeatureGroup.from_response_json(
                 link_json["artifact"]
             )
@@ -155,8 +155,8 @@ class Links:
     def __parse_feature_groups(links_json: dict, artifacts: Set[str]):
         links = Links()
         for link_json in links_json:
-            if link_json["node"]["artifact_type"] in artifacts:
-                if bool(link_json["node"]["exception_cause"]):
+            if link_json["node"]["artifactType"] in artifacts:
+                if bool(link_json["node"]["exceptionCause"]):
                     links._faulty.append(Artifact.from_response_json(link_json["node"]))
                 elif bool(link_json["node"]["accessible"]):
                     links.accessible.append(Links.__feature_group(link_json["node"]))
@@ -172,8 +172,8 @@ class Links:
     def __parse_feature_views(links_json: dict, artifacts: Set[str]):
         links = Links()
         for link_json in links_json:
-            if link_json["node"]["artifact_type"] in artifacts:
-                if bool(link_json["node"]["exception_cause"]):
+            if link_json["node"]["artifactType"] in artifacts:
+                if bool(link_json["node"]["exceptionCause"]):
                     links._faulty.append(Artifact.from_response_json(link_json["node"]))
                 elif bool(link_json["node"]["accessible"]):
                     links.accessible.append(
