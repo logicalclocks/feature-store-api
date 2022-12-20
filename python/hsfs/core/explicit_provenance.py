@@ -75,8 +75,8 @@ class Artifact:
         )
 
     @staticmethod
-    def from_response_json(link_json: dict):
-
+    def from_response_json(json_dict: dict):
+        link_json = humps.decamelize(json_dict)
         if bool(link_json["exception_cause"]):
             return Artifact(
                 link_json["artifact"]["project"],
