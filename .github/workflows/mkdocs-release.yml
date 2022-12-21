@@ -29,7 +29,7 @@ jobs:
         run: cp ../README.md . && pip3 install pip==22.0.3 && pip3 install -e .[python,dev,docs]
 
       - name: use dev mike
-        run: pip3 uninstall -y mike && pip3 install git+'https://github.com/jimporter/mike.git'  
+        run: pip3 uninstall -y mike && pip3 install git+'https://github.com/jimporter/mike.git'
 
       - name: generate autodoc
         run: python3 auto_doc.py
@@ -41,4 +41,4 @@ jobs:
       - name: mike deploy docs
         run: |
           mike deploy ${{ env.RELEASE_VERSION }} ${{ env.MAJOR_VERSION }} -u --push
-          mike alias ${{ env.RELEASE_VERSION }} latest -u --push
+          mike alias ${{ env.RELEASE_VERSION }} -u --push
