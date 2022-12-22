@@ -1905,7 +1905,7 @@ class FeatureGroup(FeatureGroupBase):
 
         return self._great_expectation_engine.validate(
             self,
-            dataframe=dataframe,
+            dataframe=engine.get_instance().convert_to_default_dataframe(dataframe),
             expectation_suite=expectation_suite,
             save_report=save_report,
             validation_options=validation_options,
