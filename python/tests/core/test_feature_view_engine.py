@@ -92,7 +92,7 @@ class TestFeatureViewEngine:
             return_value=feature_view_url,
         )
         mock_attach_transformation = mocker.patch(
-            "hsfs.core.feature_view_engine.FeatureViewEngine._attach_transformation_function",
+            "hsfs.core.feature_view_engine.FeatureViewEngine.attach_transformation_function",
         )
         mock_print = mocker.patch("builtins.print")
 
@@ -341,7 +341,7 @@ class TestFeatureViewEngine:
             "hsfs.core.feature_view_engine.FeatureViewEngine.get_attached_transformation_fn"
         )
         mock_attach_transformation = mocker.patch(
-            "hsfs.core.feature_view_engine.FeatureViewEngine._attach_transformation_function",
+            "hsfs.core.feature_view_engine.FeatureViewEngine.attach_transformation_function",
         )
 
         fv_engine = feature_view_engine.FeatureViewEngine(
@@ -383,7 +383,7 @@ class TestFeatureViewEngine:
             "hsfs.core.feature_view_engine.FeatureViewEngine.get_attached_transformation_fn"
         )
         mock_attach_transformation = mocker.patch(
-            "hsfs.core.feature_view_engine.FeatureViewEngine._attach_transformation_function",
+            "hsfs.core.feature_view_engine.FeatureViewEngine.attach_transformation_function",
         )
 
         fv_engine = feature_view_engine.FeatureViewEngine(
