@@ -21,7 +21,7 @@ from hsfs.core import feature_group_base_engine
 
 class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def save(self, feature_group):
-        if len(feature_group.features) == 0:
+        if feature_group.features is None or len(feature_group.features) == 0:
             # If the user didn't specify the schema, parse it from the query
             external_dataset = engine.get_instance().register_external_temporary_table(
                 feature_group, "read_ondmd"
