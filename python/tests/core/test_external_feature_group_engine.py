@@ -101,13 +101,13 @@ class TestExternalFeatureGroupEngine:
 
         f = feature.Feature(name="f", type="str")
 
-        fg = feature_group.FeatureGroup(
+        fg = feature_group.ExternalFeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[],
             id=10,
+            storage_connector=mocker.patch("hsfs.storage_connector.JdbcConnector"),
         )
 
         mock_engine_get_instance.return_value.parse_schema_feature_group.return_value = [
@@ -128,7 +128,6 @@ class TestExternalFeatureGroupEngine:
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
-        sc = mocker.patch("hsfs.storage_connector.JdbcConnector")
 
         external_fg_engine = external_feature_group_engine.ExternalFeatureGroupEngine(
             feature_store_id=feature_store_id
@@ -141,7 +140,7 @@ class TestExternalFeatureGroupEngine:
             version=1,
             featurestore_id=feature_store_id,
             primary_key=["f"],
-            storage_connector=sc,
+            storage_connector=mocker.patch("hsfs.storage_connector.JdbcConnector"),
         )
 
         mock_engine_get_instance.return_value.parse_schema_feature_group.return_value = [
@@ -170,14 +169,13 @@ class TestExternalFeatureGroupEngine:
 
         f = feature.Feature(name="f", type="str")
 
-        fg = feature_group.FeatureGroup(
+        fg = feature_group.ExternalFeatureGroup(
             name="test",
             version=1,
             featurestore_id=feature_store_id,
             primary_key=[],
-            partition_key=[],
             features=[f],
-            id=10,
+            storage_connector=mocker.patch("hsfs.storage_connector.JdbcConnector"),
         )
 
         # Act
