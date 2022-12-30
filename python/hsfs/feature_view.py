@@ -547,11 +547,8 @@ class FeatureView:
         For deleted and inaccessible feature groups, only a minimal information is
         returned.
 
-        # Arguments
-            feature_view_obj: Metadata object of feature view.
-
         # Returns
-            `ProvenanceLinks`:  the feature groups used to generated this feature view
+            `ProvenanceLinks`: Object containing the section of provenance graph requested.
         """
         return self._feature_view_engine.get_parent_feature_groups(self)
 
