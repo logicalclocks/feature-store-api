@@ -299,7 +299,7 @@ class TestExternalFeatureGroupEngine:
             == "Provided event_time feature feature_name doesn't exist in feature dataframe"
         )
 
-    def test_python_engine_no_features(self, mocker):
+    def test_save_python_engine_no_features(self, mocker):
         sc = storage_connector.JdbcConnector(
             id=1,
             name="test_connector",
