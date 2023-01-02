@@ -262,7 +262,7 @@ class ExpectationSuite:
             The expectation with expectation_id registered in the backend.
 
         # Raises
-            `RestAPIException`
+            `hsfs.client.exceptions.RestAPIError`
             `hsfs.client.exceptions.FeatureStoreException`
         """
         major, minor = self._variable_api.parse_major_and_minor(
@@ -324,7 +324,7 @@ class ExpectationSuite:
             The new expectation attached to the Feature Group.
 
         # Raises
-            `RestAPIException`
+            `hsfs.client.exceptions.RestAPIError`
             `hsfs.client.exceptions.FeatureStoreException`
         """
         major, minor = self._variable_api.parse_major_and_minor(
@@ -371,7 +371,7 @@ class ExpectationSuite:
             The updated expectation attached to the Feature Group.
 
         # Raises
-            `RestAPIException`
+            `hsfs.client.exceptions.RestAPIError`
             `hsfs.client.exceptions.FeatureStoreException`
         """
         major, minor = self._variable_api.parse_major_and_minor(
@@ -414,7 +414,7 @@ class ExpectationSuite:
             expectation_id: Id of the expectation to remove. The expectation will be deleted both locally and from the backend.
 
         # Raises
-            `RestAPIException`
+            `hsfs.client.exceptions.RestAPIError`
             `hsfs.client.exceptions.FeatureStoreException`
         """
         major, minor = self._variable_api.parse_major_and_minor(

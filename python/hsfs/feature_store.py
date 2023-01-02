@@ -460,7 +460,7 @@ class FeatureStore:
                     version=1,
                     primary_key=['city','date'],
                     online_enabled=True,
-                    event_time=['date']
+                    event_time='date'
                 )
             ```
 
