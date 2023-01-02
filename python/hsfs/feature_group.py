@@ -100,7 +100,7 @@ class FeatureGroupBase:
         """Select all features in the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
-        training dataset immediately.
+        feature view.
 
         !!! example
             ```python
@@ -116,8 +116,35 @@ class FeatureGroupBase:
 
             # show first 5 rows
             query.show(5)
+
+
+            # select all features exclude primary key and event time
+            from hsfs.feature import Feature
+            fg = fs.create_feature_group(
+                    "fg",
+                    features=[
+                            Feature("id", type="string"),
+                            Feature("ts", type="bigint"),
+                            Feature("f1", type="date"),
+                            Feature("f2", type="double")
+                            ],
+                    primary_key=["id"],
+                    event_time="ts")
+
+            query = fg.select_all()
+            query.features
+            # [Feature('id', ...), Feature('ts', ...), Feature('f1', ...), Feature('f2', ...)]
+
+            query = fg.select_all(include_primary_key=False, include_event_time=False)
+            query.features
+            # [Feature('f1', ...), Feature('f2', ...)]
             ```
 
+        # Arguments
+            include_primary_key: boolean, optional. If True, include primary key of the feature group
+            to the feature list. Defaults to True.
+            include_event_time: boolean, optional. If True, include event time of the feature group
+            to the feature list. Defaults to True.
         # Returns
             `Query`. A query object with all features of the feature group.
         """
@@ -138,8 +165,8 @@ class FeatureGroupBase:
     def select(self, features: List[Union[str, feature.Feature]] = []):
         """Select a subset of features of the feature group and return a query object.
 
-        The query can be used to construct joins of feature groups or create a training
-        dataset with a subset of features of the feature group.
+        The query can be used to construct joins of feature groups or create a
+        feature view with a subset of features of the feature group.
 
         !!! example
             ```python
@@ -147,10 +174,22 @@ class FeatureGroupBase:
             fs = ...
 
             # get the Feature Group instance
-            fg = fs.get_or_create_feature_group(...)
+            from hsfs.feature import Feature
+            fg = fs.create_feature_group(
+                    "fg",
+                    features=[
+                            Feature("id", type="string"),
+                            Feature("ts", type="bigint"),
+                            Feature("f1", type="date"),
+                            Feature("f2", type="double")
+                            ],
+                    primary_key=["id"],
+                    event_time="ts")
 
-            # construct the query
-            fg.select(['date', 'weekly_sales', 'is_holiday'])
+            # construct query
+            query = fg.select(["id", "f1"])
+            query.features
+            # [Feature('id', ...), Feature('f1', ...)]
             ```
 
         # Arguments
@@ -168,11 +207,11 @@ class FeatureGroupBase:
         )
 
     def select_except(self, features: List[Union[str, feature.Feature]] = []):
-        """Select all features of the feature group except a few and return a query
-        object.
+        """Select all features including primary key and event time feature
+        of the feature group except provided `features` and return a query object.
 
-        The query can be used to construct joins of feature groups or create a training
-        dataset with a subset of features of the feature group.
+        The query can be used to construct joins of feature groups or create a
+        feature view with a subset of features of the feature group.
 
         !!! example
             ```python
@@ -180,10 +219,22 @@ class FeatureGroupBase:
             fs = ...
 
             # get the Feature Group instance
-            fg = fs.get_or_create_feature_group(...)
+            from hsfs.feature import Feature
+            fg = fs.create_feature_group(
+                    "fg",
+                    features=[
+                            Feature("id", type="string"),
+                            Feature("ts", type="bigint"),
+                            Feature("f1", type="date"),
+                            Feature("f2", type="double")
+                            ],
+                    primary_key=["id"],
+                    event_time="ts")
 
-            # construct the query
-            fg.select_except(['sk_id_curr','sk_id_bureau'])
+            # construct query
+            query = fg.select_except(["ts", "f1"])
+            query.features
+            # [Feature('id', ...), Feature('f1', ...)]
             ```
 
         # Arguments
