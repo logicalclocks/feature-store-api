@@ -340,11 +340,11 @@ class FeatureGroupBase:
         For deleted and inaccessible feature groups, only a minimal information is
         returned.
 
-        # Arguments
-            feature_group_instance: Metadata object of feature group.
-
         # Returns
-            `ProvenanceLinks`:  the feature groups used to generated this feature group
+            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_group_engine.get_parent_feature_groups(self)
 
@@ -355,11 +355,11 @@ class FeatureGroupBase:
         will always be empty.
         For inaccessible feature views, only a minimal information is returned.
 
-        # Arguments
-            feature_group_instance: Metadata object of feature group.
-
         # Returns
-            `ProvenanceLinks`:  the feature views generated using this feature group
+            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_group_engine.get_generated_feature_views(self)
 
@@ -370,11 +370,11 @@ class FeatureGroupBase:
         will always be empty.
         For inaccessible feature groups, only a minimal information is returned.
 
-        # Arguments
-            feature_group_instance: Metadata object of feature group.
-
         # Returns
-            `ProvenanceLinks`:  the feature groups generated using this feature group
+            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_group_engine.get_generated_feature_groups(self)
 
@@ -403,11 +403,14 @@ class FeatureGroupBase:
             this will return the name of the feature group itself. Fall back on using
             the `get_feature` method.
 
-        Args:
-            name (str): [description]
+        # Arguments:
+            name: The name of the feature to retrieve
 
-        Returns:
-            [type]: [description]
+        # Returns:
+            Feature: The feature object
+
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
         """
         try:
             return self.__getitem__(name)
@@ -621,7 +624,7 @@ class FeatureGroupBase:
             `ExpectationSuite`. The expectation suite attached to the feature group.
 
         # Raises
-            `RestAPIException`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         # Avoid throwing an error if Feature Group not initialised.
         if self._id:
@@ -664,7 +667,7 @@ class FeatureGroupBase:
                 - "ALWAYS" always insert the DataFrame to the Feature Group, irrespective of overall validation result.
 
         # Raises
-            `RestAPIException`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         if isinstance(expectation_suite, ge.core.ExpectationSuite):
             tmp_expectation_suite = ExpectationSuite.from_ge_type(
@@ -713,7 +716,7 @@ class FeatureGroupBase:
             ```
 
         # Raises
-            `RestAPIException`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         if self._expectation_suite.id:
             self._expectation_suite_engine.delete(self._expectation_suite.id)
@@ -744,7 +747,7 @@ class FeatureGroupBase:
             `ValidationReport`. The latest validation report attached to the Feature Group.
 
         # Raises
-            `RestAPIException`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         return self._validation_report_engine.get_last(ge_type=ge_type)
 
@@ -773,7 +776,8 @@ class FeatureGroupBase:
             Union[List[`ValidationReport`], `ValidationReport`]. All validation reports attached to the feature group.
 
         # Raises
-            `RestAPIException`,`hsfs.client.exceptions.FeatureStoreException`.
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
         """
         if self._id:
             return self._validation_report_engine.get_all(ge_type=ge_type)
@@ -822,7 +826,7 @@ class FeatureGroupBase:
                 method on hopsworks type. Defaults to `True`.
 
         # Raises
-            `RestAPIException`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         if self._id:
             if isinstance(
@@ -880,7 +884,7 @@ class FeatureGroupBase:
             Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
 
         # Raises
-            `RestAPIException`
+            `hsfs.client.exceptions.RestAPIError`.
 
         # Return
             Union[List[`ValidationResult`], List[`ExpectationValidationResult`]] A list of validation result connected to the expectation_id
@@ -1514,7 +1518,7 @@ class FeatureGroup(FeatureGroupBase):
                 version=1,
                 primary_key=['unix'],
                 online_enabled=True,
-                event_time=['unix']
+                event_time='unix'
             )
 
             fg.insert(df_bitcoin_processed)
@@ -1531,7 +1535,7 @@ class FeatureGroup(FeatureGroupBase):
                 version=1,
                 primary_key=['unix'],
                 online_enabled=True,
-                event_time=['unix']
+                event_time='unix'
             )
             # async insertion in order not to wait till finish of the job
             fg.insert(df_for_fg1, write_options={"wait_for_job" : False})
@@ -1542,7 +1546,7 @@ class FeatureGroup(FeatureGroupBase):
                 version=1,
                 primary_key=['unix'],
                 online_enabled=True,
-                event_time=['unix']
+                event_time='unix'
             )
             fg.insert(df_for_fg2)
             ```

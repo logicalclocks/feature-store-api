@@ -204,6 +204,14 @@ PAGES = {
             "hsfs.constructor.query.Query"
         ),
     },
+    "api/links.md": {
+        "links_properties": keras_autodoc.get_properties(
+            "hsfs.core.explicit_provenance.Links"
+        ),
+        "artifact_properties": keras_autodoc.get_properties(
+            "hsfs.core.explicit_provenance.Artifact"
+        ),
+    },
 }
 
 hsfs_dir = pathlib.Path(__file__).resolve().parents[0]

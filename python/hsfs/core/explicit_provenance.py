@@ -113,18 +113,39 @@ class Links:
 
     @property
     def deleted(self):
+        """List of [Artifact objects](../links#artifact) which contains
+        minimal information (name, version) about the entities
+        (feature groups, feature views) they represent.
+        These entities have been removed from the feature store.
+        """
         return self._deleted
 
     @property
     def inaccessible(self):
+        """List of [Artifact objects](../links#artifact) which contains
+        minimal information (name, version) about the entities
+        (feature groups, feature views) they represent.
+        These entities exist in the feature store, however the user
+        does not have access to them anymore.
+        """
         return self._inaccessible
 
     @property
     def accessible(self):
+        """List of [feature groups](../feature_group_api) or
+        [feature views](../feature_view_api) metadata objects
+        which are part of the provenance graph requested. These entities
+        exist in the feature store and the user has access to them.
+        """
         return self._accessible
 
     @property
     def faulty(self):
+        """List of [Artifact objects](../links#artifact) which contains
+        minimal information (name, version) about the entities
+        (feature groups, feature views) they represent.
+        These entities exist in the feature store, however they are corrupted.
+        """
         return self._faulty
 
     class Direction(Enum):
