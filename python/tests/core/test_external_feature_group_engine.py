@@ -22,71 +22,6 @@ from hsfs.engine import python
 
 
 class TestExternalFeatureGroupEngine:
-    def test_python_no_features(self, mocker):
-        sc = storage_connector.JdbcConnector(
-            id=1,
-            name="test_connector",
-            featurestore_id=1,
-            connection_string="",
-            arguments="",
-        )
-        mocker.patch("hsfs.engine.get_instance", return_value=python.Engine())
-        mocker.patch("hsfs.engine.get_type")
-        feature_store_id = 99
-        external_fg_engine = external_feature_group_engine.ExternalFeatureGroupEngine(
-            feature_store_id=feature_store_id
-        )
-
-        fg = feature_group.ExternalFeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            storage_connector=sc,
-            features=[],
-        )
-        # Act
-        with pytest.raises(exceptions.FeatureStoreException) as e_save_info:
-            external_fg_engine.save(feature_group=fg)
-
-        assert e_save_info.type == exceptions.FeatureStoreException
-
-    def test_python_features(self, mocker):
-        sc = storage_connector.JdbcConnector(
-            id=1,
-            name="test_connector",
-            featurestore_id=1,
-            connection_string="",
-            arguments="",
-        )
-
-        mocker.patch("hsfs.engine.get_instance", return_value=python.Engine())
-        mocker.patch("hsfs.engine.get_type")
-        mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
-
-        feature_store_id = 99
-        external_fg_engine = external_feature_group_engine.ExternalFeatureGroupEngine(
-            feature_store_id=feature_store_id
-        )
-
-        f1 = feature.Feature(name="f1", type="int")
-        f2 = feature.Feature(name="f2", type="string")
-
-        fg = feature_group.ExternalFeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            storage_connector=sc,
-            features=[f1, f2],
-        )
-        # Act
-        external_fg_engine.save(feature_group=fg)
-
-        assert mock_fg_api.return_value.save.call_count == 1
-        assert len(mock_fg_api.return_value.save.call_args[0][0].features) == 2
-        assert not mock_fg_api.return_value.save.call_args[0][0].features[0].primary
-
     def test_save(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -363,3 +298,70 @@ class TestExternalFeatureGroupEngine:
             str(e_eventt_info.value)
             == "Provided event_time feature feature_name doesn't exist in feature dataframe"
         )
+
+    def test_python_engine_no_features(self, mocker):
+        sc = storage_connector.JdbcConnector(
+            id=1,
+            name="test_connector",
+            featurestore_id=1,
+            connection_string="",
+            arguments="",
+        )
+        mocker.patch("hsfs.engine.get_instance", return_value=python.Engine())
+        mocker.patch("hsfs.engine.get_type")
+        feature_store_id = 99
+        external_fg_engine = external_feature_group_engine.ExternalFeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fg = feature_group.ExternalFeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            storage_connector=sc,
+            features=[],
+        )
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as e_save_info:
+            external_fg_engine.save(feature_group=fg)
+
+        # Assert
+        assert e_save_info.type == exceptions.FeatureStoreException
+
+    def test_save_python_engine_features(self, mocker):
+        sc = storage_connector.JdbcConnector(
+            id=1,
+            name="test_connector",
+            featurestore_id=1,
+            connection_string="",
+            arguments="",
+        )
+
+        mocker.patch("hsfs.engine.get_instance", return_value=python.Engine())
+        mocker.patch("hsfs.engine.get_type")
+        mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
+
+        feature_store_id = 99
+        external_fg_engine = external_feature_group_engine.ExternalFeatureGroupEngine(
+            feature_store_id=feature_store_id
+        )
+
+        f1 = feature.Feature(name="f1", type="int")
+        f2 = feature.Feature(name="f2", type="string")
+
+        fg = feature_group.ExternalFeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            storage_connector=sc,
+            features=[f1, f2],
+        )
+        # Act
+        external_fg_engine.save(feature_group=fg)
+
+        # Assert
+        assert mock_fg_api.return_value.save.call_count == 1
+        assert len(mock_fg_api.return_value.save.call_args[0][0].features) == 2
+        assert not mock_fg_api.return_value.save.call_args[0][0].features[0].primary
