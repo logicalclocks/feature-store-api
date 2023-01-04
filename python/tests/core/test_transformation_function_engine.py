@@ -25,6 +25,7 @@ from hsfs import (
     transformation_function,
     transformation_function_attached,
     feature_view,
+    engine
 )
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import transformation_function_engine
@@ -70,8 +71,9 @@ fg3 = feature_group.FeatureGroup(
     id=12,
     stream=False,
 )
-
+engine.init("python")
 query = fg1.select_all().join(fg2.select(["tf1_name"]), on=["id"])
+query_self_join = fg1.select_all().join(fg1.select_all(), on=["id"], prefix="fg1_")
 query_prefix = (
     fg1.select_all()
     .join(fg2.select(["tf1_name"]), on=["id"], prefix="second_")
@@ -375,6 +377,49 @@ class TestTransformationFunctionEngine:
         assert len(fv._features) == 2
         assert fv._features[0].name == "tf_name"
         assert fv._features[1].name == "tf1_name"
+
+    def test_attach_transformation_fn_fv_self_join(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.client.get_instance")
+
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
+
+        def testFunction():
+            print("Test")
+
+        tf = transformation_function.TransformationFunction(
+            feature_store_id,
+            transformation_fn=testFunction,
+            builtin_source_code="",
+            output_type="str",
+        )
+
+        transformation_fn_dict = dict()
+
+        transformation_fn_dict["tf_name"] = tf
+        transformation_fn_dict["fg1_tf_name"] = tf
+
+        fv = feature_view.FeatureView(
+            name="test",
+            query=query_self_join,
+            featurestore_id=99,
+            transformation_functions=transformation_fn_dict,
+            labels=[],
+        )
+
+        # Act
+        tf_engine.attach_transformation_fn(
+            training_dataset_obj=None, feature_view_obj=fv
+        )
+
+        # Assert
+        assert len(fv._features) == 2
+        assert fv._features[0].name == "tf_name"
+        assert fv._features[1].name == "fg1_tf_name"
 
     def test_attach_transformation_fn_fv_q_prefix(self, mocker):
         # Arrange

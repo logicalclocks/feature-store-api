@@ -22,6 +22,7 @@ from hsfs import (
     split_statistics,
     feature_group,
     feature,
+    engine
 )
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import fs_query
@@ -29,7 +30,7 @@ from hsfs.core import feature_view_engine
 from hsfs import engine
 from hsfs.core.feature_view_engine import FeatureViewEngine
 
-engine._engine_type = "python"
+engine.init("python")
 fg1 = feature_group.FeatureGroup(
     name="test1",
     version=1,
@@ -327,6 +328,14 @@ class TestFeatureViewEngine:
             "none",
             FeatureViewEngine.LABEL_NOT_EXIST_ERROR.format("none"),
         )
+
+    def test_save_label_self_join_1(self, mocker):
+        _query = fg1.select_all().join(fg1.select_all(), prefix="fg1_")
+        self.template_save_label_success(mocker, _query, "label", fg1.id)
+
+    def test_save_label_self_join_2(self, mocker):
+        _query = fg1.select_all().join(fg1.select_all(), prefix="fg1_")
+        self.template_save_label_success(mocker, _query, "fg1_label", fg1.id)
 
     def test_get_name(self, mocker):
         # Arrange
