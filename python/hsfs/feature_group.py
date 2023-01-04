@@ -96,7 +96,11 @@ class FeatureGroupBase:
         )
         self._feature_group_engine.delete(self)
 
-    def select_all(self, include_primary_key=True, include_event_time=True):
+    def select_all(
+        self,
+        include_primary_key: Optional[bool] = True,
+        include_event_time: Optional[bool] = True,
+    ):
         """Select all features in the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
@@ -141,10 +145,10 @@ class FeatureGroupBase:
             ```
 
         # Arguments
-            include_primary_key: boolean, optional. If True, include primary key of the feature group
-            to the feature list. Defaults to True.
-            include_event_time: boolean, optional. If True, include event time of the feature group
-            to the feature list. Defaults to True.
+            include_primary_key: If True, include primary key of the feature group
+                to the feature list. Defaults to True.
+            include_event_time: If True, include event time of the feature group
+                to the feature list. Defaults to True.
         # Returns
             `Query`. A query object with all features of the feature group.
         """
@@ -162,7 +166,7 @@ class FeatureGroupBase:
         else:
             return self.select_except(self.primary_key + [self.event_time])
 
-    def select(self, features: List[Union[str, feature.Feature]] = []):
+    def select(self, features: Optional[List[Union[str, feature.Feature]]] = []):
         """Select a subset of features of the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
@@ -193,7 +197,7 @@ class FeatureGroupBase:
             ```
 
         # Arguments
-            features: list, optional. A list of `Feature` objects or feature names as
+            features: A list of `Feature` objects or feature names as
                 strings to be selected, defaults to [].
 
         # Returns
@@ -206,7 +210,7 @@ class FeatureGroupBase:
             feature_store_id=self._feature_store_id,
         )
 
-    def select_except(self, features: List[Union[str, feature.Feature]] = []):
+    def select_except(self, features: Optional[List[Union[str, feature.Feature]]] = []):
         """Select all features including primary key and event time feature
         of the feature group except provided `features` and return a query object.
 
@@ -238,7 +242,7 @@ class FeatureGroupBase:
             ```
 
         # Arguments
-            features: list, optional. A list of `Feature` objects or feature names as
+            features: A list of `Feature` objects or feature names as
                 strings to be excluded from the selection. Defaults to [],
                 selecting all features.
 

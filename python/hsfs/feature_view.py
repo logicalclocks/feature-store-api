@@ -711,8 +711,8 @@ class FeatureView:
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
-            extra_filter: List of `Filter` or `FilterLogic`. Optional. Attach additional filters
-                to the train dataset. The filters will be also applied in `get_batch_data`.
+            extra_filter: Additional filters to be attached to the training dataset.
+                The filters will be also applied in `get_batch_data`.
             data_format: The data format used to save the training dataset,
                 defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
@@ -953,8 +953,8 @@ class FeatureView:
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
-            extra_filter: List of `Filter` or `FilterLogic`. Optional. Attach additional filters
-                to the train dataset. The filters will be also applied in `get_batch_data`.
+            extra_filter: Additional filters to be attached to the training dataset.
+                The filters will be also applied in `get_batch_data`.
             data_format: The data format used to save the training dataset,
                 defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
@@ -1192,8 +1192,8 @@ class FeatureView:
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
-            extra_filter: List of `Filter` or `FilterLogic`. Optional. Attach additional filters
-                to the train dataset. The filters will be also applied in `get_batch_data`.
+            extra_filter: Additional filters to be attached to the training dataset.
+                The filters will be also applied in `get_batch_data`.
             data_format: The data format used to save the training dataset,
                 defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
@@ -1367,8 +1367,8 @@ class FeatureView:
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
-            extra_filter: List of `Filter` or `FilterLogic`. Optional. Attach additional filters
-                to the train dataset. The filters will be also applied in `get_batch_data`.
+            extra_filter: Additional filters to be attached to the training dataset.
+                The filters will be also applied in `get_batch_data`.
             statistics_config: A configuration object, or a dictionary with keys
                 "`enabled`" to generally enable descriptive statistics computation for
                 this feature group, `"correlations`" to turn on feature correlation
@@ -1481,8 +1481,8 @@ class FeatureView:
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
-            extra_filter: List of `Filter` or `FilterLogic`. Optional. Attach additional filters
-                to the train dataset. The filters will be also applied in `get_batch_data`.
+            extra_filter: Additional filters to be attached to the training dataset.
+                The filters will be also applied in `get_batch_data`.
             statistics_config: A configuration object, or a dictionary with keys
                 "`enabled`" to generally enable descriptive statistics computation for
                 this feature group, `"correlations`" to turn on feature correlation
@@ -1631,8 +1631,8 @@ class FeatureView:
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
-            extra_filter: List of `Filter` or `FilterLogic`. Optional. Attach additional filters
-                to the train dataset. The filters will be also applied in `get_batch_data`.
+            extra_filter: Additional filters to be attached to the training dataset.
+                The filters will be also applied in `get_batch_data`.
             statistics_config: A configuration object, or a dictionary with keys
                 "`enabled`" to generally enable descriptive statistics computation for
                 this feature group, `"correlations`" to turn on feature correlation
