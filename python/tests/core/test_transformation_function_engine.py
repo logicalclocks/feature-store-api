@@ -25,7 +25,7 @@ from hsfs import (
     transformation_function,
     transformation_function_attached,
     feature_view,
-    engine
+    engine,
 )
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import transformation_function_engine

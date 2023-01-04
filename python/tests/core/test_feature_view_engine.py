@@ -22,7 +22,7 @@ from hsfs import (
     split_statistics,
     feature_group,
     feature,
-    engine
+    engine,
 )
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import fs_query
