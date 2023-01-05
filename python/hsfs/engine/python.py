@@ -798,8 +798,10 @@ class Engine:
             if err is not None:
                 if offline_write_options.get("debug_kafka", False):
                     print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
-                if err.code() == KafkaError.TOPIC_AUTHORIZATION_FAILED:
-                    raise err  # Stop producing, the user is not authorized
+                if err.code() in [KafkaError.TOPIC_AUTHORIZATION_FAILED]:
+                    print(1111)
+                progress_bar.colour('RED')
+                raise err  # Stop producing, the user is not authorized
             # update progress bar for each msg
             progress_bar.update()
 
