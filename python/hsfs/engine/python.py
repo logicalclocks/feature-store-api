@@ -781,6 +781,7 @@ class Engine:
         offline_write_options: dict,
     ):
         # setup kafka producer
+        print(self._get_kafka_config(offline_write_options))
         producer = Producer(self._get_kafka_config(offline_write_options))
 
         # setup complex feature writers
