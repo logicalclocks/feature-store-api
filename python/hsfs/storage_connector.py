@@ -105,6 +105,19 @@ class StorageConnector(ABC):
 
         Note, paths are only supported for object stores like S3, HopsFS and ADLS, while
         queries are meant for JDBC or databases like Redshift and Snowflake.
+
+        # Arguments
+            query: By default, the storage connector will read the table configured together
+                with the connector, if any. It's possible to overwrite this by passing a SQL
+                query here. Defaults to `None`.
+            data_format: When reading from object stores such as S3, HopsFS and ADLS, specify
+                the file format to be read, e.g. `csv`, `parquet`.
+            options: Any additional key/value options to be passed to the connector.
+            path: Path to be read from within the bucket of the storage connector. Not relevant
+                for JDBC or database based connectors such as Snowflake, JDBC or Redshift.
+
+        # Returns
+            `DataFrame`.
         """
         return engine.get_instance().read(self, data_format, options, path)
 
@@ -250,6 +263,15 @@ class S3Connector(StorageConnector):
 
         Note, paths are only supported for object stores like S3, HopsFS and ADLS, while
         queries are meant for JDBC or databases like Redshift and Snowflake.
+
+        # Arguments
+            query: Not relevant for S3 connectors.
+            data_format: The file format of the files to be read, e.g. `csv`, `parquet`.
+            options: Any additional key/value options to be passed to the S3 connector.
+            path: Path within the bucket to be read.
+
+        # Returns
+            `DataFrame`.
         """
         self.refetch()
         return engine.get_instance().read(self, data_format, options, path)
@@ -397,16 +419,29 @@ class RedshiftConnector(StorageConnector):
         }
         if self._table_name is not None:
             props["dbtable"] = self._table_name
+
         return props
 
     def read(
         self,
-        query: str,
+        query: str = None,
         data_format: str = None,
         options: dict = {},
         path: str = None,
     ):
-        """Reads a query into a dataframe using the storage connector."""
+        """Reads a table or query into a dataframe using the storage connector.
+
+        # Arguments
+            query: By default, the storage connector will read the table configured together
+                with the connector, if any. It's possible to overwrite this by passing a SQL
+                query here. Defaults to `None`.
+            data_format: Not relevant for JDBC based connectors such as Redshift.
+            options: Any additional key/value options to be passed to the JDBC connector.
+            path: Not relevant for JDBC based connectors such as Redshift.
+
+        # Returns
+            `DataFrame`.
+        """
         # refetch to update temporary credentials
         self._storage_connector_api.refetch(self)
         options = (
@@ -416,6 +451,8 @@ class RedshiftConnector(StorageConnector):
         )
         if query:
             options["query"] = query
+            # if table also specified we override to use query
+            options.pop("dbtable", None)
 
         return engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
 
@@ -689,7 +726,19 @@ class SnowflakeConnector(StorageConnector):
         options: dict = {},
         path: str = None,
     ):
-        """Reads a query into a dataframe using the storage connector."""
+        """Reads a table or query into a dataframe using the storage connector.
+
+        # Arguments
+            query: By default, the storage connector will read the table configured together
+                with the connector, if any. It's possible to overwrite this by passing a SQL
+                query here. Defaults to `None`.
+            data_format: Not relevant for Snowflake connectors.
+            options: Any additional key/value options to be passed to the engine.
+            path: Not relevant for Snowflake connectors.
+
+        # Returns
+            `DataFrame`.
+        """
         options = (
             {**self.spark_options(), **options}
             if options is not None
@@ -756,7 +805,17 @@ class JdbcConnector(StorageConnector):
         options: dict = {},
         path: str = None,
     ):
-        """Reads a query into a dataframe using the storage connector."""
+        """Reads a query into a dataframe using the storage connector.
+
+        # Arguments
+            query: A SQL query to be read.
+            data_format: Not relevant for JDBC based connectors.
+            options: Any additional key/value options to be passed to the JDBC connector.
+            path: Not relevant for JDBC based connectors.
+
+        # Returns
+            `DataFrame`.
+        """
         self.refetch()
         options = (
             {**self.spark_options(), **options}
@@ -1017,6 +1076,7 @@ class GcsConnector(StorageConnector):
         ```
 
         # Arguments
+            query: Not relevant for GCS connectors.
             data_format: Spark data format. Defaults to `None`.
             options: Spark options. Defaults to `None`.
             path: GCS path. Defaults to `None`.

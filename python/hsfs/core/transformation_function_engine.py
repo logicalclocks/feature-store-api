@@ -19,8 +19,10 @@ import datetime
 from functools import partial
 
 from hsfs import training_dataset, training_dataset_feature
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import transformation_function_api, statistics_api
 from hsfs.core.builtin_transformation_function import BuiltInTransformationFunction
+from hsfs import util
 
 
 class TransformationFunctionEngine:
@@ -30,6 +32,11 @@ class TransformationFunctionEngine:
         "robust_scaler",
         "label_encoder",
     ]
+    AMBIGUOUS_FEATURE_ERROR = (
+        "Provided feature '{}' in transformation functions is ambiguous and exists in more than one feature groups."
+        "You can provide the feature with the prefix that was specified in the join."
+    )
+    FEATURE_NOT_EXIST_ERROR = "Provided feature '{}' in transformation functions do not exist in any of the feature groups."
 
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
@@ -87,13 +94,34 @@ class TransformationFunctionEngine:
             ] = attached_transformation_fn.transformation_function
         return transformation_fn_dict
 
-    def attach_transformation_fn(
-        self, training_dataset_obj=None, feature_view_obj=None
-    ):
+    @staticmethod
+    def attach_transformation_fn(training_dataset_obj=None, feature_view_obj=None):
         if training_dataset_obj:
             target_obj = training_dataset_obj  # todo why provide td and fv just to convert to target_obj?
         else:
             target_obj = feature_view_obj
+        # If provided feature matches column with prefix, then attach transformation function.
+        # If provided feature matches only one column without prefix, then attach transformation function. (For
+        # backward compatibility purpose, as of v3.0, features are matched to columns without prefix.)
+        # If provided feature matches multiple columns without prefix, then raise exception because it is ambiguous.
+        prefix_feature_map = {}
+        feature_map = {}
+        for feat in target_obj.query.features:
+            prefix_feature_map[feat.name] = (
+                feat.name,
+                target_obj.query._left_feature_group,
+            )
+        for join in target_obj.query.joins:
+            for feat in join.query.features:
+                if join.prefix:
+                    prefix_feature_map[join.prefix + feat.name] = (
+                        feat.name,
+                        join.query._left_feature_group,
+                    )
+                feature_map[feat.name] = feature_map.get(feat.name, []) + [
+                    join.query._left_feature_group
+                ]
+
         if target_obj._transformation_functions:
             for (
                 feature_name,
@@ -103,15 +131,42 @@ class TransformationFunctionEngine:
                     raise ValueError(
                         "Online transformations for training dataset labels are not supported."
                     )
-                target_obj._features.append(
-                    training_dataset_feature.TrainingDatasetFeature(
-                        name=feature_name,
-                        feature_group_feature_name=feature_name,
-                        type=transformation_fn.output_type,
-                        label=False,
-                        transformation_function=transformation_fn,
+                if feature_name in prefix_feature_map:
+                    target_obj._features.append(
+                        training_dataset_feature.TrainingDatasetFeature(
+                            name=feature_name,
+                            feature_group_feature_name=prefix_feature_map[feature_name][
+                                0
+                            ],
+                            featuregroup=prefix_feature_map[feature_name][1],
+                            type=transformation_fn.output_type,
+                            label=False,
+                            transformation_function=transformation_fn,
+                        )
                     )
-                )
+                elif feature_name in feature_map:
+                    if len(feature_map[feature_name]) > 1:
+                        raise FeatureStoreException(
+                            TransformationFunctionEngine.AMBIGUOUS_FEATURE_ERROR.format(
+                                feature_name
+                            )
+                        )
+                    target_obj._features.append(
+                        training_dataset_feature.TrainingDatasetFeature(
+                            name=feature_name,
+                            feature_group_feature_name=feature_name,
+                            featuregroup=feature_map[feature_name][0],
+                            type=transformation_fn.output_type,
+                            label=False,
+                            transformation_function=transformation_fn,
+                        )
+                    )
+                else:
+                    raise FeatureStoreException(
+                        TransformationFunctionEngine.FEATURE_NOT_EXIST_ERROR.format(
+                            feature_name
+                        )
+                    )
 
     def is_builtin(self, transformation_fn_instance):
         return (
@@ -180,6 +235,8 @@ class TransformationFunctionEngine:
             return "STRING"  # STRING is default type for spark udfs
 
         if isinstance(output_type, str):
+            if output_type.endswith("Type()"):
+                return util.translate_legacy_spark_type(output_type)
             output_type = output_type.lower()
 
         if output_type in (str, "str", "string"):
@@ -207,7 +264,7 @@ class TransformationFunctionEngine:
             return "TIMESTAMP"
         elif output_type in (datetime.date, "date"):
             return "DATE"
-        elif output_type in (bool, "boolean", "bool", numpy.bool):
+        elif output_type in (bool, "boolean", "bool"):
             return "BOOLEAN"
         else:
             raise TypeError("Not supported type %s." % output_type)

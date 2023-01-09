@@ -60,7 +60,6 @@ from hsfs.client import exceptions, hopsworks
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
-from hsfs.engine.spark import Engine as SparkEngine
 
 HAS_FAST = False
 try:
@@ -762,11 +761,8 @@ class Engine:
             dataset[feature_name] = dataset[feature_name].map(
                 transformation_fn.transformation_fn
             )
-            offline_type = SparkEngine.convert_spark_type_to_offline_type(
-                SparkEngine.convert_spark_type_string_to_spark_type(
-                    transformation_fn.output_type
-                ),
-                True,
+            offline_type = Engine.convert_spark_type_to_offline_type(
+                transformation_fn.output_type
             )
             dataset[feature_name] = Engine._cast_column_to_offline_type(
                 dataset[feature_name], offline_type
@@ -956,6 +952,37 @@ class Engine:
         return Engine._convert_simple_pandas_dtype_to_offline_type(dtype)
 
     @staticmethod
+    def convert_spark_type_to_offline_type(spark_type_string):
+        if spark_type_string.endswith("Type()"):
+            spark_type_string = util.translate_legacy_spark_type(spark_type_string)
+        if spark_type_string == "STRING":
+            return "STRING"
+        elif spark_type_string == "BINARY":
+            return "BINARY"
+        elif spark_type_string == "BYTE":
+            return "INT"
+        elif spark_type_string == "SHORT":
+            return "INT"
+        elif spark_type_string == "INT":
+            return "INT"
+        elif spark_type_string == "LONG":
+            return "BIGINT"
+        elif spark_type_string == "FLOAT":
+            return "FLOAT"
+        elif spark_type_string == "DOUBLE":
+            return "DOUBLE"
+        elif spark_type_string == "TIMESTAMP":
+            return "TIMESTAMP"
+        elif spark_type_string == "DATE":
+            return "DATE"
+        elif spark_type_string == "BOOLEAN":
+            return "BOOLEAN"
+        else:
+            raise ValueError(
+                f"Return type {spark_type_string} not supported for transformation functions."
+            )
+
+    @staticmethod
     def _convert_simple_pandas_dtype_to_offline_type(dtype):
         if dtype == np.dtype("uint8"):
             return "int"
@@ -992,8 +1019,6 @@ class Engine:
                 return "int"
             elif dtype == pd.Int64Dtype():
                 return "bigint"
-            elif dtype == pd.BooleanDtype():
-                return "boolean"
 
         raise ValueError(f"dtype '{dtype}' not supported")
 
@@ -1019,6 +1044,8 @@ class Engine:
             return "binary"
         elif pa.types.is_string(arrow_type) or pa.types.is_unicode(arrow_type):
             return "string"
+        elif pa.types.is_boolean(arrow_type):
+            return "boolean"
 
         raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
 
@@ -1041,14 +1068,15 @@ class Engine:
                 lambda x: (ast.literal_eval(x) if type(x) is str else x)
                 if (x is not None and x != "")
                 else None
-            ).astype(pd.BooleanDtype())
+            )
+        elif offline_type == "string":
+            return feature_column.apply(lambda x: str(x) if x is not None else None)
         elif offline_type.startswith("decimal"):
             return feature_column.apply(
                 lambda x: decimal.Decimal(x) if (x is not None) else None
             )
         else:
             offline_dtype_mapping = {
-                "string": np.dtype("str"),
                 "bigint": pd.Int64Dtype(),
                 "int": pd.Int32Dtype(),
                 "smallint": pd.Int16Dtype(),
@@ -1073,13 +1101,13 @@ class Engine:
         elif online_type == "date":
             return pd.to_datetime(feature_column, utc=True).dt.date
         elif online_type.startswith("varchar") or online_type == "text":
-            return feature_column.astype(np.dtype("str"))
+            return feature_column.apply(lambda x: str(x) if x is not None else None)
         elif online_type == "boolean":
             return feature_column.apply(
                 lambda x: (ast.literal_eval(x) if type(x) is str else x)
                 if (x is not None and x != "")
                 else None
-            ).astype(pd.BooleanDtype())
+            )
         elif online_type.startswith("decimal"):
             return feature_column.apply(
                 lambda x: decimal.Decimal(x) if (x is not None) else None

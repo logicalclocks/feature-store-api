@@ -44,6 +44,7 @@ from hsfs.validation_report import ValidationReport
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.job import Job
+from hsfs.core.variable_api import VariableApi
 from hsfs.core import great_expectation_engine
 
 
@@ -59,6 +60,7 @@ class FeatureGroupBase:
             great_expectation_engine.GreatExpectationEngine(featurestore_id)
         )
         self._feature_store_id = featurestore_id
+        self._variable_api = VariableApi()
 
     def delete(self):
         """Drop the entire feature group along with its feature data.
@@ -94,11 +96,15 @@ class FeatureGroupBase:
         )
         self._feature_group_engine.delete(self)
 
-    def select_all(self, include_primary_key=True, include_event_time=True):
+    def select_all(
+        self,
+        include_primary_key: Optional[bool] = True,
+        include_event_time: Optional[bool] = True,
+    ):
         """Select all features in the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
-        training dataset immediately.
+        feature view.
 
         !!! example
             ```python
@@ -114,8 +120,35 @@ class FeatureGroupBase:
 
             # show first 5 rows
             query.show(5)
+
+
+            # select all features exclude primary key and event time
+            from hsfs.feature import Feature
+            fg = fs.create_feature_group(
+                    "fg",
+                    features=[
+                            Feature("id", type="string"),
+                            Feature("ts", type="bigint"),
+                            Feature("f1", type="date"),
+                            Feature("f2", type="double")
+                            ],
+                    primary_key=["id"],
+                    event_time="ts")
+
+            query = fg.select_all()
+            query.features
+            # [Feature('id', ...), Feature('ts', ...), Feature('f1', ...), Feature('f2', ...)]
+
+            query = fg.select_all(include_primary_key=False, include_event_time=False)
+            query.features
+            # [Feature('f1', ...), Feature('f2', ...)]
             ```
 
+        # Arguments
+            include_primary_key: If True, include primary key of the feature group
+                to the feature list. Defaults to True.
+            include_event_time: If True, include event time of the feature group
+                to the feature list. Defaults to True.
         # Returns
             `Query`. A query object with all features of the feature group.
         """
@@ -133,11 +166,11 @@ class FeatureGroupBase:
         else:
             return self.select_except(self.primary_key + [self.event_time])
 
-    def select(self, features: List[Union[str, feature.Feature]] = []):
+    def select(self, features: Optional[List[Union[str, feature.Feature]]] = []):
         """Select a subset of features of the feature group and return a query object.
 
-        The query can be used to construct joins of feature groups or create a training
-        dataset with a subset of features of the feature group.
+        The query can be used to construct joins of feature groups or create a
+        feature view with a subset of features of the feature group.
 
         !!! example
             ```python
@@ -145,14 +178,26 @@ class FeatureGroupBase:
             fs = ...
 
             # get the Feature Group instance
-            fg = fs.get_or_create_feature_group(...)
+            from hsfs.feature import Feature
+            fg = fs.create_feature_group(
+                    "fg",
+                    features=[
+                            Feature("id", type="string"),
+                            Feature("ts", type="bigint"),
+                            Feature("f1", type="date"),
+                            Feature("f2", type="double")
+                            ],
+                    primary_key=["id"],
+                    event_time="ts")
 
-            # construct the query
-            fg.select(['date', 'weekly_sales', 'is_holiday'])
+            # construct query
+            query = fg.select(["id", "f1"])
+            query.features
+            # [Feature('id', ...), Feature('f1', ...)]
             ```
 
         # Arguments
-            features: list, optional. A list of `Feature` objects or feature names as
+            features: A list of `Feature` objects or feature names as
                 strings to be selected, defaults to [].
 
         # Returns
@@ -165,12 +210,12 @@ class FeatureGroupBase:
             feature_store_id=self._feature_store_id,
         )
 
-    def select_except(self, features: List[Union[str, feature.Feature]] = []):
-        """Select all features of the feature group except a few and return a query
-        object.
+    def select_except(self, features: Optional[List[Union[str, feature.Feature]]] = []):
+        """Select all features including primary key and event time feature
+        of the feature group except provided `features` and return a query object.
 
-        The query can be used to construct joins of feature groups or create a training
-        dataset with a subset of features of the feature group.
+        The query can be used to construct joins of feature groups or create a
+        feature view with a subset of features of the feature group.
 
         !!! example
             ```python
@@ -178,14 +223,26 @@ class FeatureGroupBase:
             fs = ...
 
             # get the Feature Group instance
-            fg = fs.get_or_create_feature_group(...)
+            from hsfs.feature import Feature
+            fg = fs.create_feature_group(
+                    "fg",
+                    features=[
+                            Feature("id", type="string"),
+                            Feature("ts", type="bigint"),
+                            Feature("f1", type="date"),
+                            Feature("f2", type="double")
+                            ],
+                    primary_key=["id"],
+                    event_time="ts")
 
-            # construct the query
-            fg.select_except(['sk_id_curr','sk_id_bureau'])
+            # construct query
+            query = fg.select_except(["ts", "f1"])
+            query.features
+            # [Feature('id', ...), Feature('f1', ...)]
             ```
 
         # Arguments
-            features: list, optional. A list of `Feature` objects or feature names as
+            features: A list of `Feature` objects or feature names as
                 strings to be excluded from the selection. Defaults to [],
                 selecting all features.
 
@@ -338,11 +395,11 @@ class FeatureGroupBase:
         For deleted and inaccessible feature groups, only a minimal information is
         returned.
 
-        # Arguments
-            feature_group_instance: Metadata object of feature group.
-
         # Returns
-            `ProvenanceLinks`:  the feature groups used to generated this feature group
+            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_group_engine.get_parent_feature_groups(self)
 
@@ -353,11 +410,11 @@ class FeatureGroupBase:
         will always be empty.
         For inaccessible feature views, only a minimal information is returned.
 
-        # Arguments
-            feature_group_instance: Metadata object of feature group.
-
         # Returns
-            `ProvenanceLinks`:  the feature views generated using this feature group
+            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_group_engine.get_generated_feature_views(self)
 
@@ -368,11 +425,11 @@ class FeatureGroupBase:
         will always be empty.
         For inaccessible feature groups, only a minimal information is returned.
 
-        # Arguments
-            feature_group_instance: Metadata object of feature group.
-
         # Returns
-            `ProvenanceLinks`:  the feature groups generated using this feature group
+            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_group_engine.get_generated_feature_groups(self)
 
@@ -401,11 +458,14 @@ class FeatureGroupBase:
             this will return the name of the feature group itself. Fall back on using
             the `get_feature` method.
 
-        Args:
-            name (str): [description]
+        # Arguments:
+            name: The name of the feature to retrieve
 
-        Returns:
-            [type]: [description]
+        # Returns:
+            Feature: The feature object
+
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
         """
         try:
             return self.__getitem__(name)
@@ -619,7 +679,7 @@ class FeatureGroupBase:
             `ExpectationSuite`. The expectation suite attached to the feature group.
 
         # Raises
-            `RestAPIException`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         # Avoid throwing an error if Feature Group not initialised.
         if self._id:
@@ -635,6 +695,7 @@ class FeatureGroupBase:
         expectation_suite: Union[ExpectationSuite, ge.core.ExpectationSuite],
         run_validation: bool = True,
         validation_ingestion_policy: str = "ALWAYS",
+        overwrite: bool = False,
     ) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
         """Attach an expectation suite to a feature group and saves it for future use. If an expectation
         suite is already attached, it is replaced. Note that the provided expectation suite is modified
@@ -653,13 +714,15 @@ class FeatureGroupBase:
 
         # Arguments
             expectation_suite: The expectation suite to attach to the Feature Group.
+            overwrite: If an Expectation Suite is already attached, overwrite it.
+                The new suite will have its own validation history, but former reports are preserved.
             run_validation: Set whether the expectation_suite will run on ingestion
             validation_ingestion_policy: Set the policy for ingestion to the Feature Group.
                 - "STRICT" only allows DataFrame passing validation to be inserted into Feature Group.
                 - "ALWAYS" always insert the DataFrame to the Feature Group, irrespective of overall validation result.
 
         # Raises
-            `RestAPIException`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         if isinstance(expectation_suite, ge.core.ExpectationSuite):
             tmp_expectation_suite = ExpectationSuite.from_ge_type(
@@ -680,6 +743,9 @@ class FeatureGroupBase:
                     type(expectation_suite)
                 )
             )
+
+        if overwrite:
+            self.delete_expectation_suite()
 
         if self._id:
             self._expectation_suite = self._expectation_suite_engine.save(
@@ -705,7 +771,7 @@ class FeatureGroupBase:
             ```
 
         # Raises
-            `RestAPIException`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         if self._expectation_suite.id:
             self._expectation_suite_engine.delete(self._expectation_suite.id)
@@ -736,7 +802,7 @@ class FeatureGroupBase:
             `ValidationReport`. The latest validation report attached to the Feature Group.
 
         # Raises
-            `RestAPIException`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         return self._validation_report_engine.get_last(ge_type=ge_type)
 
@@ -765,7 +831,8 @@ class FeatureGroupBase:
             Union[List[`ValidationReport`], `ValidationReport`]. All validation reports attached to the feature group.
 
         # Raises
-            `RestAPIException`,`hsfs.client.exceptions.FeatureStoreException`.
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
         """
         if self._id:
             return self._validation_report_engine.get_all(ge_type=ge_type)
@@ -814,7 +881,7 @@ class FeatureGroupBase:
                 method on hopsworks type. Defaults to `True`.
 
         # Raises
-            `RestAPIException`.
+            `hsfs.client.exceptions.RestAPIError`.
         """
         if self._id:
             if isinstance(
@@ -856,7 +923,7 @@ class FeatureGroupBase:
         ```python3
         validation_history = fg.get_validation_history(
             expectation_id=1,
-            fliter_by=["REJECTED", "UNKNOWN"],
+            filter_by=["REJECTED", "UNKNOWN"],
             start_validation_time="2022-01-01 00:00:00",
             end_validation_time=datetime.datetime.now(),
             ge_type=False
@@ -872,11 +939,19 @@ class FeatureGroupBase:
             Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable. See examples above.
 
         # Raises
-            `RestAPIException`
+            `hsfs.client.exceptions.RestAPIError`.
 
         # Return
             Union[List[`ValidationResult`], List[`ExpectationValidationResult`]] A list of validation result connected to the expectation_id
         """
+        major, minor = self._variable_api.parse_major_and_minor(
+            self._variable_api.get_version("hopsworks")
+        )
+        if major == "3" and minor == "0":
+            raise FeatureStoreException(
+                "The hopsworks server does not support this operation. Update server to hopsworks >3.1 to enable support."
+            )
+
         if self._id:
             return self._validation_result_engine.get_validation_history(
                 expectation_id=expectation_id,
@@ -1270,6 +1345,10 @@ class FeatureGroup(FeatureGroupBase):
             dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
                 `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
             read_options: Additional read options as key/value pairs, defaults to `{}`.
+                Only for Python engine: Set `read_options={"pandas_types": True}`
+                to retrieve columns as Pandas nullable types
+                rather than numpy/object(string) types (experimental).
+                (see https://pandas.pydata.org/docs/user_guide/integer_na.html).
 
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
@@ -1494,7 +1573,7 @@ class FeatureGroup(FeatureGroupBase):
                 version=1,
                 primary_key=['unix'],
                 online_enabled=True,
-                event_time=['unix']
+                event_time='unix'
             )
 
             fg.insert(df_bitcoin_processed)
@@ -1511,7 +1590,7 @@ class FeatureGroup(FeatureGroupBase):
                 version=1,
                 primary_key=['unix'],
                 online_enabled=True,
-                event_time=['unix']
+                event_time='unix'
             )
             # async insertion in order not to wait till finish of the job
             fg.insert(df_for_fg1, write_options={"wait_for_job" : False})
@@ -1522,7 +1601,7 @@ class FeatureGroup(FeatureGroupBase):
                 version=1,
                 primary_key=['unix'],
                 online_enabled=True,
-                event_time=['unix']
+                event_time='unix'
             )
             fg.insert(df_for_fg2)
             ```
@@ -1885,7 +1964,7 @@ class FeatureGroup(FeatureGroupBase):
 
         return self._great_expectation_engine.validate(
             self,
-            dataframe=dataframe,
+            dataframe=engine.get_instance().convert_to_default_dataframe(dataframe),
             expectation_suite=expectation_suite,
             save_report=save_report,
             validation_options=validation_options,

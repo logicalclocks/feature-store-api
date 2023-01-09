@@ -5,11 +5,11 @@
 
     <groupId>com.logicalclocks</groupId>
     <artifactId>hsfs-utils</artifactId>
-    <version>3.1.0-SNAPSHOT</version>
+    <version>3.2.0-SNAPSHOT</version>
 
     <properties>
         <hops.version>3.2.0.0-SNAPSHOT</hops.version>
-        <hsfs.version>2.6.0-SNAPSHOT</hsfs.version>
+        <hsfs.version>3.2.0-SNAPSHOT</hsfs.version>
         <slf4j.version>1.7.30</slf4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>

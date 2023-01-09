@@ -106,7 +106,17 @@ class Query:
         """
         sql_query, online_conn = self._prep_read(online, read_options)
 
-        schema = self._collect_features()
+        schema = None
+        if (
+            read_options
+            and "pandas_types" in read_options
+            and read_options["pandas_types"]
+        ):
+            schema = self._collect_features()
+            if len(self.joins) > 0 or None in [f.type for f in schema]:
+                raise ValueError(
+                    "Pandas types casting only supported for feature_group.read()/query.select_all()"
+                )
 
         return engine.get_instance().sql(
             sql_query,

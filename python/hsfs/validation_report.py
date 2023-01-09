@@ -17,6 +17,7 @@
 import json
 
 import humps
+from typing import Optional
 import great_expectations as ge
 
 from hsfs import util
@@ -203,8 +204,10 @@ class ValidationReport:
         return self._ingestion_result
 
     @ingestion_result.setter
-    def ingestion_result(self, ingestion_result: str):
+    def ingestion_result(self, ingestion_result: Optional[str]):
         allowed_values = ["INGESTED", "REJECTED", "UNKNOWN", "EXPERIMENT", "FG_DATA"]
+        if ingestion_result is None:
+            ingestion_result = "UNKNOWN"
         if ingestion_result.upper() in allowed_values:
             self._ingestion_result = ingestion_result
         else:
