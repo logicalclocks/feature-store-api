@@ -781,7 +781,6 @@ class Engine:
         offline_write_options: dict,
     ):
         # setup kafka producer
-        print(self._get_kafka_config(offline_write_options))
         producer = Producer(self._get_kafka_config(offline_write_options))
 
         # setup complex feature writers
@@ -803,7 +802,7 @@ class Engine:
                     KafkaError.TOPIC_AUTHORIZATION_FAILED,
                     KafkaError._MSG_TIMED_OUT,
                 ]:
-                    progress_bar.colour("RED")
+                    progress_bar.colour = "RED"
                     raise err  # Stop producing and show error
             # update progress bar for each msg
             progress_bar.update()
