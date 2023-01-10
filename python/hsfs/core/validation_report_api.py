@@ -17,6 +17,7 @@
 from typing import Union, List
 from hsfs import client
 from hsfs.validation_report import ValidationReport
+from hsfs.core.variable_api import VariableApi
 
 
 class ValidationReportApi:
@@ -30,6 +31,7 @@ class ValidationReportApi:
         """
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
+        self._variable_api = VariableApi()
 
     def create(self, validation_report: ValidationReport) -> ValidationReport:
         """Create an validation report attached to a featuregroup.
@@ -51,8 +53,16 @@ class ValidationReportApi:
             "validationreport",
         ]
 
+        major, minor = self._variable_api.parse_major_and_minor(
+            self._variable_api.get_version("hopsworks")
+        )
+        if major == "3" and minor == "0":
+            # You must bypass the setter otherwise it ends up as "UNKNOWN"
+            validation_report._ingestion_result = None
+
         headers = {"content-type": "application/json"}
         payload = validation_report.json()
+
         return ValidationReport.from_response_json(
             _client._send_request("PUT", path_params, headers=headers, data=payload)
         )

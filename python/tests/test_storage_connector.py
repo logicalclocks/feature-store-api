@@ -153,6 +153,28 @@ class TestRedshiftConnector:
         assert sc.arguments is None
         assert sc.expiration is None
 
+    def test_read_query_option(self, mocker):
+        sc = storage_connector.RedshiftConnector(
+            id=1,
+            name="redshiftconn",
+            featurestore_id=1,
+            table_name="abc",
+            cluster_identifier="cluster",
+            database_endpoint="us-east-2",
+            database_port=5439,
+            database_name="db",
+        )
+
+        mocker.patch("hsfs.engine.get_instance", return_value=spark.Engine())
+        mocker.patch("hsfs.core.storage_connector_api.StorageConnectorApi.refetch")
+        mock_engine_read = mocker.patch("hsfs.engine.spark.Engine.read")
+
+        query = "select * from table"
+        sc.read(query=query)
+
+        assert mock_engine_read.call_args[0][2].get("dbtable", None) is None
+        assert mock_engine_read.call_args[0][2].get("query") == query
+
 
 class TestAdlsConnector:
     def test_from_response_json(self, backend_fixtures):

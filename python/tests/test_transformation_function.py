@@ -56,7 +56,7 @@ class TestTransformationFunction:
         assert tf.version is None
         assert tf.name is None
         assert tf.transformation_fn is None
-        assert tf.output_type is None
+        assert tf.output_type == "STRING"
         assert tf.source_code_content is None
         assert tf._feature_group_feature_name is None
         assert tf._feature_group_id is None

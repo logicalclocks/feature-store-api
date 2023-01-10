@@ -19,12 +19,64 @@ import numpy
 import datetime
 
 from hsfs import (
+    feature,
+    feature_group,
     training_dataset,
     transformation_function,
     transformation_function_attached,
     feature_view,
 )
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import transformation_function_engine
+
+fg1 = feature_group.FeatureGroup(
+    name="test1",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    features=[
+        feature.Feature("id"),
+        feature.Feature("label"),
+        feature.Feature("tf_name"),
+    ],
+    id=11,
+    stream=False,
+)
+
+fg2 = feature_group.FeatureGroup(
+    name="test2",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    features=[feature.Feature("id"), feature.Feature("tf1_name")],
+    id=12,
+    stream=False,
+)
+
+fg3 = feature_group.FeatureGroup(
+    name="test3",
+    version=1,
+    featurestore_id=99,
+    primary_key=[],
+    partition_key=[],
+    features=[
+        feature.Feature("id"),
+        feature.Feature("tf_name"),
+        feature.Feature("tf1_name"),
+        feature.Feature("tf3_name"),
+    ],
+    id=12,
+    stream=False,
+)
+
+query = fg1.select_all().join(fg2.select(["tf1_name"]), on=["id"])
+query_prefix = (
+    fg1.select_all()
+    .join(fg2.select(["tf1_name"]), on=["id"], prefix="second_")
+    .join(fg3.select(["tf_name", "tf1_name"]), on=["id"], prefix="third_")
+)
 
 
 class TestTransformationFunctionEngine:
@@ -241,6 +293,7 @@ class TestTransformationFunctionEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.constructor.fs_query.FsQuery")
 
         tf_engine = transformation_function_engine.TransformationFunctionEngine(
             feature_store_id
@@ -307,7 +360,7 @@ class TestTransformationFunctionEngine:
 
         fv = feature_view.FeatureView(
             name="test",
-            query="",
+            query=query,
             featurestore_id=99,
             transformation_functions=transformation_fn_dict,
             labels=[],
@@ -322,6 +375,104 @@ class TestTransformationFunctionEngine:
         assert len(fv._features) == 2
         assert fv._features[0].name == "tf_name"
         assert fv._features[1].name == "tf1_name"
+
+    def test_attach_transformation_fn_fv_q_prefix(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.client.get_instance")
+
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
+
+        def testFunction():
+            print("Test")
+
+        tf = transformation_function.TransformationFunction(
+            feature_store_id,
+            transformation_fn=testFunction,
+            builtin_source_code="",
+            output_type="str",
+        )
+
+        transformation_fn_dict = dict()
+
+        transformation_fn_dict["tf_name"] = tf
+        transformation_fn_dict["second_tf1_name"] = tf
+        transformation_fn_dict["third_tf_name"] = tf
+        transformation_fn_dict["third_tf1_name"] = tf
+
+        fv = feature_view.FeatureView(
+            name="test",
+            query=query_prefix,
+            featurestore_id=99,
+            transformation_functions=transformation_fn_dict,
+            labels=[],
+        )
+
+        # Act
+        tf_engine.attach_transformation_fn(
+            training_dataset_obj=None, feature_view_obj=fv
+        )
+
+        # Assert
+        assert len(fv._features) == 4
+        assert fv._features[0].name == "tf_name"
+        assert fv._features[1].name == "second_tf1_name"
+        assert fv._features[2].name == "third_tf_name"
+        assert fv._features[3].name == "third_tf1_name"
+
+    def test_attach_transformation_fn_fv_q_prefix_fail(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.client.get_instance")
+
+        tf_engine = transformation_function_engine.TransformationFunctionEngine(
+            feature_store_id
+        )
+
+        def testFunction():
+            print("Test")
+
+        query_no_prefix = (
+            fg1.select_all()
+            .join(fg2.select(["tf1_name"]), on=["id"])
+            .join(fg3.select(["tf_name", "tf1_name"]), on=["id"])
+        )
+
+        tf = transformation_function.TransformationFunction(
+            feature_store_id,
+            transformation_fn=testFunction,
+            builtin_source_code="",
+            output_type="str",
+        )
+
+        transformation_fn_dict = dict()
+        transformation_fn_dict["tf_name"] = tf
+        transformation_fn_dict["tf1_name"] = tf
+
+        fv = feature_view.FeatureView(
+            name="test",
+            query=query_no_prefix,
+            featurestore_id=99,
+            transformation_functions=transformation_fn_dict,
+            labels=[],
+        )
+
+        # Act
+        with pytest.raises(FeatureStoreException) as e_info:
+            tf_engine.attach_transformation_fn(
+                training_dataset_obj=None, feature_view_obj=fv
+            )
+
+        # Assert
+        assert (
+            str(e_info.value)
+            == "Provided feature 'tf1_name' in transformation functions is ambiguous and exists in more than one "
+            "feature groups.You can provide the feature with the prefix that was specified in the join."
+        )
 
     def test_attach_transformation_fn_fv_labels(self, mocker):
         # Arrange
@@ -350,7 +501,7 @@ class TestTransformationFunctionEngine:
 
         fv = feature_view.FeatureView(
             name="test",
-            query="",
+            query=query,
             featurestore_id=99,
             transformation_functions=transformation_fn_dict,
             labels=["tf_name"],
@@ -773,9 +924,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type(bytes)
+        result1 = tf_engine.infer_spark_type("BinaryType()")
 
         # Assert
         assert result == "BINARY"
+        assert result1 == "BINARY"
 
     def test_infer_spark_type_int8_type_1(self):
         # Arrange
@@ -815,9 +968,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("byte")
+        result1 = tf_engine.infer_spark_type("ByteType()")
 
         # Assert
         assert result == "BYTE"
+        assert result1 == "BYTE"
 
     def test_infer_spark_type_int16_type_1(self):
         # Arrange
@@ -857,9 +1012,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("short")
+        result1 = tf_engine.infer_spark_type("ShortType()")
 
         # Assert
         assert result == "SHORT"
+        assert result1 == "SHORT"
 
     def test_infer_spark_type_int_type_1(self):
         # Arrange
@@ -898,24 +1055,12 @@ class TestTransformationFunctionEngine:
         )
 
         # Act
-        result = tf_engine.infer_spark_type(numpy.int)
-
-        # Assert
-        assert result == "INT"
-
-    def test_infer_spark_type_int_type_4(self):
-        # Arrange
-        feature_store_id = 99
-
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(
-            feature_store_id
-        )
-
-        # Act
         result = tf_engine.infer_spark_type(numpy.int32)
+        result1 = tf_engine.infer_spark_type("IntegerType()")
 
         # Assert
         assert result == "INT"
+        assert result1 == "INT"
 
     def test_infer_spark_type_int64_type_1(self):
         # Arrange
@@ -969,9 +1114,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("bigint")
+        result1 = tf_engine.infer_spark_type("LongType()")
 
         # Assert
         assert result == "LONG"
+        assert result1 == "LONG"
 
     def test_infer_spark_type_float_type_1(self):
         # Arrange
@@ -997,23 +1144,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("float")
+        result1 = tf_engine.infer_spark_type("FloatType()")
 
         # Assert
         assert result == "FLOAT"
-
-    def test_infer_spark_type_float_type_3(self):
-        # Arrange
-        feature_store_id = 99
-
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(
-            feature_store_id
-        )
-
-        # Act
-        result = tf_engine.infer_spark_type(numpy.float)
-
-        # Assert
-        assert result == "FLOAT"
+        assert result1 == "FLOAT"
 
     def test_infer_spark_type_double_type_1(self):
         # Arrange
@@ -1053,9 +1188,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("double")
+        result1 = tf_engine.infer_spark_type("DoubleType()")
 
         # Assert
         assert result == "DOUBLE"
+        assert result1 == "DOUBLE"
 
     def test_infer_spark_type_timestamp_type_1(self):
         # Arrange
@@ -1081,9 +1218,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type(numpy.datetime64)
+        result1 = tf_engine.infer_spark_type("TimestampType()")
 
         # Assert
         assert result == "TIMESTAMP"
+        assert result1 == "TIMESTAMP"
 
     def test_infer_spark_type_date_type_1(self):
         # Arrange
@@ -1095,9 +1234,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type(datetime.date)
+        result1 = tf_engine.infer_spark_type("DateType()")
 
         # Assert
         assert result == "DATE"
+        assert result1 == "DATE"
 
     def test_infer_spark_type_bool_type_1(self):
         # Arrange
@@ -1137,23 +1278,11 @@ class TestTransformationFunctionEngine:
 
         # Act
         result = tf_engine.infer_spark_type("bool")
+        result1 = tf_engine.infer_spark_type("BooleanType()")
 
         # Assert
         assert result == "BOOLEAN"
-
-    def test_infer_spark_type_bool_type_4(self):
-        # Arrange
-        feature_store_id = 99
-
-        tf_engine = transformation_function_engine.TransformationFunctionEngine(
-            feature_store_id
-        )
-
-        # Act
-        result = tf_engine.infer_spark_type(numpy.bool)
-
-        # Assert
-        assert result == "BOOLEAN"
+        assert result1 == "BOOLEAN"
 
     def test_infer_spark_type_wrong_type(self):
         # Arrange

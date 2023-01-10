@@ -18,12 +18,14 @@ import json
 from enum import Enum
 from typing import Set
 from hsfs import feature_group, feature_view, training_dataset
+import humps
 
 
 class Artifact:
     class MetaType(Enum):
         DELETED = 1
         INACCESSIBLE = 2
+        FAULTY = 3
 
     def __init__(
         self,
@@ -33,6 +35,7 @@ class Artifact:
         type,
         meta_type,
         href=None,
+        exception_cause=None,
     ):
         self._feature_store_name = feature_store_name
         self._name = name
@@ -40,6 +43,7 @@ class Artifact:
         self._type = type
         self._meta_type = meta_type
         self._href = href
+        self._exception_cause = exception_cause
 
     @property
     def feature_store_name(self):
@@ -67,12 +71,21 @@ class Artifact:
         return (
             f"Artifact({self._feature_store_name!r}, {self._name!r}, "
             f"{self._version!r}, {self._type!r}, {self._meta_type!r}, "
-            f"{self._href!r})"
+            f"{self._href!r}, {self._exception_cause!r})"
         )
 
     @staticmethod
-    def from_response_json(link_json: dict):
-        if bool(link_json["deleted"]):
+    def from_response_json(json_dict: dict):
+        link_json = humps.decamelize(json_dict)
+        if link_json.get("exception_cause") is not None:
+            return Artifact(
+                link_json["artifact"]["project"],
+                link_json["artifact"]["name"],
+                link_json["artifact"]["version"],
+                link_json["artifact_type"],
+                Artifact.MetaType.FAULTY,
+            )
+        elif bool(link_json["deleted"]):
             return Artifact(
                 link_json["artifact"]["project"],
                 link_json["artifact"]["name"],
@@ -96,18 +109,44 @@ class Links:
         self._accessible = []
         self._deleted = []
         self._inaccessible = []
+        self._faulty = []
 
     @property
     def deleted(self):
+        """List of [Artifact objects](../links#artifact) which contains
+        minimal information (name, version) about the entities
+        (feature groups, feature views) they represent.
+        These entities have been removed from the feature store.
+        """
         return self._deleted
 
     @property
     def inaccessible(self):
+        """List of [Artifact objects](../links#artifact) which contains
+        minimal information (name, version) about the entities
+        (feature groups, feature views) they represent.
+        These entities exist in the feature store, however the user
+        does not have access to them anymore.
+        """
         return self._inaccessible
 
     @property
     def accessible(self):
+        """List of [feature groups](../feature_group_api) or
+        [feature views](../feature_view_api) metadata objects
+        which are part of the provenance graph requested. These entities
+        exist in the feature store and the user has access to them.
+        """
         return self._accessible
+
+    @property
+    def faulty(self):
+        """List of [Artifact objects](../links#artifact) which contains
+        minimal information (name, version) about the entities
+        (feature groups, feature views) they represent.
+        These entities exist in the feature store, however they are corrupted.
+        """
+        return self._faulty
 
     class Direction(Enum):
         UPSTREAM = 1
@@ -123,7 +162,7 @@ class Links:
     def __repr__(self):
         return (
             f"Links({self._accessible!r}, {self._deleted!r}"
-            f", {self._inaccessible!r})"
+            f", {self._inaccessible!r}, {self._faulty!r})"
         )
 
     @staticmethod
@@ -140,7 +179,9 @@ class Links:
         links = Links()
         for link_json in links_json:
             if link_json["node"]["artifact_type"] in artifacts:
-                if bool(link_json["node"]["accessible"]):
+                if link_json["node"].get("exception_cause") is not None:
+                    links._faulty.append(Artifact.from_response_json(link_json["node"]))
+                elif bool(link_json["node"]["accessible"]):
                     links.accessible.append(Links.__feature_group(link_json["node"]))
                 elif bool(link_json["node"]["deleted"]):
                     links.deleted.append(Artifact.from_response_json(link_json["node"]))
@@ -155,7 +196,9 @@ class Links:
         links = Links()
         for link_json in links_json:
             if link_json["node"]["artifact_type"] in artifacts:
-                if bool(link_json["node"]["accessible"]):
+                if link_json["node"].get("exception_cause") is not None:
+                    links._faulty.append(Artifact.from_response_json(link_json["node"]))
+                elif bool(link_json["node"]["accessible"]):
                     links.accessible.append(
                         feature_view.FeatureView.from_response_json(
                             link_json["node"]["artifact"]
@@ -170,7 +213,7 @@ class Links:
         return links
 
     @staticmethod
-    def from_response_json(links_json: dict, direction: Direction, artifact: Type):
+    def from_response_json(json_dict: dict, direction: Direction, artifact: Type):
         """Parse explicit links from json response. There are three types of
         Links: UpstreamFeatureGroups, DownstreamFeatureGroups, DownstreamFeatureViews
 
@@ -182,6 +225,9 @@ class Links:
         # Returns
             A ProvenanceLink object for the selected parse type.
         """
+
+        links_json = humps.decamelize(json_dict)
+
         if direction == Links.Direction.UPSTREAM:
             # upstream is currently, always, only feature groups
             return Links.__parse_feature_groups(
@@ -214,6 +260,7 @@ class ProvenanceEncoder(json.JSONEncoder):
                 "accessible": obj.accessible,
                 "inaccessible": obj.inaccessible,
                 "deleted": obj.deleted,
+                "faulty": obj.faulty,
             }
         elif isinstance(
             obj,

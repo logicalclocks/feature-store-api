@@ -18,6 +18,7 @@
 package com.logicalclocks.base.metadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import com.logicalclocks.base.constructor.Filter;
 import com.logicalclocks.base.constructor.FilterLogic;
 import com.logicalclocks.base.constructor.QueryBase;
@@ -25,7 +26,6 @@ import com.logicalclocks.base.DeltaStreamerJobConf;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreBase;
 import com.logicalclocks.base.FeatureStoreException;
-
 import com.logicalclocks.base.engine.FeatureGroupBaseEngine;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 
