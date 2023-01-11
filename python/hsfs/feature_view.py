@@ -547,11 +547,8 @@ class FeatureView:
         For deleted and inaccessible feature groups, only a minimal information is
         returned.
 
-        # Arguments
-            feature_view_obj: Metadata object of feature view.
-
         # Returns
-            `ProvenanceLinks`:  the feature groups used to generated this feature view
+            `ProvenanceLinks`: Object containing the section of provenance graph requested.
         """
         return self._feature_view_engine.get_parent_feature_groups(self)
 
@@ -714,6 +711,8 @@ class FeatureView:
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
+            extra_filter: Additional filters to be attached to the training dataset.
+                The filters will be also applied in `get_batch_data`.
             data_format: The data format used to save the training dataset,
                 defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
@@ -954,6 +953,8 @@ class FeatureView:
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
+            extra_filter: Additional filters to be attached to the training dataset.
+                The filters will be also applied in `get_batch_data`.
             data_format: The data format used to save the training dataset,
                 defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
@@ -1191,6 +1192,8 @@ class FeatureView:
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
+            extra_filter: Additional filters to be attached to the training dataset.
+                The filters will be also applied in `get_batch_data`.
             data_format: The data format used to save the training dataset,
                 defaults to `"parquet"`-format.
             coalesce: If true the training dataset data will be coalesced into
@@ -1364,6 +1367,8 @@ class FeatureView:
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
+            extra_filter: Additional filters to be attached to the training dataset.
+                The filters will be also applied in `get_batch_data`.
             statistics_config: A configuration object, or a dictionary with keys
                 "`enabled`" to generally enable descriptive statistics computation for
                 this feature group, `"correlations`" to turn on feature correlation
@@ -1476,6 +1481,8 @@ class FeatureView:
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
+            extra_filter: Additional filters to be attached to the training dataset.
+                The filters will be also applied in `get_batch_data`.
             statistics_config: A configuration object, or a dictionary with keys
                 "`enabled`" to generally enable descriptive statistics computation for
                 this feature group, `"correlations`" to turn on feature correlation
@@ -1624,6 +1631,8 @@ class FeatureView:
             description: A string describing the contents of the training dataset to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
+            extra_filter: Additional filters to be attached to the training dataset.
+                The filters will be also applied in `get_batch_data`.
             statistics_config: A configuration object, or a dictionary with keys
                 "`enabled`" to generally enable descriptive statistics computation for
                 this feature group, `"correlations`" to turn on feature correlation
