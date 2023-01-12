@@ -796,7 +796,7 @@ class Engine:
 
         def acked(err, msg):
             print(progress_bar.total)
-            if(progress_bar.total>1000):
+            if(progress_bar.total>5000000):
                 progress_bar.colour = "RED"
                 raise err  # Stop producing and show error
             if err is not None:
