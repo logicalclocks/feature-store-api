@@ -795,6 +795,10 @@ class Engine:
         writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
 
         def acked(err, msg):
+            print(progress_bar.total)
+            if(progress_bar.total>1000):
+                progress_bar.colour = "RED"
+                raise err  # Stop producing and show error
             if err is not None:
                 if offline_write_options.get("debug_kafka", False):
                     print("Failed to deliver message: %s: %s" % (str(msg), str(err)))
