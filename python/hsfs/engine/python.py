@@ -795,8 +795,8 @@ class Engine:
         writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
 
         def acked(err, msg):
-            print(progress_bar.total)
-            if(progress_bar.total>5000000):
+            print(progress_bar.last_print_n)
+            if(progress_bar.last_print_n>1000000):
                 progress_bar.colour = "RED"
                 raise err  # Stop producing and show error
             if err is not None:
