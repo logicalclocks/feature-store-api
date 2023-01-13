@@ -68,6 +68,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_statistics(
             metadata_instance=fg,
+            feature_dataframe=None,
             feature_group_commit_id=None,
             feature_view_obj=None,
         )
@@ -110,6 +111,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_statistics(
             metadata_instance=fg,
+            feature_dataframe=None,
             feature_group_commit_id=None,
             feature_view_obj=None,
         )
@@ -160,6 +162,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_statistics(
             metadata_instance=fg,
+            feature_dataframe=None,
             feature_group_commit_id=None,
             feature_view_obj=fv,
         )
@@ -202,6 +205,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_statistics(
             metadata_instance=fg,
+            feature_dataframe=None,
             feature_group_commit_id=None,
             feature_view_obj=None,
         )
@@ -252,6 +256,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_statistics(
             metadata_instance=fg,
+            feature_dataframe=None,
             feature_group_commit_id=None,
             feature_view_obj=fv,
         )
@@ -294,6 +299,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_statistics(
             metadata_instance=fg,
+            feature_dataframe=None,
             feature_group_commit_id=1,
             feature_view_obj=None,
         )
@@ -344,6 +350,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_statistics(
             metadata_instance=fg,
+            feature_dataframe=None,
             feature_group_commit_id=1,
             feature_view_obj=fv,
         )
