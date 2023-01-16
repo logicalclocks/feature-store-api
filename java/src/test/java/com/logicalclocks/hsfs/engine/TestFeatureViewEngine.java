@@ -34,6 +34,7 @@ class TestFeatureViewEngine {
   Query queryLabelInLeftFg;
   Query queryMultipleLabels;
   Query queryLabelInRightFgOnly;
+  Query querySelfJoin;
   FeatureGroup fg1 = new FeatureGroup();
   FeatureGroup fg2 = new FeatureGroup();
   FeatureGroup fg3 = new FeatureGroup();
@@ -48,6 +49,7 @@ class TestFeatureViewEngine {
     queryMultipleLabels =
         fg1.selectExcept(Lists.newArrayList(label)).join(fg2.selectAll(), "fg2_").join(fg3.selectAll(), "fg3_");
     queryLabelInRightFgOnly = fg1.selectExcept(Lists.newArrayList(label)).join(fg2.selectAll(), "fg2_");
+    querySelfJoin = fg1.selectAll().join(fg1.selectAll(), "fg1_");
   }
 
   private void setFeatureGroup(FeatureGroup fg, int id) {
@@ -150,6 +152,28 @@ class TestFeatureViewEngine {
     String actualMessage = exception.getMessage();
 
     Assertions.assertTrue(actualMessage.contains(expectedMessage));
+  }
+
+  @Test
+  void makeLabelFeatures_queryLabelInRightFgOnly_selfJoinQuery1() throws Exception {
+    List<TrainingDatasetFeature> tdFeatures = FeatureViewEngine.makeLabelFeatures(querySelfJoin,
+        Lists.newArrayList(label));
+    Assertions.assertEquals(tdFeatures.size(), 1);
+    TrainingDatasetFeature labelFeature = tdFeatures.get(0);
+    Assertions.assertTrue(labelFeature.getLabel());
+    Assertions.assertEquals(labelFeature.getFeaturegroup().getId(), fg1.getId());
+    Assertions.assertEquals(labelFeature.getName(), label);
+  }
+
+  @Test
+  void makeLabelFeatures_queryLabelInRightFgOnly_selfJoinQuery2() throws Exception {
+    List<TrainingDatasetFeature> tdFeatures = FeatureViewEngine.makeLabelFeatures(querySelfJoin,
+        Lists.newArrayList("fg1_label"));
+    Assertions.assertEquals(tdFeatures.size(), 1);
+    TrainingDatasetFeature labelFeature = tdFeatures.get(0);
+    Assertions.assertTrue(labelFeature.getLabel());
+    Assertions.assertEquals(labelFeature.getFeaturegroup().getId(), fg1.getId());
+    Assertions.assertEquals(labelFeature.getName(), label);
   }
 
 }
