@@ -110,6 +110,7 @@ class TestExternalFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             features=[f],
+            id=10,
             storage_connector=mocker.patch("hsfs.storage_connector.JdbcConnector"),
         )
 
@@ -347,8 +348,10 @@ class TestExternalFeatureGroupEngine:
             feature_store_id=feature_store_id
         )
 
-        f1 = feature.Feature(name="f1", type="int")
-        f2 = feature.Feature(name="f2", type="string")
+        features = [
+            feature.Feature(name="f1", type="int"),
+            feature.Feature(name="f2", type="string"),
+        ]
 
         fg = feature_group.ExternalFeatureGroup(
             name="test",
@@ -356,7 +359,8 @@ class TestExternalFeatureGroupEngine:
             featurestore_id=feature_store_id,
             primary_key=[],
             storage_connector=sc,
-            features=[f1, f2],
+            features=features,
+            id=10,
         )
         # Act
         external_fg_engine.save(feature_group=fg)
@@ -364,4 +368,9 @@ class TestExternalFeatureGroupEngine:
         # Assert
         assert mock_fg_api.return_value.save.call_count == 1
         assert len(mock_fg_api.return_value.save.call_args[0][0].features) == 2
-        assert not mock_fg_api.return_value.save.call_args[0][0].features[0].primary
+        assert (
+            mock_fg_api.return_value.save.call_args[0][0].storage_connector
+            == fg.storage_connector
+        )
+        assert mock_fg_api.return_value.save.call_args[0][0].features == features
+        assert mock_fg_api.return_value.save.call_args[0][0].id == fg.id

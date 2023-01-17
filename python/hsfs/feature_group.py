@@ -2309,7 +2309,12 @@ class ExternalFeatureGroup(FeatureGroupBase):
         if self._id:
             # Got from Hopsworks, deserialize features and storage connector
             self._features = (
-                [feature.Feature.from_response_json(feat) for feat in features]
+                [
+                    feature.Feature.from_response_json(feat)
+                    if isinstance(feat, dict)
+                    else feat
+                    for feat in features
+                ]
                 if features
                 else None
             )
