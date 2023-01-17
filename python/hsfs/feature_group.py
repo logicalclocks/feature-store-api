@@ -2531,5 +2531,5 @@ class ExternalFeatureGroup(FeatureGroupBase):
 
     @property
     def feature_store_id(self):
-        """Name of the feature store in which the feature group is located."""
+        """Id of the feature store in which the feature group is located."""
         return self._feature_store_id
