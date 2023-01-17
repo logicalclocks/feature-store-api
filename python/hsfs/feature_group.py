@@ -2318,7 +2318,12 @@ class ExternalFeatureGroup(FeatureGroupBase):
         if self._id:
             # Got from Hopsworks, deserialize features and storage connector
             self._features = (
-                [feature.Feature.from_response_json(feat) for feat in features]
+                [
+                    feature.Feature.from_response_json(feat)
+                    if isinstance(feat, dict)
+                    else feat
+                    for feat in features
+                ]
                 if features
                 else None
             )
@@ -2376,7 +2381,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._code_engine.save_code(self)
 
         if self.statistics_config.enabled:
-            self._statistics_engine.compute_statistics(self, self.read())
+            self._statistics_engine.compute_statistics(self)
 
     def read(self, dataframe_type="default"):
         """Get the feature group as a DataFrame.
@@ -2551,3 +2556,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
     def feature_store_name(self):
         """Name of the feature store in which the feature group is located."""
         return self._feature_store_name
+
+    @property
+    def feature_store_id(self):
+        """Id of the feature store in which the feature group is located."""
+        return self._feature_store_id
