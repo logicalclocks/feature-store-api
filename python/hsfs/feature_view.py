@@ -314,6 +314,10 @@ class FeatureView:
     ):
         """Returns assembled serving vector from online feature store.
 
+        !!! warning "Missing primary key entries"
+            If the provided primary key `entry` can't be found in one or more of the feature groups
+            used by this feature view the call to this method will raise an exception.
+
         !!! example
             ```python
             # get feature store instance
@@ -360,6 +364,10 @@ class FeatureView:
         # Returns
             `list` List of feature values related to provided primary keys, ordered according to positions of this
             features in the feature view query.
+
+        # Raises
+            `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
+                feature view.
         """
         if self._single_vector_server is None:
             self.init_serving(external=external)
@@ -372,6 +380,13 @@ class FeatureView:
         external: Optional[bool] = None,
     ):
         """Returns assembled serving vectors in batches from online feature store.
+
+        !!! warning "Missing primary key entries"
+            If any of the provided primary key elements in `entry` can't be found in any
+            of the feature groups, no feature vector for that primary key value will be
+            returned.
+            If it can be found in at least one but not all feature groups used by
+            this feature view the call to this method will raise an exception.
 
         !!! example
             ```python
@@ -404,7 +419,12 @@ class FeatureView:
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
 
         # Returns
-            `List[list]` List of lists of feature values related to provided primary keys, ordered according to positions of this features in the feature view query.
+            `List[list]` List of lists of feature values related to provided primary keys, ordered according
+                to positions of this features in the feature view query.
+
+        # Raises
+            `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
+                feature view.
         """
         if self._batch_vectors_server is None:
             self.init_serving(external=external)
