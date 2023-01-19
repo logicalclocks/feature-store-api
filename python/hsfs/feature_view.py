@@ -78,7 +78,7 @@ class FeatureView:
         self._batch_scoring_server = None
 
     def delete(self):
-        """Delete current feature view and all associated metadata.
+        """Delete current feature view and all associated metadata and training data.
 
         !!! example
             ```python
@@ -109,16 +109,12 @@ class FeatureView:
 
     @staticmethod
     def clean(feature_store_id: int, feature_view_name: str, feature_view_version: str):
-        """Delete the feature view and all associated metadata.
+        """
+        Delete the feature view and all associated metadata and training data.
+        This can delete corrupted feature view which cannot be retrieved due to e.g corrupted query.
 
         !!! example
             ```python
-            # get feature store instance
-            fs = ...
-
-            # get feature view instance
-            feature_view = fs.get_feature_view(...)
-
             # delete a feature view and all associated metadata
             feature_view.clean(
                 feature_store_id=1,
@@ -176,8 +172,7 @@ class FeatureView:
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
     ):
-        """Initialise and cache parametrized prepared statement to
-           retrieve feature vector from online feature store.
+        """Initialise feature view to retrieve feature vector from online feature store.
 
         !!! example
             ```python
@@ -187,15 +182,13 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # initialise and cache parametrized prepared statement to retrieve a feature vector
+            # initialise feature view to retrieve a feature vector
             feature_view.init_serving(training_dataset_version=1)
             ```
 
         # Arguments
             training_dataset_version: int, optional. Default to be 1. Transformation statistics
                 are fetched from training dataset and apply in serving vector.
-            batch: boolean, optional. If set to True, prepared statements will be
-                initialised for retrieving serving vectors as a batch.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
@@ -230,7 +223,7 @@ class FeatureView:
         self,
         training_dataset_version: Optional[int] = None,
     ):
-        """Initialise and cache parametrized transformation functions.
+        """Initialise feature view to retrieve feature vector from offline feature store.
 
         !!! example
             ```python
@@ -240,7 +233,7 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # initialise and cache parametrized transformation functions
+            # initialise feature view to retrieve feature vector from offline feature store
             feature_view.init_batch_scoring(training_dataset_version=1)
 
             # get batch data
@@ -262,7 +255,7 @@ class FeatureView:
         start_time: Optional[Union[str, int, datetime, date]] = None,
         end_time: Optional[Union[str, int, datetime, date]] = None,
     ):
-        """Get a query string of batch query.
+        """Get a query string of the batch query.
 
         !!! example "Batch query for the last 24 hours"
             ```python
@@ -287,9 +280,9 @@ class FeatureView:
             ```
 
         # Arguments
-            start_time: Start event time for the batch query. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
+            start_time: Start event time for the batch query, inclusive. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            end_time: End event time for the batch query. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
+            end_time: End event time for the batch query, exclusive. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
 
         # Returns
@@ -312,7 +305,7 @@ class FeatureView:
         passed_features: Optional[Dict[str, Any]] = {},
         external: Optional[bool] = None,
     ):
-        """Returns assembled serving vector from online feature store.
+        """Returns assembled feature vector from online feature store.
 
         !!! example
             ```python
@@ -371,7 +364,7 @@ class FeatureView:
         passed_features: Optional[List[Dict[str, Any]]] = {},
         external: Optional[bool] = None,
     ):
-        """Returns assembled serving vectors in batches from online feature store.
+        """Returns assembled feature vectors in batches from online feature store.
 
         !!! example
             ```python
@@ -416,7 +409,7 @@ class FeatureView:
         end_time: Optional[Union[str, int, datetime, date]] = None,
         read_options=None,
     ):
-        """Get a batch of data from an event time interval.
+        """Get a batch of data from an event time interval from the offline feature store.
 
         !!! example "Batch data for the last 24 hours"
             ```python
@@ -439,10 +432,10 @@ class FeatureView:
             ```
 
         # Arguments
-            start_time: Start event time for the batch query. Optional. Strings should be
+            start_time: Start event time for the batch query, inclusive. Optional. Strings should be
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            end_time: End event time for the batch query. Optional. Strings should be
+            end_time: End event time for the batch query, exclusive. Optional. Strings should be
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             read_options: User provided read options. Defaults to `{}`.
@@ -589,7 +582,8 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
-        """Create a training dataset and save data into `location`.
+        """Create a training dataset metadata and save the training data into `location`.
+        The training data can be retrieved by `feature_view.get_training_data`.
 
         !!! example "Create training dataset"
             ```python
@@ -694,10 +688,10 @@ class FeatureView:
             Currently not supported petastorm, hdf5 and npy file formats.
 
         # Arguments
-            start_time: Start event time for the training dataset query. Optional. Strings should
+            start_time: Start event time for the training dataset query, inclusive. Optional. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            end_time: End event time for the training dataset query. Optional. Strings should
+            end_time: End event time for the training dataset query, exclusive. Optional. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             storage_connector: Storage connector defining the sink location for the
@@ -786,7 +780,9 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
-        """Create a training dataset and save data into `location`.
+        """Create a training dataset metadata and save the training data into `location`.
+        The training data is splited into train and test set at random or according to time ranges.
+        The training data can be retrieved by `feature_view.get_train_test_split`.
 
         !!! example "Create random splits"
             ```python
@@ -930,16 +926,16 @@ class FeatureView:
 
         # Arguments
             test_size: size of test set.
-            train_start: Start event time for the train split query. Strings should
+            train_start: Start event time for the train split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            train_end: End event time for the train split query. Strings should
+            train_end: End event time for the train split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_start: Start event time for the test split query. Strings should
+            test_start: Start event time for the test split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_end: End event time for the test split query. Strings should
+            test_end: End event time for the test split query, exclusive. Strings should
                 be  formatted in one of the following ormats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             storage_connector: Storage connector defining the sink location for the
@@ -1040,6 +1036,8 @@ class FeatureView:
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Create a training dataset and save data into `location`.
+        The training data is splited into train, validation, and test set at random or according to time range.
+        The training data can be retrieved by `feature_view.get_train_validation_test_split`.
 
         !!! example "Create random splits"
             ```python
@@ -1163,22 +1161,22 @@ class FeatureView:
         # Arguments
             validation_size: size of validation set.
             test_size: size of test set.
-            train_start: Start event time for the train split query. Strings should
+            train_start: Start event time for the train split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            train_end: End event time for the train split query. Strings should
+            train_end: End event time for the train split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            validation_start: Start event time for the validation split query. Strings
+            validation_start: Start event time for the validation split query, inclusive. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            validation_end: End event time for the validation split query. Strings
+            validation_end: End event time for the validation split query, exclusive. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_start: Start event time for the test split query. Strings should
+            test_start: Start event time for the test split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_end: End event time for the test split query. Strings should
+            test_end: End event time for the test split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             storage_connector: Storage connector defining the sink location for the
@@ -1318,7 +1316,9 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Get training data from feature groups.
+        Create a training dataset metadata and get training data from the offline feature store.
+        This returns the training data in memory and does not materialise data in storage.
+        The training data can be recreated by `feature_view.get_training_data` with the metadata created.
 
         !!! example "Create random splits"
             ```python
@@ -1351,16 +1351,16 @@ class FeatureView:
             features_df, labels_df = feature_view.training_data(
                 start_time=start_time,
                 end_time=end_time,
-                description='Descriprion of a dataset'
+                description='Description of a dataset'
             )
             ```
 
         # Arguments
-            start_time: Start event time for the training dataset query. Strings should
+            start_time: Start event time for the training dataset query, inclusive. Strings should
             be formatted in one of the following
                 formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            end_time: End event time for the training dataset query. Strings should be
+            end_time: End event time for the training dataset query, exclusive. Strings should be
             formatted in one of the following
                 formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
@@ -1423,7 +1423,10 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Get training data from feature groups.
+        Create a training dataset metadata and get training data from the offline feature store.
+        This returns the training data in memory and does not materialise data in storage.
+        The training data is splited into train and test set at random or according to time ranges.
+        The training data can be recreated by `feature_view.get_train_test_split` with the metadata created.
 
         !!! example "Create random train/test splits"
             ```python
@@ -1466,16 +1469,16 @@ class FeatureView:
 
         # Arguments
             test_size: size of test set. Should be between 0 and 1.
-            train_start: Start event time for the train split query. Strings should
+            train_start: Start event time for the train split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            train_end: End event time for the train split query. Strings should
+            train_end: End event time for the train split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_start: Start event time for the test split query. Strings should
+            test_start: Start event time for the test split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_end: End event time for the test split query. Strings should
+            test_end: End event time for the test split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             description: A string describing the contents of the training dataset to
@@ -1560,7 +1563,10 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Get training data from feature groups.
+        Create a training dataset metadata and get training data from the offline feature store.
+        This returns the training data in memory and does not materialise data in storage.
+        The training data is splited into train, validation, and test set at random or according to time ranges.
+        The training data can be recreated by `feature_view.get_train_validation_test_split` with the metadata created.
 
         !!! example
             ```python
@@ -1610,22 +1616,22 @@ class FeatureView:
         # Arguments
             validation_size: size of validation set. Should be between 0 and 1.
             test_size: size of test set. Should be between 0 and 1.
-            train_start: Start event time for the train split query. Strings should
+            train_start: Start event time for the train split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            train_end: End event time for the train split query. Strings should
+            train_end: End event time for the train split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            validation_start: Start event time for the validation split query. Strings
+            validation_start: Start event time for the validation split query, inclusive. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            validation_end: End event time for the validation split query. Strings
+            validation_end: End event time for the validation split query, exclusive. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_start: Start event time for the test split query. Strings should
+            test_start: Start event time for the test split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_end: End event time for the test split query. Strings should
+            test_end: End event time for the test split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             description: A string describing the contents of the training dataset to
@@ -1725,7 +1731,8 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Get training data from storage or feature groups.
+        Get training data created by `feature_view.create_training_data`
+        or `feature_view.training_data`.
 
         !!! example
             ```python
@@ -1767,7 +1774,8 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Get training data from storage or feature groups.
+        Get training data created by `feature_view.create_train_test_split`
+        or `feature_view.train_test_split`.
 
         !!! example
             ```python
@@ -1808,7 +1816,8 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Get training data from storage or feature groups.
+        Get training data created by `feature_view.create_train_validation_test_split`
+        or `feature_view.train_validation_test_split`.
 
         !!! example
             ```python
@@ -2012,7 +2021,7 @@ class FeatureView:
         self._feature_view_engine.delete_training_dataset_only(self)
 
     def delete_training_dataset(self, training_dataset_version: int):
-        """Delete a training dataset.
+        """Delete a training dataset. This will delete both metadata and training data.
 
         !!! example
             ```python
@@ -2039,7 +2048,7 @@ class FeatureView:
         )
 
     def delete_all_training_datasets(self):
-        """Delete all training datasets.
+        """Delete all training datasets. This will delete both metadata and training data.
 
         !!! example
             ```python
@@ -2170,20 +2179,20 @@ class FeatureView:
 
     @property
     def description(self):
+        """Description of the feature view."""
         return self._description
 
     @description.setter
     def description(self, description):
-        """Description of the feature view."""
         self._description = description
 
     @property
     def query(self):
+        """Query of the feature view."""
         return self._query
 
     @query.setter
     def query(self, query_obj):
-        """Query of the feature view."""
         self._query = query_obj
 
     @property
