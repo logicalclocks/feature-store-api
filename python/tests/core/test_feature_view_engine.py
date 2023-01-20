@@ -22,14 +22,14 @@ from hsfs import (
     split_statistics,
     feature_group,
     feature,
+    engine,
 )
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import fs_query
 from hsfs.core import feature_view_engine
-from hsfs import engine
 from hsfs.core.feature_view_engine import FeatureViewEngine
 
-engine._engine_type = "python"
+engine.init("python")
 fg1 = feature_group.FeatureGroup(
     name="test1",
     version=1,
@@ -91,6 +91,9 @@ class TestFeatureViewEngine:
             "hsfs.core.feature_view_engine.FeatureViewEngine._get_feature_view_url",
             return_value=feature_view_url,
         )
+        mock_attach_transformation = mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine.attach_transformation_function",
+        )
         mock_print = mocker.patch("builtins.print")
 
         fv_engine = feature_view_engine.FeatureViewEngine(
@@ -106,6 +109,7 @@ class TestFeatureViewEngine:
 
         # Assert
         assert mock_fv_api.return_value.post.call_count == 1
+        assert mock_attach_transformation.call_count == 1
         assert mock_print.call_count == 1
         assert mock_print.call_args[0][
             0
@@ -328,6 +332,14 @@ class TestFeatureViewEngine:
             FeatureViewEngine.LABEL_NOT_EXIST_ERROR.format("none"),
         )
 
+    def test_save_label_self_join_1(self, mocker):
+        _query = fg1.select_all().join(fg1.select_all(), prefix="fg1_")
+        self.template_save_label_success(mocker, _query, "label", fg1.id)
+
+    def test_save_label_self_join_2(self, mocker):
+        _query = fg1.select_all().join(fg1.select_all(), prefix="fg1_")
+        self.template_save_label_success(mocker, _query, "fg1_label", fg1.id)
+
     def test_get_name(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -335,6 +347,9 @@ class TestFeatureViewEngine:
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.get_attached_transformation_fn"
+        )
+        mock_attach_transformation = mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine.attach_transformation_function",
         )
 
         fv_engine = feature_view_engine.FeatureViewEngine(
@@ -363,6 +378,7 @@ class TestFeatureViewEngine:
 
         # Assert
         assert mock_fv_api.return_value.get_by_name_version.call_count == 0
+        assert mock_attach_transformation.call_count == 2
         assert mock_fv_api.return_value.get_by_name.call_count == 1
         assert len(result) == 2
 
@@ -373,6 +389,9 @@ class TestFeatureViewEngine:
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.get_attached_transformation_fn"
+        )
+        mock_attach_transformation = mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine.attach_transformation_function",
         )
 
         fv_engine = feature_view_engine.FeatureViewEngine(
@@ -394,6 +413,7 @@ class TestFeatureViewEngine:
 
         # Assert
         assert mock_fv_api.return_value.get_by_name_version.call_count == 1
+        assert mock_attach_transformation.call_count == 1
         assert mock_fv_api.return_value.get_by_name.call_count == 0
 
     def test_delete_name(self, mocker):
@@ -594,6 +614,41 @@ class TestFeatureViewEngine:
         assert "tf_name" in result
         assert "tf1_name" in result
         assert mock_fv_api.return_value.get_attached_transformation_fn.call_count == 1
+
+    def test_attach_transformation_function(self, mocker):
+        def testFunction():
+            print("Test")
+
+        tf = transformation_function_attached.TransformationFunctionAttached(
+            name="tf_name", transformation_function=testFunction
+        )
+        mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine.get_attached_transformation_fn",
+            return_value={"label": tf},
+        )
+        feature_store_id = 99
+        fv_engine = feature_view_engine.FeatureViewEngine(
+            feature_store_id=feature_store_id
+        )
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            version=1,
+            query=query,
+            featurestore_id=feature_store_id,
+        )
+        fv.schema = query._collect_features()
+
+        # Act
+        fv_engine.attach_transformation_function(fv)
+
+        # Assert
+        id_feature = fv.schema[0]
+        label_feature = fv.schema[1]
+        assert id_feature.name == "id"
+        assert id_feature.transformation_function is None
+        assert label_feature.name == "label"
+        assert label_feature.transformation_function == tf
 
     def test_create_training_dataset(self, mocker):
         # Arrange
