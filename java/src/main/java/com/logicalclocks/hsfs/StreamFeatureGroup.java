@@ -26,8 +26,8 @@ import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.JobConfiguration;
 import com.logicalclocks.base.engine.CodeEngine;
 import com.logicalclocks.base.metadata.FeatureGroupBase;
-import com.logicalclocks.base.metadata.Statistics;
 
+import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.hsfs.constructor.Query;
 
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
@@ -106,7 +106,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   @Setter
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
 
-  public final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
+  private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
 
@@ -339,62 +339,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
         jobConfiguration);
   }
 
-  public void commitDeleteRecord(Dataset<Row>  featureData)
-      throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.commitDelete(this, featureData, null);
-  }
-
-  public void commitDeleteRecord(Dataset<Row>  featureData, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException {
-    featureGroupEngine.commitDelete(this, featureData, writeOptions);
-  }
-
-  /**
-   * Return commit details.
-   *
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
-    return featureGroupEngine.commitDetails(this, null);
-  }
-
-  /**
-   * Return commit details.
-   *
-   * @param limit number of commits to return.
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public Map<Long, Map<String, String>> commitDetails(Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    return featureGroupEngine.commitDetails(this, limit);
-
-  }
-
-  /**
-   * Return commit details.
-   *
-   * @param wallclockTime point in time.
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
-      throws IOException, FeatureStoreException, ParseException {
-    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, null);
-  }
-
-  /**
-   * Return commit details.
-   *
-   * @param wallclockTime point in time.
-   * @param limit number of commits to return.
-   */
-  public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);
-  }
-
   @JsonIgnore
   public String getAvroSchema() throws FeatureStoreException, IOException {
     return getSubject().getSchema();
@@ -452,6 +396,62 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   public Query selectExcept(List<String> features) {
     return new Query(this,
         getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));
+  }
+
+  public void commitDeleteRecord(Dataset<Row>  featureData)
+      throws FeatureStoreException, IOException, ParseException {
+    featureGroupEngine.commitDelete(this, featureData, null);
+  }
+
+  public void commitDeleteRecord(Dataset<Row>  featureData, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
+    featureGroupEngine.commitDelete(this, featureData, writeOptions);
+  }
+
+  /**
+   * Return commit details.
+   *
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
+    return featureGroupEngine.commitDetails(this, null);
+  }
+
+  /**
+   * Return commit details.
+   *
+   * @param limit number of commits to return.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Map<Long, Map<String, String>> commitDetails(Integer limit)
+      throws IOException, FeatureStoreException, ParseException {
+    return featureGroupEngine.commitDetails(this, limit);
+
+  }
+
+  /**
+   * Return commit details.
+   *
+   * @param wallclockTime point in time.
+   * @throws FeatureStoreException
+   * @throws IOException
+   */
+  public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
+      throws IOException, FeatureStoreException, ParseException {
+    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, null);
+  }
+
+  /**
+   * Return commit details.
+   *
+   * @param wallclockTime point in time.
+   * @param limit number of commits to return.
+   */
+  public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
+      throws IOException, FeatureStoreException, ParseException {
+    return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);
   }
 
   /**
