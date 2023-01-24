@@ -119,6 +119,10 @@ def compute_stats(job_conf: Dict[Any, Any]) -> None:
         entity = fs.get_feature_group(
             name=job_conf["name"], version=job_conf["version"]
         )
+    elif entity_type == "external_fg":
+        entity = fs.get_external_feature_group(
+            name=job_conf["name"], version=job_conf["version"]
+        )
     else:
         entity = fs.get_training_dataset(
             name=job_conf["name"], version=job_conf["version"]
