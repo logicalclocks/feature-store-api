@@ -35,11 +35,14 @@ jobs:
       matrix:
         python-version: ["3.7", "3.8", "3.9"]
 
-    steps:      
+    steps:
       - name: Set Timezone
         run: sudo timedatectl set-timezone UTC
 
       - uses: actions/checkout@v3
+      - name: Copy README
+        run: cp README.md python/
+
       - uses: actions/setup-python@v4
         name: Setup Python
         with:
@@ -53,17 +56,20 @@ jobs:
 
       - name: Run Pytest suite
         run: pytest python/tests
-        
+
   unit_tests_ubuntu_local:
     name: Unit Testing (Ubuntu) (Local TZ)
     needs: lint_stylecheck
     runs-on: ubuntu-latest
 
-    steps:      
+    steps:
       - name: Set Timezone
         run: sudo timedatectl set-timezone Europe/Amsterdam
 
       - uses: actions/checkout@v3
+      - name: Copy README
+        run: cp README.md python/
+
       - uses: actions/setup-python@v4
         name: Setup Python
         with:
@@ -77,7 +83,7 @@ jobs:
 
       - name: Run Pytest suite
         run: pytest python/tests
-        
+
   unit_tests_windows_utc:
     name: Unit Testing (Windows)
     needs: lint_stylecheck
@@ -86,8 +92,11 @@ jobs:
     steps:
       - name: Set Timezone
         run: tzutil /s "UTC"
-        
+
       - uses: actions/checkout@v3
+      - name: Copy README
+        run: cp README.md python/
+
       - uses: actions/setup-python@v4
         name: Setup Python
         with:
@@ -111,8 +120,11 @@ jobs:
     steps:
       - name: Set Timezone
         run: tzutil /s "W. Europe Standard Time"
-        
+
       - uses: actions/checkout@v3
+      - name: Copy README
+        run: cp README.md python/
+
       - uses: actions/setup-python@v4
         name: Setup Python
         with:
