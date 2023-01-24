@@ -78,7 +78,7 @@ class FeatureView:
         self._batch_scoring_server = None
 
     def delete(self):
-        """Delete current feature view and all associated metadata and training data.
+        """Delete current feature view, all associated metadata and training data.
 
         !!! example
             ```python
@@ -111,7 +111,7 @@ class FeatureView:
     def clean(feature_store_id: int, feature_view_name: str, feature_view_version: str):
         """
         Delete the feature view and all associated metadata and training data.
-        This can delete corrupted feature view which cannot be retrieved due to e.g corrupted query.
+        This can delete corrupted feature view which cannot be retrieved due to a corrupted query for example.
 
         !!! example
             ```python
@@ -188,7 +188,7 @@ class FeatureView:
 
         # Arguments
             training_dataset_version: int, optional. Default to be 1. Transformation statistics
-                are fetched from training dataset and apply in serving vector.
+                are fetched from training dataset and applied to the feature vector.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
@@ -242,7 +242,7 @@ class FeatureView:
 
         # Arguments
             training_dataset_version: int, optional. Default to be None. Transformation statistics
-                are fetched from training dataset and apply in serving vector.
+                are fetched from training dataset and applied to the feature vector.
         """
 
         self._batch_scoring_server = vector_server.VectorServer(
@@ -582,8 +582,8 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
-        """Create a training dataset metadata and save the training data into `location`.
-        The training data can be retrieved by `feature_view.get_training_data`.
+        """Create the metadata for a training dataset and save the corresponding training data into `location`.
+        The training data can be retrieved by calling `feature_view.get_training_data`.
 
         !!! example "Create training dataset"
             ```python
@@ -780,9 +780,9 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
-        """Create a training dataset metadata and save the training data into `location`.
-        The training data is splited into train and test set at random or according to time ranges.
-        The training data can be retrieved by `feature_view.get_train_test_split`.
+        """Create the metadata for a training dataset and save the corresponding training data into `location`.
+        The training data is split into train and test set at random or according to time ranges.
+        The training data can be retrieved by calling `feature_view.get_train_test_split`.
 
         !!! example "Create random splits"
             ```python
@@ -1035,9 +1035,9 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
-        """Create a training dataset and save data into `location`.
-        The training data is splited into train, validation, and test set at random or according to time range.
-        The training data can be retrieved by `feature_view.get_train_validation_test_split`.
+        """Create the metadata for a training dataset and save the corresponding training data into `location`.
+        The training data is split into train, validation, and test set at random or according to time range.
+        The training data can be retrieved by calling `feature_view.get_train_validation_test_split`.
 
         !!! example "Create random splits"
             ```python
@@ -1316,9 +1316,9 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Create a training dataset metadata and get training data from the offline feature store.
+        Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
         This returns the training data in memory and does not materialise data in storage.
-        The training data can be recreated by `feature_view.get_training_data` with the metadata created.
+        The training data can be recreated by calling `feature_view.get_training_data` with the metadata created.
 
         !!! example "Create random splits"
             ```python
@@ -1423,10 +1423,10 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Create a training dataset metadata and get training data from the offline feature store.
+        Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
         This returns the training data in memory and does not materialise data in storage.
-        The training data is splited into train and test set at random or according to time ranges.
-        The training data can be recreated by `feature_view.get_train_test_split` with the metadata created.
+        The training data is split into train and test set at random or according to time ranges.
+        The training data can be recreated by calling `feature_view.get_train_test_split` with the metadata created.
 
         !!! example "Create random train/test splits"
             ```python
@@ -1563,10 +1563,10 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Create a training dataset metadata and get training data from the offline feature store.
+        Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
         This returns the training data in memory and does not materialise data in storage.
-        The training data is splited into train, validation, and test set at random or according to time ranges.
-        The training data can be recreated by `feature_view.get_train_validation_test_split` with the metadata created.
+        The training data is split into train, validation, and test set at random or according to time ranges.
+        The training data can be recreated by calling `feature_view.get_train_validation_test_split` with the metadata created.
 
         !!! example
             ```python
