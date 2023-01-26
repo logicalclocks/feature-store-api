@@ -175,8 +175,8 @@ public class Query {
    *
    * @param wallclockTime point in time
    * @return Query
-   * @throws FeatureStoreException
-   * @throws ParseException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws ParseException ParseException
    */
   public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
     return asOf(wallclockTime, null);
@@ -191,8 +191,8 @@ public class Query {
    * @param wallclockTime point in time
    * @param excludeUntil point in time
    * @return Query
-   * @throws FeatureStoreException
-   * @throws ParseException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws ParseException ParseException
    */
   public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
     Long wallclockTimestamp = utils.getTimeStampFromDateString(wallclockTime);
@@ -221,9 +221,8 @@ public class Query {
    * @param wallclockStartTime start date.
    * @param wallclockEndTime   end date.
    * @return Query
-   * @throws FeatureStoreException
-   * @throws IOException
-   * @throws ParseException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws ParseException ParseException
    *
    * @deprecated use asOf(wallclockEndTime, wallclockStartTime) instead
    */

@@ -31,6 +31,9 @@
         <junit.version>5.9.1</junit.version>
         <surefire-plugin.version>2.22.0</surefire-plugin.version>
         <mockito.version>4.3.1</mockito.version>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <delombok.output>${project.basedir}/delombok</delombok.output>
     </properties>
 
     <dependencies>
@@ -368,6 +371,46 @@
                     <systemPropertiesFile>src/test/resources/system.properties</systemPropertiesFile>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-maven-plugin</artifactId>
+                <version>${lombok.version}.0</version>
+                <configuration>
+                    <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+                    <outputDirectory>${delombok.output}</outputDirectory>
+                    <addOutputDirectory>false</addOutputDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <!-- <phase>none</phase> -->
+                        <goals>
+                            <goal>delombok</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <sourcepath>${delombok.output}</sourcepath>
+                </configuration>
+
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
         <testResources>
             <testResource>
@@ -375,7 +418,6 @@
             </testResource>
         </testResources>
     </build>
-
     <repositories>
         <repository>
             <id>Hops</id>
