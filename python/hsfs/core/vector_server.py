@@ -176,7 +176,7 @@ class VectorServer:
 
                 for row in result_proxy:
                     result_dict = self.deserialize_complex_features(
-                        self._complex_features, dict(row.items())
+                        self._complex_features, row._asdict()
                     )
                     if not result_dict:
                         raise Exception(
@@ -221,13 +221,13 @@ class VectorServer:
 
                 result_proxy = mysql_conn.execute(
                     prepared_statement,
-                    batch_ids=entry_values_tuples,
+                    {"batch_ids": entry_values_tuples},
                 ).fetchall()
 
                 statement_results = []
                 for row in result_proxy:
                     result_dict = self.deserialize_complex_features(
-                        self._complex_features, dict(row.items())
+                        self._complex_features, row._asdict()
                     )
 
                     if not result_dict:
