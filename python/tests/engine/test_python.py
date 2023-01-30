@@ -110,12 +110,13 @@ class TestPython:
         mock_python_engine_return_dataframe_type = mocker.patch(
             "hsfs.engine.python.Engine._return_dataframe_type"
         )
+        query = "SELECT * FROM TABLE"
 
         python_engine = python.Engine()
 
         # Act
         python_engine._jdbc(
-            sql_query=None, connector=None, dataframe_type=None, read_options={}
+            sql_query=query, connector=None, dataframe_type=None, read_options={}
         )
 
         # Assert
@@ -130,12 +131,13 @@ class TestPython:
         mock_python_engine_return_dataframe_type = mocker.patch(
             "hsfs.engine.python.Engine._return_dataframe_type"
         )
+        query = "SELECT * FROM TABLE"
 
         python_engine = python.Engine()
 
         # Act
         python_engine._jdbc(
-            sql_query=None,
+            sql_query=query,
             connector=None,
             dataframe_type=None,
             read_options={"external": ""},
