@@ -1344,8 +1344,11 @@ class FeatureGroup(FeatureGroupBase):
                 to `False`.
             dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
                 `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
-            read_options: Additional read options as key/value pairs, defaults to `{}`.
-                Only for Python engine: Set `read_options={"pandas_types": True}`
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                For python engine: Use key "hive_config" to pass a dictionary of hive or tez configurations.
+                For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                For Python engine: Set `read_options={"pandas_types": True}`
                 to retrieve columns as Pandas nullable types
                 rather than numpy/object(string) types (experimental).
                 (see https://pandas.pydata.org/docs/user_guide/integer_na.html).
@@ -1403,7 +1406,11 @@ class FeatureGroup(FeatureGroupBase):
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
             end_wallclock_time: End time of the time travel query. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
-            read_options: User provided read options. Defaults to `{}`.
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                For python engine: Use key "hive_config" to pass a dictionary of hive or tez configurations.
+                For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                Defaults to `{}`.
 
         # Returns
             `DataFrame`. The spark dataframe containing the incremental changes of
