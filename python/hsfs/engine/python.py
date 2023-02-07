@@ -87,13 +87,15 @@ class Engine:
         online_conn,
         dataframe_type,
         read_options,
-        schema=None
+        schema=None,
     ):
         if not online_conn:
             return self._sql_offline(
-                sql_query, feature_store, dataframe_type,
+                sql_query,
+                feature_store,
+                dataframe_type,
                 schema,
-                hive_config=read_options.get("hive_config") if read_options else None
+                hive_config=read_options.get("hive_config") if read_options else None,
             )
         else:
             return self._jdbc(
@@ -101,12 +103,7 @@ class Engine:
             )
 
     def _sql_offline(
-        self,
-        sql_query,
-        feature_store,
-        dataframe_type,
-        schema=None,
-        hive_config=None
+        self, sql_query, feature_store, dataframe_type, schema=None, hive_config=None
     ):
         with self._create_hive_connection(
             feature_store, hive_config=hive_config
