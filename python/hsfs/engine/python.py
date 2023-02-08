@@ -39,6 +39,7 @@ from typing import TypeVar, Optional, Dict, Any
 from confluent_kafka import Producer, KafkaError
 from tqdm.auto import tqdm
 from botocore.response import StreamingBody
+from sqlalchemy import sql
 
 from hsfs import client, feature, util
 from hsfs.client.exceptions import FeatureStoreException
@@ -124,7 +125,7 @@ class Engine:
                 ),
             )
         with self._mysql_online_fs_engine.connect() as mysql_conn:
-            result_df = pd.read_sql(sql_query, mysql_conn)
+            result_df = pd.read_sql(sql.text(sql_query), mysql_conn)
             if schema:
                 result_df = Engine.cast_columns(result_df, schema, online=True)
         return self._return_dataframe_type(result_df, dataframe_type)
