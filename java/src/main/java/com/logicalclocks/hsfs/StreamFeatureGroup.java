@@ -21,14 +21,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.CodeEngine;
-import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.StreamFeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 
@@ -42,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StreamFeatureGroup extends FeatureGroupBase {
@@ -58,14 +55,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   @Getter
   @Setter
   private StorageConnector offlineStorageConnector;
-
-  @Getter
-  @Setter
-  private String type = "streamFeatureGroupDTO";
-
-  @Getter
-  @Setter
-  protected String location;
 
   @Getter
   @Setter
@@ -87,7 +76,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   private DeltaStreamerJobConf deltaStreamerJobConf;
 
   private final StreamFeatureGroupEngine streamFeatureGroupEngine = new StreamFeatureGroupEngine();
-  private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StreamFeatureGroup.class);
@@ -97,6 +85,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
                             List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
                             boolean onlineEnabled, List<Feature> features,
                             StatisticsConfig statisticsConfig, String onlineTopicName, String eventTime) {
+    this();
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -113,14 +102,20 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     this.eventTime = eventTime;
   }
 
+  public StreamFeatureGroup() {
+    this.type = "streamFeatureGroupDTO";
+  }
+
   // used for updates
   public StreamFeatureGroup(Integer id, String description, List<Feature> features) {
+    this();
     this.id = id;
     this.description = description;
     this.features = features;
   }
 
   public StreamFeatureGroup(FeatureStore featureStore, int id) {
+    this();
     this.featureStore = featureStore;
     this.id = id;
   }

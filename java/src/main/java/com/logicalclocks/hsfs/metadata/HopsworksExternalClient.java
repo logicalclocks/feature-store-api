@@ -253,16 +253,17 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
   }
 
   private String getAssumedRole() throws FeatureStoreException {
-    StsClient stsClient = StsClient.create();
-    GetCallerIdentityResponse callerIdentityResponse = stsClient.getCallerIdentity();
-    // arns for assumed roles in SageMaker follow the following schema
-    // arn:aws:sts::123456789012:assumed-role/my-role-name/my-role-session-name
-    String arn = callerIdentityResponse.arn();
-    String[] arnSplits = arn.split("/");
-    if (arnSplits.length != 3 || !arnSplits[0].endsWith("assumed-role")) {
-      throw new FeatureStoreException("Failed to extract assumed role from arn: " + arn);
+    try (StsClient stsClient = StsClient.create()) {
+      GetCallerIdentityResponse callerIdentityResponse = stsClient.getCallerIdentity();
+      // arns for assumed roles in SageMaker follow the following schema
+      // arn:aws:sts::123456789012:assumed-role/my-role-name/my-role-session-name
+      String arn = callerIdentityResponse.arn();
+      String[] arnSplits = arn.split("/");
+      if (arnSplits.length != 3 || !arnSplits[0].endsWith("assumed-role")) {
+        throw new FeatureStoreException("Failed to extract assumed role from arn: " + arn);
+      }
+      return arnSplits[1];
     }
-    return arnSplits[1];
   }
 
   @Override
