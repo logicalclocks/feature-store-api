@@ -68,11 +68,11 @@ public class FeatureStore {
   /**
    * Get a feature group object from the feature store.
    *
-   * @param name    the name of the feature group
+   * @param name the name of the feature group
    * @param version the version of the feature group
    * @return FeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public FeatureGroup getFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
@@ -84,8 +84,8 @@ public class FeatureStore {
    *
    * @param name the name of the feature group
    * @return FeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public FeatureGroup getFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
@@ -96,10 +96,10 @@ public class FeatureStore {
   /**
    * Get a list of all versions of a feature group from the feature store.
    *
-   * @param name    the name of the feature group
-   * @return FeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @param name the name of the feature group
+   * @return list of FeatureGroups
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public scala.collection.Seq<FeatureGroup> getFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
@@ -110,11 +110,11 @@ public class FeatureStore {
   /**
    * Get a feature group object from the feature store.
    *
-   * @param name    the name of the feature group
+   * @param name the name of the feature group
    * @param version the version of the feature group
    * @return FeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public StreamFeatureGroup getStreamFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
@@ -126,8 +126,8 @@ public class FeatureStore {
    *
    * @param name the name of the feature group
    * @return FeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public StreamFeatureGroup getStreamFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
@@ -141,8 +141,8 @@ public class FeatureStore {
    * @param name    the name of the feature group
    * @param version the version of the feature group
    * @return ExternalFeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public ExternalFeatureGroup getExternalFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
@@ -154,8 +154,8 @@ public class FeatureStore {
    *
    * @param name the name of the feature group
    * @return ExternalFeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public ExternalFeatureGroup getExternalFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
@@ -167,9 +167,9 @@ public class FeatureStore {
    * Get a list of all versions of an external feature group from the feature store.
    *
    * @param name    the name of the feature group
-   * @return ExternalFeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @return list of ExternalFeatureGroup objects
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public scala.collection.Seq<ExternalFeatureGroup> getExternalFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
@@ -308,7 +308,6 @@ public class FeatureStore {
                                                           List<String> partitionKeys, boolean onlineEnabled,
                                                           String eventTime) throws IOException, FeatureStoreException {
 
-
     return featureGroupApi.getOrCreateStreamFeatureGroup(this, name, version, null,
         primaryKeys, partitionKeys, null, onlineEnabled, null, eventTime);
   }
@@ -347,6 +346,8 @@ public class FeatureStore {
    * @param query Query object
    * @param version version of the feature view
    * @return FeatureView
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public FeatureView getOrCreateFeatureView(String name, Query query, Integer version)
       throws FeatureStoreException, IOException {
@@ -363,6 +364,8 @@ public class FeatureStore {
    * @param description description of the feature view
    * @param labels list of label features
    * @return FeatureView
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public FeatureView getOrCreateFeatureView(String name, Query query, Integer version, String description,
                                             List<String> labels) throws FeatureStoreException, IOException {
@@ -375,8 +378,8 @@ public class FeatureStore {
    * @param name    name of the feature view
    * @param version version to get
    * @return FeatureView
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public FeatureView getFeatureView(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
@@ -388,8 +391,8 @@ public class FeatureStore {
    *
    * @param name name of the feature view
    * @return FeatureView
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public FeatureView getFeatureView(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature view `" + name + "`, defaulting to `"
@@ -405,11 +408,11 @@ public class FeatureStore {
   /**
    * Get a training dataset object from the selected feature store.
    *
-   * @param name    name of the training dataset
+   * @param name name of the training dataset
    * @param version version to get
    * @return TrainingDataset
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public TrainingDataset getTrainingDataset(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
@@ -421,8 +424,8 @@ public class FeatureStore {
    *
    * @param name name of the training dataset
    * @return TrainingDataset
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public TrainingDataset getTrainingDataset(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `"
@@ -433,10 +436,10 @@ public class FeatureStore {
   /**
    * Get all versions of a training dataset object from the selected feature store.
    *
-   * @param name    name of the training dataset
+   * @param name name of the training dataset
    * @return TrainingDataset
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public scala.collection.Seq<TrainingDataset> getTrainingDatasets(@NonNull String name)
       throws FeatureStoreException, IOException {

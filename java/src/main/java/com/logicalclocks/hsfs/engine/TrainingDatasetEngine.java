@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class TrainingDatasetEngine {
@@ -49,14 +48,15 @@ public class TrainingDatasetEngine {
   /**
    * Make a REST call to Hopsworks to create the metadata and write the data on the File System.
    *
-   * @param trainingDataset
-   * @param query
-   * @param userWriteOptions
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @param trainingDataset Training Dataset metadata object
+   * @param query Query Object
+   * @param userWriteOptions Additional write options as key-value pairs, defaults to empty Map
+   * @return Training Dataset metadata object
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public TrainingDataset save(TrainingDataset trainingDataset, Query query,
-      Map<String, String> userWriteOptions, List<String> labels)
+      Map<String, String> userWriteOptions)
       throws FeatureStoreException, IOException {
 
     // Make the rest call to create the training dataset metadata
@@ -138,6 +138,4 @@ public class TrainingDatasetEngine {
   public void delete(TrainingDataset trainingDataset) throws FeatureStoreException, IOException {
     trainingDatasetApi.delete(trainingDataset);
   }
-
-
 }

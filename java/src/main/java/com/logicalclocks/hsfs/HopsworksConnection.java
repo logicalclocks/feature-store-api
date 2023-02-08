@@ -95,8 +95,8 @@ public class HopsworksConnection implements Closeable {
    * Retrieve the project feature store.
    *
    * @return FeatureStore
-   * @throws IOException
-   * @throws FeatureStoreException
+   * @throws IOException IOException
+   * @throws FeatureStoreException FeatureStoreException
    */
   public FeatureStore getFeatureStore() throws IOException, FeatureStoreException {
     return getFeatureStore(rewriteFeatureStoreName(project));
@@ -108,8 +108,8 @@ public class HopsworksConnection implements Closeable {
    *
    * @param name the name of the feature store to get the handle for
    * @return FeatureStore
-   * @throws IOException
-   * @throws FeatureStoreException
+   * @throws IOException IOException
+   * @throws FeatureStoreException FeatureStoreException
    */
   public FeatureStore getFeatureStore(String name) throws IOException, FeatureStoreException {
     return featureStoreApi.get(projectObj.getProjectId(), rewriteFeatureStoreName(name));
