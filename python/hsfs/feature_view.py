@@ -1409,10 +1409,10 @@ class FeatureView:
                 `None` and will compute only descriptive statistics.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
-                For python engine: Use key "hive_config" to pass a dictionary of hive or tez configurations.
-                For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 When using the `python` engine, write_options can contain the
                 following entries:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -1530,10 +1530,10 @@ class FeatureView:
                 `None` and will compute only descriptive statistics.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
-                For python engine: Use key "hive_config" to pass a dictionary of hive or tez configurations.
-                For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 When using the `python` engine, write_options can contain the
                 following entries:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -1687,10 +1687,10 @@ class FeatureView:
                 `None` and will compute only descriptive statistics.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
-                For python engine: Use key "hive_config" to pass a dictionary of hive or tez configurations.
-                For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 When using the `python` engine, write_options can contain the
                 following entries:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -1798,8 +1798,9 @@ class FeatureView:
             training_dataset_version: training dataset version
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
-                For python engine: Use key "hive_config" to pass a dictionary of hive or tez configurations.
-                For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
 
         # Returns
@@ -1835,8 +1836,9 @@ class FeatureView:
             training_dataset_version: training dataset version
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
-                For python engine: Use key "hive_config" to pass a dictionary of hive or tez configurations.
-                For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
 
         # Returns
@@ -1876,8 +1878,9 @@ class FeatureView:
             training_dataset_version: training dataset version
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
-                For python engine: Use key "hive_config" to pass a dictionary of hive or tez configurations.
-                For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
 
         # Returns

@@ -398,8 +398,9 @@ class FeatureStore:
                 Defaults to False.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
-                For python engine: Use key "hive_config" to pass a dictionary of hive or tez configurations.
-                For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 If running queries on the online feature store, users can provide an entry `{'external': True}`,
                 this instructs the library to use the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) to establish the connection to the online feature store.
                 If not set, or set to False, the online feature store storage connector is used which relies on

@@ -1346,12 +1346,13 @@ class FeatureGroup(FeatureGroupBase):
                 `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
-                For python engine: Use key "hive_config" to pass a dictionary of hive or tez configurations.
-                For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
-                For Python engine: Set `read_options={"pandas_types": True}`
-                to retrieve columns as Pandas nullable types
-                rather than numpy/object(string) types (experimental).
-                (see https://pandas.pydata.org/docs/user_guide/integer_na.html).
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                * key `"pandas_types"` and value `True` to retrieve columns as Pandas nullable types
+                  rather than numpy/object(string) types (experimental).
+                  (see https://pandas.pydata.org/docs/user_guide/integer_na.html).
+                Defaults to `{}`.
 
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
@@ -1408,8 +1409,9 @@ class FeatureGroup(FeatureGroupBase):
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
-                For python engine: Use key "hive_config" to pass a dictionary of hive or tez configurations.
-                For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
 
         # Returns
