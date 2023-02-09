@@ -17,14 +17,18 @@
 import re
 import json
 import pandas as pd
+import numpy as np
 
 from datetime import datetime, date, timezone
 from urllib.parse import urljoin, urlparse
+from typing import Optional, Union, Any, Dict, List, TypeVar, Tuple
+from hsfs.validation_report import ValidationReport
 
 from sqlalchemy import create_engine
 
 from hsfs import client, feature
 from hsfs.client import exceptions
+from hsfs.core.job import Job
 
 
 class FeatureStoreEncoder(json.JSONEncoder):
@@ -33,6 +37,41 @@ class FeatureStoreEncoder(json.JSONEncoder):
             return o.to_dict()
         except AttributeError:
             return super().default(o)
+
+
+class FeatureGroupWriter:
+    def __init__(self, feature_group, kafka_config, kafka_producer):
+        pass
+
+    def insert(
+        self,
+        features: Union[
+            pd.DataFrame,
+            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+            TypeVar("pyspark.RDD"),  # noqa: F821
+            np.ndarray,
+            List[list],
+        ],
+        overwrite: Optional[bool] = False,
+        operation: Optional[str] = "upsert",
+        storage: Optional[str] = None,
+        write_options: Optional[Dict[str, Any]] = {},
+        validation_options: Optional[Dict[str, Any]] = {},
+        save_code: Optional[bool] = True,
+    ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
+
+        return self.feature_group.insert(
+            features=features,
+            overwrite=overwrite,
+            operation=operation,
+            storage=storage,
+            write_options=write_options,
+            validation_options=validation_options,
+            save_code=save_code,
+        )
+
+    def __exit__(self):
+        self.kafka_producer.flush()
 
 
 def validate_feature(ft):
