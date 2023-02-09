@@ -656,7 +656,7 @@ class FeatureGroupBase:
 
     def get_expectation_suite(
         self, ge_type: bool = True
-    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
+    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite, None]:
         """Return the expectation suite attached to the feature group if it exists.
 
         !!! example
@@ -773,7 +773,7 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        if self._expectation_suite.id:
+        if self.get_expectation_suite() is not None:
             self._expectation_suite_engine.delete(self._expectation_suite.id)
         self._expectation_suite = None
 

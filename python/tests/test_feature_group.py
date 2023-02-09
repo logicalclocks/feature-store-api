@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-
+import hsfs
 from hsfs import (
     feature_store,
     feature_group,
@@ -408,3 +408,79 @@ class TestExternalFeatureGroup:
         assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
         assert fg.event_time is None
         assert fg.expectation_suite is None
+
+    def test_feature_group_save_expectation_suite_from_ge_type(
+        self, mocker, backend_fixtures
+    ):
+        # Arrange
+        json = backend_fixtures["expectation_suite"]["get"]["response"]
+        es = expectation_suite.ExpectationSuite.from_response_json(json)
+        json = backend_fixtures["feature_group"]["get_stream_basic_info"]["response"]
+        fg = feature_group.FeatureGroup.from_response_json(json)
+
+        # to mock delete we need get_expectation_suite to not return none
+        mock_get_expectation_suite_api = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.get"
+        )
+        mock_get_expectation_suite_api.return_value = es
+        mock_create_expectation_suite_api = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.create"
+        )
+        mock_create_expectation_suite_api.return_value = es
+        mock_delete_expectation_suite_api = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.delete"
+        )
+
+        version_api = mocker.patch("hsfs.core.variable_api.VariableApi.get_version")
+        version_api.return_value = hsfs.__version__
+
+        mock_es_engine_get_expectation_suite_url = mocker.patch(
+            "hsfs.core.expectation_suite_engine.ExpectationSuiteEngine._get_expectation_suite_url"
+        )
+        mock_print = mocker.patch("builtins.print")
+
+        # Act
+        fg.save_expectation_suite(es.to_ge_type(), overwrite=True)
+        # Assert
+        assert mock_delete_expectation_suite_api.call_count == 1
+        assert mock_create_expectation_suite_api.call_count == 1
+        assert mock_get_expectation_suite_api.call_count == 1
+        assert mock_es_engine_get_expectation_suite_url.call_count == 1
+        assert mock_print.call_count == 1
+        assert (
+            mock_print.call_args[0][0][:55]
+            == "Attached expectation suite to Feature Group, edit it at"
+        )
+
+    def test_feature_group_save_expectation_suite_from_hopsworks_type(
+        self, mocker, backend_fixtures
+    ):
+        # Arrange
+        json = backend_fixtures["expectation_suite"]["get"]["response"]
+        es = expectation_suite.ExpectationSuite.from_response_json(json)
+        json = backend_fixtures["feature_group"]["get_stream_basic_info"]["response"]
+        fg = feature_group.FeatureGroup.from_response_json(json)
+
+        mock_update_expectation_suite_api = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.update"
+        )
+
+        version_api = mocker.patch("hsfs.core.variable_api.VariableApi.get_version")
+        version_api.return_value = hsfs.__version__
+
+        mock_es_engine_get_expectation_suite_url = mocker.patch(
+            "hsfs.core.expectation_suite_engine.ExpectationSuiteEngine._get_expectation_suite_url"
+        )
+        mock_print = mocker.patch("builtins.print")
+
+        # Act
+        fg.save_expectation_suite(es)
+        # Assert
+
+        assert mock_update_expectation_suite_api.call_count == 1
+        assert mock_es_engine_get_expectation_suite_url.call_count == 1
+        assert mock_print.call_count == 1
+        assert (
+            mock_print.call_args[0][0][:63]
+            == "Updated expectation suite attached to Feature Group, edit it at"
+        )
