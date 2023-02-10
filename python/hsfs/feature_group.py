@@ -43,6 +43,7 @@ from hsfs.core import (
     code_engine,
     external_feature_group_engine,
     validation_result_engine,
+    job_api,
 )
 
 from hsfs.statistics_config import StatisticsConfig
@@ -1229,6 +1230,11 @@ class FeatureGroup(FeatureGroupBase):
         self._stream = stream
         self._parents = parents
         self._deltastreamer_jobconf = None
+
+        job_name = "{fg_name}_{version}_offline_fg_backfill".format(
+            fg_name=self._name, version=self._version
+        )
+        self._backfill_job = job_api.JobApi().get(job_name)
 
         if self._id:
             # initialized by backend
