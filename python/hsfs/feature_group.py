@@ -1694,12 +1694,32 @@ class FeatureGroup(FeatureGroupBase):
             ge_report.to_ge_type() if ge_report is not None else None,
         )
 
-    def multi_part_insert(self):
+    def multi_part_insert(
+        self,
+        features: Union[
+            pd.DataFrame,
+            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+            TypeVar("pyspark.RDD"),  # noqa: F821
+            np.ndarray,
+            List[list],
+        ] = None,
+        overwrite: Optional[bool] = False,
+        operation: Optional[str] = "upsert",
+        storage: Optional[str] = None,
+        write_options: Optional[Dict[str, Any]] = {},
+        validation_options: Optional[Dict[str, Any]] = {},
+    ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         """Get FeatureGroupWriter for optimized multi part inserts or call this method
         to start manual optimized inserts.
         """
         self._multi_part_insert = True
-        return feature_group_writer.FeatureGroupWriter(self)
+        multi_part_writer = feature_group_writer.FeatureGroupWriter(self)
+        if features is None:
+            return multi_part_writer
+        else:
+            return multi_part_writer.insert(
+                features, operation, storage, write_options, validation_options
+            )
 
     def finalize_multi_part_insert(self):
         self._kafka_producer.flush()
