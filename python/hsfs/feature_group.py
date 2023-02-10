@@ -1717,8 +1717,14 @@ class FeatureGroup(FeatureGroupBase):
         if features is None:
             return multi_part_writer
         else:
+            # go through writer to avoid setting multi insert defaults again
             return multi_part_writer.insert(
-                features, operation, storage, write_options, validation_options
+                features,
+                overwrite,
+                operation,
+                storage,
+                write_options,
+                validation_options,
             )
 
     def finalize_multi_part_insert(self):
