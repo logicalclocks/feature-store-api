@@ -27,7 +27,14 @@ from typing import Optional, Union, Any, Dict, List, TypeVar, Tuple
 
 from datetime import datetime, date
 
-from hsfs import util, engine, feature, user, storage_connector as sc
+from hsfs import (
+    util,
+    engine,
+    feature,
+    user,
+    feature_group_writer,
+    storage_connector as sc,
+)
 from hsfs.core import (
     feature_group_engine,
     statistics_engine,
@@ -1302,6 +1309,12 @@ class FeatureGroup(FeatureGroupBase):
         )
         self._href = href
 
+        # cache for optimized writes
+        self._multi_part_insert = False
+        self._kafka_producer = None
+        self._feature_writers = None
+        self._writer = None
+
     def read(
         self,
         wallclock_time: Optional[Union[str, int, datetime, date]] = None,
@@ -1542,7 +1555,8 @@ class FeatureGroup(FeatureGroupBase):
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
         write_options: Optional[Dict[str, Any]] = {},
-        validation_options: Optional[Dict[str, Any]] = None,
+        validation_options: Optional[Dict[str, Any]] = {},
+        save_code: Optional[bool] = True,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         """Persist the metadata and materialize the feature group to the feature store
         or insert data from a dataframe into the existing feature group.
@@ -1632,10 +1646,17 @@ class FeatureGroup(FeatureGroupBase):
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
                   will use external listeners when connecting from outside of Hopsworks.
+                * key `cache_metadata`
             validation_options: Additional validation options as key-value pairs, defaults to `{}`.
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+                * key `fetch_expectation_suite` a boolean value, by default `True`, to control whether the expectation
+                   suite of the feature group should be fetched before every insert.
+            save_code: When running HSFS on Hopsworks or Databricks, HSFS can save the code/notebook used to create
+                the feature group or used to insert data to it. When calling the `insert` method repeatedly
+                with small batches of data, this can slow down the writes. Use this option to turn off saving
+                code. Defaults to `True`.
 
         # Returns
             (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
@@ -1649,13 +1670,14 @@ class FeatureGroup(FeatureGroupBase):
             operation=operation,
             storage=storage.lower() if storage is not None else None,
             write_options=write_options,
-            validation_options=validation_options
-            if validation_options is not None
-            else {"save_report": True},
+            validation_options={"save_report": True, **validation_options},
         )
 
-        if ge_report is None or ge_report.ingestion_result == "INGESTED":
+        if save_code and (
+            ge_report is None or ge_report.ingestion_result == "INGESTED"
+        ):
             self._code_engine.save_code(self)
+
         if engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark,
             # if Python, the statistics are computed by the application doing the insert
@@ -1665,6 +1687,20 @@ class FeatureGroup(FeatureGroupBase):
             job,
             ge_report.to_ge_type() if ge_report is not None else None,
         )
+
+    def multi_part_insert(self):
+        """Get FeatureGroupWriter for optimized multi part inserts or call this method
+        to start manual optimized inserts.
+        """
+        self._multi_part_insert = True
+        return feature_group_writer.FeatureGroupWriter(self)
+
+    def finalize_multi_part_insert(self):
+        self._kafka_producer.flush()
+        self._kafka_producer = None
+        self._feature_writers = None
+        self._writer = None
+        self._multi_part_insert = False
 
     def insert_stream(
         self,

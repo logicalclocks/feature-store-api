@@ -28,6 +28,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         # cache online feature store connector
         self._online_conn = None
+        self._kafka_config = None
 
     def save(
         self,
@@ -238,22 +239,23 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         return self._kafka_api.get_topic_subject(feature_group._online_topic_name)
 
     def get_kafka_config(self, online_write_options):
-        config = {
-            "kafka.bootstrap.servers": ",".join(
-                [
-                    endpoint.replace("INTERNAL://", "")
-                    for endpoint in self._kafka_api.get_broker_endpoints()
-                ]
-            ),
-            "kafka.security.protocol": "SSL",
-            "kafka.ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),
-            "kafka.ssl.truststore.password": client.get_instance()._cert_key,
-            "kafka.ssl.keystore.location": client.get_instance()._get_jks_key_store_path(),
-            "kafka.ssl.keystore.password": client.get_instance()._cert_key,
-            "kafka.ssl.key.password": client.get_instance()._cert_key,
-            "kafka.ssl.endpoint.identification.algorithm": "",
-        }
-        return {**online_write_options, **config}
+        if self._kafka_config is None:
+            self._kafka_config = {
+                "kafka.bootstrap.servers": ",".join(
+                    [
+                        endpoint.replace("INTERNAL://", "")
+                        for endpoint in self._kafka_api.get_broker_endpoints()
+                    ]
+                ),
+                "kafka.security.protocol": "SSL",
+                "kafka.ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),
+                "kafka.ssl.truststore.password": client.get_instance()._cert_key,
+                "kafka.ssl.keystore.location": client.get_instance()._get_jks_key_store_path(),
+                "kafka.ssl.keystore.password": client.get_instance()._cert_key,
+                "kafka.ssl.key.password": client.get_instance()._cert_key,
+                "kafka.ssl.endpoint.identification.algorithm": "",
+            }
+        return {**online_write_options, **self._kafka_config}
 
     def insert_stream(
         self,
