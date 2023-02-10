@@ -192,12 +192,12 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
    * - AWS Secrets manager
    * - FIle on the local file system
    *
-   * @param secretStore
-   * @param region
-   * @param apiKeyFilepath
+   * @param secretStore SecretStore PARAMETER_STORE or SECRET_MANAGER
+   * @param region AWS regions
+   * @param apiKeyFilepath path to API key file
    * @return String
-   * @throws IOException
-   * @throws FeatureStoreException
+   * @throws IOException IOException
+   * @throws FeatureStoreException FeatureStoreException
    */
   public String readApiKey(SecretStore secretStore, Region region, String apiKeyFilepath)
       throws IOException, FeatureStoreException {

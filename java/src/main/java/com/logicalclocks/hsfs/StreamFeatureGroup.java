@@ -129,11 +129,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * Reads Feature group data.
    *
    * @return DataFrame.
-   * @throws FeatureStoreException
-   * @throws IOException
-   * @throws ParseException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
-
   public Object read() throws FeatureStoreException, IOException {
     return read(false, null);
   }
@@ -149,11 +147,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   /**
    * Reads Feature group data at a specific point in time.
    *
-   * @param wallclockTime
+   * @param wallclockTime point in time.
    * @return DataFrame.
-   * @throws FeatureStoreException
-   * @throws IOException
-   * @throws ParseException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   * @throws ParseException ParseException
    */
   public Object read(String wallclockTime)
       throws FeatureStoreException, IOException, ParseException {
@@ -174,9 +172,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * @param wallclockStartTime start date.
    * @param wallclockEndTime   end date.
    * @return DataFrame.
-   * @throws FeatureStoreException
-   * @throws IOException
-   * @throws ParseException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   * @throws ParseException ParseException
    */
   @Deprecated
   public Object readChanges(String wallclockStartTime, String wallclockEndTime)
@@ -184,10 +182,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     return selectAll().pullChanges(wallclockStartTime, wallclockEndTime).read(false, null);
   }
 
-  /*
-   * @deprecated
-   * `readChanges` method is deprecated. Use `asOf(wallclockEndTime, wallclockStartTime).read(readOptions)` instead.
-   */
   @Deprecated
   public Object readChanges(String wallclockStartTime, String wallclockEndTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
@@ -203,8 +197,8 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * @param wallclockTime Datetime string. The String should be formatted in one of the
    *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
    * @return Query. The query object with the applied time travel condition
-   * @throws FeatureStoreException
-   * @throws ParseException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws ParseException ParseException
    */
   public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
     return selectAll().asOf(wallclockTime);
@@ -221,17 +215,13 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * @param excludeUntil Datetime string. The String should be formatted in one of the
    *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
    * @return Query. The query object with the applied time travel condition
-   * @throws FeatureStoreException
-   * @throws ParseException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws ParseException ParseException
    */
   public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
     return selectAll().asOf(wallclockTime, excludeUntil);
   }
 
-  /*
-   * @deprecated
-   * `save` method is deprecated and in the next release it will be  replaced by `insert` and `insertStream` methods.
-   */
   @Deprecated
   public <S> void save(S featureData, Map<String, String> writeOptions)
           throws FeatureStoreException, IOException, ParseException {
@@ -239,10 +229,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     codeEngine.saveCode(this);
   }
 
-  /*
-   * @deprecated
-   * In the next release save method will be  replaced by insert method.
-   */
   @Deprecated
   public <S> void save(S featureData, Map<String, String> writeOptions, JobConfiguration jobConfiguration)
       throws FeatureStoreException, IOException, ParseException {
@@ -354,8 +340,10 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   /**
    * Return commit details.
    *
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @return commit details.
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException FeatureStoreException
+   * @throws ParseException ParseException
    */
   public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
     return utils.commitDetails(this, null);
@@ -365,8 +353,10 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * Return commit details.
    *
    * @param limit number of commits to return.
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @return commit details.
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   * @throws ParseException ParseException
    */
   public Map<Long, Map<String, String>> commitDetails(Integer limit)
       throws IOException, FeatureStoreException, ParseException {
@@ -377,8 +367,10 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * Return commit details.
    *
    * @param wallclockTime point in time.
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @return commit details.
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   * @throws ParseException ParseException
    */
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
       throws IOException, FeatureStoreException, ParseException {
@@ -390,7 +382,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * @param wallclockTime point in time.
    * @param limit number of commits to return.
-   */
+   * @return commit details.
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   * @throws ParseException ParseException
+   * */
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     return utils.commitDetailsByWallclockTime(this, wallclockTime, limit);

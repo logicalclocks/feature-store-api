@@ -130,3 +130,6 @@ docs/generated
 
 # Test artifacts
 keyFile.json
+
+# delombok dir
+delombok
