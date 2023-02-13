@@ -382,15 +382,17 @@ class Engine:
                     util.FeatureGroupWarning,
                 )
 
+            # make shallow copy so the original df does not get changed
+            dataframe_copy = dataframe.copy(deep=False)
+
             # convert timestamps with timezone to UTC
             for col in dataframe.columns:
                 if isinstance(
-                    dataframe[col].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
+                    dataframe_copy[col].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
-                    dataframe[col] = dataframe[col].dt.tz_convert(None)
+                    dataframe_copy[col] = dataframe_copy[col].dt.tz_convert(None)
 
             # making a shallow copy of the dataframe so that column names are unchanged
-            dataframe_copy = dataframe.copy(deep=False)
             dataframe_copy.columns = [x.lower() for x in dataframe_copy.columns]
             return dataframe_copy
 
