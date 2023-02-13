@@ -198,8 +198,11 @@ class Engine:
                 if isinstance(
                     dataframe[c].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
-                    dataframe[c] = dataframe[c].dt.tz_convert(str(local_tz))
-                elif dataframe[c].dtype == np.dtype("datetime64[ns]"):
+                    # first nomalize to UTC
+                    dataframe[c] = dataframe[c].dt.tz_convert(None)
+                if dataframe[c].dtype == np.dtype("datetime64[ns]"):
+                    # convert to timestamp with client timezone cause that's what spark
+                    # assumes as timezone
                     dataframe[c] = dataframe[c].dt.tz_localize(
                         str(local_tz), ambiguous="infer", nonexistent="shift_forward"
                     )
