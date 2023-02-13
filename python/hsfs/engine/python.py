@@ -881,11 +881,11 @@ class Engine:
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
-            feature_group._backfill_job.run(
+            feature_group.backfill_job.run(
                 await_termination=offline_write_options.get("wait_for_job", True)
             )
 
-        return feature_group._backfill_job
+        return feature_group.backfill_job
 
     def _kafka_produce(
         self, producer, feature_group, key, encoded_row, acked, offline_write_options

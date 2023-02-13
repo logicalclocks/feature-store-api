@@ -1231,10 +1231,7 @@ class FeatureGroup(FeatureGroupBase):
         self._parents = parents
         self._deltastreamer_jobconf = None
 
-        job_name = "{fg_name}_{version}_offline_fg_backfill".format(
-            fg_name=self._name, version=self._version
-        )
-        self._backfill_job = job_api.JobApi().get(job_name)
+        self._backfill_job = None
 
         if self._id:
             # initialized by backend
@@ -1652,7 +1649,6 @@ class FeatureGroup(FeatureGroupBase):
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
                   will use external listeners when connecting from outside of Hopsworks.
-                * key `cache_metadata`
             validation_options: Additional validation options as key-value pairs, defaults to `{}`.
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
@@ -1710,7 +1706,89 @@ class FeatureGroup(FeatureGroupBase):
         validation_options: Optional[Dict[str, Any]] = {},
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         """Get FeatureGroupWriter for optimized multi part inserts or call this method
-        to start manual optimized inserts.
+        to start manual multi part optimized inserts.
+
+        In use cases where very small batches (1 to 1000) rows per Dataframe need
+        to be written to the feature store repeatedly, it might be inefficient to use
+        the standard `feature_group.insert()` method as it performs some background
+        actions to update the metadata of the feature group object first.
+
+        For these cases, the feature group provides the `multi_part_insert` API,
+        which is optimized for writing many small Dataframes after another.
+
+        There are two ways to use this API:
+        !!! example "Python Context Manager"
+            Using the Python `with` syntax you can acquire a FeatureGroupWriter
+            object that implements the same `multi_part_insert` API.
+            ```python
+            feature_group = fs.get_or_create_feature_group("fg_name", version=1)
+
+            with feature_group.multi_part_insert() as writer:
+                # run inserts in a loop:
+                while loop:
+                    small_batch_df = ...
+                    writer.multi_part_insert(small_batch_df)
+            ```
+            The writer batches the small Dataframes and transmits them to Hopsworks
+            efficiently.
+            When exiting the context, the feature group writer is sure to exit
+            only once all the rows have been transmitted.
+
+        !!! example "Multi part insert with manual context management"
+            Instead of letting Python handle the entering and exiting of the
+            multi part insert context, you can start and finalize the context
+            manually.
+            ```python
+            feature_group = fs.get_or_create_feature_group("fg_name", version=1)
+
+            while loop:
+                small_batch_df = ...
+                feature_group.multi_part_insert(small_batch_df)
+
+            # IMPORTANT: finalize the multi part insert to make sure all rows
+            # have been transmitted
+            feature_group.finalize_multi_part_insert()
+            ```
+            Note that the first call to `multi_part_insert` initiates the context
+            and be sure to finalize it. The `finalize_multi_part_insert` is a
+            blocking call that returns once all rows have been transmitted.
+
+        # Arguments
+            features: DataFrame, RDD, Ndarray, list. Features to be saved.
+            overwrite: Drop all data in the feature group before
+                inserting new data. This does not affect metadata, defaults to False.
+            operation: Apache Hudi operation type `"insert"` or `"upsert"`.
+                Defaults to `"upsert"`.
+            storage: Overwrite default behaviour, write to offline
+                storage only with `"offline"` or online only with `"online"`, defaults
+                to `None`.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, write_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to write data into the
+                  feature group.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the insert call should return only
+                  after the Hopsworks Job has finished. By default it waits.
+                * key `start_offline_backfill` and value `True` or `False` to configure
+                  whether or not to start the backfill job to write data to the offline
+                  storage. By default the backfill job gets started immediately.
+                * key `internal_kafka` and value `True` or `False` in case you established
+                  connectivity from you Python environment to the internal advertised
+                  listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
+                  will use external listeners when connecting from outside of Hopsworks.
+            validation_options: Additional validation options as key-value pairs, defaults to `{}`.
+                * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
+                * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
+                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+                * key `fetch_expectation_suite` a boolean value, by default `True`, to control whether the expectation
+                   suite of the feature group should be fetched before every insert.
+
+        # Returns
+            (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
+            `FeatureGroupWriter` When used as a context manager with Python `with` statement.
         """
         self._multi_part_insert = True
         multi_part_writer = feature_group_writer.FeatureGroupWriter(self)
@@ -1728,6 +1806,28 @@ class FeatureGroup(FeatureGroupBase):
             )
 
     def finalize_multi_part_insert(self):
+        """Finalizes and exits the multi part insert context opened by `multi_part_insert`
+        in a blocking fashion once all rows have been transmitted.
+
+        !!! example "Multi part insert with manual context management"
+            Instead of letting Python handle the entering and exiting of the
+            multi part insert context, you can start and finalize the context
+            manually.
+            ```python
+            feature_group = fs.get_or_create_feature_group("fg_name", version=1)
+
+            while loop:
+                small_batch_df = ...
+                feature_group.multi_part_insert(small_batch_df)
+
+            # IMPORTANT: finalize the multi part insert to make sure all rows
+            # have been transmitted
+            feature_group.finalize_multi_part_insert()
+            ```
+            Note that the first call to `multi_part_insert` initiates the context
+            and be sure to finalize it. The `finalize_multi_part_insert` is a
+            blocking call that returns once all rows have been transmitted.
+        """
         self._kafka_producer.flush()
         self._kafka_producer = None
         self._feature_writers = None
@@ -2287,6 +2387,17 @@ class FeatureGroup(FeatureGroupBase):
         """Parent feature groups as origin of the data in the current feature group.
         This is part of explicit provenance"""
         return self._parents
+
+    @property
+    def backfill_job(self):
+        """Get the Job object reference for the backfill job for this
+        Feature Group."""
+        if self._backfill_job is None:
+            job_name = "{fg_name}_{version}_offline_fg_backfill".format(
+                fg_name=self._name, version=self._version
+            )
+            self._backfill_job = job_api.JobApi().get(job_name)
+        return self._backfill_job
 
     @version.setter
     def version(self, version):
