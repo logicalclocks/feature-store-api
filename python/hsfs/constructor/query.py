@@ -98,7 +98,9 @@ class Query:
         # Arguments
             online: Read from online storage. Defaults to `False`.
             dataframe_type: DataFrame type to return. Defaults to `"default"`.
-            read_options: Optional dictionary with read options for Spark.
+            read_options: Dictionary of read options for Spark in spark engine.
+                Only for python engine: Use key "hive_config" to pass a dictionary of hive or tez configurations.
+                For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
 
         # Returns
