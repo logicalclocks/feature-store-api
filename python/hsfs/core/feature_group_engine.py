@@ -58,7 +58,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             return None, ge_report
 
         offline_write_options = write_options
-        online_write_options = self.get_kafka_config(write_options)
+        online_write_options = write_options
 
         return (
             engine.get_instance().save_dataframe(
@@ -114,7 +114,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             return None, ge_report
 
         offline_write_options = write_options
-        online_write_options = self.get_kafka_config(write_options)
+        online_write_options = write_options
 
         if not feature_group.online_enabled and storage == "online":
             raise exceptions.FeatureStoreException(
@@ -238,26 +238,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def get_subject(self, feature_group):
         return self._kafka_api.get_topic_subject(feature_group._online_topic_name)
 
-    def get_kafka_config(self, online_write_options):
-        # This should be in the Spark engine
-        if self._kafka_config is None:
-            self._kafka_config = {
-                "kafka.bootstrap.servers": ",".join(
-                    [
-                        endpoint.replace("INTERNAL://", "")
-                        for endpoint in self._kafka_api.get_broker_endpoints()
-                    ]
-                ),
-                "kafka.security.protocol": "SSL",
-                "kafka.ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),
-                "kafka.ssl.truststore.password": client.get_instance()._cert_key,
-                "kafka.ssl.keystore.location": client.get_instance()._get_jks_key_store_path(),
-                "kafka.ssl.keystore.password": client.get_instance()._cert_key,
-                "kafka.ssl.key.password": client.get_instance()._cert_key,
-                "kafka.ssl.endpoint.identification.algorithm": "",
-            }
-        return {**online_write_options, **self._kafka_config}
-
     def insert_stream(
         self,
         feature_group,
@@ -289,7 +269,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 # insert_stream method was called on non stream feature group object that has not been saved.
                 # we will use save_dataframe method on empty dataframe to create directory structure
                 offline_write_options = write_options
-                online_write_options = self.get_kafka_config(write_options)
+                online_write_options = write_options
                 engine.get_instance().save_dataframe(
                     feature_group,
                     engine.get_instance().create_empty_df(dataframe),
@@ -321,7 +301,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             await_termination,
             timeout,
             checkpoint_dir,
-            self.get_kafka_config(write_options),
+            write_options,
         )
 
         return streaming_query

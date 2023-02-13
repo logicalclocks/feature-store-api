@@ -68,7 +68,7 @@ except ImportError:
 from hsfs import feature, training_dataset_feature, client, util
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core import hudi_engine, transformation_function_engine
+from hsfs.core import hudi_engine, transformation_function_engine, kafka_api
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
@@ -100,6 +100,9 @@ class Engine:
         if importlib.util.find_spec("pydoop"):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             util.setup_pydoop()
+
+        self._kafka_api = kafka_api.KafkaApi()
+        self._kafka_config = None
 
     def sql(
         self,
@@ -297,6 +300,7 @@ class Engine:
         checkpoint_dir,
         write_options,
     ):
+        write_options = self._get_kafka_config(write_options)
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
@@ -364,6 +368,8 @@ class Engine:
             )
 
     def _save_online_dataframe(self, feature_group, dataframe, write_options):
+
+        write_options = self._get_kafka_config(write_options)
 
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
@@ -1094,6 +1100,25 @@ class Engine:
         for _feat in pyspark_schema:
             df = df.withColumn(_feat, col(_feat).cast(pyspark_schema[_feat]))
         return df
+
+    def _get_kafka_config(self, write_options: dict = {}) -> dict:
+        if self._kafka_config is None:
+            self._kafka_config = {
+                "kafka.bootstrap.servers": ",".join(
+                    [
+                        endpoint.replace("INTERNAL://", "")
+                        for endpoint in self._kafka_api.get_broker_endpoints()
+                    ]
+                ),
+                "kafka.security.protocol": "SSL",
+                "kafka.ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),
+                "kafka.ssl.truststore.password": client.get_instance()._cert_key,
+                "kafka.ssl.keystore.location": client.get_instance()._get_jks_key_store_path(),
+                "kafka.ssl.keystore.password": client.get_instance()._cert_key,
+                "kafka.ssl.key.password": client.get_instance()._cert_key,
+                "kafka.ssl.endpoint.identification.algorithm": "",
+            }
+        return {**write_options, **self._kafka_config}
 
 
 class SchemaError(Exception):
