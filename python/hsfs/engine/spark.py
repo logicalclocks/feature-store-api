@@ -198,7 +198,7 @@ class Engine:
             dataframe_copy = dataframe.copy(deep=False)
             for c in dataframe_copy.columns:
                 if isinstance(
-                        dataframe_copy[c].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
+                    dataframe_copy[c].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
                     # convert to utc timestamp
                     dataframe_copy[c] = dataframe_copy[c].dt.tz_convert(None)
