@@ -91,14 +91,24 @@ class Engine:
         schema=None,
     ):
         if not online_conn:
-            return self._sql_offline(sql_query, feature_store, dataframe_type, schema)
+            return self._sql_offline(
+                sql_query,
+                feature_store,
+                dataframe_type,
+                schema,
+                hive_config=read_options.get("hive_config") if read_options else None,
+            )
         else:
             return self._jdbc(
                 sql_query, online_conn, dataframe_type, read_options, schema
             )
 
-    def _sql_offline(self, sql_query, feature_store, dataframe_type, schema=None):
-        with self._create_hive_connection(feature_store) as hive_conn:
+    def _sql_offline(
+        self, sql_query, feature_store, dataframe_type, schema=None, hive_config=None
+    ):
+        with self._create_hive_connection(
+            feature_store, hive_config=hive_config
+        ) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
             if schema:
                 result_df = Engine.cast_columns(result_df, schema)
@@ -240,7 +250,7 @@ class Engine:
         return df_list
 
     def read_options(self, data_format, provided_options):
-        return {}
+        return provided_options or {}
 
     def read_stream(
         self,
@@ -639,13 +649,14 @@ class Engine:
 
         return td_job
 
-    def _create_hive_connection(self, feature_store):
+    def _create_hive_connection(self, feature_store, hive_config=None):
         try:
             return hive.Connection(
                 host=client.get_instance()._host,
                 port=9085,
                 # database needs to be set every time, 'default' doesn't work in pyhive
                 database=feature_store,
+                configuration=hive_config,
                 auth="CERTIFICATES",
                 truststore=client.get_instance()._get_jks_trust_store_path(),
                 keystore=client.get_instance()._get_jks_key_store_path(),
