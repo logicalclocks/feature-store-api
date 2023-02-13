@@ -239,6 +239,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         return self._kafka_api.get_topic_subject(feature_group._online_topic_name)
 
     def get_kafka_config(self, online_write_options):
+        # This should be in the Spark engine
         if self._kafka_config is None:
             self._kafka_config = {
                 "kafka.bootstrap.servers": ",".join(

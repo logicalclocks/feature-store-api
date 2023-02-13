@@ -1783,8 +1783,8 @@ class FeatureGroup(FeatureGroupBase):
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
-                * key `fetch_expectation_suite` a boolean value, by default `True`, to control whether the expectation
-                   suite of the feature group should be fetched before every insert.
+                * key `fetch_expectation_suite` a boolean value, by default `False` for multi part inserts,
+                   to control whether the expectation suite of the feature group should be fetched before every insert.
 
         # Returns
             (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
