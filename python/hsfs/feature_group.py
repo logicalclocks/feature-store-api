@@ -1548,7 +1548,7 @@ class FeatureGroup(FeatureGroupBase):
         or insert data from a dataframe into the existing feature group.
 
         Incrementally insert data to a feature group or overwrite all  data contained in the feature group. By
-        default, the data is inserted into the offline storag as well as the online storage if the feature group is
+        default, the data is inserted into the offline storage as well as the online storage if the feature group is
         `online_enabled=True`. To insert only into the online storage, set `storage="online"`, or oppositely
         `storage="offline"`.
 
@@ -1804,7 +1804,7 @@ class FeatureGroup(FeatureGroupBase):
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Drops records present in the provided DataFrame and commits it as update to this
-        Feature group. This method can only be used on time travel enabled feature groups
+        Feature group. This method can only be used on time travel enabled feature groups.
 
         # Arguments
             delete_df: dataFrame containing records to be deleted.

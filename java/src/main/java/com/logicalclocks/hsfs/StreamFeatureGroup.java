@@ -126,7 +126,18 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Reads Feature group data.
+   * Read the feature group into a dataframe.
+   * Reads the feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get stream feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        // read feature group
+   *        fg.read()
+   * }
+   * </pre>
    *
    * @return DataFrame.
    * @throws FeatureStoreException FeatureStoreException
@@ -136,46 +147,110 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     return read(false, null);
   }
 
+  /**
+   * Read the stream feature group into a dataframe.
+   * Reads the stream feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        // read feature group data from online storage
+   *        fg.read(true)
+   *        // read feature group data from offline storage
+   *        fg.read(false)
+   * }
+   * </pre>
+   *
+   * @param online Set `online` to `true` to read from the online storage.
+   * @return Spark DataFrame containing the feature data.
+   * @throws FeatureStoreException If ...
+   * @throws IOException  If ...
+   */
   public Object read(boolean online) throws FeatureStoreException, IOException {
     return read(online, null);
   }
 
+  /**
+   * Read the stream feature group into a dataframe.
+   * Reads the stream feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get stream feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        // define additional read options
+   *        Map<String, String> readOptions = ...;
+   *        // read feature group data
+   *        fg.read(readOptions)
+   * }
+   * </pre>
+   *
+   * @param online Set `online` to `true` to read from the online storage.
+   * @param readOptions Additional read options as key/value pairs.
+   * @return Spark DataFrame containing the feature data.
+   * @throws FeatureStoreException If ...
+   * @throws IOException  If ...
+   */
   public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return selectAll().read(online, readOptions);
   }
 
   /**
-   * Reads Feature group data at a specific point in time.
+   * Reads stream Feature group into a dataframe at a specific point in time.
    *
-   * @param wallclockTime point in time.
-   * @return DataFrame.
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        // read feature group data retrieve feature group as of specific point in time.
+   *        fg.read( "20230205210923")
+   * }
+   * </pre>
+   *
+   * @param wallclockTime Read data as of this point in time. Datetime string. The String should be formatted in one of
+   *                      the following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @return Spark DataFrame containing feature data.
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   * @throws ParseException If ...
    */
   public Object read(String wallclockTime)
       throws FeatureStoreException, IOException, ParseException {
     return selectAll().asOf(wallclockTime).read(false, null);
   }
 
+  /**
+   * Reads stream Feature group into a dataframe at a specific point in time.
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        // define additional read options
+   *        Map<String, String> readOptions = ...;
+   *        // read feature group data retrieve feature group as of specific point in time.
+   *        fg.read(false, "20230205210923")
+   * }
+   * </pre>
+   *
+   * @param wallclockTime Datetime string. The String should be formatted in one of the
+   *     following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param readOptions Additional read options as key-value pairs.
+   * @return Spark DataFrame containing feature data.
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   * @throws ParseException ParseException
+   */
   public Object read(String wallclockTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
     return selectAll().asOf(wallclockTime).read(false, readOptions);
   }
 
-  /**
-   * Reads changes that occurred between specified points in time.
-   *
-   * @deprecated
-   *   `readChanges` method is deprecated. Use `asOf(wallclockEndTime, wallclockStartTime).read()` instead.
-   *
-   * @param wallclockStartTime start date.
-   * @param wallclockEndTime   end date.
-   * @return DataFrame.
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
-   */
   @Deprecated
   public Object readChanges(String wallclockStartTime, String wallclockEndTime)
       throws FeatureStoreException, IOException, ParseException {
@@ -194,11 +269,21 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * at the specified point in time. This can then either be read into a Dataframe
    * or used further to perform joins or construct a training dataset.
    *
-   * @param wallclockTime Datetime string. The String should be formatted in one of the
-   *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        // get query object to retrieve all feature group as of specific point in time.
+   *        fg.asOf("20230205210923")
+   * }
+   * </pre>
+   *
+   * @param wallclockTime Read data as of this point in time. Datetime string. The String should be formatted in one of
+   *                      the following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @return Query. The query object with the applied time travel condition
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws ParseException ParseException
+   * @throws FeatureStoreException If ...
+   * @throws ParseException If ...
    */
   public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
     return selectAll().asOf(wallclockTime);
@@ -210,13 +295,23 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * at the specified point in time. This can then either be read into a Dataframe
    * or used further to perform joins or construct a training dataset.
    *
-   * @param wallclockTime Datetime string. The String should be formatted in one of the
-   *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
-   * @param excludeUntil Datetime string. The String should be formatted in one of the
-   *     following formats `%Y%m%d`, `%Y%m%d%H`, `%Y%m%d%H%M`, or `%Y%m%d%H%M%S`.
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        // get query object to retrieve all feature group as of specific point in time.
+   *        fg.asOf("20230205210923", "20230204073411")
+   * }
+   * </pre>
+   *
+   * @param wallclockTime Read data as of this point in time. Datetime string. The String should be formatted in one of
+   *                      the following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @param excludeUntil Exclude commits until this point in time. Datetime string. The String should be formatted in
+   *                     one of the following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @return Query. The query object with the applied time travel condition
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws ParseException ParseException
+   * @throws FeatureStoreException If ...
+   * @throws ParseException If ...
    */
   public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
     return selectAll().asOf(wallclockTime, excludeUntil);
@@ -237,87 +332,524 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     codeEngine.saveCode(this);
   }
 
+  /**
+   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a dataframe
+   * into the existing feature group.
+   * Incrementally insert data to a feature group or overwrite all  data contained in the feature group.
+   * The `features` dataframe can be a Spark DataFrame or RDD.
+   * If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
+   * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //insert feature Data.
+   *        fg.insert(featureData);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData spark DataFrame, RDD. Features to be saved.
+   * @throws IOException If ...
+   * @throws FeatureStoreException If ...
+   * @throws ParseException If ...
+   */
   public <S> void insert(S featureData) throws FeatureStoreException, IOException, ParseException {
-    insert(featureData, false, SaveMode.APPEND, null, null);
+    insert(featureData, SaveMode.APPEND, null, null);
   }
 
+  /**
+   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a dataframe
+   * into the existing feature group.
+   * Incrementally insert data to a feature group or overwrite all  data contained in the feature group.
+   * The `features` dataframe can be a Spark DataFrame or RDD.
+   * If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
+   * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //Define additional write options.
+   *        Map<String, String> writeOptions = ...;
+   *        //insert feature Data.
+   *        fg.insert(featureData, writeOptions);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Spark DataFrame, RDD. Features to be saved.
+   * @param writeOptions Additional write options as key-value pairs.
+   * @throws IOException If ...
+   * @throws FeatureStoreException If ...
+   * @throws ParseException If ...
+   */
   public <S> void insert(S featureData, Map<String, String> writeOptions) throws FeatureStoreException, IOException,
       ParseException {
-    insert(featureData, false, SaveMode.APPEND, writeOptions, null);
+    insert(featureData, SaveMode.APPEND, writeOptions, null);
   }
 
+  /**
+   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a dataframe
+   * into the existing feature group.
+   * Incrementally insert data to a feature group or overwrite all  data contained in the feature group.
+   * The `features` dataframe can be a Spark DataFrame or RDD.
+   * If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
+   * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //Define job configuration.
+   *        JobConfiguration jobConfiguration = ...;
+   *        //insert feature Data.
+   *        fg.insert(featureData, jobConfiguration);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Spark DataFrame, RDD. Features to be saved.
+   * @param jobConfiguration configure the Hopsworks Job used to write data into the stream feature group.
+   * @throws IOException If ...
+   * @throws FeatureStoreException If ...
+   * @throws ParseException If ...
+   */
   public <S> void insert(S featureData, JobConfiguration jobConfiguration) throws FeatureStoreException, IOException,
       ParseException {
-    insert(featureData, false, SaveMode.APPEND, null, jobConfiguration);
+    insert(featureData, SaveMode.APPEND, null, jobConfiguration);
   }
 
-  public <S> void insert(S featureData, boolean overwrite, SaveMode saveMode,
-                         Map<String, String> writeOptions) throws FeatureStoreException, IOException, ParseException {
-    insert(featureData, false, SaveMode.APPEND, writeOptions, null);
-  }
-
-  public <S> void insert(S featureData, boolean overwrite, SaveMode saveMode,
-                         JobConfiguration jobConfiguration) throws FeatureStoreException, IOException, ParseException {
-    insert(featureData, false, SaveMode.APPEND, jobConfiguration);
-  }
-
-  public <S> void insert(S featureData, boolean overwrite, SaveMode saveMode,
+  /**
+   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a dataframe
+   * into the existing feature group.
+   * Incrementally insert data to a feature group or overwrite all  data contained in the feature group.
+   * The `features` dataframe can be a Spark DataFrame or RDD.
+   * If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
+   * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //Define additional write options.
+   *        Map<String, String> writeOptions = ...;
+   *        //Define job configuration.
+   *        JobConfiguration jobConfiguration = ...;
+   *        //insert feature Data.
+   *        fg.insert(featureData, writeOptions);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Spark DataFrame, RDD. Features to be saved.
+   * @param saveMode org.apache.spark.sql.saveMode: APPEND, UPSERT, OVERWRITE
+   * @param writeOptions Additional write options as key-value pairs.
+   * @param jobConfiguration configure the Hopsworks Job used to write data into the stream feature group.
+   * @throws IOException If ...
+   * @throws FeatureStoreException If ...
+   * @throws ParseException If ...
+   */
+  public <S> void insert(S featureData, SaveMode saveMode,
                          Map<String, String> writeOptions, JobConfiguration jobConfiguration)
           throws FeatureStoreException, IOException, ParseException {
-
     streamFeatureGroupEngine.insert(this, featureData, saveMode,  partitionKeys,
         hudiPrecombineKey, writeOptions, jobConfiguration);
     codeEngine.saveCode(this);
   }
 
+  /**
+   * Ingest a Spark Structured Streaming Dataframe to the online feature store.
+   * This method creates a long running Spark Streaming Query, you can control the termination of the query through the
+   * arguments
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //insert feature Data.
+   *        fg.insertStream(featureData);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Features in Streaming Dataframe to be saved.
+   * @return Streaming Query object.
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   * @throws ParseException If ...
+   */
   public <S> Object insertStream(S featureData) throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, null, "append", false, null, null, null);
   }
 
+  /**
+   * Ingest a Spark Structured Streaming Dataframe to the online feature store.
+   * This method creates a long running Spark Streaming Query, you can control the termination of the query through the
+   * arguments
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //insert feature Data.
+   *        fg.insertStream(featureData, queryName);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Features in Streaming Dataframe to be saved.
+   * @param queryName Specify a name for the query to make it easier to recognise in the Spark UI
+   * @return Streaming Query object.
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   * @throws ParseException If ...
+   */
   public <S> Object insertStream(S featureData, String queryName)
       throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, queryName, null,false, null, null, null);
   }
 
+  /**
+   * Ingest a Spark Structured Streaming Dataframe to the online feature store.
+   * This method creates a long running Spark Streaming Query, you can control the termination of the query through the
+   * arguments
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //Define additional write options.
+   *        Map<String, String> writeOptions = ...;
+   *        //insert feature Data.
+   *        fg.insertStream(featureData, writeOptions);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Features in Streaming Dataframe to be saved.
+   * @param writeOptions Additional write options as key-value pairs.
+   * @return Streaming Query object.
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   * @throws ParseException If ...
+   */
   public <S> Object insertStream(S featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, null, null, false, null, null, writeOptions);
   }
 
+  /**
+   * Ingest a Spark Structured Streaming Dataframe to the online feature store.
+   * This method creates a long-running Spark Streaming Query, you can control the termination of the query through the
+   * arguments
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //Define additional write options.
+   *        Map<String, String> writeOptions = ...;
+   *        //insert feature Data.
+   *        fg.insertStream(featureData, queryName);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Features in Streaming Dataframe to be saved.
+   * @param queryName Specify a name for the query to make it easier to recognise in the Spark UI
+   * @param writeOptions Additional write options as key-value pairs.
+   * @return Streaming Query object.
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   * @throws ParseException If ...
+   */
   public <S> Object insertStream(S featureData, String queryName, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, queryName, "append", false, null, null, writeOptions);
   }
 
+  /**
+   * Ingest a Spark Structured Streaming Dataframe to the online feature store.
+   * This method creates a long-running Spark Streaming Query, you can control the termination of the query through the
+   * arguments
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //insert feature Data.
+   *        String queryName = ...;
+   *        String outputMode = ...;
+   *        fg.insertStream(featureData, queryName outputMode);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Features in Streaming Dataframe to be saved.
+   * @param queryName Specify a name for the query to make it easier to recognise in the Spark UI
+   * @param outputMode Specifies how data of a streaming DataFrame/Dataset is
+   *                 written to a streaming sink. (1) `"append"`: Only the new rows in the
+   *                 streaming DataFrame/Dataset will be written to the sink. (2)
+   *                 `"complete"`: All the rows in the streaming DataFrame/Dataset will be
+   *                 written to the sink every time there is some update. (3) `"update"`:
+   *                 only the rows that were updated in the streaming DataFrame/Dataset will
+   *                 be written to the sink every time there are some updates.
+   *                 If the query doesn’t contain aggregations, it will be equivalent to
+   *                 append mode. Default  behaviour is `"append"`.
+   * @return Streaming Query object.
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   * @throws ParseException If ...
+   */
   public <S> Object insertStream(S featureData, String queryName, String outputMode)
       throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, queryName, outputMode, false, null, null, null);
   }
 
+  /**
+   * Ingest a Spark Structured Streaming Dataframe to the online feature store.
+   * This method creates a long-running Spark Streaming Query, you can control the termination of the query through the
+   * arguments
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //insert feature Data.
+   *        String queryName = ...;
+   *        String outputMode = ...;
+   *        String checkpointLocation = ...;
+   *        fg.insertStream(featureData, queryName outputMode, checkpointLocation);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Features in Streaming Dataframe to be saved.
+   * @param queryName Specify a name for the query to make it easier to recognise in the Spark UI
+   * @param outputMode Specifies how data of a streaming DataFrame/Dataset is
+   *                 written to a streaming sink. (1) `"append"`: Only the new rows in the
+   *                 streaming DataFrame/Dataset will be written to the sink. (2)
+   *                 `"complete"`: All the rows in the streaming DataFrame/Dataset will be
+   *                 written to the sink every time there is some update. (3) `"update"`:
+   *                 only the rows that were updated in the streaming DataFrame/Dataset will
+   *                 be written to the sink every time there are some updates.
+   *                 If the query doesn’t contain aggregations, it will be equivalent to
+   *                 append mode.
+   * @param checkpointLocation Checkpoint directory location. This will be used to as a reference to
+   *                 from where to resume the streaming job.
+   * @return Streaming Query object.
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   * @throws ParseException If ...
+   */
   public <S> Object insertStream(S featureData, String queryName, String outputMode, String checkpointLocation)
       throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, queryName, outputMode, false, null, checkpointLocation, null);
   }
 
+  /**
+   * Ingest a Spark Structured Streaming Dataframe to the online feature store.
+   * This method creates a long-running Spark Streaming Query, you can control the termination of the query through the
+   * arguments
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //insert feature Data.
+   *        String queryName = ...;
+   *        String outputMode = ...;
+   *        fg.insertStream(featureData, queryName, outputMode, outputMode, true, 1000);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Features in Streaming Dataframe to be saved.
+   * @param queryName Specify a name for the query to make it easier to recognise in the Spark UI
+   * @param outputMode Specifies how data of a streaming DataFrame/Dataset is
+   *                 written to a streaming sink. (1) `"append"`: Only the new rows in the
+   *                 streaming DataFrame/Dataset will be written to the sink. (2)
+   *                 `"complete"`: All the rows in the streaming DataFrame/Dataset will be
+   *                 written to the sink every time there is some update. (3) `"update"`:
+   *                 only the rows that were updated in the streaming DataFrame/Dataset will
+   *                 be written to the sink every time there are some updates.
+   *                 If the query doesn’t contain aggregations, it will be equivalent to
+   *                 append mode.
+   * @param awaitTermination  Waits for the termination of this query, either by
+   *                 query.stop() or by an exception. If the query has terminated with an
+   *                 exception, then the exception will be thrown. If timeout is set, it
+   *                 returns whether the query has terminated or not within the timeout
+   *                 seconds
+   * @param timeout Only relevant in combination with `awaitTermination=true`.
+   * @return Streaming Query object.
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   * @throws ParseException If ...
+   */
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
                                  Long timeout) throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null, null);
   }
 
+  /**
+   * Ingest a Spark Structured Streaming Dataframe to the online feature store.
+   * This method creates a long-running Spark Streaming Query, you can control the termination of the query through the
+   * arguments
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //insert feature Data.
+   *        String queryName = ...;
+   *        String outputMode = ...;
+   *        String checkpointLocation = ...;
+   *        fg.insertStream(featureData, queryName, outputMode, outputMode, true, 1000, checkpointLocation);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Features in Streaming Dataframe to be saved.
+   * @param queryName Specify a name for the query to make it easier to recognise in the Spark UI
+   * @param outputMode Specifies how data of a streaming DataFrame/Dataset is
+   *                 written to a streaming sink. (1) `"append"`: Only the new rows in the
+   *                 streaming DataFrame/Dataset will be written to the sink. (2)
+   *                 `"complete"`: All the rows in the streaming DataFrame/Dataset will be
+   *                 written to the sink every time there is some update. (3) `"update"`:
+   *                 only the rows that were updated in the streaming DataFrame/Dataset will
+   *                 be written to the sink every time there are some updates.
+   *                 If the query doesn’t contain aggregations, it will be equivalent to
+   *                 append mode.
+   * @param awaitTermination  Waits for the termination of this query, either by
+   *                 query.stop() or by an exception. If the query has terminated with an
+   *                 exception, then the exception will be thrown. If timeout is set, it
+   *                 returns whether the query has terminated or not within the timeout
+   *                 seconds
+   * @param timeout Only relevant in combination with `awaitTermination=true`.
+   * @param checkpointLocation Checkpoint directory location. This will be used to as a reference to
+   *                 from where to resume the streaming job.
+   * @return Streaming Query object.
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   * @throws ParseException If ...
+   */
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
                                  Long timeout, String checkpointLocation)
       throws FeatureStoreException, IOException, ParseException {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, checkpointLocation, null);
   }
 
+  /**
+   * Ingest a Spark Structured Streaming Dataframe to the online feature store.
+   * This method creates a long-running Spark Streaming Query, you can control the termination of the query through the
+   * arguments
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //Define additional write options.
+   *        Map<String, String> writeOptions = ...;
+   *        //insert feature Data.
+   *        String queryName = ...;
+   *        String outputMode = ...;
+   *        String checkpointLocation = ...;
+   *        fg.insertStream(featureData, queryName, outputMode, outputMode, true, 1000, checkpointLocation,
+   *        writeOptions);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Features in Streaming Dataframe to be saved.
+   * @param queryName Specify a name for the query to make it easier to recognise in the Spark UI
+   * @param outputMode Specifies how data of a streaming DataFrame/Dataset is
+   *                 written to a streaming sink. (1) `"append"`: Only the new rows in the
+   *                 streaming DataFrame/Dataset will be written to the sink. (2)
+   *                 `"complete"`: All the rows in the streaming DataFrame/Dataset will be
+   *                 written to the sink every time there is some update. (3) `"update"`:
+   *                 only the rows that were updated in the streaming DataFrame/Dataset will
+   *                 be written to the sink every time there are some updates.
+   *                 If the query doesn’t contain aggregations, it will be equivalent to
+   *                 append mode.
+   * @param awaitTermination  Waits for the termination of this query, either by
+   *                 query.stop() or by an exception. If the query has terminated with an
+   *                 exception, then the exception will be thrown. If timeout is set, it
+   *                 returns whether the query has terminated or not within the timeout
+   *                 seconds
+   * @param timeout Only relevant in combination with `awaitTermination=true`.
+   * @param checkpointLocation Checkpoint directory location. This will be used to as a reference to
+   *                 from where to resume the streaming job.
+   * @param writeOptions Additional write options as key-value pairs.
+   * @return Streaming Query object.
+   */
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
-                                 Long timeout,  String checkpointLocation, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException {
+                                 Long timeout,  String checkpointLocation, Map<String, String> writeOptions) {
 
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, checkpointLocation, writeOptions,
         null);
   }
 
+  /**
+   * Ingest a Spark Structured Streaming Dataframe to the online feature store.
+   * This method creates a long-running Spark Streaming Query, you can control the termination of the query through the
+   * arguments
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //Define additional write options.
+   *        Map<String, String> writeOptions = ...;
+   *        JobConfiguration jobConfiguration = ...;
+   *        String queryName = ...;
+   *        String outputMode = ...;
+   *        String checkpointLocation = ...;
+   *        //insert feature Data.
+   *        fg.insertStream(featureData, queryName, outputMode, outputMode, true, 1000, checkpointLocation,
+   *        writeOptions, jobConfiguration);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Features in Streaming Dataframe to be saved.
+   * @param queryName Specify a name for the query to make it easier to recognise in the Spark UI
+   * @param outputMode Specifies how data of a streaming DataFrame/Dataset is
+   *                 written to a streaming sink. (1) `"append"`: Only the new rows in the
+   *                 streaming DataFrame/Dataset will be written to the sink. (2)
+   *                 `"complete"`: All the rows in the streaming DataFrame/Dataset will be
+   *                 written to the sink every time there is some update. (3) `"update"`:
+   *                 only the rows that were updated in the streaming DataFrame/Dataset will
+   *                 be written to the sink every time there are some updates.
+   *                 If the query doesn’t contain aggregations, it will be equivalent to
+   *                 append mode.
+   * @param awaitTermination  Waits for the termination of this query, either by
+   *                 query.stop() or by an exception. If the query has terminated with an
+   *                 exception, then the exception will be thrown. If timeout is set, it
+   *                 returns whether the query has terminated or not within the timeout
+   *                 seconds
+   * @param timeout Only relevant in combination with `awaitTermination=true`.
+   * @param checkpointLocation Checkpoint directory location. This will be used to as a reference to
+   *                 from where to resume the streaming job.
+   * @param writeOptions Additional write options as key-value pairs.
+   * @param jobConfiguration configure the Hopsworks Job used to write data into the stream feature group.
+   * @return Streaming Query object.
+   */
   public <S> Object insertStream(S featureData, String queryName, String outputMode, boolean awaitTermination,
                                  Long timeout,  String checkpointLocation, Map<String, String> writeOptions,
                                  JobConfiguration jobConfiguration) {
@@ -327,36 +859,98 @@ public class StreamFeatureGroup extends FeatureGroupBase {
         jobConfiguration);
   }
 
+  /**
+   * Drops records present in the provided DataFrame and commits it as update to this Stream Feature group.
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //Drops records of feature data and commit
+   *        fg.commitDeleteRecord(featureData);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Spark DataFrame, RDD. Feature data to be deleted.
+   * @throws FeatureStoreException If ...
+   * @throws IOException  If ...
+   * @throws ParseException  If ...
+   */
   public <S> void commitDeleteRecord(S featureData)
       throws FeatureStoreException, IOException, ParseException {
     utils.commitDelete(this, featureData, null);
   }
 
+  /**
+   * Drops records present in the provided DataFrame and commits it as update to this Stream Feature group.
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //Define additional write options.
+   *        Map<String, String> writeOptions = ...;
+   *        //Drops records of feature data and commit
+   *        fg.commitDeleteRecord(featureData, writeOptions);
+   * }
+   * </pre>
+   *
+   * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
+   * @param featureData Spark DataFrame, RDD. Feature data to be deleted.
+   * @param writeOptions Additional write options as key-value pairs.
+   * @throws FeatureStoreException If ...
+   * @throws IOException  If ...
+   * @throws ParseException  If ...
+   */
   public <S> void commitDeleteRecord(S featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     utils.commitDelete(this, featureData, writeOptions);
   }
 
   /**
-   * Return commit details.
+   * Retrieves commit timeline for this stream feature group.
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //get commit timeline.
+   *        fg.commitDetails();
+   * }
+   * </pre>
    *
    * @return commit details.
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException FeatureStoreException
-   * @throws ParseException ParseException
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   * @throws ParseException If ...
    */
   public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
     return utils.commitDetails(this, null);
   }
 
   /**
-   * Return commit details.
+   /**
+   * Retrieves commit timeline for this stream feature group.
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //get latest 10 commit details.
+   *        fg.commitDetails(10);
+   * }
+   * </pre>
    *
    * @param limit number of commits to return.
    * @return commit details.
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   * @throws ParseException If ...
    */
   public Map<Long, Map<String, String>> commitDetails(Integer limit)
       throws IOException, FeatureStoreException, ParseException {
@@ -364,13 +958,23 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Return commit details.
+   * Return commit details as of specific point in time.
    *
-   * @param wallclockTime point in time.
-   * @return commit details.
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        StreamFeatureGroup fg = ...;
+   *        //get commit details as of 20230206.
+   *        fg.commitDetails("20230206");
+   * }
+   * </pre>
+   *
+   * @param wallclockTime Datetime string. The String should be formatted in one of the
+   *     following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   * @throws ParseException If ...
    */
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
       throws IOException, FeatureStoreException, ParseException {
@@ -378,15 +982,26 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Return commit details.
+   * Return commit details as of specific point in time.
    *
-   * @param wallclockTime point in time.
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        FeatureGroup fg = ...;
+   *        //get top 10 commit details as of 20230206.
+   *        fg.commitDetails("20230206", 10);
+   * }
+   * </pre>
+   *
+   * @param wallclockTime Datetime string. The String should be formatted in one of the
+   *     following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param limit number of commits to return.
    * @return commit details.
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
-   * */
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   * @throws ParseException If ...
+   */
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     return utils.commitDetailsByWallclockTime(this, wallclockTime, limit);
