@@ -26,13 +26,13 @@ class TestPythonSparkConvertDataframe:
         python_engine = python.Engine()
 
         default_df_python = python_engine.convert_to_default_dataframe(
-            dataframe_fixture_times.copy(deep=True)
+            dataframe_fixture_times
         )
 
         spark_engine = spark.Engine()
 
         default_df_spark_from_pd = spark_engine.convert_to_default_dataframe(
-            dataframe_fixture_times.copy(deep=True)
+            dataframe_fixture_times
         )
 
         tz = spark_engine._spark_session.conf.get("spark.sql.session.timeZone")
@@ -50,13 +50,13 @@ class TestPythonSparkConvertDataframe:
         python_engine = python.Engine()
 
         default_df_python = python_engine.convert_to_default_dataframe(
-            dataframe_fixture_times.copy(deep=True)
+            dataframe_fixture_times
         )
 
         spark_engine = spark.Engine()
 
         default_df_spark_from_pd = spark_engine.convert_to_default_dataframe(
-            dataframe_fixture_times.copy(deep=True)
+            dataframe_fixture_times
         )
 
         assert (
@@ -71,13 +71,13 @@ class TestPythonSparkConvertDataframe:
         python_engine = python.Engine()
 
         default_df_python = python_engine.convert_to_default_dataframe(
-            dataframe_fixture_times.copy(deep=True)
+            dataframe_fixture_times
         )
 
         spark_engine = spark.Engine()
 
         default_df_spark_from_pd = spark_engine.convert_to_default_dataframe(
-            dataframe_fixture_times.copy(deep=True)
+            dataframe_fixture_times
         )
 
         assert (
@@ -92,13 +92,13 @@ class TestPythonSparkConvertDataframe:
         python_engine = python.Engine()
 
         default_df_python = python_engine.convert_to_default_dataframe(
-            dataframe_fixture_times.copy(deep=True)
+            dataframe_fixture_times
         )
 
         spark_engine = spark.Engine()
 
         default_df_spark_from_pd = spark_engine.convert_to_default_dataframe(
-            dataframe_fixture_times.copy(deep=True)
+            dataframe_fixture_times
         )
 
         assert (
@@ -113,13 +113,13 @@ class TestPythonSparkConvertDataframe:
         python_engine = python.Engine()
 
         default_df_python = python_engine.convert_to_default_dataframe(
-            dataframe_fixture_times.copy(deep=True)
+            dataframe_fixture_times
         )
 
         spark_engine = spark.Engine()
 
         default_df_spark_from_pd = spark_engine.convert_to_default_dataframe(
-            dataframe_fixture_times.copy(deep=True)
+            dataframe_fixture_times
         )
 
         assert (

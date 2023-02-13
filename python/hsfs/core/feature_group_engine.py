@@ -28,7 +28,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         # cache online feature store connector
         self._online_conn = None
-        self._kafka_config = None
 
     def save(
         self,
