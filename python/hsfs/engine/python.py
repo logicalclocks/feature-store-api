@@ -376,7 +376,7 @@ class Engine:
             dataframe_copy = dataframe.copy(deep=False)
 
             # convert timestamps with timezone to UTC
-            for col in dataframe.columns:
+            for col in dataframe_copy.columns:
                 if isinstance(
                     dataframe_copy[col].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
