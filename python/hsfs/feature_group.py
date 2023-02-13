@@ -1837,8 +1837,9 @@ class FeatureGroup(FeatureGroupBase):
             and be sure to finalize it. The `finalize_multi_part_insert` is a
             blocking call that returns once all rows have been transmitted.
         """
-        self._kafka_producer.flush()
-        self._kafka_producer = None
+        if self._kafka_producer is not None:
+            self._kafka_producer.flush()
+            self._kafka_producer = None
         self._feature_writers = None
         self._writer = None
         self._multi_part_insert = False
