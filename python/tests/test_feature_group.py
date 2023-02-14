@@ -379,6 +379,7 @@ class TestFeatureGroup:
     def test_save_code_true(self, mocker, dataframe_fixture_basic):
         engine = python.Engine()
         mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        mocker.patch("hsfs.engine.get_type", return_value="python")
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.insert",
             return_value=(None, None),
@@ -401,6 +402,7 @@ class TestFeatureGroup:
     def test_save_code_false(self, mocker, dataframe_fixture_basic):
         engine = python.Engine()
         mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        mocker.patch("hsfs.engine.get_type", return_value="python")
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine.insert",
             return_value=(None, None),
@@ -423,6 +425,7 @@ class TestFeatureGroup:
     def test_save_report_true_default(self, mocker, dataframe_fixture_basic):
         engine = python.Engine()
         mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        mocker.patch("hsfs.engine.get_type", return_value="python")
         mocker.patch(
             "hsfs.engine.python.Engine.convert_to_default_dataframe",
             return_value=dataframe_fixture_basic,
@@ -455,6 +458,7 @@ class TestFeatureGroup:
     def test_save_report_default_overwritable(self, mocker, dataframe_fixture_basic):
         engine = python.Engine()
         mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        mocker.patch("hsfs.engine.get_type", return_value="python")
         mocker.patch(
             "hsfs.engine.python.Engine.convert_to_default_dataframe",
             return_value=dataframe_fixture_basic,
