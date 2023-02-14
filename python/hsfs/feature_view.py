@@ -741,7 +741,8 @@ class FeatureView:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            write_options: Additional write options as key-value pairs, defaults to `{}`.
+            write_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
@@ -750,6 +751,7 @@ class FeatureView:
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
+                Defaults to `{}`.
 
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
@@ -985,7 +987,8 @@ class FeatureView:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            write_options: Additional write options as key-value pairs, defaults to `{}`.
+            write_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
@@ -994,6 +997,7 @@ class FeatureView:
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
+                Defaults to `{}`.
 
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
@@ -1226,7 +1230,8 @@ class FeatureView:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            write_options: Additional write options as key-value pairs, defaults to `{}`.
+            write_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
@@ -1235,6 +1240,7 @@ class FeatureView:
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
+                Defaults to `{}`.
 
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
@@ -1310,12 +1316,17 @@ class FeatureView:
 
         # Arguments
             training_dataset_version: training dataset version
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the save call should return only
+                  after the Hopsworks Job has finished. By default it waits.
+                Defaults to `{}`.
 
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
@@ -1396,12 +1407,16 @@ class FeatureView:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                When using the `python` engine, write_options can contain the
                 following entries:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
+                Defaults to `{}`.
 
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
@@ -1513,12 +1528,16 @@ class FeatureView:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                When using the `python` engine, write_options can contain the
                 following entries:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
+                Defaults to `{}`.
 
         # Returns
             (X_train, X_test, y_train, y_test):
@@ -1666,12 +1685,16 @@ class FeatureView:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                When using the `python` engine, write_options can contain the
                 following entries:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
+                Defaults to `{}`.
 
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
@@ -1773,12 +1796,12 @@ class FeatureView:
 
         # Arguments
             training_dataset_version: training dataset version
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
-                following entries:
-                * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
-                  to configure the Hopsworks Job used to compute the training dataset.
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                Defaults to `{}`.
 
         # Returns
             (X, y): Tuple of dataframe of features and labels
@@ -1811,12 +1834,12 @@ class FeatureView:
 
         # Arguments
             training_dataset_version: training dataset version
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
-                following entries:
-                * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
-                  to configure the Hopsworks Job used to compute the training dataset.
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                Defaults to `{}`.
 
         # Returns
             (X_train, X_test, y_train, y_test):
@@ -1853,12 +1876,12 @@ class FeatureView:
 
         # Arguments
             training_dataset_version: training dataset version
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
-                following entries:
-                * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
-                  to configure the Hopsworks Job used to compute the training dataset.
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                Defaults to `{}`.
 
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
