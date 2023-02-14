@@ -676,7 +676,7 @@ public class SparkEngine {
   }
 
   public void setupConnectorHadoopConf(StorageConnector storageConnector)
-          throws FeatureStoreException, IOException {
+          throws IOException {
     if (storageConnector == null) {
       return;
     }

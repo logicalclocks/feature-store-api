@@ -144,7 +144,8 @@ public class FeatureView {
    * Delete current feature view, all associated metadata and training data.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -153,8 +154,8 @@ public class FeatureView {
    * }
    * </pre>
    *
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
    */
   public void delete() throws FeatureStoreException, IOException {
     LOGGER.warn("JobWarning: All jobs associated to feature view `" + name + "`, version `"
@@ -167,7 +168,8 @@ public class FeatureView {
    * which cannot be retrieved due to a corrupted query for example.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -179,8 +181,8 @@ public class FeatureView {
    * @param featureStore feature store metadata object.
    * @param featureViewName Name of feature view.
    * @param featureViewVersion Version of feature view.
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
    */
   public static void clean(FeatureStore featureStore, String featureViewName, Integer featureViewVersion)
       throws FeatureStoreException, IOException {
@@ -191,7 +193,8 @@ public class FeatureView {
    * Update the description of the feature view.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -204,8 +207,8 @@ public class FeatureView {
    *
    * @param other Updated FeatureView metadata Object.
    * @return FeatureView  metadata Object.
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
    */
   public FeatureView update(FeatureView other) throws FeatureStoreException, IOException {
     return featureViewEngine.update(other);
@@ -215,7 +218,8 @@ public class FeatureView {
    * Initialise feature view to retrieve feature vector from online feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -224,21 +228,21 @@ public class FeatureView {
    * }
    * </pre>
    *
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
-   * @throws SQLException If ...
-   * @throws ClassNotFoundException If ...
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
    */
   public void initServing() throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     vectorServer.initServing(this, false);
   }
 
-  // TODO (davit): it's not compatible to
   /**
    * Initialise feature view to retrieve feature vector from online feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -251,10 +255,10 @@ public class FeatureView {
    * @param external If set to `true`, the connection to the  online feature store is established using the same host as
    *                 for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
    *                 If set to False, the online feature store storage connector is used which relies on the private IP.
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
-   * @throws SQLException If ...
-   * @throws ClassNotFoundException If ...
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
    */
   @Deprecated
   public void initServing(Boolean batch, Boolean external)
@@ -266,7 +270,8 @@ public class FeatureView {
    * Initialise feature view to retrieve feature vector from offline feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -286,7 +291,8 @@ public class FeatureView {
    * Returns assembled feature vector from online feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -300,10 +306,10 @@ public class FeatureView {
    * @param entry dictionary of feature group primary key and values provided by serving application.
    * @return List of feature values related to provided primary keys, ordered according to positions of this features
    *         in the feature view query.
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
-   * @throws SQLException If ...
-   * @throws ClassNotFoundException If ...
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
    */
   @JsonIgnore
   public List<Object> getFeatureVector(Map<String, Object> entry)
@@ -315,7 +321,8 @@ public class FeatureView {
    * Returns assembled feature vector from online feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -333,10 +340,10 @@ public class FeatureView {
    *                 Defaults to True if connection to Hopsworks is established from external environment
    * @return List of feature values related to provided primary keys, ordered according to positions of this features
    *         in the feature view query.
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
-   * @throws SQLException If ...
-   * @throws ClassNotFoundException If ...
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
    */
   @JsonIgnore
   public List<Object> getFeatureVector(Map<String, Object> entry, boolean external)
@@ -345,12 +352,12 @@ public class FeatureView {
   }
 
 
-  // TODO (davit): this is not compatible with python API
   /**
    * Returns assembled feature vectors in batches from online feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -364,10 +371,10 @@ public class FeatureView {
    * @param entry a list of dictionary of feature group primary key and values provided by serving application.
    * @return List of lists of feature values related to provided primary keys, ordered according to
    *         positions of this features in the feature view query.
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
-   * @throws SQLException If ...
-   * @throws ClassNotFoundException If ...
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
    */
   @JsonIgnore
   public List<List<Object>> getFeatureVectors(Map<String, List<Object>> entry)
@@ -375,12 +382,12 @@ public class FeatureView {
     return vectorServer.getFeatureVectors(this, entry);
   }
 
-  // TODO (davit): this is not compatible with python API
   /**
    *Returns assembled feature vectors in batches from online feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -397,10 +404,10 @@ public class FeatureView {
    *                 If set to False, the online feature store storage connector is used which relies on the private IP.
    * @return List of lists of feature values related to provided primary keys, ordered according to
    *         positions of this features in the feature view query.
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
-   * @throws SQLException If ...
-   * @throws ClassNotFoundException If ...
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
    */
   @JsonIgnore
   public List<List<Object>> getFeatureVectors(Map<String, List<Object>> entry, boolean external)
@@ -412,7 +419,8 @@ public class FeatureView {
    * Get a query string of the batch query.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -422,9 +430,10 @@ public class FeatureView {
    * </pre>
    *
    * @return batch query
-   * @throws FeatureStoreException  If ...
-   * @throws IOException  If ...
-   * @throws ParseException  If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
+   *                               date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse strings dates to date types.
    */
   @JsonIgnore
   public String getBatchQuery() throws FeatureStoreException, IOException, ParseException {
@@ -435,7 +444,8 @@ public class FeatureView {
    * Get a query string of the batch query.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -449,9 +459,10 @@ public class FeatureView {
    * @param endTime Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
    *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @return batch query
-   * @throws FeatureStoreException  If ...
-   * @throws IOException  If ...
-   * @throws ParseException  If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided `startTime`/`endTime` date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided `startTime`/`endTime` strings to date types.
    */
   @JsonIgnore
   public String getBatchQuery(String startTime, String endTime)
@@ -467,7 +478,8 @@ public class FeatureView {
    * Get a batch of data from an event time interval from the offline feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -480,10 +492,11 @@ public class FeatureView {
    *                 `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param endTime Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
    *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
-   * @return Spark dataframe of batch data
-   * @throws FeatureStoreException  If ...
-   * @throws IOException  If ...
-   * @throws ParseException  If ...
+   * @return Spark dataframe of batch data.
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided `startTime`/`endTime` date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided `startTime`/`endTime` strings to date types.
    */
   @JsonIgnore
   public Dataset<Row> getBatchData(String startTime, String endTime)
@@ -495,7 +508,8 @@ public class FeatureView {
    * Get a batch of data from an event time interval from the offline feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -510,9 +524,10 @@ public class FeatureView {
    *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param readOptions Additional read options as key/value pairs.
    * @return Spark dataframe of batch data
-   * @throws FeatureStoreException  If ...
-   * @throws IOException  If ...
-   * @throws ParseException  If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided `startTime`/`endTime` date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided `startTime`/`endTime` strings to date types.
    */
   @JsonIgnore
   public Dataset<Row> getBatchData(String startTime, String endTime, Map<String, String> readOptions)
@@ -532,7 +547,8 @@ public class FeatureView {
    * tag can be any valid json - primitives, arrays or json objects.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -546,8 +562,8 @@ public class FeatureView {
    *     name of the tag
    * @param value
    *     value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks;
+   * @throws IOException Generic IO exception.
    */
   public void addTag(String name, Object value) throws FeatureStoreException, IOException {
     featureViewEngine.addTag(this, name, value);
@@ -557,7 +573,8 @@ public class FeatureView {
    * Get all tags of the feature view.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -567,8 +584,8 @@ public class FeatureView {
    * </pre>
    *
    * @return a map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks;
+   * @throws IOException Generic IO exception.
    */
   @JsonIgnore
   public Map<String, Object> getTags() throws FeatureStoreException, IOException {
@@ -579,7 +596,8 @@ public class FeatureView {
    * Get a single tag value of the feature view.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -591,8 +609,8 @@ public class FeatureView {
    * @param name
    *     name of the tag
    * @return The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks;
+   * @throws IOException Generic IO exception.
    */
   @JsonIgnore
   public Object getTag(String name) throws FeatureStoreException, IOException {
@@ -603,7 +621,8 @@ public class FeatureView {
    * Delete a tag of the feature view.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -613,8 +632,8 @@ public class FeatureView {
    * </pre>
    *
    * @param name name of the tag to be deleted
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks;
+   * @throws IOException Generic IO exception.
    */
   public void deleteTag(String name) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTag(this, name);
@@ -625,7 +644,8 @@ public class FeatureView {
    * data can be retrieved by calling `feature_view.getTrainingData()`.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -645,9 +665,10 @@ public class FeatureView {
    *                    Data Scientists
    * @param dataFormat  The data format used to save the training dataset.
    * @return Training dataset version
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided `startTime`/`endTime` date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided `startTime`/`endTime` strings to date types.
    */
   public Integer createTrainingData(
       String startTime, String endTime, String description, DataFormat dataFormat
@@ -669,7 +690,8 @@ public class FeatureView {
    * data can be retrieved by calling `feature_view.getTrainingData()`.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -710,9 +732,10 @@ public class FeatureView {
    * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
    *                     in `getBatchData`.
    * @return Training dataset version.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided `startTime`/`endTime` date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided `startTime`/`endTime` strings to date types.
    */
   public Integer createTrainingData(
       String startTime, String endTime, String description, DataFormat dataFormat,
@@ -745,7 +768,8 @@ public class FeatureView {
    * calling `feature_view.getTrainTestSplit` method.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -775,9 +799,10 @@ public class FeatureView {
    *                    Data Scientists
    * @param dataFormat  The data format used to save the training dataset.
    * @return Training dataset version
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
    */
   public Integer createTrainTestSplit(
       Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
@@ -807,7 +832,8 @@ public class FeatureView {
    * calling `feature_view.getTrainTestSplit` method.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -856,9 +882,10 @@ public class FeatureView {
    * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
    *                     in `getBatchData`.
    * @return Training dataset version
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
    */
   public Integer createTrainTestSplit(
       Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
@@ -897,7 +924,8 @@ public class FeatureView {
    * retrieved by calling `feature_view.getTrainValidationTestSplit`.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -935,9 +963,10 @@ public class FeatureView {
    *                    Data Scientists
    * @param dataFormat  The data format used to save the training dataset.
    * @return Training dataset version
-   * @throws IOException If ...
-   * @throws FeatureStoreException  If ...
-   * @throws ParseException  If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
    */
   public Integer createTrainValidationTestSplit(
       Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
@@ -970,7 +999,8 @@ public class FeatureView {
    * retrieved by calling `feature_view.getTrainValidationTestSplit`.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1037,9 +1067,10 @@ public class FeatureView {
    * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
    *                     in `getBatchData`.
    * @return Training dataset version.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
    */
   public Integer createTrainValidationTestSplit(
       Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
@@ -1092,7 +1123,8 @@ public class FeatureView {
    * Recreate a training dataset.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1105,8 +1137,8 @@ public class FeatureView {
    *
    * @param version training dataset version.
    * @param writeOptions Additional read options as key-value pairs.
-   * @throws FeatureStoreException If ...
-   * @throws IOException  If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks,
+   * @throws IOException Generic IO exception.
    */
   public void recreateTrainingDataset(Integer version, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
@@ -1117,7 +1149,8 @@ public class FeatureView {
    * Get training data created by `featureView.createTrainingData` or `featureView.trainingData`.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1128,9 +1161,10 @@ public class FeatureView {
    *
    * @param version training dataset version.
    * @return List of dataframe of features and labels
-   * @throws IOException If ...
-   * @throws FeatureStoreException  If ...
-   * @throws ParseException  If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
+   *                               date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse strings dates to date types.
    */
   public List<Dataset<Row>> getTrainingData(
       Integer version
@@ -1142,7 +1176,8 @@ public class FeatureView {
    * Get training data created by `featureView.createTrainingData` or `featureView.trainingData`.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1156,9 +1191,10 @@ public class FeatureView {
    * @param version training dataset version.
    * @param readOptions Additional read options as key/value pairs.
    * @return List of dataframe of features and labels
-   * @throws IOException If ...
-   * @throws FeatureStoreException  If ...
-   * @throws ParseException  If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
+   *                               date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse strings dates to date types.
    */
   public List<Dataset<Row>> getTrainingData(
       Integer version, Map<String, String> readOptions
@@ -1172,7 +1208,8 @@ public class FeatureView {
    * Get training data created by `featureView.createTrainTestSplit`  or `featureView.trainTestSplit`.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1183,9 +1220,10 @@ public class FeatureView {
    *
    * @param version training dataset version.
    * @return List of dataframe of features and labels
-   * @throws IOException If ...
-   * @throws FeatureStoreException  If ...
-   * @throws ParseException  If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
+   *                               date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse strings dates to date types.
    */
   public List<Dataset<Row>> getTrainTestSplit(
       Integer version
@@ -1197,7 +1235,8 @@ public class FeatureView {
    * Get training data created by `featureView.createTrainTestSplit`  or `featureView.trainTestSplit`.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1211,9 +1250,10 @@ public class FeatureView {
    * @param version training dataset version.
    * @param readOptions Additional read options as key/value pairs.
    * @return List of dataframe of features and labels
-   * @throws IOException If ...
-   * @throws FeatureStoreException  If ...
-   * @throws ParseException  If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
+   *                               date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse strings dates to date types.
    */
   public List<Dataset<Row>> getTrainTestSplit(
       Integer version, Map<String, String> readOptions
@@ -1228,7 +1268,8 @@ public class FeatureView {
    * Get training data created by `featureView.createTrainValidationTestSplit` or featureView.trainValidationTestSplit`.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1239,9 +1280,10 @@ public class FeatureView {
    *
    * @param version training dataset version
    * @return List of dataframe of features and labels
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
+   *                               date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse strings dates to date types.
    */
   public List<Dataset<Row>> getTrainValidationTestSplit(
       Integer version
@@ -1253,7 +1295,8 @@ public class FeatureView {
    * Get training data created by `featureView.createTrainValidationTestSplit` or featureView.trainValidationTestSplit`.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1267,9 +1310,10 @@ public class FeatureView {
    * @param version training dataset version
    * @param readOptions Additional read options as key/value pairs.
    * @return List of dataframe of features and labels
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
+   *                               date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse strings dates to date types.
    */
   public List<Dataset<Row>> getTrainValidationTestSplit(
       Integer version, Map<String, String> readOptions
@@ -1286,7 +1330,8 @@ public class FeatureView {
    * recreated by calling `featureView.getTrainingData` with the metadata created.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1305,9 +1350,10 @@ public class FeatureView {
    * @param description A string describing the contents of the training dataset to  improve discoverability for
    *                    Data Scientists
    * @return List of dataframe of features and labels
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats.
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
    */
   public List<Dataset<Row>> trainingData(
       String startTime, String endTime, String description
@@ -1330,7 +1376,8 @@ public class FeatureView {
    * recreated by calling `featureView.getTrainingData` with the metadata created.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1366,9 +1413,10 @@ public class FeatureView {
    * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
    *                     in `getBatchData`.
    * @return List of dataframe of features and labels
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
    */
   public List<Dataset<Row>> trainingData(
       String startTime, String endTime, String description,
@@ -1398,7 +1446,8 @@ public class FeatureView {
    * `featureView.getTrainTestSplit` with the metadata created.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1430,9 +1479,10 @@ public class FeatureView {
    * @param description A string describing the contents of the training dataset to  improve discoverability for
    *                    Data Scientists
    * @return List of Spark Dataframes containing training dataset splits.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
    */
   public List<Dataset<Row>> trainTestSplit(
       Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
@@ -1465,7 +1515,8 @@ public class FeatureView {
    * `feature_view.getTrainTestSplit` with the metadata created.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1512,9 +1563,10 @@ public class FeatureView {
    * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
    *                     in `getBatchData`.
    * @return List of Spark Dataframes containing training dataset splits.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
    */
   public List<Dataset<Row>> trainTestSplit(
       Float testSize, String trainStart, String trainEnd, String testStart, String testEnd,
@@ -1552,7 +1604,8 @@ public class FeatureView {
    * calling `feature_view.getTrainValidationTestSplit` with the metadata created.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1589,9 +1642,10 @@ public class FeatureView {
    * @param description A string describing the contents of the training dataset to  improve discoverability for
    *                    Data Scientists
    * @return List of Spark Dataframes containing training dataset splits.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
    */
   public List<Dataset<Row>> trainValidationTestSplit(
       Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
@@ -1627,7 +1681,8 @@ public class FeatureView {
    * calling `feature_view.get_train_validation_test_split` with the metadata created.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1682,9 +1737,10 @@ public class FeatureView {
    * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
    *                     in `getBatchData`.
    * @return List of Spark Dataframes containing training dataset splits.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
+   *                               provided date strings to date formats;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided date strings to date types.
    */
   public List<Dataset<Row>> trainValidationTestSplit(
       Float validationSize, Float testSize, String trainStart, String trainEnd, String validationStart,
@@ -1754,7 +1810,8 @@ public class FeatureView {
    * Delete a training dataset (data only).
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1764,8 +1821,8 @@ public class FeatureView {
    * </pre>
    *
    * @param version Version of the training dataset to be removed.
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks;
+   * @throws IOException Generic IO exception.
    */
   public void purgeTrainingData(Integer version) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingDatasetOnly(this, version);
@@ -1775,7 +1832,8 @@ public class FeatureView {
    * Delete all training datasets in this feature view (data only).
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1784,8 +1842,8 @@ public class FeatureView {
    * }
    * </pre>
    *
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks;
+   * @throws IOException Generic IO exception.
    */
   public void purgeAllTrainingData() throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingDatasetOnly(this);
@@ -1795,7 +1853,8 @@ public class FeatureView {
    * Delete a training dataset. This will delete both metadata and training data.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1805,8 +1864,8 @@ public class FeatureView {
    * </pre>
    *
    * @param version Version of the training dataset to be removed.
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks;
+   * @throws IOException Generic IO exception.
    */
   public void deleteTrainingDataset(Integer version) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingData(this, version);
@@ -1816,7 +1875,8 @@ public class FeatureView {
    * Delete all training datasets. This will delete both metadata and training data.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1825,8 +1885,8 @@ public class FeatureView {
    * }
    * </pre>
    *
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks;
+   * @throws IOException Generic IO exception.
    */
   public void deleteAllTrainingDatasets() throws FeatureStoreException, IOException {
     featureViewEngine.deleteTrainingData(this);
@@ -1836,7 +1896,8 @@ public class FeatureView {
    * Add name/value tag to the training dataset.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1849,8 +1910,8 @@ public class FeatureView {
    * @param version training dataset version
    * @param name name of the tag
    * @param value value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
    */
   public void addTrainingDatasetTag(Integer version, String name, Object value) throws FeatureStoreException,
       IOException {
@@ -1861,7 +1922,8 @@ public class FeatureView {
    * Get all tags of the training dataset.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1872,8 +1934,8 @@ public class FeatureView {
    *
    * @param version training dataset version
    * @return a map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException  If ...
-   * @throws IOException  If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
    */
   @JsonIgnore
   public Map<String, Object> getTrainingDatasetTags(Integer version) throws FeatureStoreException, IOException {
@@ -1884,7 +1946,8 @@ public class FeatureView {
    * Get a single tag value of the training dataset.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1896,8 +1959,8 @@ public class FeatureView {
    * @param version training dataset version
    * @param name name of the tag
    * @return The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
    */
   @JsonIgnore
   public Object getTrainingDatasetTag(Integer version, String name) throws FeatureStoreException, IOException {
@@ -1908,7 +1971,8 @@ public class FeatureView {
    * Delete a tag of the training dataset.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1919,8 +1983,8 @@ public class FeatureView {
    *
    * @param version tag version
    * @param name name of the tag to be deleted
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
    */
   public void deleteTrainingDatasetTag(Integer version, String name) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTag(this, name, version);
@@ -1930,7 +1994,8 @@ public class FeatureView {
    * Get set of primary key names that is used as keys in input dict object for `get_serving_vector` method.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature view handle
    *        FeatureView fv = ...;
@@ -1940,10 +2005,10 @@ public class FeatureView {
    * </pre>
    *
    * @return Set of serving keys
-   * @throws SQLException If ...
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ClassNotFoundException If ...
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
    */
   @JsonIgnore
   public HashSet<String> getPrimaryKeys()

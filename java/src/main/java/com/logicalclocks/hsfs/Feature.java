@@ -133,6 +133,23 @@ public class Feature {
     this.description = description;
   }
 
+  /**
+   * Returns true if the feature has a complex type.
+   *
+   * <pre>
+   * {@code //get feature store handle
+   *        FeatureStore fs = ...;
+   *        //get feature group handle
+   *        FeatureGroup fg = ...;
+   *        // get feature
+   *        Feature ft = fg.getFeature("feature_name");
+   *        // check if the feature has a complex type.
+   *        ft.isComplex();
+   * }
+   * </pre>
+   *
+   * @return boolean
+   */
   @JsonIgnore
   public boolean isComplex() {
     return Constants.COMPLEX_FEATURE_TYPES.stream().anyMatch(c -> type.toUpperCase().startsWith(c));
@@ -198,6 +215,7 @@ public class Feature {
    * @deprecated
    * `in` method is deprecated. Use `isin` instead.
    */
+  @Deprecated
   public Filter in(Collection<?> collection) {
     return isin(collection);
   }

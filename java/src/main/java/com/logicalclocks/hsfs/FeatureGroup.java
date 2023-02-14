@@ -122,7 +122,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * Reads the feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -132,8 +133,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * </pre>
    *
    * @return Spark DataFrame containing the feature data.
-   * @throws FeatureStoreException If ...
-   * @throws IOException  If ...
+   * @throws FeatureStoreException In case it cannot run read query on storage and/or no commit information was
+   *                               found for this feature group;
+   * @throws IOException Generic IO exception.
    */
   public Dataset<Row> read() throws FeatureStoreException, IOException {
     return read(false, null);
@@ -144,7 +146,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * Reads the feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -157,8 +160,9 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * @param online Set `online` to `true` to read from the online storage.
    * @return Spark DataFrame containing the feature data.
-   * @throws FeatureStoreException If ...
-   * @throws IOException  If ...
+   * @throws FeatureStoreException In case it cannot run read query on storage and/or no commit information was found
+   *                               for this feature group;
+   * @throws IOException Generic IO exception.
    */
   public Dataset<Row> read(boolean online) throws FeatureStoreException, IOException {
     return (Dataset<Row>) selectAll().read(online);
@@ -169,7 +173,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * Reads the feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -182,8 +187,9 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * @param readOptions Additional read options as key/value pairs.
    * @return Spark DataFrame containing the feature data.
-   * @throws FeatureStoreException If ...
-   * @throws IOException  If ...
+   * @throws FeatureStoreException In case it cannot run read query on storage and/or no commit information was found
+   *                               for this feature group;
+   * @throws IOException Generic IO exception.
    */
   public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return read(false, readOptions);
@@ -194,7 +200,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * Reads the feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -210,8 +217,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * @param online Set `online` to `true` to read from the online storage.
    * @param readOptions Additional read options as key/value pairs.
    * @return Spark DataFrame containing the feature data.
-   * @throws FeatureStoreException If ...
-   * @throws IOException  If ...
+   * @throws FeatureStoreException In case it cannot run read query on storage and/or no
+   *                               commit information was found for this feature group;
+   * @throws IOException  Generic IO exception.
    */
   public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return (Dataset<Row>) selectAll().read(online, readOptions);
@@ -221,7 +229,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * Reads Feature group into a dataframe at a specific point in time.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -233,9 +242,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * @param wallclockTime Read data as of this point in time. Datetime string. The String should be formatted in one of
    *                      the following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @return Spark DataFrame containing feature data.
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException In case it's unable to identify format of the provided wallclockTime date format
+   * @throws IOException  Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided wallclockTime to date type.
    */
   public Dataset<Row> read(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
     return (Dataset<Row>) selectAll().asOf(wallclockTime).read(false, null);
@@ -245,7 +254,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * Reads Feature group into a dataframe at a specific point in time.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -260,9 +270,9 @@ public class FeatureGroup extends FeatureGroupBase {
    *     following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param readOptions Additional read options as key-value pairs.
    * @return Spark DataFrame containing feature data.
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
+   * @throws FeatureStoreException In case it's unable to identify format of the provided wallclockTime date format
+   * @throws IOException  Generic IO exception.
+   * @throws ParseException In case it's unable to parse provided wallclockTime to date type.
    */
   public Dataset<Row> read(String wallclockTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
@@ -288,7 +298,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * or used further to perform joins or construct a training dataset.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -300,8 +311,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * @param wallclockTime Read data as of this point in time. Datetime string. The String should be formatted in one of
    *                      the following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @return Query. The query object with the applied time travel condition
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException In case it's unable to identify format of the provided wallclockTime date format
+   * @throws ParseException In case it's unable to parse provided wallclockTime to date type.
    */
   public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
     return selectAll().asOf(wallclockTime);
@@ -314,7 +325,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * or used further to perform joins or construct a training dataset.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -328,8 +340,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * @param excludeUntil Exclude commits until this point in time. Datetime string. The String should be formatted in
    *                     one of the following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @return Query. The query object with the applied time travel condition
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException In case it's unable to identify format of the provided wallclockTime date format.
+   * @throws ParseException In case it's unable to parse provided wallclockTime to date type.
    */
   public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
     return selectAll().asOf(wallclockTime, excludeUntil);
@@ -339,7 +351,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * Show the first `n` rows of the feature group.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -349,8 +362,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * </pre>
    *
    * @param numRows Number of rows to show.
-   * @throws FeatureStoreException if ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException In case it cannot run read query on storage and/or no commit information was found
+   *                               for this feature group;
+   * @throws IOException Generic IO exception.
    */
   public void show(int numRows) throws FeatureStoreException, IOException {
     show(numRows, false);
@@ -360,7 +374,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * Show the first `n` rows of the feature group.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -371,8 +386,9 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * @param numRows Number of rows to show.
    * @param online If `true` read from online feature store.
-   * @throws FeatureStoreException if ...
-   * @throws IOException If ...
+   * @throws FeatureStoreException In case it cannot run read query on storage and/or no commit information was found
+   *                               for this feature group;
+   * @throws IOException Generic IO exception.
    */
   public void show(int numRows, boolean online) throws FeatureStoreException, IOException {
     read(online).show(numRows);
@@ -411,7 +427,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -421,9 +438,10 @@ public class FeatureGroup extends FeatureGroupBase {
    * </pre>
    *
    * @param featureData spark DataFrame, RDD. Features to be saved.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
+   *                               can't reconcile HUDI schema.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public void insert(Dataset<Row> featureData) throws IOException, FeatureStoreException, ParseException {
     insert(featureData, null, false);
@@ -438,7 +456,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -451,9 +470,10 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * @param featureData Spark DataFrame, RDD. Features to be saved.
    * @param writeOptions Additional write options as key-value pairs.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
+   *                               can't reconcile HUDI schema.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public void insert(Dataset<Row> featureData,  Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
@@ -474,7 +494,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -489,9 +510,10 @@ public class FeatureGroup extends FeatureGroupBase {
    * @param featureData Spark DataFrame, RDD. Features to be saved.
    * @param storage Overwrite default behaviour, write to offline storage only with `Storage.OFFLINE` or online only
    *                with `Storage.ONLINE`
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
+   *                               can't reconcile HUDI schema.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public void insert(Dataset<Row> featureData, Storage storage)
       throws IOException, FeatureStoreException, ParseException {
@@ -512,7 +534,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -523,9 +546,10 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * @param featureData Spark DataFrame, RDD. Features to be saved.
    * @param overwrite Drop all data in the feature group before inserting new data. This does not affect metadata.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
+   *                               can't reconcile HUDI schema.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public void insert(Dataset<Row> featureData, boolean overwrite)
       throws IOException, FeatureStoreException, ParseException {
@@ -546,7 +570,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -562,9 +587,10 @@ public class FeatureGroup extends FeatureGroupBase {
    * @param storage Overwrite default behaviour, write to offline storage only with `Storage.OFFLINE` or online only
    *                with `Storage.ONLINE`.
    * @param overwrite Drop all data in the feature group before inserting new data. This does not affect metadata.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
+   *                               can't reconcile HUDI schema.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite)
       throws IOException, FeatureStoreException, ParseException {
@@ -585,7 +611,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -599,9 +626,10 @@ public class FeatureGroup extends FeatureGroupBase {
    * @param featureData Spark DataFrame, RDD. Features to be saved.
    * @param overwrite Drop all data in the feature group before inserting new data. This does not affect metadata.
    * @param writeOptions Additional write options as key-value pairs.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
+   *                               can't reconcile HUDI schema.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
@@ -622,7 +650,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -638,9 +667,10 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * @param featureData Spark DataFrame, RDD. Features to be saved.
    * @param operation   commit operation type, INSERT or UPSERT.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
+   *                               can't reconcile HUDI schema.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public void insert(Dataset<Row> featureData, HudiOperationType operation)
       throws FeatureStoreException, IOException, ParseException {
@@ -661,7 +691,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -679,9 +710,10 @@ public class FeatureGroup extends FeatureGroupBase {
    * @param overwrite Drop all data in the feature group before inserting new data. This does not affect metadata.
    * @param operation   commit operation type, INSERT or UPSERT.
    * @param writeOptions Additional write options as key-value pairs.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
+   *                               can't reconcile HUDI schema.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, HudiOperationType operation,
                      Map<String, String> writeOptions)
@@ -760,7 +792,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * only be used on time travel enabled feature groups.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -770,9 +803,10 @@ public class FeatureGroup extends FeatureGroupBase {
    * </pre>
    *
    * @param featureData Spark DataFrame, RDD. Feature data to be deleted.
-   * @throws FeatureStoreException If ...
-   * @throws IOException  If ...
-   * @throws ParseException  If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or no commit information was found for
+   *                               this feature group;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public void commitDeleteRecord(Dataset<Row> featureData)
       throws FeatureStoreException, IOException, ParseException {
@@ -797,9 +831,10 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * @param featureData Spark DataFrame, RDD. Feature data to be deleted.
    * @param writeOptions Additional write options as key-value pairs.
-   * @throws FeatureStoreException If ...
-   * @throws IOException  If ...
-   * @throws ParseException  If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or no commit information was found for
+   *                               this feature group;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public void commitDeleteRecord(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
@@ -811,7 +846,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * groups.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -821,9 +857,10 @@ public class FeatureGroup extends FeatureGroupBase {
    * </pre>
    *
    * @return commit details.
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or no commit information was found for
+   *                               this feature group;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
     return utils.commitDetails(this, null);
@@ -834,7 +871,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * groups.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -845,9 +883,10 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * @param limit number of commits to return.
    * @return commit details.
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or no commit information was found for
+   *                               this feature group;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public Map<Long, Map<String, String>> commitDetails(Integer limit)
       throws IOException, FeatureStoreException, ParseException {
@@ -870,9 +909,11 @@ public class FeatureGroup extends FeatureGroupBase {
    * @param wallclockTime Datetime string. The String should be formatted in one of the
    *     following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @return commit details.
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks, unable to identify format of the
+   *                               provided wallclockTime date format and/or no commit information was found for
+   *                               this feature group;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
       throws IOException, FeatureStoreException, ParseException {
@@ -897,9 +938,11 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * @param limit number of commits to return.
    * @return commit details.
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks, unable to identify format of the
+   *                               provided wallclockTime date format and/or no commit information was found for
+   *                               this feature group;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
@@ -936,7 +979,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * for data in the offline storage of the feature group.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code
+   *        //get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
@@ -948,9 +992,11 @@ public class FeatureGroup extends FeatureGroupBase {
    * @param wallclockTime Datetime string. The String should be formatted in one of the
    *     following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @return statistics object of computed statistics
-   * @throws FeatureStoreException If ...
-   * @throws IOException If ...
-   * @throws ParseException If ...
+   * @throws FeatureStoreException If Client is not connected to Hopsworks, unable to identify format of the
+   *                               provided wallclockTime date format and/or no commit information was found for
+   *                               this feature group;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse HUDI and or statistics commit date string to date type.
    */
   public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
     if (statisticsConfig.getEnabled()) {

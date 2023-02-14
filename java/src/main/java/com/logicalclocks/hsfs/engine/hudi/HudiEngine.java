@@ -211,7 +211,7 @@ public class HudiEngine {
 
   private Map<String, String> setupHudiWriteOpts(FeatureGroupBase featureGroup, HudiOperationType operation,
                                                 Map<String, String> writeOptions)
-      throws IOException, FeatureStoreException {
+      throws FeatureStoreException {
     Map<String, String> hudiArgs = new HashMap<String, String>();
 
     hudiArgs.put(HUDI_TABLE_STORAGE_TYPE, HUDI_COPY_ON_WRITE);
