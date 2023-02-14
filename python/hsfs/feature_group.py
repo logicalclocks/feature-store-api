@@ -1683,7 +1683,6 @@ class FeatureGroup(FeatureGroupBase):
             write_options=write_options,
             validation_options={"save_report": True, **validation_options},
         )
-
         if save_code and (
             ge_report is None or ge_report.ingestion_result == "INGESTED"
         ):
