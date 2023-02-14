@@ -315,102 +315,6 @@ class TestFeatureGroup:
         assert len(features) == 2
         assert set([f.name for f in features]) == {"f1", "f2"}
 
-
-class TestExternalFeatureGroup:
-    def test_from_response_json(self, backend_fixtures):
-        # Arrange
-        json = backend_fixtures["external_feature_group"]["get"]["response"]
-
-        # Act
-        fg = feature_group.ExternalFeatureGroup.from_response_json(json)
-
-        # Assert
-        assert isinstance(fg.storage_connector, storage_connector.StorageConnector)
-        assert fg.query == "Select * from "
-        assert fg.data_format == "HUDI"
-        assert fg.path == "test_path"
-        assert fg.options == {"test_name": "test_value"}
-        assert fg.name == "external_fg_test"
-        assert fg.version == 1
-        assert fg.description == "test description"
-        assert fg.primary_key == ["intt"]
-        assert fg._feature_store_id == 67
-        assert fg._feature_store_name == "test_project_featurestore"
-        assert fg.created == "2022-08-16T07:19:12Z"
-        assert isinstance(fg.creator, user.User)
-        assert fg.id == 14
-        assert len(fg.features) == 3
-        assert isinstance(fg.features[0], feature.Feature)
-        assert (
-            fg.location
-            == "hopsfs://rpc.namenode.service.consul:8020/apps/hive/warehouse/test_project_featurestore.db/external_fg_test_1"
-        )
-        assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
-        assert fg.event_time == "datet"
-        assert isinstance(fg.expectation_suite, expectation_suite.ExpectationSuite)
-
-    def test_from_response_json_list(self, backend_fixtures):
-        # Arrange
-        json = backend_fixtures["external_feature_group"]["get_list"]["response"]
-
-        # Act
-        fg_list = feature_group.ExternalFeatureGroup.from_response_json(json)
-
-        # Assert
-        assert len(fg_list) == 1
-        fg = fg_list[0]
-        assert isinstance(fg.storage_connector, storage_connector.StorageConnector)
-        assert fg.query == "Select * from "
-        assert fg.data_format == "HUDI"
-        assert fg.path == "test_path"
-        assert fg.options == {"test_name": "test_value"}
-        assert fg.name == "external_fg_test"
-        assert fg.version == 1
-        assert fg.description == "test description"
-        assert fg.primary_key == ["intt"]
-        assert fg._feature_store_id == 67
-        assert fg._feature_store_name == "test_project_featurestore"
-        assert fg.created == "2022-08-16T07:19:12Z"
-        assert isinstance(fg.creator, user.User)
-        assert fg.id == 14
-        assert len(fg.features) == 3
-        assert isinstance(fg.features[0], feature.Feature)
-        assert (
-            fg.location
-            == "hopsfs://rpc.namenode.service.consul:8020/apps/hive/warehouse/test_project_featurestore.db/external_fg_test_1"
-        )
-        assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
-        assert fg.event_time == "datet"
-        assert isinstance(fg.expectation_suite, expectation_suite.ExpectationSuite)
-
-    def test_from_response_json_basic_info(self, backend_fixtures):
-        # Arrange
-        json = backend_fixtures["external_feature_group"]["get_basic_info"]["response"]
-
-        # Act
-        fg = feature_group.ExternalFeatureGroup.from_response_json(json)
-
-        # Assert
-        assert isinstance(fg.storage_connector, storage_connector.StorageConnector)
-        assert fg.query is None
-        assert fg.data_format is None
-        assert fg.path is None
-        assert fg.options is None
-        assert fg.name is None
-        assert fg.version is None
-        assert fg.description is None
-        assert fg.primary_key == []
-        assert fg._feature_store_id is None
-        assert fg._feature_store_name is None
-        assert fg.created is None
-        assert fg.creator is None
-        assert fg.id == 15
-        assert fg.features is None
-        assert fg.location is None
-        assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
-        assert fg.event_time is None
-        assert fg.expectation_suite is None
-
     def test_backfill_job(self, mocker):
         mock_job = mocker.Mock()
         mock_job_api = mocker.patch(
@@ -580,3 +484,99 @@ class TestExternalFeatureGroup:
             write_options={},
             validation_options={"save_report": False},
         )
+
+
+class TestExternalFeatureGroup:
+    def test_from_response_json(self, backend_fixtures):
+        # Arrange
+        json = backend_fixtures["external_feature_group"]["get"]["response"]
+
+        # Act
+        fg = feature_group.ExternalFeatureGroup.from_response_json(json)
+
+        # Assert
+        assert isinstance(fg.storage_connector, storage_connector.StorageConnector)
+        assert fg.query == "Select * from "
+        assert fg.data_format == "HUDI"
+        assert fg.path == "test_path"
+        assert fg.options == {"test_name": "test_value"}
+        assert fg.name == "external_fg_test"
+        assert fg.version == 1
+        assert fg.description == "test description"
+        assert fg.primary_key == ["intt"]
+        assert fg._feature_store_id == 67
+        assert fg._feature_store_name == "test_project_featurestore"
+        assert fg.created == "2022-08-16T07:19:12Z"
+        assert isinstance(fg.creator, user.User)
+        assert fg.id == 14
+        assert len(fg.features) == 3
+        assert isinstance(fg.features[0], feature.Feature)
+        assert (
+            fg.location
+            == "hopsfs://rpc.namenode.service.consul:8020/apps/hive/warehouse/test_project_featurestore.db/external_fg_test_1"
+        )
+        assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
+        assert fg.event_time == "datet"
+        assert isinstance(fg.expectation_suite, expectation_suite.ExpectationSuite)
+
+    def test_from_response_json_list(self, backend_fixtures):
+        # Arrange
+        json = backend_fixtures["external_feature_group"]["get_list"]["response"]
+
+        # Act
+        fg_list = feature_group.ExternalFeatureGroup.from_response_json(json)
+
+        # Assert
+        assert len(fg_list) == 1
+        fg = fg_list[0]
+        assert isinstance(fg.storage_connector, storage_connector.StorageConnector)
+        assert fg.query == "Select * from "
+        assert fg.data_format == "HUDI"
+        assert fg.path == "test_path"
+        assert fg.options == {"test_name": "test_value"}
+        assert fg.name == "external_fg_test"
+        assert fg.version == 1
+        assert fg.description == "test description"
+        assert fg.primary_key == ["intt"]
+        assert fg._feature_store_id == 67
+        assert fg._feature_store_name == "test_project_featurestore"
+        assert fg.created == "2022-08-16T07:19:12Z"
+        assert isinstance(fg.creator, user.User)
+        assert fg.id == 14
+        assert len(fg.features) == 3
+        assert isinstance(fg.features[0], feature.Feature)
+        assert (
+            fg.location
+            == "hopsfs://rpc.namenode.service.consul:8020/apps/hive/warehouse/test_project_featurestore.db/external_fg_test_1"
+        )
+        assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
+        assert fg.event_time == "datet"
+        assert isinstance(fg.expectation_suite, expectation_suite.ExpectationSuite)
+
+    def test_from_response_json_basic_info(self, backend_fixtures):
+        # Arrange
+        json = backend_fixtures["external_feature_group"]["get_basic_info"]["response"]
+
+        # Act
+        fg = feature_group.ExternalFeatureGroup.from_response_json(json)
+
+        # Assert
+        assert isinstance(fg.storage_connector, storage_connector.StorageConnector)
+        assert fg.query is None
+        assert fg.data_format is None
+        assert fg.path is None
+        assert fg.options is None
+        assert fg.name is None
+        assert fg.version is None
+        assert fg.description is None
+        assert fg.primary_key == []
+        assert fg._feature_store_id is None
+        assert fg._feature_store_name is None
+        assert fg.created is None
+        assert fg.creator is None
+        assert fg.id == 15
+        assert fg.features is None
+        assert fg.location is None
+        assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
+        assert fg.event_time is None
+        assert fg.expectation_suite is None
