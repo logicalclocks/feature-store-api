@@ -194,16 +194,21 @@ class Engine:
         if isinstance(dataframe, pd.DataFrame):
             # convert timestamps to current timezone
             local_tz = tzlocal.get_localzone()
-            for c in dataframe.columns:
+            # make shallow copy so the original df does not get changed
+            dataframe_copy = dataframe.copy(deep=False)
+            for c in dataframe_copy.columns:
                 if isinstance(
-                    dataframe[c].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
+                    dataframe_copy[c].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
-                    dataframe[c] = dataframe[c].dt.tz_convert(str(local_tz))
-                elif dataframe[c].dtype == np.dtype("datetime64[ns]"):
-                    dataframe[c] = dataframe[c].dt.tz_localize(
+                    # convert to utc timestamp
+                    dataframe_copy[c] = dataframe_copy[c].dt.tz_convert(None)
+                if dataframe_copy[c].dtype == np.dtype("datetime64[ns]"):
+                    # set the timezone to the client's timezone because that is
+                    # what spark expects.
+                    dataframe_copy[c] = dataframe_copy[c].dt.tz_localize(
                         str(local_tz), ambiguous="infer", nonexistent="shift_forward"
                     )
-            dataframe = self._spark_session.createDataFrame(dataframe)
+            dataframe = self._spark_session.createDataFrame(dataframe_copy)
         elif isinstance(dataframe, RDD):
             dataframe = dataframe.toDF()
 
