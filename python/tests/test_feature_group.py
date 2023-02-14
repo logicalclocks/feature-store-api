@@ -408,3 +408,31 @@ class TestExternalFeatureGroup:
         assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
         assert fg.event_time is None
         assert fg.expectation_suite is None
+
+    def test_backfill_job(self, mocker):
+        mock_job = mocker.Mock()
+        mock_job_api = mocker.patch(
+            "hsfs.core.job_api.JobApi.get", return_value=mock_job
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test_fg",
+            version=2,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+        )
+
+        # call first time should populate cache
+        fg.backfill_job
+
+        mock_job_api.assert_called_once_with("test_fg_2_offline_fg_backfill")
+        assert fg._backfill_job == mock_job
+
+        # call second time
+        fg.backfill_job
+
+        # make sure it still was called only once
+        mock_job_api.assert_called_once
+        assert fg.backfill_job == mock_job
