@@ -82,7 +82,7 @@ public class FeatureStore {
    * @param version the version of the feature group
    * @return FeatureGroup: The feature group metadata object.
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public FeatureGroup getFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
@@ -105,7 +105,7 @@ public class FeatureStore {
    * @param name the name of the feature group
    * @return FeatureGroup: The feature group metadata object.
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public FeatureGroup getFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
@@ -129,7 +129,7 @@ public class FeatureStore {
    * @param name the name of the feature group
    * @return List of FeatureGroup metadata objects.
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public scala.collection.Seq<FeatureGroup> getFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
@@ -154,7 +154,7 @@ public class FeatureStore {
    * @param version the version of the feature group
    * @return StreamFeatureGroup: The stream feature group metadata object.
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public StreamFeatureGroup getStreamFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
@@ -177,7 +177,7 @@ public class FeatureStore {
    * @param name the name of the feature group
    * @return FeatureGroup
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public StreamFeatureGroup getStreamFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
@@ -202,7 +202,7 @@ public class FeatureStore {
    * @param version the version of the feature group
    * @return ExternalFeatureGroup: The external feature group metadata object.
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
-   * @throws IOException If ..
+   * @throws IOException Generic IO exception.
    */
   public ExternalFeatureGroup getExternalFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
@@ -225,7 +225,7 @@ public class FeatureStore {
    * @param name the name of the feature group
    * @return ExternalFeatureGroup
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public ExternalFeatureGroup getExternalFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
@@ -249,7 +249,7 @@ public class FeatureStore {
    * @param name    the name of the feature group
    * @return List of ExternalFeatureGroup metadata objects.
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public scala.collection.Seq<ExternalFeatureGroup> getExternalFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
@@ -419,7 +419,7 @@ public class FeatureStore {
    * @param name Name of the storage connector to retrieve.
    * @return StorageConnector.AdlsConnector: Storage connector object
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public StorageConnector.AdlsConnector getAdlsConnector(String name) throws FeatureStoreException, IOException {
     return (StorageConnector.AdlsConnector) storageConnectorApi.getByName(this, name);
@@ -496,7 +496,7 @@ public class FeatureStore {
    * @param name Name of the storage connector to retrieve.
    * @return StorageConnector.GcsConnector: Storage connector object
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public StorageConnector.GcsConnector getGcsConnector(String name) throws FeatureStoreException, IOException {
     return (StorageConnector.GcsConnector) storageConnectorApi.getByName(this, name);
@@ -521,7 +521,7 @@ public class FeatureStore {
    * @param name of the feature group to retrieve or create.
    * @param version of the feature group to retrieve or create.
    * @return FeatureGroup: The feature group metadata object
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
    */
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
@@ -585,7 +585,7 @@ public class FeatureStore {
    *                 time for the features in this feature group. If event_time is set
    *                 the feature group can be used for point-in-time joins.
    * @return FeatureGroup: The feature group metadata object
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
    */
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
@@ -631,8 +631,8 @@ public class FeatureStore {
    * @param eventTime name of the feature containing the event
    *                 time for the features in this feature group. If event_time is set
    *                 the feature group can be used for point-in-time joins.
-   * @return FeatureGroup: The feature group metadata object
-   * @throws IOException If ...
+   * @return FeatureGroup: The feature group metadata object.
+   * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
    */
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, String description,
@@ -665,7 +665,7 @@ public class FeatureStore {
    * @param name of the feature group to retrieve or create.
    * @param version of the feature group to retrieve or create.
    * @return FeatureGroup: The feature group metadata object
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve StreamFeatureGroup from the feature store.
    */
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version)
@@ -696,7 +696,7 @@ public class FeatureStore {
    *                 time for the features in this feature group. If event_time is set
    *                 the feature group can be used for point-in-time joins.
    * @return FeatureGroup: The feature group metadata object
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve StreamFeatureGroup from the feature store.
    */
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
@@ -731,7 +731,7 @@ public class FeatureStore {
    *                 time for the features in this feature group. If event_time is set
    *                 the feature group can be used for point-in-time joins.
    * @return FeatureGroup: The feature group metadata object
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve StreamFeatureGroup from the feature store.
    */
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
@@ -784,7 +784,7 @@ public class FeatureStore {
    * @param version version of the feature view
    * @return FeatureView The feature view metadata object.
    * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public FeatureView getOrCreateFeatureView(String name, Query query, Integer version)
       throws FeatureStoreException, IOException {
@@ -810,7 +810,7 @@ public class FeatureStore {
    * @param labels list of label features
    * @return FeatureView The feature view metadata object.
    * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public FeatureView getOrCreateFeatureView(String name, Query query, Integer version, String description,
                                             List<String> labels) throws FeatureStoreException, IOException {
@@ -831,7 +831,7 @@ public class FeatureStore {
    * @param version version to get
    * @return FeatureView The feature view metadata object.
    * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public FeatureView getFeatureView(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
@@ -852,7 +852,7 @@ public class FeatureStore {
    * @param name name of the feature view
    * @return FeatureView The feature view metadata object.
    * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public FeatureView getFeatureView(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature view `" + name + "`, defaulting to `"

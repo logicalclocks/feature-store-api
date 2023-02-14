@@ -992,7 +992,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @param wallclockTime Datetime string. The String should be formatted in one of the
    *     following formats `yyyyMMdd`, `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @return statistics object of computed statistics
-   * @throws FeatureStoreException If Client is not connected to Hopsworks, unable to identify format of the
+   * @throws FeatureStoreException In case Client is not connected to Hopsworks, unable to identify format of the
    *                               provided wallclockTime date format and/or no commit information was found for
    *                               this feature group;
    * @throws IOException Generic IO exception.
