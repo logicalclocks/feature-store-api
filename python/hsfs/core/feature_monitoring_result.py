@@ -24,18 +24,32 @@ from hsfs import util
 class FeatureMonitoringResult:
     def __init__(
         self,
-        feature_group_id: int,
         feature_store_id: int,
-        feature_name: str,
+        entity_id: int,
+        execution_id: int,
+        job_id: int,
+        detection_stats_id: int,
+        monitoring_time: int,
+        feature_monitoring_config_id: int,
+        difference: Optional[float] = None,
+        triggered_alert: bool = False,
+        reference_stats_id: Optional[int] = None,
         id: Optional[int] = None,
         href: Optional[str] = None,
     ):
-
         self._id = id
         self._href = href
-        self._feature_group_id = feature_group_id
         self._feature_store_id = feature_store_id
-        self._feature_name = feature_name
+        self._entity_id = entity_id
+        self._execution_id = execution_id
+        self._job_id = job_id
+        self._detection_stats_id = detection_stats_id
+        self._reference_stats_id = reference_stats_id
+        self._feature_monitoring_config_id = feature_monitoring_config_id
+
+        self._monitoring_time = monitoring_time
+        self._difference = difference
+        self._triggered_alert = triggered_alert
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -53,9 +67,17 @@ class FeatureMonitoringResult:
     def to_dict(self):
 
         return {
+            "id": self._id,
             "feature_store_id": self._feature_store_id,
-            "feature_group_id": self._feature_group_id,
-            "feature_name": self._feature_name,
+            "entity_id": self._entity_id,
+            "feature_monitoring_config_id": self._feature_monitoring_config_id,
+            "job_id": self._job_id,
+            "execution_id": self._execution_id,
+            "detection_stats_id": self._detection_stats_id,
+            "reference_stats_id": self._reference_stats_id,
+            "monitoring_time": self._monitoring_time,
+            "difference": self._difference,
+            "triggered_alert": self._triggered_alert,
         }
 
     def json(self) -> str:

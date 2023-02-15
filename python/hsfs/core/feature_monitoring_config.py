@@ -17,25 +17,42 @@
 
 import json
 import humps
-from typing import Optional
+from typing import Any, Dict, Optional
 from hsfs import util
 
 
 class FeatureMonitoringConfig:
     def __init__(
         self,
-        feature_group_id: int,
         feature_store_id: int,
         feature_name: str,
+        feature_monitoring_type: str = "DESCRIPTIVE_STATISTICS",
+        detection_window_config: Optional[Dict[Any, Any]] = None,
+        reference_window_config: Optional[Dict[Any, Any]] = None,
+        descriptive_statistics_monitoring_config: Optional[Dict[Any, Any]] = None,
+        alert_config: Optional[Dict[Any, Any]] = None,
+        scheduler_config: Optional[Dict[Any, Any]] = None,
+        enabled: bool = True,
         id: Optional[int] = None,
+        feature_group_id: Optional[int] = None,
+        feature_view_id: Optional[int] = None,
         href: Optional[str] = None,
     ):
-
         self._id = id
         self._href = href
-        self._feature_group_id = feature_group_id
         self._feature_store_id = feature_store_id
+        self._feature_group_id = feature_group_id
+        self._feature_view_id = feature_view_id
         self._feature_name = feature_name
+        self._feature_monitoring_type = feature_monitoring_type
+        self._enabled = enabled
+        self._scheduler_config = scheduler_config
+        self._alert_config = alert_config
+        self._descriptive_statistics_monitoring_config = (
+            descriptive_statistics_monitoring_config
+        )
+        self._detection_window_config = detection_window_config
+        self._reference_window_config = reference_window_config
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -53,9 +70,18 @@ class FeatureMonitoringConfig:
     def to_dict(self):
 
         return {
+            "id": self._id,
             "feature_store_id": self._feature_store_id,
             "feature_group_id": self._feature_group_id,
+            "feature_view_id": self._feature_view_id,
             "feature_name": self._feature_name,
+            "enabled": self._enabled,
+            "feature_monitoring_type": self._feature_monitoring_type,
+            "scheduler_config_DTO": self._scheduler_config,
+            "alert_config_DTO": self._alert_config,
+            "detection_monitoring_window_builder_DTO": self._detection_window_config,
+            "reference_monitoring_window_buikder_DTO": self._reference_window_config,
+            "descriptive_statistics_monitoring_configuration_DTO": self._descriptive_statistics_monitoring_config,
         }
 
     def json(self) -> str:
