@@ -984,14 +984,20 @@ class FeatureGroupBase:
         entity_to_monitor: str,
         time_offset: str,
         window_length: str,
-        scheduler_config: Dict[Any, Any],
+        scheduler_config: str,
     ) -> FeatureMonitoringConfig:
-        return self._feature_monitoring_config_engine(
+        detection_window_config = (
+            self._feature_monitoring_config_engine.build_monitoring_window_config(
+                entity_to_monitor=entity_to_monitor,
+                window_length=window_length,
+                time_offset=time_offset,
+            )
+        )
+
+        return self._feature_monitoring_config_engine.enable_descriptive_statistics_monitoring(
             feature_group_id=self._id,
-            entity_to_monitor=entity_to_monitor,
+            detection_window_config=detection_window_config,
             feature_name=feature_name,
-            time_offset=time_offset,
-            window_length=window_length,
             scheduler_config=scheduler_config,
         )
 
