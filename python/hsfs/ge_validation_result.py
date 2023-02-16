@@ -204,10 +204,9 @@ class ValidationResult:
         """
         if isinstance(validation_time, str):
             try:
-                self._validation_time = dateutil.parser.parse(
-                    validation_time
-                ).astimezone(datetime.timezone.utc)
-                return
+                validation_time = dateutil.parser.parse(validation_time).astimezone(
+                    datetime.timezone.utc
+                )
             except ValueError:
                 pass
         if validation_time:

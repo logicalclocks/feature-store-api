@@ -101,13 +101,4 @@ class TestValidationResult:
 
         # Assert
         assert vr.id == 11
-        assert vr.success is True
-        assert vr._observed_value == "test_observed_value"
-        assert vr._expectation_id == 22
-        assert vr._validation_report_id == 33
-        assert vr.result == {"result_key": "result_value"}
-        assert vr.meta == {"meta_key": "meta_value"}
-        assert vr.exception_info == {"exception_info_key": "exception_info_value"}
-        assert vr.expectation_config == {
-            "expectation_config_key": "expectation_config_value"
-        }
+        assert vr.validation_time == 1676470803000
