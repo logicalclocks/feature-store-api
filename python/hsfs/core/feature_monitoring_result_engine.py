@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional, Union
 from datetime import date, datetime
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.core.feature_monitoring_result_api import FeatureMonitoringResultApi
+from hsfs import util
 
 
 class FeatureMonitoringResultEngine:
@@ -92,8 +93,16 @@ class FeatureMonitoringResultEngine:
         start_time: Union[str, int, datetime, date, None],
         end_time: Union[str, int, datetime, date, None],
     ) -> Dict[str, Any]:
+        filter_by = []
+
+        if start_time:
+            timestamp_start_time = util.convert_event_time_to_timestamp(start_time)
+            filter_by.append(f"monitoring_time_gte:{timestamp_start_time}")
+        if end_time:
+            timestamp_end_time = util.convert_event_time_to_timestamp(end_time)
+            filter_by.append(f"monitoring_time_lte:{timestamp_end_time}")
 
         return {
-            "filter_by": ["monitoring_time_gte:start_time"],
+            "filter_by": filter_by,
             "order_by": "monitoring_time:desc",
         }
