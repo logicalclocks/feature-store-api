@@ -90,3 +90,15 @@ class TestValidationResult:
 
         # Assert
         assert len(vr_list) == 0
+
+    def test_timezone_support_validation_time(self, backend_fixtures):
+        # Arrange
+        json = backend_fixtures["ge_validation_result"]["get"]["response"]
+        json["validation_time"] = "2023-02-15T09:20:03.000414-05"
+
+        # Act
+        vr = ge_validation_result.ValidationResult.from_response_json(json)
+
+        # Assert
+        assert vr.id == 11
+        assert vr.validation_time == 1676470803000
