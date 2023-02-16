@@ -656,7 +656,7 @@ class FeatureGroupBase:
 
     def get_expectation_suite(
         self, ge_type: bool = True
-    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
+    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite, None]:
         """Return the expectation suite attached to the feature group if it exists.
 
         !!! example
@@ -733,9 +733,9 @@ class FeatureGroupBase:
                 feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, ExpectationSuite):
-            tmp_expectation_suite = expectation_suite.to_json_dict()
-            tmp_expectation_suite["featuregroup_id"] = self._id
-            tmp_expectation_suite["featurestore_id"] = self._feature_store_id
+            tmp_expectation_suite = expectation_suite.to_json_dict(decamelize=True)
+            tmp_expectation_suite["feature_group_id"] = self._id
+            tmp_expectation_suite["feature_store_id"] = self._feature_store_id
             tmp_expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         else:
             raise TypeError(
@@ -773,7 +773,7 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        if self._expectation_suite.id:
+        if self.get_expectation_suite() is not None:
             self._expectation_suite_engine.delete(self._expectation_suite.id)
         self._expectation_suite = None
 
