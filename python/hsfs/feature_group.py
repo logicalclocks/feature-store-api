@@ -70,7 +70,7 @@ class FeatureGroupBase:
             great_expectation_engine.GreatExpectationEngine(featurestore_id)
         )
         self._feature_monitoring_config_engine = FeatureMonitoringConfigEngine(
-            featurestore_id=featurestore_id
+            feature_store_id=featurestore_id
         )
         self._feature_store_id = featurestore_id
         self._variable_api = VariableApi()

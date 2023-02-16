@@ -16,7 +16,7 @@
 
 from typing import List, Optional
 from hsfs import client
-import feature_monitoring_config as fmc
+import hsfs.core.feature_monitoring_config as fmc
 
 
 class FeatureMonitoringConfigApi:
