@@ -2353,6 +2353,25 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._href = href
 
     def save(self):
+        """Persist the metadata for this external feature group.
+
+        Without calling this method, your feature group will only exist
+        in your Python Kernel, but not in Hopsworks.
+
+        ```python
+        query = "SELECT * FROM sales"
+
+        fg = feature_store.create_external_feature_group(name="sales",
+            version=1,
+            description="Physical shop sales features",
+            query=query,
+            storage_connector=connector,
+            primary_key=['ss_store_sk'],
+            event_time='sale_date'
+        )
+
+        fg.save()
+        """
         self._feature_group_engine.save(self)
         self._code_engine.save_code(self)
 
