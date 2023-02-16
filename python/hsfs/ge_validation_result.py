@@ -204,11 +204,14 @@ class ValidationResult:
         """
         if isinstance(validation_time, str):
             try:
+                # returns a datemtime to be converted to timestamp below
                 validation_time = dateutil.parser.parse(validation_time).astimezone(
                     datetime.timezone.utc
                 )
             except ValueError:
                 pass
+        # use the same function as the rest of the client to deal with conversion to timestamps
+        # from various types
         if validation_time:
             self._validation_time = util.convert_event_time_to_timestamp(
                 validation_time
