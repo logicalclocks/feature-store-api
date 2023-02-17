@@ -212,17 +212,13 @@ class FeatureView:
         self._single_vector_server = vector_server.VectorServer(
             self._featurestore_id, self._features, training_dataset_version
         )
-        self._single_vector_server.init_serving(
-            self, False, external, options=options
-        )
+        self._single_vector_server.init_serving(self, False, external, options=options)
 
         # initiate batch vector server
         self._batch_vectors_server = vector_server.VectorServer(
             self._featurestore_id, self._features, training_dataset_version
         )
-        self._batch_vectors_server.init_serving(
-            self, True, external, options=options
-        )
+        self._batch_vectors_server.init_serving(self, True, external, options=options)
 
         # initiate batch scoring server
         self.init_batch_scoring(training_dataset_version)
