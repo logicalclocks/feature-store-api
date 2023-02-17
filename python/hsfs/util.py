@@ -66,7 +66,7 @@ def rewrite_feature_store_name(name):
         return name + FEATURE_STORE_NAME_SUFFIX
 
 
-def create_mysql_engine(online_conn, external):
+def create_mysql_engine(online_conn, external, options=None):
     online_options = online_conn.spark_options()
     # Here we are replacing the first part of the string returned by Hopsworks,
     # jdbc:mysql:// with the sqlalchemy one + username and password
@@ -96,9 +96,14 @@ def create_mysql_engine(online_conn, external):
         .replace("useSSL=false&", "")
         .replace("?allowPublicKeyRetrieval=true", "")
     )
-
+    if options is not None and not isinstance(options, dict):
+        raise TypeError("`options` should be a `dict` type.")
+    if not options:
+        options = {"pool_recycle": 3600}
+    elif "pool_recycle" not in options:
+        options["pool_recycle"] = 3600
     # default connection pool size kept by engine is 5
-    sql_alchemy_engine = create_engine(sql_alchemy_conn_str, pool_recycle=3600)
+    sql_alchemy_engine = create_engine(sql_alchemy_conn_str, **options)
     return sql_alchemy_engine
 
 

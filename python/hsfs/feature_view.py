@@ -171,6 +171,7 @@ class FeatureView:
         self,
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
+        options: Optional[dict] = None,
     ):
         """Initialise feature view to retrieve feature vector from online feature store.
 
@@ -195,6 +196,9 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used which relies on the private IP.
                 Defaults to True if connection to Hopsworks is established from external environment (e.g AWS
                 Sagemaker or Google Colab), otherwise to False.
+            options: Additional options as key/value pairs for configuring online serving engine.
+                * key: kwargs of SqlAlchemy engine creation (See: https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
+                  For example: `{"pool_size": 10}`
         """
 
         if training_dataset_version is None:
@@ -208,13 +212,17 @@ class FeatureView:
         self._single_vector_server = vector_server.VectorServer(
             self._featurestore_id, self._features, training_dataset_version
         )
-        self._single_vector_server.init_serving(self, False, external)
+        self._single_vector_server.init_serving(
+            self, False, external, options=options
+        )
 
         # initiate batch vector server
         self._batch_vectors_server = vector_server.VectorServer(
             self._featurestore_id, self._features, training_dataset_version
         )
-        self._batch_vectors_server.init_serving(self, True, external)
+        self._batch_vectors_server.init_serving(
+            self, True, external, options=options
+        )
 
         # initiate batch scoring server
         self.init_batch_scoring(training_dataset_version)
@@ -306,7 +314,9 @@ class FeatureView:
         external: Optional[bool] = None,
     ):
         """Returns assembled feature vector from online feature store.
-
+            Call `feature_view.init_serving` before this method if configurations belowed are needed.
+              1. The training dataset version of the transformation statistics
+              2. Additional configurations of online serving engine
         !!! warning "Missing primary key entries"
             If the provided primary key `entry` can't be found in one or more of the feature groups
             used by this feature view the call to this method will raise an exception.
@@ -373,7 +383,9 @@ class FeatureView:
         external: Optional[bool] = None,
     ):
         """Returns assembled feature vectors in batches from online feature store.
-
+            Call `feature_view.init_serving` before this method if configurations belowed are needed.
+              1. The training dataset version of the transformation statistics
+              2. Additional configurations of online serving engine
         !!! warning "Missing primary key entries"
             If any of the provided primary key elements in `entry` can't be found in any
             of the feature groups, no feature vector for that primary key value will be
