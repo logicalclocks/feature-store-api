@@ -137,8 +137,8 @@ class ExpectationSuite:
             "validationIngestionPolicy": self._validation_ingestion_policy,
         }
 
-    def to_json_dict(self) -> dict:
-        return {
+    def to_json_dict(self, decamelize=False) -> dict:
+        the_dict = {
             "id": self._id,
             "expectationSuiteName": self._expectation_suite_name,
             "expectations": [
@@ -150,6 +150,11 @@ class ExpectationSuite:
             "runValidation": self._run_validation,
             "validationIngestionPolicy": self._validation_ingestion_policy,
         }
+
+        if decamelize:
+            return humps.decamelize(the_dict)
+        else:
+            return the_dict
 
     def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
@@ -167,7 +172,7 @@ class ExpectationSuite:
 
     def _init_feature_store_and_feature_group_ids_from_href(self, href: str) -> None:
         feature_store_id, feature_group_id = re.search(
-            r"\/featurestores\/([0-9]+)\/featuregroups\/([0-9]+)\/expectationsuite*",
+            r"\/featurestores\/(\d+)\/featuregroups\/(\d+)\/expectationsuite*",
             href,
         ).groups(0)
         self._feature_store_id = int(feature_store_id)
