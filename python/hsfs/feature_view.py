@@ -310,7 +310,7 @@ class FeatureView:
         external: Optional[bool] = None,
     ):
         """Returns assembled feature vector from online feature store.
-            Call `feature_view.init_serving` before this method if configurations belowed are needed.
+            Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
               1. The training dataset version of the transformation statistics
               2. Additional configurations of online serving engine
         !!! warning "Missing primary key entries"
@@ -379,7 +379,7 @@ class FeatureView:
         external: Optional[bool] = None,
     ):
         """Returns assembled feature vectors in batches from online feature store.
-            Call `feature_view.init_serving` before this method if configurations belowed are needed.
+            Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
               1. The training dataset version of the transformation statistics
               2. Additional configurations of online serving engine
         !!! warning "Missing primary key entries"
