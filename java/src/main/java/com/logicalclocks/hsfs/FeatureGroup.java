@@ -452,8 +452,8 @@ public class FeatureGroup extends FeatureGroupBase {
    * the existing feature group.
    * Incrementally insert data to a feature group or overwrite all  data contained in the feature group.
    * The `features` dataframe can be a Spark DataFrame or RDD.
-   * If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
-   * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+   * If the feature group doesn't exist, the insert method will create the necessary metadata the first time it is
+   * invoked and write the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
    * {@code
