@@ -242,18 +242,18 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //Initialise feature view batch serving
+   *        // Initialise feature view batch serving
    *        fv.initServing(true, false);
    * }
    * </pre>
    *
-   * @param batch whether to initialise feature view to retrieve feature vector from offline feature store.
-   * @param external If set to `true`, the connection to the  online feature store is established using the same host as
-   *                 for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
+   * @param batch Whether to initialise feature view to retrieve feature vector from offline feature store.
+   * @param external If set to `true`, the connection to the online feature store is established using the same host as
+   *                 for the `host` parameter in the connection object.
    *                 If set to False, the online feature store storage connector is used which relies on the private IP.
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
