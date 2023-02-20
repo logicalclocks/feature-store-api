@@ -332,7 +332,7 @@ public class FeatureStore {
    * Get a previously created S3 compliant storage connector from the feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        StorageConnector.S3Connector s3Sc = fs.getS3Connector("s3_sc_name");
    * }
