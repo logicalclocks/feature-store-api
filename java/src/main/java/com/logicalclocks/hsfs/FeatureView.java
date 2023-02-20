@@ -1296,13 +1296,13 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
    *        // define additional readOptions
    *        Map<String, String> readOptions = ...;
-   *        //get train, validation, test split dataframe of features and labels
+   *        // get train, validation, test split dataframe of features and labels
    *        fv.getTrainValidationTestSplit(1, readOptions);
    * }
    * </pre>
