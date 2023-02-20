@@ -1516,9 +1516,9 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
    *        // create training dataset based on time split
    *        String trainStart = "20220101000000";
@@ -1540,7 +1540,7 @@ public class FeatureView {
    * }
    * </pre>
    *
-   * @param testSize size of test set.
+   * @param testSize Size of test set.
    * @param trainStart Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
    *                   `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param trainEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
@@ -1550,8 +1550,8 @@ public class FeatureView {
    * @param testEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
    *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param description A string describing the contents of the training dataset to  improve discoverability for
-   *                    Data Scientists
-   * @param seed Define a seed to create the random splits with, in order to guarantee reproducability,
+   *                    Data Scientists.
+   * @param seed Define a seed to create the random splits with, in order to guarantee reproducability.
    * @param statisticsConfig  A configuration object, to generally enable descriptive statistics computation for
    *                          this feature group, `"correlations`" to turn on feature correlation  computation,
    *                          `"histograms"` to compute feature value frequencies and `"exact_uniqueness"` to compute
