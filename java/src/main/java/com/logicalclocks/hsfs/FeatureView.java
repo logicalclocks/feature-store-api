@@ -687,13 +687,13 @@ public class FeatureView {
 
   /**
    * Create the metadata for a training dataset and save the corresponding training data into `location`. The training
-   * data can be retrieved by calling `feature_view.getTrainingData()`.
+   * data can be retrieved by calling `featureView.getTrainingData()`.
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
    *        // create training dataset
    *        String startTime = "20220101000000";
@@ -710,7 +710,7 @@ public class FeatureView {
    * @param endTime Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
    *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param description A string describing the contents of the training dataset to  improve discoverability for
-   *                    Data Scientists
+   *                    Data Scientists.
    * @param dataFormat  The data format used to save the training dataset.
    * @param coalesce If true the training dataset data will be coalesced into a single partition before writing.
    *                 The resulting training dataset will be a single file per split.
@@ -733,7 +733,7 @@ public class FeatureView {
    *                     in `getBatchData`.
    * @return Training dataset version.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
-   *                               provided `startTime`/`endTime` date formats;
+   *                               provided `startTime`/`endTime` date formats.
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse provided `startTime`/`endTime` strings to date types.
    */
