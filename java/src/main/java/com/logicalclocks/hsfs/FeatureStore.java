@@ -770,7 +770,7 @@ public class FeatureStore {
 
   /**
    * Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
-   * existing feature view metadata object.
+   * existing feature view metadata.
    *
    * <pre>
    * {@code //get feature store handle
