@@ -205,42 +205,43 @@ public class VectorServer {
     // expect that backend will return correctly ordered vectors.
     Map<Integer, List<Object>> servingVectorsMap = new HashMap<>();
 
-    Statement stmt = preparedStatementConnection.createStatement();
-    for (String query : queries) {
-      int orderInBatch = 0;
+    try (Statement stmt = preparedStatementConnection.createStatement()) {
+      for (String query : queries) {
+        int orderInBatch = 0;
 
-      // MySQL doesn't support setting array type on prepared statement. This is the hack to replace
-      // the ? with array joined as comma separated array.
-      ResultSet results = stmt.executeQuery(query);
+        // MySQL doesn't support setting array type on prepared statement. This is the hack to replace
+        // the ? with array joined as comma separated array.
+        try (ResultSet results = stmt.executeQuery(query)) {
 
-      // check if results contain any data at all and throw exception if not
-      if (!results.isBeforeFirst()) {
-        throw new FeatureStoreException("No data was retrieved from online feature store.");
-      }
-      //Get column count
-      int columnCount = results.getMetaData().getColumnCount();
-      //append results to servingVector
-      while (results.next()) {
-        int index = 1;
-        while (index <= columnCount) {
-          if (complexFeatureSchemas.containsKey(results.getMetaData().getColumnName(index))) {
-            servingVector.add(deserializeComplexFeature(complexFeatureSchemas, results, index));
-          } else {
-            servingVector.add(results.getObject(index));
+          // check if results contain any data at all and throw exception if not
+          if (!results.isBeforeFirst()) {
+            throw new FeatureStoreException("No data was retrieved from online feature store.");
           }
-          index++;
+          //Get column count
+          int columnCount = results.getMetaData().getColumnCount();
+          //append results to servingVector
+          while (results.next()) {
+            int index = 1;
+            while (index <= columnCount) {
+              if (complexFeatureSchemas.containsKey(results.getMetaData().getColumnName(index))) {
+                servingVector.add(deserializeComplexFeature(complexFeatureSchemas, results, index));
+              } else {
+                servingVector.add(results.getObject(index));
+              }
+              index++;
+            }
+            // get vector by order and update with vector from other feature group(s)
+            if (servingVectorsMap.containsKey(orderInBatch)) {
+              servingVectorsMap.get(orderInBatch).addAll(servingVector);
+            } else {
+              servingVectorsMap.put(orderInBatch, servingVector);
+            }
+            // empty servingVector for new primary key
+            servingVector = new ArrayList<>();
+            orderInBatch++;
+          }
         }
-        // get vector by order and update with vector from other feature group(s)
-        if (servingVectorsMap.containsKey(orderInBatch)) {
-          servingVectorsMap.get(orderInBatch).addAll(servingVector);
-        } else {
-          servingVectorsMap.put(orderInBatch, servingVector);
-        }
-        // empty servingVector for new primary key
-        servingVector = new ArrayList<>();
-        orderInBatch++;
       }
-      results.close();
     }
     return new ArrayList<List<Object>>(servingVectorsMap.values());
   }
