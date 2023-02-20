@@ -358,7 +358,7 @@ public class FeatureStore {
    * </pre>
    *
    * @param name Name of the storage connector to retrieve.
-   * @return SStorageConnector.HopsFsConnector: Storage connector object
+   * @return SStorageConnector.HopsFsConnector Storage connector object.
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException If ...
    */
