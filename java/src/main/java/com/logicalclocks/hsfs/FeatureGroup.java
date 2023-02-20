@@ -261,7 +261,7 @@ public class FeatureGroup extends FeatureGroupBase {
    *        FeatureGroup fg = ...;
    *        // define additional read options
    *        Map<String, String> readOptions = ...;
-   *        // read feature group data retrieve feature group as of specific point in time.
+   *        // read feature group data as of specific point in time (Hudi commit timestamp).
    *        fg.read(false, "20230205210923")
    * }
    * </pre>
