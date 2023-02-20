@@ -206,7 +206,7 @@ public class FeatureView {
    * </pre>
    *
    * @param other Updated FeatureView metadata Object.
-   * @return FeatureView  metadata Object.
+   * @return FeatureView Metadata Object.
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
