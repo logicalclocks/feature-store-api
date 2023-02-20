@@ -92,16 +92,8 @@ class FeatureMonitoringConfigEngine:
         window_length: str,
     ) -> Dict[str, Any]:
 
-        # fake logic for now
-        if entity_to_monitor == "FEATURE_GROUP":
-            window_builder_type = "TIME_OFFSET_AND_WINDOW_LENGTH"
-        elif entity_to_monitor == "INSERT":
-            window_builder_type = "TIME_OFFSET_AND_WINDOW_LENGTH"
-        else:
-            window_builder_type = "TIME_OFFSET_AND_WINDOW_LENGTH"
-
         return {
-            "window_builder_type": window_builder_type,
+            "window_builder_type": entity_to_monitor,
             "time_offset": time_offset,
             "window_length": window_length,
         }

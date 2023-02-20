@@ -26,12 +26,11 @@ class FeatureMonitoringResult:
         feature_store_id: int,
         entity_id: int,
         execution_id: int,
-        job_id: int,
         detection_stats_id: int,
         monitoring_time: int,
         feature_monitoring_config_id: int,
         difference: Optional[float] = None,
-        triggered_alert: bool = False,
+        shift_detected: bool = False,
         reference_stats_id: Optional[int] = None,
         id: Optional[int] = None,
         href: Optional[str] = None,
@@ -41,14 +40,13 @@ class FeatureMonitoringResult:
         self._feature_store_id = feature_store_id
         self._entity_id = entity_id
         self._execution_id = execution_id
-        self._job_id = job_id
         self._detection_stats_id = detection_stats_id
         self._reference_stats_id = reference_stats_id
         self._feature_monitoring_config_id = feature_monitoring_config_id
 
         self._monitoring_time = monitoring_time
         self._difference = difference
-        self._triggered_alert = triggered_alert
+        self._shift_detected = shift_detected
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -70,13 +68,12 @@ class FeatureMonitoringResult:
             "feature_store_id": self._feature_store_id,
             "entity_id": self._entity_id,
             "feature_monitoring_config_id": self._feature_monitoring_config_id,
-            "job_id": self._job_id,
             "execution_id": self._execution_id,
             "detection_stats_id": self._detection_stats_id,
             "reference_stats_id": self._reference_stats_id,
             "monitoring_time": self._monitoring_time,
             "difference": self._difference,
-            "triggered_alert": self._triggered_alert,
+            "shift_detected": self._shift_detected,
         }
 
     def json(self) -> str:

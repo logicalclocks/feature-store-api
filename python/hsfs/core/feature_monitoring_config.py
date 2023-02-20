@@ -17,7 +17,7 @@
 
 import json
 import humps
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from hsfs import util
 
 
@@ -26,30 +26,38 @@ class FeatureMonitoringConfig:
         self,
         feature_store_id: int,
         feature_name: str,
+        name: str,
         feature_monitoring_type: str = "DESCRIPTIVE_STATISTICS",
+        job_id: Optional[int] = None,
         detection_window_config: Optional[Dict[Any, Any]] = None,
         reference_window_config: Optional[Dict[Any, Any]] = None,
-        descriptive_statistics_monitoring_config: Optional[Dict[Any, Any]] = None,
+        descriptive_statistics_monitoring_comparison: Optional[Dict[Any, Any]] = None,
         alert_config: Optional[str] = None,
         scheduler_config: Optional[str] = None,
         enabled: bool = True,
         id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
         feature_view_id: Optional[int] = None,
+        description: Optional[str] = None,
         href: Optional[str] = None,
+        items: Optional[List[Any]] = None,
+        count: Optional[int] = None,
     ):
         self._id = id
         self._href = href
+        self._name = name
+        self._description = description
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
         self._feature_view_id = feature_view_id
         self._feature_name = feature_name
+        self._job_id = job_id
         self._feature_monitoring_type = feature_monitoring_type
         self._enabled = enabled
         self._scheduler_config = scheduler_config
         self._alert_config = alert_config
-        self._descriptive_statistics_monitoring_config = (
-            descriptive_statistics_monitoring_config
+        self._descriptive_statistics_monitoring_comparison = (
+            descriptive_statistics_monitoring_comparison
         )
         self._detection_window_config = detection_window_config
         self._reference_window_config = reference_window_config
@@ -76,12 +84,15 @@ class FeatureMonitoringConfig:
             "feature_view_id": self._feature_view_id,
             "feature_name": self._feature_name,
             "enabled": self._enabled,
+            "name": self._name,
+            "description": self._description,
+            "job_id": self._job_id,
             "feature_monitoring_type": self._feature_monitoring_type,
             "scheduler_config_DTO": self._scheduler_config,
             "alert_config_DTO": self._alert_config,
-            "detection_monitoring_window_builder_DTO": self._detection_window_config,
-            "reference_monitoring_window_buikder_DTO": self._reference_window_config,
-            "descriptive_statistics_monitoring_configuration_DTO": self._descriptive_statistics_monitoring_config,
+            "detection_monitoring_window_configuration_DTO": self._detection_window_config,
+            "reference_monitoring_window_configuration_DTO": self._reference_window_config,
+            "descriptive_statistics_monitoring_comparison_DTO": self._descriptive_statistics_monitoring_comparison,
         }
 
     def json(self) -> str:

@@ -34,7 +34,7 @@ class FeatureMonitoringResultEngine:
         job_id: int,
         execution_id: int,
         detection_stats_id: int,
-        triggered_alert: bool = False,
+        shift_detected: bool = False,
         difference: Optional[float] = None,
         reference_stats_id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
@@ -42,6 +42,8 @@ class FeatureMonitoringResultEngine:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
     ) -> FeatureMonitoringResult:
+
+        monitoring_time = util.convert_event_time_to_timestamp(datetime.now())
 
         result = FeatureMonitoringResult(
             feature_store_id=self._feature_store_id,
@@ -51,8 +53,8 @@ class FeatureMonitoringResultEngine:
             detection_stats_id=detection_stats_id,
             reference_stats_id=reference_stats_id,
             difference=difference,
-            triggered_alert=triggered_alert,
-            monitoring_time=int(round(datetime.now().timestamp())),
+            shift_detected=shift_detected,
+            monitoring_time=monitoring_time,
             entity_id=feature_group_id
             if feature_group_id is not None
             else feature_view_id,
