@@ -614,22 +614,22 @@ public class FeatureStore {
    * @param description contents of the feature group to improve discoverability for Data Scientists
    * @param primaryKeys  A list of feature names to be used as primary key for the
    *                     feature group. This primary key can be a composite key of multiple
-   *                     features and will be used as joining key
+   *                     features and will be used as joining key.
    * @param partitionKeys A list of feature names to be used as partition key when writing the feature data to the
-   *                      offline storage
+   *                      offline storage.
    * @param hudiPrecombineKey A feature name to be used as a precombine key for the `HUDI` feature group.  If feature
    *                          group has time travel format `HUDI` and hudi precombine key was not specified then
    *                          the first primary key of the feature group will be used as hudi precombine key.
    * @param onlineEnabled Define whether the feature group should be made available also in the online feature store
-   *                      for low latency access,
+   *                      for low latency access.
    * @param timeTravelFormat  Format used for time travel, defaults to `"HUDI"`
    * @param statisticsConfig  A configuration object, to generally enable descriptive statistics computation for
    *                          this feature group, `"correlations`" to turn on feature correlation  computation,
    *                          `"histograms"` to compute feature value frequencies and `"exact_uniqueness"` to compute
    *                          uniqueness, distinctness and entropy. The values should be booleans indicating the
    *                          setting. To fully turn off statistics computation pass `statisticsConfig=false`.
-   * @param eventTime name of the feature containing the event
-   *                 time for the features in this feature group. If event_time is set
+   * @param eventTime Name of the feature containing the event
+   *                 time for the features in this feature group. If eventTime is set
    *                 the feature group can be used for point-in-time joins.
    * @return FeatureGroup: The feature group metadata object.
    * @throws IOException Generic IO exception.
