@@ -679,7 +679,7 @@ public class FeatureStore {
    * This method doesn't update existing feature group metadata.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        FeatureGroup fg = fs.getOrCreateStreamFeatureGroup("fg_name", 1, primaryKeys, true, "datetime");
    * }
