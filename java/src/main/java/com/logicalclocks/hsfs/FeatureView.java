@@ -1441,7 +1441,7 @@ public class FeatureView {
 
   /**
    * Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
-   * This returns the training data in memory and does not materialise data in storage.  The training data is split
+   * This returns the training data in memory and does not materialise data in storage. The training data is split
    * into train and test set at random or according to time ranges. The training data can be recreated by calling
    * `featureView.getTrainTestSplit` with the metadata created.
    *
