@@ -1480,7 +1480,7 @@ public class FeatureView {
    *                    Data Scientists.
    * @return List of Spark Dataframes containing training dataset splits.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
-   *                               provided date strings to date formats;
+   *                               provided date strings to date formats.
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse provided date strings to date types.
    */
