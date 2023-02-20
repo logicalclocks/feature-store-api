@@ -299,9 +299,9 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        FeatureGroup fg = ...;
    *        // get query object to retrieve all feature group as of specific point in time.
    *        fg.asOf("20230205210923")
