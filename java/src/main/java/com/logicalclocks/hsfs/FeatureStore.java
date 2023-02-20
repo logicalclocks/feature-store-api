@@ -576,7 +576,7 @@ public class FeatureStore {
    * @param version of the feature group to retrieve or create.
    * @param primaryKeys  A list of feature names to be used as primary key for the
    *                     feature group. This primary key can be a composite key of multiple
-   *                     features and will be used as joining key
+   *                     features and will be used as joining key.
    * @param partitionKeys A list of feature names to be used as partition key when writing the feature data to the
    *                      offline storage
    * @param onlineEnabled Define whether the feature group should be made available also in the online feature store
