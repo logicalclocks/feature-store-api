@@ -664,7 +664,7 @@ public class FeatureStore {
    *
    * @param name of the feature group to retrieve or create.
    * @param version of the feature group to retrieve or create.
-   * @return FeatureGroup: The feature group metadata object
+   * @return FeatureGroup The feature group metadata object.
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve StreamFeatureGroup from the feature store.
    */
