@@ -827,8 +827,8 @@ public class FeatureStore {
    * }
    * </pre>
    *
-   * @param name    name of the feature view
-   * @param version version to get
+   * @param name    Name of the feature view.
+   * @param version Version to get.
    * @return FeatureView The feature view metadata object.
    * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
    * @throws IOException Generic IO exception.
