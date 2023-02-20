@@ -1923,17 +1923,17 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //get tags of training dataset version 1 in this feature view.
+   *        // get tags of training dataset version 1 in this feature view.
    *        fv.getTrainingDatasetTags(1);
    * }
    * </pre>
    *
-   * @param version training dataset version
-   * @return a map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
+   * @param version Training dataset version.
+   * @return A map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects 
    * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
