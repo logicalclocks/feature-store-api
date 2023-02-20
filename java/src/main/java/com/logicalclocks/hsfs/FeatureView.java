@@ -322,23 +322,23 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
    *        // define primary key values to fetch data from online feature store
    *        Map<String, Long> entry = ...;
-   *        //Get feature vector
+   *        // get feature vector
    *        fv.getFeatureVector(entry, false);
    * }
    * </pre>
    *
-   * @param entry dictionary of feature group primary key and values provided by serving application.
+   * @param entry Dictionary of feature group primary key and values provided by serving application.
    * @param external If set to true, the connection to the online feature store is established using the same host as
-   *                 for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
+   *                 for the `host` parameter in the connection object.
    *                 If set to false, the online feature store storage connector is used which relies on the private IP.
    *                 Defaults to True if connection to Hopsworks is established from external environment
-   * @return List of feature values related to provided primary keys, ordered according to positions of this features
+   * @return List of feature values related to provided primary keys, ordered according to positions of the features
    *         in the feature view query.
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
