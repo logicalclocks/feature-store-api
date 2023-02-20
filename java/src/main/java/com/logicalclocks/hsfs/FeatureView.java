@@ -562,7 +562,7 @@ public class FeatureView {
    *     Name of the tag
    * @param value
    *     Value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException If Client is not connected to Hopsworks;
+   * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
   public void addTag(String name, Object value) throws FeatureStoreException, IOException {
