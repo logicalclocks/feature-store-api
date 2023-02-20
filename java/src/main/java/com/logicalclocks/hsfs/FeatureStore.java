@@ -548,7 +548,7 @@ public class FeatureStore {
    * @param onlineEnabled Define whether the feature group should be made available also in the online feature store
    *                      for low latency access.
    * @param eventTime Name of the feature containing the event
-   *                 time for the features in this feature group. If event_time is set
+   *                 time for the features in this feature group. If eventTime is set
    *                 the feature group can be used for point-in-time joins.
    * @return FeatureGroup: The feature group metadata object
    * @throws IOException If ...
