@@ -487,7 +487,7 @@ public class FeatureStore {
    * Get a previously created Gcs compliant storage connector from the feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        StorageConnector.GcsConnector gscSc = fs.getGcsConnector("gsc_sc_name");
    * }
