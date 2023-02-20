@@ -1311,7 +1311,7 @@ public class FeatureView {
    * @param readOptions Additional read options as key/value pairs.
    * @return List of dataframe of features and labels
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
-   *                               date formats;
+   *                               date formats.
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse strings dates to date types.
    */
