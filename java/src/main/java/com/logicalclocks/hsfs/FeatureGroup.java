@@ -793,11 +793,11 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        FeatureGroup fg = ...;
-   *        //Drops records of feature data and commit
+   *        // Drops records of feature data and commit
    *        fg.commitDeleteRecord(featureData);
    * }
    * </pre>
