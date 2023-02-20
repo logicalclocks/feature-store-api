@@ -192,7 +192,7 @@ public class FeatureStore {
    * subsequently read the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        ExternalFeatureGroup fg = fs.getExternalFeatureGroup("external_fg_name", 1);
    * }
