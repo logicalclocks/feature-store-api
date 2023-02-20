@@ -1982,7 +1982,7 @@ public class FeatureView {
    * </pre>
    *
    * @param version tag version
-   * @param name name of the tag to be deleted
+   * @param name Name of the tag to be deleted.
    * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
