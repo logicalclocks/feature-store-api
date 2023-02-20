@@ -292,19 +292,19 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
    *        // define primary key values to fetch data from online feature store
    *        Map<String, Int> entry = ...;
-   *        //Get feature vector
+   *        // get feature vector
    *        fv.getFeatureVector(entry);
    * }
    * </pre>
    *
-   * @param entry dictionary of feature group primary key and values provided by serving application.
-   * @return List of feature values related to provided primary keys, ordered according to positions of this features
+   * @param entry Fictionary of feature group primary key and values provided by serving application.
+   * @return List of feature values related to provided primary keys, ordered according to positions of the features
    *         in the feature view query.
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
