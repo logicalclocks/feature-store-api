@@ -1177,13 +1177,13 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //define write options
+   *        // define write options
    *        Map<String, String> writeOptions = ...;
-   *        //get training data
+   *        // get training data
    *        fv.getTrainingData(1, writeOptions);
    * }
    * </pre>
