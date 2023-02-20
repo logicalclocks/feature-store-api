@@ -559,9 +559,9 @@ public class FeatureView {
    * </pre>
    *
    * @param name
-   *     name of the tag
+   *     Name of the tag
    * @param value
-   *     value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects
+   *     Value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects
    * @throws FeatureStoreException If Client is not connected to Hopsworks;
    * @throws IOException Generic IO exception.
    */
