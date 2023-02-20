@@ -457,13 +457,13 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        FeatureGroup fg = ...;
-   *        //Define additional write options.
+   *        // Define additional write options.
    *        Map<String, String> writeOptions = ...;
-   *        //insert feature Data.
+   *        // insert feature Data
    *        fg.insert(featureData, writeOptions);
    * }
    * </pre>
