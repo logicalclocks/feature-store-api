@@ -820,11 +820,11 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code //get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        FeatureGroup fg = ...;
-   *        //Define additional write options.
+   *        // Define additional write options.
    *        Map<String, String> writeOptions = ...;
-   *        //Drops records of feature data and commit
+   *        // Drops records of feature data and commit
    *        fg.commitDeleteRecord(featureData, writeOptions);
    * }
    * </pre>
