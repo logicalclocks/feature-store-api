@@ -571,14 +571,14 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        FeatureGroup fg = ...;
-   *        //insert feature Data in offline only and drop all data in the feature group before inserting new data.
+   *        // insert feature data in offline only and drop all data in the feature group before inserting new data
    *        fg.insert(featureData, Storage.OFFLINE, true);
    *
-   *        //Or insert feature Data in online only and drop all data in the feature group before inserting new data.
+   *        // Or insert feature data in online only and drop all data in the feature group before inserting new data
    *        fg.insert(featureData, Storage.ONLINE, true);
    * }
    * </pre>
