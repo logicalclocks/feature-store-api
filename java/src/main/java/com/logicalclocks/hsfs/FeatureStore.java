@@ -489,7 +489,7 @@ public class FeatureStore {
    * <pre>
    * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector.GcsConnector gscSc = fs.getGcsConnector("gsc_sc_name");
+   *        StorageConnector.GcsConnector gcsSc = fs.getGcsConnector("gsc_sc_name");
    * }
    * </pre>
    *
