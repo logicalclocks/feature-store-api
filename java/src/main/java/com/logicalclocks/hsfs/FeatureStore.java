@@ -246,7 +246,7 @@ public class FeatureStore {
    * }
    * </pre>
    *
-   * @param name    the name of the feature group
+   * @param name The name of the feature group.
    * @return List of ExternalFeatureGroup metadata objects.
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
    * @throws IOException Generic IO exception.
