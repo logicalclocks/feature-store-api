@@ -429,7 +429,7 @@ public class FeatureStore {
    * Get a previously created Kafka compliant storage connector from the feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        StorageConnector.KafkaConnector kafkaSc = fs.getKafkaConnector("kafka_sc_name");
    * }
