@@ -980,11 +980,11 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        FeatureGroup fg = ...;
-   *        //compute statistics as of 20230206.
+   *        // compute statistics as of 20230206
    *        fg.computeStatistics("20230206", 10);
    * }
    * </pre>
