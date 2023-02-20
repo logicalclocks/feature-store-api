@@ -445,11 +445,11 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //Get batch query that will fetch data from jan 1, 2023 to Jan 31, 2023
+   *        // get batch query that will fetch data from jan 1, 2023 to Jan 31, 2023
    *        fv.getBatchQuery("20230101", "20130131");
    * }
    * </pre>
