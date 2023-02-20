@@ -645,9 +645,9 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
    *        // create training dataset
    *        String startTime = "20220101000000";
@@ -662,11 +662,11 @@ public class FeatureView {
    * @param endTime Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
    *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param description A string describing the contents of the training dataset to  improve discoverability for
-   *                    Data Scientists
+   *                    Data Scientists.
    * @param dataFormat  The data format used to save the training dataset.
-   * @return Training dataset version
+   * @return Integer Training dataset version.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
-   *                               provided `startTime`/`endTime` date formats;
+   *                               provided `startTime`/`endTime` date formats.
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse provided `startTime`/`endTime` strings to date types.
    */
