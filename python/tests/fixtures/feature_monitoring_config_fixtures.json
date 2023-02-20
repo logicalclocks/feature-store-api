@@ -1,0 +1,106 @@
+{
+  "get_via_feature_group": {
+    "response": {
+      "id": 32,
+      "feature_name": "monitored_feature",
+      "feature_group_id": 13,
+      "feature_store_id": 67,
+      "job_id": 111,
+      "name": "unit_test_config",
+      "description": "I am a unit test fixture",
+      "enabled": true,
+      "feature_monitoring_type": "DESCRIPTIVE_STATISTICS",
+      "detection_window_config": {
+        "window_config_type": "INSERT",
+        "time_offset": "1w",
+        "window_length": "1d"
+      },
+      "reference_window_config": {
+        "window_config_type": "FEATURE_GROUP",
+        "time_offset": "LAST"
+      },
+      "descriptive_statistics_monitoring_comparison": {
+        "threshold": 1,
+        "relative": false,
+        "strict": true,
+        "compare_on": "MEAN"
+      },
+      "alert_config": "I will alert you on slack when implemented",
+      "scheduler_config": "daily",
+      "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
+    }
+  },
+  "get_via_feature_view": {
+    "response": {
+      "id": 32,
+      "feature_name": "monitored_feature",
+      "feature_view_id": 22,
+      "feature_store_id": 67,
+      "job_id": 111,
+      "name": "unit_test_config",
+      "description": "I am a unit test fixture",
+      "enabled": true,
+      "feature_monitoring_type": "DESCRIPTIVE_STATISTICS",
+      "detection_window_config": {
+        "window_config_type": "BATCH",
+        "time_offset": "1w",
+        "window_length": "1d"
+      },
+      "reference_window_config": {
+        "window_config_type": "TRAINING_DATASET",
+        "specific_id": 33
+      },
+      "descriptive_statistics_monitoring_comparison": {
+        "threshold": 1,
+        "relative": false,
+        "strict": true,
+        "compare_on": "MEAN"
+      },
+      "alert_config": "I will alert you on slack when implemented",
+      "scheduler_config": "daily",
+      "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
+    }
+  },
+  "get_list": {
+    "response": {
+      "count": 1,
+      "items": [
+        {
+          "id": 32,
+          "feature_name": "monitored_feature",
+          "feature_view_id": 22,
+          "feature_store_id": 67,
+          "job_id": 111,
+          "name": "unit_test_config",
+          "description": "I am a unit test fixture",
+          "enabled": true,
+          "feature_monitoring_type": "DESCRIPTIVE_STATISTICS",
+          "detection_window_config": {
+            "window_config_type": "BATCH",
+            "time_offset": "1w",
+            "window_length": "1d"
+          },
+          "reference_window_config": {
+            "window_config_type": "TRAINING_DATASET",
+            "specific_id": 33
+          },
+          "descriptive_statistics_monitoring_comparison": {
+            "threshold": 1,
+            "relative": false,
+            "strict": true,
+            "compare_on": "MEAN"
+          },
+          "alert_config": "I will alert you on slack when implemented",
+          "scheduler_config": "daily",
+          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
+        }
+      ]
+    }
+  },
+  "get_list_empty": {
+    "response": {
+      "count": 0,
+      "items": []
+    }
+  }
+}

@@ -16,7 +16,7 @@
 
 import json
 import humps
-from typing import Optional
+from typing import Any, Dict, List, Optional
 from hsfs import util
 
 
@@ -34,6 +34,8 @@ class FeatureMonitoringResult:
         reference_stats_id: Optional[int] = None,
         id: Optional[int] = None,
         href: Optional[str] = None,
+        items: Optional[List[Dict[str, Any]]] = None,
+        count: Optional[int] = None,
     ):
         self._id = id
         self._href = href

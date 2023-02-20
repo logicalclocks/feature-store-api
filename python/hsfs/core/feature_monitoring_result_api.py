@@ -16,11 +16,11 @@
 
 from typing import List, Optional
 from hsfs import client
-import feature_monitoring_result as fmr
+from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 
 
 class FeatureMonitoringResultApi:
-    def __init__(self, feature_store_id: int, feature_group_id: int):
+    def __init__(self, feature_store_id: int):
         """Feature Monitoring Result endpoints for the Feature Group resource.
 
         :param feature_store_id: id of the respective Feature Store
@@ -30,11 +30,11 @@ class FeatureMonitoringResultApi:
 
     def create(
         self,
-        fm_result: fmr.FeatureMonitoringResult,
+        fm_result: FeatureMonitoringResult,
         feature_group_id: Optional[int] = None,
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
-    ) -> fmr.FeatureMonitoringResult:
+    ) -> FeatureMonitoringResult:
         """Create an feature monitoring result attached to the Feature of a Feature Group.
 
         :param fm_result: feature monitoring result object to be attached to a Feature
@@ -52,7 +52,7 @@ class FeatureMonitoringResultApi:
 
         headers = {"content-type": "application/json"}
         payload = fm_result.json()
-        return fmr.FeatureMonitoringResult.from_response_json(
+        return FeatureMonitoringResult.from_response_json(
             _client._send_request("POST", path_params, headers=headers, data=payload)
         )
 
@@ -81,7 +81,7 @@ class FeatureMonitoringResultApi:
         feature_group_id: Optional[int] = None,
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
-    ) -> List[fmr.FeatureMonitoringResult]:
+    ) -> List[FeatureMonitoringResult]:
         """Get the Feature Monitoring Result attached to a Feature.
 
         :param config_id: Id of the feature monitoring config for which to fetch all results
@@ -99,7 +99,7 @@ class FeatureMonitoringResultApi:
         path_params.append("byconfig")
         path_params.append(config_id)
 
-        return fmr.FeatureMonitoringResult.from_response_json(
+        return FeatureMonitoringResult.from_response_json(
             _client._send_request("GET", path_params)
         )
 

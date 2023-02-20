@@ -1,0 +1,58 @@
+{
+  "get_via_feature_group": {
+    "response": {
+      "id": 42,
+      "entity_id": 13,
+      "feature_store_id": 67,
+      "feature_monitoring_config_id": 32,
+      "detection_stats_id": 333,
+      "reference_stats_id": 222,
+      "execution_id": 123,
+      "shift_detected": true,
+      "difference": 0.3,
+      "monitoring_time": 1676457000,
+      "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/result/byconfig/32"
+    }
+  },
+  "get_via_feature_view": {
+    "response": {
+      "id": 42,
+      "entity_id": 22,
+      "feature_store_id": 67,
+      "feature_monitoring_config_id": 32,
+      "detection_stats_id": 333,
+      "reference_stats_id": 222,
+      "execution_id": 123,
+      "shift_detected": true,
+      "difference": 0.3,
+      "monitoring_time": 1676457000,
+      "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/result/byconfig/32"
+    }
+  },
+  "get_list": {
+    "response": {
+      "count": 1,
+      "items": [
+        {
+          "id": 42,
+          "entity_id": 22,
+          "feature_store_id": 67,
+          "feature_monitoring_config_id": 32,
+          "detection_stats_id": 333,
+          "reference_stats_id": 222,
+          "execution_id": 123,
+          "shift_detected": true,
+          "difference": 0.3,
+          "monitoring_time": 1676457000,
+          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/result/byconfig/32"
+        }
+      ]
+    }
+  },
+  "get_list_empty": {
+    "response": {
+      "count": 0,
+      "items": []
+    }
+  }
+}

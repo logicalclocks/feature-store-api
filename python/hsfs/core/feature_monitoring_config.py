@@ -40,7 +40,7 @@ class FeatureMonitoringConfig:
         feature_view_id: Optional[int] = None,
         description: Optional[str] = None,
         href: Optional[str] = None,
-        items: Optional[List[Any]] = None,
+        items: Optional[List[Dict[str, Any]]] = None,
         count: Optional[int] = None,
     ):
         self._id = id

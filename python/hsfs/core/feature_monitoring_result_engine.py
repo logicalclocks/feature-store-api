@@ -31,7 +31,6 @@ class FeatureMonitoringResultEngine:
     def save_feature_monitoring_result(
         self,
         feature_monitoring_config_id: int,
-        job_id: int,
         execution_id: int,
         detection_stats_id: int,
         shift_detected: bool = False,
@@ -49,7 +48,6 @@ class FeatureMonitoringResultEngine:
             feature_store_id=self._feature_store_id,
             feature_monitoring_config_id=feature_monitoring_config_id,
             execution_id=execution_id,
-            job_id=job_id,
             detection_stats_id=detection_stats_id,
             reference_stats_id=reference_stats_id,
             difference=difference,
@@ -106,5 +104,5 @@ class FeatureMonitoringResultEngine:
 
         return {
             "filter_by": filter_by,
-            "order_by": "monitoring_time:desc",
+            "sort_by": "monitoring_time:desc",
         }
