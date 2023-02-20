@@ -448,7 +448,7 @@ public class FeatureStore {
    * Get a previously created BigQuery compliant storage connector from the feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        StorageConnector.BigqueryConnector bigqSc = fs.getBigqueryConnector("bigq_sc_name");
    * }
