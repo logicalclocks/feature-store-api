@@ -685,17 +685,17 @@ public class FeatureStore {
    * }
    * </pre>
    *
-   * @param name of the feature group to retrieve or create.
-   * @param version of the feature group to retrieve or create.
+   * @param name Name of the feature group to retrieve or create.
+   * @param version Version of the feature group to retrieve or create.
    * @param primaryKeys  A list of feature names to be used as primary key for the
    *                     feature group. This primary key can be a composite key of multiple
-   *                     features and will be used as joining key
+   *                     features and will be used as joining key.
    * @param onlineEnabled Define whether the feature group should be made available also in the online feature store
-   *                      for low latency access,
+   *                      for low latency access.
    * @param eventTime name of the feature containing the event
-   *                 time for the features in this feature group. If event_time is set
+   *                 time for the features in this feature group. If eventTime is set
    *                 the feature group can be used for point-in-time joins.
-   * @return FeatureGroup: The feature group metadata object
+   * @return FeatureGroup The feature group metadata object.
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve StreamFeatureGroup from the feature store.
    */
