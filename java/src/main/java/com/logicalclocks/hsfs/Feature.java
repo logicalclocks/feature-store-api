@@ -137,9 +137,9 @@ public class Feature {
    * Returns true if the feature has a complex type.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        FeatureGroup fg = ...;
    *        // get feature
    *        Feature ft = fg.getFeature("feature_name");
