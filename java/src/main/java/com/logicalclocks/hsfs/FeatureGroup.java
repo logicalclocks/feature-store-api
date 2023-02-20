@@ -352,9 +352,9 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        FeatureGroup fg = ...;
    *        // show top 5 lines of feature group data.
    *        fg.show(5);
