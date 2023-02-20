@@ -1124,20 +1124,20 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //define write options
+   *        // define write options
    *        Map<String, String> writeOptions = ...;
    *        //recreate training data
    *        fv.recreateTrainingDataset(1, writeOptions);
    * }
    * </pre>
    *
-   * @param version training dataset version.
+   * @param version Training dataset version.
    * @param writeOptions Additional read options as key-value pairs.
-   * @throws FeatureStoreException If Client is not connected to Hopsworks,
+   * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
   public void recreateTrainingDataset(Integer version, Map<String, String> writeOptions)
