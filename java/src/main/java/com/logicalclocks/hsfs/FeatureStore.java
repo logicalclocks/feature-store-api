@@ -410,7 +410,7 @@ public class FeatureStore {
    * Get a previously created Adls compliant storage connector from the feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        StorageConnector.AdlsConnectorr adlslSc = fs.getAdlsConnector("adls_sc_name");
    * }
