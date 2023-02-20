@@ -821,7 +821,7 @@ public class FeatureStore {
    * Get a feature view object from the selected feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        FeatureGroup fg = fs.getFeatureView("fv_name", 1);
    * }
