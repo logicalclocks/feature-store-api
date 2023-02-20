@@ -194,13 +194,13 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //update with new description
+   *        // update with new description
    *        fv.setDescription("this is new description");
-   *        //delete feature view
+   *        // delete feature view
    *        fv.update(fv);
    * }
    * </pre>
