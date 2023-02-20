@@ -200,7 +200,7 @@ public class FeatureStore {
    *
    * @param name    the name of the feature group
    * @param version the version of the feature group
-   * @return ExternalFeatureGroup: The external feature group metadata object.
+   * @return ExternalFeatureGroup The external feature group metadata object.
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
    * @throws IOException Generic IO exception.
    */
