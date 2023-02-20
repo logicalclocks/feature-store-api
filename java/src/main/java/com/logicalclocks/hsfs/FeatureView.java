@@ -1995,11 +1995,11 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //Get set of primary key names.
+   *        // get set of primary key names
    *        fv.getPrimaryKeys();
    * }
    * </pre>
