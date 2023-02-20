@@ -80,7 +80,7 @@ public abstract class StorageConnector {
   /**
    * Reads a query or a path into a dataframe using the storage connector.
    *
-   * @param query By default, the storage connector will read the table configured together  with the connector, if any.
+   * @param query By default, the storage connector will read the table configured together with the connector, if any.
    *              It's possible to overwrite this by passing a SQL query here.
    * @param dataFormat When reading from object stores such as S3, HopsFS and ADLS, specify the file format to be read,
    *                  e.g. `csv`, `parquet`.
