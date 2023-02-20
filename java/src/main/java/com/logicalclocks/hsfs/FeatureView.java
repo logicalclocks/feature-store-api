@@ -178,7 +178,7 @@ public class FeatureView {
    * }
    * </pre>
    *
-   * @param featureStore feature store metadata object.
+   * @param featureStore Feature store metadata object.
    * @param featureViewName Name of feature view.
    * @param featureViewVersion Version of feature view.
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
