@@ -897,11 +897,11 @@ public class FeatureGroup extends FeatureGroupBase {
    * Return commit details as of specific point in time.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        FeatureGroup fg = ...;
-   *        //get commit details as of 20230206.
+   *        // get commit details as of 20230206
    *        fg.commitDetails("20230206");
    * }
    * </pre>
