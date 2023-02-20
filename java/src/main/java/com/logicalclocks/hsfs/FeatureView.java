@@ -1150,19 +1150,19 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //get training data
+   *        // get training data
    *        fv.getTrainingData(1);
    * }
    * </pre>
    *
-   * @param version training dataset version.
-   * @return List of dataframe of features and labels
+   * @param version Training dataset version.
+   * @return List of dataframe of features and labels.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
-   *                               date formats;
+   *                               date formats.
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse strings dates to date types.
    */
