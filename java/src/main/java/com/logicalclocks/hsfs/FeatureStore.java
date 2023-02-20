@@ -103,7 +103,7 @@ public class FeatureStore {
    * </pre>
    *
    * @param name the name of the feature group
-   * @return FeatureGroup: The feature group metadata object.
+   * @return FeatureGroup The feature group metadata object.
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
    * @throws IOException Generic IO exception.
    */
