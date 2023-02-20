@@ -584,7 +584,7 @@ public class FeatureView {
    * </pre>
    *
    * @return a map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException If Client is not connected to Hopsworks;
+   * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
   @JsonIgnore
