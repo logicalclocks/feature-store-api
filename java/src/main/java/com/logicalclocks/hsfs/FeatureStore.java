@@ -320,7 +320,7 @@ public class FeatureStore {
    * </pre>
    *
    * @param name Name of the jdbc storage connector to retrieve.
-   * @return StorageConnector.JdbcConnector: Storage connector object
+   * @return StorageConnector.JdbcConnector Storage connector object.
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException If ...
    */
