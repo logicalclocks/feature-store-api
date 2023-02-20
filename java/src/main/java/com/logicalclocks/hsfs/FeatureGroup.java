@@ -867,7 +867,7 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Retrieves commit timeline for this feature group. This method can only be used  on time travel enabled feature
+   * Retrieves commit timeline for this feature group. This method can only be used on time travel enabled feature
    * groups.
    *
    * <pre>
