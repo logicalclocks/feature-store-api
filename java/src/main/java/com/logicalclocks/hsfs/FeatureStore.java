@@ -803,11 +803,11 @@ public class FeatureStore {
    * }
    * </pre>
    *
-   * @param name name of the feature view
-   * @param query Query object
-   * @param version version of the feature view
-   * @param description description of the feature view
-   * @param labels list of label features
+   * @param name Name of the feature view.
+   * @param query Query object.
+   * @param version Version of the feature view.
+   * @param description Description of the feature view.
+   * @param labels List of label features.
    * @return FeatureView The feature view metadata object.
    * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
    * @throws IOException Generic IO exception.
