@@ -692,14 +692,14 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        FeatureGroup fg = ...;
-   *        //Define additional write options.
+   *        // Define additional write options
    *        Map<String, String> writeOptions = ...;
-   *        //insert feature Data in offline only with additional write options and drop all previous data before new
-   *        // data is inserted.
+   *        // insert feature Data in offline only with additional write options and drop all previous data before new
+   *        // data is inserted
    *        fg.insert(featureData, Storage.OFFLINE, true, HudiOperationType.INSERT, writeOptions);
    * }
    * </pre>
