@@ -16,7 +16,8 @@
 
 import json
 from typing import Any, Dict, Optional, Union
-from datetime import date, datetime
+import datetime
+import dateutil
 
 import humps
 import great_expectations as ge
@@ -33,7 +34,7 @@ class ValidationResult:
         result: Dict[str, Any],
         expectation_config: str,
         exception_info: Dict[str, Any],
-        meta: Optional[Dict[str, Any]] = {},
+        meta: Optional[Dict[str, Any]] = None,
         id: Optional[int] = None,
         observed_value: Optional[Any] = None,
         expectation_id: Optional[int] = None,
@@ -146,7 +147,9 @@ class ValidationResult:
         return self._meta
 
     @meta.setter
-    def meta(self, meta: Dict[str, Any] = {}):
+    def meta(self, meta: Dict[str, Any] = None):
+        if meta is None:
+            self._meta = {}
         if isinstance(meta, dict):
             self._meta = meta
         elif isinstance(meta, str):
@@ -190,7 +193,7 @@ class ValidationResult:
 
     @validation_time.setter
     def validation_time(
-        self, validation_time: Union[str, int, datetime, date, None]
+        self, validation_time: Union[str, int, datetime.datetime, datetime.date, None]
     ) -> None:
         """
         Time at which validation was run using Great Expectations.
@@ -199,6 +202,16 @@ class ValidationResult:
             validation_time: The time at which validation was performed.
             Supported format include timestamps(int), datetime, date or string formatted to be datutils parsable.
         """
+        if isinstance(validation_time, str):
+            try:
+                # returns a datemtime to be converted to timestamp below
+                validation_time = dateutil.parser.parse(validation_time).astimezone(
+                    datetime.timezone.utc
+                )
+            except ValueError:
+                pass
+        # use the same function as the rest of the client to deal with conversion to timestamps
+        # from various types
         if validation_time:
             self._validation_time = util.convert_event_time_to_timestamp(
                 validation_time

@@ -693,6 +693,8 @@ class FeatureStore:
 
         # Arguments
             name: Name of the external feature group to create.
+            storage_connector: the storage connector to use to establish connectivity
+                with the data source.
             query: A string containing a SQL query valid for the target data source.
                 the query will be used to pull data from the data sources when the
                 feature group is used.
@@ -700,8 +702,9 @@ class FeatureStore:
                 the data format to use when reading it
             path: The location within the scope of the storage connector, from where to read
                 the data for the external feature group
-            storage_connector: the storage connector to use to establish connectivity
-                with the data source.
+            options: Additional options to be used by the engine when reading data from the
+                specified storage connector. For example, `{"header": True}` when reading
+                CSV files with column names in the first row.
             version: Version of the external feature group to retrieve, defaults to `None` and
                 will create the feature group with incremented version from the last
                 version in the feature store.
@@ -795,6 +798,8 @@ class FeatureStore:
 
         # Arguments
             name: Name of the external feature group to create.
+            storage_connector: the storage connector to use to establish connectivity
+                with the data source.
             query: A string containing a SQL query valid for the target data source.
                 the query will be used to pull data from the data sources when the
                 feature group is used.
@@ -802,8 +807,9 @@ class FeatureStore:
                 the data format to use when reading it
             path: The location within the scope of the storage connector, from where to read
                 the data for the external feature group
-            storage_connector: the storage connector to use to establish connectivity
-                with the data source.
+            options: Additional options to be used by the engine when reading data from the
+                specified storage connector. For example, `{"header": True}` when reading
+                CSV files with column names in the first row.
             version: Version of the external feature group to retrieve, defaults to `None` and
                 will create the feature group with incremented version from the last
                 version in the feature store.
