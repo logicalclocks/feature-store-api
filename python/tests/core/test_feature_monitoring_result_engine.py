@@ -20,36 +20,41 @@ import dateutil
 from hsfs import util
 
 DEFAULT_MONITORING_TIME_SORT_BY = "monitoring_time:desc"
+DEFAULT_FEATURE_STORE_ID = 67
+DEFAULT_FEATURE_GROUP_ID = 13
+DEFAULT_FEATURE_VIEW_ID = 22
+DEFAULT_FEATURE_VIEW_NAME = "test_feature_view"
+DEFAULT_FEATURE_VIEW_VERSION = 2
+DEFAULT_CONFIG_ID = 32
 
 
 class TestFeatureMonitoringResultEngine:
     def test_fetch_all_feature_monitoring_results_by_config_id_via_fg(self, mocker):
         # Arrange
-        feature_store_id = 67
         start_time = "2022-01-01 10:10:10"
         end_time = "2022-02-02 20:20:20"
-        config_id = 32
-        feature_group_id = 13
 
         mock_result_api = mocker.patch(
             "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.get_by_config_id",
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=feature_store_id
+            feature_store_id=DEFAULT_FEATURE_STORE_ID
         )
 
         # Act
         result_engine.fetch_all_feature_monitoring_results_by_config_id(
-            config_id=config_id,
-            feature_group_id=feature_group_id,
+            config_id=DEFAULT_CONFIG_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
             start_time=start_time,
             end_time=end_time,
         )
 
         # Assert
-        assert mock_result_api.call_args[1]["config_id"] == config_id
-        assert mock_result_api.call_args[1]["feature_group_id"] == feature_group_id
+        assert mock_result_api.call_args[1]["config_id"] == DEFAULT_CONFIG_ID
+        assert (
+            mock_result_api.call_args[1]["feature_group_id"] == DEFAULT_FEATURE_GROUP_ID
+        )
         assert mock_result_api.call_args[1]["feature_view_name"] is None
         assert mock_result_api.call_args[1]["feature_view_version"] is None
         assert isinstance(mock_result_api.call_args[1]["query_params"], dict)
@@ -68,36 +73,36 @@ class TestFeatureMonitoringResultEngine:
 
     def test_fetch_all_feature_monitoring_results_by_config_id_via_fv(self, mocker):
         # Arrange
-        feature_store_id = 67
         start_time = "2022-01-01 01:01:01"
         end_time = "2022-02-02 02:02:02"
-        config_id = 32
-        feature_view_name = "test_feature_view"
-        feature_view_version = 2
 
         mock_result_api = mocker.patch(
             "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.get_by_config_id",
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=feature_store_id
+            feature_store_id=DEFAULT_FEATURE_STORE_ID
         )
 
         # Act
         result_engine.fetch_all_feature_monitoring_results_by_config_id(
-            config_id=config_id,
-            feature_view_name=feature_view_name,
-            feature_view_version=feature_view_version,
+            config_id=DEFAULT_CONFIG_ID,
+            feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
+            feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
             start_time=start_time,
             end_time=end_time,
         )
 
         # Assert
-        assert mock_result_api.call_args[1]["config_id"] == config_id
+        assert mock_result_api.call_args[1]["config_id"] == DEFAULT_CONFIG_ID
         assert mock_result_api.call_args[1]["feature_group_id"] is None
-        assert mock_result_api.call_args[1]["feature_view_name"] == feature_view_name
         assert (
-            mock_result_api.call_args[1]["feature_view_version"] == feature_view_version
+            mock_result_api.call_args[1]["feature_view_name"]
+            == DEFAULT_FEATURE_VIEW_NAME
+        )
+        assert (
+            mock_result_api.call_args[1]["feature_view_version"]
+            == DEFAULT_FEATURE_VIEW_VERSION
         )
         assert isinstance(mock_result_api.call_args[1]["query_params"], dict)
         assert (
@@ -115,9 +120,6 @@ class TestFeatureMonitoringResultEngine:
 
     def test_save_feature_monitoring_result_via_fg(self, mocker):
         # Arrange
-        feature_store_id = 67
-        feature_group_id = 13
-        feature_monitoring_config_id = 32
         execution_id = 123
         detection_stats_id = 333
         reference_stats_id = 222
@@ -129,29 +131,31 @@ class TestFeatureMonitoringResultEngine:
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=feature_store_id
+            feature_store_id=DEFAULT_FEATURE_STORE_ID
         )
         before_time = datetime.now()
 
         # Act
         result_engine.save_feature_monitoring_result(
-            feature_monitoring_config_id=feature_monitoring_config_id,
+            feature_monitoring_config_id=DEFAULT_CONFIG_ID,
             execution_id=execution_id,
             detection_stats_id=detection_stats_id,
             reference_stats_id=reference_stats_id,
-            feature_group_id=feature_group_id,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
             difference=difference,
             shift_detected=shift_detected,
         )
         after_time = datetime.now()
 
         # Assert
-        assert mock_result_api.call_args[1]["feature_group_id"] == feature_group_id
+        assert (
+            mock_result_api.call_args[1]["feature_group_id"] == DEFAULT_FEATURE_GROUP_ID
+        )
         assert mock_result_api.call_args[1]["feature_view_name"] is None
         assert mock_result_api.call_args[1]["feature_view_version"] is None
         result = mock_result_api.call_args[0][0]
-        assert result._entity_id == feature_group_id
-        assert result._feature_monitoring_config_id == feature_monitoring_config_id
+        assert result._entity_id == DEFAULT_FEATURE_GROUP_ID
+        assert result._feature_monitoring_config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
         assert result._detection_stats_id == detection_stats_id
         assert result._reference_stats_id == reference_stats_id
@@ -167,35 +171,30 @@ class TestFeatureMonitoringResultEngine:
 
     def test_save_feature_monitoring_result_via_fv(self, mocker):
         # Arrange
-        feature_store_id = 67
-        feature_view_id = 22
-        feature_monitoring_config_id = 32
         execution_id = 123
         detection_stats_id = 333
         reference_stats_id = 222
         shift_detected = False
         difference = 0.3
-        feature_view_name = "test_feature_view"
-        feature_view_version = 2
 
         mock_result_api = mocker.patch(
             "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create",
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=feature_store_id
+            feature_store_id=DEFAULT_FEATURE_STORE_ID
         )
         before_time = datetime.now()
 
         # Act
         result_engine.save_feature_monitoring_result(
-            feature_monitoring_config_id=feature_monitoring_config_id,
+            feature_monitoring_config_id=DEFAULT_CONFIG_ID,
             execution_id=execution_id,
             detection_stats_id=detection_stats_id,
             reference_stats_id=reference_stats_id,
-            feature_view_id=feature_view_id,
-            feature_view_name=feature_view_name,
-            feature_view_version=feature_view_version,
+            feature_view_id=DEFAULT_FEATURE_VIEW_ID,
+            feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
+            feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
             difference=difference,
             shift_detected=shift_detected,
         )
@@ -203,13 +202,17 @@ class TestFeatureMonitoringResultEngine:
 
         # Assert
         assert mock_result_api.call_args[1]["feature_group_id"] is None
-        assert mock_result_api.call_args[1]["feature_view_name"] == feature_view_name
         assert (
-            mock_result_api.call_args[1]["feature_view_version"] == feature_view_version
+            mock_result_api.call_args[1]["feature_view_name"]
+            == DEFAULT_FEATURE_VIEW_NAME
+        )
+        assert (
+            mock_result_api.call_args[1]["feature_view_version"]
+            == DEFAULT_FEATURE_VIEW_VERSION
         )
         result = mock_result_api.call_args[0][0]
-        assert result._entity_id == feature_view_id
-        assert result._feature_monitoring_config_id == feature_monitoring_config_id
+        assert result._entity_id == DEFAULT_FEATURE_VIEW_ID
+        assert result._feature_monitoring_config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
         assert result._detection_stats_id == detection_stats_id
         assert result._reference_stats_id == reference_stats_id

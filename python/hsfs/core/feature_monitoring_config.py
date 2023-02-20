@@ -31,7 +31,7 @@ class FeatureMonitoringConfig:
         job_id: Optional[int] = None,
         detection_window_config: Optional[Dict[Any, Any]] = None,
         reference_window_config: Optional[Dict[Any, Any]] = None,
-        descriptive_statistics_monitoring_comparison: Optional[Dict[Any, Any]] = None,
+        descriptive_statistics_comparison_config: Optional[Dict[Any, Any]] = None,
         alert_config: Optional[str] = None,
         scheduler_config: Optional[str] = None,
         enabled: bool = True,
@@ -56,8 +56,8 @@ class FeatureMonitoringConfig:
         self._enabled = enabled
         self._scheduler_config = scheduler_config
         self._alert_config = alert_config
-        self._descriptive_statistics_monitoring_comparison = (
-            descriptive_statistics_monitoring_comparison
+        self._descriptive_statistics_comparison_config = (
+            descriptive_statistics_comparison_config
         )
         self._detection_window_config = detection_window_config
         self._reference_window_config = reference_window_config
@@ -89,7 +89,7 @@ class FeatureMonitoringConfig:
             "alert_config_DTO": self._alert_config,
             "detection_monitoring_window_configuration_DTO": self._detection_window_config,
             "reference_monitoring_window_configuration_DTO": self._reference_window_config,
-            "descriptive_statistics_monitoring_comparison_DTO": self._descriptive_statistics_monitoring_comparison,
+            "descriptive_statistics_comparison_configuration_DTO": self._descriptive_statistics_comparison_config,
         }
 
     def json(self) -> str:

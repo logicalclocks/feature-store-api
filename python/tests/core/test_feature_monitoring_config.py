@@ -44,12 +44,10 @@ class TestFeatureMonitoringConfig:
         assert config._reference_window_config["window_config_type"] == "FEATURE_GROUP"
         assert config._reference_window_config["time_offset"] == "LAST"
 
-        assert config._descriptive_statistics_monitoring_comparison["threshold"] == 1
-        assert config._descriptive_statistics_monitoring_comparison["strict"] is True
-        assert config._descriptive_statistics_monitoring_comparison["relative"] is False
-        assert (
-            config._descriptive_statistics_monitoring_comparison["compare_on"] == "MEAN"
-        )
+        assert config._descriptive_statistics_comparison_config["threshold"] == 1
+        assert config._descriptive_statistics_comparison_config["strict"] is True
+        assert config._descriptive_statistics_comparison_config["relative"] is False
+        assert config._descriptive_statistics_comparison_config["compare_on"] == "MEAN"
 
     def test_from_response_json_via_fv(self, backend_fixtures):
         # Arrange
@@ -81,12 +79,10 @@ class TestFeatureMonitoringConfig:
         )
         assert config._reference_window_config["specific_id"] == 33
 
-        assert config._descriptive_statistics_monitoring_comparison["threshold"] == 1
-        assert config._descriptive_statistics_monitoring_comparison["strict"] is True
-        assert config._descriptive_statistics_monitoring_comparison["relative"] is False
-        assert (
-            config._descriptive_statistics_monitoring_comparison["compare_on"] == "MEAN"
-        )
+        assert config._descriptive_statistics_comparison_config["threshold"] == 1
+        assert config._descriptive_statistics_comparison_config["strict"] is True
+        assert config._descriptive_statistics_comparison_config["relative"] is False
+        assert config._descriptive_statistics_comparison_config["compare_on"] == "MEAN"
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
@@ -122,12 +118,10 @@ class TestFeatureMonitoringConfig:
         )
         assert config._reference_window_config["specific_id"] == 33
 
-        assert config._descriptive_statistics_monitoring_comparison["threshold"] == 1
-        assert config._descriptive_statistics_monitoring_comparison["strict"] is True
-        assert config._descriptive_statistics_monitoring_comparison["relative"] is False
-        assert (
-            config._descriptive_statistics_monitoring_comparison["compare_on"] == "MEAN"
-        )
+        assert config._descriptive_statistics_comparison_config["threshold"] == 1
+        assert config._descriptive_statistics_comparison_config["strict"] is True
+        assert config._descriptive_statistics_comparison_config["relative"] is False
+        assert config._descriptive_statistics_comparison_config["compare_on"] == "MEAN"
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange

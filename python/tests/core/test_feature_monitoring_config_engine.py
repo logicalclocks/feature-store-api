@@ -14,7 +14,405 @@
 #   limitations under the License.
 #
 
+from hsfs.core import feature_monitoring_config_engine
+
+DEFAULT_DESCRIPTION = "A feature monitoring configuration for unit test."
+DEFAULT_NAME = "test_monitoring_config"
+DEFAULT_FEATURE_NAME = "monitored_feature"
+DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API = (
+    "hsfs.core.feature_monitoring_config_api.FeatureMonitoringConfigApi.create"
+)
+DEFAULT_FEATURE_MONITORING_TYPE = "DESCRIPTIVE_STATISTICS"
+DEFAULT_FEATURE_STORE_ID = 67
+DEFAULT_FEATURE_GROUP_ID = 13
+DEFAULT_FEATURE_VIEW_ID = 22
+DEFAULT_FEATURE_VIEW_NAME = "feature_view_unittest"
+DEFAULT_FEATURE_VIEW_VERSION = 2
+DEFAULT_ALERT_CONFIG = "alert_config"
+DEFAULT_SCHEDULER_CONFIG = "scheduler_config"
+
 
 class TestFeatureMonitoringConfigEngine:
-    def test_to_implement(self):
-        assert False
+    # This needs more extensive unit testing once we have implemented some logic to
+    # verify the compatibility of the different args
+    def test_build_monitoring_window_config(self):
+        # Arrange
+        config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID
+        )
+
+        # Act
+        window_config = config_engine.build_monitoring_window_config(
+            entity_to_monitor="FEATURE_GROUP",
+            time_offset="LAST",
+            row_percentage=10,
+        )
+
+        # Assert
+        assert window_config["window_configuration_type"] == "FEATURE_GROUP"
+        assert window_config["time_offset"] == "LAST"
+        assert window_config["row_percentage"] == 10
+
+    def test_build_feature_monitoring_config(self):
+        # Arrange
+        config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID
+        )
+
+        detection_window_config = config_engine.build_monitoring_window_config(
+            entity_to_monitor="INSERT",
+            time_offset="1w",
+            window_length="1d",
+        )
+        reference_window_config = config_engine.build_monitoring_window_config(
+            entity_to_monitor="FEATURE_GROUP", specific_value=2
+        )
+
+        stats_comparison_config = {
+            "threshold": 1,
+            "strict": True,
+            "relative": False,
+            "compare_on": "MEAN",
+        }
+
+        # Act
+        config = config_engine.build_feature_monitoring_config(
+            name=DEFAULT_NAME,
+            feature_name=DEFAULT_FEATURE_NAME,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
+            detection_window_config=detection_window_config,
+            reference_window_config=reference_window_config,
+            descriptive_statistics_comparison_config=stats_comparison_config,
+            description=DEFAULT_DESCRIPTION,
+            scheduler_config=DEFAULT_SCHEDULER_CONFIG,
+            alert_config=DEFAULT_ALERT_CONFIG,
+        )
+
+        # Assert
+        assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
+        assert config._feature_group_id == DEFAULT_FEATURE_GROUP_ID
+        assert config._feature_name == DEFAULT_FEATURE_NAME
+        assert config._name == DEFAULT_NAME
+        assert config._description == DEFAULT_DESCRIPTION
+        assert config._enabled is True
+        assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
+        assert config._alert_config == DEFAULT_ALERT_CONFIG
+        assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
+        assert config._detection_window_config["window_configuration_type"] == "INSERT"
+        assert config._detection_window_config["time_offset"] == "1w"
+        assert config._detection_window_config["window_length"] == "1d"
+        assert (
+            config._reference_window_config["window_configuration_type"]
+            == "FEATURE_GROUP"
+        )
+        assert config._reference_window_config["specific_value"] == 2
+        assert (
+            config._descriptive_statistics_comparison_config["threshold"]
+            == stats_comparison_config["threshold"]
+        )
+        assert (
+            config._descriptive_statistics_comparison_config["strict"]
+            == stats_comparison_config["strict"]
+        )
+        assert (
+            config._descriptive_statistics_comparison_config["relative"]
+            == stats_comparison_config["relative"]
+        )
+        assert (
+            config._descriptive_statistics_comparison_config["compare_on"]
+            == stats_comparison_config["compare_on"]
+        )
+
+    def test_enable_feature_monitoring_config_fg(self, mocker):
+        # Arrange
+        mock_config_api = mocker.patch(
+            "hsfs.core.feature_monitoring_config_api.FeatureMonitoringConfigApi.create"
+        )
+
+        config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID
+        )
+
+        detection_window_config = config_engine.build_monitoring_window_config(
+            entity_to_monitor="INSERT",
+            time_offset="1w",
+            window_length="1d",
+        )
+        reference_window_config = config_engine.build_monitoring_window_config(
+            entity_to_monitor="FEATURE_GROUP", specific_value=2
+        )
+
+        stats_comparison_config = {
+            "threshold": 1,
+            "strict": True,
+            "relative": False,
+            "compare_on": "MEAN",
+        }
+
+        # Act
+        config_engine.enable_feature_monitoring_config(
+            name=DEFAULT_NAME,
+            feature_name=DEFAULT_FEATURE_NAME,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
+            detection_window_config=detection_window_config,
+            reference_window_config=reference_window_config,
+            descriptive_statistics_comparison_config=stats_comparison_config,
+            description=DEFAULT_DESCRIPTION,
+            scheduler_config=DEFAULT_SCHEDULER_CONFIG,
+            alert_config=DEFAULT_ALERT_CONFIG,
+        )
+
+        # Assert
+        assert (
+            mock_config_api.call_args[1]["feature_group_id"] == DEFAULT_FEATURE_GROUP_ID
+        )
+        assert mock_config_api.call_args[1]["feature_view_name"] is None
+        assert mock_config_api.call_args[1]["feature_view_version"] is None
+        config = mock_config_api.call_args[1]["fm_config"]
+        assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
+        assert config._feature_group_id == DEFAULT_FEATURE_GROUP_ID
+        assert config._feature_view_id is None
+        assert config._feature_name == DEFAULT_FEATURE_NAME
+        assert config._name == DEFAULT_NAME
+        assert config._description == DEFAULT_DESCRIPTION
+        assert config._enabled is True
+        assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
+        assert config._alert_config == DEFAULT_ALERT_CONFIG
+        assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
+        assert config._detection_window_config["window_configuration_type"] == "INSERT"
+        assert config._detection_window_config["time_offset"] == "1w"
+        assert config._detection_window_config["window_length"] == "1d"
+        assert (
+            config._reference_window_config["window_configuration_type"]
+            == "FEATURE_GROUP"
+        )
+        assert config._reference_window_config["specific_value"] == 2
+        assert (
+            config._descriptive_statistics_comparison_config["threshold"]
+            == stats_comparison_config["threshold"]
+        )
+        assert (
+            config._descriptive_statistics_comparison_config["strict"]
+            == stats_comparison_config["strict"]
+        )
+        assert (
+            config._descriptive_statistics_comparison_config["relative"]
+            == stats_comparison_config["relative"]
+        )
+        assert (
+            config._descriptive_statistics_comparison_config["compare_on"]
+            == stats_comparison_config["compare_on"]
+        )
+
+    def test_enable_feature_monitoring_config_fv(self, mocker):
+        # Arrange
+        mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
+
+        config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID
+        )
+
+        detection_window_config = config_engine.build_monitoring_window_config(
+            entity_to_monitor="BATCH",
+            time_offset="1w",
+            window_length="1d",
+        )
+        reference_window_config = config_engine.build_monitoring_window_config(
+            entity_to_monitor="TRAINING_DATASET", specific_id=12
+        )
+
+        stats_comparison_config = {
+            "threshold": 1,
+            "strict": True,
+            "relative": False,
+            "compare_on": "MEAN",
+        }
+
+        # Act
+        config_engine.enable_feature_monitoring_config(
+            name=DEFAULT_NAME,
+            feature_name=DEFAULT_FEATURE_NAME,
+            feature_view_id=DEFAULT_FEATURE_VIEW_ID,
+            detection_window_config=detection_window_config,
+            reference_window_config=reference_window_config,
+            descriptive_statistics_comparison_config=stats_comparison_config,
+            description=DEFAULT_DESCRIPTION,
+            scheduler_config=DEFAULT_SCHEDULER_CONFIG,
+            alert_config=DEFAULT_ALERT_CONFIG,
+            feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
+            feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
+        )
+
+        # Assert
+        assert mock_config_api.call_args[1]["feature_group_id"] is None
+        assert (
+            mock_config_api.call_args[1]["feature_view_name"]
+            == DEFAULT_FEATURE_VIEW_NAME
+        )
+        assert (
+            mock_config_api.call_args[1]["feature_view_version"]
+            == DEFAULT_FEATURE_VIEW_VERSION
+        )
+        config = mock_config_api.call_args[1]["fm_config"]
+        assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
+        assert config._feature_group_id is None
+        assert config._feature_view_id == DEFAULT_FEATURE_VIEW_ID
+        assert config._feature_name == DEFAULT_FEATURE_NAME
+        assert config._name == DEFAULT_NAME
+        assert config._description == DEFAULT_DESCRIPTION
+        assert config._enabled is True
+        assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
+        assert config._alert_config == DEFAULT_ALERT_CONFIG
+        assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
+        assert config._detection_window_config["window_configuration_type"] == "BATCH"
+        assert config._detection_window_config["time_offset"] == "1w"
+        assert config._detection_window_config["window_length"] == "1d"
+        assert (
+            config._reference_window_config["window_configuration_type"]
+            == "TRAINING_DATASET"
+        )
+        assert config._reference_window_config["specific_id"] == 12
+        assert (
+            config._descriptive_statistics_comparison_config["threshold"]
+            == stats_comparison_config["threshold"]
+        )
+        assert (
+            config._descriptive_statistics_comparison_config["strict"]
+            == stats_comparison_config["strict"]
+        )
+        assert (
+            config._descriptive_statistics_comparison_config["relative"]
+            == stats_comparison_config["relative"]
+        )
+        assert (
+            config._descriptive_statistics_comparison_config["compare_on"]
+            == stats_comparison_config["compare_on"]
+        )
+
+    def test_build_stats_monitoring_only_config(self):
+        # Arrange
+        config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID
+        )
+
+        detection_window_config = config_engine.build_monitoring_window_config(
+            entity_to_monitor="INSERT",
+            time_offset="1w",
+            window_length="1d",
+        )
+
+        # Act
+        config = config_engine.build_stats_monitoring_only_config(
+            name=DEFAULT_NAME,
+            feature_name=DEFAULT_FEATURE_NAME,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
+            detection_window_config=detection_window_config,
+            description=DEFAULT_DESCRIPTION,
+            scheduler_config=DEFAULT_SCHEDULER_CONFIG,
+        )
+
+        # Assert
+        assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
+        assert config._feature_group_id == DEFAULT_FEATURE_GROUP_ID
+        assert config._feature_name == DEFAULT_FEATURE_NAME
+        assert config._enabled is True
+        assert config._name == DEFAULT_NAME
+        assert config._description == DEFAULT_DESCRIPTION
+        assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
+        assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
+        assert config._detection_window_config["window_configuration_type"] == "INSERT"
+        assert config._detection_window_config["time_offset"] == "1w"
+        assert config._detection_window_config["window_length"] == "1d"
+
+    def test_enable_descriptive_statistics_monitoring_fg(self, mocker):
+        # Arrange
+        mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
+
+        config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID
+        )
+
+        detection_window_config = config_engine.build_monitoring_window_config(
+            entity_to_monitor="INSERT",
+            time_offset="1w",
+            window_length="1d",
+        )
+
+        # Act
+        config_engine.enable_descriptive_statistics_monitoring(
+            name=DEFAULT_NAME,
+            feature_name=DEFAULT_FEATURE_NAME,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
+            detection_window_config=detection_window_config,
+            description=DEFAULT_DESCRIPTION,
+            scheduler_config=DEFAULT_SCHEDULER_CONFIG,
+        )
+
+        # Assert
+        assert (
+            mock_config_api.call_args[1]["feature_group_id"] == DEFAULT_FEATURE_GROUP_ID
+        )
+        assert mock_config_api.call_args[1]["feature_view_name"] is None
+        assert mock_config_api.call_args[1]["feature_view_version"] is None
+        config = mock_config_api.call_args[1]["fm_config"]
+        assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
+        assert config._feature_group_id == DEFAULT_FEATURE_GROUP_ID
+        assert config._feature_view_id is None
+        assert config._feature_name == DEFAULT_FEATURE_NAME
+        assert config._enabled is True
+        assert config._name == DEFAULT_NAME
+        assert config._description == DEFAULT_DESCRIPTION
+        assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
+        assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
+        assert config._detection_window_config["window_configuration_type"] == "INSERT"
+        assert config._detection_window_config["time_offset"] == "1w"
+        assert config._detection_window_config["window_length"] == "1d"
+
+    def test_enable_descriptive_statistics_monitoring_fv(self, mocker):
+        # Arrange
+        mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
+
+        config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID
+        )
+
+        detection_window_config = config_engine.build_monitoring_window_config(
+            entity_to_monitor="BATCH",
+            time_offset="1w",
+            window_length="1d",
+        )
+
+        # Act
+        config_engine.enable_descriptive_statistics_monitoring(
+            name=DEFAULT_NAME,
+            feature_name=DEFAULT_FEATURE_NAME,
+            feature_view_id=DEFAULT_FEATURE_VIEW_ID,
+            feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
+            feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
+            detection_window_config=detection_window_config,
+            scheduler_config=DEFAULT_SCHEDULER_CONFIG,
+        )
+
+        # Assert
+        assert mock_config_api.call_args[1]["feature_group_id"] is None
+        assert (
+            mock_config_api.call_args[1]["feature_view_name"]
+            == DEFAULT_FEATURE_VIEW_NAME
+        )
+        assert (
+            mock_config_api.call_args[1]["feature_view_version"]
+            == DEFAULT_FEATURE_VIEW_VERSION
+        )
+        config = mock_config_api.call_args[1]["fm_config"]
+        assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
+        assert config._feature_group_id is None
+        assert config._feature_view_id == DEFAULT_FEATURE_VIEW_ID
+        assert config._feature_name == DEFAULT_FEATURE_NAME
+        assert config._enabled is True
+        assert config._name == DEFAULT_NAME
+        assert config._description is None
+        assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
+        assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
+        assert config._detection_window_config["window_configuration_type"] == "BATCH"
+        assert config._detection_window_config["time_offset"] == "1w"
+        assert config._detection_window_config["window_length"] == "1d"

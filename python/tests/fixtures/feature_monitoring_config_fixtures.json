@@ -19,7 +19,7 @@
         "window_config_type": "FEATURE_GROUP",
         "time_offset": "LAST"
       },
-      "descriptive_statistics_monitoring_comparison": {
+      "descriptive_statistics_comparison_config": {
         "threshold": 1,
         "relative": false,
         "strict": true,
@@ -50,7 +50,7 @@
         "window_config_type": "TRAINING_DATASET",
         "specific_id": 33
       },
-      "descriptive_statistics_monitoring_comparison": {
+      "descriptive_statistics_comparison_config": {
         "threshold": 1,
         "relative": false,
         "strict": true,
@@ -84,7 +84,7 @@
             "window_config_type": "TRAINING_DATASET",
             "specific_id": 33
           },
-          "descriptive_statistics_monitoring_comparison": {
+          "descriptive_statistics_comparison_config": {
             "threshold": 1,
             "relative": false,
             "strict": true,
