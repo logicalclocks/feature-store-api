@@ -1218,7 +1218,7 @@ public class FeatureView {
    * }
    * </pre>
    *
-   * @param version training dataset version.
+   * @param version Training dataset version.
    * @return List of dataframe of features and labels
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
    *                               date formats;
