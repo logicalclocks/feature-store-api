@@ -370,7 +370,7 @@ public class FeatureStore {
    * Get a previously created Redshift compliant storage connector from the feature store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        StorageConnector.RedshiftConnector rshSc = fs.getRedshiftConnector("rsh_sc_name");
    * }
