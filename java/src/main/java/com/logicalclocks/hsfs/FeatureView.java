@@ -357,20 +357,20 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
    *        // define primary key values to fetch data from online feature store
    *        Map<String, List<Long>> entry = ...;
-   *        //Get feature vector
+   *        // get feature vector
    *        fv.getFeatureVector(entry);
    * }
    * </pre>
    *
-   * @param entry a list of dictionary of feature group primary key and values provided by serving application.
+   * @param entry A list of dictionaries of feature group primary key and values provided by serving application.
    * @return List of lists of feature values related to provided primary keys, ordered according to
-   *         positions of this features in the feature view query.
+   *         positions of the features in the feature view query.
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    * @throws SQLException In case there is online storage (RonDB) access error or other errors.
