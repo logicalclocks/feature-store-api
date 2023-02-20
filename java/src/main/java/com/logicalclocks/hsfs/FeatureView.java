@@ -1205,15 +1205,15 @@ public class FeatureView {
   }
 
   /**
-   * Get training data created by `featureView.createTrainTestSplit`  or `featureView.trainTestSplit`.
+   * Get training data created by `featureView.createTrainTestSplit` or `featureView.trainTestSplit`.
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //get train test split dataframe of features and labels
+   *        // get train test split dataframe of features and labels
    *        fv.getTrainTestSplit(1);
    * }
    * </pre>
