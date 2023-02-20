@@ -64,7 +64,7 @@ class TestFeatureMonitoringConfig:
         assert config._id == 32
         assert config._feature_store_id == 67
         assert config._feature_view_id == 22
-        assert config._feature_view_id is None
+        assert config._feature_group_id is None
         assert config._href[-2:] == "32"
         assert config._feature_name == "monitored_feature"
         assert config._job_id == 111

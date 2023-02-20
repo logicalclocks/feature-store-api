@@ -68,10 +68,7 @@ class FeatureMonitoringConfig:
         if "count" in json_decamelized:
             if json_decamelized["count"] == 0:
                 return []
-            return [
-                cls(**expectation_suite)
-                for expectation_suite in json_decamelized["items"]
-            ]
+            return [cls(**config) for config in json_decamelized["items"]]
         else:
             return cls(**json_decamelized)
 

@@ -75,7 +75,7 @@ class FeatureMonitoringResultApi:
 
         _client._send_request("DELETE", path_params)
 
-    def get_all(
+    def get_by_config_id(
         self,
         config_id: int,
         feature_group_id: Optional[int] = None,

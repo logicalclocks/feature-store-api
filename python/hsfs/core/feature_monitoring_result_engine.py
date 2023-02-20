@@ -68,11 +68,11 @@ class FeatureMonitoringResultEngine:
     def fetch_all_feature_monitoring_results_by_config_id(
         self,
         config_id: int,
-        feature_group_id: Optional[int],
-        feature_view_name: Optional[str],
-        feature_view_version: Optional[int],
-        start_time: Union[str, int, datetime, date, None],
-        end_time: Union[str, int, datetime, date, None],
+        feature_group_id: Optional[int] = None,
+        feature_view_name: Optional[str] = None,
+        feature_view_version: Optional[int] = None,
+        start_time: Union[str, int, datetime, date, None] = None,
+        end_time: Union[str, int, datetime, date, None] = None,
     ) -> List[FeatureMonitoringResult]:
 
         query_params = self.build_query_params(
@@ -80,7 +80,7 @@ class FeatureMonitoringResultEngine:
             end_time=end_time,
         )
 
-        return self._feature_monitoring_result_api.get_all(
+        return self._feature_monitoring_result_api.get_by_config_id(
             config_id=config_id,
             feature_group_id=feature_group_id,
             feature_view_name=feature_view_name,
