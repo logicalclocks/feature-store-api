@@ -773,7 +773,7 @@ public class FeatureStore {
    * existing feature view metadata.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        FeatureGroup fg = fs.getOrCreateFeatureView("fv_name", query, 1);
    * }
