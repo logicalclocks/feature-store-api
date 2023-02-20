@@ -597,11 +597,11 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //get tag
+   *        // get tag
    *        fv.getTag("tag_name");
    * }
    * </pre>
