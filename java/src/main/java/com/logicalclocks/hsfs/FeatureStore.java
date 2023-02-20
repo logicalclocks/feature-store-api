@@ -141,7 +141,7 @@ public class FeatureStore {
    * Get a stream feature group object from the feature store.
    *
    * <p>Getting a stream feature group from the Feature Store means getting its metadata handle so you can subsequently
-   * read the data into a Spark  DataFrame or use the `Query`-API to perform joins between feature groups.
+   * read the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
    *
    * <pre>
    * {@code //get feature store handle
