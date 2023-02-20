@@ -93,7 +93,7 @@ public class FeatureStore {
    * Get a feature group object with default version `1` from the feature store.
    *
    * <p>Getting a feature group from the Feature Store means getting its metadata handle so you can subsequently read
-   *  the data into a Spark or Pandas DataFrame or use the `Query`-API to perform joins between feature groups.
+   * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
    *
    * <pre>
    * {@code //get feature store handle
