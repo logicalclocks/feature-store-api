@@ -234,8 +234,8 @@ public class FeatureGroup extends FeatureGroupBase {
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        FeatureGroup fg = ...;
-   *        // read feature group data retrieve feature group as of specific point in time.
-   *        fg.read( "20230205210923")
+   *        // read feature group data as of specific point in time (Hudi commit timestamp).
+   *        fg.read("20230205210923")
    * }
    * </pre>
    *
