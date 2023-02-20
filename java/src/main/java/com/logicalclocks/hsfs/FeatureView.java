@@ -631,8 +631,8 @@ public class FeatureView {
    * }
    * </pre>
    *
-   * @param name name of the tag to be deleted
-   * @throws FeatureStoreException If Client is not connected to Hopsworks;
+   * @param name Name of the tag to be deleted.
+   * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
   public void deleteTag(String name) throws FeatureStoreException, IOException {
