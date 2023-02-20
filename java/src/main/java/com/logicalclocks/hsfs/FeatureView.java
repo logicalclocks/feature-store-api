@@ -829,13 +829,13 @@ public class FeatureView {
   /**
    * Create the metadata for a training dataset and save the corresponding training data into `location`. The training
    * data is split into train and test set at random or according to time ranges. The training data can be retrieved by
-   * calling `feature_view.getTrainTestSplit` method.
+   * calling `featureView.getTrainTestSplit` method.
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
    *        // create training dataset based on time split
    *        String trainStart = "20220101000000";
@@ -845,12 +845,12 @@ public class FeatureView {
    *        String description = "demo training dataset":
    *        fv.createTrainTestSplit(null, trainStart, trainEnd, testStart, testEnd, description, DataFormat.CSV);
    *
-   *        //or based on random split
+   *        // or based on random split
    *        fv.createTrainTestSplit(30, null, null, null, null, description, DataFormat.CSV);
    * }
    * </pre>
    *
-   * @param testSize size of test set.
+   * @param testSize Size of test set.
    * @param trainStart Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
    *                   `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param trainEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
@@ -860,7 +860,7 @@ public class FeatureView {
    * @param testEnd Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
    *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param description A string describing the contents of the training dataset to  improve discoverability for
-   *                    Data Scientists
+   *                    Data Scientists.
    * @param dataFormat  The data format used to save the training dataset.
    * @param coalesce If true the training dataset data will be coalesced into a single partition before writing.
    *                 The resulting training dataset will be a single file per split.
@@ -881,9 +881,9 @@ public class FeatureView {
    *                         The filters will be also applied in `getBatchData`.
    * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
    *                     in `getBatchData`.
-   * @return Training dataset version
+   * @return Integer Training dataset version.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
-   *                               provided date strings to date formats;
+   *                               provided date strings to date formats.
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse provided date strings to date types.
    */
