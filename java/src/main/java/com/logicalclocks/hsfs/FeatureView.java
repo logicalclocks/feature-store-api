@@ -548,11 +548,11 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //attach a tag to a feature view
+   *        // attach a tag to a feature view
    *        JSONObject value = ...;
    *        fv.addTag("tag_schema", value);
    * }
