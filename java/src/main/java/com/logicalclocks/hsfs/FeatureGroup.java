@@ -872,11 +872,11 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        FeatureGroup fg = ...;
-   *        //get latest 10 commit details.
+   *        // get latest 10 commit details.
    *        fg.commitDetails(10);
    * }
    * </pre>
