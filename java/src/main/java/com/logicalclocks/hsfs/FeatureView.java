@@ -271,17 +271,17 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //Initialise feature view batch scoring
+   *        // Initialise feature view batch scoring
    *        fv.initBatchScoring(1);
    * }
    * </pre>
    *
    * @param trainingDatasetVersion Version of training dataset to identify additional filters attached to the training
-   *                               dataset.
+   *                               dataset and statistics to use for transformation functions.
    */
   public void initBatchScoring(Integer trainingDatasetVersion) {
     this.extraFilterVersion = trainingDatasetVersion;
