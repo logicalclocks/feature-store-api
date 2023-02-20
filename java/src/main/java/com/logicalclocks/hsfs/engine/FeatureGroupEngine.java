@@ -209,7 +209,7 @@ public class FeatureGroupEngine {
     featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
 
     /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
-    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI & hudiPrecombineKey == null) {
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI && hudiPrecombineKey == null) {
       List<Feature> features = apiFG.getFeatures();
       featureGroup.setFeatures(features);
     }

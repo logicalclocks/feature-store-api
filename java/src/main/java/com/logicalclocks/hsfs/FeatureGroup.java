@@ -22,7 +22,6 @@ import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
-import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -55,10 +54,6 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
-  private String type = "cachedFeaturegroupDTO";
-
-  @Getter
-  @Setter
   private List<String> statisticColumns;
 
   @JsonIgnore
@@ -74,7 +69,6 @@ public class FeatureGroup extends FeatureGroupBase {
   private String onlineTopicName;
 
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
-  private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
@@ -84,6 +78,7 @@ public class FeatureGroup extends FeatureGroupBase {
                       List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
                       boolean onlineEnabled, TimeTravelFormat timeTravelFormat, List<Feature> features,
                       StatisticsConfig statisticsConfig, String onlineTopicName, String eventTime) {
+    this();
     this.featureStore = featureStore;
     this.name = name;
     this.version = version;
@@ -103,16 +98,19 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   public FeatureGroup() {
+    this.type = "cachedFeaturegroupDTO";
   }
 
   // used for updates
   public FeatureGroup(Integer id, String description, List<Feature> features) {
+    this();
     this.id = id;
     this.description = description;
     this.features = features;
   }
 
   public FeatureGroup(FeatureStore featureStore, int id) {
+    this();
     this.featureStore = featureStore;
     this.id = id;
   }
