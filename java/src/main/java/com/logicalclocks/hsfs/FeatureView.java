@@ -1991,7 +1991,7 @@ public class FeatureView {
   }
 
   /**
-   * Get set of primary key names that is used as keys in input dict object for `get_serving_vector` method.
+   * Get set of primary key names that is used as keys in input dict object for `getServingVector` method.
    *
    * <pre>
    * {@code
