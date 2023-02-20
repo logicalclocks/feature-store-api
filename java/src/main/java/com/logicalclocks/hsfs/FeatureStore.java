@@ -291,7 +291,7 @@ public class FeatureStore {
    * JDBC connector for the Online Feature Store.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        StorageConnector sc = fs.getStorageConnector("sc_name");
    * }
