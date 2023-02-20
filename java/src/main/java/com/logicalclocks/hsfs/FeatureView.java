@@ -525,7 +525,7 @@ public class FeatureView {
    * @param readOptions Additional read options as key/value pairs.
    * @return Spark dataframe of batch data
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
-   *                               provided `startTime`/`endTime` date formats;
+   *                               provided `startTime`/`endTime` date formats.
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse provided `startTime`/`endTime` strings to date types.
    */
