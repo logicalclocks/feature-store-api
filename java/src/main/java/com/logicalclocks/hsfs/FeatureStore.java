@@ -445,7 +445,7 @@ public class FeatureStore {
   }
 
   /**
-   * Get a previously created Bigquery compliant storage connector from the feature store.
+   * Get a previously created BigQuery compliant storage connector from the feature store.
    *
    * <pre>
    * {@code //get feature store handle
