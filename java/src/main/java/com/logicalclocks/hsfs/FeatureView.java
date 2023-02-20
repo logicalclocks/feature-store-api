@@ -1833,16 +1833,16 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //Delete a training dataset.
+   *        // Delete a training dataset.
    *        fv.purgeAllTrainingData(1);
    * }
    * </pre>
    *
-   * @throws FeatureStoreException If Client is not connected to Hopsworks;
+   * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
   public void purgeAllTrainingData() throws FeatureStoreException, IOException {
