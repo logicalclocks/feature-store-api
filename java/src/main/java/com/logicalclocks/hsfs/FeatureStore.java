@@ -531,7 +531,7 @@ public class FeatureStore {
 
   /**
    * Get feature group metadata object or create a new one if it doesn't exist.
-   * This method doesn't update existing feature group metadata object.
+   * This method doesn't update existing feature group metadata.
    *
    * <pre>
    * {@code //get feature store handle
