@@ -262,7 +262,7 @@ public class FeatureGroup extends FeatureGroupBase {
    *        // define additional read options
    *        Map<String, String> readOptions = ...;
    *        // read feature group data as of specific point in time (Hudi commit timestamp).
-   *        fg.read(false, "20230205210923")
+   *        fg.read("20230205210923", readOptions)
    * }
    * </pre>
    *
@@ -303,7 +303,8 @@ public class FeatureGroup extends FeatureGroupBase {
    *        FeatureStore fs = ...;
    *        // get feature group handle
    *        FeatureGroup fg = ...;
-   *        // get query object to retrieve all feature group as of specific point in time.
+   *        // get query object to retrieve feature group feature data as of
+   *        // specific point in time (Hudi commit timestamp).
    *        fg.asOf("20230205210923")
    * }
    * </pre>
@@ -330,7 +331,8 @@ public class FeatureGroup extends FeatureGroupBase {
    *        FeatureStore fs = ...;
    *        // get feature group handle
    *        FeatureGroup fg = ...;
-   *        // get query object to retrieve all feature group as of specific point in time.
+   *        // get query object to retrieve feature group feature data as of specific point in time "20230205210923"
+   *        // but exclude commits until "20230204073411"  (Hudi commit timestamp).
    *        fg.asOf("20230205210923", "20230204073411")
    * }
    * </pre>
@@ -432,7 +434,7 @@ public class FeatureGroup extends FeatureGroupBase {
    *        FeatureStore fs = ...;
    *        // get feature group handle
    *        FeatureGroup fg = ...;
-   *        //insert feature Data.
+   *        //insert feature data
    *        fg.insert(featureData);
    * }
    * </pre>
@@ -463,7 +465,7 @@ public class FeatureGroup extends FeatureGroupBase {
    *        FeatureGroup fg = ...;
    *        // Define additional write options.
    *        Map<String, String> writeOptions = ...;
-   *        // insert feature Data
+   *        // insert feature data
    *        fg.insert(featureData, writeOptions);
    * }
    * </pre>
@@ -698,7 +700,7 @@ public class FeatureGroup extends FeatureGroupBase {
    *        FeatureGroup fg = ...;
    *        // Define additional write options
    *        Map<String, String> writeOptions = ...;
-   *        // insert feature Data in offline only with additional write options and drop all previous data before new
+   *        // insert feature data in offline only with additional write options and drop all previous data before new
    *        // data is inserted
    *        fg.insert(featureData, Storage.OFFLINE, true, HudiOperationType.INSERT, writeOptions);
    * }

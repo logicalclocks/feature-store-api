@@ -69,7 +69,8 @@ public class FeatureStore {
    * Get a feature group object from the feature store.
    *
    * <p>Getting a feature group from the Feature Store means getting its metadata handle so you can subsequently read
-   * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
+   * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature
+   * views.
    *
    * <pre>
    * {@code
@@ -94,7 +95,8 @@ public class FeatureStore {
    * Get a feature group object with default version `1` from the feature store.
    *
    * <p>Getting a feature group from the Feature Store means getting its metadata handle so you can subsequently read
-   * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
+   * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature
+   * views.
    *
    * <pre>
    * {@code
@@ -119,7 +121,8 @@ public class FeatureStore {
    * Get a list of all versions of a feature group from the feature store.
    *
    * <p>Getting a feature group from the Feature Store means getting its metadata handle so you can subsequently read
-   * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
+   * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature
+   * views.
    *
    * <pre>
    * {@code
@@ -144,7 +147,8 @@ public class FeatureStore {
    * Get a stream feature group object from the feature store.
    *
    * <p>Getting a stream feature group from the Feature Store means getting its metadata handle so you can subsequently
-   * read the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
+   * read the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create
+   * feature views.
    *
    * <pre>
    * {@code
@@ -169,7 +173,8 @@ public class FeatureStore {
    * Get a stream feature group object with default version `1` from the feature store.
    *
    * <p>Getting a stream feature group from the Feature Store means getting its metadata handle so you can subsequently
-   * read the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
+   * read the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create
+   * feature views.
    *
    * <pre>
    * {@code
@@ -194,7 +199,8 @@ public class FeatureStore {
    * Get an external feature group object from the feature store.
    *
    * <p>Getting an external feature group from the Feature Store means getting its  metadata handle so you can
-   * subsequently read the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
+   * subsequently read the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups
+   * and create feature views.
    *
    * <pre>
    * {@code
@@ -219,7 +225,8 @@ public class FeatureStore {
    * Get an external feature group object with default version `1` from the feature store.
    *
    * <p>Getting an external feature group from the Feature Store means getting its  metadata handle so you can
-   * subsequently read the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
+   * subsequently read the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups
+   * and create feature views.
    *
    * <pre>
    * {@code //get feature store handle
@@ -229,7 +236,7 @@ public class FeatureStore {
    * </pre>
    *
    * @param name the name of the feature group
-   * @return ExternalFeatureGroup
+   * @return ExternalFeatureGroup The external feature group metadata object.
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
    * @throws IOException Generic IO exception.
    */
@@ -243,7 +250,8 @@ public class FeatureStore {
    * Get a list of all versions of an external feature group from the feature store.
    *
    * <p>Getting a feature group from the Feature Store means getting its metadata handle so you can subsequently read
-   * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
+   * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature
+   * views.
    *
    * <pre>
    * {@code // get feature store handle
@@ -347,7 +355,7 @@ public class FeatureStore {
    * @param name Name of the storage connector to retrieve.
    * @return StorageConnector.S3Connector Storage connector object.
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public StorageConnector.S3Connector getS3Connector(String name) throws FeatureStoreException, IOException {
     return (StorageConnector.S3Connector) storageConnectorApi.getByName(this, name);
@@ -463,7 +471,7 @@ public class FeatureStore {
    * @param name Name of the storage connector to retrieve.
    * @return StorageConnector.BigqueryConnector Storage connector object.
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public StorageConnector.BigqueryConnector getBigqueryConnector(String name) throws FeatureStoreException,
       IOException {
@@ -557,7 +565,7 @@ public class FeatureStore {
    *                 time for the features in this feature group. If eventTime is set
    *                 the feature group can be used for point-in-time joins.
    * @return FeatureGroup: The feature group metadata object
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
    */
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, List<String> primaryKeys,

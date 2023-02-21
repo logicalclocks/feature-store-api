@@ -429,7 +429,7 @@ public class FeatureView {
    * }
    * </pre>
    *
-   * @return batch query
+   * @return String query string of the batch query
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
    *                               date formats.
    * @throws IOException Generic IO exception.
@@ -458,7 +458,7 @@ public class FeatureView {
    *                 `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param endTime Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
    *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
-   * @return batch query
+   * @return String query string of the batch query
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
    *                               provided `startTime`/`endTime` date formats;
    * @throws IOException Generic IO exception.
@@ -492,7 +492,7 @@ public class FeatureView {
    *                 `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param endTime Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
    *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
-   * @return Spark dataframe of batch data.
+   * @return {@code Dataset<Row>} Spark dataframe of batch data.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
    *                               provided `startTime`/`endTime` date formats.
    * @throws IOException Generic IO exception.
@@ -523,7 +523,7 @@ public class FeatureView {
    * @param endTime Datetime string. The String should be formatted in one of the following formats `yyyyMMdd`,
    *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param readOptions Additional read options as key/value pairs.
-   * @return Spark dataframe of batch data
+   * @return {@code Dataset<Row>} Spark dataframe of batch data.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
    *                               provided `startTime`/`endTime` date formats.
    * @throws IOException Generic IO exception.
@@ -583,7 +583,8 @@ public class FeatureView {
    * }
    * </pre>
    *
-   * @return a map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
+   * @return {@code Map<String, Object>} a map of tag name and values. The value of a tag can be any valid
+   *          json - primitives, arrays or json objects
    * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
@@ -608,7 +609,7 @@ public class FeatureView {
    *
    * @param name
    *     name of the tag
-   * @return The value of a tag can be any valid json - primitives, arrays or json objects
+   * @return Object The value of a tag can be any valid json - primitives, arrays or json objects
    * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
@@ -731,7 +732,7 @@ public class FeatureView {
    *                         The filters will be also applied in `getBatchData`.
    * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
    *                     in `getBatchData`.
-   * @return Training dataset version.
+   * @return Integer Training dataset version.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
    *                               provided `startTime`/`endTime` date formats.
    * @throws IOException Generic IO exception.
@@ -1160,7 +1161,7 @@ public class FeatureView {
    * </pre>
    *
    * @param version Training dataset version.
-   * @return List of dataframe of features and labels.
+   * @return {@code List<Dataset<Row>>} List of dataframe of features and labels.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
    *                               date formats.
    * @throws IOException Generic IO exception.
@@ -1190,7 +1191,7 @@ public class FeatureView {
    *
    * @param version Training dataset version.
    * @param readOptions Additional read options as key/value pairs.
-   * @return List of dataframe of features and labels
+   * @return {@code List<Dataset<Row>>} List of dataframe of features and labels.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
    *                               date formats.
    * @throws IOException Generic IO exception.
@@ -1219,7 +1220,7 @@ public class FeatureView {
    * </pre>
    *
    * @param version Training dataset version.
-   * @return List of dataframe of features and labels
+   * @return {@code List<Dataset<Row>>} List of dataframe of features and labels.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
    *                               date formats.
    * @throws IOException Generic IO exception.
@@ -1249,7 +1250,7 @@ public class FeatureView {
    *
    * @param version Training dataset version.
    * @param readOptions Additional read options as key/value pairs.
-   * @return List of dataframe of features and labels
+   * @return {@code List<Dataset<Row>>} List of dataframe of features and labels.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
    *                               date formats.
    * @throws IOException Generic IO exception.
@@ -1279,7 +1280,7 @@ public class FeatureView {
    * </pre>
    *
    * @param version Training dataset version.
-   * @return List of dataframe of features and labels
+   * @return {@code List<Dataset<Row>>} List of dataframe of features and labels.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
    *                               date formats.
    * @throws IOException Generic IO exception.
@@ -1309,7 +1310,7 @@ public class FeatureView {
    *
    * @param version Training dataset version.
    * @param readOptions Additional read options as key/value pairs.
-   * @return List of dataframe of features and labels
+   * @return {@code List<Dataset<Row>>} List of dataframe of features and labels.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify
    *                               date formats.
    * @throws IOException Generic IO exception.
@@ -1349,7 +1350,7 @@ public class FeatureView {
    *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param description A string describing the contents of the training dataset to  improve discoverability for
    *                    Data Scientists.
-   * @return List of dataframe of features and labels
+   * @return {@code List<Dataset<Row>>} List of dataframe of features and labels.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
    *                               provided date strings to date formats.
    * @throws IOException Generic IO exception.
@@ -1412,7 +1413,7 @@ public class FeatureView {
    *                         The filters will be also applied in `getBatchData`.
    * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
    *                     in `getBatchData`.
-   * @return List of dataframe of features and labels
+   * @return {@code List<Dataset<Row>>} List of dataframe of features and labels.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
    *                               provided date strings to date formats.
    * @throws IOException Generic IO exception.
@@ -1478,7 +1479,7 @@ public class FeatureView {
    *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param description A string describing the contents of the training dataset to  improve discoverability for
    *                    Data Scientists.
-   * @return List of Spark Dataframes containing training dataset splits.
+   * @return {@code List<Dataset<Row>>} List of Spark Dataframes containing training dataset splits.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
    *                               provided date strings to date formats.
    * @throws IOException Generic IO exception.
@@ -1562,7 +1563,7 @@ public class FeatureView {
    *                         The filters will be also applied in `getBatchData`.
    * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
    *                     in `getBatchData`.
-   * @return List of Spark Dataframes containing training dataset splits.
+   * @return {@code List<Dataset<Row>>} List of Spark Dataframes containing training dataset splits.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
    *                               provided date strings to date formats.
    * @throws IOException Generic IO exception.
@@ -1641,7 +1642,7 @@ public class FeatureView {
    *                `yyyyMMddHH`, `yyyyMMddHHmm`, or `yyyyMMddHHmmss`.
    * @param description A string describing the contents of the training dataset to  improve discoverability for
    *                    Data Scientists.
-   * @return List of Spark Dataframes containing training dataset splits.
+   * @return {@code List<Dataset<Row>>} List of Spark Dataframes containing training dataset splits.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
    *                               provided date strings to date formats.
    * @throws IOException Generic IO exception.
@@ -1736,7 +1737,7 @@ public class FeatureView {
    *                         The filters will be also applied in `getBatchData`.
    * @param extraFilter  Additional filter to be attached to the training dataset. The filter will be also applied
    *                     in `getBatchData`.
-   * @return List of Spark Dataframes containing training dataset splits.
+   * @return {@code List<Dataset<Row>>} List of Spark Dataframes containing training dataset splits.
    * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify format of the
    *                               provided date strings to date formats.
    * @throws IOException Generic IO exception.
@@ -1933,7 +1934,8 @@ public class FeatureView {
    * </pre>
    *
    * @param version Training dataset version.
-   * @return A map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects 
+   * @return {@code Map<String, Object>} A map of tag name and values. The value of a tag can be any valid json -
+   *          primitives, arrays or json objects
    * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
@@ -1958,7 +1960,7 @@ public class FeatureView {
    *
    * @param version Training dataset version.
    * @param name Name of the tag.
-   * @return The value of a tag can be any valid json - primitives, arrays or json objects.
+   * @return Object The value of a tag can be any valid json - primitives, arrays or json objects.
    * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
@@ -2004,7 +2006,7 @@ public class FeatureView {
    * }
    * </pre>
    *
-   * @return Set of serving keys
+   * @return {@code HashSet<String>}  Set of serving keys
    * @throws FeatureStoreException In case client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    * @throws SQLException In case there is online storage (RonDB) access error or other errors.

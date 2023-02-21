@@ -127,13 +127,13 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   /**
    * Read the feature group into a dataframe.
-   * Reads the feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
+   * Reads the feature group by from the offline storage as Spark DataFrame on Hopsworks and Databricks.
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get stream feature group handle
+   *        // get stream feature group handle
    *        StreamFeatureGroup fg = ...;
    *        // read feature group
    *        fg.read()
@@ -151,11 +151,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   /**
    * Read the stream feature group into a dataframe.
-   * Reads the stream feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
+   * Reads the stream feature group from the offline or online storage as Spark DataFrame on Hopsworks and Databricks.
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        StreamFeatureGroup fg = ...;
@@ -178,13 +178,14 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   /**
    * Read the stream feature group into a dataframe.
-   * Reads the stream feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
+   * Reads the stream feature group by from the offline or online storage as Spark DataFrame on Hopsworks and
+   * Databricks.
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get stream feature group handle
+   *        // get stream feature group handle
    *        StreamFeatureGroup fg = ...;
    *        // define additional read options
    *        Map<String, String> readOptions = ...;
@@ -209,12 +210,12 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        // read feature group data retrieve feature group as of specific point in time.
-   *        fg.read( "20230205210923")
+   *        // read feature group data as of specific point in time (Hudi commit timestamp).
+   *        fg.read("20230205210923")
    * }
    * </pre>
    *
@@ -235,14 +236,14 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
    *        // define additional read options
    *        Map<String, String> readOptions = ...;
-   *        // read feature group data retrieve feature group as of specific point in time.
-   *        fg.read(false, "20230205210923")
+   *        // read stream feature group data as of specific point in time (Hudi commit timestamp).
+   *        fg.read("20230205210923", readOptions)
    * }
    * </pre>
    *
@@ -279,11 +280,12 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        // get query object to retrieve all feature group as of specific point in time.
+   *        // get query object to retrieve stream feature group feature data as of
+   *        // specific point in time (Hudi commit timestamp).
    *        fg.asOf("20230205210923")
    * }
    * </pre>
@@ -305,11 +307,12 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * or used further to perform joins or construct a training dataset.
    *
    * <pre>
-   * {@code //get feature store handle
+   * {@code // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        // get query object to retrieve all feature group as of specific point in time.
+   *        // get query object to retrieve feature group feature data as of specific point in time "20230205210923"
+   *        // but exclude commits until "20230204073411" (Hudi commit timestamp).
    *        fg.asOf("20230205210923", "20230204073411")
    * }
    * </pre>
@@ -342,20 +345,20 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a dataframe
-   * into the existing feature group.
-   * Incrementally insert data to a feature group or overwrite all  data contained in the feature group.
+   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a
+   * dataframe into the existing stream feature group.
+   * Incrementally insert data to a stream feature group or overwrite all  data contained in the feature group.
    * The `features` dataframe can be a Spark DataFrame or RDD.
-   * If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
-   * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+   * If the stream feature group doesn't exist, the insert method will create the necessary metadata the first time it
+   * is invoked and write the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //insert feature Data.
+   *        //insert feature data
    *        fg.insert(featureData);
    * }
    * </pre>
@@ -372,22 +375,22 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a dataframe
-   * into the existing feature group.
-   * Incrementally insert data to a feature group or overwrite all  data contained in the feature group.
+   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a
+   * dataframe into the existing stream feature group.
+   * Incrementally insert data to a stream feature group or overwrite all  data contained in the feature group.
    * The `features` dataframe can be a Spark DataFrame or RDD.
-   * If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
-   * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+   * If the stream feature group doesn't exist, the insert method will create the necessary metadata the first time it
+   * is invoked and write the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //Define additional write options.
+   *        // define additional write options
    *        Map<String, String> writeOptions = ...;
-   *        //insert feature Data.
+   *        // insert feature data
    *        fg.insert(featureData, writeOptions);
    * }
    * </pre>
@@ -395,9 +398,10 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * @param <S> generic type for dataframes, can be Spark or Flink streaming dataframes.
    * @param featureData Spark DataFrame, RDD. Features to be saved.
    * @param writeOptions Additional write options as key-value pairs.
-   * @throws IOException If ...
-   * @throws FeatureStoreException If ...
-   * @throws ParseException If ...
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
+   *                               can't reconcile HUDI schema.
+   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
   public <S> void insert(S featureData, Map<String, String> writeOptions) throws FeatureStoreException, IOException,
       ParseException {
@@ -405,22 +409,22 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a dataframe
-   * into the existing feature group.
-   * Incrementally insert data to a feature group or overwrite all  data contained in the feature group.
+   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a
+   * dataframe into the existing stream feature group.
+   * Incrementally insert data to a stream feature group or overwrite all  data contained in the feature group.
    * The `features` dataframe can be a Spark DataFrame or RDD.
-   * If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
-   * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+   * If the stream feature group doesn't exist, the insert method will create the necessary metadata the first time it
+   * is invoked and write the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //Define job configuration.
+   *        // Define job configuration.
    *        JobConfiguration jobConfiguration = ...;
-   *        //insert feature Data.
+   *        // insert feature data
    *        fg.insert(featureData, jobConfiguration);
    * }
    * </pre>
@@ -439,24 +443,24 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a dataframe
-   * into the existing feature group.
-   * Incrementally insert data to a feature group or overwrite all  data contained in the feature group.
+   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a
+   * dataframe into the existing stream feature group.
+   * Incrementally insert data to a stream feature group or overwrite all  data contained in the feature group.
    * The `features` dataframe can be a Spark DataFrame or RDD.
-   * If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
-   * invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+   * If the stream feature group doesn't exist, the insert method will create the necessary metadata the first time it
+   * is invoked and write the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //Define additional write options.
+   *        // define additional write options
    *        Map<String, String> writeOptions = ...;
-   *        //Define job configuration.
+   *        // define job configuration.
    *        JobConfiguration jobConfiguration = ...;
-   *        //insert feature Data.
+   *        // insert feature data
    *        fg.insert(featureData, writeOptions);
    * }
    * </pre>
@@ -486,11 +490,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //insert feature Data.
+   *        // insert feature data
    *        fg.insertStream(featureData);
    * }
    * </pre>
@@ -514,11 +518,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //insert feature Data.
+   *        // insert feature data
    *        fg.insertStream(featureData, queryName);
    * }
    * </pre>
@@ -544,13 +548,13 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //Define additional write options.
+   *        // define additional write options
    *        Map<String, String> writeOptions = ...;
-   *        //insert feature Data.
+   *        // insert feature data
    *        fg.insertStream(featureData, writeOptions);
    * }
    * </pre>
@@ -576,13 +580,13 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //Define additional write options.
+   *        // define additional write options
    *        Map<String, String> writeOptions = ...;
-   *        //insert feature Data.
+   *        // insert feature data
    *        fg.insertStream(featureData, queryName);
    * }
    * </pre>
@@ -609,11 +613,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //insert feature Data.
+   *        // insert feature data
    *        String queryName = ...;
    *        String outputMode = ...;
    *        fg.insertStream(featureData, queryName outputMode);
@@ -650,11 +654,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //insert feature Data.
+   *        // insert feature data
    *        String queryName = ...;
    *        String outputMode = ...;
    *        String checkpointLocation = ...;
@@ -694,11 +698,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //insert feature Data.
+   *        // insert feature data
    *        String queryName = ...;
    *        String outputMode = ...;
    *        fg.insertStream(featureData, queryName, outputMode, outputMode, true, 1000);
@@ -741,11 +745,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //insert feature Data.
+   *        // insert feature data
    *        String queryName = ...;
    *        String outputMode = ...;
    *        String checkpointLocation = ...;
@@ -792,13 +796,13 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //Define additional write options.
+   *        // define additional write options
    *        Map<String, String> writeOptions = ...;
-   *        //insert feature Data.
+   *        // insert feature data
    *        String queryName = ...;
    *        String outputMode = ...;
    *        String checkpointLocation = ...;
@@ -844,17 +848,17 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //Define additional write options.
+   *        // define additional write options
    *        Map<String, String> writeOptions = ...;
    *        JobConfiguration jobConfiguration = ...;
    *        String queryName = ...;
    *        String outputMode = ...;
    *        String checkpointLocation = ...;
-   *        //insert feature Data.
+   *        // insert feature data
    *        fg.insertStream(featureData, queryName, outputMode, outputMode, true, 1000, checkpointLocation,
    *        writeOptions, jobConfiguration);
    * }
@@ -898,11 +902,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //Drops records of feature data and commit
+   *        // drop records of feature data and commit
    *        fg.commitDeleteRecord(featureData);
    * }
    * </pre>
@@ -924,13 +928,13 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //Define additional write options.
+   *        // define additional write options
    *        Map<String, String> writeOptions = ...;
-   *        //Drops records of feature data and commit
+   *        // drop records of feature data and commit
    *        fg.commitDeleteRecord(featureData, writeOptions);
    * }
    * </pre>
@@ -953,11 +957,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //get commit timeline.
+   *        // get commit timeline
    *        fg.commitDetails();
    * }
    * </pre>
@@ -978,11 +982,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //get latest 10 commit details.
+   *        // get latest 10 commit details
    *        fg.commitDetails(10);
    * }
    * </pre>
@@ -1008,7 +1012,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *        FeatureStore fs = ...;
    *        //get feature group handle
    *        StreamFeatureGroup fg = ...;
-   *        //get commit details as of 20230206.
+   *        //get commit details as of 20230206
    *        fg.commitDetails("20230206");
    * }
    * </pre>
@@ -1030,11 +1034,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature group handle
+   *        // get feature group handle
    *        FeatureGroup fg = ...;
-   *        //get top 10 commit details as of 20230206.
+   *        // get top 10 commit details as of 20230206
    *        fg.commitDetails("20230206", 10);
    * }
    * </pre>
