@@ -1947,18 +1947,18 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //get tag with name `"demo_name"` of training dataset version 1 in this feature view.
+   *        // get tag with name `"demo_name"` of training dataset version 1 in this feature view.
    *        fv.getTrainingDatasetTags(1, "demo_name");
    * }
    * </pre>
    *
-   * @param version training dataset version
-   * @param name name of the tag
-   * @return The value of a tag can be any valid json - primitives, arrays or json objects
+   * @param version Training dataset version.
+   * @param name Name of the tag.
+   * @return The value of a tag can be any valid json - primitives, arrays or json objects.
    * @throws FeatureStoreException If Client is not connected to Hopsworks.
    * @throws IOException Generic IO exception.
    */
