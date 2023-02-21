@@ -72,7 +72,8 @@ public class FeatureStore {
    * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
    *
    * <pre>
-   * {@code // get feature store handle
+   * {@code
+   *        // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    * }
@@ -96,7 +97,8 @@ public class FeatureStore {
    * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
    *
    * <pre>
-   * {@code // get feature store handle
+   * {@code
+   *        // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices");
    * }
@@ -120,7 +122,8 @@ public class FeatureStore {
    * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
    *
    * <pre>
-   * {@code // get feature store handle
+   * {@code
+   *        // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        FeatureGroup fg = fs.getFeatureGroups("electricity_prices");
    * }
@@ -144,7 +147,8 @@ public class FeatureStore {
    * read the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
    *
    * <pre>
-   * {@code // get feature store handle
+   * {@code
+   *        // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        FeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    * }
@@ -168,7 +172,8 @@ public class FeatureStore {
    * read the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
    *
    * <pre>
-   * {@code // get feature store handle
+   * {@code
+   *        // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        FeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices");
    * <}
@@ -192,7 +197,8 @@ public class FeatureStore {
    * subsequently read the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature views.
    *
    * <pre>
-   * {@code // get feature store handle
+   * {@code
+   *        // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        ExternalFeatureGroup fg = fs.getExternalFeatureGroup("external_fg_name", 1);
    * }
@@ -300,7 +306,7 @@ public class FeatureStore {
    * @param name Name of the storage connector to retrieve.
    * @return StorageConnector Storage connector object.
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name);
@@ -322,7 +328,7 @@ public class FeatureStore {
    * @param name Name of the jdbc storage connector to retrieve.
    * @return StorageConnector.JdbcConnector Storage connector object.
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public StorageConnector.JdbcConnector getJdbcConnector(String name) throws FeatureStoreException, IOException {
     return (StorageConnector.JdbcConnector) storageConnectorApi.getByName(this, name);
@@ -360,7 +366,7 @@ public class FeatureStore {
    * @param name Name of the storage connector to retrieve.
    * @return SStorageConnector.HopsFsConnector Storage connector object.
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public StorageConnector.HopsFsConnector getHopsFsConnector(String name) throws FeatureStoreException, IOException {
     return (StorageConnector.HopsFsConnector) storageConnectorApi.getByName(this, name);
@@ -379,7 +385,7 @@ public class FeatureStore {
    * @param name Name of the storage connector to retrieve.
    * @return StorageConnector.RedshiftConnector Storage connector object.
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public StorageConnector.RedshiftConnector getRedshiftConnector(String name)
       throws FeatureStoreException, IOException {
@@ -399,7 +405,7 @@ public class FeatureStore {
    * @param name Name of the storage connector to retrieve.
    * @return StorageConnector.SnowflakeConnector Storage connector object.
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public StorageConnector.SnowflakeConnector getSnowflakeConnector(String name)
       throws FeatureStoreException, IOException {
@@ -438,7 +444,7 @@ public class FeatureStore {
    * @param name Name of the storage connector to retrieve.
    * @return StorageConnector.KafkaConnector Storage connector object.
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public StorageConnector.KafkaConnector getKafkaConnector(String name) throws FeatureStoreException, IOException {
     return (StorageConnector.KafkaConnector) storageConnectorApi.getByName(this, name);
@@ -477,7 +483,7 @@ public class FeatureStore {
    *
    * @return StorageConnector.JdbcConnector Storage connector object.
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException If ...
+   * @throws IOException Generic IO exception.
    */
   public StorageConnector.JdbcConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
     return storageConnectorApi.getOnlineStorageConnector(this);
@@ -622,7 +628,7 @@ public class FeatureStore {
    *                          the first primary key of the feature group will be used as hudi precombine key.
    * @param onlineEnabled Define whether the feature group should be made available also in the online feature store
    *                      for low latency access.
-   * @param timeTravelFormat  Format used for time travel, defaults to `"HUDI"`
+   * @param timeTravelFormat  Format used for time travel: `TimeTravelFormat.HUDI` or `TimeTravelFormat.NONE`.
    * @param statisticsConfig  A configuration object, to generally enable descriptive statistics computation for
    *                          this feature group, `"correlations`" to turn on feature correlation  computation,
    *                          `"histograms"` to compute feature value frequencies and `"exact_uniqueness"` to compute

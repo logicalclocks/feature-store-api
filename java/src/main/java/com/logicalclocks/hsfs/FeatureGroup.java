@@ -119,7 +119,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   /**
    * Read the feature group into a dataframe.
-   * Reads the feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
+   * Reads the feature group by from the offline storage as Spark DataFrame on Hopsworks and Databricks.
    *
    * <pre>
    * {@code
@@ -143,7 +143,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   /**
    * Read the feature group into a dataframe.
-   * Reads the feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
+   * Reads the feature group from the offline or online storage as Spark DataFrame on Hopsworks and Databricks.
    *
    * <pre>
    * {@code
@@ -170,7 +170,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   /**
    * Read the feature group into a dataframe.
-   * Reads the feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
+   * Reads the feature group from the offline storage as Spark DataFrame on Hopsworks and Databricks.
    *
    * <pre>
    * {@code
@@ -197,7 +197,7 @@ public class FeatureGroup extends FeatureGroupBase {
 
   /**
    * Read the feature group into a dataframe.
-   * Reads the feature group by default from the offline storage as Spark DataFrame on Hopsworks and Databricks.
+   * Reads the feature group by from the offline or online storage as Spark DataFrame on Hopsworks and Databricks.
    *
    * <pre>
    * {@code
