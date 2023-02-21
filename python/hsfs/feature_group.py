@@ -1802,6 +1802,7 @@ class FeatureGroup(FeatureGroupBase):
                 * key `fetch_expectation_suite` a boolean value, by default `False` for multi part inserts,
                    to control whether the expectation suite of the feature group should be fetched before every insert.
 
+
         # Returns
             (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
             `FeatureGroupWriter` When used as a context manager with Python `with` statement.
