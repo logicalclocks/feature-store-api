@@ -1712,7 +1712,10 @@ class FeatureGroup(FeatureGroupBase):
         storage: Optional[str] = None,
         write_options: Optional[Dict[str, Any]] = {},
         validation_options: Optional[Dict[str, Any]] = {},
-    ) -> Union[Tuple[Optional[Job], Optional[ValidationReport]], feature_group_writer.FeatureGroupWriter]:
+    ) -> Union[
+        Tuple[Optional[Job], Optional[ValidationReport]],
+        feature_group_writer.FeatureGroupWriter,
+    ]:
         """Get FeatureGroupWriter for optimized multi part inserts or call this method
         to start manual multi part optimized inserts.
 
@@ -1801,7 +1804,6 @@ class FeatureGroup(FeatureGroupBase):
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
                 * key `fetch_expectation_suite` a boolean value, by default `False` for multi part inserts,
                    to control whether the expectation suite of the feature group should be fetched before every insert.
-
 
         # Returns
             (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
