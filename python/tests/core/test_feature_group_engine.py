@@ -32,9 +32,6 @@ class TestFeatureGroupEngine:
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
         mocker.patch("hsfs.core.great_expectation_engine.GreatExpectationEngine")
-        mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
-        )
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
             feature_store_id=feature_store_id
@@ -70,9 +67,6 @@ class TestFeatureGroupEngine:
         )
         mock_ge_engine = mocker.patch(
             "hsfs.core.great_expectation_engine.GreatExpectationEngine"
-        )
-        mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
@@ -121,9 +115,6 @@ class TestFeatureGroupEngine:
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
         mocker.patch("hsfs.core.great_expectation_engine.GreatExpectationEngine")
-        mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
-        )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
@@ -165,9 +156,6 @@ class TestFeatureGroupEngine:
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
         mocker.patch("hsfs.core.great_expectation_engine.GreatExpectationEngine")
-        mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
-        )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
@@ -211,9 +199,6 @@ class TestFeatureGroupEngine:
         )
         mock_ge_engine = mocker.patch(
             "hsfs.core.great_expectation_engine.GreatExpectationEngine"
-        )
-        mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
 
@@ -266,9 +251,6 @@ class TestFeatureGroupEngine:
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
         mocker.patch("hsfs.core.great_expectation_engine.GreatExpectationEngine")
-        mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
-        )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
@@ -314,9 +296,6 @@ class TestFeatureGroupEngine:
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
         mocker.patch("hsfs.core.great_expectation_engine.GreatExpectationEngine")
-        mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
-        )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
@@ -733,42 +712,6 @@ class TestFeatureGroupEngine:
         # Assert
         assert mock_kafka_api.return_value.get_topic_subject.call_count == 1
 
-    def test_get_kafka_config(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mocker.patch("hsfs.engine.get_type")
-        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mock_kafka_api = mocker.patch("hsfs.core.kafka_api.KafkaApi")
-
-        fg_engine = feature_group_engine.FeatureGroupEngine(
-            feature_store_id=feature_store_id
-        )
-
-        mock_kafka_api.return_value.get_broker_endpoints.return_value = ["url1", "url2"]
-        mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
-            "1"
-        )
-        mock_client_get_instance.return_value._cert_key = "2"
-        mock_client_get_instance.return_value._get_jks_key_store_path.return_value = "3"
-        mock_client_get_instance.return_value._cert_key = "4"
-
-        # Act
-        results = fg_engine.get_kafka_config(online_write_options={})
-
-        # Assert
-        assert results == {
-            "kafka.bootstrap.servers": "url1,url2",
-            "kafka.security.protocol": "SSL",
-            "kafka.ssl.endpoint.identification.algorithm": "",
-            "kafka.ssl.key.password": "4",
-            "kafka.ssl.keystore.location": "3",
-            "kafka.ssl.keystore.password": "4",
-            "kafka.ssl.truststore.location": "1",
-            "kafka.ssl.truststore.password": "4",
-        }
-        assert mock_kafka_api.return_value.get_broker_endpoints.call_count == 1
-
     def test_insert_stream(self, mocker):
         # Arrange
         feature_store_id = 99
@@ -777,9 +720,6 @@ class TestFeatureGroupEngine:
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
-        )
-        mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
@@ -829,9 +769,6 @@ class TestFeatureGroupEngine:
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
-        )
-        mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
@@ -884,9 +821,6 @@ class TestFeatureGroupEngine:
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
         )
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
-        )
-        mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
         )
 
@@ -929,9 +863,6 @@ class TestFeatureGroupEngine:
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
-        )
-        mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine.get_kafka_config"
         )
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
