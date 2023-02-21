@@ -58,10 +58,6 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
   @Setter
   private List<OnDemandOptions> options;
 
-  @Getter
-  @Setter
-  private String type = "onDemandFeaturegroupDTO";
-
   private ExternalFeatureGroupEngine externalFeatureGroupEngine = new ExternalFeatureGroupEngine();
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
 
@@ -70,6 +66,7 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
                               ExternalDataFormat dataFormat, String path, Map<String, String> options,
                               @NonNull StorageConnector storageConnector, String description, List<String> primaryKeys,
                               List<Feature> features, StatisticsConfig statisticsConfig, String eventTime) {
+    this();
     this.timeTravelFormat = null;
     this.featureStore = featureStore;
     this.name = name;
@@ -91,9 +88,11 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
   }
 
   public ExternalFeatureGroup() {
+    this.type = "onDemandFeaturegroupDTO";
   }
 
   public ExternalFeatureGroup(FeatureStore featureStore, int id) {
+    this();
     this.featureStore = featureStore;
     this.id = id;
   }

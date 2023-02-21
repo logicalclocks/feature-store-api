@@ -373,6 +373,12 @@ class Engine:
             upper_case_features = [
                 col for col in dataframe.columns if any(re.finditer("[A-Z]", col))
             ]
+
+            # make shallow copy so the original df does not get changed
+            # this is always needed to keep the user df unchanged
+            dataframe_copy = dataframe.copy(deep=False)
+
+            # making a shallow copy of the dataframe so that column names are unchanged
             if len(upper_case_features) > 0:
                 warnings.warn(
                     "The ingested dataframe contains upper case letters in feature names: `{}`. "
@@ -381,19 +387,14 @@ class Engine:
                     ),
                     util.FeatureGroupWarning,
                 )
-
-            # make shallow copy so the original df does not get changed
-            dataframe_copy = dataframe.copy(deep=False)
+                dataframe_copy.columns = [x.lower() for x in dataframe_copy.columns]
 
             # convert timestamps with timezone to UTC
-            for col in dataframe.columns:
+            for col in dataframe_copy.columns:
                 if isinstance(
                     dataframe_copy[col].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
                     dataframe_copy[col] = dataframe_copy[col].dt.tz_convert(None)
-
-            # making a shallow copy of the dataframe so that column names are unchanged
-            dataframe_copy.columns = [x.lower() for x in dataframe_copy.columns]
             return dataframe_copy
 
         raise TypeError(
@@ -788,12 +789,7 @@ class Engine:
     def get_unique_values(feature_dataframe, feature_name):
         return feature_dataframe[feature_name].unique()
 
-    def _write_dataframe_kafka(
-        self,
-        feature_group: FeatureGroup,
-        dataframe: pd.DataFrame,
-        offline_write_options: dict,
-    ):
+    def _init_kafka_resources(self, feature_group, offline_write_options):
         # setup kafka producer
         producer = Producer(self._get_kafka_config(offline_write_options))
 
@@ -807,6 +803,39 @@ class Engine:
 
         # setup row writer function
         writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
+        return producer, feature_writers, writer
+
+    def _write_dataframe_kafka(
+        self,
+        feature_group: FeatureGroup,
+        dataframe: pd.DataFrame,
+        offline_write_options: dict,
+    ):
+        if feature_group._multi_part_insert:
+            if feature_group._kafka_producer is None:
+                producer, feature_writers, writer = self._init_kafka_resources(
+                    feature_group, offline_write_options
+                )
+                feature_group._kafka_producer = producer
+                feature_group._feature_writers = feature_writers
+                feature_group._writer = writer
+            else:
+                producer = feature_group._kafka_producer
+                feature_writers = feature_group._feature_writers
+                writer = feature_group._writer
+        else:
+            producer, feature_writers, writer = self._init_kafka_resources(
+                feature_group, offline_write_options
+            )
+
+            # initialize progress bar
+            progress_bar = tqdm(
+                total=dataframe.shape[0],
+                bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
+                "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
+                desc="Uploading Dataframe",
+                mininterval=1,
+            )
 
         def acked(err, msg):
             if err is not None:
@@ -819,16 +848,9 @@ class Engine:
                     progress_bar.colour = "RED"
                     raise err  # Stop producing and show error
             # update progress bar for each msg
-            progress_bar.update()
+            if not feature_group._multi_part_insert:
+                progress_bar.update()
 
-        # initialize progress bar
-        progress_bar = tqdm(
-            total=dataframe.shape[0],
-            bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
-            "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
-            desc="Uploading Dataframe",
-            mininterval=1,
-        )
         # loop over rows
         for r in dataframe.itertuples(index=False):
             # itertuples returns Python NamedTyple, to be able to serialize it using
@@ -864,21 +886,19 @@ class Engine:
             )
 
         # make sure producer blocks and everything is delivered
-        producer.flush()
-        progress_bar.close()
+        if not feature_group._multi_part_insert:
+            producer.flush()
+            progress_bar.close()
 
         # start backfilling job
-        job_name = "{fg_name}_{version}_offline_fg_backfill".format(
-            fg_name=feature_group.name, version=feature_group.version
-        )
-        job = self._job_api.get(job_name)
-
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
-            job.run(await_termination=offline_write_options.get("wait_for_job", True))
+            feature_group.backfill_job.run(
+                await_termination=offline_write_options.get("wait_for_job", True)
+            )
 
-        return job
+        return feature_group.backfill_job
 
     def _kafka_produce(
         self, producer, feature_group, key, encoded_row, acked, offline_write_options
