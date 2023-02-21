@@ -1972,11 +1972,11 @@ public class FeatureView {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
+   *        // get feature store handle
    *        FeatureStore fs = ...;
-   *        //get feature view handle
+   *        // get feature view handle
    *        FeatureView fv = ...;
-   *        //delete tag with name `"demo_name"` of training dataset version 1 in this feature view.
+   *        // delete tag with name `"demo_name"` of training dataset version 1 in this feature view.
    *        fv.deleteTrainingDatasetTag(1, "demo_name");
    * }
    * </pre>
