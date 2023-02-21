@@ -48,7 +48,7 @@ class GreatExpectationEngine:
         None,
     ]:
         suite = self.fetch_or_convert_expectation_suite(
-            feature_group, expectation_suite
+            feature_group, expectation_suite, validation_options
         )
 
         if self.should_run_validation(
@@ -88,17 +88,16 @@ class GreatExpectationEngine:
         expectation_suite: Union[
             ge.core.ExpectationSuite, es.ExpectationSuite, None
         ] = None,
+        validation_options: dict = {},
     ) -> Optional[es.ExpectationSuite]:
         """Convert provided expectation suite or fetch the one attached to the Feature Group from backend."""
-        if expectation_suite:
+        if expectation_suite is not None:
             if isinstance(expectation_suite, es.ExpectationSuite):
-                suite = expectation_suite
-            else:
-                suite = es.ExpectationSuite.from_ge_type(expectation_suite)
-        else:
-            suite = feature_group.get_expectation_suite(False)
-
-        return suite
+                return expectation_suite
+            return es.ExpectationSuite.from_ge_type(expectation_suite)
+        if validation_options.get("fetch_expectation_suite", True):
+            return feature_group.get_expectation_suite(False)
+        return feature_group.expectation_suite
 
     def should_run_validation(
         self,
