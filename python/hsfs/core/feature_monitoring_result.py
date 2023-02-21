@@ -80,3 +80,43 @@ class FeatureMonitoringResult:
 
     def __str__(self):
         return self.json()
+
+    @property
+    def id(self) -> Optional[int]:
+        return self._id
+
+    @property
+    def feature_monitoring_config_id(self) -> int:
+        return self._feature_monitoring_config_id
+
+    @property
+    def feature_store_id(self) -> int:
+        return self._feature_store_id
+
+    @property
+    def entity_id(self) -> int:
+        return self._entity_id
+
+    @property
+    def detection_stats_id(self) -> Optional[int]:
+        return self._detection_stats_id
+
+    @property
+    def reference_stats_id(self) -> Optional[int]:
+        return self._reference_stats_id
+
+    @property
+    def execution_id(self) -> Optional[int]:
+        return self._execution_id
+
+    @property
+    def monitoring_time(self) -> int:
+        return self._monitoring_time
+
+    @property
+    def difference(self) -> float:
+        return self._difference
+
+    @property
+    def shift_detected(self) -> bool:
+        return self._shift_detected

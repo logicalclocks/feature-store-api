@@ -97,3 +97,63 @@ class FeatureMonitoringConfig:
 
     def __str__(self):
         return self.json()
+
+    @property
+    def id(self) -> Optional[int]:
+        return self._id
+
+    @property
+    def feature_store_id(self) -> int:
+        return self._feature_store_id
+
+    @property
+    def feature_group_id(self) -> Optional[int]:
+        return self._feature_group_id
+
+    @property
+    def feature_view_id(self) -> Optional[int]:
+        return self._feature_view_id
+
+    @property
+    def feature_name(self) -> str:
+        return self._feature_name
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def description(self) -> Optional[str]:
+        return self._description
+
+    @property
+    def job_id(self) -> Optional[int]:
+        return self._job_id
+
+    @property
+    def enabled(self) -> bool:
+        return self._enabled
+
+    @property
+    def feature_monitoring_type(self) -> Optional[str]:
+        return self._feature_monitoring_type
+
+    @property
+    def alert_config(self) -> Optional[str]:
+        return self._alert_config
+
+    @property
+    def scheduler_config(self) -> Optional[str]:
+        return self._scheduler_config
+
+    @property
+    def detection_window_config(self) -> Dict[str, Any]:
+        return self._detection_window_config
+
+    @property
+    def reference_window_config(self) -> Optional[Dict[str, Any]]:
+        return self._reference_window_config
+
+    @property
+    def descriptive_statistics_comparison_config(self) -> Optional[Dict[str, Any]]:
+        return self._descriptive_statistics_comparison_config
