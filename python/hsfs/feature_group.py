@@ -1712,7 +1712,7 @@ class FeatureGroup(FeatureGroupBase):
         storage: Optional[str] = None,
         write_options: Optional[Dict[str, Any]] = {},
         validation_options: Optional[Dict[str, Any]] = {},
-    ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
+    ) -> Union[Tuple[Optional[Job], Optional[ValidationReport]], feature_group_writer.FeatureGroupWriter]:
         """Get FeatureGroupWriter for optimized multi part inserts or call this method
         to start manual multi part optimized inserts.
 
@@ -1761,6 +1761,13 @@ class FeatureGroup(FeatureGroupBase):
             and be sure to finalize it. The `finalize_multi_part_insert` is a
             blocking call that returns once all rows have been transmitted.
 
+            Once you are done with the multi part insert, it is good practice to
+            start the backfill job in order to write the data to the offline
+            storage:
+            ```python
+            feature_group.backfill_job.run(await_termination=True)
+            ```
+
         # Arguments
             features: DataFrame, RDD, Ndarray, list. Features to be saved.
             overwrite: Drop all data in the feature group before
@@ -1782,7 +1789,8 @@ class FeatureGroup(FeatureGroupBase):
                   after the Hopsworks Job has finished. By default it waits.
                 * key `start_offline_backfill` and value `True` or `False` to configure
                   whether or not to start the backfill job to write data to the offline
-                  storage. By default the backfill job gets started immediately.
+                  storage. By default the backfill job does not get started automatically
+                  for multi part inserts.
                 * key `internal_kafka` and value `True` or `False` in case you established
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
