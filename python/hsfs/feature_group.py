@@ -664,7 +664,7 @@ class FeatureGroupBase:
 
     def get_expectation_suite(
         self, ge_type: bool = True
-    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
+    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite, None]:
         """Return the expectation suite attached to the feature group if it exists.
 
         !!! example
@@ -741,9 +741,9 @@ class FeatureGroupBase:
                 feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, ExpectationSuite):
-            tmp_expectation_suite = expectation_suite.to_json_dict()
-            tmp_expectation_suite["featuregroup_id"] = self._id
-            tmp_expectation_suite["featurestore_id"] = self._feature_store_id
+            tmp_expectation_suite = expectation_suite.to_json_dict(decamelize=True)
+            tmp_expectation_suite["feature_group_id"] = self._id
+            tmp_expectation_suite["feature_store_id"] = self._feature_store_id
             tmp_expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         else:
             raise TypeError(
@@ -781,7 +781,7 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        if self._expectation_suite.id:
+        if self.get_expectation_suite() is not None:
             self._expectation_suite_engine.delete(self._expectation_suite.id)
         self._expectation_suite = None
 
@@ -2545,6 +2545,25 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._href = href
 
     def save(self):
+        """Persist the metadata for this external feature group.
+
+        Without calling this method, your feature group will only exist
+        in your Python Kernel, but not in Hopsworks.
+
+        ```python
+        query = "SELECT * FROM sales"
+
+        fg = feature_store.create_external_feature_group(name="sales",
+            version=1,
+            description="Physical shop sales features",
+            query=query,
+            storage_connector=connector,
+            primary_key=['ss_store_sk'],
+            event_time='sale_date'
+        )
+
+        fg.save()
+        """
         self._feature_group_engine.save(self)
         self._code_engine.save_code(self)
 

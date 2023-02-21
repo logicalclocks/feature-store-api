@@ -18,7 +18,6 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
-import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
@@ -27,8 +26,6 @@ import java.io.IOException;
 public class ExternalFeatureGroupEngine extends FeatureGroupBaseEngine {
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
-
-  private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
 
   public ExternalFeatureGroup saveFeatureGroup(ExternalFeatureGroup externalFeatureGroup)
       throws FeatureStoreException, IOException {
