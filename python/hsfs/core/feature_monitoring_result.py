@@ -64,15 +64,15 @@ class FeatureMonitoringResult:
 
         return {
             "id": self._id,
-            "feature_store_id": self._feature_store_id,
-            "entity_id": self._entity_id,
-            "feature_monitoring_config_id": self._feature_monitoring_config_id,
-            "execution_id": self._execution_id,
-            "detection_stats_id": self._detection_stats_id,
-            "reference_stats_id": self._reference_stats_id,
-            "monitoring_time": self._monitoring_time,
+            "featureStoreId": self._feature_store_id,
+            "entityId": self._entity_id,
+            "featureMonitoringConfigId": self._feature_monitoring_config_id,
+            "executionId": self._execution_id,
+            "detectionStatsId": self._detection_stats_id,
+            "referenceStatsId": self._reference_stats_id,
+            "monitoringTime": self._monitoring_time,
             "difference": self._difference,
-            "shift_detected": self._shift_detected,
+            "shiftDetected": self._shift_detected,
         }
 
     def json(self) -> str:

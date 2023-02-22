@@ -76,20 +76,20 @@ class FeatureMonitoringConfig:
 
         return {
             "id": self._id,
-            "feature_store_id": self._feature_store_id,
-            "feature_group_id": self._feature_group_id,
-            "feature_view_id": self._feature_view_id,
-            "feature_name": self._feature_name,
+            "featureStoreId": self._feature_store_id,
+            "featureGroupId": self._feature_group_id,
+            "featureViewId": self._feature_view_id,
+            "featureName": self._feature_name,
             "enabled": self._enabled,
             "name": self._name,
             "description": self._description,
-            "job_id": self._job_id,
-            "feature_monitoring_type": self._feature_monitoring_type,
-            "scheduler_config_DTO": self._scheduler_config,
-            "alert_config_DTO": self._alert_config,
-            "detection_monitoring_window_configuration_DTO": self._detection_window_config,
-            "reference_monitoring_window_configuration_DTO": self._reference_window_config,
-            "descriptive_statistics_comparison_configuration_DTO": self._descriptive_statistics_comparison_config,
+            "jobId": self._job_id,
+            "featureMonitoringType": self._feature_monitoring_type,
+            "schedulerConfigDTO": self._scheduler_config,
+            "alertConfigDTO": self._alert_config,
+            "detectionMonitoringWindowConfigurationDTO": self._detection_window_config,
+            "referenceMonitoringWindowConfigurationDTO": self._reference_window_config,
+            "descriptiveStatisticsComparisonConfigurationDTO": self._descriptive_statistics_comparison_config,
         }
 
     def json(self) -> str:
