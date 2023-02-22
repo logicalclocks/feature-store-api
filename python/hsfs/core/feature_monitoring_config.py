@@ -17,7 +17,7 @@
 
 import json
 import humps
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 from hsfs import util
 
 
@@ -202,35 +202,35 @@ class FeatureMonitoringConfig:
     def detection_monitoring_window_configuration(self) -> Dict[str, Any]:
         return self._detection_monitoring_window_configuration
 
-    @detection_monitoring_window_configuration.setter
-    def detection_monitoring_window_configuration(
-        self, detection_monitoring_window_configuration: Union[Dict[str, Any], str]
-    ):
-        if isinstance(detection_monitoring_window_configuration, str):
-            self._detection_monitoring_window_configuration = json.loads(
-                detection_monitoring_window_configuration
-            )
-        else:
-            self._detection_monitoring_window_configuration = (
-                detection_monitoring_window_configuration
-            )
+    # @detection_monitoring_window_configuration.setter
+    # def detection_monitoring_window_configuration(
+    #     self, detection_monitoring_window_configuration: Union[Dict[str, Any], str]
+    # ):
+    #     if isinstance(detection_monitoring_window_configuration, str):
+    #         self._detection_monitoring_window_configuration = json.loads(
+    #             detection_monitoring_window_configuration
+    #         )
+    #     else:
+    #         self._detection_monitoring_window_configuration = (
+    #             detection_monitoring_window_configuration
+    #         )
 
     @property
     def reference_window_monitoring_configuration(self) -> Optional[Dict[str, Any]]:
         return self._reference_monitoring_window_configuration
 
-    @reference_window_monitoring_configuration.setter
-    def reference_window_monitoring_configuration(
-        self, reference_monitoring_window_configuration: Union[Dict[str, Any], str]
-    ):
-        if isinstance(reference_monitoring_window_configuration, str):
-            self._reference_monitoring_window_configuration = json.loads(
-                reference_monitoring_window_configuration
-            )
-        else:
-            self._reference_monitoring_window_configuration = (
-                reference_monitoring_window_configuration
-            )
+    # @reference_window_monitoring_configuration.setter
+    # def reference_window_monitoring_configuration(
+    #     self, reference_monitoring_window_configuration: Union[Dict[str, Any], str, None]
+    # ):
+    #     if isinstance(reference_monitoring_window_configuration, str):
+    #         self._reference_monitoring_window_configuration = json.loads(
+    #             reference_monitoring_window_configuration
+    #         )
+    #     else:
+    #         self._reference_monitoring_window_configuration = (
+    #             reference_monitoring_window_configuration
+    #         )
 
     @property
     def descriptive_statistics_comparison_configuration(
@@ -238,16 +238,16 @@ class FeatureMonitoringConfig:
     ) -> Optional[Dict[str, Any]]:
         return self._descriptive_statistics_comparison_configuration
 
-    @descriptive_statistics_comparison_configuration.setter
-    def descriptive_statistics_comparison_configuration(
-        self,
-        descriptive_statistics_comparison_configuration: Union[Dict[str, Any], str],
-    ):
-        if isinstance(descriptive_statistics_comparison_configuration, str):
-            self._descriptive_statistics_comparison_configuration = json.loads(
-                descriptive_statistics_comparison_configuration
-            )
-        else:
-            self._descriptive_statistics_comparison_configuration = (
-                descriptive_statistics_comparison_configuration
-            )
+    # @descriptive_statistics_comparison_configuration.setter
+    # def descriptive_statistics_comparison_configuration(
+    #     self,
+    #     descriptive_statistics_comparison_configuration: Union[Dict[str, Any], str, None],
+    # ):
+    #     if isinstance(descriptive_statistics_comparison_configuration, str):
+    #         self._descriptive_statistics_comparison_configuration = json.loads(
+    #             descriptive_statistics_comparison_configuration
+    #         )
+    #     else:
+    #         self._descriptive_statistics_comparison_configuration = (
+    #             descriptive_statistics_comparison_configuration
+    #         )
