@@ -29,9 +29,11 @@ class FeatureMonitoringConfig:
         name: str,
         feature_monitoring_type: str = "DESCRIPTIVE_STATISTICS",
         job_id: Optional[int] = None,
-        detection_window_config: Optional[Dict[Any, Any]] = None,
-        reference_window_config: Optional[Dict[Any, Any]] = None,
-        descriptive_statistics_comparison_config: Optional[Dict[Any, Any]] = None,
+        detection_monitoring_window_configuration: Optional[Dict[Any, Any]] = None,
+        reference_monitoring_window_configuration: Optional[Dict[Any, Any]] = None,
+        descriptive_statistics_comparison_configuration: Optional[
+            Dict[Any, Any]
+        ] = None,
         alert_config: Optional[str] = None,
         scheduler_config: Optional[str] = None,
         enabled: bool = True,
@@ -56,11 +58,15 @@ class FeatureMonitoringConfig:
         self._enabled = enabled
         self._scheduler_config = scheduler_config
         self._alert_config = alert_config
-        self._descriptive_statistics_comparison_config = (
-            descriptive_statistics_comparison_config
+        self._descriptive_statistics_comparison_configuration = (
+            descriptive_statistics_comparison_configuration
         )
-        self._detection_window_config = detection_window_config
-        self._reference_window_config = reference_window_config
+        self._detection_monitoring_window_configuration = (
+            detection_monitoring_window_configuration
+        )
+        self._reference_monitoring_window_configuration = (
+            reference_monitoring_window_configuration
+        )
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -88,32 +94,32 @@ class FeatureMonitoringConfig:
 
     def to_dict(self):
 
-        if isinstance(self._detection_window_config, dict):
-            detection_window_config = self._window_config_to_dict(
-                self._detection_window_config
+        if isinstance(self._detection_monitoring_window_configuration, dict):
+            detection_monitoring_window_configuration = self._window_config_to_dict(
+                self._detection_monitoring_window_configuration
             )
         else:
-            detection_window_config = None
+            detection_monitoring_window_configuration = None
 
-        if isinstance(self._reference_window_config, dict):
-            reference_window_config = self._window_config_to_dict(
-                self._reference_window_config
+        if isinstance(self._reference_monitoring_window_configuration, dict):
+            reference_monitoring_window_configuration = self._window_config_to_dict(
+                self._reference_monitoring_window_configuration
             )
         else:
-            reference_window_config = None
+            reference_monitoring_window_configuration = None
 
-        if isinstance(self._descriptive_statistics_comparison_config, dict):
+        if isinstance(self._descriptive_statistics_comparison_configuration, dict):
             stats_comparison_config = {
-                "threshold": self._descriptive_statistics_comparison_config.get(
+                "threshold": self._descriptive_statistics_comparison_configuration.get(
                     "threshold", 0.0
                 ),
-                "compareOn": self._descriptive_statistics_comparison_config.get(
+                "compareOn": self._descriptive_statistics_comparison_configuration.get(
                     "compare_on", "MEAN"
                 ),
-                "strict": self._descriptive_statistics_comparison_config.get(
+                "strict": self._descriptive_statistics_comparison_configuration.get(
                     "strict", False
                 ),
-                "relative": self._descriptive_statistics_comparison_config.get(
+                "relative": self._descriptive_statistics_comparison_configuration.get(
                     "relative", False
                 ),
             }
@@ -131,11 +137,11 @@ class FeatureMonitoringConfig:
             "description": self._description,
             "jobId": self._job_id,
             "featureMonitoringType": self._feature_monitoring_type,
-            "schedulerConfigDTO": self._scheduler_config,
-            "alertConfigDTO": self._alert_config,
-            "detectionMonitoringWindowConfigurationDTO": detection_window_config,
-            "referenceMonitoringWindowConfigurationDTO": reference_window_config,
-            "descriptiveStatisticsComparisonConfigurationDTO": stats_comparison_config,
+            "schedulerConfig": self._scheduler_config,
+            "alertConfig": self._alert_config,
+            "detectionMonitoringWindowConfiguration": detection_monitoring_window_configuration,
+            "referenceMonitoringWindowConfiguration": reference_monitoring_window_configuration,
+            "descriptiveStatisticsComparisonConfiguration": stats_comparison_config,
         }
 
     def json(self) -> str:
@@ -193,13 +199,15 @@ class FeatureMonitoringConfig:
         return self._scheduler_config
 
     @property
-    def detection_window_config(self) -> Dict[str, Any]:
-        return self._detection_window_config
+    def detection_monitoring_window_configuration(self) -> Dict[str, Any]:
+        return self._detection_monitoring_window_configuration
 
     @property
-    def reference_window_config(self) -> Optional[Dict[str, Any]]:
-        return self._reference_window_config
+    def reference_window_monitoring_configuration(self) -> Optional[Dict[str, Any]]:
+        return self._reference_monitoring_window_configuration
 
     @property
-    def descriptive_statistics_comparison_config(self) -> Optional[Dict[str, Any]]:
-        return self._descriptive_statistics_comparison_config
+    def descriptive_statistics_comparison_configuration(
+        self,
+    ) -> Optional[Dict[str, Any]]:
+        return self._descriptive_statistics_comparison_configuration

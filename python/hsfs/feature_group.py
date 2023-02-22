@@ -981,14 +981,14 @@ class FeatureGroupBase:
     def enabled_statistics_monitoring(
         self,
         feature_name: str,
-        window_config_type: str,
+        window_configuration_type: str,
         time_offset: str,
         window_length: str,
         scheduler_config: str,
     ) -> FeatureMonitoringConfig:
-        detection_window_config = (
+        detection_monitoring_window_configuration = (
             self._feature_monitoring_config_engine.build_monitoring_window_config(
-                window_config_type=window_config_type,
+                window_configuration_type=window_configuration_type,
                 window_length=window_length,
                 time_offset=time_offset,
             )
@@ -996,7 +996,7 @@ class FeatureGroupBase:
 
         return self._feature_monitoring_config_engine.enable_descriptive_statistics_monitoring(
             feature_group_id=self._id,
-            detection_window_config=detection_window_config,
+            detection_monitoring_window_configuration=detection_monitoring_window_configuration,
             feature_name=feature_name,
             scheduler_config=scheduler_config,
         )

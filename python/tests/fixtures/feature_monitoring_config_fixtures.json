@@ -10,16 +10,16 @@
       "description": "I am a unit test fixture",
       "enabled": true,
       "feature_monitoring_type": "DESCRIPTIVE_STATISTICS",
-      "detection_window_config": {
-        "window_config_type": "INSERT",
+      "detection_monitoring_window_configuration": {
+        "window_configuration_type": "INSERT",
         "time_offset": "1w",
         "window_length": "1d"
       },
-      "reference_window_config": {
-        "window_config_type": "SNAPSHOT",
+      "reference_monitoring_window_configuration": {
+        "window_configuration_type": "SNAPSHOT",
         "time_offset": "LAST"
       },
-      "descriptive_statistics_comparison_config": {
+      "descriptive_statistics_comparison_configuration": {
         "threshold": 1,
         "relative": false,
         "strict": true,
@@ -41,16 +41,16 @@
       "description": "I am a unit test fixture",
       "enabled": true,
       "feature_monitoring_type": "DESCRIPTIVE_STATISTICS",
-      "detection_window_config": {
-        "window_config_type": "BATCH",
+      "detection_monitoring_window_configuration": {
+        "window_configuration_type": "BATCH",
         "time_offset": "1w",
         "window_length": "1d"
       },
-      "reference_window_config": {
-        "window_config_type": "TRAINING_DATASET",
+      "reference_monitoring_window_configuration": {
+        "window_configuration_type": "TRAINING_DATASET",
         "specific_id": 33
       },
-      "descriptive_statistics_comparison_config": {
+      "descriptive_statistics_comparison_configuration": {
         "threshold": 1,
         "relative": false,
         "strict": true,
@@ -75,16 +75,16 @@
           "description": "I am a unit test fixture",
           "enabled": true,
           "feature_monitoring_type": "DESCRIPTIVE_STATISTICS",
-          "detection_window_config": {
-            "window_config_type": "BATCH",
+          "detection_monitoring_window_configuration": {
+            "window_configuration_type": "BATCH",
             "time_offset": "1w",
             "window_length": "1d"
           },
-          "reference_window_config": {
-            "window_config_type": "TRAINING_DATASET",
+          "reference_monitoring_window_configuration": {
+            "window_configuration_type": "TRAINING_DATASET",
             "specific_id": 33
           },
-          "descriptive_statistics_comparison_config": {
+          "descriptive_statistics_comparison_configuration": {
             "threshold": 1,
             "relative": false,
             "strict": true,

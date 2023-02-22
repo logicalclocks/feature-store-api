@@ -43,7 +43,7 @@ class TestFeatureMonitoringConfigEngine:
 
         # Act
         window_config = config_engine.build_monitoring_window_config(
-            window_config_type="SNAPSHOT",
+            window_configuration_type="SNAPSHOT",
             time_offset="LAST",
             row_percentage=10,
         )
@@ -59,16 +59,20 @@ class TestFeatureMonitoringConfigEngine:
             feature_store_id=DEFAULT_FEATURE_STORE_ID
         )
 
-        detection_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="INSERT",
-            time_offset="1w",
-            window_length="1d",
+        detection_monitoring_window_configuration = (
+            config_engine.build_monitoring_window_config(
+                window_configuration_type="INSERT",
+                time_offset="1w",
+                window_length="1d",
+            )
         )
-        reference_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="SNAPSHOT", specific_value=2
+        reference_monitoring_window_configuration = (
+            config_engine.build_monitoring_window_config(
+                window_configuration_type="SNAPSHOT", specific_value=2
+            )
         )
 
-        stats_comparison_config = {
+        stats_comparison_configuration = {
             "threshold": 1,
             "strict": True,
             "relative": False,
@@ -80,9 +84,9 @@ class TestFeatureMonitoringConfigEngine:
             name=DEFAULT_NAME,
             feature_name=DEFAULT_FEATURE_NAME,
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
-            detection_window_config=detection_window_config,
-            reference_window_config=reference_window_config,
-            descriptive_statistics_comparison_config=stats_comparison_config,
+            detection_monitoring_window_configuration=detection_monitoring_window_configuration,
+            reference_monitoring_window_configuration=reference_monitoring_window_configuration,
+            descriptive_statistics_comparison_configuration=stats_comparison_configuration,
             description=DEFAULT_DESCRIPTION,
             scheduler_config=DEFAULT_SCHEDULER_CONFIG,
             alert_config=DEFAULT_ALERT_CONFIG,
@@ -98,28 +102,38 @@ class TestFeatureMonitoringConfigEngine:
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
-        assert config._detection_window_config["window_configuration_type"] == "INSERT"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
         assert (
-            config._reference_window_config["window_configuration_type"] == "SNAPSHOT"
+            config._detection_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "INSERT"
         )
-        assert config._reference_window_config["specific_value"] == 2
+        assert config._detection_monitoring_window_configuration["time_offset"] == "1w"
         assert (
-            config._descriptive_statistics_comparison_config["threshold"]
-            == stats_comparison_config["threshold"]
-        )
-        assert (
-            config._descriptive_statistics_comparison_config["strict"]
-            == stats_comparison_config["strict"]
+            config._detection_monitoring_window_configuration["window_length"] == "1d"
         )
         assert (
-            config._descriptive_statistics_comparison_config["relative"]
-            == stats_comparison_config["relative"]
+            config._reference_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "SNAPSHOT"
+        )
+        assert config._reference_monitoring_window_configuration["specific_value"] == 2
+        assert (
+            config._descriptive_statistics_comparison_configuration["threshold"]
+            == stats_comparison_configuration["threshold"]
         )
         assert (
-            config._descriptive_statistics_comparison_config["compare_on"]
-            == stats_comparison_config["compare_on"]
+            config._descriptive_statistics_comparison_configuration["strict"]
+            == stats_comparison_configuration["strict"]
+        )
+        assert (
+            config._descriptive_statistics_comparison_configuration["relative"]
+            == stats_comparison_configuration["relative"]
+        )
+        assert (
+            config._descriptive_statistics_comparison_configuration["compare_on"]
+            == stats_comparison_configuration["compare_on"]
         )
 
     def test_enable_feature_monitoring_config_fg(self, mocker):
@@ -132,16 +146,20 @@ class TestFeatureMonitoringConfigEngine:
             feature_store_id=DEFAULT_FEATURE_STORE_ID
         )
 
-        detection_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="INSERT",
-            time_offset="1w",
-            window_length="1d",
+        detection_monitoring_window_configuration = (
+            config_engine.build_monitoring_window_config(
+                window_configuration_type="INSERT",
+                time_offset="1w",
+                window_length="1d",
+            )
         )
-        reference_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="SNAPSHOT", specific_value=2
+        reference_monitoring_window_configuration = (
+            config_engine.build_monitoring_window_config(
+                window_configuration_type="SNAPSHOT", specific_value=2
+            )
         )
 
-        stats_comparison_config = {
+        stats_comparison_configuration = {
             "threshold": 1,
             "strict": True,
             "relative": False,
@@ -153,9 +171,9 @@ class TestFeatureMonitoringConfigEngine:
             name=DEFAULT_NAME,
             feature_name=DEFAULT_FEATURE_NAME,
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
-            detection_window_config=detection_window_config,
-            reference_window_config=reference_window_config,
-            descriptive_statistics_comparison_config=stats_comparison_config,
+            detection_monitoring_window_configuration=detection_monitoring_window_configuration,
+            reference_monitoring_window_configuration=reference_monitoring_window_configuration,
+            descriptive_statistics_comparison_configuration=stats_comparison_configuration,
             description=DEFAULT_DESCRIPTION,
             scheduler_config=DEFAULT_SCHEDULER_CONFIG,
             alert_config=DEFAULT_ALERT_CONFIG,
@@ -178,28 +196,38 @@ class TestFeatureMonitoringConfigEngine:
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
-        assert config._detection_window_config["window_configuration_type"] == "INSERT"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
         assert (
-            config._reference_window_config["window_configuration_type"] == "SNAPSHOT"
+            config._detection_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "INSERT"
         )
-        assert config._reference_window_config["specific_value"] == 2
+        assert config._detection_monitoring_window_configuration["time_offset"] == "1w"
         assert (
-            config._descriptive_statistics_comparison_config["threshold"]
-            == stats_comparison_config["threshold"]
-        )
-        assert (
-            config._descriptive_statistics_comparison_config["strict"]
-            == stats_comparison_config["strict"]
+            config._detection_monitoring_window_configuration["window_length"] == "1d"
         )
         assert (
-            config._descriptive_statistics_comparison_config["relative"]
-            == stats_comparison_config["relative"]
+            config._reference_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "SNAPSHOT"
+        )
+        assert config._reference_monitoring_window_configuration["specific_value"] == 2
+        assert (
+            config._descriptive_statistics_comparison_configuration["threshold"]
+            == stats_comparison_configuration["threshold"]
         )
         assert (
-            config._descriptive_statistics_comparison_config["compare_on"]
-            == stats_comparison_config["compare_on"]
+            config._descriptive_statistics_comparison_configuration["strict"]
+            == stats_comparison_configuration["strict"]
+        )
+        assert (
+            config._descriptive_statistics_comparison_configuration["relative"]
+            == stats_comparison_configuration["relative"]
+        )
+        assert (
+            config._descriptive_statistics_comparison_configuration["compare_on"]
+            == stats_comparison_configuration["compare_on"]
         )
 
     def test_enable_feature_monitoring_config_fv(self, mocker):
@@ -210,16 +238,20 @@ class TestFeatureMonitoringConfigEngine:
             feature_store_id=DEFAULT_FEATURE_STORE_ID
         )
 
-        detection_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="BATCH",
-            time_offset="1w",
-            window_length="1d",
+        detection_monitoring_window_configuration = (
+            config_engine.build_monitoring_window_config(
+                window_configuration_type="BATCH",
+                time_offset="1w",
+                window_length="1d",
+            )
         )
-        reference_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="TRAINING_DATASET", specific_id=12
+        reference_monitoring_window_configuration = (
+            config_engine.build_monitoring_window_config(
+                window_configuration_type="TRAINING_DATASET", specific_id=12
+            )
         )
 
-        stats_comparison_config = {
+        stats_comparison_configuration = {
             "threshold": 1,
             "strict": True,
             "relative": False,
@@ -231,9 +263,9 @@ class TestFeatureMonitoringConfigEngine:
             name=DEFAULT_NAME,
             feature_name=DEFAULT_FEATURE_NAME,
             feature_view_id=DEFAULT_FEATURE_VIEW_ID,
-            detection_window_config=detection_window_config,
-            reference_window_config=reference_window_config,
-            descriptive_statistics_comparison_config=stats_comparison_config,
+            detection_monitoring_window_configuration=detection_monitoring_window_configuration,
+            reference_monitoring_window_configuration=reference_monitoring_window_configuration,
+            descriptive_statistics_comparison_configuration=stats_comparison_configuration,
             description=DEFAULT_DESCRIPTION,
             scheduler_config=DEFAULT_SCHEDULER_CONFIG,
             alert_config=DEFAULT_ALERT_CONFIG,
@@ -262,29 +294,38 @@ class TestFeatureMonitoringConfigEngine:
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
-        assert config._detection_window_config["window_configuration_type"] == "BATCH"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
         assert (
-            config._reference_window_config["window_configuration_type"]
+            config._detection_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "BATCH"
+        )
+        assert config._detection_monitoring_window_configuration["time_offset"] == "1w"
+        assert (
+            config._detection_monitoring_window_configuration["window_length"] == "1d"
+        )
+        assert (
+            config._reference_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
             == "TRAINING_DATASET"
         )
-        assert config._reference_window_config["specific_id"] == 12
+        assert config._reference_monitoring_window_configuration["specific_id"] == 12
         assert (
-            config._descriptive_statistics_comparison_config["threshold"]
-            == stats_comparison_config["threshold"]
+            config._descriptive_statistics_comparison_configuration["threshold"]
+            == stats_comparison_configuration["threshold"]
         )
         assert (
-            config._descriptive_statistics_comparison_config["strict"]
-            == stats_comparison_config["strict"]
+            config._descriptive_statistics_comparison_configuration["strict"]
+            == stats_comparison_configuration["strict"]
         )
         assert (
-            config._descriptive_statistics_comparison_config["relative"]
-            == stats_comparison_config["relative"]
+            config._descriptive_statistics_comparison_configuration["relative"]
+            == stats_comparison_configuration["relative"]
         )
         assert (
-            config._descriptive_statistics_comparison_config["compare_on"]
-            == stats_comparison_config["compare_on"]
+            config._descriptive_statistics_comparison_configuration["compare_on"]
+            == stats_comparison_configuration["compare_on"]
         )
 
     def test_build_stats_monitoring_only_config(self):
@@ -293,10 +334,12 @@ class TestFeatureMonitoringConfigEngine:
             feature_store_id=DEFAULT_FEATURE_STORE_ID
         )
 
-        detection_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="INSERT",
-            time_offset="1w",
-            window_length="1d",
+        detection_monitoring_window_configuration = (
+            config_engine.build_monitoring_window_config(
+                window_configuration_type="INSERT",
+                time_offset="1w",
+                window_length="1d",
+            )
         )
 
         # Act
@@ -304,7 +347,7 @@ class TestFeatureMonitoringConfigEngine:
             name=DEFAULT_NAME,
             feature_name=DEFAULT_FEATURE_NAME,
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
-            detection_window_config=detection_window_config,
+            detection_monitoring_window_configuration=detection_monitoring_window_configuration,
             description=DEFAULT_DESCRIPTION,
             scheduler_config=DEFAULT_SCHEDULER_CONFIG,
         )
@@ -318,9 +361,16 @@ class TestFeatureMonitoringConfigEngine:
         assert config._description == DEFAULT_DESCRIPTION
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
-        assert config._detection_window_config["window_configuration_type"] == "INSERT"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
+        assert (
+            config._detection_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "INSERT"
+        )
+        assert config._detection_monitoring_window_configuration["time_offset"] == "1w"
+        assert (
+            config._detection_monitoring_window_configuration["window_length"] == "1d"
+        )
 
     def test_enable_descriptive_statistics_monitoring_fg(self, mocker):
         # Arrange
@@ -330,10 +380,12 @@ class TestFeatureMonitoringConfigEngine:
             feature_store_id=DEFAULT_FEATURE_STORE_ID
         )
 
-        detection_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="INSERT",
-            time_offset="1w",
-            window_length="1d",
+        detection_monitoring_window_configuration = (
+            config_engine.build_monitoring_window_config(
+                window_configuration_type="INSERT",
+                time_offset="1w",
+                window_length="1d",
+            )
         )
 
         # Act
@@ -341,7 +393,7 @@ class TestFeatureMonitoringConfigEngine:
             name=DEFAULT_NAME,
             feature_name=DEFAULT_FEATURE_NAME,
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
-            detection_window_config=detection_window_config,
+            detection_monitoring_window_configuration=detection_monitoring_window_configuration,
             description=DEFAULT_DESCRIPTION,
             scheduler_config=DEFAULT_SCHEDULER_CONFIG,
         )
@@ -362,9 +414,16 @@ class TestFeatureMonitoringConfigEngine:
         assert config._description == DEFAULT_DESCRIPTION
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
-        assert config._detection_window_config["window_configuration_type"] == "INSERT"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
+        assert (
+            config._detection_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "INSERT"
+        )
+        assert config._detection_monitoring_window_configuration["time_offset"] == "1w"
+        assert (
+            config._detection_monitoring_window_configuration["window_length"] == "1d"
+        )
 
     def test_enable_descriptive_statistics_monitoring_fv(self, mocker):
         # Arrange
@@ -374,10 +433,12 @@ class TestFeatureMonitoringConfigEngine:
             feature_store_id=DEFAULT_FEATURE_STORE_ID
         )
 
-        detection_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="BATCH",
-            time_offset="1w",
-            window_length="1d",
+        detection_monitoring_window_configuration = (
+            config_engine.build_monitoring_window_config(
+                window_configuration_type="BATCH",
+                time_offset="1w",
+                window_length="1d",
+            )
         )
 
         # Act
@@ -387,7 +448,7 @@ class TestFeatureMonitoringConfigEngine:
             feature_view_id=DEFAULT_FEATURE_VIEW_ID,
             feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
             feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
-            detection_window_config=detection_window_config,
+            detection_monitoring_window_configuration=detection_monitoring_window_configuration,
             scheduler_config=DEFAULT_SCHEDULER_CONFIG,
         )
 
@@ -411,6 +472,13 @@ class TestFeatureMonitoringConfigEngine:
         assert config._description is None
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
-        assert config._detection_window_config["window_configuration_type"] == "BATCH"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
+        assert (
+            config._detection_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "BATCH"
+        )
+        assert config._detection_monitoring_window_configuration["time_offset"] == "1w"
+        assert (
+            config._detection_monitoring_window_configuration["window_length"] == "1d"
+        )

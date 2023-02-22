@@ -38,16 +38,35 @@ class TestFeatureMonitoringConfig:
         assert isinstance(config._alert_config, str)
         assert isinstance(config._scheduler_config, str)
 
-        assert config._detection_window_config["window_config_type"] == "INSERT"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
-        assert config._reference_window_config["window_config_type"] == "SNAPSHOT"
-        assert config._reference_window_config["time_offset"] == "LAST"
+        assert (
+            config._detection_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "INSERT"
+        )
+        assert config._detection_monitoring_window_configuration["time_offset"] == "1w"
+        assert (
+            config._detection_monitoring_window_configuration["window_length"] == "1d"
+        )
+        assert (
+            config._reference_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "SNAPSHOT"
+        )
+        assert (
+            config._reference_monitoring_window_configuration["time_offset"] == "LAST"
+        )
 
-        assert config._descriptive_statistics_comparison_config["threshold"] == 1
-        assert config._descriptive_statistics_comparison_config["strict"] is True
-        assert config._descriptive_statistics_comparison_config["relative"] is False
-        assert config._descriptive_statistics_comparison_config["compare_on"] == "MEAN"
+        assert config._descriptive_statistics_comparison_configuration["threshold"] == 1
+        assert config._descriptive_statistics_comparison_configuration["strict"] is True
+        assert (
+            config._descriptive_statistics_comparison_configuration["relative"] is False
+        )
+        assert (
+            config._descriptive_statistics_comparison_configuration["compare_on"]
+            == "MEAN"
+        )
 
     def test_from_response_json_via_fv(self, backend_fixtures):
         # Arrange
@@ -71,18 +90,33 @@ class TestFeatureMonitoringConfig:
         assert isinstance(config._alert_config, str)
         assert isinstance(config._scheduler_config, str)
 
-        assert config._detection_window_config["window_config_type"] == "BATCH"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
         assert (
-            config._reference_window_config["window_config_type"] == "TRAINING_DATASET"
+            config._detection_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "BATCH"
         )
-        assert config._reference_window_config["specific_id"] == 33
+        assert config._detection_monitoring_window_configuration["time_offset"] == "1w"
+        assert (
+            config._detection_monitoring_window_configuration["window_length"] == "1d"
+        )
+        assert (
+            config._reference_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "TRAINING_DATASET"
+        )
+        assert config._reference_monitoring_window_configuration["specific_id"] == 33
 
-        assert config._descriptive_statistics_comparison_config["threshold"] == 1
-        assert config._descriptive_statistics_comparison_config["strict"] is True
-        assert config._descriptive_statistics_comparison_config["relative"] is False
-        assert config._descriptive_statistics_comparison_config["compare_on"] == "MEAN"
+        assert config._descriptive_statistics_comparison_configuration["threshold"] == 1
+        assert config._descriptive_statistics_comparison_configuration["strict"] is True
+        assert (
+            config._descriptive_statistics_comparison_configuration["relative"] is False
+        )
+        assert (
+            config._descriptive_statistics_comparison_configuration["compare_on"]
+            == "MEAN"
+        )
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
@@ -110,18 +144,33 @@ class TestFeatureMonitoringConfig:
         assert isinstance(config._alert_config, str)
         assert isinstance(config._scheduler_config, str)
 
-        assert config._detection_window_config["window_config_type"] == "BATCH"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
         assert (
-            config._reference_window_config["window_config_type"] == "TRAINING_DATASET"
+            config._detection_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "BATCH"
         )
-        assert config._reference_window_config["specific_id"] == 33
+        assert config._detection_monitoring_window_configuration["time_offset"] == "1w"
+        assert (
+            config._detection_monitoring_window_configuration["window_length"] == "1d"
+        )
+        assert (
+            config._reference_monitoring_window_configuration[
+                "window_configuration_type"
+            ]
+            == "TRAINING_DATASET"
+        )
+        assert config._reference_monitoring_window_configuration["specific_id"] == 33
 
-        assert config._descriptive_statistics_comparison_config["threshold"] == 1
-        assert config._descriptive_statistics_comparison_config["strict"] is True
-        assert config._descriptive_statistics_comparison_config["relative"] is False
-        assert config._descriptive_statistics_comparison_config["compare_on"] == "MEAN"
+        assert config._descriptive_statistics_comparison_configuration["threshold"] == 1
+        assert config._descriptive_statistics_comparison_configuration["strict"] is True
+        assert (
+            config._descriptive_statistics_comparison_configuration["relative"] is False
+        )
+        assert (
+            config._descriptive_statistics_comparison_configuration["compare_on"]
+            == "MEAN"
+        )
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange
