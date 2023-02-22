@@ -95,7 +95,7 @@ class FeatureMonitoringConfigEngine:
 
     def build_monitoring_window_config(
         self,
-        entity_to_monitor: str,
+        window_config_type: str,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
         specific_value: Optional[float] = None,
@@ -104,7 +104,7 @@ class FeatureMonitoringConfigEngine:
     ) -> Dict[str, Any]:
 
         return {
-            "window_configuration_type": entity_to_monitor,
+            "window_configuration_type": window_config_type,
             "time_offset": time_offset,
             "window_length": window_length,
             "specific_id": specific_id,

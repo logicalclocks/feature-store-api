@@ -43,13 +43,13 @@ class TestFeatureMonitoringConfigEngine:
 
         # Act
         window_config = config_engine.build_monitoring_window_config(
-            entity_to_monitor="FEATURE_GROUP",
+            window_config_type="SNAPSHOT",
             time_offset="LAST",
             row_percentage=10,
         )
 
         # Assert
-        assert window_config["window_configuration_type"] == "FEATURE_GROUP"
+        assert window_config["window_configuration_type"] == "SNAPSHOT"
         assert window_config["time_offset"] == "LAST"
         assert window_config["row_percentage"] == 10
 
@@ -60,12 +60,12 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
-            entity_to_monitor="INSERT",
+            window_config_type="INSERT",
             time_offset="1w",
             window_length="1d",
         )
         reference_window_config = config_engine.build_monitoring_window_config(
-            entity_to_monitor="FEATURE_GROUP", specific_value=2
+            window_config_type="SNAPSHOT", specific_value=2
         )
 
         stats_comparison_config = {
@@ -102,8 +102,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._detection_window_config["time_offset"] == "1w"
         assert config._detection_window_config["window_length"] == "1d"
         assert (
-            config._reference_window_config["window_configuration_type"]
-            == "FEATURE_GROUP"
+            config._reference_window_config["window_configuration_type"] == "SNAPSHOT"
         )
         assert config._reference_window_config["specific_value"] == 2
         assert (
@@ -134,12 +133,12 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
-            entity_to_monitor="INSERT",
+            window_config_type="INSERT",
             time_offset="1w",
             window_length="1d",
         )
         reference_window_config = config_engine.build_monitoring_window_config(
-            entity_to_monitor="FEATURE_GROUP", specific_value=2
+            window_config_type="SNAPSHOT", specific_value=2
         )
 
         stats_comparison_config = {
@@ -183,8 +182,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._detection_window_config["time_offset"] == "1w"
         assert config._detection_window_config["window_length"] == "1d"
         assert (
-            config._reference_window_config["window_configuration_type"]
-            == "FEATURE_GROUP"
+            config._reference_window_config["window_configuration_type"] == "SNAPSHOT"
         )
         assert config._reference_window_config["specific_value"] == 2
         assert (
@@ -213,12 +211,12 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
-            entity_to_monitor="BATCH",
+            window_config_type="BATCH",
             time_offset="1w",
             window_length="1d",
         )
         reference_window_config = config_engine.build_monitoring_window_config(
-            entity_to_monitor="TRAINING_DATASET", specific_id=12
+            window_config_type="TRAINING_DATASET", specific_id=12
         )
 
         stats_comparison_config = {
@@ -296,7 +294,7 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
-            entity_to_monitor="INSERT",
+            window_config_type="INSERT",
             time_offset="1w",
             window_length="1d",
         )
@@ -333,7 +331,7 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
-            entity_to_monitor="INSERT",
+            window_config_type="INSERT",
             time_offset="1w",
             window_length="1d",
         )
@@ -377,7 +375,7 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
-            entity_to_monitor="BATCH",
+            window_config_type="BATCH",
             time_offset="1w",
             window_length="1d",
         )

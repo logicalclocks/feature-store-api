@@ -16,7 +16,7 @@
         "window_length": "1d"
       },
       "reference_window_config": {
-        "window_config_type": "FEATURE_GROUP",
+        "window_config_type": "SNAPSHOT",
         "time_offset": "LAST"
       },
       "descriptive_statistics_comparison_config": {
