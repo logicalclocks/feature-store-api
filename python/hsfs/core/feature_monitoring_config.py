@@ -72,7 +72,53 @@ class FeatureMonitoringConfig:
         else:
             return cls(**json_decamelized)
 
+    def _window_config_to_dict(self, window_config: Dict[str, Any]) -> Dict[str, Any]:
+
+        return {
+            "windowConfigurationType": window_config.get(
+                "window_configuration_type", "SPECIFIC_VALUE"
+            ),
+            "windowLength": window_config.get("window_length", None),
+            "timeOffset": window_config.get("time_offset", None),
+            "specificValue": window_config.get("specific_value", None),
+            "specificId": window_config.get("specific_id", None),
+            "rowPercentage": window_config.get("row_percentage", None),
+            "id": window_config.get("id", None),
+        }
+
     def to_dict(self):
+
+        if isinstance(self._detection_window_config, dict):
+            detection_window_config = self._window_config_to_dict(
+                self._detection_window_config
+            )
+        else:
+            detection_window_config = None
+
+        if isinstance(self._reference_window_config, dict):
+            reference_window_config = self._window_config_to_dict(
+                self._reference_window_config
+            )
+        else:
+            reference_window_config = None
+
+        if isinstance(self._descriptive_statistics_comparison_config, dict):
+            stats_comparison_config = {
+                "threshold": self._descriptive_statistics_comparison_config.get(
+                    "threshold", 0.0
+                ),
+                "compareOn": self._descriptive_statistics_comparison_config.get(
+                    "compare_on", "MEAN"
+                ),
+                "strict": self._descriptive_statistics_comparison_config.get(
+                    "strict", False
+                ),
+                "relative": self._descriptive_statistics_comparison_config.get(
+                    "relative", False
+                ),
+            }
+        else:
+            stats_comparison_config = None
 
         return {
             "id": self._id,
@@ -87,9 +133,9 @@ class FeatureMonitoringConfig:
             "featureMonitoringType": self._feature_monitoring_type,
             "schedulerConfigDTO": self._scheduler_config,
             "alertConfigDTO": self._alert_config,
-            "detectionMonitoringWindowConfigurationDTO": self._detection_window_config,
-            "referenceMonitoringWindowConfigurationDTO": self._reference_window_config,
-            "descriptiveStatisticsComparisonConfigurationDTO": self._descriptive_statistics_comparison_config,
+            "detectionMonitoringWindowConfigurationDTO": detection_window_config,
+            "referenceMonitoringWindowConfigurationDTO": reference_window_config,
+            "descriptiveStatisticsComparisonConfigurationDTO": stats_comparison_config,
         }
 
     def json(self) -> str:
