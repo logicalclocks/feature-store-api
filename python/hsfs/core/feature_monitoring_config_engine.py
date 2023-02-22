@@ -50,6 +50,8 @@ class FeatureMonitoringConfigEngine:
             description=description,
         )
 
+        config._job_id = self.setup_monitoring_job(config)
+
         return self._feature_monitoring_config_api.create(
             fm_config=config,
             feature_group_id=feature_group_id,
@@ -85,6 +87,8 @@ class FeatureMonitoringConfigEngine:
             alert_config=alert_config,
             description=description,
         )
+
+        config._job_id = self.setup_monitoring_job(config)
 
         return self._feature_monitoring_config_api.create(
             fm_config=config,
@@ -168,3 +172,6 @@ class FeatureMonitoringConfigEngine:
             reference_window_config=reference_window_config,
             descriptive_statistics_comparison_config=descriptive_statistics_comparison_config,
         )
+
+    def setup_monitoring_job(self, _config: FeatureMonitoringConfig) -> int:
+        return 1
