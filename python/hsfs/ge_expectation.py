@@ -74,13 +74,18 @@ class GeExpectation:
             "meta": json.dumps(self._meta),
         }
 
-    def to_json_dict(self) -> Dict[str, Any]:
-        return {
+    def to_json_dict(self, decamelize=False) -> Dict[str, Any]:
+        the_dict = {
             "id": self._id,
             "expectationType": self._expectation_type,
             "kwargs": self._kwargs,
             "meta": self._meta,
         }
+
+        if decamelize:
+            return humps.decamelize(the_dict)
+        else:
+            return the_dict
 
     def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)

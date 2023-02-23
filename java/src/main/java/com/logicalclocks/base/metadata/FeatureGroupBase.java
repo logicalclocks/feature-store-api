@@ -161,8 +161,8 @@ public class FeatureGroupBase {
    *
    * @param name  name of the tag
    * @param value value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects.
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public void addTag(String name, Object value) throws FeatureStoreException, IOException {
     featureGroupBaseEngine.addTag(this, name, value);
@@ -172,8 +172,8 @@ public class FeatureGroupBase {
    * Get all tags of the feature group.
    *
    * @return map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @JsonIgnore
   public Map<String, Object> getTags() throws FeatureStoreException, IOException {
@@ -185,8 +185,8 @@ public class FeatureGroupBase {
    *
    * @param name name of tha tag
    * @return The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @JsonIgnore
   public Object getTag(String name) throws FeatureStoreException, IOException {
@@ -197,8 +197,8 @@ public class FeatureGroupBase {
    * Delete a tag of the feature group.
    *
    * @param name name of the tag to be deleted
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public void deleteTag(String name) throws FeatureStoreException, IOException {
     featureGroupBaseEngine.deleteTag(this, name);
@@ -207,9 +207,9 @@ public class FeatureGroupBase {
   /**
    * Update the description of the feature group.
    *
-   * @param description
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @param description feature group description.
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public void updateDescription(String description) throws FeatureStoreException, IOException {
     featureGroupBaseEngine.updateDescription(this, description, this.getClass());
@@ -218,10 +218,10 @@ public class FeatureGroupBase {
   /**
    * Update the description of a single feature.
    *
-   * @param featureName
-   * @param description
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @param featureName Name of the feature
+   * @param description Description of the feature
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public void updateFeatureDescription(String featureName, String description)
       throws FeatureStoreException, IOException {
@@ -234,9 +234,10 @@ public class FeatureGroupBase {
    * Update the metadata of multiple features.
    * Currently only feature description updates are supported.
    *
-   * @param features
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @param features List of Feature metadata objects
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   * @throws ParseException ParseException
    */
   public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
 
@@ -246,9 +247,10 @@ public class FeatureGroupBase {
    * Update the metadata of multiple features.
    * Currently only feature description updates are supported.
    *
-   * @param feature
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @param feature Feature metadata object
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   * @throws ParseException ParseException
    */
   public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
 
@@ -258,9 +260,10 @@ public class FeatureGroupBase {
    * Append features to the schema of the feature group.
    * It is only possible to append features to a feature group. Removing features is considered a breaking change.
    *
-   * @param features
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @param features list of Feature metadata objects
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   * @throws ParseException ParseException
    */
   public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
 
@@ -270,9 +273,10 @@ public class FeatureGroupBase {
    * Append a single feature to the schema of the feature group.
    * It is only possible to append features to a feature group. Removing features is considered a breaking change.
    *
-   * @param features
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @param features List of Feature metadata objects
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   * @throws ParseException ParseException
    */
   public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
 
@@ -283,8 +287,8 @@ public class FeatureGroupBase {
    * Change the `enabled`, `histograms`, `correlations` or `columns` attributes and persist
    * the changes by calling this method.
    *
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public void updateStatisticsConfig() throws FeatureStoreException, IOException {
     featureGroupBaseEngine.updateStatisticsConfig(this, this.getClass());
@@ -294,8 +298,8 @@ public class FeatureGroupBase {
    * Recompute the statistics for the feature group and save them to the feature store.
    *
    * @return statistics object of computed statistics
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public <T> T computeStatistics() throws FeatureStoreException, IOException {
     return null;
@@ -305,8 +309,8 @@ public class FeatureGroupBase {
    * Get the last statistics commit for the feature group.
    *
    * @return statistics object of latest commit
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @JsonIgnore
   public <T> T getStatistics() throws FeatureStoreException, IOException {
@@ -329,10 +333,10 @@ public class FeatureGroupBase {
   /**
    * Filter the query based on a condition for a feature or a conjunction of multiple filters.
    *
-   * @param filter
-   * @return Query
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @param filter Filter metadata object
+   * @return Query object
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public QueryBase filter(Filter filter) throws FeatureStoreException, IOException {
     return this.selectAll().genericFilter(filter);
@@ -341,10 +345,10 @@ public class FeatureGroupBase {
   /**
    * Filter the query based on a condition for a feature or a conjunction of multiple filters.
    *
-   * @param filter
-   * @return Query
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @param filter Filter metadata object
+   * @return Query object
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public QueryBase filter(FilterLogic filter) throws FeatureStoreException, IOException {
     return this.selectAll().genericFilter(filter);
@@ -353,9 +357,9 @@ public class FeatureGroupBase {
   /**
    * Retrieve a feature of the feature group by name.
    *
-   * @param name
-   * @return Feature
-   * @throws FeatureStoreException
+   * @param name feature name
+   * @return Feature metadata object
+   * @throws FeatureStoreException FeatureStoreException
    */
   @JsonIgnore
   public Feature getFeature(String name) throws FeatureStoreException {

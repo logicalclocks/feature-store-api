@@ -64,12 +64,19 @@ public class FeatureGroupEngine {
   /**
    * Create the metadata and write the data to the online/offline feature store.
    *
-   * @param featureGroup
-   * @param dataset
-   * @param partitionKeys
-   * @param writeOptions
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @param featureGroup Feature Group metadata object.
+   * @param dataset Spark DataFrame or RDD.
+   * @param partitionKeys A list of feature names to be used as partition key when  writing the feature data to the
+   *                      offline storage, defaults to empty list.
+   * @param hudiPrecombineKey  A feature name to be used as a precombine key for the `TimeTravelFormat.HUDI` feature
+   *                           group. If feature group has `TimeTravelFormat.HUDI` and hudi precombine key was not
+   *                           specified then the first primary key of the feature group will be used as hudi precombine
+   *                           key.
+   * @param writeOptions Additional write options as key-value pairs, defaults to empty Map.
+   * @return Feature Group metadata object
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   * @throws ParseException ParseException
    */
   public FeatureGroup save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> partitionKeys,
                            String hudiPrecombineKey, Map<String, String> writeOptions)

@@ -199,10 +199,10 @@ public class TrainingDataset extends TrainingDatasetBase {
   /**
    * Create the training dataset based on the content of the feature store query.
    *
-   * @param query        the query to save as training dataset
+   * @param query the query to save as training dataset
    * @param writeOptions options to pass to the Spark write operation
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public void save(Query query, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
@@ -218,6 +218,7 @@ public class TrainingDataset extends TrainingDatasetBase {
    *
    * @return Spark Dataset containing the training dataset data
    * @throws FeatureStoreException if the training dataset has splits and the split was not specified
+   * @throws IOException IOException
    */
   @Override
   public Dataset<Row> read() throws FeatureStoreException, IOException {
@@ -230,6 +231,7 @@ public class TrainingDataset extends TrainingDatasetBase {
    * @param readOptions options to pass to the Spark read operation
    * @return Spark Dataset containing the training dataset data
    * @throws FeatureStoreException if the training dataset has splits and the split was not specified
+   * @throws IOException IOException
    */
   public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return read("", readOptions);
@@ -240,6 +242,8 @@ public class TrainingDataset extends TrainingDatasetBase {
    *
    * @param split the split name
    * @return Spark Dataset containing the training dataset data
+   * @throws FeatureStoreException if the training dataset has splits and the split was not specified
+   * @throws IOException IOException
    */
   public Dataset<Row> read(String split) throws FeatureStoreException, IOException {
     return read(split, null);
@@ -252,6 +256,7 @@ public class TrainingDataset extends TrainingDatasetBase {
    * @param readOptions options to pass to the Spark read operation
    * @return Spark Dataset containing the training dataset data
    * @throws FeatureStoreException if the training dataset has splits and the split was not specified
+   * @throws IOException IOException
    */
   @Override
   public Dataset<Row> read(String split, Map<String, String> readOptions) throws FeatureStoreException, IOException {
@@ -264,7 +269,9 @@ public class TrainingDataset extends TrainingDatasetBase {
   /**
    * Show numRows from the training dataset (across all splits).
    *
-   * @param numRows
+   * @param numRows number of rows to display
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @Override
   public void show(int numRows) throws FeatureStoreException, IOException {
@@ -275,8 +282,8 @@ public class TrainingDataset extends TrainingDatasetBase {
    * Recompute the statistics for the entire training dataset and save them to the feature store.
    *
    * @return statistics object of computed statistics
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @Override
   public Statistics computeStatistics() throws FeatureStoreException, IOException {
@@ -295,8 +302,8 @@ public class TrainingDataset extends TrainingDatasetBase {
    * Change the `enabled`, `histograms`, `correlations` or `columns` attributes and persist
    * the changes by calling this method.
    *
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @Override
   public void updateStatisticsConfig() throws FeatureStoreException, IOException {
@@ -307,8 +314,8 @@ public class TrainingDataset extends TrainingDatasetBase {
    * Get the last statistics commit for the training dataset.
    *
    * @return statistics object of latest commit
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @JsonIgnore
   @Override
@@ -321,8 +328,8 @@ public class TrainingDataset extends TrainingDatasetBase {
    *
    * @param commitTime commit time in the format "YYYYMMDDhhmmss"
    * @return statistics object for the commit time
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @JsonIgnore
   @Override
@@ -335,8 +342,8 @@ public class TrainingDataset extends TrainingDatasetBase {
    *
    * @param name  name of the tag
    * @param value value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @Override
   public void addTag(String name, Object value) throws FeatureStoreException, IOException {
@@ -347,8 +354,8 @@ public class TrainingDataset extends TrainingDatasetBase {
    * Get all tags of the training dataset.
    *
    * @return a map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @JsonIgnore
   @Override
@@ -361,8 +368,8 @@ public class TrainingDataset extends TrainingDatasetBase {
    *
    * @param name name of the tag
    * @return The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @JsonIgnore
   @Override
@@ -374,8 +381,8 @@ public class TrainingDataset extends TrainingDatasetBase {
    * Delete a tag of the training dataset.
    *
    * @param name name of the tag to be deleted
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @Override
   public void deleteTag(String name) throws FeatureStoreException, IOException {
@@ -417,9 +424,10 @@ public class TrainingDataset extends TrainingDatasetBase {
   /**
    * Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store.
    *
-   * @throws SQLException
-   * @throws IOException
-   * @throws FeatureStoreException
+   * @throws SQLException SQLException
+   * @throws IOException IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws ClassNotFoundException ClassNotFoundException
    */
   public void initPreparedStatement() throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
     initPreparedStatement(false);
@@ -428,9 +436,11 @@ public class TrainingDataset extends TrainingDatasetBase {
   /**
    * Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store.
    *
-   * @throws SQLException
-   * @throws IOException
-   * @throws FeatureStoreException
+   * @param external whether is from external client or not
+   * @throws SQLException SQLException
+   * @throws IOException IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws ClassNotFoundException ClassNotFoundException
    */
   public void initPreparedStatement(boolean external)
       throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
@@ -440,9 +450,12 @@ public class TrainingDataset extends TrainingDatasetBase {
   /**
    * Initialise and cache parametrised prepared statement to retrieve batch feature vectors from online feature store.
    *
-   * @throws SQLException
-   * @throws IOException
-   * @throws FeatureStoreException
+   * @param external whether is from external client or not
+   * @param batch whether to initialise feature vector for batch retrieval
+   * @throws SQLException SQLException
+   * @throws IOException IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws ClassNotFoundException ClassNotFoundException
    */
   public void initPreparedStatement(boolean external, boolean batch) throws SQLException, IOException,
       FeatureStoreException, ClassNotFoundException {
@@ -454,8 +467,11 @@ public class TrainingDataset extends TrainingDatasetBase {
    *
    * @param entry Map object with kes as primary key names of the training dataset features groups and values as
    *              corresponding ids to retrieve feature vector from online feature store.
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @return list of feature values sorted according to provided primary keys.
+   * @throws SQLException SQLException
+   * @throws IOException IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws ClassNotFoundException ClassNotFoundException
    */
   @JsonIgnore
   public List<Object> getServingVector(Map<String, Object> entry) throws SQLException, FeatureStoreException,
@@ -470,8 +486,11 @@ public class TrainingDataset extends TrainingDatasetBase {
    *              corresponding ids to retrieve feature vector from online feature store.
    * @param external If true, the connection to the online feature store will be established using the hostname
    *                 provided in the hsfs.connection() setup.
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @return list of feature values sorted according to provided primary keys.
+   * @throws SQLException SQLException
+   * @throws IOException IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws ClassNotFoundException ClassNotFoundException
    */
   @JsonIgnore
   public List<Object> getServingVector(Map<String, Object> entry, boolean external)
@@ -500,8 +519,8 @@ public class TrainingDataset extends TrainingDatasetBase {
    * This operation drops all metadata associated with this version of the
    * training dataset and and the materialized data in HopsFS.
    *
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @Override
   public void delete() throws FeatureStoreException, IOException {
@@ -514,10 +533,10 @@ public class TrainingDataset extends TrainingDatasetBase {
    * Set of primary key names that is used as keys in input dict object for `get_serving_vector` method.
    *
    * @return Set of serving keys
-   * @throws SQLException
-   * @throws IOException
-   * @throws FeatureStoreException
-   * @throws ClassNotFoundException
+   * @throws SQLException SQLException
+   * @throws IOException IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws ClassNotFoundException ClassNotFoundException
    */
   @JsonIgnore
   public HashSet<String> getServingKeys()

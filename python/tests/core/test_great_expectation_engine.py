@@ -292,6 +292,45 @@ class TestCodeEngine:
         # Assert
         assert mock_fg_get_expectation_suite.call_count == 1
 
+    def test_fetch_expectation_suite_false(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        ge_engine = great_expectation_engine.GreatExpectationEngine(
+            feature_store_id=feature_store_id
+        )
+
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_instance")
+
+        suite = None
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=feature_store_id,
+            primary_key=[],
+            partition_key=[],
+            expectation_suite=ge.core.ExpectationSuite(
+                expectation_suite_name="attached_to_feature_group",
+            ),
+        )
+
+        mock_fg_get_expectation_suite = mocker.patch(
+            "hsfs.feature_group.FeatureGroup.get_expectation_suite"
+        )
+
+        # Act
+        result = ge_engine.fetch_or_convert_expectation_suite(
+            feature_group=fg,
+            expectation_suite=suite,
+            validation_options={"fetch_expectation_suite": False},
+        )
+
+        # Assert
+        assert mock_fg_get_expectation_suite.call_count == 0
+        assert result.expectation_suite_name == "attached_to_feature_group"
+        assert isinstance(result, es.ExpectationSuite)
+
     def test_should_run_validation_based_on_suite(self, mocker):
         # Arrange
         feature_store_id = 99

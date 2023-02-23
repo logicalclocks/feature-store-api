@@ -227,7 +227,6 @@ public class QueryBase {
    * @param wallclockEndTime   end date.
    * @return Query
    * @throws FeatureStoreException
-   * @throws IOException
    * @throws ParseException
    *
    * @deprecated use asOf(wallclockEndTime, wallclockStartTime) instead

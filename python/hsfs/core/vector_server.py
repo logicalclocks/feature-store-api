@@ -56,13 +56,13 @@ class VectorServer:
             feature_store_id
         )
 
-    def init_serving(self, entity, batch, external):
+    def init_serving(self, entity, batch, external, options=None):
         if external is None:
             external = isinstance(client.get_instance(), client.external.Client)
         # `init_prepared_statement` should be the last because other initialisations
         # has to be done successfully before it is able to fetch feature vectors.
         self.init_transformation(entity)
-        self.init_prepared_statement(entity, batch, external)
+        self.init_prepared_statement(entity, batch, external, options=options)
 
     def init_batch_scoring(self, entity):
         self.init_transformation(entity)
@@ -71,7 +71,7 @@ class VectorServer:
         # attach transformation functions
         self._transformation_functions = self._get_transformation_fns(entity)
 
-    def init_prepared_statement(self, entity, batch, external):
+    def init_prepared_statement(self, entity, batch, external, options=None):
         if isinstance(entity, feature_view.FeatureView):
             prepared_statements = self._feature_view_api.get_serving_prepared_statement(
                 entity.name, entity.version, batch
@@ -90,7 +90,7 @@ class VectorServer:
         self._serving_keys = None
         self._external = external
 
-        self._set_mysql_connection()
+        self._set_mysql_connection(options=options)
 
         prepared_statements_dict = {}
         pkname_by_serving_index = {}
@@ -176,7 +176,7 @@ class VectorServer:
 
                 for row in result_proxy:
                     result_dict = self.deserialize_complex_features(
-                        self._complex_features, dict(row.items())
+                        self._complex_features, row._asdict()
                     )
                     if not result_dict:
                         raise Exception(
@@ -221,13 +221,13 @@ class VectorServer:
 
                 result_proxy = mysql_conn.execute(
                     prepared_statement,
-                    batch_ids=entry_values_tuples,
+                    {"batch_ids": entry_values_tuples},
                 ).fetchall()
 
                 statement_results = []
                 for row in result_proxy:
                     result_dict = self.deserialize_complex_features(
-                        self._complex_features, dict(row.items())
+                        self._complex_features, row._asdict()
                     )
 
                     if not result_dict:
@@ -299,10 +299,10 @@ class VectorServer:
     def _make_preview_statement(self, statement, n):
         return text(statement.text[: statement.text.find(" WHERE ")] + f" LIMIT {n}")
 
-    def _set_mysql_connection(self):
+    def _set_mysql_connection(self, options=None):
         online_conn = self._storage_connector_api.get_online_connector()
         self._prepared_statement_engine = util.create_mysql_engine(
-            online_conn, self._external
+            online_conn, self._external, options=options
         )
 
     def _generate_vector(self, result_dict):

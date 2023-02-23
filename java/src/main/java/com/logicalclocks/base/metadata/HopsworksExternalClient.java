@@ -193,12 +193,12 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
    * - AWS Secrets manager
    * - FIle on the local file system
    *
-   * @param secretStore
-   * @param region
-   * @param apiKeyFilepath
+   * @param secretStore SecretStore PARAMETER_STORE or SECRET_MANAGER
+   * @param region AWS regions
+   * @param apiKeyFilepath path to API key file
    * @return String
-   * @throws IOException
-   * @throws FeatureStoreException
+   * @throws IOException IOException
+   * @throws FeatureStoreException FeatureStoreException
    */
   public String readApiKey(SecretStore secretStore, Region region, String apiKeyFilepath)
       throws IOException, FeatureStoreException {
@@ -254,16 +254,17 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
   }
 
   private String getAssumedRole() throws FeatureStoreException {
-    StsClient stsClient = StsClient.create();
-    GetCallerIdentityResponse callerIdentityResponse = stsClient.getCallerIdentity();
-    // arns for assumed roles in SageMaker follow the following schema
-    // arn:aws:sts::123456789012:assumed-role/my-role-name/my-role-session-name
-    String arn = callerIdentityResponse.arn();
-    String[] arnSplits = arn.split("/");
-    if (arnSplits.length != 3 || !arnSplits[0].endsWith("assumed-role")) {
-      throw new FeatureStoreException("Failed to extract assumed role from arn: " + arn);
+    try (StsClient stsClient = StsClient.create()) {
+      GetCallerIdentityResponse callerIdentityResponse = stsClient.getCallerIdentity();
+      // arns for assumed roles in SageMaker follow the following schema
+      // arn:aws:sts::123456789012:assumed-role/my-role-name/my-role-session-name
+      String arn = callerIdentityResponse.arn();
+      String[] arnSplits = arn.split("/");
+      if (arnSplits.length != 3 || !arnSplits[0].endsWith("assumed-role")) {
+        throw new FeatureStoreException("Failed to extract assumed role from arn: " + arn);
+      }
+      return arnSplits[1];
     }
-    return arnSplits[1];
   }
 
   @Override

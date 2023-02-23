@@ -128,7 +128,7 @@ public class FeatureView extends FeatureViewBase {
      * Query of a feature view. Note that `as_of` argument in the `Query` will be ignored because feature view does
      * not support time travel query.
      *
-     * @param query
+     * @param query Query object
      * @return builder
      */
     public FeatureViewBuilder query(Query query) {
@@ -260,8 +260,8 @@ public class FeatureView extends FeatureViewBase {
    *     name of the tag
    * @param value
    *     value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public void addTag(String name, Object value) throws FeatureStoreException, IOException {
     featureViewEngine.addTag(this, name, value);
@@ -271,8 +271,8 @@ public class FeatureView extends FeatureViewBase {
    * Get all tags of the feature view.
    *
    * @return a map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @JsonIgnore
   public Map<String, Object> getTags() throws FeatureStoreException, IOException {
@@ -285,8 +285,8 @@ public class FeatureView extends FeatureViewBase {
    * @param name
    *     name of the tag
    * @return The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @JsonIgnore
   public Object getTag(String name) throws FeatureStoreException, IOException {
@@ -298,8 +298,8 @@ public class FeatureView extends FeatureViewBase {
    *
    * @param name
    *     name of the tag to be deleted
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public void deleteTag(String name) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTag(this, name);
@@ -725,12 +725,13 @@ public class FeatureView extends FeatureViewBase {
   /**
    * Add name/value tag to the training dataset.
    *
+   * @param version tag version
    * @param name
    *     name of the tag
    * @param value
    *     value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public void addTrainingDatasetTag(Integer version, String name, Object value) throws FeatureStoreException,
       IOException {
@@ -740,9 +741,10 @@ public class FeatureView extends FeatureViewBase {
   /**
    * Get all tags of the training dataset.
    *
+   * @param version tag version
    * @return a map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @JsonIgnore
   public Map<String, Object> getTrainingDatasetTags(Integer version) throws FeatureStoreException, IOException {
@@ -752,11 +754,12 @@ public class FeatureView extends FeatureViewBase {
   /**
    * Get a single tag value of the training dataset.
    *
+   * @param version tag version
    * @param name
    *     name of the tag
    * @return The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   @JsonIgnore
   public Object getTrainingDatasetTag(Integer version, String name) throws FeatureStoreException, IOException {
@@ -766,10 +769,11 @@ public class FeatureView extends FeatureViewBase {
   /**
    * Delete a tag of the training dataset.
    *
+   * @param version tag version
    * @param name
    *     name of the tag to be deleted
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public void deleteTrainingDatasetTag(Integer version, String name) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTag(this, name, version);
@@ -779,10 +783,10 @@ public class FeatureView extends FeatureViewBase {
    * Set of primary key names that is used as keys in input dict object for `get_serving_vector` method.
    *
    * @return Set of serving keys
-   * @throws SQLException
-   * @throws IOException
-   * @throws FeatureStoreException
-   * @throws ClassNotFoundException
+   * @throws SQLException SQLException
+   * @throws IOException IOException
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws ClassNotFoundException ClassNotFoundException
    */
   @JsonIgnore
   public HashSet<String> getPrimaryKeys()

@@ -595,6 +595,7 @@ public abstract class StorageConnector extends StorageConnectorBase {
     /**
      * Set spark options specific to BigQuery.
      * @return Map
+     * @throws IOException IOException
      */
     @Override
     public Map<String, String> sparkOptions() throws IOException {
@@ -628,13 +629,13 @@ public abstract class StorageConnector extends StorageConnectorBase {
     /**
      * If Table options are set in the storage connector, set path to table.
      * Else use the query argument to set as path.
-     * @param query
-     * @param dataFormat
-     * @param options
-     * @param path
+     * @param query query string
+     * @param dataFormat dataFormat
+     * @param options options
+     * @param path path
      * @return Dataframe
-     * @throws FeatureStoreException
-     * @throws IOException
+     * @throws FeatureStoreException FeatureStoreException
+     * @throws IOException IOException
      */
     @Override
     public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)

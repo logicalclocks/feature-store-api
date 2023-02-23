@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-
+import hsfs
 from hsfs import (
     feature_store,
     feature_group,
@@ -25,7 +25,9 @@ from hsfs import (
     expectation_suite,
     util,
     engine,
+    feature_group_writer,
 )
+from hsfs.engine import python
 from hsfs.client.exceptions import FeatureStoreException
 import pytest
 import warnings
@@ -313,6 +315,180 @@ class TestFeatureGroup:
         assert len(features) == 2
         assert set([f.name for f in features]) == {"f1", "f2"}
 
+    def test_backfill_job(self, mocker):
+        mock_job = mocker.Mock()
+        mock_job_api = mocker.patch(
+            "hsfs.core.job_api.JobApi.get", return_value=mock_job
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test_fg",
+            version=2,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+        )
+
+        # call first time should populate cache
+        fg.backfill_job
+
+        mock_job_api.assert_called_once_with("test_fg_2_offline_fg_backfill")
+        assert fg._backfill_job == mock_job
+
+        # call second time
+        fg.backfill_job
+
+        # make sure it still was called only once
+        mock_job_api.assert_called_once
+        assert fg.backfill_job == mock_job
+
+    def test_multi_part_insert_return_writer(self, mocker):
+        fg = feature_group.FeatureGroup(
+            name="test_fg",
+            version=2,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+        )
+
+        result = fg.multi_part_insert()
+        assert isinstance(result, feature_group_writer.FeatureGroupWriter)
+        assert result._feature_group == fg
+
+    def test_multi_part_insert_call_insert(self, mocker, dataframe_fixture_basic):
+        mock_writer = mocker.Mock()
+        mocker.patch(
+            "hsfs.feature_group_writer.FeatureGroupWriter", return_value=mock_writer
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test_fg",
+            version=2,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+        )
+
+        fg.multi_part_insert(dataframe_fixture_basic)
+        mock_writer.insert.assert_called_once()
+        assert fg._multi_part_insert is True
+
+    def test_save_code_true(self, mocker, dataframe_fixture_basic):
+        engine = python.Engine()
+        mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        mocker.patch("hsfs.engine.get_type", return_value="python")
+        mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.insert",
+            return_value=(None, None),
+        )
+        mock_code_engine = mocker.patch("hsfs.core.code_engine.CodeEngine.save_code")
+
+        fg = feature_group.FeatureGroup(
+            name="test_fg",
+            version=2,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+        )
+
+        fg.insert(dataframe_fixture_basic, save_code=True)
+
+        mock_code_engine.assert_called_once_with(fg)
+
+    def test_save_code_false(self, mocker, dataframe_fixture_basic):
+        engine = python.Engine()
+        mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        mocker.patch("hsfs.engine.get_type", return_value="python")
+        mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.insert",
+            return_value=(None, None),
+        )
+        mock_code_engine = mocker.patch("hsfs.core.code_engine.CodeEngine.save_code")
+
+        fg = feature_group.FeatureGroup(
+            name="test_fg",
+            version=2,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+        )
+
+        fg.insert(dataframe_fixture_basic, save_code=False)
+
+        mock_code_engine.assert_not_called()
+
+    def test_save_report_true_default(self, mocker, dataframe_fixture_basic):
+        engine = python.Engine()
+        mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        mocker.patch("hsfs.engine.get_type", return_value="python")
+        mocker.patch(
+            "hsfs.engine.python.Engine.convert_to_default_dataframe",
+            return_value=dataframe_fixture_basic,
+        )
+        mock_insert = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.insert",
+            return_value=(None, None),
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test_fg",
+            version=2,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+        )
+
+        fg.insert(dataframe_fixture_basic)
+        mock_insert.assert_called_once_with(
+            fg,
+            feature_dataframe=dataframe_fixture_basic,
+            overwrite=False,
+            operation="upsert",
+            storage=None,
+            write_options={},
+            validation_options={"save_report": True},
+        )
+
+    def test_save_report_default_overwritable(self, mocker, dataframe_fixture_basic):
+        engine = python.Engine()
+        mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        mocker.patch("hsfs.engine.get_type", return_value="python")
+        mocker.patch(
+            "hsfs.engine.python.Engine.convert_to_default_dataframe",
+            return_value=dataframe_fixture_basic,
+        )
+        mock_insert = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.insert",
+            return_value=(None, None),
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test_fg",
+            version=2,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+        )
+
+        fg.insert(dataframe_fixture_basic, validation_options={"save_report": False})
+
+        mock_insert.assert_called_once_with(
+            fg,
+            feature_dataframe=dataframe_fixture_basic,
+            overwrite=False,
+            operation="upsert",
+            storage=None,
+            write_options={},
+            validation_options={"save_report": False},
+        )
+
 
 class TestExternalFeatureGroup:
     def test_from_response_json(self, backend_fixtures):
@@ -408,3 +584,79 @@ class TestExternalFeatureGroup:
         assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
         assert fg.event_time is None
         assert fg.expectation_suite is None
+
+    def test_feature_group_save_expectation_suite_from_ge_type(
+        self, mocker, backend_fixtures
+    ):
+        # Arrange
+        json = backend_fixtures["expectation_suite"]["get"]["response"]
+        es = expectation_suite.ExpectationSuite.from_response_json(json)
+        json = backend_fixtures["feature_group"]["get_stream_basic_info"]["response"]
+        fg = feature_group.FeatureGroup.from_response_json(json)
+
+        # to mock delete we need get_expectation_suite to not return none
+        mock_get_expectation_suite_api = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.get",
+            return_value=es,
+        )
+        mock_create_expectation_suite_api = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.create",
+            return_value=es,
+        )
+        mock_delete_expectation_suite_api = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.delete"
+        )
+
+        version_api = mocker.patch("hsfs.core.variable_api.VariableApi.get_version")
+        version_api.return_value = hsfs.__version__
+
+        mock_es_engine_get_expectation_suite_url = mocker.patch(
+            "hsfs.core.expectation_suite_engine.ExpectationSuiteEngine._get_expectation_suite_url"
+        )
+        mock_print = mocker.patch("builtins.print")
+
+        # Act
+        fg.save_expectation_suite(es.to_ge_type(), overwrite=True)
+        # Assert
+        assert mock_delete_expectation_suite_api.call_count == 1
+        assert mock_create_expectation_suite_api.call_count == 1
+        assert mock_get_expectation_suite_api.call_count == 1
+        assert mock_es_engine_get_expectation_suite_url.call_count == 1
+        assert mock_print.call_count == 1
+        assert (
+            mock_print.call_args[0][0][:55]
+            == "Attached expectation suite to Feature Group, edit it at"
+        )
+
+    def test_feature_group_save_expectation_suite_from_hopsworks_type(
+        self, mocker, backend_fixtures
+    ):
+        # Arrange
+        json = backend_fixtures["expectation_suite"]["get"]["response"]
+        es = expectation_suite.ExpectationSuite.from_response_json(json)
+        json = backend_fixtures["feature_group"]["get_stream_basic_info"]["response"]
+        fg = feature_group.FeatureGroup.from_response_json(json)
+
+        mock_update_expectation_suite_api = mocker.patch(
+            "hsfs.core.expectation_suite_api.ExpectationSuiteApi.update"
+        )
+
+        version_api = mocker.patch("hsfs.core.variable_api.VariableApi.get_version")
+        version_api.return_value = hsfs.__version__
+
+        mock_es_engine_get_expectation_suite_url = mocker.patch(
+            "hsfs.core.expectation_suite_engine.ExpectationSuiteEngine._get_expectation_suite_url"
+        )
+        mock_print = mocker.patch("builtins.print")
+
+        # Act
+        fg.save_expectation_suite(es)
+        # Assert
+
+        assert mock_update_expectation_suite_api.call_count == 1
+        assert mock_es_engine_get_expectation_suite_url.call_count == 1
+        assert mock_print.call_count == 1
+        assert (
+            mock_print.call_args[0][0][:63]
+            == "Updated expectation suite attached to Feature Group, edit it at"
+        )

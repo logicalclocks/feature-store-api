@@ -196,9 +196,12 @@ public class Feature {
   /**
    * check if a value exists in a group of values.
    *
-   * @deprecated
-   * `in` method is deprecated. Use `isin` instead.
+   * @param collection collection of values to filter on SqlFilterCondition.IN
+   * @return Filter object
+   *
+   * @deprecated `in` method is deprecated. Use `isin` instead.
    */
+  @Deprecated
   public Filter in(Collection<?> collection) {
     return isin(collection);
   }

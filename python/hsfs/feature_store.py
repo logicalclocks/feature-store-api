@@ -396,11 +396,16 @@ class FeatureStore:
                 which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Hive engine.
             online: Set to true to execute the query against the online feature store.
                 Defaults to False.
-            read_options: Additional options to pass to the execution engine. Defaults to {}.
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 If running queries on the online feature store, users can provide an entry `{'external': True}`,
                 this instructs the library to use the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) to establish the connection to the online feature store.
                 If not set, or set to False, the online feature store storage connector is used which relies on
                 the private ip.
+                Defaults to `{}`.
 
         # Returns
             `DataFrame`: DataFrame depending on the chosen type.
@@ -688,6 +693,8 @@ class FeatureStore:
 
         # Arguments
             name: Name of the external feature group to create.
+            storage_connector: the storage connector to use to establish connectivity
+                with the data source.
             query: A string containing a SQL query valid for the target data source.
                 the query will be used to pull data from the data sources when the
                 feature group is used.
@@ -695,8 +702,9 @@ class FeatureStore:
                 the data format to use when reading it
             path: The location within the scope of the storage connector, from where to read
                 the data for the external feature group
-            storage_connector: the storage connector to use to establish connectivity
-                with the data source.
+            options: Additional options to be used by the engine when reading data from the
+                specified storage connector. For example, `{"header": True}` when reading
+                CSV files with column names in the first row.
             version: Version of the external feature group to retrieve, defaults to `None` and
                 will create the feature group with incremented version from the last
                 version in the feature store.
@@ -790,6 +798,8 @@ class FeatureStore:
 
         # Arguments
             name: Name of the external feature group to create.
+            storage_connector: the storage connector to use to establish connectivity
+                with the data source.
             query: A string containing a SQL query valid for the target data source.
                 the query will be used to pull data from the data sources when the
                 feature group is used.
@@ -797,8 +807,9 @@ class FeatureStore:
                 the data format to use when reading it
             path: The location within the scope of the storage connector, from where to read
                 the data for the external feature group
-            storage_connector: the storage connector to use to establish connectivity
-                with the data source.
+            options: Additional options to be used by the engine when reading data from the
+                specified storage connector. For example, `{"header": True}` when reading
+                CSV files with column names in the first row.
             version: Version of the external feature group to retrieve, defaults to `None` and
                 will create the feature group with incremented version from the last
                 version in the feature store.

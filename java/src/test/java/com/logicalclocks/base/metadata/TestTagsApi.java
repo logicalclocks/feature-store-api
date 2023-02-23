@@ -36,8 +36,8 @@ public class TestTagsApi {
   @Test
   public void testDoubleValueWrite() throws IOException {
     ObjectMapper objectMapper = new ObjectMapper();
-//    objectMapper.writeValue(System.out, "test");
-    System.out.println(objectMapper.writeValueAsString(4.2d));
+    String result = objectMapper.writeValueAsString(4.2d);
+    Assertions.assertEquals("4.2", result);
   }
 
   @Test

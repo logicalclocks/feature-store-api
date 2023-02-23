@@ -78,7 +78,7 @@ class FeatureView:
         self._batch_scoring_server = None
 
     def delete(self):
-        """Delete current feature view and all associated metadata.
+        """Delete current feature view, all associated metadata and training data.
 
         !!! example
             ```python
@@ -109,16 +109,12 @@ class FeatureView:
 
     @staticmethod
     def clean(feature_store_id: int, feature_view_name: str, feature_view_version: str):
-        """Delete the feature view and all associated metadata.
+        """
+        Delete the feature view and all associated metadata and training data.
+        This can delete corrupted feature view which cannot be retrieved due to a corrupted query for example.
 
         !!! example
             ```python
-            # get feature store instance
-            fs = ...
-
-            # get feature view instance
-            feature_view = fs.get_feature_view(...)
-
             # delete a feature view and all associated metadata
             feature_view.clean(
                 feature_store_id=1,
@@ -175,9 +171,9 @@ class FeatureView:
         self,
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
+        options: Optional[dict] = None,
     ):
-        """Initialise and cache parametrized prepared statement to
-           retrieve feature vector from online feature store.
+        """Initialise feature view to retrieve feature vector from online feature store.
 
         !!! example
             ```python
@@ -187,21 +183,22 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # initialise and cache parametrized prepared statement to retrieve a feature vector
+            # initialise feature view to retrieve a feature vector
             feature_view.init_serving(training_dataset_version=1)
             ```
 
         # Arguments
             training_dataset_version: int, optional. Default to be 1. Transformation statistics
-                are fetched from training dataset and apply in serving vector.
-            batch: boolean, optional. If set to True, prepared statements will be
-                initialised for retrieving serving vectors as a batch.
+                are fetched from training dataset and applied to the feature vector.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
                 If set to False, the online feature store storage connector is used which relies on the private IP.
                 Defaults to True if connection to Hopsworks is established from external environment (e.g AWS
                 Sagemaker or Google Colab), otherwise to False.
+            options: Additional options as key/value pairs for configuring online serving engine.
+                * key: kwargs of SqlAlchemy engine creation (See: https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
+                  For example: `{"pool_size": 10}`
         """
 
         if training_dataset_version is None:
@@ -215,13 +212,13 @@ class FeatureView:
         self._single_vector_server = vector_server.VectorServer(
             self._featurestore_id, self._features, training_dataset_version
         )
-        self._single_vector_server.init_serving(self, False, external)
+        self._single_vector_server.init_serving(self, False, external, options=options)
 
         # initiate batch vector server
         self._batch_vectors_server = vector_server.VectorServer(
             self._featurestore_id, self._features, training_dataset_version
         )
-        self._batch_vectors_server.init_serving(self, True, external)
+        self._batch_vectors_server.init_serving(self, True, external, options=options)
 
         # initiate batch scoring server
         self.init_batch_scoring(training_dataset_version)
@@ -230,7 +227,7 @@ class FeatureView:
         self,
         training_dataset_version: Optional[int] = None,
     ):
-        """Initialise and cache parametrized transformation functions.
+        """Initialise feature view to retrieve feature vector from offline feature store.
 
         !!! example
             ```python
@@ -240,7 +237,7 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # initialise and cache parametrized transformation functions
+            # initialise feature view to retrieve feature vector from offline feature store
             feature_view.init_batch_scoring(training_dataset_version=1)
 
             # get batch data
@@ -249,7 +246,7 @@ class FeatureView:
 
         # Arguments
             training_dataset_version: int, optional. Default to be None. Transformation statistics
-                are fetched from training dataset and apply in serving vector.
+                are fetched from training dataset and applied to the feature vector.
         """
 
         self._batch_scoring_server = vector_server.VectorServer(
@@ -262,7 +259,7 @@ class FeatureView:
         start_time: Optional[Union[str, int, datetime, date]] = None,
         end_time: Optional[Union[str, int, datetime, date]] = None,
     ):
-        """Get a query string of batch query.
+        """Get a query string of the batch query.
 
         !!! example "Batch query for the last 24 hours"
             ```python
@@ -287,9 +284,9 @@ class FeatureView:
             ```
 
         # Arguments
-            start_time: Start event time for the batch query. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
+            start_time: Start event time for the batch query, inclusive. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            end_time: End event time for the batch query. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
+            end_time: End event time for the batch query, exclusive. Optional. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
 
         # Returns
@@ -312,8 +309,10 @@ class FeatureView:
         passed_features: Optional[Dict[str, Any]] = {},
         external: Optional[bool] = None,
     ):
-        """Returns assembled serving vector from online feature store.
-
+        """Returns assembled feature vector from online feature store.
+            Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
+              1. The training dataset version of the transformation statistics
+              2. Additional configurations of online serving engine
         !!! warning "Missing primary key entries"
             If the provided primary key `entry` can't be found in one or more of the feature groups
             used by this feature view the call to this method will raise an exception.
@@ -379,8 +378,10 @@ class FeatureView:
         passed_features: Optional[List[Dict[str, Any]]] = {},
         external: Optional[bool] = None,
     ):
-        """Returns assembled serving vectors in batches from online feature store.
-
+        """Returns assembled feature vectors in batches from online feature store.
+            Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
+              1. The training dataset version of the transformation statistics
+              2. Additional configurations of online serving engine
         !!! warning "Missing primary key entries"
             If any of the provided primary key elements in `entry` can't be found in any
             of the feature groups, no feature vector for that primary key value will be
@@ -436,7 +437,7 @@ class FeatureView:
         end_time: Optional[Union[str, int, datetime, date]] = None,
         read_options=None,
     ):
-        """Get a batch of data from an event time interval.
+        """Get a batch of data from an event time interval from the offline feature store.
 
         !!! example "Batch data for the last 24 hours"
             ```python
@@ -459,10 +460,10 @@ class FeatureView:
             ```
 
         # Arguments
-            start_time: Start event time for the batch query. Optional. Strings should be
+            start_time: Start event time for the batch query, inclusive. Optional. Strings should be
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            end_time: End event time for the batch query. Optional. Strings should be
+            end_time: End event time for the batch query, exclusive. Optional. Strings should be
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             read_options: User provided read options. Defaults to `{}`.
@@ -609,7 +610,8 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
-        """Create a training dataset and save data into `location`.
+        """Create the metadata for a training dataset and save the corresponding training data into `location`.
+        The training data can be retrieved by calling `feature_view.get_training_data`.
 
         !!! example "Create training dataset"
             ```python
@@ -714,10 +716,10 @@ class FeatureView:
             Currently not supported petastorm, hdf5 and npy file formats.
 
         # Arguments
-            start_time: Start event time for the training dataset query. Optional. Strings should
+            start_time: Start event time for the training dataset query, inclusive. Optional. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            end_time: End event time for the training dataset query. Optional. Strings should
+            end_time: End event time for the training dataset query, exclusive. Optional. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             storage_connector: Storage connector defining the sink location for the
@@ -747,7 +749,8 @@ class FeatureView:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            write_options: Additional write options as key-value pairs, defaults to `{}`.
+            write_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
@@ -756,6 +759,7 @@ class FeatureView:
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
+                Defaults to `{}`.
 
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
@@ -806,7 +810,9 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
-        """Create a training dataset and save data into `location`.
+        """Create the metadata for a training dataset and save the corresponding training data into `location`.
+        The training data is split into train and test set at random or according to time ranges.
+        The training data can be retrieved by calling `feature_view.get_train_test_split`.
 
         !!! example "Create random splits"
             ```python
@@ -950,16 +956,16 @@ class FeatureView:
 
         # Arguments
             test_size: size of test set.
-            train_start: Start event time for the train split query. Strings should
+            train_start: Start event time for the train split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            train_end: End event time for the train split query. Strings should
+            train_end: End event time for the train split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_start: Start event time for the test split query. Strings should
+            test_start: Start event time for the test split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_end: End event time for the test split query. Strings should
+            test_end: End event time for the test split query, exclusive. Strings should
                 be  formatted in one of the following ormats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             storage_connector: Storage connector defining the sink location for the
@@ -989,7 +995,8 @@ class FeatureView:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            write_options: Additional write options as key-value pairs, defaults to `{}`.
+            write_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
@@ -998,6 +1005,7 @@ class FeatureView:
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
+                Defaults to `{}`.
 
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
@@ -1059,7 +1067,9 @@ class FeatureView:
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
     ):
-        """Create a training dataset and save data into `location`.
+        """Create the metadata for a training dataset and save the corresponding training data into `location`.
+        The training data is split into train, validation, and test set at random or according to time range.
+        The training data can be retrieved by calling `feature_view.get_train_validation_test_split`.
 
         !!! example "Create random splits"
             ```python
@@ -1183,22 +1193,22 @@ class FeatureView:
         # Arguments
             validation_size: size of validation set.
             test_size: size of test set.
-            train_start: Start event time for the train split query. Strings should
+            train_start: Start event time for the train split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            train_end: End event time for the train split query. Strings should
+            train_end: End event time for the train split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            validation_start: Start event time for the validation split query. Strings
+            validation_start: Start event time for the validation split query, inclusive. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            validation_end: End event time for the validation split query. Strings
+            validation_end: End event time for the validation split query, exclusive. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_start: Start event time for the test split query. Strings should
+            test_start: Start event time for the test split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_end: End event time for the test split query. Strings should
+            test_end: End event time for the test split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             storage_connector: Storage connector defining the sink location for the
@@ -1228,7 +1238,8 @@ class FeatureView:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            write_options: Additional write options as key-value pairs, defaults to `{}`.
+            write_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
@@ -1237,6 +1248,7 @@ class FeatureView:
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
+                Defaults to `{}`.
 
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
@@ -1312,12 +1324,17 @@ class FeatureView:
 
         # Arguments
             training_dataset_version: training dataset version
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                When using the `python` engine, write_options can contain the
                 following entries:
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the save call should return only
+                  after the Hopsworks Job has finished. By default it waits.
+                Defaults to `{}`.
 
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
@@ -1338,7 +1355,9 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Get training data from feature groups.
+        Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
+        This returns the training data in memory and does not materialise data in storage.
+        The training data can be recreated by calling `feature_view.get_training_data` with the metadata created.
 
         !!! example "Create random splits"
             ```python
@@ -1371,16 +1390,16 @@ class FeatureView:
             features_df, labels_df = feature_view.training_data(
                 start_time=start_time,
                 end_time=end_time,
-                description='Descriprion of a dataset'
+                description='Description of a dataset'
             )
             ```
 
         # Arguments
-            start_time: Start event time for the training dataset query. Strings should
+            start_time: Start event time for the training dataset query, inclusive. Strings should
             be formatted in one of the following
                 formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            end_time: End event time for the training dataset query. Strings should be
+            end_time: End event time for the training dataset query, exclusive. Strings should be
             formatted in one of the following
                 formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
@@ -1396,12 +1415,16 @@ class FeatureView:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                When using the `python` engine, write_options can contain the
                 following entries:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
+                Defaults to `{}`.
 
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
@@ -1443,7 +1466,10 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Get training data from feature groups.
+        Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
+        This returns the training data in memory and does not materialise data in storage.
+        The training data is split into train and test set at random or according to time ranges.
+        The training data can be recreated by calling `feature_view.get_train_test_split` with the metadata created.
 
         !!! example "Create random train/test splits"
             ```python
@@ -1486,16 +1512,16 @@ class FeatureView:
 
         # Arguments
             test_size: size of test set. Should be between 0 and 1.
-            train_start: Start event time for the train split query. Strings should
+            train_start: Start event time for the train split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-            train_end: End event time for the train split query. Strings should
+            train_end: End event time for the train split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_start: Start event time for the test split query. Strings should
+            test_start: Start event time for the test split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_end: End event time for the test split query. Strings should
+            test_end: End event time for the test split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             description: A string describing the contents of the training dataset to
@@ -1510,12 +1536,16 @@ class FeatureView:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                When using the `python` engine, write_options can contain the
                 following entries:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
+                Defaults to `{}`.
 
         # Returns
             (X_train, X_test, y_train, y_test):
@@ -1580,7 +1610,10 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Get training data from feature groups.
+        Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
+        This returns the training data in memory and does not materialise data in storage.
+        The training data is split into train, validation, and test set at random or according to time ranges.
+        The training data can be recreated by calling `feature_view.get_train_validation_test_split` with the metadata created.
 
         !!! example
             ```python
@@ -1630,22 +1663,22 @@ class FeatureView:
         # Arguments
             validation_size: size of validation set. Should be between 0 and 1.
             test_size: size of test set. Should be between 0 and 1.
-            train_start: Start event time for the train split query. Strings should
+            train_start: Start event time for the train split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            train_end: End event time for the train split query. Strings should
+            train_end: End event time for the train split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            validation_start: Start event time for the validation split query. Strings
+            validation_start: Start event time for the validation split query, inclusive. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            validation_end: End event time for the validation split query. Strings
+            validation_end: End event time for the validation split query, exclusive. Strings
                 should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_start: Start event time for the test split query. Strings should
+            test_start: Start event time for the test split query, inclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            test_end: End event time for the test split query. Strings should
+            test_end: End event time for the test split query, exclusive. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             description: A string describing the contents of the training dataset to
@@ -1660,12 +1693,16 @@ class FeatureView:
                 values should be booleans indicating the setting. To fully turn off
                 statistics computation pass `statistics_config=False`. Defaults to
                 `None` and will compute only descriptive statistics.
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                When using the `python` engine, write_options can contain the
                 following entries:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
+                Defaults to `{}`.
 
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
@@ -1745,7 +1782,8 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Get training data from storage or feature groups.
+        Get training data created by `feature_view.create_training_data`
+        or `feature_view.training_data`.
 
         !!! example
             ```python
@@ -1766,12 +1804,12 @@ class FeatureView:
 
         # Arguments
             training_dataset_version: training dataset version
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
-                following entries:
-                * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
-                  to configure the Hopsworks Job used to compute the training dataset.
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                Defaults to `{}`.
 
         # Returns
             (X, y): Tuple of dataframe of features and labels
@@ -1787,7 +1825,8 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Get training data from storage or feature groups.
+        Get training data created by `feature_view.create_train_test_split`
+        or `feature_view.train_test_split`.
 
         !!! example
             ```python
@@ -1803,12 +1842,12 @@ class FeatureView:
 
         # Arguments
             training_dataset_version: training dataset version
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
-                following entries:
-                * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
-                  to configure the Hopsworks Job used to compute the training dataset.
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                Defaults to `{}`.
 
         # Returns
             (X_train, X_test, y_train, y_test):
@@ -1828,7 +1867,8 @@ class FeatureView:
         read_options: Optional[Dict[Any, Any]] = None,
     ):
         """
-        Get training data from storage or feature groups.
+        Get training data created by `feature_view.create_train_validation_test_split`
+        or `feature_view.train_validation_test_split`.
 
         !!! example
             ```python
@@ -1844,12 +1884,12 @@ class FeatureView:
 
         # Arguments
             training_dataset_version: training dataset version
-            read_options: Additional read options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, read_options can contain the
-                following entries:
-                * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
-                  to configure the Hopsworks Job used to compute the training dataset.
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                Defaults to `{}`.
 
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
@@ -2032,7 +2072,7 @@ class FeatureView:
         self._feature_view_engine.delete_training_dataset_only(self)
 
     def delete_training_dataset(self, training_dataset_version: int):
-        """Delete a training dataset.
+        """Delete a training dataset. This will delete both metadata and training data.
 
         !!! example
             ```python
@@ -2059,7 +2099,7 @@ class FeatureView:
         )
 
     def delete_all_training_datasets(self):
-        """Delete all training datasets.
+        """Delete all training datasets. This will delete both metadata and training data.
 
         !!! example
             ```python
@@ -2190,20 +2230,20 @@ class FeatureView:
 
     @property
     def description(self):
+        """Description of the feature view."""
         return self._description
 
     @description.setter
     def description(self, description):
-        """Description of the feature view."""
         self._description = description
 
     @property
     def query(self):
+        """Query of the feature view."""
         return self._query
 
     @query.setter
     def query(self, query_obj):
-        """Query of the feature view."""
         self._query = query_obj
 
     @property

@@ -27,7 +27,14 @@ from typing import Optional, Union, Any, Dict, List, TypeVar, Tuple
 
 from datetime import datetime, date
 
-from hsfs import util, engine, feature, user, storage_connector as sc
+from hsfs import (
+    util,
+    engine,
+    feature,
+    user,
+    feature_group_writer,
+    storage_connector as sc,
+)
 from hsfs.core import (
     feature_group_engine,
     statistics_engine,
@@ -36,6 +43,7 @@ from hsfs.core import (
     code_engine,
     external_feature_group_engine,
     validation_result_engine,
+    job_api,
 )
 
 from hsfs.statistics_config import StatisticsConfig
@@ -656,7 +664,7 @@ class FeatureGroupBase:
 
     def get_expectation_suite(
         self, ge_type: bool = True
-    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite]:
+    ) -> Union[ExpectationSuite, ge.core.ExpectationSuite, None]:
         """Return the expectation suite attached to the feature group if it exists.
 
         !!! example
@@ -733,9 +741,9 @@ class FeatureGroupBase:
                 feature_group_id=self._id,
             )
         elif isinstance(expectation_suite, ExpectationSuite):
-            tmp_expectation_suite = expectation_suite.to_json_dict()
-            tmp_expectation_suite["featuregroup_id"] = self._id
-            tmp_expectation_suite["featurestore_id"] = self._feature_store_id
+            tmp_expectation_suite = expectation_suite.to_json_dict(decamelize=True)
+            tmp_expectation_suite["feature_group_id"] = self._id
+            tmp_expectation_suite["feature_store_id"] = self._feature_store_id
             tmp_expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         else:
             raise TypeError(
@@ -773,7 +781,7 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        if self._expectation_suite.id:
+        if self.get_expectation_suite() is not None:
             self._expectation_suite_engine.delete(self._expectation_suite.id)
         self._expectation_suite = None
 
@@ -1223,6 +1231,8 @@ class FeatureGroup(FeatureGroupBase):
         self._parents = parents
         self._deltastreamer_jobconf = None
 
+        self._backfill_job = None
+
         if self._id:
             # initialized by backend
             self.primary_key = [
@@ -1302,6 +1312,12 @@ class FeatureGroup(FeatureGroupBase):
         )
         self._href = href
 
+        # cache for optimized writes
+        self._multi_part_insert = False
+        self._kafka_producer = None
+        self._feature_writers = None
+        self._writer = None
+
     def read(
         self,
         wallclock_time: Optional[Union[str, int, datetime, date]] = None,
@@ -1344,11 +1360,15 @@ class FeatureGroup(FeatureGroupBase):
                 to `False`.
             dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
                 `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
-            read_options: Additional read options as key/value pairs, defaults to `{}`.
-                Only for Python engine: Set `read_options={"pandas_types": True}`
-                to retrieve columns as Pandas nullable types
-                rather than numpy/object(string) types (experimental).
-                (see https://pandas.pydata.org/docs/user_guide/integer_na.html).
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                * key `"pandas_types"` and value `True` to retrieve columns as Pandas nullable types
+                  rather than numpy/object(string) types (experimental).
+                  (see https://pandas.pydata.org/docs/user_guide/integer_na.html).
+                Defaults to `{}`.
 
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
@@ -1403,7 +1423,12 @@ class FeatureGroup(FeatureGroupBase):
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
             end_wallclock_time: End time of the time travel query. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
                 `%Y-%m-%d %H:%M:%S`, or `%Y-%m-%d %H:%M:%S.%f`.
-            read_options: User provided read options. Defaults to `{}`.
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For spark engine: Dictionary of read options for Spark.
+                For python engine:
+                * key `"hive_config"` to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                Defaults to `{}`.
 
         # Returns
             `DataFrame`. The spark dataframe containing the incremental changes of
@@ -1542,7 +1567,8 @@ class FeatureGroup(FeatureGroupBase):
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
         write_options: Optional[Dict[str, Any]] = {},
-        validation_options: Optional[Dict[str, Any]] = None,
+        validation_options: Optional[Dict[str, Any]] = {},
+        save_code: Optional[bool] = True,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         """Persist the metadata and materialize the feature group to the feature store
         or insert data from a dataframe into the existing feature group.
@@ -1636,6 +1662,12 @@ class FeatureGroup(FeatureGroupBase):
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+                * key `fetch_expectation_suite` a boolean value, by default `True`, to control whether the expectation
+                   suite of the feature group should be fetched before every insert.
+            save_code: When running HSFS on Hopsworks or Databricks, HSFS can save the code/notebook used to create
+                the feature group or used to insert data to it. When calling the `insert` method repeatedly
+                with small batches of data, this can slow down the writes. Use this option to turn off saving
+                code. Defaults to `True`.
 
         # Returns
             (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
@@ -1649,13 +1681,13 @@ class FeatureGroup(FeatureGroupBase):
             operation=operation,
             storage=storage.lower() if storage is not None else None,
             write_options=write_options,
-            validation_options=validation_options
-            if validation_options is not None
-            else {"save_report": True},
+            validation_options={"save_report": True, **validation_options},
         )
-
-        if ge_report is None or ge_report.ingestion_result == "INGESTED":
+        if save_code and (
+            ge_report is None or ge_report.ingestion_result == "INGESTED"
+        ):
             self._code_engine.save_code(self)
+
         if engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark,
             # if Python, the statistics are computed by the application doing the insert
@@ -1665,6 +1697,162 @@ class FeatureGroup(FeatureGroupBase):
             job,
             ge_report.to_ge_type() if ge_report is not None else None,
         )
+
+    def multi_part_insert(
+        self,
+        features: Union[
+            pd.DataFrame,
+            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+            TypeVar("pyspark.RDD"),  # noqa: F821
+            np.ndarray,
+            List[list],
+        ] = None,
+        overwrite: Optional[bool] = False,
+        operation: Optional[str] = "upsert",
+        storage: Optional[str] = None,
+        write_options: Optional[Dict[str, Any]] = {},
+        validation_options: Optional[Dict[str, Any]] = {},
+    ) -> Union[
+        Tuple[Optional[Job], Optional[ValidationReport]],
+        feature_group_writer.FeatureGroupWriter,
+    ]:
+        """Get FeatureGroupWriter for optimized multi part inserts or call this method
+        to start manual multi part optimized inserts.
+
+        In use cases where very small batches (1 to 1000) rows per Dataframe need
+        to be written to the feature store repeatedly, it might be inefficient to use
+        the standard `feature_group.insert()` method as it performs some background
+        actions to update the metadata of the feature group object first.
+
+        For these cases, the feature group provides the `multi_part_insert` API,
+        which is optimized for writing many small Dataframes after another.
+
+        There are two ways to use this API:
+        !!! example "Python Context Manager"
+            Using the Python `with` syntax you can acquire a FeatureGroupWriter
+            object that implements the same `multi_part_insert` API.
+            ```python
+            feature_group = fs.get_or_create_feature_group("fg_name", version=1)
+
+            with feature_group.multi_part_insert() as writer:
+                # run inserts in a loop:
+                while loop:
+                    small_batch_df = ...
+                    writer.multi_part_insert(small_batch_df)
+            ```
+            The writer batches the small Dataframes and transmits them to Hopsworks
+            efficiently.
+            When exiting the context, the feature group writer is sure to exit
+            only once all the rows have been transmitted.
+
+        !!! example "Multi part insert with manual context management"
+            Instead of letting Python handle the entering and exiting of the
+            multi part insert context, you can start and finalize the context
+            manually.
+            ```python
+            feature_group = fs.get_or_create_feature_group("fg_name", version=1)
+
+            while loop:
+                small_batch_df = ...
+                feature_group.multi_part_insert(small_batch_df)
+
+            # IMPORTANT: finalize the multi part insert to make sure all rows
+            # have been transmitted
+            feature_group.finalize_multi_part_insert()
+            ```
+            Note that the first call to `multi_part_insert` initiates the context
+            and be sure to finalize it. The `finalize_multi_part_insert` is a
+            blocking call that returns once all rows have been transmitted.
+
+            Once you are done with the multi part insert, it is good practice to
+            start the backfill job in order to write the data to the offline
+            storage:
+            ```python
+            feature_group.backfill_job.run(await_termination=True)
+            ```
+
+        # Arguments
+            features: DataFrame, RDD, Ndarray, list. Features to be saved.
+            overwrite: Drop all data in the feature group before
+                inserting new data. This does not affect metadata, defaults to False.
+            operation: Apache Hudi operation type `"insert"` or `"upsert"`.
+                Defaults to `"upsert"`.
+            storage: Overwrite default behaviour, write to offline
+                storage only with `"offline"` or online only with `"online"`, defaults
+                to `None`.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, write_options can contain the
+                following entries:
+                * key `spark` and value an object of type
+                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  to configure the Hopsworks Job used to write data into the
+                  feature group.
+                * key `wait_for_job` and value `True` or `False` to configure
+                  whether or not to the insert call should return only
+                  after the Hopsworks Job has finished. By default it waits.
+                * key `start_offline_backfill` and value `True` or `False` to configure
+                  whether or not to start the backfill job to write data to the offline
+                  storage. By default the backfill job does not get started automatically
+                  for multi part inserts.
+                * key `internal_kafka` and value `True` or `False` in case you established
+                  connectivity from you Python environment to the internal advertised
+                  listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
+                  will use external listeners when connecting from outside of Hopsworks.
+            validation_options: Additional validation options as key-value pairs, defaults to `{}`.
+                * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
+                * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
+                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+                * key `fetch_expectation_suite` a boolean value, by default `False` for multi part inserts,
+                   to control whether the expectation suite of the feature group should be fetched before every insert.
+
+        # Returns
+            (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
+            `FeatureGroupWriter` When used as a context manager with Python `with` statement.
+        """
+        self._multi_part_insert = True
+        multi_part_writer = feature_group_writer.FeatureGroupWriter(self)
+        if features is None:
+            return multi_part_writer
+        else:
+            # go through writer to avoid setting multi insert defaults again
+            return multi_part_writer.insert(
+                features,
+                overwrite,
+                operation,
+                storage,
+                write_options,
+                validation_options,
+            )
+
+    def finalize_multi_part_insert(self):
+        """Finalizes and exits the multi part insert context opened by `multi_part_insert`
+        in a blocking fashion once all rows have been transmitted.
+
+        !!! example "Multi part insert with manual context management"
+            Instead of letting Python handle the entering and exiting of the
+            multi part insert context, you can start and finalize the context
+            manually.
+            ```python
+            feature_group = fs.get_or_create_feature_group("fg_name", version=1)
+
+            while loop:
+                small_batch_df = ...
+                feature_group.multi_part_insert(small_batch_df)
+
+            # IMPORTANT: finalize the multi part insert to make sure all rows
+            # have been transmitted
+            feature_group.finalize_multi_part_insert()
+            ```
+            Note that the first call to `multi_part_insert` initiates the context
+            and be sure to finalize it. The `finalize_multi_part_insert` is a
+            blocking call that returns once all rows have been transmitted.
+        """
+        if self._kafka_producer is not None:
+            self._kafka_producer.flush()
+            self._kafka_producer = None
+        self._feature_writers = None
+        self._writer = None
+        self._multi_part_insert = False
 
     def insert_stream(
         self,
@@ -2220,6 +2408,17 @@ class FeatureGroup(FeatureGroupBase):
         This is part of explicit provenance"""
         return self._parents
 
+    @property
+    def backfill_job(self):
+        """Get the Job object reference for the backfill job for this
+        Feature Group."""
+        if self._backfill_job is None:
+            job_name = "{fg_name}_{version}_offline_fg_backfill".format(
+                fg_name=self._name, version=self._version
+            )
+            self._backfill_job = job_api.JobApi().get(job_name)
+        return self._backfill_job
+
     @version.setter
     def version(self, version):
         self._version = version
@@ -2349,6 +2548,25 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._href = href
 
     def save(self):
+        """Persist the metadata for this external feature group.
+
+        Without calling this method, your feature group will only exist
+        in your Python Kernel, but not in Hopsworks.
+
+        ```python
+        query = "SELECT * FROM sales"
+
+        fg = feature_store.create_external_feature_group(name="sales",
+            version=1,
+            description="Physical shop sales features",
+            query=query,
+            storage_connector=connector,
+            primary_key=['ss_store_sk'],
+            event_time='sale_date'
+        )
+
+        fg.save()
+        """
         self._feature_group_engine.save(self)
         self._code_engine.save_code(self)
 
