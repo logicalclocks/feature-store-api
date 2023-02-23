@@ -177,6 +177,18 @@ def import_fg(job_conf: Dict[Any, Any]) -> None:
     fg.insert(df)
 
 
+def feature_monitoring(job_conf: Dict[str, Any]) -> None:
+    """
+    Run feature monitoring for a given entity (feature_group or feature_view)
+    based on a feature monitoring configuration.
+    """
+    # Dummy job for now.
+    feature_store = job_conf.pop("feature_store")
+    fs = get_feature_store_handle(feature_store)
+
+    assert isinstance(fs, hsfs.feature_store.FeatureStore)
+
+
 if __name__ == "__main__":
     # Setup spark first so it fails faster in case of args errors
     # Otherwise the resource manager will wait until the spark application master
