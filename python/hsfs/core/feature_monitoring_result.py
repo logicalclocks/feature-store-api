@@ -24,7 +24,6 @@ class FeatureMonitoringResult:
     def __init__(
         self,
         feature_store_id: int,
-        entity_id: int,
         execution_id: int,
         detection_stats_id: int,
         monitoring_time: int,
@@ -40,7 +39,6 @@ class FeatureMonitoringResult:
         self._id = id
         self._href = href
         self._feature_store_id = feature_store_id
-        self._entity_id = entity_id
         self._execution_id = execution_id
         self._detection_stats_id = detection_stats_id
         self._reference_stats_id = reference_stats_id
@@ -65,7 +63,6 @@ class FeatureMonitoringResult:
         return {
             "id": self._id,
             "featureStoreId": self._feature_store_id,
-            "entityId": self._entity_id,
             "featureMonitoringConfigId": self._feature_monitoring_config_id,
             "executionId": self._execution_id,
             "detectionStatsId": self._detection_stats_id,
@@ -81,6 +78,8 @@ class FeatureMonitoringResult:
     def __str__(self):
         return self.json()
 
+    # TODO: Add repr when stable
+
     @property
     def id(self) -> Optional[int]:
         return self._id
@@ -92,10 +91,6 @@ class FeatureMonitoringResult:
     @property
     def feature_store_id(self) -> int:
         return self._feature_store_id
-
-    @property
-    def entity_id(self) -> int:
-        return self._entity_id
 
     @property
     def detection_stats_id(self) -> Optional[int]:

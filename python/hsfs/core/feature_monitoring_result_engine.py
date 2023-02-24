@@ -53,9 +53,6 @@ class FeatureMonitoringResultEngine:
             difference=difference,
             shift_detected=shift_detected,
             monitoring_time=monitoring_time,
-            entity_id=feature_group_id
-            if feature_group_id is not None
-            else feature_view_id,
         )
 
         return self._feature_monitoring_result_api.create(

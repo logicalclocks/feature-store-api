@@ -30,7 +30,6 @@ class TestFeatureMonitoringResult:
         # Assert
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
-        assert result._entity_id == 13
         assert result._execution_id == 123
         assert result._detection_stats_id == 333
         assert result._reference_stats_id == 222
@@ -52,7 +51,6 @@ class TestFeatureMonitoringResult:
         # Assert
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
-        assert result._entity_id == 22
         assert result._execution_id == 123
         assert result._detection_stats_id == 333
         assert result._reference_stats_id == 222
@@ -77,7 +75,6 @@ class TestFeatureMonitoringResult:
         assert len(result_list) == 1
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
-        assert result._entity_id == 22
         assert result._execution_id == 123
         assert result._detection_stats_id == 333
         assert result._reference_stats_id == 222

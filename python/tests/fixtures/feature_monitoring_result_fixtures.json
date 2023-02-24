@@ -2,7 +2,6 @@
   "get_via_feature_group": {
     "response": {
       "id": 42,
-      "entity_id": 13,
       "feature_store_id": 67,
       "feature_monitoring_config_id": 32,
       "detection_stats_id": 333,
@@ -17,7 +16,6 @@
   "get_via_feature_view": {
     "response": {
       "id": 42,
-      "entity_id": 22,
       "feature_store_id": 67,
       "feature_monitoring_config_id": 32,
       "detection_stats_id": 333,
@@ -35,7 +33,6 @@
       "items": [
         {
           "id": 42,
-          "entity_id": 22,
           "feature_store_id": 67,
           "feature_monitoring_config_id": 32,
           "detection_stats_id": 333,

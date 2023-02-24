@@ -54,8 +54,6 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core import great_expectation_engine
-from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
-from hsfs.core.feature_monitoring_config_engine import FeatureMonitoringConfigEngine
 
 
 class FeatureGroupBase:
@@ -68,9 +66,6 @@ class FeatureGroupBase:
         self._code_engine = code_engine.CodeEngine(featurestore_id, self.ENTITY_TYPE)
         self._great_expectation_engine = (
             great_expectation_engine.GreatExpectationEngine(featurestore_id)
-        )
-        self._feature_monitoring_config_engine = FeatureMonitoringConfigEngine(
-            feature_store_id=featurestore_id
         )
         self._feature_store_id = featurestore_id
         self._variable_api = VariableApi()
@@ -977,29 +972,6 @@ class FeatureGroupBase:
             raise FeatureStoreException(
                 "Only Feature Group registered with Hopsworks can fetch validation history."
             )
-
-    def enabled_statistics_monitoring(
-        self,
-        feature_name: str,
-        window_configuration_type: str,
-        time_offset: str,
-        window_length: str,
-        scheduler_config: str,
-    ) -> FeatureMonitoringConfig:
-        detection_monitoring_window_configuration = (
-            self._feature_monitoring_config_engine.build_monitoring_window_config(
-                window_configuration_type=window_configuration_type,
-                window_length=window_length,
-                time_offset=time_offset,
-            )
-        )
-
-        return self._feature_monitoring_config_engine.enable_descriptive_statistics_monitoring(
-            feature_group_id=self._id,
-            detection_monitoring_window_configuration=detection_monitoring_window_configuration,
-            feature_name=feature_name,
-            scheduler_config=scheduler_config,
-        )
 
     def __getattr__(self, name):
         try:

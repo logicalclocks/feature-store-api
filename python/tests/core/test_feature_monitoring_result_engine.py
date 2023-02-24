@@ -154,7 +154,6 @@ class TestFeatureMonitoringResultEngine:
         assert mock_result_api.call_args[1]["feature_view_name"] is None
         assert mock_result_api.call_args[1]["feature_view_version"] is None
         result = mock_result_api.call_args[0][0]
-        assert result._entity_id == DEFAULT_FEATURE_GROUP_ID
         assert result._feature_monitoring_config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
         assert result._detection_stats_id == detection_stats_id
@@ -211,7 +210,6 @@ class TestFeatureMonitoringResultEngine:
             == DEFAULT_FEATURE_VIEW_VERSION
         )
         result = mock_result_api.call_args[0][0]
-        assert result._entity_id == DEFAULT_FEATURE_VIEW_ID
         assert result._feature_monitoring_config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
         assert result._detection_stats_id == detection_stats_id
