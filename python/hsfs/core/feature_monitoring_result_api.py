@@ -39,6 +39,12 @@ class FeatureMonitoringResultApi:
 
         :param fm_result: feature monitoring result object to be attached to a Feature
         :type fm_result: `FeatureMonitoringResult`
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
         :return: the created feature monitoring result
         :rtype: FeatureMonitoringResult
         """
@@ -63,7 +69,15 @@ class FeatureMonitoringResultApi:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
     ) -> None:
-        """Delete the Feature Monitoring result attached to a Feature."""
+        """Delete the Feature Monitoring result attached to a Feature.
+
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
+        """
         _client = client.get_instance()
         path_params = self.build_path_params(
             project_id=_client._project_id,
@@ -86,8 +100,14 @@ class FeatureMonitoringResultApi:
 
         :param config_id: Id of the feature monitoring config for which to fetch all results
         :type config_id: int
-        :return: fetched feature monitoring result attached to the Feature Group
-        :rtype: FeatureMonitoringResult || None
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
+        :return: fetched feature monitoring results attached to the Feature Group
+        :rtype: List[FeatureMonitoringResult]
         """
         _client = client.get_instance()
         path_params = self.build_path_params(
@@ -98,6 +118,39 @@ class FeatureMonitoringResultApi:
         )
         path_params.append("byconfig")
         path_params.append(config_id)
+
+        return FeatureMonitoringResult.from_response_json(
+            _client._send_request("GET", path_params)
+        )
+
+    def get_by_id(
+        self,
+        result_id: int,
+        feature_group_id: Optional[int] = None,
+        feature_view_name: Optional[str] = None,
+        feature_view_version: Optional[int] = None,
+    ) -> List[FeatureMonitoringResult]:
+        """Get the Feature Monitoring Result attached to a Feature.
+
+        :param result_id: Id of the feature monitoring result to fetch
+        :type result_id: int
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
+        :return: fetched feature monitoring result attached to the Feature Group
+        :rtype: FeatureMonitoringResult || None
+        """
+        _client = client.get_instance()
+        path_params = self.build_path_params(
+            project_id=_client._project_id,
+            feature_group_id=feature_group_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+        )
+        path_params.append(result_id)
 
         return FeatureMonitoringResult.from_response_json(
             _client._send_request("GET", path_params)

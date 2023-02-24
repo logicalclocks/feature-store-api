@@ -39,6 +39,12 @@ class FeatureMonitoringConfigApi:
 
         :param fm_config: feature monitoring config object to be attached to a Feature
         :type fm_config: `FeatureMonitoringConfiguration`
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
         :return: the created feature monitoring configuration
         :rtype: FeatureMonitoringConfiguration
         """
@@ -67,6 +73,12 @@ class FeatureMonitoringConfigApi:
 
         :param fm_config: feature monitoring configuration to be attached to a Feature
         :type fm_config: `FeatureMonitoringConfig`
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
         :return: the updated feature monitoring configuration
         :rtype: FeatureMonitoringConfig
         """
@@ -93,7 +105,19 @@ class FeatureMonitoringConfigApi:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
     ) -> None:
-        """Delete the Feature Monitoring configuration attached to a Feature."""
+        """Delete the Feature Monitoring configuration attached to a Feature.
+
+        :param config_id: Id of the feature monitoring configuration to delete
+        :type config_id: int
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
+        :return: fetched feature monitoring configuration attached to the Feature Group
+        :rtype: FeatureMonitoringConfig || None
+        """
         _client = client.get_instance()
         path_params = self.build_path_params(
             project_id=_client._project_id,
@@ -116,6 +140,12 @@ class FeatureMonitoringConfigApi:
 
         :param config_id: Id of the feature monitoring configuration to fetch
         :type config_id: int
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
         :return: fetched feature monitoring configuration attached to the Feature Group
         :rtype: FeatureMonitoringConfig || None
         """
@@ -142,9 +172,15 @@ class FeatureMonitoringConfigApi:
         """Get all Feature Monitoring Configurations attached to a Feature Name.
 
         :param feature_name: Name of the feature for which to fetch monitoring configuration
-        :type config_id: int
+        :type feature_name: str
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
         :return: fetched feature monitoring configuration attached to the Feature Group
-        :rtype: FeatureMonitoringConfig || None
+        :rtype: List[FeatureMonitoringConfig] || None
         """
         _client = client.get_instance()
         path_params = self.build_path_params(
@@ -159,6 +195,39 @@ class FeatureMonitoringConfigApi:
             _client._send_request("GET", path_params)
         )
 
+    def get_by_name(
+        self,
+        name: str,
+        feature_group_id: Optional[int] = None,
+        feature_view_name: Optional[str] = None,
+        feature_view_version: Optional[int] = None,
+    ) -> Optional[fmc.FeatureMonitoringConfig]:
+        """Get all Feature Monitoring Configurations attached to a Feature Name.
+
+        :param name: Name of the feature monitoring configuration to fetch
+        :type name: str
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
+        :return: fetched feature monitoring configuration attached to the Feature Group
+        :rtype: List[FeatureMonitoringConfig] || None
+        """
+        _client = client.get_instance()
+        path_params = self.build_path_params(
+            project_id=_client._project_id,
+            feature_group_id=feature_group_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+            name=name,
+        )
+
+        return fmc.FeatureMonitoringConfig.from_response_json(
+            _client._send_request("GET", path_params)
+        )
+
     def build_path_params(
         self,
         project_id: int,
@@ -167,6 +236,7 @@ class FeatureMonitoringConfigApi:
         feature_view_version: Optional[int] = None,
         feature_name: Optional[str] = None,
         config_id: Optional[int] = None,
+        name: Optional[str] = None,
     ) -> List[str]:
         path_params = [
             "project",
@@ -186,5 +256,7 @@ class FeatureMonitoringConfigApi:
             path_params.append(config_id)
         elif feature_name:
             path_params.extend(["feature", feature_name])
+        elif name:
+            path_params.extend(["name", name])
 
         return path_params
