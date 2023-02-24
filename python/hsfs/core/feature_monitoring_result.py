@@ -27,7 +27,7 @@ class FeatureMonitoringResult:
         execution_id: int,
         detection_stats_id: int,
         monitoring_time: int,
-        feature_monitoring_config_id: int,
+        config_id: int,
         difference: Optional[float] = None,
         shift_detected: bool = False,
         reference_stats_id: Optional[int] = None,
@@ -42,7 +42,7 @@ class FeatureMonitoringResult:
         self._execution_id = execution_id
         self._detection_stats_id = detection_stats_id
         self._reference_stats_id = reference_stats_id
-        self._feature_monitoring_config_id = feature_monitoring_config_id
+        self._config_id = config_id
 
         self._monitoring_time = monitoring_time
         self._difference = difference
@@ -63,7 +63,7 @@ class FeatureMonitoringResult:
         return {
             "id": self._id,
             "featureStoreId": self._feature_store_id,
-            "featureMonitoringConfigId": self._feature_monitoring_config_id,
+            "configId": self._feature_monitoring_config_id,
             "executionId": self._execution_id,
             "detectionStatsId": self._detection_stats_id,
             "referenceStatsId": self._reference_stats_id,
@@ -85,8 +85,8 @@ class FeatureMonitoringResult:
         return self._id
 
     @property
-    def feature_monitoring_config_id(self) -> int:
-        return self._feature_monitoring_config_id
+    def config_id(self) -> int:
+        return self._config_id
 
     @property
     def feature_store_id(self) -> int:
