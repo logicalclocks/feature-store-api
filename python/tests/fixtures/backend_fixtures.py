@@ -26,6 +26,8 @@ FIXTURES = [
     "external_feature_group_alias",
     "external_feature_group",
     "feature",
+    "feature_monitoring_config",
+    "feature_monitoring_result",
     "feature_group_commit",
     "feature_group",
     "feature_store",
