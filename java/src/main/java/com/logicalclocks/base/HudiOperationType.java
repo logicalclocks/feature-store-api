@@ -18,17 +18,11 @@
 package com.logicalclocks.base;
 
 public enum HudiOperationType {
-  BULK_INSERT("bulk_insert"),
-  INSERT("insert"),
-  UPSERT("upsert");
-
-  private final String value;
-
-  private HudiOperationType(String value) {
-    this.value = value;
-  }
+  BULK_INSERT,
+  INSERT,
+  UPSERT;
 
   public String getValue() {
-    return value;
+    return name().toLowerCase();
   }
 }
