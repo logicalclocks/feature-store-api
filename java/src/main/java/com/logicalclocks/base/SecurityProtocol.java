@@ -29,5 +29,5 @@ public enum SecurityProtocol {
   @XmlEnumValue("SASL_SSL")
   SASL_SSL,
   @XmlEnumValue("SSL")
-  SSL;
+  SSL
 }
