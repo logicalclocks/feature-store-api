@@ -177,7 +177,7 @@ def import_fg(job_conf: Dict[Any, Any]) -> None:
     fg.insert(df)
 
 
-def feature_monitoring(job_conf: Dict[str, Any]) -> None:
+def run_feature_monitoring(job_conf: Dict[str, Any]) -> None:
     """
     Run feature monitoring for a given entity (feature_group or feature_view)
     based on a feature monitoring configuration.
