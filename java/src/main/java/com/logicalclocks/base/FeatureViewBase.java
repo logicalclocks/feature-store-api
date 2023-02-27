@@ -73,7 +73,7 @@ public abstract class FeatureViewBase {
   @Setter
   private String type = "featureViewDTO";
 
-  private static VectorServer vectorServer = new VectorServer();
+  protected static VectorServer vectorServer = new VectorServer();
   private Integer extraFilterVersion = null;
 
   public void initServing() throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
