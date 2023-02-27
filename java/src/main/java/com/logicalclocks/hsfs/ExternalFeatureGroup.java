@@ -75,9 +75,6 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
   @Setter
   private List<OnDemandOptions> options;
 
-  @Getter
-  @Setter
-  private String type = "onDemandFeaturegroupDTO";
 
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
 
