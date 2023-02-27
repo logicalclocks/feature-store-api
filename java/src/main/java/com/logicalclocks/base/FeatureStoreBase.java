@@ -74,7 +74,7 @@ public abstract class FeatureStoreBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
-  public abstract Object  getStreamFeatureGroup(String name) throws FeatureStoreException, IOException;
+  public abstract Object getStreamFeatureGroup(String name) throws FeatureStoreException, IOException;
 
   public abstract Object createStreamFeatureGroup();
 
