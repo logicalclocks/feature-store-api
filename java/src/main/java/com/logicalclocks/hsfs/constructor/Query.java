@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -53,7 +54,7 @@ public class Query extends QueryBase {
 
   public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
-    this.leftFeatures = leftFeatures;
+    this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
   }
 
   @Override
@@ -260,5 +261,14 @@ public class Query extends QueryBase {
   @Override
   public void show(boolean online, int numRows) throws FeatureStoreException, IOException {
     SparkEngine.getInstance().objectToDataset(read(online)).show(numRows);
+  }
+
+  private List<Feature>  addFeatureGroupToFeatures(FeatureGroupBase featureGroupBase, List<Feature> leftFeatures) {
+    List<Feature> updatedFeatures = new ArrayList<>();
+    for (Feature feature: leftFeatures) {
+      feature.setFeatureGroupId(featureGroupBase.getId());
+      updatedFeatures.add(feature);
+    }
+    return updatedFeatures;
   }
 }

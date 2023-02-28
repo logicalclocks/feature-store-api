@@ -16,7 +16,6 @@
 
 package com.logicalclocks.hsfs;
 
-import com.logicalclocks.base.Feature;
 import com.logicalclocks.hsfs.constructor.Query;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -32,9 +31,7 @@ public class TestFeatureGroupBase {
     List<String> selectFeatures = Arrays.asList("ft1", "ft2");
 
     Query result = featureGroup.select(selectFeatures);
-    /*
     Assertions.assertEquals(1, result.getLeftFeatures().get(0).getFeatureGroupId());
     Assertions.assertEquals(1, result.getLeftFeatures().get(1).getFeatureGroupId());
-     */
   }
 }

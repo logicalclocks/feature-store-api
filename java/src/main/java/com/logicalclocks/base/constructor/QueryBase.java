@@ -27,8 +27,6 @@ import com.logicalclocks.base.metadata.FeatureGroupBase;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -39,8 +37,6 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class QueryBase {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(QueryBase.class);
 
   @Getter
   @Setter

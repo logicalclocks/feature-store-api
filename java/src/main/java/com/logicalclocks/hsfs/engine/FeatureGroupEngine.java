@@ -324,22 +324,6 @@ public class FeatureGroupEngine {
     return featureGroup;
   }
 
-  /* TODO (davit):
-  public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroupBase, List<Feature> features,
-                                                          Class<T> fgClass)
-      throws FeatureStoreException, IOException, ParseException {
-    featureGroupBase.getFeatures().addAll(features);
-    T apiFG = featureGroupApi.updateMetadata(featureGroupBase, "updateMetadata",
-        fgClass);
-    featureGroupBase.setFeatures(apiFG.getFeatures());
-    if (featureGroupBase instanceof FeatureGroup) {
-      FeatureGroup featureGroup = (FeatureGroup) featureGroupBase;
-      SparkEngine.getInstance().writeOfflineDataframe(featureGroup,
-          SparkEngine.getInstance().getEmptyAppendedDataframe(featureGroup.read(), features),
-          HudiOperationType.UPSERT, new HashMap<>(), null);
-    }
-  }
-  */
   public <T extends FeatureGroupBase> void appendFeatures(FeatureGroupBase featureGroup, List<Feature> features,
                                                           Class<T> fgClass)
       throws FeatureStoreException, IOException, ParseException {
@@ -347,6 +331,7 @@ public class FeatureGroupEngine {
     T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata",
         fgClass);
     featureGroup.setFeatures(apiFG.getFeatures());
+    featureGroup.unloadSubject();
     if (featureGroup instanceof FeatureGroup) {
       SparkEngine.getInstance().writeEmptyDataframe(featureGroup);
     }
