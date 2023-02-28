@@ -26,6 +26,7 @@ import com.logicalclocks.base.metadata.FeatureStoreApi;
 import com.logicalclocks.base.metadata.HopsworksClient;
 import com.logicalclocks.base.metadata.ProjectApi;
 import com.logicalclocks.base.util.Constants;
+import com.logicalclocks.hsfs.engine.SparkEngine;
 import lombok.Builder;
 import lombok.Getter;
 import org.slf4j.Logger;
@@ -89,10 +90,14 @@ public class HopsworksConnection extends HopsworksConnectionBase {
     this.apiKeyFilePath = apiKeyFilePath;
     this.apiKeyValue = apiKeyValue;
 
+    SparkEngine.getInstance().validateSparkConfiguration();
     HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
-        hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue);
+        hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue,
+        SparkEngine.getInstance().getTrustStorePath(), SparkEngine.getInstance().getKeyStorePath(),
+        SparkEngine.getInstance().getCertKey());
     this.projectObj = getProject();
     HopsworksClient.getInstance().setProject(this.projectObj);
+
   }
 
   /**

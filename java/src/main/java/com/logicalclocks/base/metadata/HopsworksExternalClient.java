@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.SecretStore;
-import com.logicalclocks.hsfs.engine.SparkEngine;
+
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHeaders;
@@ -91,14 +91,14 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
                                  boolean hostnameVerification, String trustStorePath)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, null, null, hostnameVerification, trustStorePath, apiKeyFilepath, null);
+    this(host, port, null, null, hostnameVerification, trustStorePath, apiKeyFilepath, null, null, null, null);
   }
 
   public HopsworksExternalClient(String host, int port, boolean hostnameVerification,
                                  String trustStorePath, Region region, SecretStore secretStore)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, region, secretStore, hostnameVerification, trustStorePath, null, null);
+    this(host, port, region, secretStore, hostnameVerification, trustStorePath, null, null, null, null, null);
   }
 
 
@@ -106,7 +106,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
                                  String trustStorePath, String apiKeyValue)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, null, null, hostnameVerification, trustStorePath, null, apiKeyValue);
+    this(host, port, null, null, hostnameVerification, trustStorePath, null, apiKeyValue, null, null, null);
   }
 
   public HopsworksExternalClient(CloseableHttpClient httpClient, HttpHost httpHost) {
@@ -116,7 +116,8 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
 
   HopsworksExternalClient(String host, int port, Region region,
                           SecretStore secretStore, boolean hostnameVerification,
-                          String trustStorePath, String apiKeyFilepath, String apiKeyValue)
+                          String trustStorePath, String apiKeyFilepath, String apiKeyValue,
+                          String sparkTrustStorePath, String sparkKeyStorePath, String sparkCertKey)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
 
@@ -138,10 +139,9 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
       this.apiKey = readApiKey(secretStore, region, apiKeyFilepath);
     }
 
-    SparkEngine.getInstance().validateSparkConfiguration();
-    this.trustStorePath = SparkEngine.getInstance().getTrustStorePath();
-    this.keyStorePath = SparkEngine.getInstance().getKeyStorePath();
-    this.certKey = HopsworksHttpClient.readCertKey(SparkEngine.getInstance().getCertKey());
+    this.trustStorePath = sparkTrustStorePath;
+    this.keyStorePath = sparkKeyStorePath;
+    this.certKey = HopsworksHttpClient.readCertKey(sparkCertKey);
   }
 
   private Registry<ConnectionSocketFactory> createConnectionFactory(HttpHost httpHost, boolean hostnameVerification,
