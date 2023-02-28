@@ -22,8 +22,6 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.TimeTravelFormat;
-import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
-import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -42,8 +40,6 @@ import java.util.concurrent.TimeoutException;
 public class FeatureGroupEngine {
 
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private HudiEngine hudiEngine = new HudiEngine();
-  protected KafkaApi kafkaApi = new KafkaApi();
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
@@ -52,12 +48,19 @@ public class FeatureGroupEngine {
   /**
    * Create the metadata and write the data to the online/offline feature store.
    *
-   * @param featureGroup
-   * @param dataset
-   * @param partitionKeys
-   * @param writeOptions
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @param featureGroup Feature Group metadata object.
+   * @param dataset Spark DataFrame or RDD.
+   * @param partitionKeys A list of feature names to be used as partition key when  writing the feature data to the
+   *                      offline storage, defaults to empty list.
+   * @param hudiPrecombineKey  A feature name to be used as a precombine key for the `TimeTravelFormat.HUDI` feature
+   *                           group. If feature group has `TimeTravelFormat.HUDI` and hudi precombine key was not
+   *                           specified then the first primary key of the feature group will be used as hudi precombine
+   *                           key.
+   * @param writeOptions Additional write options as key-value pairs, defaults to empty Map.
+   * @return Feature Group metadata object
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   * @throws ParseException ParseException
    */
   public FeatureGroup save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> partitionKeys,
                            String hudiPrecombineKey, Map<String, String> writeOptions)
@@ -206,7 +209,7 @@ public class FeatureGroupEngine {
     featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
 
     /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
-    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI & hudiPrecombineKey == null) {
+    if (featureGroup.getTimeTravelFormat() == TimeTravelFormat.HUDI && hudiPrecombineKey == null) {
       List<Feature> features = apiFG.getFeatures();
       featureGroup.setFeatures(features);
     }

@@ -39,6 +39,7 @@ from typing import TypeVar, Optional, Dict, Any
 from confluent_kafka import Producer, KafkaError
 from tqdm.auto import tqdm
 from botocore.response import StreamingBody
+from sqlalchemy import sql
 
 from hsfs import client, feature, util
 from hsfs.client.exceptions import FeatureStoreException
@@ -90,14 +91,24 @@ class Engine:
         schema=None,
     ):
         if not online_conn:
-            return self._sql_offline(sql_query, feature_store, dataframe_type, schema)
+            return self._sql_offline(
+                sql_query,
+                feature_store,
+                dataframe_type,
+                schema,
+                hive_config=read_options.get("hive_config") if read_options else None,
+            )
         else:
             return self._jdbc(
                 sql_query, online_conn, dataframe_type, read_options, schema
             )
 
-    def _sql_offline(self, sql_query, feature_store, dataframe_type, schema=None):
-        with self._create_hive_connection(feature_store) as hive_conn:
+    def _sql_offline(
+        self, sql_query, feature_store, dataframe_type, schema=None, hive_config=None
+    ):
+        with self._create_hive_connection(
+            feature_store, hive_config=hive_config
+        ) as hive_conn:
             result_df = pd.read_sql(sql_query, hive_conn)
             if schema:
                 result_df = Engine.cast_columns(result_df, schema)
@@ -114,7 +125,7 @@ class Engine:
                 ),
             )
         with self._mysql_online_fs_engine.connect() as mysql_conn:
-            result_df = pd.read_sql(sql_query, mysql_conn)
+            result_df = pd.read_sql(sql.text(sql_query), mysql_conn)
             if schema:
                 result_df = Engine.cast_columns(result_df, schema, online=True)
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -239,7 +250,7 @@ class Engine:
         return df_list
 
     def read_options(self, data_format, provided_options):
-        return {}
+        return provided_options or {}
 
     def read_stream(
         self,
@@ -362,6 +373,12 @@ class Engine:
             upper_case_features = [
                 col for col in dataframe.columns if any(re.finditer("[A-Z]", col))
             ]
+
+            # make shallow copy so the original df does not get changed
+            # this is always needed to keep the user df unchanged
+            dataframe_copy = dataframe.copy(deep=False)
+
+            # making a shallow copy of the dataframe so that column names are unchanged
             if len(upper_case_features) > 0:
                 warnings.warn(
                     "The ingested dataframe contains upper case letters in feature names: `{}`. "
@@ -370,17 +387,14 @@ class Engine:
                     ),
                     util.FeatureGroupWarning,
                 )
+                dataframe_copy.columns = [x.lower() for x in dataframe_copy.columns]
 
             # convert timestamps with timezone to UTC
-            for col in dataframe.columns:
+            for col in dataframe_copy.columns:
                 if isinstance(
-                    dataframe[col].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
+                    dataframe_copy[col].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
-                    dataframe[col] = dataframe[col].dt.tz_convert(None)
-
-            # making a shallow copy of the dataframe so that column names are unchanged
-            dataframe_copy = dataframe.copy(deep=False)
-            dataframe_copy.columns = [x.lower() for x in dataframe_copy.columns]
+                    dataframe_copy[col] = dataframe_copy[col].dt.tz_convert(None)
             return dataframe_copy
 
         raise TypeError(
@@ -636,13 +650,14 @@ class Engine:
 
         return td_job
 
-    def _create_hive_connection(self, feature_store):
+    def _create_hive_connection(self, feature_store, hive_config=None):
         try:
             return hive.Connection(
                 host=client.get_instance()._host,
                 port=9085,
                 # database needs to be set every time, 'default' doesn't work in pyhive
                 database=feature_store,
+                configuration=hive_config,
                 auth="CERTIFICATES",
                 truststore=client.get_instance()._get_jks_trust_store_path(),
                 keystore=client.get_instance()._get_jks_key_store_path(),
@@ -774,12 +789,7 @@ class Engine:
     def get_unique_values(feature_dataframe, feature_name):
         return feature_dataframe[feature_name].unique()
 
-    def _write_dataframe_kafka(
-        self,
-        feature_group: FeatureGroup,
-        dataframe: pd.DataFrame,
-        offline_write_options: dict,
-    ):
+    def _init_kafka_resources(self, feature_group, offline_write_options):
         # setup kafka producer
         producer = Producer(self._get_kafka_config(offline_write_options))
 
@@ -793,6 +803,39 @@ class Engine:
 
         # setup row writer function
         writer = self._get_encoder_func(feature_group._get_encoded_avro_schema())
+        return producer, feature_writers, writer
+
+    def _write_dataframe_kafka(
+        self,
+        feature_group: FeatureGroup,
+        dataframe: pd.DataFrame,
+        offline_write_options: dict,
+    ):
+        if feature_group._multi_part_insert:
+            if feature_group._kafka_producer is None:
+                producer, feature_writers, writer = self._init_kafka_resources(
+                    feature_group, offline_write_options
+                )
+                feature_group._kafka_producer = producer
+                feature_group._feature_writers = feature_writers
+                feature_group._writer = writer
+            else:
+                producer = feature_group._kafka_producer
+                feature_writers = feature_group._feature_writers
+                writer = feature_group._writer
+        else:
+            producer, feature_writers, writer = self._init_kafka_resources(
+                feature_group, offline_write_options
+            )
+
+            # initialize progress bar
+            progress_bar = tqdm(
+                total=dataframe.shape[0],
+                bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
+                "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
+                desc="Uploading Dataframe",
+                mininterval=1,
+            )
 
         def acked(err, msg):
             if err is not None:
@@ -805,16 +848,9 @@ class Engine:
                     progress_bar.colour = "RED"
                     raise err  # Stop producing and show error
             # update progress bar for each msg
-            progress_bar.update()
+            if not feature_group._multi_part_insert:
+                progress_bar.update()
 
-        # initialize progress bar
-        progress_bar = tqdm(
-            total=dataframe.shape[0],
-            bar_format="{desc}: {percentage:.2f}% |{bar}| Rows {n_fmt}/{total_fmt} | "
-            "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
-            desc="Uploading Dataframe",
-            mininterval=1,
-        )
         # loop over rows
         for r in dataframe.itertuples(index=False):
             # itertuples returns Python NamedTyple, to be able to serialize it using
@@ -850,21 +886,19 @@ class Engine:
             )
 
         # make sure producer blocks and everything is delivered
-        producer.flush()
-        progress_bar.close()
+        if not feature_group._multi_part_insert:
+            producer.flush()
+            progress_bar.close()
 
         # start backfilling job
-        job_name = "{fg_name}_{version}_offline_fg_backfill".format(
-            fg_name=feature_group.name, version=feature_group.version
-        )
-        job = self._job_api.get(job_name)
-
         if offline_write_options is not None and offline_write_options.get(
             "start_offline_backfill", True
         ):
-            job.run(await_termination=offline_write_options.get("wait_for_job", True))
+            feature_group.backfill_job.run(
+                await_termination=offline_write_options.get("wait_for_job", True)
+            )
 
-        return job
+        return feature_group.backfill_job
 
     def _kafka_produce(
         self, producer, feature_group, key, encoded_row, acked, offline_write_options

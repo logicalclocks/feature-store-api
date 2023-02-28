@@ -251,10 +251,14 @@ public class SparkEngine {
   /**
    * Setup Spark to write the data on the File System.
    *
-   * @param trainingDataset
-   * @param query
-   * @param writeOptions
-   * @param saveMode
+   * @param trainingDataset Training Dataset metadata object
+   * @param query Query Object
+   * @param queryReadOptions Additional read options as key-value pairs, defaults to empty Map
+   * @param writeOptions Additional write options as key-value pairs, defaults to empty Map
+   * @param saveMode org.apache.spark.sql.saveMode: Append, Overwrite, ErrorIfExists, Ignore
+   * @return Spark dataframe
+   * @throws FeatureStoreException  FeatureStoreException
+   * @throws IOException IOException
    */
   public Dataset<Row>[] write(TrainingDataset trainingDataset, Query query, Map<String, String> queryReadOptions,
                     Map<String, String> writeOptions, SaveMode saveMode) throws FeatureStoreException, IOException {
@@ -435,12 +439,12 @@ public class SparkEngine {
   /**
    * Write multiple training dataset splits and name them.
    *
-   * @param datasets
-   * @param dataFormat
-   * @param writeOptions
-   * @param saveMode
-   * @param basePath
-   * @param splits
+   * @param datasets Spark DataFrame or RDD.
+   * @param dataFormat DataFormat: CSV, TSV, PARQUET, AVRO, IMAGE, ORC, TFRECORDS, TFRECORD
+   * @param writeOptions Additional write options as key-value pairs, defaults to empty Map
+   * @param saveMode saveMode org.apache.spark.sql.saveMode: Append, Overwrite, ErrorIfExists, Ignore
+   * @param basePath Base path to training dataset file
+   * @param splits list of training dataset Split metadata objects
    */
   private void writeSplits(Dataset<Row>[] datasets, DataFormat dataFormat, Map<String, String> writeOptions,
                            SaveMode saveMode, String basePath, List<Split> splits) {
@@ -453,11 +457,11 @@ public class SparkEngine {
   /**
    * Write a single dataset split.
    *
-   * @param dataset
-   * @param dataFormat
-   * @param writeOptions
-   * @param saveMode
-   * @param path         it should be the full path
+   * @param dataset Spark DataFrame or RDD.
+   * @param dataFormat DataFormat: CSV, TSV, PARQUET, AVRO, IMAGE, ORC, TFRECORDS, TFRECORD
+   * @param writeOptions Additional write options as key-value pairs, defaults to empty Map
+   * @param saveMode saveMode org.apache.spark.sql.saveMode: Append, Overwrite, ErrorIfExists, Ignore
+   * @param path full path to training dataset file
    */
   private void writeSingle(Dataset<Row> dataset, DataFormat dataFormat,
                            Map<String, String> writeOptions, SaveMode saveMode, String path) {
@@ -500,15 +504,6 @@ public class SparkEngine {
     return reader.load();
   }
 
-  /**
-   * Writes feature group dataframe to kafka for online-fs ingestion.
-   *
-   * @param featureGroupBase
-   * @param dataset
-   * @param writeOptions
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
   public <S> void writeOnlineDataframe(FeatureGroupBase featureGroupBase, S dataset, String onlineTopicName,
                                          Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
@@ -563,9 +558,11 @@ public class SparkEngine {
   /**
    * Encodes all complex type features to binary using their avro type as schema.
    *
-   * @param featureGroupBase
-   * @param dataset
-   * @return
+   * @param featureGroupBase FeatureGroupBase Feature Group base metadata object
+   * @param dataset Spark DataFrame or RDD.
+   * @return Spark DataFrame.
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   public Dataset<Row> encodeComplexFeatures(FeatureGroupBase featureGroupBase, Dataset<Row> dataset)
           throws FeatureStoreException, IOException {
@@ -584,11 +581,11 @@ public class SparkEngine {
   /**
    * Serializes dataframe to two binary columns, one avro serialized key and one avro serialized value column.
    *
-   * @param featureGroupBase
-   * @param dataset
-   * @return dataset
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @param featureGroupBase FeatureGroupBase Feature Group base metadata object
+   * @param dataset  Spark DataFrame or RDD.
+   * @return Spark DataFrame.
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
    */
   private Dataset<Row> onlineFeatureGroupToAvro(FeatureGroupBase featureGroupBase, Dataset<Row> dataset)
       throws FeatureStoreException, IOException {
@@ -936,8 +933,7 @@ public class SparkEngine {
     // The JSON key file of the service account used for GCS
     // access when google.cloud.auth.service.account.enable is true.
     String localPath = addFile(storageConnector.getKeyPath());
-    String fileContent = Files.lines(Paths.get(localPath), StandardCharsets.UTF_8)
-        .collect(Collectors.joining("\n"));
+    String fileContent = String.join("\n", Files.readAllLines(Paths.get(localPath), StandardCharsets.UTF_8));
     JSONObject jsonObject = new JSONObject(fileContent);
 
     // set the account properties instead of key file path

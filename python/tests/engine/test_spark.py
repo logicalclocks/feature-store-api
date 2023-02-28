@@ -832,6 +832,14 @@ class TestSpark:
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
+        mock_kafka_api = mocker.patch("hsfs.core.kafka_api.KafkaApi")
+        mock_kafka_api.return_value.get_broker_endpoints.return_value = ["url1", "url2"]
+        mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
+            "1"
+        )
+        mock_client_get_instance.return_value._cert_key = "2"
+        mock_client_get_instance.return_value._get_jks_key_store_path.return_value = "3"
+        mock_client_get_instance.return_value._cert_key = "4"
 
         spark_engine = spark.Engine()
 
@@ -899,7 +907,15 @@ class TestSpark:
         assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
             1
         ] == {
-            "test_name": "test_value"
+            "kafka.bootstrap.servers": "url1,url2",
+            "kafka.security.protocol": "SSL",
+            "kafka.ssl.endpoint.identification.algorithm": "",
+            "kafka.ssl.key.password": "4",
+            "kafka.ssl.keystore.location": "3",
+            "kafka.ssl.keystore.password": "4",
+            "kafka.ssl.truststore.location": "1",
+            "kafka.ssl.truststore.password": "4",
+            "test_name": "test_value",
         }
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
@@ -937,6 +953,14 @@ class TestSpark:
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
+        mock_kafka_api = mocker.patch("hsfs.core.kafka_api.KafkaApi")
+        mock_kafka_api.return_value.get_broker_endpoints.return_value = ["url1", "url2"]
+        mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
+            "1"
+        )
+        mock_client_get_instance.return_value._cert_key = "2"
+        mock_client_get_instance.return_value._get_jks_key_store_path.return_value = "3"
+        mock_client_get_instance.return_value._cert_key = "4"
 
         spark_engine = spark.Engine()
 
@@ -1004,7 +1028,15 @@ class TestSpark:
         assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
             1
         ] == {
-            "test_name": "test_value"
+            "kafka.bootstrap.servers": "url1,url2",
+            "kafka.security.protocol": "SSL",
+            "kafka.ssl.endpoint.identification.algorithm": "",
+            "kafka.ssl.key.password": "4",
+            "kafka.ssl.keystore.location": "3",
+            "kafka.ssl.keystore.password": "4",
+            "kafka.ssl.truststore.location": "1",
+            "kafka.ssl.truststore.password": "4",
+            "test_name": "test_value",
         }
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
@@ -1042,6 +1074,14 @@ class TestSpark:
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
+        mock_kafka_api = mocker.patch("hsfs.core.kafka_api.KafkaApi")
+        mock_kafka_api.return_value.get_broker_endpoints.return_value = ["url1", "url2"]
+        mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
+            "1"
+        )
+        mock_client_get_instance.return_value._cert_key = "2"
+        mock_client_get_instance.return_value._get_jks_key_store_path.return_value = "3"
+        mock_client_get_instance.return_value._cert_key = "4"
 
         spark_engine = spark.Engine()
 
@@ -1109,7 +1149,15 @@ class TestSpark:
         assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
             1
         ] == {
-            "test_name": "test_value"
+            "kafka.bootstrap.servers": "url1,url2",
+            "kafka.security.protocol": "SSL",
+            "kafka.ssl.endpoint.identification.algorithm": "",
+            "kafka.ssl.key.password": "4",
+            "kafka.ssl.keystore.location": "3",
+            "kafka.ssl.keystore.password": "4",
+            "kafka.ssl.truststore.location": "1",
+            "kafka.ssl.truststore.password": "4",
+            "test_name": "test_value",
         }
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
@@ -1147,6 +1195,14 @@ class TestSpark:
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
+        mock_kafka_api = mocker.patch("hsfs.core.kafka_api.KafkaApi")
+        mock_kafka_api.return_value.get_broker_endpoints.return_value = ["url1", "url2"]
+        mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
+            "1"
+        )
+        mock_client_get_instance.return_value._cert_key = "2"
+        mock_client_get_instance.return_value._get_jks_key_store_path.return_value = "3"
+        mock_client_get_instance.return_value._cert_key = "4"
 
         spark_engine = spark.Engine()
 
@@ -1214,7 +1270,15 @@ class TestSpark:
         assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
             1
         ] == {
-            "test_name": "test_value"
+            "kafka.bootstrap.servers": "url1,url2",
+            "kafka.security.protocol": "SSL",
+            "kafka.ssl.endpoint.identification.algorithm": "",
+            "kafka.ssl.key.password": "4",
+            "kafka.ssl.keystore.location": "3",
+            "kafka.ssl.keystore.password": "4",
+            "kafka.ssl.truststore.location": "1",
+            "kafka.ssl.truststore.password": "4",
+            "test_name": "test_value",
         }
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
@@ -1394,11 +1458,19 @@ class TestSpark:
 
     def test_save_online_dataframe(self, mocker):
         # Arrange
-        mocker.patch("hsfs.client.get_instance")
+        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.spark.Engine._encode_complex_features")
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
         )
+        mock_kafka_api = mocker.patch("hsfs.core.kafka_api.KafkaApi")
+        mock_kafka_api.return_value.get_broker_endpoints.return_value = ["url1", "url2"]
+        mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
+            "1"
+        )
+        mock_client_get_instance.return_value._cert_key = "2"
+        mock_client_get_instance.return_value._get_jks_key_store_path.return_value = "3"
+        mock_client_get_instance.return_value._cert_key = "4"
 
         spark_engine = spark.Engine()
 
@@ -1436,7 +1508,15 @@ class TestSpark:
         assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.write.format.return_value.options.call_args[
             1
         ] == {
-            "test_name": "test_value"
+            "kafka.bootstrap.servers": "url1,url2",
+            "kafka.security.protocol": "SSL",
+            "kafka.ssl.endpoint.identification.algorithm": "",
+            "kafka.ssl.key.password": "4",
+            "kafka.ssl.keystore.location": "3",
+            "kafka.ssl.keystore.password": "4",
+            "kafka.ssl.truststore.location": "1",
+            "kafka.ssl.truststore.password": "4",
+            "test_name": "test_value",
         }
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.write.format.return_value.options.return_value.option.call_args[
@@ -4394,3 +4474,82 @@ class TestSpark:
         # Assert
         assert result.schema == spark_df.schema
         assert result.collect() == []
+
+    def test_get_kafka_config(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.engine.get_type")
+        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
+        mock_kafka_api = mocker.patch("hsfs.core.kafka_api.KafkaApi")
+
+        mock_kafka_api.return_value.get_broker_endpoints.return_value = ["url1", "url2"]
+        mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
+            "1"
+        )
+        mock_client_get_instance.return_value._cert_key = "2"
+        mock_client_get_instance.return_value._get_jks_key_store_path.return_value = "3"
+        mock_client_get_instance.return_value._cert_key = "4"
+
+        spark_engine = spark.Engine()
+
+        # Act
+        results = spark_engine._get_kafka_config(write_options={"user_opt": "ABC"})
+
+        # Assert
+        assert results == {
+            "kafka.bootstrap.servers": "url1,url2",
+            "kafka.security.protocol": "SSL",
+            "kafka.ssl.endpoint.identification.algorithm": "",
+            "kafka.ssl.key.password": "4",
+            "kafka.ssl.keystore.location": "3",
+            "kafka.ssl.keystore.password": "4",
+            "kafka.ssl.truststore.location": "1",
+            "kafka.ssl.truststore.password": "4",
+            "user_opt": "ABC",
+        }
+        assert mock_kafka_api.return_value.get_broker_endpoints.call_count == 1
+
+    def test_get_kafka_config_cache(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.engine.get_type")
+        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
+        mock_kafka_api = mocker.patch("hsfs.core.kafka_api.KafkaApi")
+
+        mock_kafka_api.return_value.get_broker_endpoints.return_value = ["url1", "url2"]
+        mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
+            "1"
+        )
+        mock_client_get_instance.return_value._cert_key = "2"
+        mock_client_get_instance.return_value._get_jks_key_store_path.return_value = "3"
+        mock_client_get_instance.return_value._cert_key = "4"
+
+        spark_engine = spark.Engine()
+
+        # Act
+        results = spark_engine._get_kafka_config(write_options={"user_opt": "ABC"})
+
+        assert spark_engine._kafka_config == {
+            "kafka.bootstrap.servers": "url1,url2",
+            "kafka.security.protocol": "SSL",
+            "kafka.ssl.endpoint.identification.algorithm": "",
+            "kafka.ssl.key.password": "4",
+            "kafka.ssl.keystore.location": "3",
+            "kafka.ssl.keystore.password": "4",
+            "kafka.ssl.truststore.location": "1",
+            "kafka.ssl.truststore.password": "4",
+        }
+
+        results = spark_engine._get_kafka_config(write_options={"user_opt": "second"})
+
+        # Assert
+        assert results == {
+            "kafka.bootstrap.servers": "url1,url2",
+            "kafka.security.protocol": "SSL",
+            "kafka.ssl.endpoint.identification.algorithm": "",
+            "kafka.ssl.key.password": "4",
+            "kafka.ssl.keystore.location": "3",
+            "kafka.ssl.keystore.password": "4",
+            "kafka.ssl.truststore.location": "1",
+            "kafka.ssl.truststore.password": "4",
+            "user_opt": "second",
+        }
+        assert mock_kafka_api.return_value.get_broker_endpoints.call_count == 1

@@ -46,17 +46,6 @@ public class StreamFeatureGroupEngine {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngine.class);
 
-  /**
-   * Create the metadata and write the data to the online/offline feature store.
-   *
-   * @param featureGroup
-   * @param dataset
-   * @param partitionKeys
-   * @param writeOptions
-   * @param sparkJobConfiguration
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
   public <S> StreamFeatureGroup save(StreamFeatureGroup featureGroup, S dataset, List<String> partitionKeys,
                                      String hudiPrecombineKey, Map<String, String> writeOptions,
                                      JobConfiguration sparkJobConfiguration)
