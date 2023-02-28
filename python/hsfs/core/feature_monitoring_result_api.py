@@ -163,6 +163,19 @@ class FeatureMonitoringResultApi:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
     ) -> List[str]:
+        """Build the path parameters for the Feature Monitoring Result API.
+
+        :param project_id: Id of the project
+        :type project_id: int
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
+        :return: list of path parameters
+        :rtype: List[str]
+        """
         path_params = [
             "project",
             project_id,

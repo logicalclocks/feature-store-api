@@ -186,6 +186,17 @@ def run_feature_monitoring(job_conf: Dict[str, Any]) -> None:
     feature_store = job_conf.pop("feature_store")
     fs = get_feature_store_handle(feature_store)
 
+    monitoring_config_engine = (
+        hsfs.core.feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=fs.featurestore_id
+        )
+    )
+
+    monitoring_config_engine.run_feature_monitoring(
+        feature_store=fs,
+        config_id=job_conf["config_id"],
+    )
+
     assert isinstance(fs, hsfs.feature_store.FeatureStore)
 
 

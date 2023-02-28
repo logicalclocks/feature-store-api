@@ -238,6 +238,25 @@ class FeatureMonitoringConfigApi:
         config_id: Optional[int] = None,
         name: Optional[str] = None,
     ) -> List[str]:
+        """Builds the path parameters for the Feature Monitoring Config API.
+
+        :param project_id: Id of the project
+        :type project_id: int
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
+        :param feature_name: Name of the feature. Only to fetch feature monitoring configuration by feature name.
+        :type feature_name: str, optional
+        :param config_id: Id of the feature monitoring configuration. Only to fetch feature monitoring configuration by id.
+        :type config_id: int, optional
+        :param name: Name of the feature monitoring configuration. Only to fetch feature monitoring configuration by name.
+        :type name: str, optional
+        :return: path parameters
+        :rtype: List[str]
+        """
         path_params = [
             "project",
             project_id,

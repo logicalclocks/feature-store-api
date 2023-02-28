@@ -14,11 +14,14 @@
 #   limitations under the License.
 #
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Hashable, List, Optional, Union
 from datetime import date, datetime
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.core.feature_monitoring_result_api import FeatureMonitoringResultApi
+from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
 from hsfs import util
+
+DEFAULT_EXECUTION_ID = 123
 
 
 class FeatureMonitoringResultEngine:
@@ -41,6 +44,25 @@ class FeatureMonitoringResultEngine:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
     ) -> FeatureMonitoringResult:
+        """Save feature monitoring result.
+
+        # Arguments
+            feature_monitoring_config_id: int. Id of the feature monitoring configuration.
+            execution_id: int. Id of the job execution.
+            detection_stats_id: int. Id of the detection statistics.
+            shift_detected: bool. Whether a shift is detected between the detection and reference window.
+                It is used to decide whether to trigger an alert.
+            difference: Optional[float]. Difference between detection statistics and reference statistics.
+                Defaults to zero if no reference is provided.
+            reference_stats_id: Optional[int]. Id of the reference statistics.
+                Defaults to None if no reference is provided.
+            feature_group_id: int. Id of the feature group. Defaults to None if feature view is used.
+            feature_view_name: str. Name of the feature view. Defaults to None if feature group is used.
+            feature_view_version: int. Version of the feature view. Defaults to None if feature group is used.
+
+        # Returns
+            FeatureMonitoringResult. Saved Feature monitoring result.
+        """
 
         monitoring_time = util.convert_event_time_to_timestamp(datetime.now())
 
@@ -71,6 +93,21 @@ class FeatureMonitoringResultEngine:
         start_time: Union[str, int, datetime, date, None] = None,
         end_time: Union[str, int, datetime, date, None] = None,
     ) -> List[FeatureMonitoringResult]:
+        """Fetch all feature monitoring results by config id.
+
+        # Arguments
+            config_id: int. Id of the feature monitoring configuration.
+            feature_group_id: int. Id of the feature group. Defaults to None if feature view is used.
+            feature_view_name: str. Name of the feature view. Defaults to None if feature group is used.
+            feature_view_version: int. Version of the feature view. Defaults to None if feature group is used.
+            start_time: Union[str, int, datetime, date, None].
+                Query results with monitoring time greater than or equal to start_time.
+            end_time: Union[str, int, datetime, date, None].
+                Query results with monitoring time less than or equal to end_time.
+
+        # Returns
+            List[FeatureMonitoringResult]. List of feature monitoring results.
+        """
 
         query_params = self.build_query_params(
             start_time=start_time,
@@ -89,7 +126,18 @@ class FeatureMonitoringResultEngine:
         self,
         start_time: Union[str, int, datetime, date, None],
         end_time: Union[str, int, datetime, date, None],
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, str]:
+        """Build query parameters for feature monitoring result API calls.
+
+        # Arguments
+            start_time: Union[str, int, datetime, date, None].
+                Query results with monitoring time greater than or equal to start_time.
+            end_time: Union[str, int, datetime, date, None].
+                Query results with monitoring time less than or equal to end_time.
+
+        # Returns
+            Dict[str, str]. Query parameters.
+        """
         filter_by = []
 
         if start_time:
@@ -103,3 +151,88 @@ class FeatureMonitoringResultEngine:
             "filter_by": filter_by,
             "sort_by": "monitoring_time:desc",
         }
+
+    def run_and_save_statistics_comparison(
+        self,
+        detection_stats_id: int,
+        detection_stats: Dict[Hashable, Any],
+        fm_config: FeatureMonitoringConfig,
+        reference_stats_id: Optional[int] = None,
+        reference_stats: Optional[Dict[Hashable, Any]] = None,
+    ) -> FeatureMonitoringResult:
+        """Run and upload statistics comparison between detection and reference stats.
+
+        # Arguments
+            detection_stats_id: int. Id of the detection statistics.
+            detection_stats: Computed statistics for detection data.
+            fm_config: FeatureMonitoringConfig. Feature monitoring configuration.
+            reference_stats_id: int. Id of the reference statistics.
+            reference_stats: Computed statistics for reference data.
+
+        # Returns
+            FeatureMonitoringResult. Feature monitoring result.
+        """
+
+        if reference_stats:
+            difference = self.compute_difference(
+                detection_stats=detection_stats,
+                reference_stats=reference_stats,
+                metric=fm_config.statistics_comparison_config["compareOn"],
+                relative=fm_config.statistics_comparison_config["relative"],
+            )
+
+            if fm_config.statistics_comparison_config["strict"]:
+                shift_detected = (
+                    True
+                    if difference >= fm_config.statistics_comparison_config["threshold"]
+                    else False
+                )
+            else:
+                shift_detected = (
+                    True
+                    if difference > fm_config.statistics_comparison_config["threshold"]
+                    else False
+                )
+        else:
+            difference = 0
+            shift_detected = False
+
+        return self.save_feature_monitoring_result(
+            feature_monitoring_config_id=fm_config.id,
+            execution_id=DEFAULT_EXECUTION_ID,
+            detection_stats_id=detection_stats_id,
+            reference_stats_id=reference_stats_id,
+            difference=difference,
+            shift_detected=shift_detected,
+            feature_group_id=fm_config.feature_group_id,
+            feature_view_name=fm_config.feature_view_id,
+        )
+
+    def compute_difference(
+        self,
+        detection_stats: Dict[Hashable, Any],
+        reference_stats: Dict[Hashable, Any],
+        metric: str,
+        relative: bool = False,
+    ) -> float:
+        """Compute the difference between the reference and detection statistics.
+
+        # Arguments
+            detection_stats: `Dict[Hashable, Any]`. The statistics computed from detection data.
+            reference_stats: `Dict[Hashable, Any]`. The statistics computed from reference data.
+            metric: `str`. The metric to compute the difference for.
+            relative: `bool`. Whether to compute the relative difference or not.
+
+        # Returns
+            `float`. The difference between the reference and detection statistics.
+        """
+
+        if relative:
+            if (reference_stats[metric] + detection_stats[metric]) == 0:
+                return float("inf")
+            else:
+                return (detection_stats[metric] - reference_stats[metric]) / (
+                    reference_stats[metric] + detection_stats[metric]
+                )
+        else:
+            return detection_stats[metric] - reference_stats[metric]

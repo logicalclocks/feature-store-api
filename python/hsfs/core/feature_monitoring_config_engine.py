@@ -14,9 +14,18 @@
 #   limitations under the License.
 #
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Hashable, Optional, Tuple, Union
+import pandas as pd
+from datetime import datetime
+
+from hsfs.feature_store import FeatureStore
+from hsfs.feature_group import FeatureGroup
+from hsfs.feature_view import FeatureView
 from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
 from hsfs.core.feature_monitoring_config_api import FeatureMonitoringConfigApi
+from hsfs.core.feature_monitoring_result_engine import FeatureMonitoringResultEngine
+from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
+from hsfs.util import convert_event_time_to_timestamp
 
 
 class FeatureMonitoringConfigEngine:
@@ -175,3 +184,121 @@ class FeatureMonitoringConfigEngine:
 
     def setup_monitoring_job(self, _config: FeatureMonitoringConfig) -> int:
         return 1
+
+    def run_feature_monitoring(
+        self, feature_store: FeatureStore, config_id: int
+    ) -> FeatureMonitoringResult:
+
+        config = self._feature_monitoring_config_api.get(config_id)
+        result_engine = FeatureMonitoringResultEngine(
+            feature_store_id=self._feature_store_id
+        )
+
+        detection_stats, detection_stats_id = self.run_single_window_monitoring(
+            feature_store=feature_store,
+            monitoring_window_config=config.detection_window_config,
+            feature_name=config.feature_name,
+            feature_group_id=config.feature_group_id,
+            feature_view_id=config.feature_view_id,
+            check_existing=False,
+        )
+
+        if config.reference_window_config is not None:
+            reference_stats, reference_stats_id = self.run_single_window_monitoring(
+                feature_store=feature_store,
+                monitoring_window_config=config.reference_window_config,
+                feature_name=config.feature_name,
+                feature_group_id=config.feature_group_id,
+                feature_view_id=config.feature_view_id,
+                check_existing=True,
+            )
+
+        result = result_engine.run_statistics_comparison(
+            detection_stats_id=detection_stats_id,
+            reference_stats_id=reference_stats_id if reference_stats_id else None,
+            detection_stats=detection_stats,
+            reference_stats=reference_stats if reference_stats else None,
+            fm_config=config,
+        )
+
+        return result
+
+    def run_single_window_monitoring(
+        self,
+        feature_store: FeatureStore,
+        monitoring_window_config: Dict[str, Any],
+        feature_name: str,
+        feature_group_id: Optional[int] = None,
+        feature_view_id: Optional[int] = None,
+        check_existing: bool = False,
+    ) -> Tuple[Dict[str, Any], int]:
+        # check_existing is a flag to check if the statistics for the entity have already been computed
+        if check_existing:
+            registered_stats_id = self.check_for_registered_stats(
+                monitoring_window_config
+            )
+            if registered_stats_id is not None:
+                return registered_stats_id
+
+        if feature_group_id is not None:
+            entity = feature_store.get_feature_group(feature_group_id)
+        elif feature_view_id is not None:
+            entity = feature_store.get_feature_view(feature_view_id)
+        else:
+            raise ValueError(
+                "Monitoring config does not have a feature group or feature view id"
+            )
+
+        # Fetch the actual data for which to compute statistics based on row_percentage and time window
+        entity_df = self.fetch_entity_data(
+            entity=entity,
+            feature_name=feature_name,
+            monitoring_window_config=monitoring_window_config,
+        )
+
+        # This method should be implemented on a statistics_compute_engine rather than here
+        stats, registered_stats_id = self.compute_and_upload_statistics(entity_df)
+
+        return registered_stats_id
+
+    def compute_and_upload_statistics(
+        self, entity_df: pd.DataFrame
+    ) -> Tuple[Dict[Hashable, Any], int]:
+        # Dummy method for now
+        # This method should be implemented on a statistics_compute_engine rather than here
+        # Or potentially just in the python/spark engines
+        stats = entity_df.describe()
+        print("Computing and faking statistics upload... ")
+        registered_stats_id = 22
+
+        return stats.to_dict(), registered_stats_id
+
+    def check_for_registered_stats(
+        self, monitoring_window_config: Dict[str, Any]
+    ) -> Optional[int]:
+        # Dummy method for now
+        print(
+            "Checking for registered stats for window config: ",
+            monitoring_window_config.get("id", "unregistered"),
+        )
+        return None
+
+    def fetch_entity_data(
+        self,
+        entity: Union[FeatureGroup, FeatureView],
+        feature_name: str,
+        monitoring_window_config: Dict[str, Any],
+    ) -> pd.DataFrame:
+        # Lots of work to be done here to suport all the different cases
+
+        return (
+            entity.select(features=[feature_name])
+            .as_of(
+                wallclock_time=convert_event_time_to_timestamp(datetime.now())
+                - monitoring_window_config["time_offset"],
+                exclude_until=convert_event_time_to_timestamp(datetime.now())
+                - monitoring_window_config["time_offset"]
+                + monitoring_window_config["window_length"],
+            )
+            .read()
+        )
