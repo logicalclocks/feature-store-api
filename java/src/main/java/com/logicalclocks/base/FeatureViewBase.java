@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.logicalclocks.base.constructor.QueryBase;
 import com.logicalclocks.base.engine.VectorServer;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.IOException;
@@ -31,7 +30,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-@NoArgsConstructor
 public abstract class FeatureViewBase {
 
   @Getter
@@ -71,10 +69,10 @@ public abstract class FeatureViewBase {
 
   @Getter
   @Setter
-  private String type = "featureViewDTO";
+  private String type;
 
   protected static VectorServer vectorServer = new VectorServer();
-  private Integer extraFilterVersion = null;
+  protected Integer extraFilterVersion = null;
 
   public void initServing() throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     vectorServer.initServing(this, false);

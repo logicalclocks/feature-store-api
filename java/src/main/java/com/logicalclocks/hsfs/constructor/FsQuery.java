@@ -19,7 +19,6 @@ package com.logicalclocks.hsfs.constructor;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.base.FeatureStoreException;
-import com.logicalclocks.base.constructor.ExternalFeatureGroupAlias;
 import com.logicalclocks.base.constructor.FsQueryBase;
 import com.logicalclocks.base.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
@@ -38,10 +37,10 @@ public class FsQuery extends FsQueryBase {
       return;
     }
 
-    for (ExternalFeatureGroupAlias externalFeatureGroupAlias : super.getOnDemandFeatureGroups()) {
+    for (HudiFeatureGroupAlias externalFeatureGroupAlias : super.getOnDemandFeatureGroups()) {
       String alias = externalFeatureGroupAlias.getAlias();
       ExternalFeatureGroup onDemandFeatureGroup =
-          (ExternalFeatureGroup) externalFeatureGroupAlias.getOnDemandFeatureGroup();
+          (ExternalFeatureGroup) externalFeatureGroupAlias.getFeatureGroup();
 
       SparkEngine.getInstance().registerOnDemandTemporaryTable(onDemandFeatureGroup, alias);
     }

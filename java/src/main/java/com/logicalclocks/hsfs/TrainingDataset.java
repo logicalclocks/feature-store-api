@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.Split;
+import com.logicalclocks.base.StatisticsConfig;
 import com.logicalclocks.base.Storage;
 import com.logicalclocks.base.TrainingDatasetBase;
 import com.logicalclocks.base.TrainingDatasetFeature;
@@ -32,12 +33,10 @@ import com.logicalclocks.base.constructor.Filter;
 import com.logicalclocks.base.constructor.FilterLogic;
 import com.logicalclocks.base.engine.CodeEngine;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
-import com.logicalclocks.base.engine.VectorServer;
 import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.engine.TrainingDatasetEngine;
-import com.logicalclocks.hsfs.engine.TrainingDatasetUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -51,8 +50,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.ParseException;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -62,40 +59,7 @@ public class TrainingDataset extends TrainingDatasetBase {
 
   @Getter
   @Setter
-  private Integer id;
-
-  @Getter
-  @Setter
-  private String name;
-
-  @Getter
-  @Setter
-  private Integer version;
-
-  @Getter
-  @Setter
-  private String description;
-
-  @Getter
-  @Setter
   private DataFormat dataFormat;
-
-  @Getter
-  @Setter
-  private Boolean coalesce;
-
-  @Getter
-  @Setter
-  private TrainingDatasetType trainingDatasetType = TrainingDatasetType.HOPSFS_TRAINING_DATASET;
-
-  @Getter
-  @Setter
-  private List<TrainingDatasetFeature> features;
-
-  @Getter
-  @Setter
-  @JsonIgnore
-  private FeatureStore featureStore;
 
   @Getter
   @Setter
@@ -103,19 +67,7 @@ public class TrainingDataset extends TrainingDatasetBase {
 
   @Getter
   @Setter
-  private String location;
-
-  @Getter
-  @Setter
-  private Long seed;
-
-  @Getter
-  @Setter
-  private List<Split> splits;
-
-  @Getter
-  @Setter
-  private String trainSplit;
+  private List<TrainingDatasetFeature> features;
 
   @Getter
   @Setter
@@ -126,31 +78,10 @@ public class TrainingDataset extends TrainingDatasetBase {
   @JsonProperty("queryDTO")
   private Query queryInt;
 
-  @JsonIgnore
-  private List<String> label;
-
-  @Getter
-  @Setter
-  private Date eventStartTime;
-
-  @Getter
-  @Setter
-  private Date eventEndTime;
-
-  @Getter
-  @Setter
-  private FilterLogic extraFilter;
-
-  @Getter
-  @Setter
-  private String type = "trainingDatasetDTO";
-
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
   private CodeEngine codeEngine = new CodeEngine(EntityEndpointType.TRAINING_DATASET);
 
-  private TrainingDatasetUtils utils = new TrainingDatasetUtils();
-  private VectorServer vectorServer = new VectorServer();
   private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDataset.class);
 
   @Builder
@@ -390,76 +321,9 @@ public class TrainingDataset extends TrainingDatasetBase {
   }
 
   @JsonIgnore
-  public String getQuery() throws FeatureStoreException, IOException {
-    return getQuery(Storage.ONLINE, false);
-  }
-
-  @JsonIgnore
-  public String getQuery(boolean withLabel) throws FeatureStoreException, IOException {
-    return getQuery(Storage.ONLINE, withLabel);
-  }
-
-  @JsonIgnore
-  public String getQuery(Storage storage) throws FeatureStoreException, IOException {
-    return getQuery(storage, false);
-  }
-
-  @JsonIgnore
   @Override
   public String getQuery(Storage storage, boolean withLabel) throws FeatureStoreException, IOException {
     return trainingDatasetEngine.getQuery(this, storage, withLabel, false);
-  }
-
-  @JsonIgnore
-  public List<String> getLabel() {
-    return features.stream().filter(TrainingDatasetFeature::getLabel).map(TrainingDatasetFeature::getName).collect(
-        Collectors.toList());
-  }
-
-  @JsonIgnore
-  public void setLabel(List<String> label) {
-    this.label = label.stream().map(String::toLowerCase).collect(Collectors.toList());
-  }
-
-  /**
-   * Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store.
-   *
-   * @throws SQLException SQLException
-   * @throws IOException IOException
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws ClassNotFoundException ClassNotFoundException
-   */
-  public void initPreparedStatement() throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
-    initPreparedStatement(false);
-  }
-
-  /**
-   * Initialise and cache parametrised prepared statement to retrieve feature vector from online feature store.
-   *
-   * @param external whether is from external client or not
-   * @throws SQLException SQLException
-   * @throws IOException IOException
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws ClassNotFoundException ClassNotFoundException
-   */
-  public void initPreparedStatement(boolean external)
-      throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
-    vectorServer.initPreparedStatement(this, false, external);
-  }
-
-  /**
-   * Initialise and cache parametrised prepared statement to retrieve batch feature vectors from online feature store.
-   *
-   * @param external whether is from external client or not
-   * @param batch whether to initialise feature vector for batch retrieval
-   * @throws SQLException SQLException
-   * @throws IOException IOException
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws ClassNotFoundException ClassNotFoundException
-   */
-  public void initPreparedStatement(boolean external, boolean batch) throws SQLException, IOException,
-      FeatureStoreException, ClassNotFoundException {
-    vectorServer.initPreparedStatement(this, batch, external);
   }
 
   /**
@@ -480,37 +344,6 @@ public class TrainingDataset extends TrainingDatasetBase {
   }
 
   /**
-   * Retrieve feature vector from online feature store.
-   *
-   * @param entry Map object with kes as primary key names of the training dataset features groups and values as
-   *              corresponding ids to retrieve feature vector from online feature store.
-   * @param external If true, the connection to the online feature store will be established using the hostname
-   *                 provided in the hsfs.connection() setup.
-   * @return list of feature values sorted according to provided primary keys.
-   * @throws SQLException SQLException
-   * @throws IOException IOException
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws ClassNotFoundException ClassNotFoundException
-   */
-  @JsonIgnore
-  public List<Object> getServingVector(Map<String, Object> entry, boolean external)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVector(this, entry, external);
-  }
-
-  @JsonIgnore
-  public List<List<Object>> getServingVectors(Map<String, List<Object>> entry)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException, SQLException {
-    return  vectorServer.getFeatureVectors(this, entry);
-  }
-
-  @JsonIgnore
-  public List<List<Object>> getServingVectors(Map<String, List<Object>> entry, boolean external)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVectors(this, entry, external);
-  }
-
-  /**
    * Delete training dataset and all associated metadata.
    * Note that this operation drops only files which were materialized in
    * HopsFS. If you used a Storage Connector for a cloud storage such as S3,
@@ -527,23 +360,5 @@ public class TrainingDataset extends TrainingDatasetBase {
     LOGGER.warn("JobWarning: All jobs associated to training dataset `" + name + "`, version `"
         + version + "` will be removed.");
     trainingDatasetEngine.delete(this);
-  }
-
-  /**
-   * Set of primary key names that is used as keys in input dict object for `get_serving_vector` method.
-   *
-   * @return Set of serving keys
-   * @throws SQLException SQLException
-   * @throws IOException IOException
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws ClassNotFoundException ClassNotFoundException
-   */
-  @JsonIgnore
-  public HashSet<String> getServingKeys()
-      throws SQLException, IOException, FeatureStoreException, ClassNotFoundException {
-    if (vectorServer.getServingKeys().isEmpty()) {
-      initPreparedStatement();
-    }
-    return vectorServer.getServingKeys();
   }
 }

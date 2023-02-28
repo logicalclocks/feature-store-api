@@ -24,6 +24,8 @@ import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.JobConfiguration;
+import com.logicalclocks.base.StatisticsConfig;
+import com.logicalclocks.base.TimeTravelFormat;
 import com.logicalclocks.base.engine.CodeEngine;
 import com.logicalclocks.base.metadata.FeatureGroupBase;
 
@@ -100,7 +102,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
-
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StreamFeatureGroup.class);

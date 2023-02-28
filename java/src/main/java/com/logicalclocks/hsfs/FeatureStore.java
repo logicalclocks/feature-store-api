@@ -19,7 +19,9 @@ package com.logicalclocks.hsfs;
 
 import com.logicalclocks.base.FeatureStoreBase;
 import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.base.StatisticsConfig;
 import com.logicalclocks.base.StorageConnectorBase;
+import com.logicalclocks.base.TimeTravelFormat;
 import com.logicalclocks.base.TrainingDatasetBase;
 import com.logicalclocks.base.metadata.FeatureGroupBase;
 import com.logicalclocks.base.metadata.StorageConnectorApi;

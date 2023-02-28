@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class FeatureViewEngineBase {
+public abstract class FeatureViewEngineBase {
 
   private FeatureViewApi featureViewApi = new FeatureViewApi();
   private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_VIEW);
@@ -110,13 +110,6 @@ public class FeatureViewEngineBase {
     }
   }
 
-  public FeatureViewBase update(FeatureViewBase featureViewBase) throws FeatureStoreException,
-      IOException {
-    FeatureViewBase featureViewBaseUpdated = featureViewApi.update(featureViewBase, FeatureViewBase.class);
-    featureViewBase.setDescription(featureViewBaseUpdated.getDescription());
-    return featureViewBase;
-  }
-
   public <T extends FeatureViewBase> FeatureViewBase get(FeatureStoreBase featureStoreBase, String name,
                                                           Integer version, Class<T> fvType)
       throws FeatureStoreException, IOException {
@@ -162,79 +155,12 @@ public class FeatureViewEngineBase {
     featureViewApi.delete(featureStoreBase, name, version);
   }
 
-  public void createTrainingDataset() {
-  }
-
-  public void writeTrainingDataset() {
-  }
-
-  public void getTrainingDataset() {
-  }
-
-  private void setTrainSplit() {
-  }
-
-  private void createTrainingDataMetadata(){
-  }
-
-  private void setEventTime() {
-  }
-
-  private Date getStartTime() {
+  protected Date getStartTime() {
     return new Date(1000);
   }
 
-  private Date getEndTime() {
+  protected Date getEndTime() {
     return new Date();
-  }
-
-  private void getTrainingDataMetadata() {
-
-  }
-
-  public void computeStatistics() {
-  }
-
-  private void convertSplitDatasetsToMap() {
-  }
-
-  public void recreateTrainingDataset() {
-  }
-
-  private void readDataset() {
-  }
-
-  public void deleteTrainingData() {
-  }
-
-  public void deleteTrainingDatasetOnly() {
-  }
-
-  public String getBatchQueryString(FeatureViewBase featureViewBase, Date startTime, Date endTime,
-                                    Integer trainingDataVersion) throws FeatureStoreException, IOException {
-    QueryBase queryBase = getBatchQuery(featureViewBase, startTime, endTime, false, trainingDataVersion);
-    return queryBase.sql();
-  }
-
-  public QueryBase getBatchQuery(FeatureViewBase featureViewBase, Date startTime, Date endTime, Boolean withLabels,
-                                 Integer trainingDataVersion)
-      throws FeatureStoreException, IOException {
-    QueryBase queryBase = featureViewApi.getBatchQuery(
-        featureViewBase.getFeatureStore(),
-        featureViewBase.getName(),
-        featureViewBase.getVersion(),
-        startTime == null ? null : startTime.getTime(),
-        endTime == null ? null : endTime.getTime(),
-        withLabels,
-        trainingDataVersion,
-        QueryBase.class
-    );
-    queryBase.getLeftFeatureGroup().setFeatureStore(
-        featureViewBase.getQuery().getLeftFeatureGroup().getFeatureStore());
-    return queryBase;
-  }
-
-  public void getBatchData() throws FeatureStoreException, IOException {
   }
 
   public void addTag(FeatureViewBase featureViewBase, String name, Object value)

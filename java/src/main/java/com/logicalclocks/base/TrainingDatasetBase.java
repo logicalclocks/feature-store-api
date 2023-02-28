@@ -28,7 +28,6 @@ import com.logicalclocks.base.engine.VectorServer;
 import com.logicalclocks.base.metadata.Statistics;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.IOException;
@@ -40,90 +39,81 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@NoArgsConstructor
 public abstract class TrainingDatasetBase {
   @Getter
   @Setter
-  private Integer id;
+  protected Integer id;
 
   @Getter
   @Setter
-  private String name;
+  protected String name;
 
   @Getter
   @Setter
-  private Integer version;
+  protected Integer version;
 
   @Getter
   @Setter
-  private String description;
+  protected String description;
 
   @Getter
   @Setter
-  private Boolean coalesce;
+  protected Boolean coalesce;
 
   @Getter
   @Setter
-  private TrainingDatasetType trainingDatasetType = TrainingDatasetType.HOPSFS_TRAINING_DATASET;
+  protected TrainingDatasetType trainingDatasetType = TrainingDatasetType.HOPSFS_TRAINING_DATASET;
 
   @Getter
   @Setter
-  private List<TrainingDatasetFeature> features;
+  protected List<TrainingDatasetFeature> features;
 
   @Getter
   @Setter
   @JsonIgnore
-  private FeatureStoreBase featureStore;
+  protected FeatureStoreBase featureStore;
 
   @Getter
   @Setter
-  private StorageConnectorBase storageConnector;
+  protected String location;
 
   @Getter
   @Setter
-  private String location;
+  protected Long seed;
 
   @Getter
   @Setter
-  private Long seed;
+  protected List<Split> splits;
 
   @Getter
   @Setter
-  private List<Split> splits;
-
-  @Getter
-  @Setter
-  private String trainSplit;
-
-  @Getter
-  @Setter
-  private StatisticsConfigBase statisticsConfig = new StatisticsConfigBase();
+  protected String trainSplit;
 
   @Getter
   @Setter
   @JsonProperty("queryDTO")
-  private QueryBase queryBaseInt;
+  protected QueryBase queryBaseInt;
 
   @JsonIgnore
-  private List<String> label;
+  protected List<String> label;
 
   @Getter
   @Setter
-  private Date eventStartTime;
+  protected Date eventStartTime;
 
   @Getter
   @Setter
-  private Date eventEndTime;
+  protected Date eventEndTime;
 
   @Getter
   @Setter
-  private FilterLogic extraFilter;
+  protected FilterLogic extraFilter;
 
   @Getter
   @Setter
-  private String type = "trainingDatasetDTO";
+  protected String type = "trainingDatasetDTO";
 
-  private VectorServer vectorServer = new VectorServer();
+  protected VectorServer vectorServer = new VectorServer();
 
   public void setTimeSeriesSplits(Integer timeSplitSize, String trainStart, String trainEnd, String valStart,
                                   String valEnd, String testStart, String testEnd) throws FeatureStoreException,

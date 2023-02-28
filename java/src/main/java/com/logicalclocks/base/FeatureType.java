@@ -17,13 +17,8 @@
 
 package com.logicalclocks.base;
 
-
-import lombok.Getter;
-
 public enum FeatureType {
   BIGINT,
   DATE,
   TIMESTAMP
-}
-
 }

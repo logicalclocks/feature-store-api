@@ -44,25 +44,25 @@ public class QueryBase {
 
   @Getter
   @Setter
-  private FeatureGroupBase leftFeatureGroup;
+  protected FeatureGroupBase leftFeatureGroup;
   @Getter
   @Setter
-  private List<Feature> leftFeatures;
+  protected List<Feature> leftFeatures;
   @Getter
   @Setter
-  private Long leftFeatureGroupStartTime;
+  protected Long leftFeatureGroupStartTime;
   @Getter
   @Setter
-  private Long leftFeatureGroupEndTime;
+  protected Long leftFeatureGroupEndTime;
   @Getter
   @Setter
-  private List<Join> joins = new ArrayList<>();
+  protected List<Join> joins = new ArrayList<>();
   @Getter
   @Setter
-  private FilterLogic filter;
+  protected FilterLogic filter;
   @Getter
   @Setter
-  private Boolean hiveEngine = false;
+  protected Boolean hiveEngine = false;
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 

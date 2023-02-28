@@ -25,7 +25,9 @@ import com.logicalclocks.base.Feature;
 
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.HudiOperationType;
+import com.logicalclocks.base.StatisticsConfig;
 import com.logicalclocks.base.Storage;
+import com.logicalclocks.base.TimeTravelFormat;
 import com.logicalclocks.base.engine.CodeEngine;
 import com.logicalclocks.base.metadata.FeatureGroupBase;
 import com.logicalclocks.base.metadata.Statistics;

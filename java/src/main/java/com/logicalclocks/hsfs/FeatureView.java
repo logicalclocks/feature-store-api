@@ -24,12 +24,12 @@ import com.google.common.collect.Maps;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.Split;
+import com.logicalclocks.base.StatisticsConfig;
 import com.logicalclocks.base.TrainingDatasetFeature;
 import com.logicalclocks.base.TrainingDatasetType;
 import com.logicalclocks.base.constructor.Filter;
 import com.logicalclocks.base.constructor.FilterLogic;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
-import com.logicalclocks.base.engine.VectorServer;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureViewEngine;
 import lombok.Getter;
@@ -91,9 +91,7 @@ public class FeatureView extends FeatureViewBase {
   @Setter
   private String type = "featureViewDTO";
 
-  private static FeatureViewEngine featureViewEngine = new FeatureViewEngine();
-  private static VectorServer vectorServer = new VectorServer();
-  private Integer extraFilterVersion = null;
+  private static final FeatureViewEngine featureViewEngine = new FeatureViewEngine();
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
   public static class FeatureViewBuilder {
@@ -175,43 +173,6 @@ public class FeatureView extends FeatureViewBase {
 
   public FeatureView update(FeatureView other) throws FeatureStoreException, IOException {
     return featureViewEngine.update(other);
-  }
-
-  public void initServing() throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
-    vectorServer.initServing(this, false);
-  }
-
-  public void initServing(Boolean batch, Boolean external)
-      throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
-    vectorServer.initServing(this, batch, external);
-  }
-
-  public void initBatchScoring(Integer trainingDatasetVersion) {
-    this.extraFilterVersion = trainingDatasetVersion;
-  }
-
-  @JsonIgnore
-  public List<Object> getFeatureVector(Map<String, Object> entry)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVector(this, entry);
-  }
-
-  @JsonIgnore
-  public List<Object> getFeatureVector(Map<String, Object> entry, boolean external)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVector(this, entry, external);
-  }
-
-  @JsonIgnore
-  public List<List<Object>> getFeatureVectors(Map<String, List<Object>> entry)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVectors(this, entry);
-  }
-
-  @JsonIgnore
-  public List<List<Object>> getFeatureVectors(Map<String, List<Object>> entry, boolean external)
-      throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
-    return vectorServer.getFeatureVectors(this, entry, external);
   }
 
   @JsonIgnore

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021-2022. Hopsworks AB
+ *  Copyright (c) 2022-2023. Hopsworks AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -29,24 +29,32 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class StatisticsConfigBase {
+public class StatisticsConfig {
   @Getter
   @Setter
-  protected Boolean enabled = true;
+  private Boolean enabled = true;
 
   @Getter
   @Setter
-  protected Boolean histograms = false;
+  private Boolean histograms = false;
 
   @Getter
   @Setter
-  protected Boolean correlations = false;
+  private Boolean correlations = false;
 
   @Getter
   @Setter
-  protected Boolean exactUniqueness = false;
+  private Boolean exactUniqueness = false;
 
   @Getter
   @Setter
-  protected List<String> columns = new ArrayList<>();
+  private List<String> columns = new ArrayList<>();
+
+  public StatisticsConfig(Boolean enabled, Boolean histograms, Boolean correlations,
+                          Boolean exactUniqueness) {
+    this.enabled = enabled;
+    this.histograms = histograms;
+    this.correlations = correlations;
+    this.exactUniqueness = exactUniqueness;
+  }
 }

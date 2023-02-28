@@ -31,9 +31,7 @@ import com.logicalclocks.base.metadata.StorageConnectorApi;
 
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
@@ -41,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -50,28 +47,6 @@ import java.util.stream.Collectors;
 public class Query extends QueryBase {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Query.class);
-
-  @Getter
-  @Setter
-  private FeatureGroupBase leftFeatureGroup;
-  @Getter
-  @Setter
-  private List<Feature> leftFeatures;
-  @Getter
-  @Setter
-  private Long leftFeatureGroupStartTime;
-  @Getter
-  @Setter
-  private Long leftFeatureGroupEndTime;
-  @Getter
-  @Setter
-  private List<Join> joins = new ArrayList<>();
-  @Getter
-  @Setter
-  private FilterLogic filter;
-  @Getter
-  @Setter
-  private Boolean hiveEngine = false;
 
   private QueryConstructorApi queryConstructorApi = new QueryConstructorApi();
   private StorageConnectorApi storageConnectorApi = new StorageConnectorApi();

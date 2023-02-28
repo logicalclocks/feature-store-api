@@ -128,13 +128,6 @@ public class HopsworksConnection extends HopsworksConnectionBase {
     }
   }
 
-  /**
-   * Close the connection and clean up the certificates.
-   */
-  public void close() {
-    // Close the client
-  }
-
   public Project getProject() throws IOException, FeatureStoreException {
     LOGGER.info("Getting information for project name: " + project);
     return projectApi.get(project);

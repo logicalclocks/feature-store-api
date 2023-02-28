@@ -140,10 +140,10 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
     return featureView;
   }
 
-  public List<FeatureViewBase> get(FeatureStore featureStore, String name) throws FeatureStoreException,
+  public List<FeatureView> get(FeatureStore featureStore, String name) throws FeatureStoreException,
       IOException {
     List<FeatureViewBase> featureViewBases = super.get(featureStore, name);
-    List<FeatureView> featureView = new ArrayList<>();
+    List<FeatureView> featureViews = new ArrayList<>();
     for (FeatureViewBase fvBase : featureViewBases) {
       FeatureView fv = (FeatureView) fvBase;
       fv.setFeatureStore(featureStore);
@@ -156,18 +156,9 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
               .filter(TrainingDatasetFeature::getLabel)
               .map(TrainingDatasetFeature::getName)
               .collect(Collectors.toList()));
+      featureViews.add(fv);
     }
-    return featureViewBases;
-  }
-
-  public void delete(FeatureStore featureStore, String name) throws FeatureStoreException,
-      IOException {
-    featureViewApi.delete(featureStore, name);
-  }
-
-  public void delete(FeatureStore featureStore, String name, Integer version) throws FeatureStoreException,
-      IOException {
-    featureViewApi.delete(featureStore, name, version);
+    return featureViews;
   }
 
   public TrainingDatasetBundle createTrainingDataset(
@@ -338,14 +329,6 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
     }
   }
 
-  private Date getStartTime() {
-    return new Date(1000);
-  }
-
-  private Date getEndTime() {
-    return new Date();
-  }
-
   private TrainingDataset getTrainingDataMetadata(
       FeatureView featureView, Integer trainingDatasetVersion) throws IOException, FeatureStoreException {
     return (TrainingDataset) featureViewApi.getTrainingData(featureView.getFeatureStore(), featureView.getName(),
@@ -452,46 +435,6 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
   ) throws FeatureStoreException, IOException {
     return getBatchQuery(featureView, startTime, endTime, false, trainingDataVersion)
         .read(false, readOptions);
-  }
-
-  public void addTag(FeatureView featureView, String name, Object value)
-      throws FeatureStoreException, IOException {
-    tagsApi.add(featureView, name, value);
-  }
-
-  public void addTag(FeatureView featureView, String name, Object value, Integer trainingDataVersion)
-      throws FeatureStoreException, IOException {
-    tagsApi.add(featureView, trainingDataVersion, name, value);
-  }
-
-  public void deleteTag(FeatureView featureView, String name)
-      throws FeatureStoreException, IOException {
-    tagsApi.deleteTag(featureView, name);
-  }
-
-  public void deleteTag(FeatureView featureView, String name, Integer trainingDataVersion)
-      throws FeatureStoreException, IOException {
-    tagsApi.deleteTag(featureView, trainingDataVersion, name);
-  }
-
-  public Object getTag(FeatureView featureView, String name)
-      throws FeatureStoreException, IOException {
-    return tagsApi.get(featureView, name);
-  }
-
-  public Object getTag(FeatureView featureView, String name, Integer trainingDataVersion)
-      throws FeatureStoreException, IOException {
-    return tagsApi.get(featureView, trainingDataVersion, name);
-  }
-
-  public Map<String, Object> getTags(FeatureView featureView)
-      throws FeatureStoreException, IOException {
-    return tagsApi.get(featureView);
-  }
-
-  public Map<String, Object> getTags(FeatureView featureView, Integer trainingDataVersion)
-      throws FeatureStoreException, IOException {
-    return tagsApi.get(featureView, trainingDataVersion);
   }
 
   public FeatureView getOrCreateFeatureView(FeatureStore featureStore, String name, Integer version,  Query query,

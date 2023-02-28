@@ -23,11 +23,11 @@ import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.HudiOperationType;
 import com.logicalclocks.base.JobConfiguration;
 import com.logicalclocks.base.Storage;
-import com.logicalclocks.hsfs.TimeTravelFormat;
+import com.logicalclocks.base.TimeTravelFormat;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.metadata.FeatureGroupApi;
 import com.logicalclocks.base.metadata.FeatureGroupBase;
-import com.logicalclocks.hsfs.StatisticsConfig;
+import com.logicalclocks.base.StatisticsConfig;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroup;
 

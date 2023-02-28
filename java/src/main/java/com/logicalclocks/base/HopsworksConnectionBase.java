@@ -17,15 +17,10 @@
 
 package com.logicalclocks.base;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.Closeable;
 import java.io.IOException;
 
 public abstract class HopsworksConnectionBase implements Closeable {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksConnectionBase.class);
 
   public abstract Object getFeatureStore(String name) throws IOException, FeatureStoreException;
 

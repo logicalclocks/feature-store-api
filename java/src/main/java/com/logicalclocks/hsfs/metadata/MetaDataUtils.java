@@ -22,7 +22,7 @@ import com.logicalclocks.base.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
-import com.logicalclocks.hsfs.StatisticsConfig;
+import com.logicalclocks.base.StatisticsConfig;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 
 import java.io.IOException;

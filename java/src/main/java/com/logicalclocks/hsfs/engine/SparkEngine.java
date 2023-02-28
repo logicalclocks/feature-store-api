@@ -28,7 +28,7 @@ import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.HudiOperationType;
 import com.logicalclocks.base.Split;
-import com.logicalclocks.hsfs.TimeTravelFormat;
+import com.logicalclocks.base.TimeTravelFormat;
 import com.logicalclocks.base.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.metadata.FeatureGroupBase;
@@ -319,7 +319,7 @@ public class SparkEngine {
   private Dataset<Row>[] timeSeriesSplit(TrainingDataset trainingDataset, Query query,
                                          Map<String, String> readOptions, Boolean dropEventTime)
       throws FeatureStoreException, IOException {
-    Dataset<Row> dataset = (Dataset<Row>) query.read(false, readOptions);
+    Dataset<Row> dataset = query.read(false, readOptions);
     List<Split> splits = trainingDataset.getSplits();
     Dataset<Row>[] datasetSplits = new Dataset[splits.size()];
     dataset.persist();
@@ -330,7 +330,7 @@ public class SparkEngine {
         String eventTimeType =
             query.getLeftFeatureGroup().getFeature(eventTime).getType();
 
-        if (BIGINT.getType().equals(eventTimeType)) {
+        if (BIGINT.name().equals(eventTimeType)) {
           String tmpEventTime = eventTime + "_hopsworks_tmp";
           sparkSession.sqlContext()
               .udf()
@@ -355,7 +355,7 @@ public class SparkEngine {
                   split.getEndTime().getTime()
               )
           ).drop(tmpEventTime);
-        } else if (DATE.getType().equals(eventTimeType) || TIMESTAMP.getType().equals(eventTimeType)) {
+        } else if (DATE.name().equals(eventTimeType) || TIMESTAMP.name().equals(eventTimeType)) {
           // unix_timestamp return in second. `getTime()` return in millisecond.
           datasetSplits[i] = dataset.filter(
               String.format(

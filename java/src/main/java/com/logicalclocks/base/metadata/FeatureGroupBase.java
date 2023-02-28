@@ -29,8 +29,8 @@ import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.engine.FeatureGroupBaseEngine;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 
-import com.logicalclocks.hsfs.TimeTravelFormat;
-import com.logicalclocks.hsfs.StatisticsConfig;
+import com.logicalclocks.base.TimeTravelFormat;
+import com.logicalclocks.base.StatisticsConfig;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -44,7 +44,7 @@ public abstract class FsQueryBase {
 
   @Getter
   @Setter
-  private List<ExternalFeatureGroupAlias> onDemandFeatureGroups;
+  private List<HudiFeatureGroupAlias> onDemandFeatureGroups;
 
   @Getter
   @Setter
