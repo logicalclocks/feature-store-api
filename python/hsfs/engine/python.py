@@ -28,6 +28,7 @@ import json
 import random
 import uuid
 import decimal
+import numbers
 from datetime import datetime, timezone
 
 import great_expectations as ge
@@ -307,10 +308,10 @@ class Engine:
     ):
         # TODO: add statistics for correlations, histograms and exact_uniqueness
         if not relevant_columns:
-            stats = df.describe()
+            stats = df.describe(datetime_is_numeric=True)
         else:
             target_cols = [col for col in df.columns if col in relevant_columns]
-            stats = df[target_cols].describe()
+            stats = df[target_cols].describe(datetime_is_numeric=True)
         final_stats = []
         for col in stats.columns:
             stat = self._convert_pandas_statistics(stats[col].to_dict())
@@ -338,7 +339,8 @@ class Engine:
         if "mean" in stat:
             content_dict["mean"] = stat["mean"]
         if "mean" in stat and "count" in stat:
-            content_dict["sum"] = stat["mean"] * stat["count"]
+            if isinstance(stat["mean"], numbers.Number):
+                content_dict["sum"] = stat["mean"] * stat["count"]
         if "max" in stat:
             content_dict["maximum"] = stat["max"]
         if "std" in stat:
