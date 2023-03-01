@@ -20,5 +20,5 @@ package com.logicalclocks.base.constructor;
 public enum SqlFilterLogic {
   AND,
   OR,
-  SINGLE;
+  SINGLE
 }
