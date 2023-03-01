@@ -59,8 +59,6 @@ import java.util.stream.Collectors;
 
 public class FeatureViewEngine extends FeatureViewEngineBase {
 
-  private FeatureViewApi featureViewApi = new FeatureViewApi();
-  private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_VIEW);
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureViewEngine.class);
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
