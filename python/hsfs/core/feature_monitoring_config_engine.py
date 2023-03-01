@@ -27,6 +27,8 @@ from hsfs.core.feature_monitoring_result_engine import FeatureMonitoringResultEn
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.util import convert_event_time_to_timestamp
 
+from hsfs.core.job import Job
+
 
 class FeatureMonitoringConfigEngine:
     def __init__(self, feature_store_id: int) -> None:
@@ -59,7 +61,13 @@ class FeatureMonitoringConfigEngine:
             description=description,
         )
 
-        config._job_id = self.setup_monitoring_job(config)
+        monitoring_job = self.setup_monitoring_job(
+            config_name=config.name,
+            feature_group_id=feature_group_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+        )
+        config._job_id = monitoring_job.id
 
         return self._feature_monitoring_config_api.create(
             fm_config=config,
@@ -97,7 +105,13 @@ class FeatureMonitoringConfigEngine:
             description=description,
         )
 
-        config._job_id = self.setup_monitoring_job(config)
+        monitoring_job = self.setup_monitoring_job(
+            config_name=config.name,
+            feature_group_id=feature_group_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+        )
+        config._job_id = monitoring_job.id
 
         return self._feature_monitoring_config_api.create(
             fm_config=config,
@@ -182,8 +196,34 @@ class FeatureMonitoringConfigEngine:
             statistics_comparison_config=statistics_comparison_config,
         )
 
-    def setup_monitoring_job(self, _config: FeatureMonitoringConfig) -> int:
-        return 1
+    def setup_monitoring_job(
+        self,
+        config_name: str,
+        feature_group_id: Optional[int] = None,
+        feature_view_name: Optional[str] = None,
+        feature_view_version: Optional[str] = None,
+    ) -> Job:
+
+        return self._feature_monitoring_config_api.setup_feature_monitoring_job(
+            config_name=config_name,
+            feature_group_id=feature_group_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+        )
+
+    def trigger_monitoring_job(
+        self,
+        config_id: int,
+        feature_group_id: Optional[int] = None,
+        feature_view_name: Optional[str] = None,
+        feature_view_version: Optional[str] = None,
+    ) -> Job:
+        return self._feature_monitoring_config_api.trigger_feature_monitoring_job(
+            config_id=config_id,
+            feature_group_id=feature_group_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+        )
 
     def run_feature_monitoring(
         self, feature_store: FeatureStore, config_id: int

@@ -137,7 +137,7 @@ class TestFeatureMonitoringResultEngine:
 
         # Act
         result_engine.save_feature_monitoring_result(
-            feature_monitoring_config_id=DEFAULT_CONFIG_ID,
+            config_id=DEFAULT_CONFIG_ID,
             execution_id=execution_id,
             detection_stats_id=detection_stats_id,
             reference_stats_id=reference_stats_id,
@@ -154,7 +154,7 @@ class TestFeatureMonitoringResultEngine:
         assert mock_result_api.call_args[1]["feature_view_name"] is None
         assert mock_result_api.call_args[1]["feature_view_version"] is None
         result = mock_result_api.call_args[0][0]
-        assert result._feature_monitoring_config_id == DEFAULT_CONFIG_ID
+        assert result._config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
         assert result._detection_stats_id == detection_stats_id
         assert result._reference_stats_id == reference_stats_id
@@ -187,7 +187,7 @@ class TestFeatureMonitoringResultEngine:
 
         # Act
         result_engine.save_feature_monitoring_result(
-            feature_monitoring_config_id=DEFAULT_CONFIG_ID,
+            config_id=DEFAULT_CONFIG_ID,
             execution_id=execution_id,
             detection_stats_id=detection_stats_id,
             reference_stats_id=reference_stats_id,
@@ -210,7 +210,7 @@ class TestFeatureMonitoringResultEngine:
             == DEFAULT_FEATURE_VIEW_VERSION
         )
         result = mock_result_api.call_args[0][0]
-        assert result._feature_monitoring_config_id == DEFAULT_CONFIG_ID
+        assert result._config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
         assert result._detection_stats_id == detection_stats_id
         assert result._reference_stats_id == reference_stats_id

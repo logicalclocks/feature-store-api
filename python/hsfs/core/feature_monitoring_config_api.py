@@ -17,6 +17,7 @@
 from typing import List, Optional
 from hsfs import client
 import hsfs.core.feature_monitoring_config as fmc
+from hsfs.core.job import Job
 
 
 class FeatureMonitoringConfigApi:
@@ -227,6 +228,102 @@ class FeatureMonitoringConfigApi:
         return fmc.FeatureMonitoringConfig.from_response_json(
             _client._send_request("GET", path_params)
         )
+
+    def pause_or_resume_monitoring(
+        self,
+        config_id: int,
+        enabled: bool,
+        feature_group_id: Optional[int] = None,
+        feature_view_name: Optional[str] = None,
+        feature_view_version: Optional[int] = None,
+    ) -> None:
+        """Pause or resume monitoring for a configuration.
+
+        :param config_id: Id of the feature monitoring configuration to pause or resume monitoring for
+        :type config_id: int
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
+        """
+        _client = client.get_instance()
+        path_params = self.build_path_params(
+            project_id=_client._project_id,
+            feature_group_id=feature_group_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+            config_id=config_id,
+        )
+        path_params.append("enabled")
+        if enabled:
+            path_params.append("RESUME")
+        else:
+            path_params.append("PAUSE")
+
+        _client._send_request("PUT", path_params)
+
+    def setup_feature_monitoring_job(
+        self,
+        config_name: str,
+        feature_group_id: Optional[int] = None,
+        feature_view_name: Optional[str] = None,
+        feature_view_version: Optional[int] = None,
+    ) -> Job:
+        """Setup a feature monitoring job for a configuration.
+
+        :param config_name: Name of the feature monitoring configuration to setup a job for
+        :type config_name: str
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
+        :return: Job object for the feature monitoring job
+        :rtype: Job
+        """
+        _client = client.get_instance()
+        path_params = self.build_path_params(
+            project_id=_client._project_id,
+            feature_group_id=feature_group_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+        )
+        path_params.extend(["setupJob", config_name])
+
+        return Job.from_response_json(_client._send_request("POST", path_params))
+
+    def trigger_feature_monitoring_job(
+        self,
+        config_id: int,
+        feature_group_id: Optional[int] = None,
+        feature_view_name: Optional[str] = None,
+        feature_view_version: Optional[int] = None,
+    ) -> Job:
+        """Trigger a feature monitoring job for a configuration.
+
+        :param config_id: Id of the feature monitoring configuration to trigger a job for
+        :type config_id: int
+        :param feature_group_id: id of the feature group, if attaching a config to a feature group
+        :type feature_group_id: int, optional
+        :param feature_view_name: name of the feature view, if attaching a config to a feature view
+        :type feature_view_name: str, optional
+        :param feature_view_version: version of the feature view, if attaching a config to a feature view
+        :type feature_view_version: int, optional
+        :return: Job object for the feature monitoring job
+        :rtype: Job
+        """
+        _client = client.get_instance()
+        path_params = self.build_path_params(
+            project_id=_client._project_id,
+            feature_group_id=feature_group_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+            config_id=config_id,
+        )
+        path_params.append("trigger")
 
     def build_path_params(
         self,

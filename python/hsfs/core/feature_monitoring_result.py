@@ -63,7 +63,7 @@ class FeatureMonitoringResult:
         return {
             "id": self._id,
             "featureStoreId": self._feature_store_id,
-            "configId": self._feature_monitoring_config_id,
+            "configId": self._config_id,
             "executionId": self._execution_id,
             "detectionStatsId": self._detection_stats_id,
             "referenceStatsId": self._reference_stats_id,

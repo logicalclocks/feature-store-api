@@ -15,6 +15,7 @@
 #
 
 from hsfs.core import feature_monitoring_config_engine
+from hsfs.core.job import Job
 
 DEFAULT_DESCRIPTION = "A feature monitoring configuration for unit test."
 DEFAULT_NAME = "test_monitoring_config"
@@ -22,6 +23,7 @@ DEFAULT_FEATURE_NAME = "monitored_feature"
 DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API = (
     "hsfs.core.feature_monitoring_config_api.FeatureMonitoringConfigApi.create"
 )
+DEFAULT_FEATURE_MONITORING_CONFIG_SETUP_JOB_API = "hsfs.core.feature_monitoring_config_api.FeatureMonitoringConfigApi.setup_feature_monitoring_job"
 DEFAULT_FEATURE_MONITORING_TYPE = "DESCRIPTIVE_STATISTICS"
 DEFAULT_FEATURE_STORE_ID = 67
 DEFAULT_FEATURE_GROUP_ID = 13
@@ -120,10 +122,15 @@ class TestFeatureMonitoringConfigEngine:
             == stats_comparison_configuration["compare_on"]
         )
 
-    def test_enable_feature_monitoring_config_fg(self, mocker):
+    def test_enable_feature_monitoring_config_fg(self, backend_fixtures, mocker):
         # Arrange
         mock_config_api = mocker.patch(
             "hsfs.core.feature_monitoring_config_api.FeatureMonitoringConfigApi.create"
+        )
+        job_json = backend_fixtures["job"]["get"]["response"]
+        mock_config_job_api = mocker.patch(
+            DEFAULT_FEATURE_MONITORING_CONFIG_SETUP_JOB_API,
+            return_value=Job.from_response_json(job_json),
         )
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
@@ -165,6 +172,7 @@ class TestFeatureMonitoringConfigEngine:
         )
         assert mock_config_api.call_args[1]["feature_view_name"] is None
         assert mock_config_api.call_args[1]["feature_view_version"] is None
+        assert mock_config_job_api.call_count == 1
         config = mock_config_api.call_args[1]["fm_config"]
         assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
         assert config._feature_group_id == DEFAULT_FEATURE_GROUP_ID
@@ -173,6 +181,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
+        assert config._job_id == job_json["id"]
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
@@ -198,9 +207,14 @@ class TestFeatureMonitoringConfigEngine:
             == stats_comparison_configuration["compare_on"]
         )
 
-    def test_enable_feature_monitoring_config_fv(self, mocker):
+    def test_enable_feature_monitoring_config_fv(self, backend_fixtures, mocker):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
+        job_json = backend_fixtures["job"]["get"]["response"]
+        mock_config_job_api = mocker.patch(
+            DEFAULT_FEATURE_MONITORING_CONFIG_SETUP_JOB_API,
+            return_value=Job.from_response_json(job_json),
+        )
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID
@@ -248,6 +262,7 @@ class TestFeatureMonitoringConfigEngine:
             == DEFAULT_FEATURE_VIEW_VERSION
         )
         config = mock_config_api.call_args[1]["fm_config"]
+        assert mock_config_job_api.call_count == 1
         assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
         assert config._feature_group_id is None
         assert config._feature_view_id == DEFAULT_FEATURE_VIEW_ID
@@ -255,6 +270,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
+        assert config._job_id == job_json["id"]
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
@@ -317,9 +333,16 @@ class TestFeatureMonitoringConfigEngine:
         assert config._detection_window_config["time_offset"] == "1w"
         assert config._detection_window_config["window_length"] == "1d"
 
-    def test_enable_descriptive_statistics_monitoring_fg(self, mocker):
+    def test_enable_descriptive_statistics_monitoring_fg(
+        self, backend_fixtures, mocker
+    ):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
+        job_json = backend_fixtures["job"]["get"]["response"]
+        mock_config_job_api = mocker.patch(
+            DEFAULT_FEATURE_MONITORING_CONFIG_SETUP_JOB_API,
+            return_value=Job.from_response_json(job_json),
+        )
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID
@@ -348,6 +371,7 @@ class TestFeatureMonitoringConfigEngine:
         assert mock_config_api.call_args[1]["feature_view_name"] is None
         assert mock_config_api.call_args[1]["feature_view_version"] is None
         config = mock_config_api.call_args[1]["fm_config"]
+        assert mock_config_job_api.call_count == 1
         assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
         assert config._feature_group_id == DEFAULT_FEATURE_GROUP_ID
         assert config._feature_view_id is None
@@ -355,15 +379,23 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
+        assert config._job_id == job_json["id"]
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config["window_config_type"] == "INSERT"
         assert config._detection_window_config["time_offset"] == "1w"
         assert config._detection_window_config["window_length"] == "1d"
 
-    def test_enable_descriptive_statistics_monitoring_fv(self, mocker):
+    def test_enable_descriptive_statistics_monitoring_fv(
+        self, backend_fixtures, mocker
+    ):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
+        job_json = backend_fixtures["job"]["get"]["response"]
+        mock_config_job_api = mocker.patch(
+            DEFAULT_FEATURE_MONITORING_CONFIG_SETUP_JOB_API,
+            return_value=Job.from_response_json(job_json),
+        )
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID
@@ -397,6 +429,7 @@ class TestFeatureMonitoringConfigEngine:
             == DEFAULT_FEATURE_VIEW_VERSION
         )
         config = mock_config_api.call_args[1]["fm_config"]
+        assert mock_config_job_api.call_count == 1
         assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
         assert config._feature_group_id is None
         assert config._feature_view_id == DEFAULT_FEATURE_VIEW_ID
@@ -404,6 +437,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._name == DEFAULT_NAME
         assert config._description is None
+        assert config._job_id == job_json["id"]
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config["window_config_type"] == "BATCH"

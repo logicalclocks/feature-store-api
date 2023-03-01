@@ -33,7 +33,7 @@ class FeatureMonitoringResultEngine:
 
     def save_feature_monitoring_result(
         self,
-        feature_monitoring_config_id: int,
+        config_id: int,
         execution_id: int,
         detection_stats_id: int,
         shift_detected: bool = False,
@@ -47,7 +47,7 @@ class FeatureMonitoringResultEngine:
         """Save feature monitoring result.
 
         # Arguments
-            feature_monitoring_config_id: int. Id of the feature monitoring configuration.
+            config_id: int. Id of the feature monitoring configuration.
             execution_id: int. Id of the job execution.
             detection_stats_id: int. Id of the detection statistics.
             shift_detected: bool. Whether a shift is detected between the detection and reference window.
@@ -68,7 +68,7 @@ class FeatureMonitoringResultEngine:
 
         result = FeatureMonitoringResult(
             feature_store_id=self._feature_store_id,
-            feature_monitoring_config_id=feature_monitoring_config_id,
+            config_id=config_id,
             execution_id=execution_id,
             detection_stats_id=detection_stats_id,
             reference_stats_id=reference_stats_id,
@@ -198,7 +198,7 @@ class FeatureMonitoringResultEngine:
             shift_detected = False
 
         return self.save_feature_monitoring_result(
-            feature_monitoring_config_id=fm_config.id,
+            config_id=fm_config.id,
             execution_id=DEFAULT_EXECUTION_ID,
             detection_stats_id=detection_stats_id,
             reference_stats_id=reference_stats_id,
