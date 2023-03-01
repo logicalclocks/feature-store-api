@@ -59,7 +59,7 @@ public class Query extends QueryBase {
 
   @Override
   public String sql() {
-    // overriding toString does not work wtih jackson
+    // overriding toString does not work with jackson
     return sql(Storage.OFFLINE);
   }
 
