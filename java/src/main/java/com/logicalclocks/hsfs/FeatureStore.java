@@ -20,7 +20,6 @@ package com.logicalclocks.hsfs;
 import com.logicalclocks.base.FeatureStoreBase;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.StatisticsConfig;
-import com.logicalclocks.base.StorageConnectorBase;
 import com.logicalclocks.base.TimeTravelFormat;
 import com.logicalclocks.base.TrainingDatasetBase;
 import com.logicalclocks.base.FeatureGroupBase;
@@ -266,9 +265,9 @@ public class FeatureStore extends FeatureStoreBase {
     return storageConnectorApi.getByName(this, name, StorageConnector.S3Connector.class);
   }
 
-  public StorageConnectorBase.HopsFsConnectorBase getHopsFsConnector(String name) throws FeatureStoreException,
+  public StorageConnector.HopsFsConnector getHopsFsConnector(String name) throws FeatureStoreException,
       IOException {
-    return storageConnectorApi.getByName(this, name, StorageConnectorBase.HopsFsConnectorBase.class);
+    return storageConnectorApi.getByName(this, name, StorageConnector.HopsFsConnector.class);
   }
 
   public StorageConnector.RedshiftConnector getRedshiftConnector(String name)

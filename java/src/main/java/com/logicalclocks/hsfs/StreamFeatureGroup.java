@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import com.logicalclocks.base.DeltaStreamerJobConf;
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.Feature;
@@ -27,18 +28,16 @@ import com.logicalclocks.base.JobConfiguration;
 import com.logicalclocks.base.StatisticsConfig;
 import com.logicalclocks.base.engine.CodeEngine;
 import com.logicalclocks.base.FeatureGroupBase;
-
 import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.hsfs.constructor.Query;
-
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+
 import org.apache.avro.Schema;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -56,35 +55,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StreamFeatureGroup extends FeatureGroupBase {
-
-  @Getter
-  @Setter
-  @JsonIgnore
-  private FeatureStore featureStore;
-
-  @Getter
-  @Setter
-  private Boolean onlineEnabled;
-
-  @Getter
-  @Setter
-  private StorageConnector onlineStorageConnector;
-
-  @Getter
-  @Setter
-  private StorageConnector offlineStorageConnector;
-
-  @Getter
-  @Setter
-  private List<String> statisticColumns;
-
-  @JsonIgnore
-  // These are only used in the client. In the server they are aggregated in the `features` field
-  private List<String> partitionKeys;
-
-  @JsonIgnore
-  // This is only used in the client. In the server they are aggregated in the `features` field
-  private String hudiPrecombineKey;
 
   @Setter
   private DeltaStreamerJobConf deltaStreamerJobConf;

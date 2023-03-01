@@ -21,9 +21,7 @@ import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.SecurityProtocol;
 import com.logicalclocks.base.SslEndpointIdentificationAlgorithm;
 import com.logicalclocks.base.StorageConnectorBase;
-import com.logicalclocks.base.StorageConnectorType;
 import com.logicalclocks.base.metadata.Option;
-import com.logicalclocks.base.metadata.StorageConnectorApi;
 import com.logicalclocks.base.util.Constants;
 
 import java.io.IOException;
@@ -36,7 +34,6 @@ import com.logicalclocks.hsfs.engine.SparkEngine;
 import com.google.common.base.Strings;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.spark.sql.Dataset;
@@ -53,7 +50,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
-@NoArgsConstructor
 @ToString
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "storageConnectorType", visible = true)
@@ -70,22 +66,6 @@ import java.util.stream.Collectors;
 })
 
 public abstract class StorageConnector extends StorageConnectorBase {
-  @Getter @Setter
-  protected StorageConnectorType storageConnectorType;
-
-  @Getter @Setter
-  private Integer id;
-
-  @Getter @Setter
-  private String name;
-
-  @Getter @Setter
-  private String description;
-
-  @Getter @Setter
-  private Integer featurestoreId;
-
-  protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
   @Override
   public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
@@ -95,17 +75,6 @@ public abstract class StorageConnector extends StorageConnectorBase {
 
   public StorageConnector refetch() throws FeatureStoreException, IOException {
     return storageConnectorApi.get(getFeaturestoreId(), getName(), StorageConnector.class);
-  }
-
-  @JsonIgnore
-  @Override
-  public String getPath(String subPath) throws FeatureStoreException {
-    return null;
-  }
-
-  @Override
-  public Map<String, String> sparkOptions() throws IOException {
-    return null;
   }
 
   public static class S3Connector extends StorageConnector {
@@ -156,22 +125,7 @@ public abstract class StorageConnector extends StorageConnectorBase {
     }
   }
 
-  public static class HopsFsConnector extends StorageConnector {
-
-    @Getter @Setter
-    private String hopsfsPath;
-
-    @Getter @Setter
-    private String datasetName;
-
-    public Map<String, String> sparkOptions() {
-      return new HashMap<>();
-    }
-
-    @JsonIgnore
-    public String getPath(String subPath) {
-      return hopsfsPath + "/" + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
-    }
+  public static class HopsFsConnector extends HopsFsConnectorBase {
   }
 
   public static class RedshiftConnector extends StorageConnector {
@@ -295,12 +249,6 @@ public abstract class StorageConnector extends StorageConnectorBase {
       Map<String, String> options = new HashMap<>();
       sparkOptions.stream().forEach(option -> options.put(option.getName(), option.getValue()));
       return options;
-    }
-
-    @Override
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
-        throws FeatureStoreException, IOException {
-      return null;
     }
   }
 
@@ -510,12 +458,7 @@ public abstract class StorageConnector extends StorageConnectorBase {
       throw new NotSupportedException("Reading a Kafka Stream into a static Spark Dataframe is not supported.");
     }
 
-    @JsonIgnore
-    public String getPath(String subPath) {
-      return null;
-    }
-
-    public Object readStream(String topic, boolean topicPattern, String messageFormat, String schema,
+    public Dataset<Row> readStream(String topic, boolean topicPattern, String messageFormat, String schema,
                              Map<String, String> options, boolean includeMetadata) throws FeatureStoreException,
         IOException {
       if (!Arrays.asList("avro", "json", null).contains(messageFormat.toLowerCase())) {
@@ -530,6 +473,12 @@ public abstract class StorageConnector extends StorageConnectorBase {
 
       return SparkEngine.getInstance().readStream(this, sparkFormat, messageFormat.toLowerCase(),
           schema, options, includeMetadata);
+    }
+
+    @JsonIgnore
+    @Override
+    public String getPath(String subPath) throws FeatureStoreException {
+      return null;
     }
   }
 
@@ -560,12 +509,6 @@ public abstract class StorageConnector extends StorageConnectorBase {
     @Override
     public Map<String, String> sparkOptions() {
       return new HashMap<>();
-    }
-
-    @Override
-    public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
-        throws FeatureStoreException, IOException {
-      return null;
     }
   }
 

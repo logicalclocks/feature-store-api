@@ -51,16 +51,16 @@ public abstract class StorageConnectorBase {
   protected StorageConnectorType storageConnectorType;
 
   @Getter @Setter
-  private Integer id;
+  protected Integer id;
 
   @Getter @Setter
-  private String name;
+  protected String name;
 
   @Getter @Setter
-  private String description;
+  protected String description;
 
   @Getter @Setter
-  private Integer featurestoreId;
+  protected Integer featurestoreId;
 
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
@@ -77,10 +77,10 @@ public abstract class StorageConnectorBase {
   public static class HopsFsConnectorBase extends StorageConnectorBase {
 
     @Getter @Setter
-    private String hopsfsPath;
+    protected String hopsfsPath;
 
     @Getter @Setter
-    private String datasetName;
+    protected String datasetName;
 
     public Map<String, String> sparkOptions() {
       return new HashMap<>();

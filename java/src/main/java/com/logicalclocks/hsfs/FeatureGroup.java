@@ -36,9 +36,7 @@ import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -58,22 +56,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FeatureGroup extends FeatureGroupBase {
-
-  @Getter
-  @Setter
-  private Boolean onlineEnabled;
-
-  @Getter
-  @Setter
-  private List<String> statisticColumns;
-
-  @JsonIgnore
-  // These are only used in the client. In the server they are aggregated in the `features` field
-  private List<String> partitionKeys;
-
-  @JsonIgnore
-  // This is only used in the client. In the server they are aggregated in the `features` field
-  private String hudiPrecombineKey;
 
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   protected StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);

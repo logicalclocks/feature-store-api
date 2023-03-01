@@ -102,7 +102,23 @@ public class FeatureGroupBase {
 
   @Getter
   @Setter
+  protected Boolean onlineEnabled;
+
+  @Getter
+  @Setter
   protected String onlineTopicName;
+
+  @Getter
+  @Setter
+  protected List<String> statisticColumns;
+
+  @JsonIgnore
+  // These are only used in the client. In the server they are aggregated in the `features` field
+  protected List<String> partitionKeys;
+
+  @JsonIgnore
+  // This is only used in the client. In the server they are aggregated in the `features` field
+  protected String hudiPrecombineKey;
 
   @JsonIgnore
   protected Subject subject;

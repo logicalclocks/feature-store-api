@@ -18,15 +18,15 @@
 package com.logicalclocks.base;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.google.common.collect.Lists;
 import com.logicalclocks.base.constructor.FilterLogic;
-import com.logicalclocks.base.constructor.QueryBase;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.engine.VectorServer;
 import com.logicalclocks.base.metadata.Statistics;
 
+import com.logicalclocks.hsfs.DataFormat;
+import com.logicalclocks.hsfs.StorageConnector;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -89,11 +89,6 @@ public abstract class TrainingDatasetBase {
   @Setter
   protected String trainSplit;
 
-  @Getter
-  @Setter
-  @JsonProperty("queryDTO")
-  protected QueryBase queryBaseInt;
-
   @JsonIgnore
   protected List<String> label;
 
@@ -108,6 +103,19 @@ public abstract class TrainingDatasetBase {
   @Getter
   @Setter
   protected FilterLogic extraFilter;
+
+  @Getter
+  @Setter
+  protected DataFormat dataFormat;
+
+  @Getter
+  @Setter
+  protected StorageConnector storageConnector;
+
+
+  @Getter
+  @Setter
+  protected StatisticsConfig statisticsConfig = new StatisticsConfig();
 
   @Getter
   @Setter

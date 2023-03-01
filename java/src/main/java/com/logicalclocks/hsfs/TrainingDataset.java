@@ -27,7 +27,6 @@ import com.logicalclocks.base.Split;
 import com.logicalclocks.base.StatisticsConfig;
 import com.logicalclocks.base.Storage;
 import com.logicalclocks.base.TrainingDatasetBase;
-import com.logicalclocks.base.TrainingDatasetFeature;
 import com.logicalclocks.base.TrainingDatasetType;
 import com.logicalclocks.base.constructor.Filter;
 import com.logicalclocks.base.constructor.FilterLogic;
@@ -56,22 +55,6 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class TrainingDataset extends TrainingDatasetBase {
-
-  @Getter
-  @Setter
-  private DataFormat dataFormat;
-
-  @Getter
-  @Setter
-  private StorageConnector storageConnector;
-
-  @Getter
-  @Setter
-  private List<TrainingDatasetFeature> features;
-
-  @Getter
-  @Setter
-  private StatisticsConfig statisticsConfig = new StatisticsConfig();
 
   @Getter
   @Setter
