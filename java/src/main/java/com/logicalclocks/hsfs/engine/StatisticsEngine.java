@@ -20,7 +20,7 @@ package com.logicalclocks.hsfs.engine;
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.Split;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.metadata.SplitStatistics;
 import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.base.metadata.StatisticsApi;

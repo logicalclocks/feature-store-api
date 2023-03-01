@@ -21,11 +21,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.logicalclocks.base.FeatureStoreBase;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.Split;
 import com.logicalclocks.base.StatisticsConfig;
-import com.logicalclocks.base.TrainingDatasetFeature;
 import com.logicalclocks.base.TrainingDatasetType;
 import com.logicalclocks.base.constructor.Filter;
 import com.logicalclocks.base.constructor.FilterLogic;
@@ -55,41 +55,7 @@ public class FeatureView extends FeatureViewBase {
   @Getter
   @Setter
   @JsonIgnore
-  private Integer id;
-
-  @Getter
-  @Setter
-  private String name;
-
-  @Getter
-  @Setter
-  private Integer version;
-
-  @Getter
-  @Setter
-  private String description;
-
-  @Getter
-  @Setter
-  private List<TrainingDatasetFeature> features;
-
-  @Getter
-  @Setter
-  @JsonIgnore
   private FeatureStore featureStore;
-
-  @Getter
-  @Setter
-  private Query query;
-
-  @Getter
-  @Setter
-  @JsonIgnore
-  private List<String> labels;
-
-  @Getter
-  @Setter
-  private String type = "featureViewDTO";
 
   private static final FeatureViewEngine featureViewEngine = new FeatureViewEngine();
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
@@ -166,7 +132,7 @@ public class FeatureView extends FeatureViewBase {
     featureViewEngine.delete(this.featureStore, this.name, this.version);
   }
 
-  public void clean(FeatureStore featureStore, String featureViewName, Integer featureViewVersion)
+  public void clean(FeatureStoreBase featureStore, String featureViewName, Integer featureViewVersion)
       throws FeatureStoreException, IOException {
     featureViewEngine.delete(featureStore, featureViewName, featureViewVersion);
   }

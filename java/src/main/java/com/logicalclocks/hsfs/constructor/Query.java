@@ -25,7 +25,7 @@ import com.logicalclocks.base.constructor.FilterLogic;
 import com.logicalclocks.base.constructor.Join;
 import com.logicalclocks.base.constructor.JoinType;
 import com.logicalclocks.base.constructor.QueryBase;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.metadata.QueryConstructorApi;
 import com.logicalclocks.base.metadata.StorageConnectorApi;
 

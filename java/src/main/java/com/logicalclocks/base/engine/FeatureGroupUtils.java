@@ -20,7 +20,7 @@ package com.logicalclocks.base.engine;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreBase;
 import com.logicalclocks.base.metadata.FeatureGroupApi;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.metadata.HopsworksClient;
 import com.logicalclocks.base.metadata.KafkaApi;
 import com.logicalclocks.base.FeatureGroupCommit;

@@ -35,41 +35,41 @@ public abstract class FeatureViewBase {
   @Getter
   @Setter
   @JsonIgnore
-  private Integer id;
+  protected Integer id;
 
   @Getter
   @Setter
-  private String name;
+  protected String name;
 
   @Getter
   @Setter
-  private Integer version;
+  protected Integer version;
 
   @Getter
   @Setter
-  private String description;
+  protected String description;
 
   @Getter
   @Setter
-  private List<TrainingDatasetFeature> features;
-
-  @Getter
-  @Setter
-  @JsonIgnore
-  private FeatureStoreBase featureStore;
-
-  @Getter
-  @Setter
-  private QueryBase query;
+  protected List<TrainingDatasetFeature> features;
 
   @Getter
   @Setter
   @JsonIgnore
-  private List<String> labels;
+  protected FeatureStoreBase featureStore;
 
   @Getter
   @Setter
-  private String type;
+  protected QueryBase query;
+
+  @Getter
+  @Setter
+  @JsonIgnore
+  protected List<String> labels;
+
+  @Getter
+  @Setter
+  protected String type = "featureViewDTO";
 
   protected static VectorServer vectorServer = new VectorServer();
   protected Integer extraFilterVersion = null;
@@ -110,16 +110,6 @@ public abstract class FeatureViewBase {
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
     return vectorServer.getFeatureVectors(this, entry, external);
   }
-
-  public abstract void delete() throws FeatureStoreException, IOException;
-
-  @JsonIgnore
-  public abstract String getBatchQuery(String startTime, String endTime)
-      throws FeatureStoreException, IOException, ParseException;
-
-  @JsonIgnore
-  public abstract Object getBatchData(String startTime, String endTime, Map<String, String> readOptions)
-      throws FeatureStoreException, IOException, ParseException;
 
   /**
    * Add name/value tag to the feature view.
@@ -228,6 +218,14 @@ public abstract class FeatureViewBase {
     return vectorServer.getServingKeys();
   }
 
+  @JsonIgnore
+  public abstract String getBatchQuery(String startTime, String endTime)
+      throws FeatureStoreException, IOException, ParseException;
+
+  @JsonIgnore
+  public abstract Object getBatchData(String startTime, String endTime, Map<String, String> readOptions)
+      throws FeatureStoreException, IOException, ParseException;
+
   public abstract Object getTrainingData(Integer version, Map<String, String> readOptions)
       throws IOException, FeatureStoreException, ParseException;
 
@@ -237,6 +235,8 @@ public abstract class FeatureViewBase {
   public abstract Object getTrainValidationTestSplit(Integer version, Map<String, String> readOptions)
       throws IOException, FeatureStoreException, ParseException;
 
+  public abstract void delete() throws FeatureStoreException, IOException;
+
   public abstract void purgeTrainingData(Integer version) throws FeatureStoreException, IOException;
 
   public abstract void purgeAllTrainingData() throws FeatureStoreException, IOException;
@@ -244,4 +244,7 @@ public abstract class FeatureViewBase {
   public abstract void deleteTrainingDataset(Integer version) throws FeatureStoreException, IOException;
 
   public abstract void deleteAllTrainingDatasets() throws FeatureStoreException, IOException;
+
+  public abstract void clean(FeatureStoreBase featureStore, String featureViewName, Integer featureViewVersion)
+      throws FeatureStoreException, IOException;
 }

@@ -19,13 +19,10 @@ package com.logicalclocks.hsfs;
 
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
-import com.logicalclocks.base.engine.FeatureGroupBaseEngine;
 import com.logicalclocks.base.metadata.FeatureGroupApi;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.metadata.HopsworksClient;
 import com.logicalclocks.base.metadata.HopsworksHttpClient;
-import com.logicalclocks.base.metadata.Subject;
-import com.logicalclocks.base.metadata.TagsApi;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 

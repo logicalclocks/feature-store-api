@@ -19,6 +19,7 @@ package com.logicalclocks.base.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.base.EntityEndpointType;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.TrainingDatasetBase;
 import lombok.NonNull;

@@ -18,7 +18,7 @@
 package com.logicalclocks.base.engine;
 
 import com.logicalclocks.base.metadata.FeatureGroupApi;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.metadata.TagsApi;
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.Feature;

@@ -24,7 +24,7 @@ import com.logicalclocks.base.HudiOperationType;
 import com.logicalclocks.base.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.metadata.FeatureGroupApi;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.metadata.KafkaApi;
 import com.logicalclocks.base.metadata.PartitionDetails;
 

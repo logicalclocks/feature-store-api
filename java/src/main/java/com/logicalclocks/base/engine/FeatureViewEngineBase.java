@@ -22,7 +22,7 @@ import com.google.common.collect.Maps;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.constructor.Join;
 import com.logicalclocks.base.constructor.QueryBase;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.metadata.FeatureViewApi;
 import com.logicalclocks.base.metadata.TagsApi;
 import com.logicalclocks.base.EntityEndpointType;
@@ -30,8 +30,6 @@ import com.logicalclocks.base.FeatureStoreBase;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.TrainingDatasetFeature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Date;
@@ -41,9 +39,8 @@ import java.util.stream.Collectors;
 
 public abstract class FeatureViewEngineBase {
 
-  private FeatureViewApi featureViewApi = new FeatureViewApi();
-  private TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_VIEW);
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureViewEngineBase.class);
+  protected FeatureViewApi featureViewApi = new FeatureViewApi();
+  protected TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_VIEW);
   public static String AMBIGUOUS_LABEL_ERROR = "Provided label '%s' is ambiguous and exists in more than one feature "
       + "groups. You can provide the label with the prefix you specify in the join.";
   public static String LABEL_NOT_EXIST_ERROR = "Provided label '%s' do not exist in any of the feature groups.";
@@ -56,7 +53,7 @@ public abstract class FeatureViewEngineBase {
     return featureViewBase;
   }
 
-  static List<TrainingDatasetFeature> makeLabelFeatures(QueryBase query, List<String> labels)
+  public static List<TrainingDatasetFeature> makeLabelFeatures(QueryBase query, List<String> labels)
       throws FeatureStoreException {
     if (labels == null || labels.isEmpty()) {
       return Lists.newArrayList();

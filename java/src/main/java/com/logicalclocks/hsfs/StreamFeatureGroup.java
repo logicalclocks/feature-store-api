@@ -25,9 +25,8 @@ import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.JobConfiguration;
 import com.logicalclocks.base.StatisticsConfig;
-import com.logicalclocks.base.TimeTravelFormat;
 import com.logicalclocks.base.engine.CodeEngine;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 
 import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.hsfs.constructor.Query;
@@ -45,8 +44,6 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.streaming.StreamingQuery;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -89,22 +86,12 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   // This is only used in the client. In the server they are aggregated in the `features` field
   private String hudiPrecombineKey;
 
-  @Getter(onMethod = @__(@Override))
-  @Setter(onMethod = @__(@Override))
-  private String onlineTopicName;
-
   @Setter
   private DeltaStreamerJobConf deltaStreamerJobConf;
-
-  @Getter(onMethod = @__(@Override))
-  @Setter
-  private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
 
   protected FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(StreamFeatureGroup.class);
 
   @Builder
   public StreamFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
@@ -161,7 +148,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     return read(online, null);
   }
 
-  @Override
   public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return selectAll().read(online, readOptions);
   }
@@ -353,12 +339,10 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     return utils.getDeserializedAvroSchema(getAvroSchema());
   }
 
-  @Override
   public Query selectFeatures(List<Feature> features) {
     return new Query(this, features);
   }
 
-  @Override
   public Query select(List<String> features) {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
@@ -366,18 +350,15 @@ public class StreamFeatureGroup extends FeatureGroupBase {
     return selectFeatures(featureObjList);
   }
 
-  @Override
   public Query selectAll() {
     return new Query(this, getFeatures());
   }
 
-  @Override
   public Query selectExceptFeatures(List<Feature> features) {
     List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
     return selectExcept(exceptFeatures);
   }
 
-  @Override
   public Query selectExcept(List<String> features) {
     return new Query(this,
         getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));

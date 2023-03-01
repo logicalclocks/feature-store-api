@@ -20,6 +20,7 @@ package com.logicalclocks.base.metadata;
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.base.DeltaStreamerJobConf;
 import com.logicalclocks.base.Feature;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.FeatureGroupCommit;
 import com.logicalclocks.base.FeatureStoreBase;
 import com.logicalclocks.base.FeatureStoreException;

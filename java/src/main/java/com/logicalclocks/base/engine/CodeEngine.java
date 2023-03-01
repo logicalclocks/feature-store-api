@@ -22,7 +22,7 @@ import com.databricks.dbutils_v1.DBUtilsHolder;
 import com.google.common.base.Strings;
 import com.logicalclocks.base.metadata.Code;
 import com.logicalclocks.base.metadata.CodeApi;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.TrainingDatasetBase;

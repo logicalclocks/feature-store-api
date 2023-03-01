@@ -22,7 +22,7 @@ import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.Storage;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class QueryBase {
+public abstract class QueryBase {
 
   @Getter
   @Setter
@@ -67,13 +67,9 @@ public class QueryBase {
     this.leftFeatures = leftFeatures;
   }
 
-  public String sql() {
-    return null;
-  }
+  public abstract String sql();
 
-  public String sql(Storage storage) {
-    return null;
-  }
+  public abstract String sql(Storage storage);
 
   public QueryBase genericJoin(QueryBase subquery) {
     return genericJoin(subquery, JoinType.INNER);
@@ -270,12 +266,8 @@ public class QueryBase {
     return false;
   }
 
-  public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException,
-      IOException {
-    return null;
-  }
+  public abstract Object read(boolean online, Map<String, String> readOptions)
+      throws FeatureStoreException, IOException;
 
-  public void show(boolean online, int numRows) throws FeatureStoreException, IOException {
-
-  }
+  public abstract void show(boolean online, int numRows) throws FeatureStoreException, IOException;
 }

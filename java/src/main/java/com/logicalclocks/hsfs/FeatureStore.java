@@ -23,7 +23,7 @@ import com.logicalclocks.base.StatisticsConfig;
 import com.logicalclocks.base.StorageConnectorBase;
 import com.logicalclocks.base.TimeTravelFormat;
 import com.logicalclocks.base.TrainingDatasetBase;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.metadata.StorageConnectorApi;
 import com.logicalclocks.base.metadata.TrainingDatasetApi;
 
@@ -48,15 +48,11 @@ import java.util.List;
 
 public class FeatureStore extends FeatureStoreBase {
 
-  private FeatureGroupEngine featureGroupEngine;
   private MetaDataUtils metaDataUtils = new MetaDataUtils();
-  private TrainingDatasetApi trainingDatasetApi;
-  private StorageConnectorApi storageConnectorApi;
+  private FeatureGroupEngine featureGroupEngine;
   private FeatureViewEngine featureViewEngine;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
-
-  private static final Integer DEFAULT_VERSION = 1;
 
   public FeatureStore() {
     trainingDatasetApi = new TrainingDatasetApi();
@@ -158,7 +154,6 @@ public class FeatureStore extends FeatureStoreBase {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
-  @Override
   public StreamFeatureGroup getStreamFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
     return metaDataUtils.getStreamFeatureGroup(this, name, version);
@@ -172,27 +167,23 @@ public class FeatureStore extends FeatureStoreBase {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
-  @Override
   public StreamFeatureGroup getStreamFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
     return getStreamFeatureGroup(name, DEFAULT_VERSION);
   }
 
-  @Override
   public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
     return StreamFeatureGroup.builder()
         .featureStore(this);
   }
 
-  @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version)
       throws IOException, FeatureStoreException {
     return metaDataUtils.getOrCreateStreamFeatureGroup(this, name, version, null,
         null, null, null, false, null, null);
   }
 
-  @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
                                                           boolean onlineEnabled, String eventTime)
       throws IOException, FeatureStoreException {
@@ -200,7 +191,6 @@ public class FeatureStore extends FeatureStoreBase {
         primaryKeys, null, null, onlineEnabled, null, eventTime);
   }
 
-  @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
                                                           List<String> partitionKeys, boolean onlineEnabled,
                                                           String eventTime) throws IOException, FeatureStoreException {
@@ -221,7 +211,6 @@ public class FeatureStore extends FeatureStoreBase {
         primaryKeys, partitionKeys, hudiPrecombineKey, onlineEnabled, statisticsConfig, eventTime);
   }
 
-  @Override
   public ExternalFeatureGroup.ExternalFeatureGroupBuilder createExternalFeatureGroup() {
     return ExternalFeatureGroup.builder()
         .featureStore(this);
@@ -428,7 +417,6 @@ public class FeatureStore extends FeatureStoreBase {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
-  @Override
   public TrainingDataset getTrainingDataset(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
     return (TrainingDataset) trainingDatasetApi.getTrainingDataset(this, name, version);
@@ -442,14 +430,12 @@ public class FeatureStore extends FeatureStoreBase {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
-  @Override
   public TrainingDataset getTrainingDataset(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
     return getTrainingDataset(name, DEFAULT_VERSION);
   }
 
-  @Override
   public Seq<TrainingDataset> getTrainingDatasets(@NonNull String name)
       throws FeatureStoreException, IOException {
 

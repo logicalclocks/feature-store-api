@@ -29,7 +29,7 @@ import com.logicalclocks.base.StatisticsConfig;
 import com.logicalclocks.base.Storage;
 import com.logicalclocks.base.TimeTravelFormat;
 import com.logicalclocks.base.engine.CodeEngine;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
@@ -44,8 +44,6 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.avro.Schema;
 
 import java.io.IOException;
@@ -63,11 +61,6 @@ public class FeatureGroup extends FeatureGroupBase {
 
   @Getter
   @Setter
-  @JsonIgnore
-  private FeatureStore featureStore;
-
-  @Getter
-  @Setter
   private Boolean onlineEnabled;
 
   @Getter
@@ -82,15 +75,9 @@ public class FeatureGroup extends FeatureGroupBase {
   // This is only used in the client. In the server they are aggregated in the `features` field
   private String hudiPrecombineKey;
 
-  @Getter(onMethod = @__(@Override))
-  @Setter(onMethod = @__(@Override))
-  private String onlineTopicName;
-
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   protected StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
   @Builder
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version,
@@ -152,7 +139,6 @@ public class FeatureGroup extends FeatureGroupBase {
     return read(false, readOptions);
   }
 
-  @Override
   public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return selectAll().read(online, readOptions);
   }
@@ -561,12 +547,10 @@ public class FeatureGroup extends FeatureGroupBase {
     return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);
   }
 
-  @Override
   public Query selectFeatures(List<Feature> features) {
     return new Query(this, features);
   }
 
-  @Override
   public Query select(List<String> features) {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
@@ -574,18 +558,15 @@ public class FeatureGroup extends FeatureGroupBase {
     return selectFeatures(featureObjList);
   }
 
-  @Override
   public Query selectAll() {
     return new Query(this, getFeatures());
   }
 
-  @Override
   public Query selectExceptFeatures(List<Feature> features) {
     List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
     return selectExcept(exceptFeatures);
   }
 
-  @Override
   public Query selectExcept(List<String> features) {
     return new Query(this,
         getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));

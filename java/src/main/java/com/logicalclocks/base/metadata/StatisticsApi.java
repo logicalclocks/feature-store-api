@@ -19,6 +19,7 @@ package com.logicalclocks.base.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.base.EntityEndpointType;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.TrainingDatasetBase;
@@ -35,12 +36,11 @@ import static com.logicalclocks.base.metadata.HopsworksClient.getInstance;
 
 public class StatisticsApi {
 
-  public static final String ENTITY_ROOT_PATH = "{/entityType}";
-  public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
-  public static final String STATISTICS_PATH = ENTITY_ID_PATH + "/statistics{?filter_by,fields,sort_by,offset,limit}";
-  public static final String FV_STATISTICS_PATH = "/featureview{/fvName}/version{/fvVersion}"
+  private static final String ENTITY_ROOT_PATH = "{/entityType}";
+  private static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
+  private static final String STATISTICS_PATH = ENTITY_ID_PATH + "/statistics{?filter_by,fields,sort_by,offset,limit}";
+  private static final String FV_STATISTICS_PATH = "/featureview{/fvName}/version{/fvVersion}"
       + "/trainingdatasets/version{/tdVersion}/statistics{?filter_by,fields,sort_by,offset,limit}";
-
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StatisticsApi.class);
 

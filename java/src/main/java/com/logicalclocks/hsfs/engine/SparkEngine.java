@@ -31,7 +31,7 @@ import com.logicalclocks.base.Split;
 import com.logicalclocks.base.TimeTravelFormat;
 import com.logicalclocks.base.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.metadata.HopsworksClient;
 import com.logicalclocks.base.metadata.HopsworksHttpClient;
 import com.logicalclocks.base.metadata.KafkaApi;

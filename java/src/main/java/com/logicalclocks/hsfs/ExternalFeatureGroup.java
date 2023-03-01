@@ -26,7 +26,7 @@ import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.StatisticsConfig;
 import com.logicalclocks.base.TimeTravelFormat;
 import com.logicalclocks.base.engine.CodeEngine;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.metadata.OnDemandOptions;
 import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.hsfs.constructor.Query;
@@ -134,21 +134,14 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
     return selectAll().read();
   }
 
-  @Override
-  public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
-    return null;
-  }
-
   public void show(int numRows) throws FeatureStoreException, IOException {
     read().show(numRows);
   }
 
-  @Override
   public Query selectFeatures(List<Feature> features) {
     return new Query(this, features);
   }
 
-  @Override
   public Query select(List<String> features) {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
@@ -156,18 +149,15 @@ public class ExternalFeatureGroup extends FeatureGroupBase {
     return selectFeatures(featureObjList);
   }
 
-  @Override
   public Query selectAll() {
     return new Query(this, getFeatures());
   }
 
-  @Override
   public Query selectExceptFeatures(List<Feature> features) {
     List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
     return selectExcept(exceptFeatures);
   }
 
-  @Override
   public Query selectExcept(List<String> features) {
     return new Query(this,
         getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));

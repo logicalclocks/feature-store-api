@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.base.engine.FeatureViewEngineBase;
 import com.logicalclocks.base.metadata.FeatureGroupApi;
 import com.logicalclocks.base.metadata.StorageConnectorApi;
+import com.logicalclocks.base.metadata.TrainingDatasetApi;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -46,13 +47,15 @@ public abstract class FeatureStoreBase {
   @Setter
   private Integer projectId;
 
-  private FeatureGroupApi featureGroupApi;
-  private StorageConnectorApi storageConnectorApi;
-  private FeatureViewEngineBase featureViewEngineBase;
+  protected FeatureGroupApi featureGroupApi;
+  protected TrainingDatasetApi trainingDatasetApi;
+  protected StorageConnectorApi storageConnectorApi;
+  protected FeatureViewEngineBase featureViewEngineBase;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStoreBase.class);
 
-  private static final Integer DEFAULT_VERSION = 1;
+  protected static final Integer DEFAULT_VERSION = 1;
+
 
   /**
    * Get a feature group object from the feature store.
@@ -93,34 +96,8 @@ public abstract class FeatureStoreBase {
 
   public abstract Object  createExternalFeatureGroup();
 
-
-  /**
-   * Get a feature view object from the selected feature store.
-   *
-   * @param name    name of the feature view
-   * @param version version to get
-   * @return FeatureView
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public FeatureViewBase getFeatureView(@NonNull String name, @NonNull Integer version)
-      throws FeatureStoreException, IOException {
-    return featureViewEngineBase.get(this, name, version, FeatureViewBase.class);
-  }
-
-  /**
-   * Get a feature view object with the default version `1` from the selected feature store.
-   *
-   * @param name name of the feature view
-   * @return FeatureView
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public FeatureViewBase getFeatureView(String name) throws FeatureStoreException, IOException {
-    LOGGER.info("VersionWarning: No version provided for getting feature view `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getFeatureView(name, DEFAULT_VERSION);
-  }
+  public abstract FeatureViewBase getFeatureView(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException;
 
   /**
    * Get a external feature group object from the feature store.

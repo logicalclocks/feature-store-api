@@ -17,7 +17,6 @@
 
 package com.logicalclocks.base;
 
-import com.logicalclocks.base.metadata.FeatureGroupBase;
 import com.logicalclocks.base.util.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

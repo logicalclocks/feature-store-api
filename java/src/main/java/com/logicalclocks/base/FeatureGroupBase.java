@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020-2022. Hopsworks AB
+ *  Copyright (c) 2020-2023. Hopsworks AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,23 +15,15 @@
  *
  */
 
-package com.logicalclocks.base.metadata;
+package com.logicalclocks.base;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import com.logicalclocks.base.constructor.Filter;
-import com.logicalclocks.base.constructor.FilterLogic;
-import com.logicalclocks.base.constructor.QueryBase;
-import com.logicalclocks.base.DeltaStreamerJobConf;
-import com.logicalclocks.base.Feature;
-import com.logicalclocks.base.FeatureStoreBase;
-import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.engine.FeatureGroupBaseEngine;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 
-import com.logicalclocks.base.TimeTravelFormat;
-import com.logicalclocks.base.StatisticsConfig;
-
+import com.logicalclocks.base.metadata.Subject;
+import com.logicalclocks.base.metadata.User;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -118,42 +110,17 @@ public class FeatureGroupBase {
   protected FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
   protected FeatureGroupUtils utils = new FeatureGroupUtils();
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
+  protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
 
   public FeatureGroupBase(FeatureStoreBase featureStore, Integer id) {
     this.featureStore = featureStore;
     this.id = id;
   }
 
-  public QueryBase selectFeatures(List<Feature> features) {
-    return null;
-  }
-
-  public QueryBase select(List<String> features) {
-    return null;
-  }
-
-  public QueryBase selectAll() {
-    return null;
-  }
-
-  public QueryBase selectExceptFeatures(List<Feature> features) {
-    return null;
-  }
-
-  public QueryBase selectExcept(List<String> features) {
-    return null;
-  }
-
   public void delete() throws FeatureStoreException, IOException {
     LOGGER.warn("JobWarning: All jobs associated to feature group `" + name + "`, version `"
         + version + "` will be removed.");
     featureGroupBaseEngine.delete(this);
-  }
-
-  public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException,
-      IOException {
-    return null;
   }
 
   /**
@@ -328,30 +295,6 @@ public class FeatureGroupBase {
   @JsonIgnore
   public void unloadSubject() {
     this.subject = null;
-  }
-
-  /**
-   * Filter the query based on a condition for a feature or a conjunction of multiple filters.
-   *
-   * @param filter Filter metadata object
-   * @return Query object
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   */
-  public QueryBase filter(Filter filter) throws FeatureStoreException, IOException {
-    return this.selectAll().genericFilter(filter);
-  }
-
-  /**
-   * Filter the query based on a condition for a feature or a conjunction of multiple filters.
-   *
-   * @param filter Filter metadata object
-   * @return Query object
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   */
-  public QueryBase filter(FilterLogic filter) throws FeatureStoreException, IOException {
-    return this.selectAll().genericFilter(filter);
   }
 
   /**

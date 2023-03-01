@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.logicalclocks.base.constructor.Filter;
 import com.logicalclocks.base.constructor.SqlFilterCondition;
-import com.logicalclocks.base.metadata.FeatureGroupBase;
 import com.logicalclocks.base.util.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
