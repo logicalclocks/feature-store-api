@@ -403,7 +403,7 @@ public abstract class TrainingDatasetBase {
    * the data will not be deleted, but you will not be able to track it anymore
    * from the Feature Store.
    * This operation drops all metadata associated with this version of the
-   * training dataset and and the materialized data in HopsFS.
+   * training dataset and the materialized data in HopsFS.
    *
    * @throws FeatureStoreException
    * @throws IOException
