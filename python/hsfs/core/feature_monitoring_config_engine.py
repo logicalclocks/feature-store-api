@@ -50,7 +50,31 @@ class FeatureMonitoringConfigEngine:
         feature_view_version: Optional[str] = None,
         description: Optional[str] = None,
     ) -> FeatureMonitoringConfig:
+        """Enable descriptive statistics monitoring for a feature.
 
+        # Arguments
+            name: str, required
+                Name of the monitoring configuration.
+            feature_name: str, required
+                Name of the feature to monitor.
+            detection_window_config: Dict[str, Any], required
+                Configuration of the detection window.
+            scheduler_config: str, optional
+                Configuration of the scheduler.
+            feature_group_id: int, optional
+                Id of the feature group to monitor.
+            feature_view_id: int, optional
+                Id of the feature view to monitor.
+            feature_view_name: str, optional
+                Name of the feature view to monitor, only used for endpoints path parameters
+            feature_view_version: str, optional
+                Version of the feature view to monitor, only used for endpoints path parameters
+            description: str, optional
+                Description of the monitoring configuration.
+
+        # Returns
+            FeatureMonitoringConfig
+        """
         config = self.build_stats_monitoring_only_config(
             name=name,
             feature_name=feature_name,
