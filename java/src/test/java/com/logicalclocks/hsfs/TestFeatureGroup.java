@@ -26,6 +26,7 @@ import com.logicalclocks.base.metadata.HopsworksClient;
 import com.logicalclocks.base.metadata.HopsworksHttpClient;
 import com.logicalclocks.base.metadata.Subject;
 import com.logicalclocks.base.metadata.TagsApi;
+import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 
 import org.junit.jupiter.api.Assertions;
@@ -35,6 +36,7 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,6 +44,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 public class TestFeatureGroup {
+
+  @Test
+  public void testSelect_fgId_set() {
+    FeatureGroup featureGroup = new FeatureGroup(null, 1);
+    List<String> selectFeatures = Arrays.asList("ft1", "ft2");
+
+    Query result = featureGroup.select(selectFeatures);
+    Assertions.assertEquals(1, result.getLeftFeatures().get(0).getFeatureGroupId());
+    Assertions.assertEquals(1, result.getLeftFeatures().get(1).getFeatureGroupId());
+  }
 
   @Test
   public void testFeatureGroupPrimaryKey() {
