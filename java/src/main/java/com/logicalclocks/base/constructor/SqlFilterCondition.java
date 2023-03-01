@@ -25,5 +25,5 @@ public enum SqlFilterCondition {
   LESS_THAN_OR_EQUAL,
   LESS_THAN,
   IN,
-  LIKE;
+  LIKE
 }
