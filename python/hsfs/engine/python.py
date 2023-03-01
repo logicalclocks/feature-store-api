@@ -308,10 +308,10 @@ class Engine:
     ):
         # TODO: add statistics for correlations, histograms and exact_uniqueness
         if not relevant_columns:
-            stats = df.describe(datetime_is_numeric=True)
+            stats = df.describe()
         else:
             target_cols = [col for col in df.columns if col in relevant_columns]
-            stats = df[target_cols].describe(datetime_is_numeric=True)
+            stats = df[target_cols].describe()
         final_stats = []
         for col in stats.columns:
             stat = self._convert_pandas_statistics(stats[col].to_dict())
