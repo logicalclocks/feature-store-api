@@ -24,5 +24,5 @@ public enum JoinType {
   LEFT,
   RIGHT,
   LEFT_SEMI_JOIN,
-  COMMA;
+  COMMA
 }
