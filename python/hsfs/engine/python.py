@@ -28,6 +28,7 @@ import json
 import random
 import uuid
 import decimal
+import numbers
 from datetime import datetime, timezone
 
 import great_expectations as ge
@@ -338,7 +339,8 @@ class Engine:
         if "mean" in stat:
             content_dict["mean"] = stat["mean"]
         if "mean" in stat and "count" in stat:
-            content_dict["sum"] = stat["mean"] * stat["count"]
+            if isinstance(stat["mean"], numbers.Number):
+                content_dict["sum"] = stat["mean"] * stat["count"]
         if "max" in stat:
             content_dict["maximum"] = stat["max"]
         if "std" in stat:
