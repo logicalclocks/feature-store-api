@@ -139,6 +139,7 @@ public class TestFeatureGroup {
 
     FeatureStore featureStore = Mockito.mock(FeatureStore.class);
     FeatureGroupApi featureGroupApi = Mockito.mock(FeatureGroupApi.class);
+    FeatureGroupEngine featureGroupEngine = Mockito.mock(FeatureGroupEngine.class);
 
     FeatureGroupBase featureGroupBase = Mockito.mock(FeatureGroupBase.class);
     when(featureGroupBase.getFeatures()).thenReturn(new ArrayList<>());
@@ -153,20 +154,12 @@ public class TestFeatureGroup {
     StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
         Collections.singletonList("featureA"), null, null,
         true, features, null, "onlineTopicName", "eventTime");
-
-    /*
-    featureGroup.subject = new Subject();
-
-    featureGroup.featureGroupBaseEngine = new FeatureGroupBaseEngine(
-        featureGroupApi, Mockito.mock(TagsApi.class));
-
+    featureGroup.featureGroupEngine = featureGroupEngine;
 
     // Act
-    // TODO (davit): java.lang.NullPointerException at com.logicalclocks.hsfs.engine.FeatureGroupEngine.appendFeatures(FeatureGroupEngine.java:349)
     featureGroup.appendFeatures(new Feature("featureD"));
 
     // Assert
-    Assertions.assertNull(featureGroup.subject);
-     */
+    Assertions.assertNull(featureGroup.getSubject());
   }
 }
