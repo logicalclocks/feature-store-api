@@ -16,8 +16,9 @@
 
 import json
 import humps
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from hsfs import util
+from datetime import datetime, date
 
 
 class FeatureMonitoringResult:
@@ -26,7 +27,7 @@ class FeatureMonitoringResult:
         feature_store_id: int,
         execution_id: int,
         detection_stats_id: int,
-        monitoring_time: int,
+        monitoring_time: Union[int, datetime, date, str],
         config_id: int,
         difference: Optional[float] = None,
         shift_detected: bool = False,
@@ -44,7 +45,7 @@ class FeatureMonitoringResult:
         self._reference_stats_id = reference_stats_id
         self._config_id = config_id
 
-        self._monitoring_time = monitoring_time
+        self._monitoring_time = util.convert_event_time_to_timestamp(monitoring_time)
         self._difference = difference
         self._shift_detected = shift_detected
 
