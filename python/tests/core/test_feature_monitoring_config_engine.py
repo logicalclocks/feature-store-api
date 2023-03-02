@@ -40,7 +40,8 @@ class TestFeatureMonitoringConfigEngine:
     def test_build_monitoring_window_config(self):
         # Arrange
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
         # Act
@@ -58,7 +59,8 @@ class TestFeatureMonitoringConfigEngine:
     def test_build_feature_monitoring_config(self):
         # Arrange
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
@@ -81,7 +83,6 @@ class TestFeatureMonitoringConfigEngine:
         config = config_engine.build_feature_monitoring_config(
             name=DEFAULT_NAME,
             feature_name=DEFAULT_FEATURE_NAME,
-            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
             detection_window_config=detection_window_config,
             reference_window_config=reference_window_config,
             statistics_comparison_config=stats_comparison_configuration,
@@ -134,7 +135,8 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
@@ -157,7 +159,6 @@ class TestFeatureMonitoringConfigEngine:
         config_engine.enable_feature_monitoring_config(
             name=DEFAULT_NAME,
             feature_name=DEFAULT_FEATURE_NAME,
-            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
             detection_window_config=detection_window_config,
             reference_window_config=reference_window_config,
             statistics_comparison_config=stats_comparison_configuration,
@@ -167,11 +168,6 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         # Assert
-        assert (
-            mock_config_api.call_args[1]["feature_group_id"] == DEFAULT_FEATURE_GROUP_ID
-        )
-        assert mock_config_api.call_args[1]["feature_view_name"] is None
-        assert mock_config_api.call_args[1]["feature_view_version"] is None
         assert mock_config_job_api.call_count == 1
         config = mock_config_api.call_args[1]["fm_config"]
         assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
@@ -217,7 +213,10 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_view_id=DEFAULT_FEATURE_VIEW_ID,
+            feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
+            feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
@@ -240,27 +239,15 @@ class TestFeatureMonitoringConfigEngine:
         config_engine.enable_feature_monitoring_config(
             name=DEFAULT_NAME,
             feature_name=DEFAULT_FEATURE_NAME,
-            feature_view_id=DEFAULT_FEATURE_VIEW_ID,
             detection_window_config=detection_window_config,
             reference_window_config=reference_window_config,
             statistics_comparison_config=stats_comparison_configuration,
             description=DEFAULT_DESCRIPTION,
             scheduler_config=DEFAULT_SCHEDULER_CONFIG,
             alert_config=DEFAULT_ALERT_CONFIG,
-            feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
-            feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
         )
 
         # Assert
-        assert mock_config_api.call_args[1]["feature_group_id"] is None
-        assert (
-            mock_config_api.call_args[1]["feature_view_name"]
-            == DEFAULT_FEATURE_VIEW_NAME
-        )
-        assert (
-            mock_config_api.call_args[1]["feature_view_version"]
-            == DEFAULT_FEATURE_VIEW_VERSION
-        )
         config = mock_config_api.call_args[1]["fm_config"]
         assert mock_config_job_api.call_count == 1
         assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
@@ -301,7 +288,8 @@ class TestFeatureMonitoringConfigEngine:
     def test_build_stats_monitoring_only_config(self):
         # Arrange
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
@@ -314,7 +302,6 @@ class TestFeatureMonitoringConfigEngine:
         config = config_engine.build_stats_monitoring_only_config(
             name=DEFAULT_NAME,
             feature_name=DEFAULT_FEATURE_NAME,
-            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
             detection_window_config=detection_window_config,
             description=DEFAULT_DESCRIPTION,
             scheduler_config=DEFAULT_SCHEDULER_CONFIG,
@@ -345,7 +332,8 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
@@ -358,18 +346,12 @@ class TestFeatureMonitoringConfigEngine:
         config_engine.enable_descriptive_statistics_monitoring(
             name=DEFAULT_NAME,
             feature_name=DEFAULT_FEATURE_NAME,
-            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
             detection_window_config=detection_window_config,
             description=DEFAULT_DESCRIPTION,
             scheduler_config=DEFAULT_SCHEDULER_CONFIG,
         )
 
         # Assert
-        assert (
-            mock_config_api.call_args[1]["feature_group_id"] == DEFAULT_FEATURE_GROUP_ID
-        )
-        assert mock_config_api.call_args[1]["feature_view_name"] is None
-        assert mock_config_api.call_args[1]["feature_view_version"] is None
         config = mock_config_api.call_args[1]["fm_config"]
         assert mock_config_job_api.call_count == 1
         assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
@@ -398,7 +380,10 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_view_id=DEFAULT_FEATURE_VIEW_ID,
+            feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
+            feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
@@ -411,23 +396,11 @@ class TestFeatureMonitoringConfigEngine:
         config_engine.enable_descriptive_statistics_monitoring(
             name=DEFAULT_NAME,
             feature_name=DEFAULT_FEATURE_NAME,
-            feature_view_id=DEFAULT_FEATURE_VIEW_ID,
-            feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
-            feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
             detection_window_config=detection_window_config,
             scheduler_config=DEFAULT_SCHEDULER_CONFIG,
         )
 
         # Assert
-        assert mock_config_api.call_args[1]["feature_group_id"] is None
-        assert (
-            mock_config_api.call_args[1]["feature_view_name"]
-            == DEFAULT_FEATURE_VIEW_NAME
-        )
-        assert (
-            mock_config_api.call_args[1]["feature_view_version"]
-            == DEFAULT_FEATURE_VIEW_VERSION
-        )
         config = mock_config_api.call_args[1]["fm_config"]
         assert mock_config_job_api.call_count == 1
         assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID

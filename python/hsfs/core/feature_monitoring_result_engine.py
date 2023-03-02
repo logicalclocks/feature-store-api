@@ -25,10 +25,42 @@ DEFAULT_EXECUTION_ID = 123
 
 
 class FeatureMonitoringResultEngine:
-    def __init__(self, feature_store_id: Optional[int]):
+    def __init__(
+        self,
+        feature_store_id: int,
+        feature_group_id: Optional[int] = None,
+        feature_view_id: Optional[int] = None,
+        feature_view_name: Optional[str] = None,
+        feature_view_version: Optional[int] = None,
+    ):
+        """Feature Monitoring Result business logic for the Feature Group resource.
+
+        # Arguments
+            feature_store_id: int. Id of the respective Feature Store.
+            feature_group_id: int. Id of the feature group, if monitoring a feature group.
+            feature_view_id: int. Id of the feature view, if monitoring a feature view.
+            feature_view_name: str. Name of the feature view, if monitoring a feature view.
+            feature_view_version: int. Version of the feature view, if monitoring a feature view.
+
+        # Returns
+            `FeatureMonitoringResultEngine` object.
+        """
+        if feature_group_id is None:
+            assert feature_view_id is not None
+            assert feature_view_name is not None
+            assert feature_view_version is not None
+
         self._feature_store_id = feature_store_id
+        self._feature_group_id = feature_group_id
+        self._feature_view_id = feature_view_id
+        self._feature_view_name = feature_view_name
+        self._feature_view_version = feature_view_version
+
         self._feature_monitoring_result_api = FeatureMonitoringResultApi(
-            feature_store_id=feature_store_id
+            feature_store_id=feature_store_id,
+            feature_group_id=feature_group_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
         )
 
     def save_feature_monitoring_result(
@@ -39,10 +71,6 @@ class FeatureMonitoringResultEngine:
         shift_detected: bool = False,
         difference: Optional[float] = None,
         reference_stats_id: Optional[int] = None,
-        feature_group_id: Optional[int] = None,
-        feature_view_id: Optional[int] = None,
-        feature_view_name: Optional[str] = None,
-        feature_view_version: Optional[int] = None,
     ) -> FeatureMonitoringResult:
         """Save feature monitoring result.
 
@@ -56,9 +84,6 @@ class FeatureMonitoringResultEngine:
                 Defaults to zero if no reference is provided.
             reference_stats_id: Optional[int]. Id of the reference statistics.
                 Defaults to None if no reference is provided.
-            feature_group_id: int. Id of the feature group. Defaults to None if feature view is used.
-            feature_view_name: str. Name of the feature view. Defaults to None if feature group is used.
-            feature_view_version: int. Version of the feature view. Defaults to None if feature group is used.
 
         # Returns
             FeatureMonitoringResult. Saved Feature monitoring result.
@@ -79,17 +104,11 @@ class FeatureMonitoringResultEngine:
 
         return self._feature_monitoring_result_api.create(
             result,
-            feature_group_id=feature_group_id,
-            feature_view_name=feature_view_name,
-            feature_view_version=feature_view_version,
         )
 
     def fetch_all_feature_monitoring_results_by_config_id(
         self,
         config_id: int,
-        feature_group_id: Optional[int] = None,
-        feature_view_name: Optional[str] = None,
-        feature_view_version: Optional[int] = None,
         start_time: Union[str, int, datetime, date, None] = None,
         end_time: Union[str, int, datetime, date, None] = None,
     ) -> List[FeatureMonitoringResult]:
@@ -97,9 +116,6 @@ class FeatureMonitoringResultEngine:
 
         # Arguments
             config_id: int. Id of the feature monitoring configuration.
-            feature_group_id: int. Id of the feature group. Defaults to None if feature view is used.
-            feature_view_name: str. Name of the feature view. Defaults to None if feature group is used.
-            feature_view_version: int. Version of the feature view. Defaults to None if feature group is used.
             start_time: Union[str, int, datetime, date, None].
                 Query results with monitoring time greater than or equal to start_time.
             end_time: Union[str, int, datetime, date, None].
@@ -116,9 +132,6 @@ class FeatureMonitoringResultEngine:
 
         return self._feature_monitoring_result_api.get_by_config_id(
             config_id=config_id,
-            feature_group_id=feature_group_id,
-            feature_view_name=feature_view_name,
-            feature_view_version=feature_view_version,
             query_params=query_params,
         )
 
@@ -204,8 +217,6 @@ class FeatureMonitoringResultEngine:
             reference_stats_id=reference_stats_id,
             difference=difference,
             shift_detected=shift_detected,
-            feature_group_id=fm_config.feature_group_id,
-            feature_view_name=fm_config.feature_view_id,
         )
 
     def compute_difference(
