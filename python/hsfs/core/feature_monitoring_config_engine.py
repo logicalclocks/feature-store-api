@@ -115,6 +115,37 @@ class FeatureMonitoringConfigEngine:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[str] = None,
     ) -> FeatureMonitoringConfig:
+        """Enable feature monitoring for a feature.
+
+        # Arguments
+            feature_name: str, required
+                Name of the feature to monitor.
+            name: str, required
+                Name of the monitoring configuration.
+            detection_window_config: Dict[str, Any], required
+                Configuration of the detection window.
+            reference_window_config: Dict[str, Any], required
+                Configuration of the reference window.
+            statistics_comparison_config: Dict[str, Any], required
+                Configuration of the statistics comparison.
+            alert_config: str, required
+                Configuration of the alert.
+            scheduler_config: str, required
+                Configuration of the scheduler.
+            description: str, optional
+                Description of the monitoring configuration.
+            feature_group_id: int, optional
+                Id of the feature group to monitor.
+            feature_view_id: int, optional
+                Id of the feature view to monitor.
+            feature_view_name: str, optional
+                Name of the feature view to monitor, only used for endpoints path parameters
+            feature_view_version: str, optional
+                Version of the feature view to monitor, only used for endpoints path parameters
+
+        # Returns
+            FeatureMonitoringConfig The registered monitoring configuration.
+        """
 
         config = self.build_feature_monitoring_config(
             name=name,
@@ -153,6 +184,23 @@ class FeatureMonitoringConfigEngine:
         specific_id: Optional[int] = None,
         row_percentage: Optional[int] = None,
     ) -> Dict[str, Any]:
+        """Builds a monitoring window config dictionary.
+
+        # Arguments
+            window_config_type: str, required
+                Type of the window config, can be either
+                `SPECIFIC_VALUE`,`FEATURE_GROUP`,`INSERT`,`BATCH` or `FEATURE_VIEW`.
+            time_offset: str, optional
+                monitoring window start time is computed as "now - time_offset".
+            window_length: str, optional
+                monitoring window end time is computed as
+                    "now - time_offset + window_length".
+            specific_value: float, optional
+                Specific value instead of a statistics computed on data.
+            specific_id: int, optional
+                Specific id of an entity that has fixed
+
+        """
 
         return {
             "window_config_type": window_config_type,
@@ -173,6 +221,27 @@ class FeatureMonitoringConfigEngine:
         feature_view_id: Optional[int] = None,
         description: Optional[str] = None,
     ) -> FeatureMonitoringConfig:
+        """Builds a feature monitoring config for descriptive statistics only.
+
+        # Arguments
+            name: str, required
+                Name of the monitoring configuration.
+            feature_name: str, required
+                Name of the feature to monitor.
+            detection_window_config: Dict[str, Any], required
+                Configuration of the detection window.
+            scheduler_config: str, required
+                Configuration of the scheduler.
+            feature_group_id: int, optional
+                Id of the feature group to monitor.
+            feature_view_id: int, optional
+                Id of the feature view to monitor.
+            description: str, optional
+                Description of the monitoring configuration.
+
+        # Returns
+            FeatureMonitoringConfig The monitoring configuration.
+        """
 
         return FeatureMonitoringConfig(
             feature_store_id=self._feature_store_id,
@@ -203,6 +272,30 @@ class FeatureMonitoringConfigEngine:
         feature_view_id: Optional[int] = None,
         description: Optional[str] = None,
     ) -> FeatureMonitoringConfig:
+        """Builds a feature monitoring config.
+
+        # Arguments
+            feature_name: str, required
+                Name of the feature to monitor.
+            name: str, required
+                Name of the monitoring configuration.
+            detection_window_config: Dict[str, Any], required
+                Configuration of the detection window.
+            reference_window_config: Dict[str, Any], required
+                Configuration of the reference window.
+            statistics_comparison_config: Dict[str, Any], required
+                Configuration of the statistics comparison.
+            scheduler_config: str, required
+                Configuration of the scheduler.
+            alert_config: str, required
+                Configuration of the alert.
+            feature_group_id: int, optional
+                Id of the feature group to monitor.
+            feature_view_id: int, optional
+                Id of the feature view to monitor.
+            description: str, optional
+                Description of the monitoring configuration.
+        """
 
         return FeatureMonitoringConfig(
             feature_store_id=self._feature_store_id,
@@ -227,6 +320,17 @@ class FeatureMonitoringConfigEngine:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[str] = None,
     ) -> Job:
+        """Setup a feature monitoring job based on the entity and config name.
+
+        # Arguments
+            config_name: name of the monitoring config.
+            feature_group_id: id of the feature group to monitor.
+            feature_view_name: name of the feature view to monitor.
+            feature_view_version: version of the feature view to monitor.
+
+        # Returns
+            Job: monitoring job object.
+        """
 
         return self._feature_monitoring_config_api.setup_feature_monitoring_job(
             config_name=config_name,
@@ -242,6 +346,17 @@ class FeatureMonitoringConfigEngine:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[str] = None,
     ) -> Job:
+        """Trigger a feature monitoring job based on the entity and config id.
+
+        # Arguments
+            config_id: id of the monitoring config.
+            feature_group_id: id of the feature group to monitor.
+            feature_view_name: name of the feature view to monitor.
+            feature_view_version: version of the feature view to monitor.
+
+        # Returns
+            Job object.
+        """
         return self._feature_monitoring_config_api.trigger_feature_monitoring_job(
             config_id=config_id,
             feature_group_id=feature_group_id,
@@ -252,6 +367,15 @@ class FeatureMonitoringConfigEngine:
     def run_feature_monitoring(
         self, feature_store: FeatureStore, config_id: int
     ) -> FeatureMonitoringResult:
+        """Run by feature monitoring job, monitoring is based on the config id.
+
+        # Arguments
+            feature_store: FeatureStore object.
+            config_id: id of the monitoring config.
+
+        # Returns
+            FeatureMonitoringResult object.
+        """
 
         config = self._feature_monitoring_config_api.get(config_id)
         result_engine = FeatureMonitoringResultEngine(
@@ -296,7 +420,19 @@ class FeatureMonitoringConfigEngine:
         feature_view_id: Optional[int] = None,
         check_existing: bool = False,
     ) -> Tuple[Dict[str, Any], int]:
-        # check_existing is a flag to check if the statistics for the entity have already been computed
+        """Run monitoring for a single window.
+
+        # Arguments
+            feature_store: FeatureStore: Feature store to fetch the entity to monitor.
+            monitoring_window_config: Dict[str, Any]: Monitoring window config.
+            feature_name: str: Name of the feature to monitor.
+            feature_group_id: Optional[int]: Id of the feature group to monitor.
+            feature_view_id: Optional[int]: Id of the feature view to monitor.
+            check_existing: bool: Whether to check for existing stats.
+
+        # Returns
+            Tuple[Dict[str, Any], int]: Tuple of stats and stats id.
+        """
         if check_existing:
             registered_stats_id = self.check_for_registered_stats(
                 monitoring_window_config
@@ -347,12 +483,22 @@ class FeatureMonitoringConfigEngine:
         )
         return None
 
-    def fetch_entity_data(
+    def fetch_entity_data_based_on_monitoring_window_config(
         self,
         entity: Union[FeatureGroup, FeatureView],
         feature_name: str,
         monitoring_window_config: Dict[str, Any],
     ) -> pd.DataFrame:
+        """Fetch the entity data based on the monitoring window config.
+
+        # Arguments
+            entity: Union[FeatureGroup, FeatureView]: Entity to monitor.
+            feature_name: str: Name of the feature to monitor.
+            monitoring_window_config: Dict[str, Any]: Monitoring window config.
+
+        # Returns
+            pd.DataFrame: Entity data.
+        """
         # Lots of work to be done here to suport all the different cases
 
         return (
