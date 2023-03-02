@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@NoArgsConstructor
 public class Query extends QueryBase {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Query.class);
