@@ -214,7 +214,7 @@ class FeatureMonitoringConfigApi:
         path_params = self.build_path_params(
             project_id=_client._project_id,
         )
-        path_params.extend(["setupJob", config_name])
+        path_params.extend(["setup", config_name])
 
         return Job.from_response_json(_client._send_request("POST", path_params))
 
