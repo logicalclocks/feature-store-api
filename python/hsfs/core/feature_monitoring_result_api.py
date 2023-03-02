@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from hsfs import client
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 
@@ -85,14 +85,14 @@ class FeatureMonitoringResultApi:
     def get_by_config_id(
         self,
         config_id: int,
-        query_params: Optional[Dict[str, str]] = None,
+        query_params: Optional[Dict[str, Union[str, List[str]]]] = None,
     ) -> List[FeatureMonitoringResult]:
         """Get all Feature Monitoring Result attached to a Monitoring Config.
 
         :param config_id: Id of the feature monitoring config for which to fetch all results
         :type config_id: int
         :param query_params: query parameters to filter the results by monitoring_time
-        :type query_params: Dict[str, str], optional
+        :type query_params: Dict[str, Union[str, List[str]]], optional
         :return: fetched feature monitoring results attached to the Feature Group
         :rtype: List[FeatureMonitoringResult]
         """
@@ -102,9 +102,10 @@ class FeatureMonitoringResultApi:
         )
         path_params.append("byconfig")
         path_params.append(config_id)
+        headers = {"content-type": "application/json"}
 
         return FeatureMonitoringResult.from_response_json(
-            _client._send_request("GET", path_params, query_params=query_params)
+            _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
     def get_by_id(
