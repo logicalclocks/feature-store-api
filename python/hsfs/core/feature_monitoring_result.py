@@ -79,7 +79,7 @@ class FeatureMonitoringResult:
         return self.json()
 
     def __repr__(self) -> str:
-        return humps.decamelize(self.to_dict())
+        return json.dumps(humps.decamelize(self.to_dict()), indent=2)
 
     @property
     def id(self) -> Optional[int]:

@@ -137,7 +137,7 @@ class FeatureMonitoringConfig:
         return self.json()
 
     def __repr__(self):
-        return humps.decamelize(self.to_dict())
+        return json.dumps(humps.decamelize(self.to_dict()), indent=2)
 
     @property
     def id(self) -> Optional[int]:
