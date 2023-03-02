@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class FsQueryBase {
   @Getter
   @Setter
