@@ -52,10 +52,7 @@ public abstract class FeatureStoreBase {
   protected StorageConnectorApi storageConnectorApi;
   protected FeatureViewEngineBase featureViewEngineBase;
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStoreBase.class);
-
   protected static final Integer DEFAULT_VERSION = 1;
-
 
   /**
    * Get a feature group object from the feature store.
