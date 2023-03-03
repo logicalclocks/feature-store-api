@@ -14,13 +14,10 @@
 #   limitations under the License.
 #
 
-from typing import Any, Dict, Hashable, Optional, Tuple, Union
+from typing import Any, Dict, Hashable, Optional, Tuple
 import pandas as pd
 from datetime import datetime
 
-from hsfs.feature_store import FeatureStore
-from hsfs.feature_group import FeatureGroup
-from hsfs.feature_view import FeatureView
 from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
 from hsfs.core.feature_monitoring_config_api import FeatureMonitoringConfigApi
 from hsfs.core.feature_monitoring_result_engine import FeatureMonitoringResultEngine
@@ -316,7 +313,7 @@ class FeatureMonitoringConfigEngine:
         )
 
     def run_feature_monitoring(
-        self, feature_store: FeatureStore, config_id: int
+        self, feature_store, config_id: int  #: FeatureStore,
     ) -> FeatureMonitoringResult:
         """Run by feature monitoring job, monitoring is based on the config id.
 
@@ -360,7 +357,7 @@ class FeatureMonitoringConfigEngine:
 
     def run_single_window_monitoring(
         self,
-        feature_store: FeatureStore,
+        feature_store,  #: FeatureStore,
         monitoring_window_config: Dict[str, Any],
         feature_name: str,
         check_existing: bool = False,
@@ -428,7 +425,7 @@ class FeatureMonitoringConfigEngine:
 
     def fetch_entity_data_based_on_monitoring_window_config(
         self,
-        entity: Union[FeatureGroup, FeatureView],
+        entity,  #: Union[feature_group.FeatureGroup, feature_view.FeatureView],
         feature_name: str,
         monitoring_window_config: Dict[str, Any],
     ) -> pd.DataFrame:
