@@ -17,9 +17,13 @@
 
 package com.logicalclocks.base.engine;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.logicalclocks.base.Feature;
+import com.logicalclocks.base.FeatureGroupBaseForApi;
+import com.logicalclocks.base.Split;
+import com.logicalclocks.base.TrainingDatasetBase;
 import com.logicalclocks.base.constructor.Join;
 import com.logicalclocks.base.constructor.QueryBase;
 import com.logicalclocks.base.FeatureGroupBase;
@@ -30,6 +34,8 @@ import com.logicalclocks.base.FeatureStoreBase;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.TrainingDatasetFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Date;
@@ -37,7 +43,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class FeatureViewEngineBase {
+public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1>, T2 extends FeatureViewBase<T2, T3, T4>,
+    T3 extends FeatureStoreBase<T3>, T4> {
+
+  protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureViewEngineBase.class);
 
   protected FeatureViewApi featureViewApi = new FeatureViewApi();
   protected TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_VIEW);
@@ -66,20 +75,20 @@ public abstract class FeatureViewEngineBase {
       Map<String, String> labelWithPrefixToFeature = Maps.newHashMap();
       Map<String, FeatureGroupBase> labelWithPrefixToFeatureGroup = Maps.newHashMap();
       Map<String, List<FeatureGroupBase>> labelToFeatureGroups = Maps.newHashMap();
-      for (Feature feat : query.getLeftFeatures()) {
+      for (Feature feat : (List<Feature>) query.getLeftFeatures()) {
         labelWithPrefixToFeature.put(feat.getName(), feat.getName());
         labelWithPrefixToFeatureGroup.put(feat.getName(),
-            (new FeatureGroupBase(null, feat.getFeatureGroupId())));
+            (new FeatureGroupBaseForApi(null, feat.getFeatureGroupId())));
       }
-      for (Join join : query.getJoins()) {
-        for (Feature feat : join.getQuery().getLeftFeatures()) {
+      for (Join join : (List<Join>) query.getJoins()) {
+        for (Feature feat : (List<Feature>) join.getQuery().getLeftFeatures()) {
           String labelWithPrefix = join.getPrefix() + feat.getName();
           labelWithPrefixToFeature.put(labelWithPrefix, feat.getName());
           labelWithPrefixToFeatureGroup.put(labelWithPrefix,
-              new FeatureGroupBase(null, feat.getFeatureGroupId()));
+              new FeatureGroupBaseForApi(null, feat.getFeatureGroupId()));
           List<FeatureGroupBase> featureGroups = labelToFeatureGroups.getOrDefault(feat.getName(),
               Lists.newArrayList());
-          featureGroups.add(new FeatureGroupBase(null, feat.getFeatureGroupId()));
+          featureGroups.add(new FeatureGroupBaseForApi(null, feat.getFeatureGroupId()));
           labelToFeatureGroups.put(feat.getName(), featureGroups);
         }
       }
@@ -107,34 +116,35 @@ public abstract class FeatureViewEngineBase {
     }
   }
 
-  public <T extends FeatureViewBase> FeatureViewBase get(FeatureStoreBase featureStoreBase, String name,
-                                                          Integer version, Class<T> fvType)
+  public T2 get(T3 featureStoreBase, String name, Integer version, Class<T2> fvType)
       throws FeatureStoreException, IOException {
     FeatureViewBase featureViewBase = featureViewApi.get(featureStoreBase, name, version, fvType);
     featureViewBase.setFeatureStore(featureStoreBase);
-    featureViewBase.getFeatures().stream()
+    List<TrainingDatasetFeature> features = featureViewBase.getFeatures();
+    features.stream()
         .filter(f -> f.getFeatureGroup() != null)
         .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStoreBase));
     featureViewBase.getQuery().getLeftFeatureGroup().setFeatureStore(featureStoreBase);
     featureViewBase.setLabels(
-        featureViewBase.getFeatures().stream()
+        features.stream()
             .filter(TrainingDatasetFeature::getLabel)
             .map(TrainingDatasetFeature::getName)
             .collect(Collectors.toList()));
-    return featureViewBase;
+    return (T2) featureViewBase;
   }
 
-  public List<FeatureViewBase> get(FeatureStoreBase featureStoreBase, String name) throws FeatureStoreException,
+  public List<FeatureViewBase> get(T3 featureStoreBase, String name) throws FeatureStoreException,
       IOException {
     List<FeatureViewBase> featureViewBases = featureViewApi.get(featureStoreBase, name);
     for (FeatureViewBase fv : featureViewBases) {
       fv.setFeatureStore(featureStoreBase);
-      fv.getFeatures().stream()
+      List<TrainingDatasetFeature> features = fv.getFeatures();
+      features.stream()
           .filter(f -> f.getFeatureGroup() != null)
           .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStoreBase));
       fv.getQuery().getLeftFeatureGroup().setFeatureStore(featureStoreBase);
       fv.setLabels(
-          fv.getFeatures().stream()
+          features.stream()
               .filter(TrainingDatasetFeature::getLabel)
               .map(TrainingDatasetFeature::getName)
               .collect(Collectors.toList()));
@@ -142,12 +152,12 @@ public abstract class FeatureViewEngineBase {
     return featureViewBases;
   }
 
-  public void delete(FeatureStoreBase featureStoreBase, String name) throws FeatureStoreException,
+  public void delete(T3 featureStoreBase, String name) throws FeatureStoreException,
       IOException {
     featureViewApi.delete(featureStoreBase, name);
   }
 
-  public void delete(FeatureStoreBase featureStoreBase, String name, Integer version) throws FeatureStoreException,
+  public void delete(T3 featureStoreBase, String name, Integer version) throws FeatureStoreException,
       IOException {
     featureViewApi.delete(featureStoreBase, name, version);
   }
@@ -199,4 +209,98 @@ public abstract class FeatureViewEngineBase {
       throws FeatureStoreException, IOException {
     return tagsApi.get(featureViewBase, trainingDataVersion);
   }
+
+  public abstract T1 getBatchQuery(T2 featureView, Date startTime, Date endTime, Boolean withLabels,
+                                  Integer trainingDataVersion)
+      throws FeatureStoreException, IOException;
+
+  public T1 getBatchQuery(T2 featureView, Date startTime,  Date endTime, Boolean withLabels,
+                          Integer trainingDataVersion, Class<T1> queryType) throws FeatureStoreException, IOException {
+    QueryBase query;
+    try {
+      query = featureViewApi.getBatchQuery(
+          featureView.getFeatureStore(),
+          featureView.getName(),
+          featureView.getVersion(),
+          startTime == null ? null : startTime.getTime(),
+          endTime == null ? null : endTime.getTime(),
+          withLabels,
+          trainingDataVersion,
+          queryType
+      );
+    } catch (IOException e) {
+      if (e.getMessage().contains("\"errorCode\":270172")) {
+        throw new FeatureStoreException(
+            "Cannot generate dataset or query from the given start/end time because"
+                + " event time column is not available in the left feature groups."
+                + " A start/end time should not be provided as parameters."
+        );
+      } else {
+        throw e;
+      }
+    }
+    query.getLeftFeatureGroup().setFeatureStore(featureView.getQuery().getLeftFeatureGroup().getFeatureStore());
+    return (T1)query;
+  }
+
+  protected void setEventTime(FeatureViewBase featureView, TrainingDatasetBase trainingDataset) {
+    String eventTime = featureView.getQuery().getLeftFeatureGroup().getEventTime();
+    if (!Strings.isNullOrEmpty(eventTime)) {
+      if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()) {
+        for (Split split : trainingDataset.getSplits()) {
+          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT
+              && split.getName().equals(Split.TRAIN)
+              && split.getStartTime() == null) {
+            split.setStartTime(getStartTime());
+          }
+          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT
+              && split.getName().equals(Split.TEST)
+              && split.getEndTime() == null) {
+            split.setEndTime(getEndTime());
+          }
+        }
+      } else {
+        if (trainingDataset.getEventStartTime() == null) {
+          trainingDataset.setEventStartTime(getStartTime());
+        }
+        if (trainingDataset.getEventEndTime() == null) {
+          trainingDataset.setEventEndTime(getEndTime());
+        }
+      }
+    }
+  }
+
+  public void deleteTrainingData(T2 featureView, Integer trainingDataVersion)
+      throws FeatureStoreException, IOException {
+    featureViewApi.deleteTrainingData(featureView.getFeatureStore(), featureView.getName(),
+        featureView.getVersion(), trainingDataVersion);
+  }
+
+  public void deleteTrainingData(T2 featureView) throws FeatureStoreException, IOException {
+    featureViewApi.deleteTrainingData(featureView.getFeatureStore(), featureView.getName(),
+        featureView.getVersion());
+  }
+
+  public void deleteTrainingDatasetOnly(T2 featureView, Integer trainingDataVersion)
+      throws FeatureStoreException, IOException {
+    featureViewApi.deleteTrainingDatasetOnly(featureView.getFeatureStore(), featureView.getName(),
+        featureView.getVersion(), trainingDataVersion);
+  }
+
+  public void deleteTrainingDatasetOnly(T2 featureView) throws FeatureStoreException, IOException {
+    featureViewApi.deleteTrainingDatasetOnly(featureView.getFeatureStore(), featureView.getName(),
+        featureView.getVersion());
+  }
+
+  public abstract String getBatchQueryString(T2 featureView, Date startTime, Date endTime, Integer trainingDataVersion)
+      throws FeatureStoreException, IOException;
+
+  public abstract T2 getOrCreateFeatureView(T3 featureStore, String name,  Integer version, T1 query,
+                                           String description, List<String> labels)
+      throws FeatureStoreException, IOException;
+
+  public abstract T4 getBatchData(
+      T2 featureView, Date startTime, Date endTime, Map<String, String> readOptions,
+      Integer trainingDataVersion
+  ) throws FeatureStoreException, IOException;
 }

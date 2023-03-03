@@ -24,9 +24,13 @@ import com.logicalclocks.base.Storage;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.FeatureGroupBase;
 
+import com.logicalclocks.base.metadata.QueryConstructorApi;
+import com.logicalclocks.base.metadata.StorageConnectorApi;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -35,7 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class QueryBase {
+@NoArgsConstructor
+public abstract class QueryBase<T extends QueryBase<T>> {
 
   @Getter
   @Setter
@@ -59,6 +64,10 @@ public abstract class QueryBase {
   @Setter
   protected Boolean hiveEngine = false;
 
+  protected static final Logger LOGGER = LoggerFactory.getLogger(QueryBase.class);
+
+  protected QueryConstructorApi queryConstructorApi = new QueryConstructorApi();
+  protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   public QueryBase(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
@@ -68,99 +77,107 @@ public abstract class QueryBase {
 
   public abstract String sql();
 
-  public abstract String sql(Storage storage);
-
-  public QueryBase genericJoin(QueryBase subquery) {
-    return genericJoin(subquery, JoinType.INNER);
+  public <U>  String sql(Storage storage, Class<U> queryBaseType) {
+    try {
+      return queryConstructorApi
+          .constructQuery(this.getLeftFeatureGroup().getFeatureStore(), this, queryBaseType)
+          .getStorageQuery(storage);
+    } catch (FeatureStoreException | IOException e) {
+      return e.getMessage();
+    }
   }
 
-  public QueryBase genericJoin(QueryBase subquery, String prefix) {
-    return genericJoin(subquery, JoinType.INNER, prefix);
+  public T join(T subquery) {
+    return join(subquery, JoinType.INNER);
   }
 
-  public QueryBase genericJoin(QueryBase subquery, List<String> on) {
-    return genericJoinFeatures(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER);
+  public T join(T subquery, String prefix) {
+    return join(subquery, JoinType.INNER, prefix);
   }
 
-  public QueryBase genericJoin(QueryBase subquery, List<String> leftOn, List<String> rightOn) {
-    return genericJoinFeatures(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
+  public T join(T subquery, List<String> on) {
+    return joinFeatures(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER);
+  }
+
+  public T join(T subquery, List<String> leftOn, List<String> rightOn) {
+    return joinFeatures(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
         rightOn.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER);
   }
 
-  public QueryBase genericJoin(QueryBase subquery, List<String> leftOn, List<String> rightOn, String prefix) {
-    return genericJoinFeatures(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
+  public T join(T subquery, List<String> leftOn, List<String> rightOn, String prefix) {
+    return joinFeatures(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
         rightOn.stream().map(Feature::new).collect(Collectors.toList()), JoinType.INNER, prefix);
   }
 
-  public QueryBase genericJoin(QueryBase subquery, JoinType joinType) {
+  public T join(T subquery, JoinType joinType) {
     joins.add(new Join(subquery, joinType, null));
-    return this;
+    return (T)this;
   }
 
-  public QueryBase genericJoin(QueryBase subquery, JoinType joinType, String prefix) {
+  public T join(T subquery, JoinType joinType, String prefix) {
     joins.add(new Join(subquery, joinType, prefix));
-    return this;
+    return (T)this;
   }
 
-  public QueryBase genericJoin(QueryBase subquery, List<String> on, JoinType joinType) {
+  public T join(T subquery, List<String> on, JoinType joinType) {
     joins.add(new Join(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), joinType, null));
-    return this;
+    return (T)this;
   }
 
-  public QueryBase genericJoin(QueryBase subquery, List<String> on, JoinType joinType, String prefix) {
+  public T join(T subquery, List<String> on, JoinType joinType, String prefix) {
     joins.add(new Join(subquery, on.stream().map(Feature::new).collect(Collectors.toList()), joinType, prefix));
-    return this;
+    return (T)this;
   }
 
-  public QueryBase genericJoin(QueryBase subquery, List<String> leftOn, List<String> rightOn, JoinType joinType) {
+  public T join(T subquery, List<String> leftOn, List<String> rightOn, JoinType joinType) {
     joins.add(new Join(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
         rightOn.stream().map(Feature::new).collect(Collectors.toList()), joinType, null));
-    return this;
+    return (T)this;
   }
 
-  public QueryBase genericJoin(QueryBase subquery, List<String> leftOn, List<String> rightOn, JoinType joinType,
+  public T join(T subquery, List<String> leftOn, List<String> rightOn, JoinType joinType,
                                String prefix) {
     joins.add(new Join(subquery, leftOn.stream().map(Feature::new).collect(Collectors.toList()),
         rightOn.stream().map(Feature::new).collect(Collectors.toList()), joinType, prefix));
-    return this;
+    return (T)this;
   }
 
-  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> on) {
-    return genericJoinFeatures(subquery, on, JoinType.INNER);
+  public T joinFeatures(T subquery, List<Feature> on) {
+    return joinFeatures(subquery, on, JoinType.INNER);
   }
 
-  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> on, String prefix) {
-    return genericJoinFeatures(subquery, on, JoinType.INNER, prefix);
+  public T joinFeatures(T subquery, List<Feature> on, String prefix) {
+    return joinFeatures(subquery, on, JoinType.INNER, prefix);
   }
 
-  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> leftOn, List<Feature> rightOn) {
-    return genericJoinFeatures(subquery, leftOn, rightOn, JoinType.INNER);
+  public T joinFeatures(T subquery, List<Feature> leftOn, List<Feature> rightOn) {
+    return joinFeatures(subquery, leftOn, rightOn, JoinType.INNER);
   }
 
-  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> leftOn, List<Feature> rightOn, String prefix) {
-    return genericJoinFeatures(subquery, leftOn, rightOn, JoinType.INNER, prefix);
+  public T joinFeatures(T subquery, List<Feature> leftOn, List<Feature> rightOn, String prefix) {
+    return joinFeatures(subquery, leftOn, rightOn, JoinType.INNER, prefix);
   }
 
-  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> on, JoinType joinType) {
+  public T joinFeatures(T subquery, List<Feature> on, JoinType joinType) {
     joins.add(new Join(subquery, on, joinType, null));
-    return this;
+    return (T)this;
   }
 
-  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> on, JoinType joinType, String prefix) {
+  public T joinFeatures(T subquery, List<Feature> on, JoinType joinType, String prefix) {
     joins.add(new Join(subquery, on, joinType, prefix));
-    return this;
+    return (T)this;
   }
 
-  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> leftOn, List<Feature> rightOn,
+  public T joinFeatures(T subquery, List<Feature> leftOn, List<Feature> rightOn,
                                        JoinType joinType) {
     joins.add(new Join(subquery, leftOn, rightOn, joinType, null));
-    return this;
+    return (T)this;
   }
 
-  public QueryBase genericJoinFeatures(QueryBase subquery, List<Feature> leftOn, List<Feature> rightOn,
+  public T joinFeatures(T subquery, List<Feature> leftOn, List<Feature> rightOn,
                                        JoinType joinType, String prefix) {
     joins.add(new Join(subquery, leftOn, rightOn, joinType, prefix));
-    return this;
+    return (T)this;
   }
 
   /**
@@ -174,8 +191,8 @@ public abstract class QueryBase {
    * @throws FeatureStoreException
    * @throws ParseException
    */
-  public QueryBase genericAsOf(String wallclockTime) throws FeatureStoreException, ParseException {
-    return genericAsOf(wallclockTime, null);
+  public T asOf(String wallclockTime) throws FeatureStoreException, ParseException {
+    return asOf(wallclockTime, null);
   }
 
   /**
@@ -190,7 +207,7 @@ public abstract class QueryBase {
    * @throws FeatureStoreException
    * @throws ParseException
    */
-  public QueryBase genericAsOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
+  public T asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
     Long wallclockTimestamp = utils.getTimeStampFromDateString(wallclockTime);
     Long excludeUntilTimestamp = null;
     if (excludeUntil != null) {
@@ -208,7 +225,7 @@ public abstract class QueryBase {
     if (excludeUntilTimestamp != null) {
       this.setLeftFeatureGroupStartTime(excludeUntilTimestamp);
     }
-    return this;
+    return (T)this;
   }
 
   /**
@@ -222,34 +239,34 @@ public abstract class QueryBase {
    *
    * @deprecated use asOf(wallclockEndTime, wallclockStartTime) instead
    */
-  public QueryBase genericPullChanges(String wallclockStartTime, String wallclockEndTime)
+  public T pullChanges(String wallclockStartTime, String wallclockEndTime)
       throws FeatureStoreException, ParseException {
     this.setLeftFeatureGroupStartTime(utils.getTimeStampFromDateString(wallclockStartTime));
     this.setLeftFeatureGroupEndTime(utils.getTimeStampFromDateString(wallclockEndTime));
-    return this;
+    return (T)this;
   }
 
-  public QueryBase genericFilter(Filter filter) {
+  public T filter(Filter filter) {
     if (this.filter == null) {
       this.filter = new FilterLogic(filter);
     } else {
       this.filter = this.filter.and(filter);
     }
-    return this;
+    return (T)this;
   }
 
-  public QueryBase genericFilter(FilterLogic filter) {
+  public T filter(FilterLogic filter) {
     if (this.filter == null) {
       this.filter = filter;
     } else {
       this.filter = this.filter.and(filter);
     }
-    return this;
+    return (T)this;
   }
 
-  public QueryBase getericAppendFeature(Feature feature) {
+  public T appendFeature(Feature feature) {
     this.leftFeatures.add(feature);
-    return this;
+    return (T)this;
   }
 
   @JsonIgnore
@@ -264,6 +281,16 @@ public abstract class QueryBase {
     }
     return false;
   }
+
+  protected List<Feature>  addFeatureGroupToFeatures(FeatureGroupBase featureGroupBase, List<Feature> leftFeatures) {
+    List<Feature> updatedFeatures = new ArrayList<>();
+    for (Feature feature: leftFeatures) {
+      feature.setFeatureGroupId(featureGroupBase.getId());
+      updatedFeatures.add(feature);
+    }
+    return updatedFeatures;
+  }
+
 
   public abstract Object read(boolean online, Map<String, String> readOptions)
       throws FeatureStoreException, IOException;

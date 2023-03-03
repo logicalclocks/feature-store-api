@@ -18,10 +18,8 @@
 package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.logicalclocks.base.FeatureStoreBase;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.Split;
@@ -38,8 +36,6 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -50,7 +46,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class FeatureView extends FeatureViewBase {
+public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Dataset<Row>> {
 
   @Getter
   @Setter
@@ -58,7 +54,6 @@ public class FeatureView extends FeatureViewBase {
   private FeatureStore featureStore;
 
   private static final FeatureViewEngine featureViewEngine = new FeatureViewEngine();
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroup.class);
 
   public static class FeatureViewBuilder {
 
@@ -126,27 +121,32 @@ public class FeatureView extends FeatureViewBase {
     this.labels = labels != null ? labels.stream().map(String::toLowerCase).collect(Collectors.toList()) : null;
   }
 
+  @Override
   public void delete() throws FeatureStoreException, IOException {
     LOGGER.warn("JobWarning: All jobs associated to feature view `" + name + "`, version `"
         + version + "` will be removed.");
     featureViewEngine.delete(this.featureStore, this.name, this.version);
   }
 
-  public void clean(FeatureStoreBase featureStore, String featureViewName, Integer featureViewVersion)
+  @Override
+  public void clean(FeatureStore featureStore, String featureViewName, Integer featureViewVersion)
       throws FeatureStoreException, IOException {
     featureViewEngine.delete(featureStore, featureViewName, featureViewVersion);
   }
 
+  @Override
   public FeatureView update(FeatureView other) throws FeatureStoreException, IOException {
     return featureViewEngine.update(other);
   }
 
   @JsonIgnore
+  @Override
   public String getBatchQuery() throws FeatureStoreException, IOException, ParseException {
     return getBatchQuery(null, null);
   }
 
   @JsonIgnore
+  @Override
   public String getBatchQuery(String startTime, String endTime)
       throws FeatureStoreException, IOException, ParseException {
     return featureViewEngine.getBatchQueryString(
@@ -162,6 +162,7 @@ public class FeatureView extends FeatureViewBase {
   }
 
   @JsonIgnore
+  @Override
   public Dataset<Row> getBatchData(String startTime, String endTime)
       throws FeatureStoreException, IOException, ParseException {
     return getBatchData(startTime, endTime, Maps.newHashMap());
@@ -190,6 +191,7 @@ public class FeatureView extends FeatureViewBase {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
+  @Override
   public void addTag(String name, Object value) throws FeatureStoreException, IOException {
     featureViewEngine.addTag(this, name, value);
   }
@@ -202,6 +204,7 @@ public class FeatureView extends FeatureViewBase {
    * @throws IOException IOException
    */
   @JsonIgnore
+  @Override
   public Map<String, Object> getTags() throws FeatureStoreException, IOException {
     return featureViewEngine.getTags(this);
   }
@@ -216,6 +219,7 @@ public class FeatureView extends FeatureViewBase {
    * @throws IOException IOException
    */
   @JsonIgnore
+  @Override
   public Object getTag(String name) throws FeatureStoreException, IOException {
     return featureViewEngine.getTag(this, name);
   }
@@ -228,6 +232,7 @@ public class FeatureView extends FeatureViewBase {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
+  @Override
   public void deleteTag(String name) throws FeatureStoreException, IOException {
     featureViewEngine.deleteTag(this, name);
   }
@@ -596,37 +601,6 @@ public class FeatureView extends FeatureViewBase {
     return getDataset(
         featureViewEngine.getTrainingDataset(this, trainingDataset, readOptions),
         Lists.newArrayList(Split.TRAIN, Split.VALIDATION, Split.TEST));
-  }
-
-  private void validateTrainTestSplit(Float testSize, String trainEnd, String testStart) throws FeatureStoreException {
-    if (!((testSize != null && testSize > 0 && testSize < 1)
-        || (!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(testStart)))) {
-      throw new FeatureStoreException(
-          "Invalid split input."
-              + "You should specify either `testSize` or (`trainEnd` or `testStart`)."
-              + " `testSize` should be between 0 and 1 if specified."
-      );
-    }
-  }
-
-  private void validateTrainValidationTestSplit(
-      Float validationSize, Float testSize, String trainEnd, String validationStart, String validationEnd,
-      String testStart)
-      throws FeatureStoreException {
-    if (!((validationSize != null && validationSize > 0 && validationSize < 1
-        && testSize != null && testSize > 0 && testSize < 1
-        && validationSize + testSize < 1)
-        || ((!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(validationStart))
-        && (!Strings.isNullOrEmpty(validationEnd) || !Strings.isNullOrEmpty(testStart))))) {
-      throw new FeatureStoreException(
-          "Invalid split input."
-              + " You should specify either (`validationSize` and `testSize`) or "
-              + "((`trainEnd` or `validationStart`) and (`validationEnd` "
-              + "or `testStart`))."
-              + "`validationSize`, `testSize` and sum of `validationSize` and `testSize` should be between 0 and 1 "
-              + "if specified."
-      );
-    }
   }
 
   @Override

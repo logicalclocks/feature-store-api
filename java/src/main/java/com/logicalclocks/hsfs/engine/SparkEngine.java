@@ -610,28 +610,20 @@ public class SparkEngine {
    */
   private Dataset<Row> onlineFeatureGroupToAvro(FeatureGroupBase featureGroupBase, Dataset<Row> dataset)
       throws FeatureStoreException, IOException {
+    List<String> pks = featureGroupBase.getPrimaryKeys();
     return dataset.select(
-        to_avro(concat(featureGroupBase.getPrimaryKeys().stream().map(name -> col(name).cast("string"))
+        to_avro(concat(pks.stream().map(name -> col(name).cast("string"))
             .toArray(Column[]::new))).alias("key"),
         to_avro(struct(featureGroupBase.getDeserializedAvroSchema().getFields().stream()
                 .map(f -> col(f.name())).toArray(Column[]::new)),
             featureGroupBase.getEncodedAvroSchema()).alias("value"));
   }
 
-  public <S>  void writeEmptyDataframe(FeatureGroupBase featureGroup)
+  public void writeEmptyDataframe(FeatureGroupBase featureGroup)
           throws IOException, FeatureStoreException, ParseException {
     String fgTableName = utils.getTableName(featureGroup);
     Dataset emptyDf = sparkSession.table(fgTableName).limit(0);
     writeOfflineDataframe(featureGroup, emptyDf, HudiOperationType.UPSERT, new HashMap<>(), null);
-  }
-
-  public <S>  void writeOfflineDataframe(StreamFeatureGroup streamFeatureGroup, S genericDataset,
-                                         HudiOperationType operation, Map<String, String> writeOptions,
-                                         Integer validationId)
-      throws IOException, FeatureStoreException, ParseException {
-
-    Dataset<Row> dataset = (Dataset<Row>) genericDataset;
-    hudiEngine.saveHudiFeatureGroup(sparkSession, streamFeatureGroup, dataset, operation, writeOptions, validationId);
   }
 
   public void writeOfflineDataframe(FeatureGroupBase featureGroup, Dataset<Row> dataset,

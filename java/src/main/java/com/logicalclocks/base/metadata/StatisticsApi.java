@@ -99,8 +99,6 @@ public class StatisticsApi {
     return hopsworksClient.handleRequest(postRequest, Statistics.class);
   }
 
-
-
   public Statistics get(FeatureGroupBase featureGroup, String commitTime) throws FeatureStoreException, IOException {
     return get(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
         featureGroup.getId(), commitTime);

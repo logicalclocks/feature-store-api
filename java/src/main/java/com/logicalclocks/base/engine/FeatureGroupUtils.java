@@ -62,7 +62,8 @@ public class FeatureGroupUtils {
   }
 
   public Seq<String> getPartitionColumns(FeatureGroupBase offlineFeatureGroup) {
-    List<String> partitionCols = offlineFeatureGroup.getFeatures().stream()
+    List<Feature> features = offlineFeatureGroup.getFeatures();
+    List<String> partitionCols = features.stream()
         .filter(Feature::getPartition)
         .map(Feature::getName)
         .collect(Collectors.toList());
@@ -71,7 +72,8 @@ public class FeatureGroupUtils {
   }
 
   public Seq<String> getPrimaryColumns(FeatureGroupBase offlineFeatureGroup) {
-    List<String> primaryCols = offlineFeatureGroup.getFeatures().stream()
+    List<Feature> features = offlineFeatureGroup.getFeatures();
+    List<String> primaryCols = features.stream()
         .filter(Feature::getPrimary)
         .map(Feature::getName)
         .collect(Collectors.toList());
@@ -207,7 +209,8 @@ public class FeatureGroupUtils {
 
   public void verifyAttributeKeyNames(FeatureGroupBase featureGroup, List<String> partitionKeyNames,
                                       String precombineKeyName) throws FeatureStoreException {
-    List<String> featureNames = featureGroup.getFeatures().stream().map(Feature::getName).collect(Collectors.toList());
+    List<Feature> features = featureGroup.getFeatures();
+    List<String> featureNames = features.stream().map(Feature::getName).collect(Collectors.toList());
     if (featureGroup.getPrimaryKeys() != null && !featureGroup.getPrimaryKeys().isEmpty()) {
       checkListdiff(featureGroup.getPrimaryKeys(), featureNames, "primary");
     }

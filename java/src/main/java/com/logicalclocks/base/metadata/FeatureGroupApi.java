@@ -221,10 +221,11 @@ public class FeatureGroupApi {
 
     LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
+    List<Feature> features = featureGroup.getFeatures();
     /* set primary features */
     if (featureGroup.getPrimaryKeys() != null) {
       featureGroup.getPrimaryKeys().forEach(pk ->
-          featureGroup.getFeatures().forEach(f -> {
+          features.forEach(f -> {
             if (f.getName().equals(pk)) {
               f.setPrimary(true);
             }
@@ -234,7 +235,7 @@ public class FeatureGroupApi {
     /* set partition key features */
     if (partitionKeys != null) {
       partitionKeys.forEach(pk ->
-          featureGroup.getFeatures().forEach(f -> {
+          features.forEach(f -> {
             if (f.getName().equals(pk)) {
               f.setPartition(true);
             }
@@ -243,7 +244,7 @@ public class FeatureGroupApi {
 
     /* set hudi precombine key name */
     if (hudiPrecombineKey != null) {
-      featureGroup.getFeatures().forEach(f -> {
+      features.forEach(f -> {
         if (f.getName().equals(hudiPrecombineKey)) {
           f.setHudiPrecombineKey(true);
         }
@@ -280,8 +281,8 @@ public class FeatureGroupApi {
 
     /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
     if (hudiPrecombineKey == null) {
-      List<Feature> features = apiFG.getFeatures();
-      featureGroup.setFeatures(features);
+      List<Feature> updatedFeatures = apiFG.getFeatures();
+      featureGroup.setFeatures(updatedFeatures);
     }
 
     return featureGroup;

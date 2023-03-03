@@ -17,7 +17,6 @@
 
 package com.logicalclocks.base.constructor;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Strings;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.Storage;

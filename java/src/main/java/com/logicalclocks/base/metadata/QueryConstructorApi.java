@@ -36,7 +36,7 @@ public class QueryConstructorApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(QueryConstructorApi.class);
 
-  public <U> FsQueryBase constructQuery(FeatureStoreBase featureStoreBase, QueryBase queryBase, Class<U> fgType)
+  public <U> FsQueryBase constructQuery(FeatureStoreBase featureStoreBase, QueryBase queryBase, Class<U> queryBaseType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -54,7 +54,7 @@ public class QueryConstructorApi {
 
     LOGGER.info("Sending metadata request: " + uri);
     LOGGER.info("Sending query: " + queryJson);
-    FsQueryBase fsQueryBase = (FsQueryBase) hopsworksClient.handleRequest(putRequest, fgType);
+    FsQueryBase fsQueryBase = (FsQueryBase) hopsworksClient.handleRequest(putRequest, queryBaseType);
     fsQueryBase.removeNewLines();
     return fsQueryBase;
   }

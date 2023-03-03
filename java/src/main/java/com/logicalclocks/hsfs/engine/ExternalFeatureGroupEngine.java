@@ -19,11 +19,7 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.engine.FeatureGroupBaseEngine;
-import com.logicalclocks.base.engine.FeatureGroupUtils;
-import com.logicalclocks.base.metadata.FeatureGroupApi;
-import com.logicalclocks.base.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
-import org.apache.http.entity.StringEntity;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
@@ -31,12 +27,9 @@ import java.io.IOException;
 
 public class ExternalFeatureGroupEngine extends FeatureGroupBaseEngine {
 
-  private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
-  private FeatureGroupUtils utils = new FeatureGroupUtils();
-  @Override
-  public ExternalFeatureGroup saveFeatureGroup(ExternalFeatureGroup externalFeatureGroup)
+  public ExternalFeatureGroup saveExternalFeatureGroup(ExternalFeatureGroup externalFeatureGroup)
       throws FeatureStoreException, IOException {
-    Dataset<Row> onDemandDataset = null;
+    Dataset<Row> onDemandDataset;
     if (externalFeatureGroup.getFeatures() == null) {
       onDemandDataset = SparkEngine.getInstance()
           .registerOnDemandTemporaryTable(externalFeatureGroup, "read_ondmd");
@@ -57,19 +50,9 @@ public class ExternalFeatureGroupEngine extends FeatureGroupBaseEngine {
           }));
     }
 
-    ExternalFeatureGroup apiFg = save(externalFeatureGroup);
+    ExternalFeatureGroup apiFg = saveExtennalFeatureGroupMetaData(externalFeatureGroup, ExternalFeatureGroup.class);
     externalFeatureGroup.setId(apiFg.getId());
 
     return externalFeatureGroup;
-  }
-
-  private ExternalFeatureGroup save(ExternalFeatureGroup externalFeatureGroup)
-      throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(externalFeatureGroup);
-
-    return (ExternalFeatureGroup)
-        featureGroupApi.saveInternal(externalFeatureGroup, new StringEntity(featureGroupJson),
-        ExternalFeatureGroup.class);
   }
 }

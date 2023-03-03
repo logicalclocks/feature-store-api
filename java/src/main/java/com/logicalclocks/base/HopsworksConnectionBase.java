@@ -17,14 +17,61 @@
 
 package com.logicalclocks.base;
 
+import com.google.common.base.Strings;
+import com.logicalclocks.base.metadata.FeatureStoreApi;
+import com.logicalclocks.base.metadata.ProjectApi;
+import com.logicalclocks.base.util.Constants;
+
+import lombok.Getter;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import software.amazon.awssdk.regions.Region;
+
 import java.io.Closeable;
 import java.io.IOException;
 
 public abstract class HopsworksConnectionBase implements Closeable {
 
-  public abstract Object getFeatureStore(String name) throws IOException, FeatureStoreException;
+  private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksConnectionBase.class);
 
-  public abstract String rewriteFeatureStoreName(String name);
+  @Getter
+  protected String host;
+
+  @Getter
+  protected int port;
+
+  @Getter
+  protected String project;
+
+  @Getter
+  protected Region region;
+
+  @Getter
+  protected SecretStore secretStore;
+
+  @Getter
+  protected boolean hostnameVerification;
+
+  @Getter
+  protected String trustStorePath;
+
+  @Getter
+  protected String certPath;
+
+  @Getter
+  protected String apiKeyFilePath;
+
+  @Getter
+  protected String apiKeyValue;
+
+  protected FeatureStoreApi featureStoreApi = new FeatureStoreApi();
+  protected ProjectApi projectApi = new ProjectApi();
+
+  protected Project projectObj;
+
+  public abstract Object getFeatureStore(String name) throws IOException, FeatureStoreException;
 
   /**
    * Close the connection and clean up the certificates.
@@ -33,7 +80,26 @@ public abstract class HopsworksConnectionBase implements Closeable {
     // Close the client
   }
 
-  public abstract Project getProject() throws IOException, FeatureStoreException;
+  public String rewriteFeatureStoreName(String name) {
+    name = name.toLowerCase();
+    if (name.endsWith(Constants.FEATURESTORE_SUFFIX)) {
+      return name;
+    } else {
+      return name + Constants.FEATURESTORE_SUFFIX;
+    }
+  }
 
-  public abstract String getProjectName(String project);
+  public Project getProject() throws IOException, FeatureStoreException {
+    LOGGER.info("Getting information for project name: " + project);
+    return projectApi.get(project);
+  }
+
+  public String getProjectName(String project) {
+    if (Strings.isNullOrEmpty(project)) {
+      // User didn't specify a project in the connection construction. Assume they are running
+      // from within Hopsworks and the project name is available a system property
+      return System.getProperty(Constants.PROJECTNAME_ENV);
+    }
+    return project;
+  }
 }

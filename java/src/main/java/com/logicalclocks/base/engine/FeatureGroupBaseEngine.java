@@ -19,10 +19,13 @@ package com.logicalclocks.base.engine;
 
 import com.logicalclocks.base.metadata.FeatureGroupApi;
 import com.logicalclocks.base.FeatureGroupBase;
+import com.logicalclocks.base.metadata.HopsworksClient;
 import com.logicalclocks.base.metadata.TagsApi;
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
+import com.logicalclocks.hsfs.ExternalFeatureGroup;
+import org.apache.http.entity.StringEntity;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,7 +34,9 @@ import java.util.Map;
 import java.util.Optional;
 
 public class FeatureGroupBaseEngine {
-  protected FeatureGroupApi featureGroupApi;
+
+  protected FeatureGroupApi featureGroupApi = new FeatureGroupApi();
+  protected FeatureGroupUtils utils = new FeatureGroupUtils();
   protected TagsApi tagsApi;
 
   public FeatureGroupBaseEngine() {
@@ -79,7 +84,7 @@ public class FeatureGroupBaseEngine {
                                                           Class<T> fgClass)
       throws FeatureStoreException, IOException {
     List<Feature> newFeatures = new ArrayList<>();
-    for (Feature feature : featureGroup.getFeatures()) {
+    for (Feature feature : (List<Feature>) featureGroup.getFeatures()) {
       Optional<Feature> match =
           features.stream().filter(updated -> updated.getName().equalsIgnoreCase(feature.getName())).findAny();
       if (!match.isPresent()) {
@@ -100,5 +105,15 @@ public class FeatureGroupBaseEngine {
       throws FeatureStoreException, IOException {
     T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateStatsConfig", fgClass);
     featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
+  }
+
+  protected  <T extends FeatureGroupBase> T saveExtennalFeatureGroupMetaData(ExternalFeatureGroup externalFeatureGroup,
+                                                                             Class<T> fgClass)
+      throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(externalFeatureGroup);
+
+    return (T) featureGroupApi.saveInternal(externalFeatureGroup, new StringEntity(featureGroupJson),
+        fgClass);
   }
 }

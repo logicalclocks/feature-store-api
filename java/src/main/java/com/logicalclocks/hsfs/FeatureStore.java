@@ -45,7 +45,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FeatureStore extends FeatureStoreBase {
+public class FeatureStore extends FeatureStoreBase<FeatureStore> {
 
   private MetaDataUtils metaDataUtils = new MetaDataUtils();
   private FeatureGroupEngine featureGroupEngine;

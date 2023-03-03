@@ -52,7 +52,7 @@ public class TestExternalFeatureGroup {
         Collections.singletonList("primaryKey"), features, null, "featureA");
 
     Exception pkException = assertThrows(FeatureStoreException.class, () -> {
-      externalFeatureGroupEngine.saveFeatureGroup(externalFeatureGroup);
+      externalFeatureGroupEngine.saveExternalFeatureGroup(externalFeatureGroup);
     });
 
     // Assert
@@ -78,7 +78,7 @@ public class TestExternalFeatureGroup {
         Collections.singletonList("featureA"), features, null, "eventTime");
 
     Exception pkException = assertThrows(FeatureStoreException.class, () -> {
-      externalFeatureGroupEngine.saveFeatureGroup(externalFeatureGroup);
+      externalFeatureGroupEngine.saveExternalFeatureGroup(externalFeatureGroup);
     });
 
     // Assert

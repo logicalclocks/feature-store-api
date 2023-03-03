@@ -255,7 +255,8 @@ public class HudiEngine {
       hudiArgs.put(HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY, HIVE_NON_PARTITION_EXTRACTOR_CLASS_OPT_VAL);
     }
 
-    String precombineKey = featureGroup.getFeatures().stream().filter(Feature::getHudiPrecombineKey).findFirst()
+    List<Feature> features = featureGroup.getFeatures();
+    String precombineKey = features.stream().filter(Feature::getHudiPrecombineKey).findFirst()
         .orElseThrow(() -> new FeatureStoreException("Can't find hudi precombine key")).getName();
     hudiArgs.put(HUDI_PRECOMBINE_FIELD, precombineKey);
 

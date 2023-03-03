@@ -22,13 +22,11 @@ import com.google.common.collect.Maps;
 
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.FeatureStoreException;
-import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.Split;
 import com.logicalclocks.base.TrainingDatasetFeature;
 import com.logicalclocks.base.TrainingDatasetType;
 import com.logicalclocks.base.engine.FeatureViewEngineBase;
 import com.logicalclocks.base.metadata.Statistics;
-
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.FeatureView;
 import com.logicalclocks.hsfs.constructor.Query;
@@ -40,20 +38,14 @@ import org.apache.hadoop.mapred.InvalidInputException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-public class FeatureViewEngine extends FeatureViewEngineBase {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureViewEngine.class);
+public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView, FeatureStore, Dataset<Row>> {
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
@@ -66,30 +58,9 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
 
   public FeatureView get(FeatureStore featureStore, String name, Integer version)
       throws FeatureStoreException, IOException {
-    FeatureView featureView = (FeatureView) super.get(featureStore, name, version, FeatureView.class);
+    FeatureView featureView = get(featureStore, name, version, FeatureView.class);
     featureView.setFeatureStore(featureStore);
     return featureView;
-  }
-
-  public List<FeatureView> get(FeatureStore featureStore, String name) throws FeatureStoreException,
-      IOException {
-    List<FeatureViewBase> featureViewBases = super.get(featureStore, name);
-    List<FeatureView> featureViews = new ArrayList<>();
-    for (FeatureViewBase fvBase : featureViewBases) {
-      FeatureView fv = (FeatureView) fvBase;
-      fv.setFeatureStore(featureStore);
-      fv.getFeatures().stream()
-          .filter(f -> f.getFeatureGroup() != null)
-          .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStore));
-      fv.getQuery().getLeftFeatureGroup().setFeatureStore(featureStore);
-      fv.setLabels(
-          fv.getFeatures().stream()
-              .filter(TrainingDatasetFeature::getLabel)
-              .map(TrainingDatasetFeature::getName)
-              .collect(Collectors.toList()));
-      featureViews.add(fv);
-    }
-    return featureViews;
   }
 
   public TrainingDatasetBundle createTrainingDataset(
@@ -108,7 +79,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
     Map<String, String> writeOptions =
         SparkEngine.getInstance().getWriteOptions(userWriteOptions, trainingDataset.getDataFormat());
     Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(),
-        trainingDataset.getEventEndTime(), true, trainingDataset.getVersion());
+        trainingDataset.getEventEndTime(), true, trainingDataset.getVersion(), Query.class);
     Dataset<Row>[] datasets = SparkEngine.getInstance().write(trainingDataset, query, Maps.newHashMap(),
         writeOptions, SaveMode.Overwrite);
     computeStatistics(featureView, trainingDataset, datasets);
@@ -190,7 +161,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
       TrainingDatasetBundle trainingDatasetBundle;
       if (trainingDatasetUpdated.getSplits() != null && !trainingDatasetUpdated.getSplits().isEmpty()) {
         Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(), trainingDataset.getEventEndTime(),
-            true, trainingDataset.getVersion());
+            true, trainingDataset.getVersion(), Query.class);
         Dataset<Row>[] datasets = SparkEngine.getInstance().splitDataset(trainingDatasetUpdated, query,
             userReadOptions);
         trainingDatasetBundle = new TrainingDatasetBundle(trainingDatasetUpdated.getVersion(),
@@ -233,33 +204,6 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
         featureView.getName(), featureView.getVersion(), trainingDataset, TrainingDataset.class);
   }
 
-  private void setEventTime(FeatureView featureView, TrainingDataset trainingDataset) {
-    String eventTime = featureView.getQuery().getLeftFeatureGroup().getEventTime();
-    if (!Strings.isNullOrEmpty(eventTime)) {
-      if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()) {
-        for (Split split : trainingDataset.getSplits()) {
-          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT
-              && split.getName().equals(Split.TRAIN)
-              && split.getStartTime() == null) {
-            split.setStartTime(getStartTime());
-          }
-          if (split.getSplitType() == Split.SplitType.TIME_SERIES_SPLIT
-              && split.getName().equals(Split.TEST)
-              && split.getEndTime() == null) {
-            split.setEndTime(getEndTime());
-          }
-        }
-      } else {
-        if (trainingDataset.getEventStartTime() == null) {
-          trainingDataset.setEventStartTime(getStartTime());
-        }
-        if (trainingDataset.getEventEndTime() == null) {
-          trainingDataset.setEventEndTime(getEndTime());
-        }
-      }
-    }
-  }
-
   private TrainingDataset getTrainingDataMetadata(
       FeatureView featureView, Integer trainingDatasetVersion) throws IOException, FeatureStoreException {
     return (TrainingDataset) featureViewApi.getTrainingData(featureView.getFeatureStore(), featureView.getName(),
@@ -280,7 +224,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
     return null;
   }
 
-  private Map<String, Dataset<Row>> convertSplitDatasetsToMap(List<Split> splits, Dataset<Row>[] datasets) {
+  protected Map<String, Dataset<Row>> convertSplitDatasetsToMap(List<Split> splits, Dataset<Row>[] datasets) {
     Map<String, Dataset<Row>> datasetSplits = Maps.newHashMap();
     for (int i = 0; i < datasets.length; i++) {
       datasetSplits.put(splits.get(i).getName(), datasets[i]);
@@ -298,82 +242,40 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
                                    Map<String, String> userReadOptions) throws IOException,
       FeatureStoreException {
     Query query = getBatchQuery(featureView, trainingDataset.getEventStartTime(), trainingDataset.getEventEndTime(),
-        true, trainingDataset.getVersion());
+        true, trainingDataset.getVersion(), Query.class);
     return query.read(false, userReadOptions);
   }
 
-  public void deleteTrainingData(FeatureView featureView, Integer trainingDataVersion)
-      throws FeatureStoreException, IOException {
-    featureViewApi.deleteTrainingData(featureView.getFeatureStore(), featureView.getName(),
-        featureView.getVersion(), trainingDataVersion);
-  }
-
-  public void deleteTrainingData(FeatureView featureView) throws FeatureStoreException, IOException {
-    featureViewApi.deleteTrainingData(featureView.getFeatureStore(), featureView.getName(),
-        featureView.getVersion());
-  }
-
-  public void deleteTrainingDatasetOnly(FeatureView featureView, Integer trainingDataVersion)
-      throws FeatureStoreException, IOException {
-    featureViewApi.deleteTrainingDatasetOnly(featureView.getFeatureStore(), featureView.getName(),
-        featureView.getVersion(), trainingDataVersion);
-  }
-
-  public void deleteTrainingDatasetOnly(FeatureView featureView) throws FeatureStoreException, IOException {
-    featureViewApi.deleteTrainingDatasetOnly(featureView.getFeatureStore(), featureView.getName(),
-        featureView.getVersion());
-  }
-
+  @Override
   public String getBatchQueryString(FeatureView featureView, Date startTime, Date endTime, Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
-    Query query = getBatchQuery(featureView, startTime, endTime, false, trainingDataVersion);
+    Query query = getBatchQuery(featureView, startTime, endTime, false, trainingDataVersion, Query.class);
     return query.sql();
   }
 
-  public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime, Boolean withLabels,
-                             Integer trainingDataVersion)
-      throws FeatureStoreException, IOException {
-    Query query = null;
-    try {
-      query = featureViewApi.getBatchQuery(
-          featureView.getFeatureStore(),
-          featureView.getName(),
-          featureView.getVersion(),
-          startTime == null ? null : startTime.getTime(),
-          endTime == null ? null : endTime.getTime(),
-          withLabels,
-          trainingDataVersion,
-          Query.class
-      );
-    } catch (IOException e) {
-      if (e.getMessage().contains("\"errorCode\":270172")) {
-        throw new FeatureStoreException(
-            "Cannot generate dataset or query from the given start/end time because"
-                + " event time column is not available in the left feature groups."
-                + " A start/end time should not be provided as parameters."
-        );
-      } else {
-        throw e;
-      }
-    }
-    query.getLeftFeatureGroup().setFeatureStore(featureView.getQuery().getLeftFeatureGroup().getFeatureStore());
-    return query;
-  }
-
+  @Override
   public Dataset<Row> getBatchData(
       FeatureView featureView, Date startTime, Date endTime, Map<String, String> readOptions,
       Integer trainingDataVersion
   ) throws FeatureStoreException, IOException {
-    return getBatchQuery(featureView, startTime, endTime, false, trainingDataVersion)
+    return getBatchQuery(featureView, startTime, endTime, false, trainingDataVersion, Query.class)
         .read(false, readOptions);
   }
 
+  @Override
+  public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime, Boolean withLabels,
+                             Integer trainingDataVersion)
+      throws FeatureStoreException, IOException {
+    return getBatchQuery(featureView, startTime, endTime, false, trainingDataVersion, Query.class);
+  }
+
+  @Override
   public FeatureView getOrCreateFeatureView(FeatureStore featureStore, String name, Integer version,  Query query,
                                             String description, List<String> labels)
       throws FeatureStoreException, IOException {
-    FeatureView featureView = null;
+    FeatureView featureView;
     try {
-      featureView = (FeatureView) get(featureStore, name, version, FeatureView.class);
+      featureView = get(featureStore, name, version, FeatureView.class);
     } catch (IOException | FeatureStoreException e) {
       if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270181")) {
         featureView = new FeatureView.FeatureViewBuilder(featureStore)
@@ -383,6 +285,8 @@ public class FeatureViewEngine extends FeatureViewEngineBase {
             .description(description)
             .labels(labels)
             .build();
+      } else {
+        throw e;
       }
     }
     return featureView;

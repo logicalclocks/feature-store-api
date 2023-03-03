@@ -19,12 +19,12 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.logicalclocks.base.DeltaStreamerJobConf;
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.Feature;
 
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.HudiOperationType;
+import com.logicalclocks.base.JobConfiguration;
 import com.logicalclocks.base.StatisticsConfig;
 import com.logicalclocks.base.Storage;
 import com.logicalclocks.base.TimeTravelFormat;
@@ -42,7 +42,6 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
-import org.apache.avro.Schema;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -55,7 +54,7 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FeatureGroup extends FeatureGroupBase {
+public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
 
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
   protected StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
@@ -109,18 +108,22 @@ public class FeatureGroup extends FeatureGroupBase {
     this.id = id;
   }
 
+  @Override
   public Dataset<Row> read() throws FeatureStoreException, IOException {
     return read(false, null);
   }
 
+  @Override
   public Dataset<Row> read(boolean online) throws FeatureStoreException, IOException {
     return selectAll().read(online);
   }
 
+  @Override
   public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return read(false, readOptions);
   }
 
+  @Override
   public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return selectAll().read(online, readOptions);
   }
@@ -134,6 +137,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException IOException
    * @throws ParseException ParseException
    */
+  @Override
   public Dataset<Row> read(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
     return selectAll().asOf(wallclockTime).read(false, null);
   }
@@ -148,6 +152,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException IOException
    * @throws ParseException ParseException
    */
+  @Override
   public Dataset<Row> read(String wallclockTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException {
     return selectAll().asOf(wallclockTime).read(false, readOptions);
@@ -200,6 +205,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException FeatureStoreException
    * @throws ParseException ParseException
    */
+  @Override
   public Query asOf(String wallclockTime) throws FeatureStoreException, ParseException {
     return selectAll().asOf(wallclockTime);
   }
@@ -218,14 +224,17 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException FeatureStoreException
    * @throws ParseException ParseException
    */
+  @Override
   public Query asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
     return selectAll().asOf(wallclockTime, excludeUntil);
   }
 
+  @Override
   public void show(int numRows) throws FeatureStoreException, IOException {
     show(numRows, false);
   }
 
+  @Override
   public void show(int numRows, boolean online) throws FeatureStoreException, IOException {
     read(online).show(numRows);
   }
@@ -254,30 +263,36 @@ public class FeatureGroup extends FeatureGroupBase {
     }
   }
 
+  @Override
   public void insert(Dataset<Row> featureData) throws IOException, FeatureStoreException, ParseException {
     insert(featureData, null, false);
   }
 
+  @Override
   public void insert(Dataset<Row> featureData,  Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     insert(featureData, null, false, null, writeOptions);
   }
 
+  @Override
   public void insert(Dataset<Row> featureData, Storage storage)
       throws IOException, FeatureStoreException, ParseException {
     insert(featureData, storage, false, null, null);
   }
 
+  @Override
   public void insert(Dataset<Row> featureData, boolean overwrite)
       throws IOException, FeatureStoreException, ParseException {
     insert(featureData, null, overwrite);
   }
 
+  @Override
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite)
       throws IOException, FeatureStoreException, ParseException {
     insert(featureData, storage, overwrite, null, null);
   }
 
+  @Override
   public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     insert(featureData, null, overwrite, null, writeOptions);
@@ -292,11 +307,13 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException IOException
    * @throws ParseException ParseException
    */
+  @Override
   public void insert(Dataset<Row> featureData, HudiOperationType operation)
       throws FeatureStoreException, IOException, ParseException {
     insert(featureData, null, false, operation, null);
   }
 
+  @Override
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, HudiOperationType operation,
                      Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
@@ -319,6 +336,18 @@ public class FeatureGroup extends FeatureGroupBase {
 
     codeEngine.saveCode(this);
     computeStatistics();
+  }
+
+  @Override
+  public void insert(Dataset<Row> featureData, JobConfiguration jobConfiguration)
+      throws FeatureStoreException, IOException, ParseException {
+    new FeatureStoreException("This method is implemented in StreamFeatureGroup");
+  }
+
+  @Override
+  public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions,
+                     JobConfiguration jobConfiguration) throws FeatureStoreException, IOException, ParseException {
+    new FeatureStoreException("This method is implemented in StreamFeatureGroup");
   }
 
   /**
@@ -482,6 +511,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException IOException
    * @throws ParseException ParseException
    */
+  @Override
   public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
     return featureGroupEngine.commitDetails(this, null);
   }
@@ -495,6 +525,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException IOException
    * @throws ParseException ParseException
    */
+  @Override
   public Map<Long, Map<String, String>> commitDetails(Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     return featureGroupEngine.commitDetails(this, limit);
@@ -509,6 +540,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException IOException
    * @throws ParseException ParseException
    */
+  @Override
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
       throws IOException, FeatureStoreException, ParseException {
     return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, null);
@@ -524,15 +556,18 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws IOException IOException
    * @throws ParseException ParseException
    */
+  @Override
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);
   }
 
+  @Override
   public Query selectFeatures(List<Feature> features) {
     return new Query(this, features);
   }
 
+  @Override
   public Query select(List<String> features) {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
@@ -540,15 +575,18 @@ public class FeatureGroup extends FeatureGroupBase {
     return selectFeatures(featureObjList);
   }
 
+  @Override
   public Query selectAll() {
     return new Query(this, getFeatures());
   }
 
+  @Override
   public Query selectExceptFeatures(List<Feature> features) {
     List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
     return selectExcept(exceptFeatures);
   }
 
+  @Override
   public Query selectExcept(List<String> features) {
     return new Query(this,
         getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));
@@ -595,6 +633,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @throws FeatureStoreException
    * @throws IOException
    */
+  @Override
   public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
     if (statisticsConfig.getEnabled()) {
       Map<Long, Map<String, String>> latestCommitMetaData =
@@ -609,33 +648,16 @@ public class FeatureGroup extends FeatureGroupBase {
     return null;
   }
 
+  /**
+   * Get the last statistics commit for the feature group.
+   *
+   * @return statistics object of latest commit
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   */
   @JsonIgnore
-  public List<String> getComplexFeatures() {
-    return utils.getComplexFeatures(features);
-  }
-
-  @JsonIgnore
-  public String getAvroSchema() throws FeatureStoreException, IOException {
-    return getSubject().getSchema();
-  }
-
-  @JsonIgnore
-  public String getFeatureAvroSchema(String featureName) throws FeatureStoreException, IOException {
-    return utils.getFeatureAvroSchema(featureName, utils.getDeserializedAvroSchema(getAvroSchema()));
-  }
-
-  @JsonIgnore
-  public String getEncodedAvroSchema() throws FeatureStoreException, IOException {
-    return utils.getEncodedAvroSchema(getDeserializedAvroSchema(), utils.getComplexFeatures(features));
-  }
-
-  @JsonIgnore
-  public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
-    return utils.getDeserializedAvroSchema(getAvroSchema());
-  }
-
   @Override
-  public void setDeltaStreamerJobConf(DeltaStreamerJobConf deltaStreamerJobConf)
-      throws FeatureStoreException, IOException {
+  public Statistics getStatistics() throws FeatureStoreException, IOException {
+    return statisticsEngine.getLast(this);
   }
 }

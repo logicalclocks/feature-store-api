@@ -17,62 +17,19 @@
 
 package com.logicalclocks.hsfs;
 
-import com.google.common.base.Strings;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.HopsworksConnectionBase;
-import com.logicalclocks.base.Project;
 import com.logicalclocks.base.SecretStore;
-import com.logicalclocks.base.metadata.FeatureStoreApi;
 import com.logicalclocks.base.metadata.HopsworksClient;
-import com.logicalclocks.base.metadata.ProjectApi;
-import com.logicalclocks.base.util.Constants;
 import com.logicalclocks.hsfs.engine.SparkEngine;
+
 import lombok.Builder;
-import lombok.Getter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import software.amazon.awssdk.regions.Region;
 
 import java.io.IOException;
 
 public class HopsworksConnection extends HopsworksConnectionBase {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksConnection.class);
-
-  @Getter
-  private String host;
-
-  @Getter
-  private int port;
-
-  @Getter
-  private String project;
-
-  @Getter
-  private Region region;
-
-  @Getter
-  private SecretStore secretStore;
-
-  @Getter
-  private boolean hostnameVerification;
-
-  @Getter
-  private String trustStorePath;
-
-  @Getter
-  private String certPath;
-
-  @Getter
-  private String apiKeyFilePath;
-
-  @Getter
-  private String apiKeyValue;
-
-  private FeatureStoreApi featureStoreApi = new FeatureStoreApi();
-  private ProjectApi projectApi = new ProjectApi();
-
-  private Project projectObj;
 
   @Builder
   public HopsworksConnection(String host, int port, String project, Region region, SecretStore secretStore,
@@ -122,28 +79,5 @@ public class HopsworksConnection extends HopsworksConnectionBase {
    */
   public FeatureStore getFeatureStore(String name) throws IOException, FeatureStoreException {
     return featureStoreApi.get(projectObj.getProjectId(), rewriteFeatureStoreName(name), FeatureStore.class);
-  }
-
-  public String rewriteFeatureStoreName(String name) {
-    name = name.toLowerCase();
-    if (name.endsWith(Constants.FEATURESTORE_SUFFIX)) {
-      return name;
-    } else {
-      return name + Constants.FEATURESTORE_SUFFIX;
-    }
-  }
-
-  public Project getProject() throws IOException, FeatureStoreException {
-    LOGGER.info("Getting information for project name: " + project);
-    return projectApi.get(project);
-  }
-
-  public String getProjectName(String project) {
-    if (Strings.isNullOrEmpty(project)) {
-      // User didn't specify a project in the connection construction. Assume they are running
-      // from within Hopsworks and the project name is available a system property
-      return System.getProperty(Constants.PROJECTNAME_ENV);
-    }
-    return project;
   }
 }

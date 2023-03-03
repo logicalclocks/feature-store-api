@@ -18,10 +18,16 @@
 package com.logicalclocks.base;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import com.google.common.base.Strings;
 import com.logicalclocks.base.constructor.QueryBase;
 import com.logicalclocks.base.engine.VectorServer;
+
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -30,7 +36,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-public abstract class FeatureViewBase {
+@NoArgsConstructor
+public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends FeatureStoreBase<T3>, T4> {
 
   @Getter
   @Setter
@@ -71,6 +78,8 @@ public abstract class FeatureViewBase {
   @Setter
   protected String type = "featureViewDTO";
 
+  protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureViewBase.class);
+
   protected static VectorServer vectorServer = new VectorServer();
   protected Integer extraFilterVersion = null;
 
@@ -81,6 +90,38 @@ public abstract class FeatureViewBase {
   public void initServing(Boolean batch, Boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     vectorServer.initServing(this, batch, external);
+  }
+
+  protected void validateTrainTestSplit(Float testSize, String trainEnd, String testStart)
+      throws FeatureStoreException {
+    if (!((testSize != null && testSize > 0 && testSize < 1)
+        || (!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(testStart)))) {
+      throw new FeatureStoreException(
+          "Invalid split input."
+              + "You should specify either `testSize` or (`trainEnd` or `testStart`)."
+              + " `testSize` should be between 0 and 1 if specified."
+      );
+    }
+  }
+
+  protected void validateTrainValidationTestSplit(
+      Float validationSize, Float testSize, String trainEnd, String validationStart, String validationEnd,
+      String testStart)
+      throws FeatureStoreException {
+    if (!((validationSize != null && validationSize > 0 && validationSize < 1
+        && testSize != null && testSize > 0 && testSize < 1
+        && validationSize + testSize < 1)
+        || ((!Strings.isNullOrEmpty(trainEnd) || !Strings.isNullOrEmpty(validationStart))
+        && (!Strings.isNullOrEmpty(validationEnd) || !Strings.isNullOrEmpty(testStart))))) {
+      throw new FeatureStoreException(
+          "Invalid split input."
+              + " You should specify either (`validationSize` and `testSize`) or "
+              + "((`trainEnd` or `validationStart`) and (`validationEnd` "
+              + "or `testStart`))."
+              + "`validationSize`, `testSize` and sum of `validationSize` and `testSize` should be between 0 and 1 "
+              + "if specified."
+      );
+    }
   }
 
   public void initBatchScoring(Integer trainingDatasetVersion) {
@@ -218,12 +259,24 @@ public abstract class FeatureViewBase {
     return vectorServer.getServingKeys();
   }
 
-  @JsonIgnore
+  public abstract void delete() throws FeatureStoreException, IOException;
+
+  public abstract void clean(T3 featureStore, String featureViewName, Integer featureViewVersion)
+      throws FeatureStoreException, IOException;
+
+  public abstract T update(T other) throws FeatureStoreException, IOException;
+
+  public abstract String getBatchQuery() throws FeatureStoreException, IOException, ParseException;
+
   public abstract String getBatchQuery(String startTime, String endTime)
       throws FeatureStoreException, IOException, ParseException;
 
-  @JsonIgnore
-  public abstract Object getBatchData(String startTime, String endTime, Map<String, String> readOptions)
+  public abstract T4 getBatchData() throws FeatureStoreException, IOException, ParseException;
+
+  public abstract T4 getBatchData(String startTime, String endTime)
+      throws FeatureStoreException, IOException, ParseException;
+
+  public abstract T4 getBatchData(String startTime, String endTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException;
 
   public abstract Object getTrainingData(Integer version, Map<String, String> readOptions)
@@ -235,8 +288,6 @@ public abstract class FeatureViewBase {
   public abstract Object getTrainValidationTestSplit(Integer version, Map<String, String> readOptions)
       throws IOException, FeatureStoreException, ParseException;
 
-  public abstract void delete() throws FeatureStoreException, IOException;
-
   public abstract void purgeTrainingData(Integer version) throws FeatureStoreException, IOException;
 
   public abstract void purgeAllTrainingData() throws FeatureStoreException, IOException;
@@ -244,7 +295,4 @@ public abstract class FeatureViewBase {
   public abstract void deleteTrainingDataset(Integer version) throws FeatureStoreException, IOException;
 
   public abstract void deleteAllTrainingDatasets() throws FeatureStoreException, IOException;
-
-  public abstract void clean(FeatureStoreBase featureStore, String featureViewName, Integer featureViewVersion)
-      throws FeatureStoreException, IOException;
 }
