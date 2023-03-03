@@ -380,13 +380,17 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if feature_group.stream:
             # when creating a stream feature group, users have the possibility of passing
             # a spark_job_configuration object as part of the write_options with the key "spark"
+            # filter out consumer config, not needed for delta streamer
             _spark_options = write_options.pop("spark", None)
             _write_options = (
-                [{"name": k, "value": v} for k, v in write_options.items()]
+                [
+                    {"name": k, "value": v}
+                    for k, v in write_options.items()
+                    if k != "kafka_producer_config"
+                ]
                 if write_options
                 else None
             )
-            _write_options.pop("kafka_producer_config", None)
             feature_group._deltastreamer_jobconf = DeltaStreamerJobConf(
                 _write_options, _spark_options
             )
