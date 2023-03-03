@@ -94,6 +94,7 @@ class FeatureMonitoringConfigEngine:
             config_name=config.name,
         )
         config._job_id = monitoring_job.id
+        config._job_name = monitoring_job.name
 
         return self._feature_monitoring_config_api.create(
             fm_config=config,
@@ -149,6 +150,7 @@ class FeatureMonitoringConfigEngine:
             config_name=config.name,
         )
         config._job_id = monitoring_job.id
+        config._job_name = monitoring_job.name
 
         return self._feature_monitoring_config_api.create(
             fm_config=config,

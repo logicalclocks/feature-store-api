@@ -29,6 +29,7 @@ class FeatureMonitoringConfig:
         name: str,
         feature_monitoring_type: str = "DESCRIPTIVE_STATISTICS",
         job_id: Optional[int] = None,
+        job_name: Optional[str] = None,
         detection_window_config: Optional[Dict[str, Any]] = None,
         reference_window_config: Optional[Dict[str, Any]] = None,
         statistics_comparison_config: Optional[Dict[str, Any]] = None,
@@ -52,6 +53,7 @@ class FeatureMonitoringConfig:
         self._feature_view_id = feature_view_id
         self._feature_name = feature_name
         self._job_id = job_id
+        self._job_name = job_name
         self._feature_monitoring_type = feature_monitoring_type
         self._enabled = enabled
         self._scheduler_config = scheduler_config
@@ -122,6 +124,7 @@ class FeatureMonitoringConfig:
             "name": self._name,
             "description": self._description,
             "jobId": self._job_id,
+            "jobName": self._job_name,
             "featureMonitoringType": self._feature_monitoring_type,
             "schedulerConfig": self._scheduler_config,
             "alertConfig": self._alert_config,
@@ -170,6 +173,10 @@ class FeatureMonitoringConfig:
     @property
     def job_id(self) -> Optional[int]:
         return self._job_id
+
+    @property
+    def job_name(self) -> Optional[str]:
+        return self._job_name
 
     @property
     def enabled(self) -> bool:

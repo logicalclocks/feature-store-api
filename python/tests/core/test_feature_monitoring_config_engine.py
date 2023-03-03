@@ -178,6 +178,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
         assert config._job_id == job_json["id"]
+        assert config._job_name == job_json["name"]
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
@@ -258,6 +259,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
         assert config._job_id == job_json["id"]
+        assert config._job_name == job_json["name"]
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
@@ -362,6 +364,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
         assert config._job_id == job_json["id"]
+        assert config._job_name == job_json["name"]
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config["window_config_type"] == "INSERT"
@@ -411,6 +414,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description is None
         assert config._job_id == job_json["id"]
+        assert config._job_name == job_json["name"]
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config["window_config_type"] == "BATCH"

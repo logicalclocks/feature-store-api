@@ -18,6 +18,7 @@ from hsfs.core import feature_monitoring_result_engine
 from datetime import datetime, date
 import dateutil
 from hsfs import util
+import time
 
 DEFAULT_MONITORING_TIME_SORT_BY = "monitoring_time:desc"
 DEFAULT_FEATURE_STORE_ID = 67
@@ -122,6 +123,7 @@ class TestFeatureMonitoringResultEngine:
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
         before_time = datetime.now()
+        time.sleep(1)
 
         # Act
         result_engine.save_feature_monitoring_result(
@@ -132,6 +134,7 @@ class TestFeatureMonitoringResultEngine:
             difference=difference,
             shift_detected=shift_detected,
         )
+        time.sleep(1)
         after_time = datetime.now()
 
         # Assert
@@ -169,6 +172,7 @@ class TestFeatureMonitoringResultEngine:
             feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
         )
         before_time = datetime.now()
+        time.sleep(1)
 
         # Act
         result_engine.save_feature_monitoring_result(
@@ -179,6 +183,7 @@ class TestFeatureMonitoringResultEngine:
             difference=difference,
             shift_detected=shift_detected,
         )
+        time.sleep(1)
         after_time = datetime.now()
 
         # Assert
