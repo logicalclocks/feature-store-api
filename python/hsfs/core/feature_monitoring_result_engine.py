@@ -88,8 +88,9 @@ class FeatureMonitoringResultEngine:
         # Returns
             FeatureMonitoringResult. Saved Feature monitoring result.
         """
-
-        monitoring_time = int(round(datetime.now().timestamp(), 0)) * 1000
+        monitoring_time = round(
+            util.convert_event_time_to_timestamp(datetime.now()), -3
+        )
 
         result = FeatureMonitoringResult(
             feature_store_id=self._feature_store_id,
