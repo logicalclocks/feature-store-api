@@ -386,6 +386,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 if write_options
                 else None
             )
+            _write_options.pop("kafka_producer_config", None)
             feature_group._deltastreamer_jobconf = DeltaStreamerJobConf(
                 _write_options, _spark_options
             )
