@@ -43,8 +43,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1>, T2 extends FeatureViewBase<T2, T3, T1, T5>,
-    T3 extends FeatureStoreBase<T3, T1>, T5> {
+public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1, T4>, T2 extends FeatureViewBase<T2, T3, T1, T5>,
+    T3 extends FeatureStoreBase<T3, T1>, T4 extends FeatureGroupBase, T5> {
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureViewEngineBase.class);
 
@@ -55,9 +55,9 @@ public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1>, T2 extends
       + "groups. You can provide the label with the prefix you specify in the join.";
   public static String LABEL_NOT_EXIST_ERROR = "Provided label '%s' do not exist in any of the feature groups.";
 
-  public FeatureViewBase save(FeatureViewBase featureViewBase) throws FeatureStoreException, IOException {
+  public T2 save(T2 featureViewBase, Class<T2> fvType) throws FeatureStoreException, IOException {
     featureViewBase.setFeatures(makeLabelFeatures(featureViewBase.getQuery(), featureViewBase.getLabels()));
-    FeatureViewBase updatedFeatureViewBase = featureViewApi.save(featureViewBase, FeatureViewBase.class);
+    T2 updatedFeatureViewBase = featureViewApi.save(featureViewBase, fvType);
     featureViewBase.setVersion(updatedFeatureViewBase.getVersion());
     featureViewBase.setFeatures(updatedFeatureViewBase.getFeatures());
     return featureViewBase;

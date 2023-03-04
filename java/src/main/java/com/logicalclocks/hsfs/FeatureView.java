@@ -107,7 +107,7 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
 
     public FeatureView build() throws FeatureStoreException, IOException {
       FeatureView featureView = new FeatureView(name, version, query, description, featureStore, labels);
-      featureViewEngine.save(featureView);
+      featureViewEngine.save(featureView, FeatureView.class);
       return featureView;
     }
   }

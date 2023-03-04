@@ -28,6 +28,7 @@ import com.logicalclocks.base.TrainingDatasetType;
 import com.logicalclocks.base.engine.FeatureViewEngineBase;
 import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.base.DataFormat;
+import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureView;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.FeatureStore;
@@ -45,7 +46,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView, FeatureStore, Dataset<Row>> {
+public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView, FeatureStore, FeatureGroup,
+    Dataset<Row>> {
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);

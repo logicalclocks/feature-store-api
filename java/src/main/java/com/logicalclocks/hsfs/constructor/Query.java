@@ -18,13 +18,15 @@
 package com.logicalclocks.hsfs.constructor;
 
 import com.logicalclocks.base.Feature;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.Storage;
 import com.logicalclocks.base.constructor.QueryBase;
-import com.logicalclocks.base.FeatureGroupBase;
+import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 
+import lombok.NoArgsConstructor;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
@@ -32,12 +34,30 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class Query extends QueryBase<Query> {
+@NoArgsConstructor
+public class Query extends QueryBase<Query, FeatureGroup> {
 
-  public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
+  public Query(FeatureGroup leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
   }
+
+  public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
+    //this.leftFeatureGroup = leftFeatureGroup;
+    this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
+  }
+
+  /*
+  public Query(StreamFeatureGroup leftFeatureGroup, List<Feature> leftFeatures) {
+    this.leftFeatureGroup = leftFeatureGroup;
+    this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
+  }
+
+  public Query(ExternalFeatureGroup leftFeatureGroup, List<Feature> leftFeatures) {
+    this.leftFeatureGroup = leftFeatureGroup;
+    this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
+  }
+   */
 
   @Override
   public String sql() {

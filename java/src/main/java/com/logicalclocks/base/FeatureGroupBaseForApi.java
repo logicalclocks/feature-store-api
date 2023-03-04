@@ -28,40 +28,43 @@ import java.util.List;
 import java.util.Map;
 
 @NoArgsConstructor
-public class FeatureGroupBaseForApi extends FeatureGroupBase {
+public class FeatureGroupBaseForApi extends FeatureGroupBase<FeatureGroupBaseForApi> {
 
   public FeatureGroupBaseForApi(FeatureStoreBase featureStore, Integer id) {
     this.featureStore = featureStore;
     this.id = id;
   }
 
+
   @Override
-  public Object read() throws FeatureStoreException, IOException {
+  public FeatureGroupBaseForApi read() throws FeatureStoreException, IOException {
     return null;
   }
 
   @Override
-  public Object read(boolean online) throws FeatureStoreException, IOException {
+  public FeatureGroupBaseForApi read(boolean online) throws FeatureStoreException, IOException {
     return null;
   }
 
   @Override
-  public Object read(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
+  public FeatureGroupBaseForApi read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return null;
   }
 
   @Override
-  public Object read(String wallclockTime, Map readOptions) throws FeatureStoreException, IOException, ParseException {
+  public FeatureGroupBaseForApi read(boolean online, Map<String, String> readOptions)
+      throws FeatureStoreException, IOException {
     return null;
   }
 
   @Override
-  public Object read(boolean online, Map readOptions) throws FeatureStoreException, IOException {
+  public FeatureGroupBaseForApi read(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
     return null;
   }
 
   @Override
-  public Object read(Map readOptions) throws FeatureStoreException, IOException {
+  public FeatureGroupBaseForApi read(String wallclockTime, Map<String, String> readOptions)
+      throws FeatureStoreException, IOException, ParseException {
     return null;
   }
 
@@ -86,58 +89,74 @@ public class FeatureGroupBaseForApi extends FeatureGroupBase {
   }
 
   @Override
-  public void insert(Object featureData) throws IOException, FeatureStoreException, ParseException {
+  public void insert(FeatureGroupBaseForApi featureData) throws IOException, FeatureStoreException, ParseException {
 
   }
 
   @Override
-  public void insert(Object featureData, Storage storage) throws IOException, FeatureStoreException, ParseException {
+  public void insert(FeatureGroupBaseForApi featureData, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
 
   }
 
   @Override
-  public void insert(Object featureData, boolean overwrite) throws IOException, FeatureStoreException, ParseException {
-
-  }
-
-  @Override
-  public void insert(Object featureData, Storage storage, boolean overwrite)
+  public void insert(FeatureGroupBaseForApi featureData, Storage storage)
       throws IOException, FeatureStoreException, ParseException {
 
   }
 
   @Override
-  public void insert(Object featureData, HudiOperationType operation)
+  public void insert(FeatureGroupBaseForApi featureData, boolean overwrite)
+      throws IOException, FeatureStoreException, ParseException {
+
+  }
+
+  @Override
+  public void insert(FeatureGroupBaseForApi featureData, Storage storage, boolean overwrite)
+      throws IOException, FeatureStoreException, ParseException {
+
+  }
+
+  @Override
+  public void insert(FeatureGroupBaseForApi featureData, boolean overwrite, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
 
   }
 
   @Override
-  public void insert(Object featureData, boolean overwrite, Map writeOptions, JobConfiguration jobConfiguration)
+  public void insert(FeatureGroupBaseForApi featureData, HudiOperationType operation)
       throws FeatureStoreException, IOException, ParseException {
 
   }
 
   @Override
-  public void insert(Object featureData, JobConfiguration jobConfiguration)
+  public void insert(FeatureGroupBaseForApi featureData, Storage storage, boolean overwrite,
+                     HudiOperationType operation, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
 
   }
 
   @Override
-  public void insert(Object featureData, Storage storage, boolean overwrite, HudiOperationType operation,
-                     Map writeOptions) throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void insert(Object featureData, boolean overwrite, Map writeOptions)
+  public void insert(FeatureGroupBaseForApi featureData, JobConfiguration jobConfiguration)
       throws FeatureStoreException, IOException, ParseException {
 
   }
 
   @Override
-  public void insert(Object featureData, Map writeOptions) throws FeatureStoreException, IOException, ParseException {
+  public void insert(FeatureGroupBaseForApi featureData, boolean overwrite, Map<String, String> writeOptions,
+                     JobConfiguration jobConfiguration) throws FeatureStoreException, IOException, ParseException {
+
+  }
+
+  @Override
+  public void commitDeleteRecord(FeatureGroupBaseForApi featureData)
+      throws FeatureStoreException, IOException, ParseException {
+
+  }
+
+  @Override
+  public void commitDeleteRecord(FeatureGroupBaseForApi featureData, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
 
   }
 
@@ -165,8 +184,33 @@ public class FeatureGroupBaseForApi extends FeatureGroupBase {
   }
 
   @Override
+  public QueryBase selectFeatures(List<Feature> features) {
+    return null;
+  }
+
+  @Override
+  public QueryBase select(List<String> features) {
+    return null;
+  }
+
+  @Override
   public QueryBase selectAll() {
     return null;
+  }
+
+  @Override
+  public QueryBase selectExceptFeatures(List<Feature> features) {
+    return null;
+  }
+
+  @Override
+  public QueryBase selectExcept(List<String> features) {
+    return null;
+  }
+
+  @Override
+  public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
+
   }
 
   @Override
@@ -175,17 +219,12 @@ public class FeatureGroupBaseForApi extends FeatureGroupBase {
   }
 
   @Override
-  public void updateFeatures(List list) throws FeatureStoreException, IOException, ParseException {
+  public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
 
   }
 
   @Override
   public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void appendFeatures(List list) throws FeatureStoreException, IOException, ParseException {
 
   }
 
@@ -202,36 +241,5 @@ public class FeatureGroupBaseForApi extends FeatureGroupBase {
   @Override
   public Statistics getStatistics() throws FeatureStoreException, IOException {
     return null;
-  }
-
-  @Override
-  public QueryBase selectExcept(List features) {
-    return null;
-  }
-
-  @Override
-  public QueryBase selectExceptFeatures(List list) {
-    return null;
-  }
-
-  @Override
-  public QueryBase select(List features) {
-    return null;
-  }
-
-  @Override
-  public QueryBase selectFeatures(List list) {
-    return null;
-  }
-
-  @Override
-  public void commitDeleteRecord(Object featureData, Map writeOptions)
-      throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void commitDeleteRecord(Object featureData) throws FeatureStoreException, IOException, ParseException {
-
   }
 }

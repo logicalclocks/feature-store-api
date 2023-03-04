@@ -47,14 +47,14 @@ public class HopsworksClient {
   public static final String API_PATH = "/hopsworks-api/api";
   public static final String PROJECT_PATH = API_PATH + "/project{/projectId}";
 
-  private static HopsworksClient hopsworksClientInstance = null;
-  private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksClient.class);
+  protected static HopsworksClient hopsworksClientInstance = null;
+  protected static final Logger LOGGER = LoggerFactory.getLogger(HopsworksClient.class);
 
   @Getter
   @Setter
-  private Project project;
+  protected Project project;
   @Getter
-  private String host;
+  protected String host;
 
   public static HopsworksClient getInstance() throws FeatureStoreException {
     if (hopsworksClientInstance == null) {
@@ -71,8 +71,7 @@ public class HopsworksClient {
   public static synchronized HopsworksClient setupHopsworksClient(String host, int port, Region region,
                                                                   SecretStore secretStore, boolean hostnameVerification,
                                                                   String trustStorePath, String apiKeyFilePath,
-                                                                  String apiKeyValue, String sparkTrustStorePath,
-                                                                  String sparkKeyStorePath, String sparkCertKey)
+                                                                  String apiKeyValue)
       throws FeatureStoreException {
     if (hopsworksClientInstance != null) {
       return hopsworksClientInstance;
@@ -84,8 +83,7 @@ public class HopsworksClient {
         hopsworksHttpClient = new HopsworksInternalClient();
       } else {
         hopsworksHttpClient = new HopsworksExternalClient(host, port, region,
-            secretStore, hostnameVerification, trustStorePath, apiKeyFilePath, apiKeyValue, sparkTrustStorePath,
-            sparkKeyStorePath, sparkCertKey);
+            secretStore, hostnameVerification, trustStorePath, apiKeyFilePath, apiKeyValue);
       }
     } catch (Exception e) {
       throw new FeatureStoreException("Could not setup Hopsworks client", e);
@@ -96,10 +94,10 @@ public class HopsworksClient {
   }
 
   @Getter
-  private HopsworksHttpClient hopsworksHttpClient;
+  protected HopsworksHttpClient hopsworksHttpClient;
 
   @Getter
-  private ObjectMapper objectMapper;
+  protected ObjectMapper objectMapper;
 
   @VisibleForTesting
   public HopsworksClient(HopsworksHttpClient hopsworksHttpClient, String host) {
@@ -114,7 +112,7 @@ public class HopsworksClient {
 
   @AllArgsConstructor
   @NoArgsConstructor
-  private static class HopsworksErrorClass {
+  protected static class HopsworksErrorClass {
     @Getter
     @Setter
     private Integer errorCode;
@@ -131,7 +129,7 @@ public class HopsworksClient {
     }
   }
 
-  private static class BaseHandler<T> implements ResponseHandler<T> {
+  protected static class BaseHandler<T> implements ResponseHandler<T> {
 
     private Class<T> cls;
     private ObjectMapper objectMapper;

@@ -18,17 +18,19 @@
 package com.logicalclocks.base.constructor;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.Storage;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.FeatureGroupBase;
-
 import com.logicalclocks.base.metadata.QueryConstructorApi;
 import com.logicalclocks.base.metadata.StorageConnectorApi;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,11 +42,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public abstract class QueryBase<T extends QueryBase<T>> {
+public abstract class QueryBase<T extends QueryBase<T, T2>, T2 extends FeatureGroupBase> {
 
   @Getter
   @Setter
-  protected FeatureGroupBase leftFeatureGroup;
+  protected T2 leftFeatureGroup;
   @Getter
   @Setter
   protected List<Feature> leftFeatures;
@@ -70,7 +72,7 @@ public abstract class QueryBase<T extends QueryBase<T>> {
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
-  public QueryBase(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
+  public QueryBase(T2 leftFeatureGroup, List<Feature> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
   }
