@@ -18,6 +18,7 @@
 package com.logicalclocks.base;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.logicalclocks.base.constructor.QueryBase;
 import com.logicalclocks.base.metadata.FeatureGroupApi;
 import com.logicalclocks.base.metadata.StorageConnectorApi;
 import com.logicalclocks.base.metadata.TrainingDatasetApi;
@@ -28,7 +29,7 @@ import lombok.Setter;
 import java.io.IOException;
 import java.util.List;
 
-public abstract class FeatureStoreBase<T extends FeatureStoreBase> {
+public abstract class FeatureStoreBase<T extends FeatureStoreBase, T2 extends QueryBase> {
 
   @Getter
   @Setter
@@ -87,10 +88,24 @@ public abstract class FeatureStoreBase<T extends FeatureStoreBase> {
                                                        String eventTime)
       throws IOException, FeatureStoreException;
 
+  public abstract Object getOrCreateStreamFeatureGroup(String name, Integer version, String description,
+                                                List<String> primaryKeys, List<String> partitionKeys,
+                                                String hudiPrecombineKey, boolean onlineEnabled,
+                                                StatisticsConfig statisticsConfig, String eventTime)
+      throws IOException, FeatureStoreException;
+
   public abstract Object  createExternalFeatureGroup();
 
-  public abstract FeatureViewBase getFeatureView(@NonNull String name, @NonNull Integer version)
+  public abstract Object getFeatureView(String name) throws FeatureStoreException, IOException;
+
+  public abstract Object getFeatureView(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException;
+
+  public abstract Object getOrCreateFeatureView(String name, T2 query, Integer version)
+      throws FeatureStoreException, IOException;
+
+  public abstract Object getOrCreateFeatureView(String name, T2 query, Integer version, String description,
+                                                List<String> labels) throws FeatureStoreException, IOException;
 
   /**
    * Get a external feature group object from the feature store.

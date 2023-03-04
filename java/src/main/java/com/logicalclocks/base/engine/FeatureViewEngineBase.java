@@ -43,13 +43,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1>, T2 extends FeatureViewBase<T2, T3, T4>,
-    T3 extends FeatureStoreBase<T3>, T4> {
+public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1>, T2 extends FeatureViewBase<T2, T3, T1, T5>,
+    T3 extends FeatureStoreBase<T3, T1>, T5> {
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureViewEngineBase.class);
 
   protected FeatureViewApi featureViewApi = new FeatureViewApi();
   protected TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_VIEW);
+
   public static String AMBIGUOUS_LABEL_ERROR = "Provided label '%s' is ambiguous and exists in more than one feature "
       + "groups. You can provide the label with the prefix you specify in the join.";
   public static String LABEL_NOT_EXIST_ERROR = "Provided label '%s' do not exist in any of the feature groups.";
@@ -299,7 +300,7 @@ public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1>, T2 extends
                                            String description, List<String> labels)
       throws FeatureStoreException, IOException;
 
-  public abstract T4 getBatchData(
+  public abstract T5 getBatchData(
       T2 featureView, Date startTime, Date endTime, Map<String, String> readOptions,
       Integer trainingDataVersion
   ) throws FeatureStoreException, IOException;

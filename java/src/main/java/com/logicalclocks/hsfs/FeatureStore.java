@@ -45,11 +45,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FeatureStore extends FeatureStoreBase<FeatureStore> {
+public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
 
-  private MetaDataUtils metaDataUtils = new MetaDataUtils();
   private FeatureGroupEngine featureGroupEngine;
   private FeatureViewEngine featureViewEngine;
+  private MetaDataUtils metaDataUtils = new MetaDataUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
 
@@ -153,6 +153,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore> {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
+  @Override
   public StreamFeatureGroup getStreamFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
     return metaDataUtils.getStreamFeatureGroup(this, name, version);
@@ -166,6 +167,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore> {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
+  @Override
   public StreamFeatureGroup getStreamFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
@@ -177,12 +179,14 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore> {
         .featureStore(this);
   }
 
+  @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version)
       throws IOException, FeatureStoreException {
     return metaDataUtils.getOrCreateStreamFeatureGroup(this, name, version, null,
         null, null, null, false, null, null);
   }
 
+  @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
                                                           boolean onlineEnabled, String eventTime)
       throws IOException, FeatureStoreException {
@@ -190,6 +194,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore> {
         primaryKeys, null, null, onlineEnabled, null, eventTime);
   }
 
+  @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
                                                           List<String> partitionKeys, boolean onlineEnabled,
                                                           String eventTime) throws IOException, FeatureStoreException {
@@ -199,6 +204,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore> {
         primaryKeys, partitionKeys, null, onlineEnabled, null, eventTime);
   }
 
+  @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, String description,
                                                           List<String> primaryKeys, List<String> partitionKeys,
                                                           String hudiPrecombineKey, boolean onlineEnabled,
@@ -230,6 +236,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore> {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
+  @Override
   public ExternalFeatureGroup getExternalFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
     return metaDataUtils.getExternalFeatureGroup(this, name, version);
@@ -243,56 +250,68 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore> {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
+  @Override
   public ExternalFeatureGroup getExternalFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
     return getExternalFeatureGroup(name, DEFAULT_VERSION);
   }
 
+  @Override
   public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.class);
   }
 
+  @Override
   public StorageConnector.JdbcConnector getJdbcConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.JdbcConnector.class);
   }
 
+  @Override
   public StorageConnector.JdbcConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
     return storageConnectorApi.getOnlineStorageConnector(this, StorageConnector.JdbcConnector.class);
   }
 
+  @Override
   public StorageConnector.S3Connector getS3Connector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.S3Connector.class);
   }
 
+  @Override
   public StorageConnector.HopsFsConnector getHopsFsConnector(String name) throws FeatureStoreException,
       IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.HopsFsConnector.class);
   }
 
+  @Override
   public StorageConnector.RedshiftConnector getRedshiftConnector(String name)
       throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.RedshiftConnector.class);
   }
 
+  @Override
   public StorageConnector.SnowflakeConnector getSnowflakeConnector(String name)
       throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.SnowflakeConnector.class);
   }
 
+  @Override
   public StorageConnector.AdlsConnector getAdlsConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.AdlsConnector.class);
   }
 
+  @Override
   public StorageConnector.KafkaConnector getKafkaConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.KafkaConnector.class);
   }
 
+  @Override
   public StorageConnector.BigqueryConnector getBigqueryConnector(String name) throws FeatureStoreException,
       IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.BigqueryConnector.class);
   }
 
+  @Override
   public StorageConnector.GcsConnector getGcsConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.GcsConnector.class);
   }
@@ -346,6 +365,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore> {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
+  @Override
   public FeatureView getOrCreateFeatureView(String name, Query query, Integer version)
       throws FeatureStoreException, IOException {
     return featureViewEngine.getOrCreateFeatureView(this, name, version, query, null, null);
@@ -364,6 +384,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore> {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
+  @Override
   public FeatureView getOrCreateFeatureView(String name, Query query, Integer version, String description,
                                             List<String> labels) throws FeatureStoreException, IOException {
     return featureViewEngine.getOrCreateFeatureView(this, name, version, query, description, labels);
@@ -378,6 +399,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore> {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
+  @Override
   public FeatureView getFeatureView(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
     return featureViewEngine.get(this, name, version);
@@ -391,6 +413,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore> {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
+  @Override
   public FeatureView getFeatureView(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature view `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");

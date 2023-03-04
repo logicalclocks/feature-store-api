@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020-2022. Hopsworks AB
+ *  Copyright (c) 2020-2023. Hopsworks AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  *
  */
 
-package com.logicalclocks.hsfs;
+package com.logicalclocks.base;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

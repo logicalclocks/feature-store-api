@@ -37,7 +37,8 @@ import java.util.List;
 import java.util.Map;
 
 @NoArgsConstructor
-public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends FeatureStoreBase<T3>, T4> {
+public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends FeatureStoreBase<T3, T4>,
+    T4 extends QueryBase, T5> {
 
   @Getter
   @Setter
@@ -67,7 +68,7 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
 
   @Getter
   @Setter
-  protected QueryBase query;
+  protected T4 query;
 
   @Getter
   @Setter
@@ -271,12 +272,12 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
   public abstract String getBatchQuery(String startTime, String endTime)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract T4 getBatchData() throws FeatureStoreException, IOException, ParseException;
+  public abstract T5 getBatchData() throws FeatureStoreException, IOException, ParseException;
 
-  public abstract T4 getBatchData(String startTime, String endTime)
+  public abstract T5 getBatchData(String startTime, String endTime)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract T4 getBatchData(String startTime, String endTime, Map<String, String> readOptions)
+  public abstract T5 getBatchData(String startTime, String endTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException;
 
   public abstract Object getTrainingData(Integer version, Map<String, String> readOptions)

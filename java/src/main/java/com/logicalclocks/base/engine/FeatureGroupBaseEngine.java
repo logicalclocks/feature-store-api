@@ -24,7 +24,6 @@ import com.logicalclocks.base.metadata.TagsApi;
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
-import com.logicalclocks.hsfs.ExternalFeatureGroup;
 import org.apache.http.entity.StringEntity;
 
 import java.io.IOException;
@@ -35,7 +34,7 @@ import java.util.Optional;
 
 public class FeatureGroupBaseEngine {
 
-  protected FeatureGroupApi featureGroupApi = new FeatureGroupApi();
+  protected FeatureGroupApi featureGroupApi;
   protected FeatureGroupUtils utils = new FeatureGroupUtils();
   protected TagsApi tagsApi;
 
@@ -107,7 +106,7 @@ public class FeatureGroupBaseEngine {
     featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
   }
 
-  protected  <T extends FeatureGroupBase> T saveExtennalFeatureGroupMetaData(ExternalFeatureGroup externalFeatureGroup,
+  protected  <T extends FeatureGroupBase> T saveExtennalFeatureGroupMetaData(T externalFeatureGroup,
                                                                              Class<T> fgClass)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();

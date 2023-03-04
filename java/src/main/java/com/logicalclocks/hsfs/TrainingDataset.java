@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.logicalclocks.base.DataFormat;
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.Split;
@@ -55,6 +56,10 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class TrainingDataset extends TrainingDatasetBase {
+
+  @Getter
+  @Setter
+  private StorageConnector storageConnector;
 
   @Getter
   @Setter

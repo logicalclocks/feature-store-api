@@ -26,6 +26,7 @@ import com.logicalclocks.base.metadata.TagsApi;
 import com.logicalclocks.base.metadata.TrainingDatasetApi;
 import com.logicalclocks.hsfs.TrainingDataset;
 import com.logicalclocks.hsfs.constructor.Query;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;

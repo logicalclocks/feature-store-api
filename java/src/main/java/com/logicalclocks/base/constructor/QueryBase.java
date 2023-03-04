@@ -77,10 +77,12 @@ public abstract class QueryBase<T extends QueryBase<T>> {
 
   public abstract String sql();
 
-  public <U>  String sql(Storage storage, Class<U> queryBaseType) {
+  public abstract String sql(Storage storage);
+
+  public <T2> String sql(Storage storage, Class<T2> fsQueryType) {
     try {
       return queryConstructorApi
-          .constructQuery(this.getLeftFeatureGroup().getFeatureStore(), this, queryBaseType)
+          .constructQuery(this.getLeftFeatureGroup().getFeatureStore(), this, fsQueryType)
           .getStorageQuery(storage);
     } catch (FeatureStoreException | IOException e) {
       return e.getMessage();
@@ -291,9 +293,16 @@ public abstract class QueryBase<T extends QueryBase<T>> {
     return updatedFeatures;
   }
 
+  public abstract Object read()
+      throws FeatureStoreException, IOException;
+
+  public abstract Object read(boolean online)
+      throws FeatureStoreException, IOException;
 
   public abstract Object read(boolean online, Map<String, String> readOptions)
       throws FeatureStoreException, IOException;
+
+  public abstract void show(int numRows) throws FeatureStoreException, IOException;
 
   public abstract void show(boolean online, int numRows) throws FeatureStoreException, IOException;
 }

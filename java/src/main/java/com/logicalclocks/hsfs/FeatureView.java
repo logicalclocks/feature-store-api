@@ -20,6 +20,7 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.logicalclocks.base.DataFormat;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.FeatureViewBase;
 import com.logicalclocks.base.Split;
@@ -46,7 +47,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Dataset<Row>> {
+public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Query, Dataset<Row>> {
 
   @Getter
   @Setter

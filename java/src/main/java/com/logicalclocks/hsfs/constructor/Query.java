@@ -39,19 +39,22 @@ public class Query extends QueryBase<Query> {
     this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
   }
 
+  @Override
   public String sql() {
     return sql(Storage.OFFLINE, FsQuery.class);
   }
 
+  @Override
   public String sql(Storage storage) {
     return sql(storage, FsQuery.class);
   }
 
-
+  @Override
   public Dataset<Row> read() throws FeatureStoreException, IOException {
     return read(false, null);
   }
 
+  @Override
   public Dataset<Row> read(boolean online) throws FeatureStoreException, IOException {
     return read(online, null);
   }
@@ -76,6 +79,7 @@ public class Query extends QueryBase<Query> {
     }
   }
 
+  @Override
   public void show(int numRows) throws FeatureStoreException, IOException {
     show(false, numRows);
   }

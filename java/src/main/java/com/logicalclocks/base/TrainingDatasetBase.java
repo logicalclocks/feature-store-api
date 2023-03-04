@@ -25,8 +25,6 @@ import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.engine.VectorServer;
 import com.logicalclocks.base.metadata.Statistics;
 
-import com.logicalclocks.hsfs.DataFormat;
-import com.logicalclocks.hsfs.StorageConnector;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -107,11 +105,6 @@ public abstract class TrainingDatasetBase {
   @Getter
   @Setter
   protected DataFormat dataFormat;
-
-  @Getter
-  @Setter
-  protected StorageConnector storageConnector;
-
 
   @Getter
   @Setter

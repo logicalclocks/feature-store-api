@@ -127,5 +127,4 @@ public class MetaDataUtils {
     resultFg.setFeatureStore(featureStore);
     return resultFg;
   }
-
 }

@@ -27,7 +27,7 @@ import com.logicalclocks.base.TrainingDatasetFeature;
 import com.logicalclocks.base.TrainingDatasetType;
 import com.logicalclocks.base.engine.FeatureViewEngineBase;
 import com.logicalclocks.base.metadata.Statistics;
-import com.logicalclocks.hsfs.DataFormat;
+import com.logicalclocks.base.DataFormat;
 import com.logicalclocks.hsfs.FeatureView;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.FeatureStore;
