@@ -20,7 +20,7 @@ package com.logicalclocks.base;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import com.logicalclocks.base.constructor.QueryBase;
-import com.logicalclocks.base.engine.FeatureGroupBaseEngine;
+import com.logicalclocks.base.engine.FeatureGroupEngineBase;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.base.metadata.Subject;
@@ -127,7 +127,7 @@ public abstract class FeatureGroupBase<T> {
   @JsonIgnore
   protected Subject subject;
 
-  protected FeatureGroupBaseEngine featureGroupBaseEngine = new FeatureGroupBaseEngine();
+  protected FeatureGroupEngineBase featureGroupEngineBase = new FeatureGroupEngineBase();
   protected FeatureGroupUtils utils = new FeatureGroupUtils();
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
@@ -135,7 +135,7 @@ public abstract class FeatureGroupBase<T> {
   public void delete() throws FeatureStoreException, IOException {
     LOGGER.warn("JobWarning: All jobs associated to feature group `" + name + "`, version `"
         + version + "` will be removed.");
-    featureGroupBaseEngine.delete(this);
+    featureGroupEngineBase.delete(this);
   }
 
   /**
@@ -147,7 +147,7 @@ public abstract class FeatureGroupBase<T> {
    * @throws IOException IOException
    */
   public void addTag(String name, Object value) throws FeatureStoreException, IOException {
-    featureGroupBaseEngine.addTag(this, name, value);
+    featureGroupEngineBase.addTag(this, name, value);
   }
 
   /**
@@ -159,7 +159,7 @@ public abstract class FeatureGroupBase<T> {
    */
   @JsonIgnore
   public Map<String, Object> getTags() throws FeatureStoreException, IOException {
-    return featureGroupBaseEngine.getTags(this);
+    return featureGroupEngineBase.getTags(this);
   }
 
   /**
@@ -172,7 +172,7 @@ public abstract class FeatureGroupBase<T> {
    */
   @JsonIgnore
   public Object getTag(String name) throws FeatureStoreException, IOException {
-    return featureGroupBaseEngine.getTag(this, name);
+    return featureGroupEngineBase.getTag(this, name);
   }
 
   /**
@@ -183,7 +183,7 @@ public abstract class FeatureGroupBase<T> {
    * @throws IOException IOException
    */
   public void deleteTag(String name) throws FeatureStoreException, IOException {
-    featureGroupBaseEngine.deleteTag(this, name);
+    featureGroupEngineBase.deleteTag(this, name);
   }
 
   /**
@@ -194,7 +194,7 @@ public abstract class FeatureGroupBase<T> {
    * @throws IOException IOException
    */
   public void updateDescription(String description) throws FeatureStoreException, IOException {
-    featureGroupBaseEngine.updateDescription(this, description, this.getClass());
+    featureGroupEngineBase.updateDescription(this, description, this.getClass());
   }
 
   /**
@@ -207,7 +207,7 @@ public abstract class FeatureGroupBase<T> {
    */
   public void updateFeatureDescription(String featureName, String description)
       throws FeatureStoreException, IOException {
-    featureGroupBaseEngine.updateFeatures(this,
+    featureGroupEngineBase.updateFeatures(this,
         Collections.singletonList(Feature.builder().name(featureName).description(description).type("tmp").build()),
         this.getClass());
   }
@@ -345,7 +345,7 @@ public abstract class FeatureGroupBase<T> {
    * @throws IOException IOException
    */
   public void updateStatisticsConfig() throws FeatureStoreException, IOException {
-    featureGroupBaseEngine.updateStatisticsConfig(this, this.getClass());
+    featureGroupEngineBase.updateStatisticsConfig(this, this.getClass());
   }
 
   /**

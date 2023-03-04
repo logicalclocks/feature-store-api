@@ -20,7 +20,7 @@ package com.logicalclocks.hsfs;
 import com.logicalclocks.base.ExternalDataFormat;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
-import com.logicalclocks.hsfs.engine.ExternalFeatureGroupEngine;
+import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -39,7 +39,7 @@ public class TestExternalFeatureGroup {
 
     FeatureStore featureStore = Mockito.mock(FeatureStore.class);
     StorageConnector storageConnector = Mockito.mock(StorageConnector.class);
-    ExternalFeatureGroupEngine externalFeatureGroupEngine = new ExternalFeatureGroupEngine();
+    FeatureGroupEngine externalFeatureGroupEngine = new FeatureGroupEngine();
 
     // Act
     List<Feature> features = new ArrayList<>();
@@ -65,7 +65,7 @@ public class TestExternalFeatureGroup {
 
     FeatureStore featureStore = Mockito.mock(FeatureStore.class);
     StorageConnector storageConnector = Mockito.mock(StorageConnector.class);
-    ExternalFeatureGroupEngine externalFeatureGroupEngine = new ExternalFeatureGroupEngine();
+    FeatureGroupEngine externalFeatureGroupEngine = new FeatureGroupEngine();
 
     // Act
     List<Feature> features = new ArrayList<>();

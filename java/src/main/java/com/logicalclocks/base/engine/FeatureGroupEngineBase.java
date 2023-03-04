@@ -24,7 +24,10 @@ import com.logicalclocks.base.metadata.TagsApi;
 import com.logicalclocks.base.EntityEndpointType;
 import com.logicalclocks.base.Feature;
 import com.logicalclocks.base.FeatureStoreException;
+
 import org.apache.http.entity.StringEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,19 +35,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class FeatureGroupBaseEngine {
+public class FeatureGroupEngineBase {
 
-  protected FeatureGroupApi featureGroupApi;
+  protected FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   protected FeatureGroupUtils utils = new FeatureGroupUtils();
-  protected TagsApi tagsApi;
+  protected TagsApi tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
 
-  public FeatureGroupBaseEngine() {
-    featureGroupApi = new FeatureGroupApi();
-    tagsApi = new TagsApi(EntityEndpointType.FEATURE_GROUP);
+  protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupEngineBase.class);
+
+  public FeatureGroupEngineBase() {
   }
 
   // for testing
-  public FeatureGroupBaseEngine(FeatureGroupApi featureGroupApi, TagsApi tagsApi) {
+  public FeatureGroupEngineBase(FeatureGroupApi featureGroupApi, TagsApi tagsApi) {
     this.featureGroupApi = featureGroupApi;
     this.tagsApi = tagsApi;
   }

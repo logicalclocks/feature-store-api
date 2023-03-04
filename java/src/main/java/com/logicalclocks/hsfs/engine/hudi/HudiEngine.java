@@ -33,7 +33,6 @@ import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
-import com.logicalclocks.hsfs.metadata.MetaDataUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hudi.common.model.HoodieCommitMetadata;
@@ -145,7 +144,6 @@ public class HudiEngine {
 
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
-  private MetaDataUtils metaDataUtils = new MetaDataUtils();
   private FeatureGroupApi featureGroupApi = new FeatureGroupApi();
   private FeatureGroupCommit fgCommitMetadata = new FeatureGroupCommit();
   private DeltaStreamerConfig deltaStreamerConfig = new DeltaStreamerConfig();
@@ -310,7 +308,7 @@ public class HudiEngine {
       throws IOException, FeatureStoreException {
     Configuration configuration = sparkSession.sparkContext().hadoopConfiguration();
     Properties properties = new Properties();
-    properties.putAll(setupHudiWriteOpts((FeatureGroupBase) streamFeatureGroup,
+    properties.putAll(setupHudiWriteOpts(streamFeatureGroup,
         HudiOperationType.BULK_INSERT, null));
     HoodieTableMetaClient.initTableAndGetMetaClient(configuration, streamFeatureGroup.getLocation(), properties);
   }
@@ -324,9 +322,10 @@ public class HudiEngine {
     if (!sparkSchemasMatch(hudiSchema, hiveSchema)) {
       Dataset dataframe = sparkSession.table(fgTableName).limit(0);
 
+      FeatureStore featureStore = (FeatureStore) hudiFeatureGroupAlias.getFeatureGroup().getFeatureStore();
+
       try {
-        FeatureGroup fullFG = metaDataUtils.getFeatureGroup(
-            (FeatureStore) hudiFeatureGroupAlias.getFeatureGroup().getFeatureStore(),
+        FeatureGroup fullFG = featureStore.getFeatureGroup(
                 hudiFeatureGroupAlias.getFeatureGroup().getName(),
                 hudiFeatureGroupAlias.getFeatureGroup().getVersion());
         saveHudiFeatureGroup(sparkSession, fullFG, dataframe,

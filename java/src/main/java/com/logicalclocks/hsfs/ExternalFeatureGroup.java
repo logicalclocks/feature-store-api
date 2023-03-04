@@ -32,7 +32,6 @@ import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.metadata.OnDemandOptions;
 import com.logicalclocks.base.metadata.Statistics;
 import com.logicalclocks.hsfs.constructor.Query;
-import com.logicalclocks.hsfs.engine.ExternalFeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.StatisticsEngine;
 
@@ -81,7 +80,6 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
 
   private final FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
 
-  private ExternalFeatureGroupEngine externalFeatureGroupEngine = new ExternalFeatureGroupEngine();
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
 
@@ -124,7 +122,7 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   }
 
   public void save() throws FeatureStoreException, IOException {
-    externalFeatureGroupEngine.saveExternalFeatureGroup(this);
+    featureGroupEngine.saveExternalFeatureGroup(this);
     codeEngine.saveCode(this);
     if (statisticsConfig.getEnabled()) {
       statisticsEngine.computeStatistics(this, read(), null);

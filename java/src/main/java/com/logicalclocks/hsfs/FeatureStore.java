@@ -31,7 +31,6 @@ import com.logicalclocks.hsfs.engine.FeatureViewEngine;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 
-import com.logicalclocks.hsfs.metadata.MetaDataUtils;
 import lombok.NonNull;
 
 import org.apache.spark.sql.Dataset;
@@ -49,7 +48,6 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
 
   private FeatureGroupEngine featureGroupEngine;
   private FeatureViewEngine featureViewEngine;
-  private MetaDataUtils metaDataUtils = new MetaDataUtils();
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
 
@@ -71,7 +69,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
    */
   public FeatureGroup getFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    return metaDataUtils.getFeatureGroup(this, name, version);
+    return featureGroupEngine.getFeatureGroup(this, name, version);
   }
 
   /**
@@ -99,7 +97,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
   public scala.collection.Seq<FeatureGroup> getFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
     List<FeatureGroup> featureGroups = new ArrayList<>();
-    for (FeatureGroupBase fg: metaDataUtils.getFeatureGroups(this, name)) {
+    for (FeatureGroupBase fg: featureGroupEngine.getFeatureGroups(this, name)) {
       featureGroups.add((FeatureGroup) fg);
     }
     return JavaConverters.asScalaBufferConverter(featureGroups)
@@ -129,7 +127,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
                                               boolean onlineEnabled,
                                               String eventTime) throws IOException, FeatureStoreException {
 
-    return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
+    return featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
         partitionKeys, null, onlineEnabled, null, null, eventTime);
   }
 
@@ -142,21 +140,6 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
 
     return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, description, primaryKeys,
         partitionKeys, hudiPrecombineKey, onlineEnabled, timeTravelFormat, statisticsConfig, eventTime);
-  }
-
-  /**
-   * Get a feature group object from the feature store.
-   *
-   * @param name the name of the feature group
-   * @param version the version of the feature group
-   * @return FeatureGroup
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   */
-  @Override
-  public StreamFeatureGroup getStreamFeatureGroup(@NonNull String name, @NonNull Integer version)
-      throws FeatureStoreException, IOException {
-    return metaDataUtils.getStreamFeatureGroup(this, name, version);
   }
 
   /**
@@ -174,15 +157,31 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
     return getStreamFeatureGroup(name, DEFAULT_VERSION);
   }
 
+  /**
+   * Get a feature group object from the feature store.
+   *
+   * @param name the name of the feature group
+   * @param version the version of the feature group
+   * @return FeatureGroup
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   */
+  @Override
+  public StreamFeatureGroup getStreamFeatureGroup(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException {
+    return featureGroupEngine.getStreamFeatureGroup(this, name, version);
+  }
+
   public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
     return StreamFeatureGroup.builder()
         .featureStore(this);
   }
 
+
   @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version)
       throws IOException, FeatureStoreException {
-    return metaDataUtils.getOrCreateStreamFeatureGroup(this, name, version, null,
+    return featureGroupEngine.getOrCreateStreamFeatureGroup(this, name, version, null,
         null, null, null, false, null, null);
   }
 
@@ -190,7 +189,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
                                                           boolean onlineEnabled, String eventTime)
       throws IOException, FeatureStoreException {
-    return metaDataUtils.getOrCreateStreamFeatureGroup(this, name, version, null,
+    return featureGroupEngine.getOrCreateStreamFeatureGroup(this, name, version, null,
         primaryKeys, null, null, onlineEnabled, null, eventTime);
   }
 
@@ -200,7 +199,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
                                                           String eventTime) throws IOException, FeatureStoreException {
 
 
-    return metaDataUtils.getOrCreateStreamFeatureGroup(this, name, version, null,
+    return featureGroupEngine.getOrCreateStreamFeatureGroup(this, name, version, null,
         primaryKeys, partitionKeys, null, onlineEnabled, null, eventTime);
   }
 
@@ -212,7 +211,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
                                                           String eventTime)
       throws IOException, FeatureStoreException {
 
-    return metaDataUtils.getOrCreateStreamFeatureGroup(this, name, version, description,
+    return featureGroupEngine.getOrCreateStreamFeatureGroup(this, name, version, description,
         primaryKeys, partitionKeys, hudiPrecombineKey, onlineEnabled, statisticsConfig, eventTime);
   }
 
@@ -227,6 +226,21 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
         .featureStore(this);
   }
 
+
+  /**
+   * Get a list of all versions of an external feature group from the feature store.
+   *
+   * @param name    the name of the feature group
+   * @return list of ExternalFeatureGroup objects
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   */
+  public scala.collection.Seq<ExternalFeatureGroup> getExternalFeatureGroups(@NonNull String name)
+      throws FeatureStoreException, IOException {
+    return JavaConverters.asScalaBufferConverter(featureGroupEngine.getExternalFeatureGroups(this, name))
+        .asScala().toSeq();
+  }
+
   /**
    * Get a external feature group object from the feature store.
    *
@@ -239,7 +253,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
   @Override
   public ExternalFeatureGroup getExternalFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    return metaDataUtils.getExternalFeatureGroup(this, name, version);
+    return featureGroupEngine.getExternalFeatureGroup(this, name, version);
   }
 
   /**
@@ -316,24 +330,10 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
     return storageConnectorApi.getByName(this, name, StorageConnector.GcsConnector.class);
   }
 
-  /**
-   * Get a list of all versions of an external feature group from the feature store.
-   *
-   * @param name    the name of the feature group
-   * @return list of ExternalFeatureGroup objects
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   */
-  public scala.collection.Seq<ExternalFeatureGroup> getExternalFeatureGroups(@NonNull String name)
-      throws FeatureStoreException, IOException {
-    return JavaConverters.asScalaBufferConverter(metaDataUtils.getExternalFeatureGroups(this, name))
-        .asScala().toSeq();
-  }
-
   @Deprecated
   public ExternalFeatureGroup getOnDemandFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
-    return metaDataUtils.getExternalFeatureGroup(this, name, version);
+    return featureGroupEngine.getExternalFeatureGroup(this, name, version);
   }
 
   @Deprecated
@@ -346,7 +346,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
   @Deprecated
   public scala.collection.Seq<ExternalFeatureGroup> getOnDemandFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
-    return JavaConverters.asScalaBufferConverter(metaDataUtils.getExternalFeatureGroups(this, name))
+    return JavaConverters.asScalaBufferConverter(featureGroupEngine.getExternalFeatureGroups(this, name))
         .asScala().toSeq();
   }
 
