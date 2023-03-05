@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public abstract class QueryBase<T extends QueryBase<T, T2>, T2 extends FeatureGroupBase> {
+public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends FeatureGroupBase, T3> {
 
   @Getter
   @Setter
@@ -58,7 +58,7 @@ public abstract class QueryBase<T extends QueryBase<T, T2>, T2 extends FeatureGr
   protected Long leftFeatureGroupEndTime;
   @Getter
   @Setter
-  protected List<Join> joins = new ArrayList<>();
+  protected List<Join<T>> joins = new ArrayList<>();
   @Getter
   @Setter
   protected FilterLogic filter;

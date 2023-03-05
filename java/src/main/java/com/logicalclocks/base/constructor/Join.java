@@ -25,11 +25,11 @@ import lombok.Setter;
 import java.util.List;
 
 @NoArgsConstructor
-public class Join {
+public class Join<T extends QueryBase> {
 
   @Getter
   @Setter
-  private QueryBase query;
+  private T query;
 
   @Getter
   @Setter
@@ -49,20 +49,20 @@ public class Join {
   @Setter
   private String prefix;
 
-  public Join(QueryBase query, JoinType type, String prefix) {
+  public Join(T query, JoinType type, String prefix) {
     this.query = query;
     this.type = type;
     this.prefix = prefix;
   }
 
-  public Join(QueryBase query, List<Feature> on, JoinType type, String prefix) {
+  public Join(T query, List<Feature> on, JoinType type, String prefix) {
     this.query = query;
     this.on = on;
     this.type = type;
     this.prefix = prefix;
   }
 
-  public Join(QueryBase query, List<Feature> leftOn, List<Feature> rightOn, JoinType type, String prefix) {
+  public Join(T query, List<Feature> leftOn, List<Feature> rightOn, JoinType type, String prefix) {
     this.query = query;
     this.leftOn = leftOn;
     this.rightOn = rightOn;

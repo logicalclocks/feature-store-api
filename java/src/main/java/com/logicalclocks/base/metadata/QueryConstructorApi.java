@@ -36,7 +36,7 @@ public class QueryConstructorApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(QueryConstructorApi.class);
 
-  public <U> FsQueryBase constructQuery(FeatureStoreBase featureStoreBase, QueryBase queryBase, Class<U> queryBaseType)
+  public <T> FsQueryBase constructQuery(FeatureStoreBase featureStoreBase, QueryBase queryBase, Class<T> queryBaseType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH

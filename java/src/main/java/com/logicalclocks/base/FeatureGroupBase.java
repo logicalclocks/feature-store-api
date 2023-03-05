@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 
-public abstract class FeatureGroupBase<T> {
+public abstract class FeatureGroupBase<T2> {
 
   @Getter
   @Setter
@@ -213,17 +213,17 @@ public abstract class FeatureGroupBase<T> {
         this.getClass());
   }
 
-  public abstract T read() throws FeatureStoreException, IOException;
+  public abstract T2 read() throws FeatureStoreException, IOException;
 
-  public abstract T read(boolean online) throws FeatureStoreException, IOException;
+  public abstract T2 read(boolean online) throws FeatureStoreException, IOException;
 
-  public abstract T read(Map<String, String> readOptions) throws FeatureStoreException, IOException;
+  public abstract T2 read(Map<String, String> readOptions) throws FeatureStoreException, IOException;
 
-  public abstract T read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException;
+  public abstract T2 read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException;
 
-  public abstract T read(String wallclockTime) throws FeatureStoreException, IOException, ParseException;
+  public abstract T2 read(String wallclockTime) throws FeatureStoreException, IOException, ParseException;
 
-  public abstract T read(String wallclockTime, Map<String, String> readOptions)
+  public abstract T2 read(String wallclockTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException;
 
   public abstract QueryBase asOf(String wallclockTime) throws FeatureStoreException, ParseException;
@@ -235,40 +235,40 @@ public abstract class FeatureGroupBase<T> {
 
   public abstract void show(int numRows, boolean online) throws FeatureStoreException, IOException;
 
-  public abstract void insert(T featureData) throws IOException, FeatureStoreException, ParseException;
+  public abstract void insert(T2 featureData) throws IOException, FeatureStoreException, ParseException;
 
-  public abstract void insert(T featureData,  Map<String, String> writeOptions)
+  public abstract void insert(T2 featureData,  Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void insert(T featureData, Storage storage)
+  public abstract void insert(T2 featureData, Storage storage)
       throws IOException, FeatureStoreException, ParseException;
 
-  public abstract void insert(T featureData, boolean overwrite)
+  public abstract void insert(T2 featureData, boolean overwrite)
       throws IOException, FeatureStoreException, ParseException;
 
-  public abstract void insert(T featureData, Storage storage, boolean overwrite)
+  public abstract void insert(T2 featureData, Storage storage, boolean overwrite)
       throws IOException, FeatureStoreException, ParseException;
 
-  public abstract void insert(T featureData, boolean overwrite, Map<String, String> writeOptions)
+  public abstract void insert(T2 featureData, boolean overwrite, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void insert(T featureData, HudiOperationType operation)
+  public abstract void insert(T2 featureData, HudiOperationType operation)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void insert(T featureData, Storage storage, boolean overwrite, HudiOperationType operation,
+  public abstract void insert(T2 featureData, Storage storage, boolean overwrite, HudiOperationType operation,
                      Map<String, String> writeOptions) throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void insert(T  featureData, JobConfiguration jobConfiguration)
+  public abstract void insert(T2  featureData, JobConfiguration jobConfiguration)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void insert(T featureData, boolean overwrite, Map<String, String> writeOptions,
+  public abstract void insert(T2 featureData, boolean overwrite, Map<String, String> writeOptions,
                               JobConfiguration jobConfiguration)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void commitDeleteRecord(T featureData)
+  public abstract void commitDeleteRecord(T2 featureData)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void commitDeleteRecord(T featureData, Map<String, String> writeOptions)
+  public abstract void commitDeleteRecord(T2 featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException;
 
   public abstract Map<Long, Map<String, String>> commitDetails()
