@@ -255,7 +255,7 @@ public class SparkEngine {
    * @param query Query Object
    * @param queryReadOptions Additional read options as key-value pairs, defaults to empty Map
    * @param writeOptions Additional write options as key-value pairs, defaults to empty Map
-   * @param saveMode com.logicalclocks.hsfs.saveMode: Append, Overwrite, ErrorIfExists, Ignore
+   * @param saveMode org.apache.spark.sql.saveMode: Append, Overwrite, ErrorIfExists, Ignore
    * @return Spark dataframe
    * @throws FeatureStoreException If Client is not connected to Hopsworks
    * @throws IOException Generic IO exception.

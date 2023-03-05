@@ -122,14 +122,14 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   /**
    * Read the feature group into a dataframe.
-   * Reads the feature group by from the offline storage as Spark DataFrame on Hopsworks and Databricks.
+   * Reads the feature group by from the offline storage as Spark DataFrame.
    *
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
-   *        // get stream feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature group handle
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // read feature group
    *        fg.read()
    * }
@@ -146,14 +146,14 @@ public class StreamFeatureGroup extends FeatureGroupBase {
 
   /**
    * Read the stream feature group into a dataframe.
-   * Reads the stream feature group from the offline or online storage as Spark DataFrame on Hopsworks and Databricks.
+   * Reads the stream feature group from the offline or online storage as Spark DataFrame.
    *
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
-   *        //get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature group handle
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // read feature group data from online storage
    *        fg.read(true)
    *        // read feature group data from offline storage
@@ -179,11 +179,13 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
-   *        // get stream feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature group handle
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // define additional read options
-   *        Map<String, String> readOptions = ...;
+   *        Map<String, String> readOptions = new HashMap<String, String>() {{
+   *                                                  put("hoodie.datasource.read.end.instanttime", "20230401211015")
+   *                                                }};
    *        // read feature group data
    *        fg.read(readOptions)
    * }
@@ -206,9 +208,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // read feature group data as of specific point in time (Hudi commit timestamp).
    *        fg.read("20230205210923")
    * }
@@ -232,11 +234,13 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // define additional read options
-   *        Map<String, String> readOptions = ...;
+   *        Map<String, String> readOptions = new HashMap<String, String>() {{
+   *                                                  put("hoodie.datasource.read.end.instanttime", "20230401211015")
+   *                                                }};
    *        // read stream feature group data as of specific point in time (Hudi commit timestamp).
    *        fg.read("20230205210923", readOptions)
    * }
@@ -276,9 +280,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // get query object to retrieve stream feature group feature data as of
    *        // specific point in time (Hudi commit timestamp).
    *        fg.asOf("20230205210923")
@@ -302,10 +306,11 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * or used further to perform joins or construct a training dataset.
    *
    * <pre>
-   * {@code // get feature store handle
-   *        FeatureStore fs = ...;
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // get query object to retrieve feature group feature data as of specific point in time "20230205210923"
    *        // but exclude commits until "20230204073411" (Hudi commit timestamp).
    *        fg.asOf("20230205210923", "20230204073411")
@@ -340,8 +345,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a
-   * dataframe into the existing stream feature group.
    * Incrementally insert data to a stream feature group or overwrite all  data contained in the feature group.
    * The `features` dataframe can be a Spark DataFrame or RDD.
    * If the stream feature group doesn't exist, the insert method will create the necessary metadata the first time it
@@ -350,9 +353,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        //insert feature data
    *        fg.insert(featureData);
    * }
@@ -370,8 +373,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a
-   * dataframe into the existing stream feature group.
    * Incrementally insert data to a stream feature group or overwrite all  data contained in the feature group.
    * The `features` dataframe can be a Spark DataFrame or RDD.
    * If the stream feature group doesn't exist, the insert method will create the necessary metadata the first time it
@@ -380,11 +381,15 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // define additional write options
-   *        Map<String, String> writeOptions = ...;
+   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
+   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
+   *                           put("hoodie.insert.shuffle.parallelism", "5");
+   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
+   *                           };
    *        // insert feature data
    *        fg.insert(featureData, writeOptions);
    * }
@@ -404,8 +409,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a
-   * dataframe into the existing stream feature group.
    * Incrementally insert data to a stream feature group or overwrite all  data contained in the feature group.
    * The `features` dataframe can be a Spark DataFrame or RDD.
    * If the stream feature group doesn't exist, the insert method will create the necessary metadata the first time it
@@ -414,11 +417,13 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // Define job configuration.
-   *        JobConfiguration jobConfiguration = ...;
+   *        JobConfiguration jobConfiguration = new JobConfiguration();
+   *        jobConfiguration.setDynamicAllocationEnabled(true);
+   *        jobConfiguration.setAmMemory(2048);
    *        // insert feature data
    *        fg.insert(featureData, jobConfiguration);
    * }
@@ -438,8 +443,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the stream feature group to the feature store or insert data from a
-   * dataframe into the existing stream feature group.
    * Incrementally insert data to a stream feature group or overwrite all  data contained in the feature group.
    * The `features` dataframe can be a Spark DataFrame or RDD.
    * If the stream feature group doesn't exist, the insert method will create the necessary metadata the first time it
@@ -448,13 +451,20 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // define additional write options
-   *        Map<String, String> writeOptions = ...;
+   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
+   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
+   *                           put("hoodie.insert.shuffle.parallelism", "5");
+   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
+   *                           };
    *        // define job configuration.
-   *        JobConfiguration jobConfiguration = ...;
+   *        // Define job configuration.
+   *        JobConfiguration jobConfiguration = new JobConfiguration();
+   *        jobConfiguration.setDynamicAllocationEnabled(true);
+   *        jobConfiguration.setAmMemory(2048);
    *        // insert feature data
    *        fg.insert(featureData, writeOptions);
    * }
@@ -486,9 +496,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // insert feature data
    *        fg.insertStream(featureData);
    * }
@@ -514,9 +524,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // insert feature data
    *        fg.insertStream(featureData, queryName);
    * }
@@ -544,11 +554,15 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // define additional write options
-   *        Map<String, String> writeOptions = ...;
+   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
+   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
+   *                           put("hoodie.insert.shuffle.parallelism", "5");
+   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
+   *                           };
    *        // insert feature data
    *        fg.insertStream(featureData, writeOptions);
    * }
@@ -576,11 +590,15 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // define additional write options
-   *        Map<String, String> writeOptions = ...;
+   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
+   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
+   *                           put("hoodie.insert.shuffle.parallelism", "5");
+   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
+   *                           };
    *        // insert feature data
    *        fg.insertStream(featureData, queryName);
    * }
@@ -609,12 +627,12 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // insert feature data
-   *        String queryName = ...;
-   *        String outputMode = ...;
+   *        String queryName = "electricity_prices_streaming_query";
+   *        String outputMode = "append";
    *        fg.insertStream(featureData, queryName outputMode);
    * }
    * </pre>
@@ -650,13 +668,13 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // insert feature data
-   *        String queryName = ...;
-   *        String outputMode = ...;
-   *        String checkpointLocation = ...;
+   *        String queryName = "electricity_prices_streaming_query";
+   *        String outputMode = "append";
+   *        String checkpointLocation = "path_to_checkpoint_dir";
    *        fg.insertStream(featureData, queryName outputMode, checkpointLocation);
    * }
    * </pre>
@@ -694,12 +712,12 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // insert feature data
-   *        String queryName = ...;
-   *        String outputMode = ...;
+   *        String queryName = "electricity_prices_streaming_query";
+   *        String outputMode = "append";
    *        fg.insertStream(featureData, queryName, outputMode, outputMode, true, 1000);
    * }
    * </pre>
@@ -741,13 +759,13 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // insert feature data
-   *        String queryName = ...;
-   *        String outputMode = ...;
-   *        String checkpointLocation = ...;
+   *        String queryName = "electricity_prices_streaming_query";
+   *        String outputMode = "append";
+   *        String checkpointLocation = "path_to_checkpoint_dir";
    *        fg.insertStream(featureData, queryName, outputMode, outputMode, true, 1000, checkpointLocation);
    * }
    * </pre>
@@ -792,15 +810,19 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // define additional write options
-   *        Map<String, String> writeOptions = ...;
+   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
+   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
+   *                           put("hoodie.insert.shuffle.parallelism", "5");
+   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
+   *                           };
    *        // insert feature data
-   *        String queryName = ...;
-   *        String outputMode = ...;
-   *        String checkpointLocation = ...;
+   *        String queryName = "electricity_prices_streaming_query";
+   *        String outputMode = "append";
+   *        String checkpointLocation = "path_to_checkpoint_dir";
    *        fg.insertStream(featureData, queryName, outputMode, outputMode, true, 1000, checkpointLocation,
    *        writeOptions);
    * }
@@ -844,15 +866,22 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // define additional write options
-   *        Map<String, String> writeOptions = ...;
-   *        JobConfiguration jobConfiguration = ...;
-   *        String queryName = ...;
-   *        String outputMode = ...;
-   *        String checkpointLocation = ...;
+   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
+   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
+   *                           put("hoodie.insert.shuffle.parallelism", "5");
+   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
+   *                           };
+   *        // Define job configuration.
+   *        JobConfiguration jobConfiguration = new JobConfiguration();
+   *        jobConfiguration.setDynamicAllocationEnabled(true);
+   *        jobConfiguration.setAmMemory(2048);
+   *        String queryName = "electricity_prices_streaming_query";
+   *        String outputMode = "append";
+   *        String checkpointLocation = "path_to_checkpoint_dir";
    *        // insert feature data
    *        fg.insertStream(featureData, queryName, outputMode, outputMode, true, 1000, checkpointLocation,
    *        writeOptions, jobConfiguration);
@@ -898,9 +927,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // drop records of feature data and commit
    *        fg.commitDeleteRecord(featureData);
    * }
@@ -924,11 +953,15 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // define additional write options
-   *        Map<String, String> writeOptions = ...;
+   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
+   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
+   *                           put("hoodie.insert.shuffle.parallelism", "5");
+   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
+   *                           };
    *        // drop records of feature data and commit
    *        fg.commitDeleteRecord(featureData, writeOptions);
    * }
@@ -953,9 +986,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // get commit timeline
    *        fg.commitDetails();
    * }
@@ -978,9 +1011,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // get latest 10 commit details
    *        fg.commitDetails(10);
    * }
@@ -1003,10 +1036,10 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
-   *        FeatureStore fs = ...;
-   *        //get feature group handle
-   *        StreamFeatureGroup fg = ...;
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature group handle
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        //get commit details as of 20230206
    *        fg.commitDetails("20230206");
    * }
@@ -1030,9 +1063,9 @@ public class StreamFeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
    *        // get top 10 commit details as of 20230206
    *        fg.commitDetails("20230206", 10);
    * }

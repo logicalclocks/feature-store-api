@@ -68,8 +68,8 @@ public class FeatureStore {
   /**
    * Get a feature group object from the feature store.
    *
-   * <p>Getting a feature group from the Feature Store means getting its metadata handle so you can subsequently read
-   * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature
+   * <p>Feature group metadata handle enables to interact with the feature group,
+   * such as read the data or use the `Query`-API to perform joins between feature groups and create feature
    * views.
    *
    * <pre>
@@ -94,8 +94,8 @@ public class FeatureStore {
   /**
    * Get a feature group object with default version `1` from the feature store.
    *
-   * <p>Getting a feature group from the Feature Store means getting its metadata handle so you can subsequently read
-   * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature
+   * <p>Feature group metadata handle enables to interact with the feature group,
+   * such as read the data or use the `Query`-API to perform joins between feature groups and create feature
    * views.
    *
    * <pre>
@@ -120,8 +120,8 @@ public class FeatureStore {
   /**
    * Get a list of all versions of a feature group from the feature store.
    *
-   * <p>Getting a feature group from the Feature Store means getting its metadata handle so you can subsequently read
-   * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature
+   * <p>Feature group metadata handle enables to interact with the feature group,
+   * such as read the data or use the `Query`-API to perform joins between feature groups and create feature
    * views.
    *
    * <pre>
@@ -249,8 +249,8 @@ public class FeatureStore {
   /**
    * Get a list of all versions of an external feature group from the feature store.
    *
-   * <p>Getting a feature group from the Feature Store means getting its metadata handle so you can subsequently read
-   * the data into a Spark DataFrame or use the `Query`-API to perform joins between feature groups and create feature
+   * <p>Feature group metadata handle enables to interact with the feature group,
+   * such as read the data or use the `Query`-API to perform joins between feature groups and create feature
    * views.
    *
    * <pre>
@@ -298,8 +298,8 @@ public class FeatureStore {
   /**
    * Get a previously created storage connector from the feature store.
    *
-   * <p>Storage connectors encapsulate all information needed for the execution engine to read and write to specific
-   * storage. This storage can be S3, a JDBC compliant database or the distributed filesystem HOPSFS.
+   * <p>Storage connectors encapsulate all information needed for the execution engine to read and write to a specific
+   * storage.
    *
    * <p>If you want to connect to the online feature store, see the getOnlineStorageConnector` method to get the
    * JDBC connector for the Online Feature Store.
@@ -789,7 +789,7 @@ public class FeatureStore {
    * <pre>
    * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        FeatureGroup fg = fs.getOrCreateFeatureView("fv_name", query, 1);
+   *        FeatureView fv = fs.getOrCreateFeatureView("fv_name", query, 1);
    * }
    * </pre>
    *
@@ -812,7 +812,7 @@ public class FeatureStore {
    * <pre>
    * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        FeatureGroup fg = fs.getOrCreateFeatureView("fv_name", query, 1, description, labels);
+   *        FeatureView fv = fs.getOrCreateFeatureView("fv_name", query, 1, description, labels);
    *        "datetime");
    * }
    * </pre>
@@ -837,7 +837,7 @@ public class FeatureStore {
    * <pre>
    * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        FeatureGroup fg = fs.getFeatureView("fv_name", 1);
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    * }
    * </pre>
    *
@@ -858,8 +858,7 @@ public class FeatureStore {
    * <pre>
    * {@code // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        FeatureGroup fg = fs.getFeatureView("fv_name");
-   *        "datetime");
+   *        FeatureView fv = fs.getFeatureView("fv_name");
    * }
    * </pre>
    *

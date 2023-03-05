@@ -1575,8 +1575,8 @@ class FeatureGroup(FeatureGroupBase):
 
         Incrementally insert data to a feature group or overwrite all  data contained in the feature group. By
         default, the data is inserted into the offline storage as well as the online storage if the feature group is
-        `online_enabled=True`. To insert only into the online storage, set `storage="online"`, or oppositely
-        `storage="offline"`.
+        `online_enabled=True`. To insert only into the online or offline storage set `storage="online"` or
+        `storage="offline"` respectively.
 
         The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
         or a two-dimensional Numpy array or a two-dimensional Python nested list.

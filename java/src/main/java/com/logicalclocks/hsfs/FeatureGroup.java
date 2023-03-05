@@ -117,14 +117,14 @@ public class FeatureGroup extends FeatureGroupBase {
 
   /**
    * Read the feature group into a dataframe.
-   * Reads the feature group by from the offline storage as Spark DataFrame on Hopsworks and Databricks.
+   * Reads the feature group by from the offline storage as Spark DataFrame.
    *
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // read feature group
    *        fg.read()
    * }
@@ -141,14 +141,14 @@ public class FeatureGroup extends FeatureGroupBase {
 
   /**
    * Read the feature group into a dataframe.
-   * Reads the feature group from the offline or online storage as Spark DataFrame on Hopsworks and Databricks.
+   * Reads the feature group from the offline or online storage as Spark DataFrame.
    *
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // read feature group data from online storage
    *        fg.read(true)
    *        // read feature group data from offline storage
@@ -168,16 +168,18 @@ public class FeatureGroup extends FeatureGroupBase {
 
   /**
    * Read the feature group into a dataframe.
-   * Reads the feature group from the offline storage as Spark DataFrame on Hopsworks and Databricks.
+   * Reads the feature group from the offline storage as Spark DataFrame.
    *
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
-   *        // define additional read options
-   *        Map<String, String> readOptions = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
+   *        // define additional read options (this example applies to HUDI enabled FGs)
+   *        Map<String, String> readOptions = new HashMap<String, String>() {{
+   *                                                  put("hoodie.datasource.read.end.instanttime", "20230401211015")
+   *                                                }};
    *        // read feature group data
    *        fg.read(readOptions)
    * }
@@ -186,7 +188,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @param readOptions Additional read options as key/value pairs.
    * @return Spark DataFrame containing the feature data.
    * @throws FeatureStoreException In case it cannot run read query on storage and/or no commit information was found
-   *                               for this feature group;
+   *         for this feature group.
    * @throws IOException Generic IO exception.
    */
   public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
@@ -195,16 +197,18 @@ public class FeatureGroup extends FeatureGroupBase {
 
   /**
    * Read the feature group into a dataframe.
-   * Reads the feature group by from the offline or online storage as Spark DataFrame on Hopsworks and Databricks.
+   * Reads the feature group by from the offline or online storage as Spark DataFrame.
    *
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
-   *        // define additional read options
-   *        Map<String, String> readOptions = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
+   *        // define additional read options (this example applies to HUDI enabled FGs)
+   *        Map<String, String> readOptions = new HashMap<String, String>() {{
+   *                                                  put("hoodie.datasource.read.end.instanttime", "20230401211015")
+   *                                                }};
    *        // read feature group data from online storage
    *        fg.read(true, readOptions)
    *        // read feature group data from offline storage
@@ -216,7 +220,7 @@ public class FeatureGroup extends FeatureGroupBase {
    * @param readOptions Additional read options as key/value pairs.
    * @return Spark DataFrame containing the feature data.
    * @throws FeatureStoreException In case it cannot run read query on storage and/or no
-   *                               commit information was found for this feature group;
+   *                               commit information was found for this feature group.
    * @throws IOException  Generic IO exception.
    */
   public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
@@ -229,9 +233,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // read feature group data as of specific point in time (Hudi commit timestamp).
    *        fg.read("20230205210923")
    * }
@@ -254,11 +258,13 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
-   *        // define additional read options
-   *        Map<String, String> readOptions = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
+   *        // define additional read options (this example applies to HUDI enabled FGs)
+   *        Map<String, String> readOptions = new HashMap<String, String>() {{
+   *                                                  put("hoodie.datasource.read.end.instanttime", "20230401211015")
+   *                                                }};
    *        // read feature group data as of specific point in time (Hudi commit timestamp).
    *        fg.read("20230205210923", readOptions)
    * }
@@ -298,9 +304,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // get query object to retrieve feature group feature data as of
    *        // specific point in time (Hudi commit timestamp).
    *        fg.asOf("20230205210923")
@@ -326,9 +332,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // get query object to retrieve feature group feature data as of specific point in time "20230205210923"
    *        // but exclude commits until "20230204073411"  (Hudi commit timestamp).
    *        fg.asOf("20230205210923", "20230204073411")
@@ -353,9 +359,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // show top 5 lines of feature group data.
    *        fg.show(5);
    * }
@@ -375,10 +381,10 @@ public class FeatureGroup extends FeatureGroupBase {
    *
    * <pre>
    * {@code
-   *        //get feature store handle
-   *        FeatureStore fs = ...;
-   *        //get feature group handle
-   *        FeatureGroup fg = ...;
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature group handle
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // show top 5 lines of feature data from online storage.
    *        fg.show(5, true);
    * }
@@ -419,8 +425,6 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the feature group to the feature store or insert data from a dataframe into
-   * the existing feature group.
    * Incrementally insert data to a feature group or overwrite all  data contained in the feature group.
    * The `features` dataframe can be a Spark DataFrame or RDD.
    * If the feature group doesn't exist, the insert method will create the necessary metadata the first time it is
@@ -429,9 +433,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        //insert feature data
    *        fg.insert(featureData);
    * }
@@ -448,8 +452,6 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the feature group to the feature store or insert data from a dataframe into
-   * the existing feature group.
    * Incrementally insert data to a feature group or overwrite all  data contained in the feature group.
    * The `features` dataframe can be a Spark DataFrame or RDD.
    * If the feature group doesn't exist, the insert method will create the necessary metadata the first time it is
@@ -458,11 +460,15 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
-   *        // Define additional write options.
-   *        Map<String, String> writeOptions = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
+   *        // Define additional write options (this example applies to HUDI enabled FGs)
+   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
+   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
+   *                           put("hoodie.insert.shuffle.parallelism", "5");
+   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
+   *                           };
    *        // insert feature data
    *        fg.insert(featureData, writeOptions);
    * }
@@ -481,24 +487,22 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the feature group to the feature store or insert data from a dataframe into
-   * the existing feature group.
-   * Incrementally insert data to a feature group or overwrite all  data contained in the feature group. By default,
+   * Incrementally insert data to a feature group or overwrite all data contained in the feature group. By default,
    * the data is inserted into the offline storage as well as the online storage if the feature group is
-   * `onlineEnabled=true`. To insert only into the online storage, set `storage="online"`, or oppositely
-   * `storage="offline"`.
-   * The `features` dataframe can be a Spark DataFrame or RDD.
+   * online enabled. To insert only into the online or offline storage specify Storage.ONLINE or Storage.OFFLINE
+   * respectively. The `features` dataframe can be a Spark DataFrame or RDD.
    * If statistics are enabled, statistics are recomputed for the entire feature group. If feature group's time travel
    * format is `HUDI` then `operation` argument can be either `insert` or `upsert`.
+   *
    * If the feature group doesn't exist, the insert method will create the necessary metadata the first time it is
    * invoked and write the specified `features` dataframe as feature group to the online/offline feature store.
    *
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // insert feature data in offline only
    *        fg.insert(featureData, Storage.OFFLINE);
    *
@@ -521,13 +525,10 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the feature group to the feature store or insert data from a dataframe into
-   * the existing feature group.
    * Incrementally insert data to a feature group or overwrite all  data contained in the feature group. By default,
    * the data is inserted into the offline storage as well as the online storage if the feature group is
-   * `onlineEnabled=true`. To insert only into the online storage, set `storage="online"`, or oppositely
-   * `storage="offline"`.
-   * The `features` dataframe can be a Spark DataFrame or RDD.
+   * online enabled. To insert only into the online or offline storage specify Storage.ONLINE or Storage.OFFLINE
+   * respectively. The `features` dataframe can be a Spark DataFrame or RDD.
    * If statistics are enabled, statistics are recomputed for the entire feature group. If feature group's time travel
    * format is `HUDI` then `operation` argument can be either `insert` or `upsert`.
    * If the feature group doesn't exist, the insert method will create the necessary metadata the first time it is
@@ -536,9 +537,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // insert feature data and drop all data in the feature group before inserting new data
    *        fg.insert(featureData, true);
    * }
@@ -557,13 +558,10 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the feature group to the feature store or insert data from a dataframe into
-   * the existing feature group.
    * Incrementally insert data to a feature group or overwrite all  data contained in the feature group. By default,
    * the data is inserted into the offline storage as well as the online storage if the feature group is
-   * `onlineEnabled=true`. To insert only into the online storage, set `storage="online"`, or oppositely
-   * `storage="offline"`.
-   * The `features` dataframe can be a Spark DataFrame or RDD.
+   * online enabled. To insert only into the online or offline storage specify Storage.ONLINE or Storage.OFFLINE
+   * respectively. The `features` dataframe can be a Spark DataFrame or RDD.
    * If statistics are enabled, statistics are recomputed for the entire feature group. If feature group's time travel
    * format is `HUDI` then `operation` argument can be either `insert` or `upsert`.
    * If the feature group doesn't exist, the insert method will create the necessary metadata the first time it is
@@ -572,9 +570,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // insert feature data in offline only and drop all data in the feature group before inserting new data
    *        fg.insert(featureData, Storage.OFFLINE, true);
    *
@@ -598,13 +596,10 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Persist the metadata and materialize the feature group to the feature store or insert data from a dataframe into
-   * the existing feature group.
    * Incrementally insert data to a feature group or overwrite all  data contained in the feature group. By default,
    * the data is inserted into the offline storage as well as the online storage if the feature group is
-   * `onlineEnabled=true`. To insert only into the online storage, set `storage="online"`, or oppositely
-   * `storage="offline"`.
-   * The `features` dataframe can be a Spark DataFrame or RDD.
+   * online enabled. To insert only into the online or offline storage specify Storage.ONLINE or Storage.OFFLINE
+   * respectively. The `features` dataframe can be a Spark DataFrame or RDD.
    * If statistics are enabled, statistics are recomputed for the entire feature group. If feature group's time travel
    * format is `HUDI` then `operation` argument can be either `insert` or `upsert`.
    * If the feature group doesn't exist, the insert method will create the necessary metadata the first time it is
@@ -613,11 +608,15 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
-   *        // define additional write options
-   *        Map<String, String> writeOptions = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
+   *        // Define additional write options (this example applies to HUDI enabled FGs)
+   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
+   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
+   *                           put("hoodie.insert.shuffle.parallelism", "5");
+   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
+   *                           };
    *        // insert feature data and drop all data in the feature group before inserting new data
    *        fg.insert(featureData, true, writeOptions);
    * }
@@ -637,13 +636,10 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   *Persist the metadata and materialize the feature group to the feature store or insert data from a dataframe into
-   * the existing feature group.
    * Incrementally insert data to a feature group or overwrite all  data contained in the feature group. By default,
    * the data is inserted into the offline storage as well as the online storage if the feature group is
-   * `onlineEnabled=true`. To insert only into the online storage, set `storage="online"`, or oppositely
-   * `storage="offline"`.
-   * The `features` dataframe can be a Spark DataFrame or RDD.
+   * online enabled. To insert only into the online or offline storage specify Storage.ONLINE or Storage.OFFLINE
+   * respectively. The `features` dataframe can be a Spark DataFrame or RDD.
    * If statistics are enabled, statistics are recomputed for the entire feature group. If feature group's time travel
    * format is `HUDI` then `operation` argument can be either `insert` or `upsert`.
    * If the feature group doesn't exist, the insert method will create the necessary metadata the first time it is
@@ -652,11 +648,15 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
-   *        // Define additional write options
-   *        Map<String, String> writeOptions = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
+   *        // Define additional write options (this example applies to HUDI enabled FGs)
+   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
+   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
+   *                           put("hoodie.insert.shuffle.parallelism", "5");
+   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
+   *                           };
    *        // insert feature data
    *        fg.insert(featureData, HudiOperationType.INSERT);
    *
@@ -678,13 +678,10 @@ public class FeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   *Persist the metadata and materialize the feature group to the feature store or insert data from a dataframe into
-   * the existing feature group.
    * Incrementally insert data to a feature group or overwrite all  data contained in the feature group. By default,
    * the data is inserted into the offline storage as well as the online storage if the feature group is
-   * `onlineEnabled=true`. To insert only into the online storage, set `storage="online"`, or oppositely
-   * `storage="offline"`.
-   * The `features` dataframe can be a Spark DataFrame or RDD.
+   * online enabled. To insert only into the online or offline storage specify Storage.ONLINE or Storage.OFFLINE
+   * respectively. The `features` dataframe can be a Spark DataFrame or RDD.
    * If statistics are enabled, statistics are recomputed for the entire feature group. If feature group's time travel
    * format is `HUDI` then `operation` argument can be either `insert` or `upsert`.
    * If the feature group doesn't exist, the insert method will create the necessary metadata the first time it is
@@ -693,11 +690,15 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
-   *        // Define additional write options
-   *        Map<String, String> writeOptions = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
+   *        // Define additional write options (this example applies to HUDI enabled FGs)
+   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
+   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
+   *                           put("hoodie.insert.shuffle.parallelism", "5");
+   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
+   *                           };
    *        // insert feature data in offline only with additional write options and drop all previous data before new
    *        // data is inserted
    *        fg.insert(featureData, Storage.OFFLINE, true, HudiOperationType.INSERT, writeOptions);
@@ -794,9 +795,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // Drops records of feature data and commit
    *        fg.commitDeleteRecord(featureData);
    * }
@@ -818,12 +819,17 @@ public class FeatureGroup extends FeatureGroupBase {
    * only be used on time travel enabled feature groups.
    *
    * <pre>
-   * {@code //get feature store handle
-   *        FeatureStore fs = ...;
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
-   *        // Define additional write options.
-   *        Map<String, String> writeOptions = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
+   *        // Define additional write options (this example applies to HUDI enabled FGs)
+   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
+   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
+   *                           put("hoodie.insert.shuffle.parallelism", "5");
+   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
+   *                           };
    *        // Drops records of feature data and commit
    *        fg.commitDeleteRecord(featureData, writeOptions);
    * }
@@ -848,9 +854,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // get commit timeline.
    *        fg.commitDetails();
    * }
@@ -873,9 +879,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // get latest 10 commit details.
    *        fg.commitDetails(10);
    * }
@@ -897,10 +903,11 @@ public class FeatureGroup extends FeatureGroupBase {
    * Return commit details as of specific point in time.
    *
    * <pre>
-   * {@code // get feature store handle
-   *        FeatureStore fs = ...;
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // get commit details as of 20230206
    *        fg.commitDetails("20230206");
    * }
@@ -924,10 +931,11 @@ public class FeatureGroup extends FeatureGroupBase {
    * Return commit details as of specific point in time.
    *
    * <pre>
-   * {@code // get feature store handle
-   *        FeatureStore fs = ...;
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // get top 10 commit details as of 20230206
    *        fg.commitDetails("20230206", 10);
    * }
@@ -981,9 +989,9 @@ public class FeatureGroup extends FeatureGroupBase {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature group handle
-   *        FeatureGroup fg = ...;
+   *        FeatureGroup fg = fs.getFeatureGroup("electricity_prices", 1);
    *        // compute statistics as of 20230206
    *        fg.computeStatistics("20230206", 10);
    * }

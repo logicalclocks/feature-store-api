@@ -146,9 +146,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // delete feature view
    *        fv.delete();
    * }
@@ -170,9 +170,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // delete feature view
    *        fv.clean();
    * }
@@ -195,11 +195,11 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // update with new description
-   *        fv.setDescription("this is new description");
+   *        fv.setDescription("Updated description");
    *        // delete feature view
    *        fv.update(fv);
    * }
@@ -220,9 +220,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // Initialise feature view serving
    *        fv.initServing();
    * }
@@ -243,9 +243,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // Initialise feature view batch serving
    *        fv.initServing(true, false);
    * }
@@ -272,9 +272,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // Initialise feature view batch scoring
    *        fv.initBatchScoring(1);
    * }
@@ -293,11 +293,15 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // define primary key values to fetch data from online feature store
-   *        Map<String, Int> entry = ...;
+   *        Map<String, Object> pkMap = new HashMap<String, Object>() {
+   *               {put("customer_id", 1);
+   *                put("contract_id" , 100);
+   *                }
+   *        };
    *        // get feature vector
    *        fv.getFeatureVector(entry);
    * }
@@ -323,11 +327,15 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // define primary key values to fetch data from online feature store
-   *        Map<String, Long> entry = ...;
+   *        Map<String, Object> pkMap = new HashMap<String, Object>() {
+   *               {put("customer_id", 1);
+   *                put("contract_id" , 100);
+   *                }
+   *        };
    *        // get feature vector
    *        fv.getFeatureVector(entry, false);
    * }
@@ -358,9 +366,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // define primary key values to fetch data from online feature store
    *        Map<String, List<Long>> entry = ...;
    *        // get feature vector
@@ -388,9 +396,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // define primary key values to fetch data from online feature store
    *        Map<String, List<Long>> entry = ...;
    *        // get feature vector
@@ -421,9 +429,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // get batch query
    *        fv.getBatchQuery();
    * }
@@ -446,9 +454,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // get batch query that will fetch data from jan 1, 2023 to Jan 31, 2023
    *        fv.getBatchQuery("20230101", "20130131");
    * }
@@ -480,9 +488,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // get batch query that will fetch data from jan 1, 2023 to Jan 31, 2023
    *        fv.getBatchQuery("20230101", "20130131");
    * }
@@ -510,9 +518,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // get batch query that will fetch data from jan 1, 2023 to Jan 31, 2023
    *        fv.getBatchQuery("20230101", "20130131");
    * }
@@ -549,9 +557,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // attach a tag to a feature view
    *        JSONObject value = ...;
    *        fv.addTag("tag_schema", value);
@@ -575,9 +583,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // get tags
    *        fv.getTags();
    * }
@@ -599,9 +607,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // get tag
    *        fv.getTag("tag_name");
    * }
@@ -624,9 +632,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // delete tag
    *        fv.deleteTag("tag_name");
    * }
@@ -647,9 +655,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // create training dataset
    *        String startTime = "20220101000000";
    *        String endTime = "20220606235959";
@@ -693,15 +701,15 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // create training dataset
    *        String startTime = "20220101000000";
    *        String endTime = "20220606235959";
    *        String description = "demo training dataset":
-   *        String location = ...;
-   *        StatisticsConfig statisticsConfig = ...;
+   *        String location = "";
+   *        StatisticsConfig statisticsConfig = new StatisticsConfig(true, true, true, true)
    *        fv.createTrainingData(startTime, endTime, description, DataFormat.CSV, true, location, statisticsConfig);
    * }
    * </pre>
@@ -771,9 +779,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // create training dataset based on time split
    *        String trainStart = "20220101000000";
    *        String trainEnd = "20220630235959";
@@ -835,9 +843,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // create training dataset based on time split
    *        String trainStart = "20220101000000";
    *        String trainEnd = "20220630235959";
@@ -927,9 +935,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // create training dataset based on time split
    *        String trainStart = "20220101000000";
    *        String trainEnd = "20220630235959";
@@ -1002,9 +1010,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // create training dataset based on time split
    *        String trainStart = "20220101000000";
    *        String trainEnd = "20220630235959";
@@ -1013,14 +1021,30 @@ public class FeatureView {
    *        String testStart = "20220901000000";
    *        String testEnd = "20220931235959";
    *        String description = "demo training dataset":
-   *        StorageConnector storageConnector = ...;
-   *        String location = ..;
-   *        Long seed = ...;
+   *        StorageConnector.S3Connector storageConnector = fs.getS3Connector("s3Connector");
+   *        String location = "";
+   *        Long seed = 1234L;
    *        Boolean coalesce = true;
-   *        StatisticsConfig statisticsConfig = ...;
-   *        Map<String, String> writeOptions = ...;
-   *        FilterLogic extraFilterLogic = ...,
-   *        Filter extraFilter = ...;
+   *        StatisticsConfig statisticsConfig = new StatisticsConfig(true, true, true, true)
+   *        Map<String, String> writeOptions = new HashMap<String, String>() {{
+   *                           put("header", "true");
+   *                           put("delimiter", ",")}
+   *                           };
+   *        // define extra filters
+   *        Filter leftFtFilter = new Filter();
+   *        leftFtFilter.setFeature(new Feature("left_ft_name"));
+   *        leftFtFilter.setValue("400");
+   *        leftFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        Filter rightFtFilter = new Filter();
+   *        rightFtFilter.setFeature(new Feature("right_ft_name"));
+   *        rightFtFilter.setValue("50");
+   *        rightFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        FilterLogic extraFilterLogic = new FilterLogic(SqlFilterLogic.AND, leftFtFilter, rightFtFilter);
+   *        Filter extraFilter = new Filter();
+   *        extraFilter.setFeature(new Feature("ft_name"));
+   *        extraFilter.setValue("100");
+   *        extraFilter.setCondition(SqlFilterCondition.GREATER_THAN);
+   *        // create training data
    *        fv.createTrainTestSplit(null, null, trainStart, trainEnd, validationStart, validationEnd, testStart,
    *        testEnd,  description, DataFormat.CSV, coalesce, storageConnector, location, seed, statisticsConfig,
    *        writeOptions, extraFilterLogic, extraFilter);
@@ -1126,11 +1150,14 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // define write options
-   *        Map<String, String> writeOptions = ...;
+   *        Map<String, String> writeOptions = new HashMap<String, String>() {{
+   *                           put("header", "true");
+   *                           put("delimiter", ",")}
+   *                           };
    *        //recreate training data
    *        fv.recreateTrainingDataset(1, writeOptions);
    * }
@@ -1152,9 +1179,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // get training data
    *        fv.getTrainingData(1);
    * }
@@ -1179,11 +1206,14 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // define write options
-   *        Map<String, String> writeOptions = ...;
+   *        Map<String, String> writeOptions = new HashMap<String, String>() {{
+   *                           put("header", "true");
+   *                           put("delimiter", ",")}
+   *                           };
    *        // get training data
    *        fv.getTrainingData(1, writeOptions);
    * }
@@ -1211,9 +1241,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // get train test split dataframe of features and labels
    *        fv.getTrainTestSplit(1);
    * }
@@ -1238,11 +1268,14 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // define additional readOptions
-   *        Map<String, String> readOptions = ...;
+   *        Map<String, String> readOptions =  new HashMap<String, String>() {{
+   *                           put("header", "true");
+   *                           put("delimiter", ",")}
+   *                           };
    *        // get train test split dataframe of features and labels
    *        fv.getTrainTestSplit(1, readOptions);
    * }
@@ -1271,9 +1304,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // get train, validation, test split dataframe of features and labels
    *        fv.getTrainValidationTestSplit(1);
    * }
@@ -1298,11 +1331,14 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // define additional readOptions
-   *        Map<String, String> readOptions = ...;
+   *        Map<String, String> readOptions =  new HashMap<String, String>() {{
+   *                           put("header", "true");
+   *                           put("delimiter", ",")}
+   *                           };
    *        // get train, validation, test split dataframe of features and labels
    *        fv.getTrainValidationTestSplit(1, readOptions);
    * }
@@ -1333,9 +1369,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // create training dataset based on time split
    *        String startTime = "20220101000000";
    *        String endTime = "20220630235959";
@@ -1379,18 +1415,34 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // create training dataset based on time split
    *        String startTime = "20220101000000";
    *        String endTime = "20220630235959";
    *        String description = "demo training dataset":
-   *        Long seed = ...;
-   *        StatisticsConfig statisticsConfig = ...;
-   *        Map<String, String> readOptions = ...;
-   *        FilterLogic extraFilterLogic = ...,
-   *        Filter extraFilter = ...;
+   *        Long seed = 1234L;
+   *        StatisticsConfig statisticsConfig = new StatisticsConfig(true, true, true, true)
+   *        Map<String, String> readOptions =  new HashMap<String, String>() {{
+   *                           put("header", "true");
+   *                           put("delimiter", ",")}
+   *                           };
+   *        // define extra filters
+   *        Filter leftFtFilter = new Filter();
+   *        leftFtFilter.setFeature(new Feature("left_ft_name"));
+   *        leftFtFilter.setValue("400");
+   *        leftFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        Filter rightFtFilter = new Filter();
+   *        rightFtFilter.setFeature(new Feature("right_ft_name"));
+   *        rightFtFilter.setValue("50");
+   *        rightFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        FilterLogic extraFilterLogic = new FilterLogic(SqlFilterLogic.AND, leftFtFilter, rightFtFilter);
+   *        Filter extraFilter = new Filter();
+   *        extraFilter.setFeature(new Feature("ft_name"));
+   *        extraFilter.setValue("100");
+   *        extraFilter.setCondition(SqlFilterCondition.GREATER_THAN);
+   *        // create training data
    *        fv.trainValidationTestSplit(startTime, endTime,  description, seed, statisticsConfig, readOptions,
    *        extraFilterLogic, extraFilter);
    * }
@@ -1449,19 +1501,35 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // create training dataset based on time split
    *        String trainStart = "20220101000000";
    *        String trainEnd = "20220630235959";
    *        String testStart = "20220701000000";
    *        String testEnd = "20220830235959";
    *        String description = "demo training dataset":
-   *        StatisticsConfig statisticsConfig = ...;
-   *        Map<String, String> readOptions = ...;
-   *        FilterLogic extraFilterLogic = ...,
-   *        Filter extraFilter = ...;
+   *        StatisticsConfig statisticsConfig = new StatisticsConfig(true, true, true, true)
+   *        Map<String, String> readOptions =  new HashMap<String, String>() {{
+   *                           put("header", "true");
+   *                           put("delimiter", ",")}
+   *                           };
+   *        // define extra filters
+   *        Filter leftFtFilter = new Filter();
+   *        leftFtFilter.setFeature(new Feature("left_ft_name"));
+   *        leftFtFilter.setValue("400");
+   *        leftFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        Filter rightFtFilter = new Filter();
+   *        rightFtFilter.setFeature(new Feature("right_ft_name"));
+   *        rightFtFilter.setValue("50");
+   *        rightFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        FilterLogic extraFilterLogic = new FilterLogic(SqlFilterLogic.AND, leftFtFilter, rightFtFilter);
+   *        Filter extraFilter = new Filter();
+   *        extraFilter.setFeature(new Feature("ft_name"));
+   *        extraFilter.setValue("100");
+   *        extraFilter.setCondition(SqlFilterCondition.GREATER_THAN);
+   *        // create training data
    *        fv.trainValidationTestSplit(null, trainStart, trainEnd, testStart, trainEnd, description);
    *        // or random split
    *        fv.trainValidationTestSplit(30, null, null, null, null, description);
@@ -1518,20 +1586,36 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // create training dataset based on time split
    *        String trainStart = "20220101000000";
    *        String trainEnd = "20220630235959";
    *        String testStart = "20220701000000";
    *        String testEnd = "20220830235959";
    *        String description = "demo training dataset":
-   *        Long seed = ...;
-   *        StatisticsConfig statisticsConfig = ...;
-   *        Map<String, String> readOptions = ...;
-   *        FilterLogic extraFilterLogic = ...,
-   *        Filter extraFilter = ...;
+   *        Long seed = 1234L;
+   *        StatisticsConfig statisticsConfig = new StatisticsConfig(true, true, true, true)
+   *        Map<String, String> readOptions =  new HashMap<String, String>() {{
+   *                           put("header", "true");
+   *                           put("delimiter", ",")}
+   *                           };
+   *        // define extra filters
+   *        Filter leftFtFilter = new Filter();
+   *        leftFtFilter.setFeature(new Feature("left_ft_name"));
+   *        leftFtFilter.setValue("400");
+   *        leftFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        Filter rightFtFilter = new Filter();
+   *        rightFtFilter.setFeature(new Feature("right_ft_name"));
+   *        rightFtFilter.setValue("50");
+   *        rightFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        FilterLogic extraFilterLogic = new FilterLogic(SqlFilterLogic.AND, leftFtFilter, rightFtFilter);
+   *        Filter extraFilter = new Filter();
+   *        extraFilter.setFeature(new Feature("ft_name"));
+   *        extraFilter.setValue("100");
+   *        extraFilter.setCondition(SqlFilterCondition.GREATER_THAN);
+   *        // create training data
    *        fv.trainTestSplit(null, strainStart, trainEnd, testStart, trainEnd, description, seed, statisticsConfig,
    *        readOptions, extraFilterLogic, extraFilter);
    *
@@ -1607,9 +1691,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // create training dataset based on time split
    *        String trainStart = "20220101000000";
    *        String trainEnd = "20220630235959";
@@ -1684,9 +1768,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // create training dataset based on time split
    *        String trainStart = "20220101000000";
    *        String trainEnd = "20220630235959";
@@ -1695,11 +1779,27 @@ public class FeatureView {
    *        String testStart = "20220901000000";
    *        String testEnd = "20220931235959";
    *        String description = "demo training dataset":
-   *        Long seed = ...;
-   *        StatisticsConfig statisticsConfig = ...;
-   *        Map<String, String> readOptions = ...;
-   *        FilterLogic extraFilterLogic = ...,
-   *        Filter extraFilter = ...;
+   *        Long seed = 1234L;
+   *        StatisticsConfig statisticsConfig = new StatisticsConfig(true, true, true, true)
+   *        Map<String, String> readOptions =  new HashMap<String, String>() {{
+   *                           put("header", "true");
+   *                           put("delimiter", ",")}
+   *                           };
+   *        // define extra filters
+   *        Filter leftFtFilter = new Filter();
+   *        leftFtFilter.setFeature(new Feature("left_ft_name"));
+   *        leftFtFilter.setValue("400");
+   *        leftFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        Filter rightFtFilter = new Filter();
+   *        rightFtFilter.setFeature(new Feature("right_ft_name"));
+   *        rightFtFilter.setValue("50");
+   *        rightFtFilter.setCondition(SqlFilterCondition.EQUALS);
+   *        FilterLogic extraFilterLogic = new FilterLogic(SqlFilterLogic.AND, leftFtFilter, rightFtFilter);
+   *        Filter extraFilter = new Filter();
+   *        extraFilter.setFeature(new Feature("ft_name"));
+   *        extraFilter.setValue("100");
+   *        extraFilter.setCondition(SqlFilterCondition.GREATER_THAN);
+   *        // create training data
    *        fv.trainValidationTestSplit(null, null, trainStart, trainEnd, validationStart, validationEnd, testStart,
    *        testEnd,  description, seed, statisticsConfig,
    *        readOptions, extraFilterLogic, extraFilter);
@@ -1813,9 +1913,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // Delete a training dataset version 1
    *        fv.purgeAllTrainingData(1);
    * }
@@ -1835,9 +1935,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // Delete a training dataset.
    *        fv.purgeAllTrainingData(1);
    * }
@@ -1856,9 +1956,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // Delete a training dataset version 1.
    *        fv.deleteTrainingDataset(1);
    * }
@@ -1878,9 +1978,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // Delete all training datasets in this feature view.
    *        fv.deleteAllTrainingDatasets();
    * }
@@ -1899,9 +1999,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // add tag to datasets version 1 in this feature view.
    *        JSONObject json = ...;
    *        fv.addTrainingDatasetTag(1, "tag_name", json);
@@ -1925,9 +2025,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // get tags of training dataset version 1 in this feature view.
    *        fv.getTrainingDatasetTags(1);
    * }
@@ -1950,9 +2050,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // get tag with name `"demo_name"` of training dataset version 1 in this feature view.
    *        fv.getTrainingDatasetTags(1, "demo_name");
    * }
@@ -1975,9 +2075,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // delete tag with name `"demo_name"` of training dataset version 1 in this feature view.
    *        fv.deleteTrainingDatasetTag(1, "demo_name");
    * }
@@ -1998,9 +2098,9 @@ public class FeatureView {
    * <pre>
    * {@code
    *        // get feature store handle
-   *        FeatureStore fs = ...;
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
    *        // get feature view handle
-   *        FeatureView fv = ...;
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
    *        // get set of primary key names
    *        fv.getPrimaryKeys();
    * }
