@@ -226,7 +226,7 @@ class FeatureMonitoringConfigApi:
 
         :param config_id: Id of the feature monitoring configuration to trigger a job for
         :type config_id: int
-        :return: Job object for the feature monitoring job
+        :return: Job attached to the monitoring configuration
         :rtype: Job
         """
         _client = client.get_instance()
@@ -235,6 +235,8 @@ class FeatureMonitoringConfigApi:
             config_id=config_id,
         )
         path_params.append("trigger")
+
+        return Job.from_response_json(_client._send_request("POST", path_params))
 
     def build_path_params(
         self,

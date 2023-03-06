@@ -441,10 +441,10 @@ class FeatureMonitoringConfigEngine:
         return (
             entity.select(features=[feature_name])
             .as_of(
-                wallclock_time=datetime.now() - time_offset,
-                exclude_until=datetime.now() - time_offset + window_length,
+                exclude_until=datetime.now() - time_offset,
+                wallclock_time=datetime.now() - time_offset + window_length,
             )
-            .read()
+            .read(dataframe_type="pandas")
         )
 
     def time_range_str_to_time_delta(self, time_range: str) -> timedelta:
