@@ -187,19 +187,18 @@ def run_feature_monitoring(job_conf: Dict[str, str]) -> None:
     fs = get_feature_store_handle(feature_store)
 
     if job_conf["entity_type"].upper() == "FEATUREGROUPS":
-        feature_group_id = fs.get_feature_group(
+        entity = fs.get_feature_group(
             name=job_conf["name"], version=job_conf["version"]
-        )._id
+        )
+        feature_group_id = entity._id
         feature_view_id, feature_view_name, feature_view_version = None, None, None
     else:
         feature_group_id = None
-        feature_view = fs.get_feature_view(
-            name=job_conf["name"], version=job_conf["version"]
-        )
+        entity = fs.get_feature_view(name=job_conf["name"], version=job_conf["version"])
         feature_view_id, feature_view_name, feature_view_version = (
-            feature_view._id,
-            feature_view.name,
-            feature_view.version,
+            entity._id,
+            entity.name,
+            entity.version,
         )
 
     monitoring_config_engine = (
@@ -211,10 +210,20 @@ def run_feature_monitoring(job_conf: Dict[str, str]) -> None:
             feature_view_version=feature_view_version,
         )
     )
+    monitoring_result_engine = (
+        hsfs.core.feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+            feature_store_id=fs._id,
+            feature_group_id=feature_group_id,
+            feature_view_id=feature_view_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+        )
+    )
 
     monitoring_config_engine.run_feature_monitoring(
-        feature_store=fs,
+        entity=entity,
         config_name=job_conf["config_name"],
+        result_engine=monitoring_result_engine,
     )
 
     assert isinstance(fs, hsfs.feature_store.FeatureStore)

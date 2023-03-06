@@ -313,25 +313,26 @@ class FeatureMonitoringConfigEngine:
         )
 
     def run_feature_monitoring(
-        self, feature_store, config_name: str
+        self, entity, config_name: str, result_engine: FeatureMonitoringResultEngine
     ) -> FeatureMonitoringResult:
         """Run by feature monitoring job, monitoring is based on the config id.
 
         # Arguments
-            feature_store: FeatureStore object.
+            entity (Union[Featuregroup, FeatureView]): Featuregroup or Featureview
+                object containing the feature to monitor.
             config_str: name of the monitoring config.
+            result_engine: result engine to
+                upload the outcome of the monitoring to the backend.
 
         # Returns
-            FeatureMonitoringResult object.
+            FeatureMonitoringResult: A result object describing the
+                outcome of the monitoring.
         """
 
         config = self._feature_monitoring_config_api.get_by_name(config_name)
-        result_engine = FeatureMonitoringResultEngine(
-            feature_store_id=self._feature_store_id
-        )
 
         detection_stats, detection_stats_id = self.run_single_window_monitoring(
-            feature_store=feature_store,
+            entity=entity,
             monitoring_window_config=config.detection_window_config,
             feature_name=config.feature_name,
             check_existing=False,
@@ -339,7 +340,7 @@ class FeatureMonitoringConfigEngine:
 
         if config.reference_window_config is not None:
             reference_stats, reference_stats_id = self.run_single_window_monitoring(
-                feature_store=feature_store,
+                entity=entity,
                 monitoring_window_config=config.reference_window_config,
                 feature_name=config.feature_name,
                 check_existing=True,
@@ -357,7 +358,7 @@ class FeatureMonitoringConfigEngine:
 
     def run_single_window_monitoring(
         self,
-        feature_store,  #: FeatureStore,
+        entity,
         monitoring_window_config: Dict[str, Any],
         feature_name: str,
         check_existing: bool = False,
@@ -380,15 +381,6 @@ class FeatureMonitoringConfigEngine:
             if registered_stats_id is not None:
                 return registered_stats_id
 
-        if self._feature_group_id is not None:
-            entity = feature_store.get_feature_group(self._feature_group_id)
-        elif self._feature_view_id is not None:
-            entity = feature_store.get_feature_view(self._feature_view_id)
-        else:
-            raise ValueError(
-                "Monitoring config does not have a feature group or feature view id"
-            )
-
         # Fetch the actual data for which to compute statistics based on row_percentage and time window
         entity_df = self.fetch_entity_data(
             entity=entity,
@@ -399,7 +391,7 @@ class FeatureMonitoringConfigEngine:
         # This method should be implemented on a statistics_compute_engine rather than here
         stats, registered_stats_id = self.compute_and_upload_statistics(entity_df)
 
-        return registered_stats_id
+        return stats, registered_stats_id
 
     def compute_and_upload_statistics(
         self, entity_df: pd.DataFrame
