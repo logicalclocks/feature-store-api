@@ -317,14 +317,14 @@ class FeatureMonitoringConfigEngine:
     ) -> FeatureMonitoringResult:
         """Run by feature monitoring job, monitoring is based on the config id.
 
-        # Arguments
+        Args:
             entity (Union[Featuregroup, FeatureView]): Featuregroup or Featureview
                 object containing the feature to monitor.
             config_str: name of the monitoring config.
             result_engine: result engine to
                 upload the outcome of the monitoring to the backend.
 
-        # Returns
+        Returns:
             FeatureMonitoringResult: A result object describing the
                 outcome of the monitoring.
         """
@@ -365,13 +365,13 @@ class FeatureMonitoringConfigEngine:
     ) -> Tuple[Dict[str, Any], int]:
         """Run monitoring for a single window.
 
-        # Arguments
-            feature_store: FeatureStore: Feature store to fetch the entity to monitor.
+        Args:
+            entity: FeatureStore: Feature store to fetch the entity to monitor.
             monitoring_window_config: Dict[str, Any]: Monitoring window config.
             feature_name: str: Name of the feature to monitor.
             check_existing: bool: Whether to check for existing stats.
 
-        # Returns
+        Returns:
             Tuple[Dict[str, Any], int]: Tuple of stats and stats id.
         """
         if check_existing:
@@ -382,7 +382,7 @@ class FeatureMonitoringConfigEngine:
                 return registered_stats_id
 
         # Fetch the actual data for which to compute statistics based on row_percentage and time window
-        entity_df = self.fetch_entity_data(
+        entity_df = self.fetch_entity_data_based_on_monitoring_window_config(
             entity=entity,
             feature_name=feature_name,
             monitoring_window_config=monitoring_window_config,
