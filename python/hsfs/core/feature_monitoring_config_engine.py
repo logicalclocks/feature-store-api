@@ -391,7 +391,8 @@ class FeatureMonitoringConfigEngine:
             )
             if registered_stats_id is not None:
                 return {}, registered_stats_id
-        elif monitoring_window_config["window_config_type"] == "SPECIFIC_VALUE":
+
+        if monitoring_window_config["window_config_type"] == "SPECIFIC_VALUE":
             return {
                 "specific_value": monitoring_window_config["specifc_value"]
             }, DEFAULT_REFERENCE_STATS_ID
