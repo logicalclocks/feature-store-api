@@ -21,6 +21,18 @@ from hsfs.core.job import Job
 
 
 class FeatureMonitoringConfigApi:
+    """Feature Monitoring Configuration endpoints for the Feature Group resource.
+
+    :param feature_store_id: id of the respective Feature Store
+    :type feature_store_id: int
+    :param feature_group_id: id of the feature group, if monitoring a feature group
+    :type feature_group_id: int, optional
+    :param feature_view_name: name of the feature view, if monitoring a feature view
+    :type feature_view_name: str, optional
+    :param feature_view_version: version of the feature view, if monitoring a feature view
+    :type feature_view_version: int, optional
+    """
+
     def __init__(
         self,
         feature_store_id: int,
@@ -28,17 +40,6 @@ class FeatureMonitoringConfigApi:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
     ):
-        """Feature Monitoring Configuration endpoints for the Feature Group resource.
-
-        :param feature_store_id: id of the respective Feature Store
-        :type feature_store_id: int
-        :param feature_group_id: id of the feature group, if monitoring a feature group
-        :type feature_group_id: int, optional
-        :param feature_view_name: name of the feature view, if monitoring a feature view
-        :type feature_view_name: str, optional
-        :param feature_view_version: version of the feature view, if monitoring a feature view
-        :type feature_view_version: int, optional
-        """
         if feature_group_id is None:
             assert feature_view_name is not None
             assert feature_view_version is not None

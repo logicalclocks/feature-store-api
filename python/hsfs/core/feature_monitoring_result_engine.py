@@ -25,6 +25,16 @@ DEFAULT_EXECUTION_ID = 123
 
 
 class FeatureMonitoringResultEngine:
+    """Logic and helper methods to deal with results from a feature monitoring job.
+
+    Attributes:
+        feature_store_id: int. Id of the respective Feature Store.
+        feature_group_id: int. Id of the feature group, if monitoring a feature group.
+        feature_view_id: int. Id of the feature view, if monitoring a feature view.
+        feature_view_name: str. Name of the feature view, if monitoring a feature view.
+        feature_view_version: int. Version of the feature view, if monitoring a feature view.
+    """
+
     def __init__(
         self,
         feature_store_id: int,
@@ -33,18 +43,7 @@ class FeatureMonitoringResultEngine:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
     ):
-        """Feature Monitoring Result business logic for the Feature Group resource.
 
-        # Arguments
-            feature_store_id: int. Id of the respective Feature Store.
-            feature_group_id: int. Id of the feature group, if monitoring a feature group.
-            feature_view_id: int. Id of the feature view, if monitoring a feature view.
-            feature_view_name: str. Name of the feature view, if monitoring a feature view.
-            feature_view_version: int. Version of the feature view, if monitoring a feature view.
-
-        # Returns
-            `FeatureMonitoringResultEngine` object.
-        """
         if feature_group_id is None:
             assert feature_view_id is not None
             assert feature_view_name is not None
@@ -74,7 +73,7 @@ class FeatureMonitoringResultEngine:
     ) -> FeatureMonitoringResult:
         """Save feature monitoring result.
 
-        # Arguments
+        Args:
             config_id: int. Id of the feature monitoring configuration.
             execution_id: int. Id of the job execution.
             detection_stats_id: int. Id of the detection statistics.
@@ -85,7 +84,7 @@ class FeatureMonitoringResultEngine:
             reference_stats_id: Optional[int]. Id of the reference statistics.
                 Defaults to None if no reference is provided.
 
-        # Returns
+        Returns:
             FeatureMonitoringResult. Saved Feature monitoring result.
         """
         monitoring_time = round(
@@ -115,14 +114,14 @@ class FeatureMonitoringResultEngine:
     ) -> List[FeatureMonitoringResult]:
         """Fetch all feature monitoring results by config id.
 
-        # Arguments
+        Args:
             config_id: int. Id of the feature monitoring configuration.
             start_time: Union[str, int, datetime, date, None].
                 Query results with monitoring time greater than or equal to start_time.
             end_time: Union[str, int, datetime, date, None].
                 Query results with monitoring time less than or equal to end_time.
 
-        # Returns
+        Returns:
             List[FeatureMonitoringResult]. List of feature monitoring results.
         """
 
@@ -143,13 +142,13 @@ class FeatureMonitoringResultEngine:
     ) -> Dict[str, str]:
         """Build query parameters for feature monitoring result API calls.
 
-        # Arguments
+        Args:
             start_time: Union[str, int, datetime, date, None].
                 Query results with monitoring time greater than or equal to start_time.
             end_time: Union[str, int, datetime, date, None].
                 Query results with monitoring time less than or equal to end_time.
 
-        # Returns
+        Returns:
             Dict[str, str]. Query parameters.
         """
         filter_by = []
@@ -176,14 +175,14 @@ class FeatureMonitoringResultEngine:
     ) -> FeatureMonitoringResult:
         """Run and upload statistics comparison between detection and reference stats.
 
-        # Arguments
+        Args:
             detection_stats_id: int. Id of the detection statistics.
             detection_stats: Computed statistics for detection data.
             fm_config: FeatureMonitoringConfig. Feature monitoring configuration.
             reference_stats_id: int. Id of the reference statistics.
             reference_stats: Computed statistics for reference data.
 
-        # Returns
+        Returns:
             FeatureMonitoringResult. Feature monitoring result.
         """
 
@@ -229,13 +228,13 @@ class FeatureMonitoringResultEngine:
     ) -> float:
         """Compute the difference between the reference and detection statistics.
 
-        # Arguments
+        Args:
             detection_stats: `Dict[Hashable, Any]`. The statistics computed from detection data.
             reference_stats: `Dict[Hashable, Any]`. The statistics computed from reference data.
             metric: `str`. The metric to compute the difference for.
             relative: `bool`. Whether to compute the relative difference or not.
 
-        # Returns
+        Returns:
             `float`. The difference between the reference and detection statistics.
         """
         if reference_stats.get("specific_value", None) is not None:

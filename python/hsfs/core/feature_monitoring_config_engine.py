@@ -29,6 +29,16 @@ DEFAULT_REFERENCE_STATS_ID = 234
 
 
 class FeatureMonitoringConfigEngine:
+    """Logic and helper methods to perform feature monitoring based on a given configuration.
+
+    Attributes:
+        feature_store_id: int. Id of the respective Feature Store.
+        feature_group_id: int. Id of the feature group, if monitoring a feature group.
+        feature_view_id: int. Id of the feature view, if monitoring a feature view.
+        feature_view_name: str. Name of the feature view, if monitoring a feature view.
+        feature_view_version: int. Version of the feature view, if monitoring a feature view.
+    """
+
     def __init__(
         self,
         feature_store_id: int,
