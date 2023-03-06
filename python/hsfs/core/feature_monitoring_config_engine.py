@@ -395,7 +395,7 @@ class FeatureMonitoringConfigEngine:
 
         if monitoring_window_config["window_config_type"] == "SPECIFIC_VALUE":
             return {
-                "specific_value": monitoring_window_config["specifc_value"]
+                "specific_value": monitoring_window_config["specific_value"]
             }, DEFAULT_REFERENCE_STATS_ID
 
         # Fetch the actual data for which to compute statistics based on row_percentage and time window
