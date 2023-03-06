@@ -313,19 +313,19 @@ class FeatureMonitoringConfigEngine:
         )
 
     def run_feature_monitoring(
-        self, feature_store, config_id: int  #: FeatureStore,
+        self, feature_store, config_name: str
     ) -> FeatureMonitoringResult:
         """Run by feature monitoring job, monitoring is based on the config id.
 
         # Arguments
             feature_store: FeatureStore object.
-            config_id: id of the monitoring config.
+            config_str: name of the monitoring config.
 
         # Returns
             FeatureMonitoringResult object.
         """
 
-        config = self._feature_monitoring_config_api.get(config_id)
+        config = self._feature_monitoring_config_api.get_by_name(config_name)
         result_engine = FeatureMonitoringResultEngine(
             feature_store_id=self._feature_store_id
         )
