@@ -16,13 +16,12 @@
 
 from typing import Any, Dict, Hashable, Optional, Tuple
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
 from hsfs.core.feature_monitoring_config_api import FeatureMonitoringConfigApi
 from hsfs.core.feature_monitoring_result_engine import FeatureMonitoringResultEngine
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
-from hsfs.util import convert_event_time_to_timestamp
 
 from hsfs.core.job import Job
 
@@ -64,7 +63,7 @@ class FeatureMonitoringConfigEngine:
     ) -> FeatureMonitoringConfig:
         """Enable descriptive statistics monitoring for a feature.
 
-        # Arguments
+        Args:
             name: str, required
                 Name of the monitoring configuration.
             feature_name: str, required
@@ -76,7 +75,7 @@ class FeatureMonitoringConfigEngine:
             description: str, optional
                 Description of the monitoring configuration.
 
-        # Returns
+        Returns:
             FeatureMonitoringConfig
         """
         config = self.build_stats_monitoring_only_config(
@@ -110,7 +109,7 @@ class FeatureMonitoringConfigEngine:
     ) -> FeatureMonitoringConfig:
         """Enable feature monitoring for a feature.
 
-        # Arguments
+        Args:
             feature_name: str, required
                 Name of the feature to monitor.
             name: str, required
@@ -128,7 +127,7 @@ class FeatureMonitoringConfigEngine:
             description: str, optional
                 Description of the monitoring configuration.
 
-        # Returns
+        Returns:
             FeatureMonitoringConfig The registered monitoring configuration.
         """
 
@@ -164,7 +163,7 @@ class FeatureMonitoringConfigEngine:
     ) -> Dict[str, Any]:
         """Builds a monitoring window config dictionary.
 
-        # Arguments
+        Args:
             window_config_type: str, required
                 Type of the window config, can be either
                 `SPECIFIC_VALUE`,`FEATURE_GROUP`,`INSERT`,`BATCH` or `FEATURE_VIEW`.
@@ -199,7 +198,7 @@ class FeatureMonitoringConfigEngine:
     ) -> FeatureMonitoringConfig:
         """Builds a feature monitoring config for descriptive statistics only.
 
-        # Arguments
+        Args:
             name: str, required
                 Name of the monitoring configuration.
             feature_name: str, required
@@ -211,7 +210,7 @@ class FeatureMonitoringConfigEngine:
             description: str, optional
                 Description of the monitoring configuration.
 
-        # Returns
+        Returns:
             FeatureMonitoringConfig The monitoring configuration.
         """
 
@@ -244,7 +243,7 @@ class FeatureMonitoringConfigEngine:
     ) -> FeatureMonitoringConfig:
         """Builds a feature monitoring config.
 
-        # Arguments
+        Args:
             feature_name: str, required
                 Name of the feature to monitor.
             name: str, required
@@ -285,10 +284,10 @@ class FeatureMonitoringConfigEngine:
     ) -> Job:
         """Setup a feature monitoring job based on the entity and config name.
 
-        # Arguments
+        Args:
             config_name: name of the monitoring config.
 
-        # Returns
+        Returns:
             Job: monitoring job object.
         """
 
@@ -302,10 +301,10 @@ class FeatureMonitoringConfigEngine:
     ) -> Job:
         """Trigger a feature monitoring job based on the entity and config id.
 
-        # Arguments
+        Args:
             config_id: id of the monitoring config.
 
-        # Returns
+        Returns:
             Job object.
         """
         return self._feature_monitoring_config_api.trigger_feature_monitoring_job(
@@ -423,24 +422,40 @@ class FeatureMonitoringConfigEngine:
     ) -> pd.DataFrame:
         """Fetch the entity data based on the monitoring window config.
 
-        # Arguments
+        Args:
             entity: Union[FeatureGroup, FeatureView]: Entity to monitor.
             feature_name: str: Name of the feature to monitor.
             monitoring_window_config: Dict[str, Any]: Monitoring window config.
 
-        # Returns
+        Returns:
             pd.DataFrame: Entity data.
         """
         # Lots of work to be done here to suport all the different cases
+        time_offset = self.time_range_str_to_time_delta(
+            monitoring_window_config["time_offset"]
+        )
+        window_length = self.time_range_str_to_time_delta(
+            monitoring_window_config["window_length"]
+        )
 
         return (
             entity.select(features=[feature_name])
             .as_of(
-                wallclock_time=convert_event_time_to_timestamp(datetime.now())
-                - monitoring_window_config["time_offset"],
-                exclude_until=convert_event_time_to_timestamp(datetime.now())
-                - monitoring_window_config["time_offset"]
-                + monitoring_window_config["window_length"],
+                wallclock_time=datetime.now() - time_offset,
+                exclude_until=datetime.now() - time_offset + window_length,
             )
             .read()
         )
+
+    def time_range_str_to_time_delta(self, time_range: str) -> timedelta:
+        # Dummy method for now
+        if time_range == "1m":
+            time_offset = timedelta(months=1)
+        elif time_range == "1w":
+            time_offset = timedelta(weeks=1)
+        elif time_range == "1d":
+            time_offset = timedelta(days=1)
+        elif time_range == "1h":
+            time_offset = timedelta(hours=1)
+
+        return time_offset
