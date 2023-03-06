@@ -25,6 +25,8 @@ from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 
 from hsfs.core.job import Job
 
+DEFAULT_REFERENCE_STATS_ID = 234
+
 
 class FeatureMonitoringConfigEngine:
     def __init__(
@@ -345,7 +347,7 @@ class FeatureMonitoringConfigEngine:
                 check_existing=True,
             )
 
-        result = result_engine.run_statistics_comparison(
+        result = result_engine.run_and_save_statistics_comparison(
             detection_stats_id=detection_stats_id,
             reference_stats_id=reference_stats_id if reference_stats_id else None,
             detection_stats=detection_stats,
@@ -378,7 +380,11 @@ class FeatureMonitoringConfigEngine:
                 monitoring_window_config
             )
             if registered_stats_id is not None:
-                return registered_stats_id
+                return {}, registered_stats_id
+        elif monitoring_window_config["window_config_type"] == "SPECIFIC_VALUE":
+            return {
+                "specific_value": monitoring_window_config["specifc_value"]
+            }, DEFAULT_REFERENCE_STATS_ID
 
         # Fetch the actual data for which to compute statistics based on row_percentage and time window
         entity_df = self.fetch_entity_data_based_on_monitoring_window_config(

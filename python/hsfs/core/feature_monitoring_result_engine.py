@@ -238,6 +238,8 @@ class FeatureMonitoringResultEngine:
         # Returns
             `float`. The difference between the reference and detection statistics.
         """
+        if reference_stats.get("specific_value", None) is not None:
+            reference_stats[metric] = reference_stats["specific_value"]
 
         if relative:
             if (reference_stats[metric] + detection_stats[metric]) == 0:
