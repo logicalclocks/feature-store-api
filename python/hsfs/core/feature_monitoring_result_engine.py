@@ -191,7 +191,7 @@ class FeatureMonitoringResultEngine:
             difference = self.compute_difference(
                 detection_stats=detection_stats[feature_name],
                 reference_stats=reference_stats[feature_name],
-                metric=fm_config.statistics_comparison_config["compare_on"],
+                metric=fm_config.statistics_comparison_config["compare_on"].lower(),
                 relative=fm_config.statistics_comparison_config["relative"],
             )
 
