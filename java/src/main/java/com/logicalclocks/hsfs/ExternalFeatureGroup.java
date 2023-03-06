@@ -42,8 +42,6 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -82,8 +80,6 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
 
   private final StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.FEATURE_GROUP);
   private final CodeEngine codeEngine = new CodeEngine(EntityEndpointType.FEATURE_GROUP);
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(ExternalFeatureGroup.class);
 
   @Builder
   public ExternalFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String query,

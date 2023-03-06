@@ -45,8 +45,7 @@ import java.util.stream.Collectors;
 public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends FeatureGroupBase, T3> {
 
   @Getter
-  @Setter
-  protected T2 leftFeatureGroup;
+  protected FeatureGroupBase leftFeatureGroup;
   @Getter
   @Setter
   protected List<Feature> leftFeatures;
@@ -65,6 +64,10 @@ public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends Featu
   @Getter
   @Setter
   protected Boolean hiveEngine = false;
+
+  protected void setLeftFeatureGroup(T2 leftFeatureGroup) {
+    this.leftFeatureGroup = leftFeatureGroup;
+  }
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(QueryBase.class);
 
