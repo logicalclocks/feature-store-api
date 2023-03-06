@@ -358,6 +358,7 @@ class FeatureMonitoringConfigEngine:
             )
 
         result = result_engine.run_and_save_statistics_comparison(
+            feature_name=config.feature_name,
             detection_stats_id=detection_stats_id,
             reference_stats_id=reference_stats_id if reference_stats_id else None,
             detection_stats=detection_stats,

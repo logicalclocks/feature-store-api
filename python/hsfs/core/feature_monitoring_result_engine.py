@@ -167,6 +167,7 @@ class FeatureMonitoringResultEngine:
 
     def run_and_save_statistics_comparison(
         self,
+        feature_name: str,
         detection_stats_id: int,
         detection_stats: Dict[Hashable, Any],
         fm_config: FeatureMonitoringConfig,
@@ -188,9 +189,9 @@ class FeatureMonitoringResultEngine:
 
         if reference_stats:
             difference = self.compute_difference(
-                detection_stats=detection_stats,
-                reference_stats=reference_stats,
-                metric=fm_config.statistics_comparison_config["compareOn"],
+                detection_stats=detection_stats[feature_name],
+                reference_stats=reference_stats[feature_name],
+                metric=fm_config.statistics_comparison_config["compare_on"],
                 relative=fm_config.statistics_comparison_config["relative"],
             )
 
