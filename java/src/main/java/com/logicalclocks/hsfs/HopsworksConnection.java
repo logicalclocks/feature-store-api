@@ -22,6 +22,8 @@ import com.logicalclocks.base.HopsworksConnectionBase;
 import com.logicalclocks.base.SecretStore;
 import com.logicalclocks.base.metadata.HopsworksClient;
 
+import com.logicalclocks.base.metadata.HopsworksInternalClient;
+import com.logicalclocks.hsfs.engine.SparkEngine;
 import lombok.Builder;
 
 import software.amazon.awssdk.regions.Region;
@@ -46,8 +48,20 @@ public class HopsworksConnection extends HopsworksConnectionBase {
     this.apiKeyFilePath = apiKeyFilePath;
     this.apiKeyValue = apiKeyValue;
 
+    String frameworkTrustStorePath = null;
+    String keyStorePath = null;
+    String certKey = null;
+    if (!System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
+      SparkEngine.getInstance().validateSparkConfiguration();
+      frameworkTrustStorePath = SparkEngine.getInstance().getTrustStorePath();
+      keyStorePath = SparkEngine.getInstance().getKeyStorePath();
+      certKey = SparkEngine.getInstance().getCertKey();
+    }
     HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
-        hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue);
+        hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue,
+        frameworkTrustStorePath,
+        keyStorePath,
+        certKey);
     this.projectObj = getProject();
     HopsworksClient.getInstance().setProject(this.projectObj);
   }

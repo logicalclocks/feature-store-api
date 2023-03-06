@@ -22,7 +22,6 @@ import com.google.common.base.Strings;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.SecretStore;
 
-import com.logicalclocks.hsfs.engine.SparkEngine;
 import lombok.Getter;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHeaders;
@@ -90,24 +89,30 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
   protected String certKey;
 
   public HopsworksExternalClient(String host, int port, String apiKeyFilepath,
-                                 boolean hostnameVerification, String trustStorePath)
+                                 boolean hostnameVerification, String trustStorePath, String frameworkTrustStorePath,
+                                 String keyStorePath, String certKey)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, null, null, hostnameVerification, trustStorePath, apiKeyFilepath, null);
+    this(host, port, null, null, hostnameVerification, trustStorePath, apiKeyFilepath, null,
+        frameworkTrustStorePath, keyStorePath, certKey);
   }
 
   public HopsworksExternalClient(String host, int port, boolean hostnameVerification,
-                                 String trustStorePath, Region region, SecretStore secretStore)
+                                 String trustStorePath, Region region, SecretStore secretStore,
+                                 String frameworkTrustStorePath, String keyStorePath, String certKey)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, region, secretStore, hostnameVerification, trustStorePath, null, null);
+    this(host, port, region, secretStore, hostnameVerification, trustStorePath, null, null,
+        frameworkTrustStorePath, keyStorePath, certKey);
   }
 
   public HopsworksExternalClient(String host, int port, boolean hostnameVerification,
-                                 String trustStorePath, String apiKeyValue)
+                                 String trustStorePath, String apiKeyValue, String frameworkTrustStorePath,
+                                 String keyStorePath, String certKey)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, null, null, hostnameVerification, trustStorePath, null, apiKeyValue);
+    this(host, port, null, null, hostnameVerification, trustStorePath, null, apiKeyValue,
+        frameworkTrustStorePath, keyStorePath, certKey);
   }
 
   public HopsworksExternalClient(CloseableHttpClient httpClient, HttpHost httpHost) {
@@ -117,7 +122,8 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
 
   HopsworksExternalClient(String host, int port, Region region,
                           SecretStore secretStore, boolean hostnameVerification,
-                          String trustStorePath, String apiKeyFilepath, String apiKeyValue)
+                          String trustStorePath, String apiKeyFilepath, String apiKeyValue,
+                          String frameworkTrustStorePath, String keyStorePath, String certKey)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
 
@@ -139,10 +145,9 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
       this.apiKey = readApiKey(secretStore, region, apiKeyFilepath);
     }
 
-    SparkEngine.getInstance().validateSparkConfiguration();
-    this.trustStorePath = SparkEngine.getInstance().getTrustStorePath();
-    this.keyStorePath = SparkEngine.getInstance().getKeyStorePath();
-    this.certKey = HopsworksHttpClient.readCertKey(SparkEngine.getInstance().getCertKey());
+    this.trustStorePath = frameworkTrustStorePath;
+    this.keyStorePath = keyStorePath;
+    this.certKey = HopsworksHttpClient.readCertKey(certKey);
   }
 
   protected Registry<ConnectionSocketFactory> createConnectionFactory(HttpHost httpHost, boolean hostnameVerification,
