@@ -283,42 +283,58 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
     codeEngine.saveCode(this);
   }
 
+  @Override
   public StreamingQuery insertStream(Dataset<Row> featureData) {
-    return insertStream(featureData, null, "append", false, null, null, null);
-  }
-
-  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName) {
-    return insertStream(featureData, queryName, null,false, null, null, null);
-  }
-
-  public StreamingQuery insertStream(Dataset<Row> featureData, Map<String, String> writeOptions) {
-    return insertStream(featureData, null, null, false, null, null, writeOptions);
-  }
-
-  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, Map<String, String> writeOptions) {
-    return insertStream(featureData, queryName, "append", false, null, null, writeOptions);
-  }
-
-  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode) {
-    return insertStream(featureData, queryName, outputMode, false, null, null, null);
-  }
-
-  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
-                                     String checkpointLocation) {
-    return insertStream(featureData, queryName, outputMode, false, null, checkpointLocation, null);
-  }
-
-  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
-                                     boolean awaitTermination, Long timeout) {
-    return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null, null);
-  }
-
-  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
-                                     boolean awaitTermination, Long timeout, String checkpointLocation) {
-    return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, checkpointLocation,
+    return insertStream(featureData, null, null, false, null, null, null,
         null);
   }
 
+  @Override
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName) {
+    return insertStream(featureData, queryName, null, false, null, null, null,
+        null);
+  }
+
+  @Override
+  public StreamingQuery insertStream(Dataset<Row> featureData, Map<String, String> writeOptions) {
+    return insertStream(featureData, null, null, false, null, null, writeOptions,
+        null);
+  }
+
+  @Override
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, Map<String, String> writeOptions) {
+    return insertStream(featureData, queryName, null, false, null, null, writeOptions,
+        null);
+  }
+
+  @Override
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode) {
+    return insertStream(featureData, queryName, outputMode, false, null, null, null,
+        null);
+  }
+
+  @Override
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
+                                     String checkpointLocation) {
+    return insertStream(featureData, queryName, outputMode, false, null, checkpointLocation, null,
+        null);
+  }
+
+  @Override
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
+                                     boolean awaitTermination, Long timeout) {
+    return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null, null,
+        null);
+  }
+
+  @Override
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
+                                     boolean awaitTermination, Long timeout, String checkpointLocation) {
+    return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, checkpointLocation, null,
+        null);
+  }
+
+  @Override
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, Long timeout,  String checkpointLocation,
                                      Map<String, String> writeOptions) {
@@ -326,6 +342,14 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
         null);
   }
 
+  @Override
+  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, boolean awaitTermination,
+                             String checkpointLocation) throws Exception {
+    return insertStream(featureData, queryName, outputMode, awaitTermination, null, checkpointLocation, null,
+        null);
+  }
+
+  @Override
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, Long timeout,  String checkpointLocation,
                                      Map<String, String> writeOptions, JobConfiguration jobConfiguration) {
@@ -334,6 +358,7 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
         jobConfiguration);
   }
 
+  @Override
   public Query selectFeatures(List<Feature> features) {
     return new Query(this, features);
   }
@@ -484,6 +509,7 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * @throws FeatureStoreException
    * @throws IOException
    */
+  @Override
   public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
     if (statisticsConfig.getEnabled()) {
       Map<Long, Map<String, String>> latestCommitMetaData =

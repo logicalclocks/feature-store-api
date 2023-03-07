@@ -43,6 +43,11 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
   @Getter
   @Setter
   @JsonIgnore
+  protected T3 featureStore;
+
+  @Getter
+  @Setter
+  @JsonIgnore
   protected Integer id;
 
   @Getter
@@ -60,11 +65,6 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
   @Getter
   @Setter
   protected List<TrainingDatasetFeature> features;
-
-  @Getter
-  @Setter
-  @JsonIgnore
-  protected FeatureStoreBase featureStore;
 
   @Getter
   @Setter

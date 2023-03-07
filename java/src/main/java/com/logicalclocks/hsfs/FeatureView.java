@@ -31,10 +31,10 @@ import com.logicalclocks.base.constructor.FilterLogic;
 import com.logicalclocks.base.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureViewEngine;
-import lombok.Getter;
+
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.Setter;
+
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
@@ -48,11 +48,6 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Query, Dataset<Row>> {
-
-  @Getter
-  @Setter
-  @JsonIgnore
-  private FeatureStore featureStore;
 
   private static final FeatureViewEngine featureViewEngine = new FeatureViewEngine();
 

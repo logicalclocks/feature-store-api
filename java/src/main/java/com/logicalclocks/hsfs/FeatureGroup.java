@@ -366,7 +366,7 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData)
       throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
-    return insertStream(featureData, null);
+    return insertStream(featureData, null, null, false, null, null, null);
   }
 
   /**
@@ -386,7 +386,20 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   @Deprecated
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName)
       throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
-    return insertStream(featureData, queryName, "append");
+    return insertStream(featureData, queryName, null, false, null, null, null);
+  }
+
+  @Deprecated
+  @Override
+  public StreamingQuery insertStream(Dataset<Row> featureData, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException, ParseException {
+    return insertStream(featureData, null, null, false, null, null, writeOptions);
+  }
+
+  @Override
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException, ParseException {
+    return insertStream(featureData, queryName, null, false, null, null, writeOptions);
   }
 
   /**
@@ -405,9 +418,18 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
+  @Override
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode)
       throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
     return insertStream(featureData, queryName, outputMode, false, null, null, null);
+  }
+
+  @Deprecated
+  @Override
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
+                                     String checkpointLocation)
+      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException, ParseException {
+    return insertStream(featureData, queryName, outputMode, false, null, checkpointLocation, null);
   }
 
   /**
@@ -428,10 +450,19 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
+  @Override
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, Long timeout)
       throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
     return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, null, null);
+  }
+
+  @Deprecated
+  @Override
+  public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
+                                     boolean awaitTermination, Long timeout, String checkpointLocation)
+      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException, ParseException {
+    return insertStream(featureData, queryName, outputMode, awaitTermination, timeout, checkpointLocation, null);
   }
 
   /**
@@ -452,6 +483,7 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
+  @Override
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, String checkpointLocation)
       throws StreamingQueryException, IOException, FeatureStoreException, TimeoutException, ParseException {
@@ -478,6 +510,7 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * insertStream method is deprecated FeatureGroups. Full capability insertStream is available for StreamFeatureGroups.
    */
   @Deprecated
+  @Override
   public StreamingQuery insertStream(Dataset<Row> featureData, String queryName, String outputMode,
                                      boolean awaitTermination, Long timeout, String checkpointLocation,
                                      Map<String, String> writeOptions)
@@ -493,11 +526,21 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
         timeout, checkpointLocation, partitionKeys, hudiPrecombineKey, writeOptions);
   }
 
+  @Override
+  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, boolean awaitTermination,
+                             Long timeout, String checkpointLocation, Map<String, String> writeOptions,
+                             JobConfiguration jobConfiguration)
+      throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException, ParseException {
+    return null;
+  }
+
+  @Override
   public void commitDeleteRecord(Dataset<Row> featureData)
       throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.commitDelete(this, featureData, null);
   }
 
+  @Override
   public void commitDeleteRecord(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.commitDelete(this, featureData, writeOptions);

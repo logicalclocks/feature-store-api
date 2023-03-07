@@ -51,6 +51,26 @@ public abstract class FeatureStoreBase<T extends FeatureStoreBase, T2 extends Qu
 
   protected static final Integer DEFAULT_VERSION = 1;
 
+  public abstract Object createFeatureGroup();
+
+  public abstract Object getFeatureGroups(@NonNull String name) throws FeatureStoreException, IOException;
+
+  public abstract Object getOrCreateFeatureGroup(String name, Integer version)
+      throws IOException, FeatureStoreException;
+
+  public abstract Object getOrCreateFeatureGroup(String name, Integer version,
+                                                 List<String> primaryKeys,
+                                                 List<String> partitionKeys,
+                                                 boolean onlineEnabled,
+                                                 String eventTime) throws IOException, FeatureStoreException;
+
+  public abstract Object getOrCreateFeatureGroup(String name, Integer version, String description,
+                                                 List<String> primaryKeys, List<String> partitionKeys,
+                                                 String hudiPrecombineKey,
+                                                 boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
+                                                 StatisticsConfig statisticsConfig, String eventTime)
+      throws IOException, FeatureStoreException;
+
   /**
    * Get a feature group object from the feature store.
    *
@@ -95,6 +115,8 @@ public abstract class FeatureStoreBase<T extends FeatureStoreBase, T2 extends Qu
       throws IOException, FeatureStoreException;
 
   public abstract Object  createExternalFeatureGroup();
+
+  public abstract Object createFeatureView();
 
   public abstract Object getFeatureView(String name) throws FeatureStoreException, IOException;
 

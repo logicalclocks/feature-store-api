@@ -209,6 +209,70 @@ public class FeatureGroupBaseForApi extends FeatureGroupBase<FeatureGroupBaseFor
   }
 
   @Override
+  public Object insertStream(FeatureGroupBaseForApi featureData) throws Exception {
+    return null;
+  }
+
+  @Override
+  public Object insertStream(FeatureGroupBaseForApi featureData, String queryName) throws Exception {
+    return null;
+  }
+
+  @Override
+  public Object insertStream(FeatureGroupBaseForApi featureData, Map<String, String> writeOptions) throws Exception {
+    return null;
+  }
+
+  @Override
+  public Object insertStream(FeatureGroupBaseForApi featureData, String queryName, Map<String, String> writeOptions)
+      throws Exception {
+    return null;
+  }
+
+  @Override
+  public Object insertStream(FeatureGroupBaseForApi featureData, String queryName, String outputMode) throws Exception {
+    return null;
+  }
+
+  @Override
+  public Object insertStream(FeatureGroupBaseForApi featureData, String queryName, String outputMode,
+                             String checkpointLocation) throws Exception {
+    return null;
+  }
+
+  @Override
+  public Object insertStream(FeatureGroupBaseForApi featureData, String queryName, String outputMode,
+                             boolean awaitTermination, Long timeout) throws Exception {
+    return null;
+  }
+
+  @Override
+  public Object insertStream(FeatureGroupBaseForApi featureData, String queryName, String outputMode,
+                             boolean awaitTermination, Long timeout, String checkpointLocation) throws Exception {
+    return null;
+  }
+
+  @Override
+  public Object insertStream(FeatureGroupBaseForApi featureData, String queryName, String outputMode,
+                             boolean awaitTermination, Long timeout, String checkpointLocation,
+                             Map<String, String> writeOptions) throws Exception {
+    return null;
+  }
+
+  @Override
+  public Object insertStream(FeatureGroupBaseForApi featureData, String queryName, String outputMode,
+                             boolean awaitTermination, String checkpointLocation) throws Exception {
+    return null;
+  }
+
+  @Override
+  public Object insertStream(FeatureGroupBaseForApi featureData, String queryName, String outputMode,
+                             boolean awaitTermination, Long timeout, String checkpointLocation,
+                             Map<String, String> writeOptions, JobConfiguration jobConfiguration) throws Exception {
+    return null;
+  }
+
+  @Override
   public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
 
   }

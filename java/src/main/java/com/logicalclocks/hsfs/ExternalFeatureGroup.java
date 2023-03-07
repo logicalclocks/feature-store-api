@@ -300,6 +300,70 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   }
 
   @Override
+  public Object insertStream(Dataset<Row> featureData) throws Exception {
+    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
+  }
+
+  @Override
+  public Object insertStream(Dataset<Row> featureData, String queryName) throws Exception {
+    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
+  }
+
+  @Override
+  public Object insertStream(Dataset<Row> featureData, Map<String, String> writeOptions) throws Exception {
+    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
+  }
+
+  @Override
+  public Object insertStream(Dataset<Row> featureData, String queryName, Map<String, String> writeOptions)
+      throws Exception {
+    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
+  }
+
+  @Override
+  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode) throws Exception {
+    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
+  }
+
+  @Override
+  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, String checkpointLocation)
+      throws Exception {
+    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
+  }
+
+  @Override
+  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, boolean awaitTermination,
+                             Long timeout) throws Exception {
+    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
+  }
+
+  @Override
+  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, boolean awaitTermination,
+                             Long timeout, String checkpointLocation) throws Exception {
+    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
+  }
+
+  @Override
+  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, boolean awaitTermination,
+                             Long timeout, String checkpointLocation, Map<String, String> writeOptions)
+      throws Exception {
+    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
+  }
+
+  @Override
+  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, boolean awaitTermination,
+                             String checkpointLocation) throws Exception {
+    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
+  }
+
+  @Override
+  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, boolean awaitTermination,
+                             Long timeout, String checkpointLocation, Map<String, String> writeOptions,
+                             JobConfiguration jobConfiguration) throws Exception {
+    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
+  }
+
+  @Override
   public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.appendFeatures(this, features, this.getClass());
   }

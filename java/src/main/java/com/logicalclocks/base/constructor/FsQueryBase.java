@@ -18,6 +18,7 @@
 package com.logicalclocks.base.constructor;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.base.FeatureGroupBase;
 import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.Storage;
 import lombok.Getter;
@@ -27,7 +28,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public abstract class FsQueryBase {
+public abstract class FsQueryBase<T extends FeatureGroupBase> {
   @Getter
   @Setter
   private String query;
@@ -42,11 +43,11 @@ public abstract class FsQueryBase {
 
   @Getter
   @Setter
-  private List<HudiFeatureGroupAlias> onDemandFeatureGroups;
+  private List<HudiFeatureGroupAlias<T>> onDemandFeatureGroups;
 
   @Getter
   @Setter
-  private List<HudiFeatureGroupAlias> hudiCachedFeatureGroups;
+  private List<HudiFeatureGroupAlias<T>> hudiCachedFeatureGroups;
 
   public void removeNewLines() {
     query = query != null ? query.replace("\n", " ") : null;

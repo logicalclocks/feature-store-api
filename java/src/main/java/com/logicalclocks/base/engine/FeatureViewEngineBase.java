@@ -117,6 +117,10 @@ public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1, T4, T5>, T2
     }
   }
 
+  public abstract T2 update(T2 featureView) throws FeatureStoreException, IOException;
+
+  public abstract T2 get(T3 featureStore, String name, Integer version) throws FeatureStoreException, IOException;
+
   public T2 get(T3 featureStoreBase, String name, Integer version, Class<T2> fvType)
       throws FeatureStoreException, IOException {
     FeatureViewBase featureViewBase = featureViewApi.get(featureStoreBase, name, version, fvType);

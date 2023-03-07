@@ -71,6 +71,8 @@ public abstract class HopsworksConnectionBase implements Closeable {
 
   protected Project projectObj;
 
+  public abstract Object getFeatureStore() throws IOException, FeatureStoreException;
+
   public abstract Object getFeatureStore(String name) throws IOException, FeatureStoreException;
 
   /**

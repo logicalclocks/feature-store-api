@@ -22,6 +22,7 @@ import com.logicalclocks.base.FeatureStoreException;
 import com.logicalclocks.base.constructor.FsQueryBase;
 import com.logicalclocks.base.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.hsfs.ExternalFeatureGroup;
+import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.engine.SparkEngine;
 import lombok.AllArgsConstructor;
 
@@ -30,14 +31,14 @@ import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @AllArgsConstructor
-public class FsQuery extends FsQueryBase {
+public class FsQuery extends FsQueryBase<StreamFeatureGroup> {
   @Override
   public void registerOnDemandFeatureGroups() throws FeatureStoreException, IOException {
-    if (super.getOnDemandFeatureGroups() == null || super.getOnDemandFeatureGroups().isEmpty()) {
+    if (getOnDemandFeatureGroups() == null || getOnDemandFeatureGroups().isEmpty()) {
       return;
     }
 
-    for (HudiFeatureGroupAlias externalFeatureGroupAlias : super.getOnDemandFeatureGroups()) {
+    for (HudiFeatureGroupAlias externalFeatureGroupAlias : getOnDemandFeatureGroups()) {
       String alias = externalFeatureGroupAlias.getAlias();
       ExternalFeatureGroup onDemandFeatureGroup =
           (ExternalFeatureGroup) externalFeatureGroupAlias.getFeatureGroup();
@@ -48,7 +49,7 @@ public class FsQuery extends FsQueryBase {
 
   @Override
   public void registerHudiFeatureGroups(Map<String, String> readOptions) throws FeatureStoreException {
-    for (HudiFeatureGroupAlias hudiFeatureGroupAlias : super.getHudiCachedFeatureGroups()) {
+    for (HudiFeatureGroupAlias hudiFeatureGroupAlias : getHudiCachedFeatureGroups()) {
       SparkEngine.getInstance().registerHudiTemporaryTable(hudiFeatureGroupAlias, readOptions);
     }
   }

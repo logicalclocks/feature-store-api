@@ -94,6 +94,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
+  @Override
   public scala.collection.Seq<FeatureGroup> getFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
     List<FeatureGroup> featureGroups = new ArrayList<>();
@@ -104,11 +105,13 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
         .asScala().toSeq();
   }
 
+  @Override
   public FeatureGroup.FeatureGroupBuilder createFeatureGroup() {
     return FeatureGroup.builder()
         .featureStore(this);
   }
 
+  @Override
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
     return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, null,
         null, null, false, null, null, null);
@@ -121,6 +124,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
         null, null, onlineEnabled, null, null, eventTime);
   }
 
+  @Override
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
                                               List<String> primaryKeys,
                                               List<String> partitionKeys,
@@ -131,6 +135,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
         partitionKeys, null, onlineEnabled, null, null, eventTime);
   }
 
+  @Override
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, String description,
                                               List<String> primaryKeys, List<String> partitionKeys,
                                               String hudiPrecombineKey,
@@ -235,6 +240,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
    * @throws FeatureStoreException FeatureStoreException
    * @throws IOException IOException
    */
+  @Override
   public scala.collection.Seq<ExternalFeatureGroup> getExternalFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
     return JavaConverters.asScalaBufferConverter(featureGroupEngine.getExternalFeatureGroups(this, name))
@@ -350,6 +356,7 @@ public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
         .asScala().toSeq();
   }
 
+  @Override
   public FeatureView.FeatureViewBuilder createFeatureView() {
     return new FeatureView.FeatureViewBuilder(this);
   }

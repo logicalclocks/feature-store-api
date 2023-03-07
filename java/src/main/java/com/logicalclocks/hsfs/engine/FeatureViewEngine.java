@@ -52,12 +52,14 @@ public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView,
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
 
+  @Override
   public FeatureView update(FeatureView featureView) throws FeatureStoreException,
       IOException {
     featureViewApi.update(featureView, FeatureView.class);
     return featureView;
   }
 
+  @Override
   public FeatureView get(FeatureStore featureStore, String name, Integer version)
       throws FeatureStoreException, IOException {
     FeatureView featureView = get(featureStore, name, version, FeatureView.class);

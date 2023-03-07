@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 
-public abstract class FeatureGroupBase<T2> {
+public abstract class FeatureGroupBase<T> {
 
   @Getter
   @Setter
@@ -213,17 +213,17 @@ public abstract class FeatureGroupBase<T2> {
         this.getClass());
   }
 
-  public abstract T2 read() throws FeatureStoreException, IOException;
+  public abstract T read() throws FeatureStoreException, IOException;
 
-  public abstract T2 read(boolean online) throws FeatureStoreException, IOException;
+  public abstract T read(boolean online) throws FeatureStoreException, IOException;
 
-  public abstract T2 read(Map<String, String> readOptions) throws FeatureStoreException, IOException;
+  public abstract T read(Map<String, String> readOptions) throws FeatureStoreException, IOException;
 
-  public abstract T2 read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException;
+  public abstract T read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException;
 
-  public abstract T2 read(String wallclockTime) throws FeatureStoreException, IOException, ParseException;
+  public abstract T read(String wallclockTime) throws FeatureStoreException, IOException, ParseException;
 
-  public abstract T2 read(String wallclockTime, Map<String, String> readOptions)
+  public abstract T read(String wallclockTime, Map<String, String> readOptions)
       throws FeatureStoreException, IOException, ParseException;
 
   public abstract QueryBase asOf(String wallclockTime) throws FeatureStoreException, ParseException;
@@ -235,40 +235,40 @@ public abstract class FeatureGroupBase<T2> {
 
   public abstract void show(int numRows, boolean online) throws FeatureStoreException, IOException;
 
-  public abstract void insert(T2 featureData) throws IOException, FeatureStoreException, ParseException;
+  public abstract void insert(T featureData) throws IOException, FeatureStoreException, ParseException;
 
-  public abstract void insert(T2 featureData,  Map<String, String> writeOptions)
+  public abstract void insert(T featureData,  Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void insert(T2 featureData, Storage storage)
+  public abstract void insert(T featureData, Storage storage)
       throws IOException, FeatureStoreException, ParseException;
 
-  public abstract void insert(T2 featureData, boolean overwrite)
+  public abstract void insert(T featureData, boolean overwrite)
       throws IOException, FeatureStoreException, ParseException;
 
-  public abstract void insert(T2 featureData, Storage storage, boolean overwrite)
+  public abstract void insert(T featureData, Storage storage, boolean overwrite)
       throws IOException, FeatureStoreException, ParseException;
 
-  public abstract void insert(T2 featureData, boolean overwrite, Map<String, String> writeOptions)
+  public abstract void insert(T featureData, boolean overwrite, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void insert(T2 featureData, HudiOperationType operation)
+  public abstract void insert(T featureData, HudiOperationType operation)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void insert(T2 featureData, Storage storage, boolean overwrite, HudiOperationType operation,
+  public abstract void insert(T featureData, Storage storage, boolean overwrite, HudiOperationType operation,
                      Map<String, String> writeOptions) throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void insert(T2  featureData, JobConfiguration jobConfiguration)
+  public abstract void insert(T  featureData, JobConfiguration jobConfiguration)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void insert(T2 featureData, boolean overwrite, Map<String, String> writeOptions,
+  public abstract void insert(T featureData, boolean overwrite, Map<String, String> writeOptions,
                               JobConfiguration jobConfiguration)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void commitDeleteRecord(T2 featureData)
+  public abstract void commitDeleteRecord(T featureData)
       throws FeatureStoreException, IOException, ParseException;
 
-  public abstract void commitDeleteRecord(T2 featureData, Map<String, String> writeOptions)
+  public abstract void commitDeleteRecord(T featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException;
 
   public abstract Map<Long, Map<String, String>> commitDetails()
@@ -292,6 +292,40 @@ public abstract class FeatureGroupBase<T2> {
   public abstract QueryBase selectExceptFeatures(List<Feature> features);
 
   public abstract QueryBase selectExcept(List<String> features);
+
+  public abstract Object insertStream(T featureData) throws Exception;
+
+  public abstract Object insertStream(T featureData, String queryName) throws Exception;
+
+  public abstract Object insertStream(T featureData, Map<String, String> writeOptions) throws Exception;
+
+  public abstract Object insertStream(T featureData, String queryName, Map<String, String> writeOptions)
+      throws Exception;
+
+  public abstract Object insertStream(T featureData, String queryName, String outputMode) throws Exception;
+
+  public abstract Object insertStream(T featureData, String queryName, String outputMode,
+                                     String checkpointLocation) throws Exception;
+
+  public abstract Object insertStream(T featureData, String queryName, String outputMode,
+                                     boolean awaitTermination, Long timeout) throws Exception;
+
+  public abstract Object insertStream(T featureData, String queryName, String outputMode,
+                                     boolean awaitTermination, Long timeout, String checkpointLocation)
+      throws Exception;
+
+  public abstract Object insertStream(T featureData, String queryName, String outputMode,
+                                     boolean awaitTermination, Long timeout,  String checkpointLocation,
+                                     Map<String, String> writeOptions) throws Exception;
+
+  public abstract Object insertStream(T featureData, String queryName, String outputMode, boolean awaitTermination,
+                                      String checkpointLocation) throws Exception;
+
+  public abstract Object insertStream(T featureData, String queryName, String outputMode,
+                                     boolean awaitTermination, Long timeout,  String checkpointLocation,
+                                     Map<String, String> writeOptions, JobConfiguration jobConfiguration)
+      throws Exception;
+
 
   /**
    * Update the metadata of multiple features.
