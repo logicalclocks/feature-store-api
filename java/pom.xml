@@ -398,6 +398,9 @@
                     <source>1.8</source>
                     <target>1.8</target>
                     <sourcepath>${delombok.output}</sourcepath>
+                    <sourceFileExcludes>
+                        <exclude>**/MainClass.java</exclude>
+                    </sourceFileExcludes>
                 </configuration>
 
                 <executions>
