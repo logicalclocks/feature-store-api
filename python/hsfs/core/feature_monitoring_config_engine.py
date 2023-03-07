@@ -458,14 +458,18 @@ class FeatureMonitoringConfigEngine:
             monitoring_window_config["window_length"]
         )
 
-        return (
-            entity.select(features=[feature_name])
-            .as_of(
+        if entity.ENTITY_TYPE == "FEATURE_GROUP":
+            query = entity.select(features=[feature_name]).as_of(
                 exclude_until=datetime.now() - time_offset,
                 wallclock_time=datetime.now() - time_offset + window_length,
             )
-            .read(dataframe_type="pandas")
-        )
+            return query.read(dataframe_type="pandas")
+        elif entity.ENTITY_TYPE == "FEATURE_VIEW":
+            query = entity.get_batch_query(
+                start_date=datetime.now() - time_offset,
+                end_date=datetime.now() - time_offset + window_length,
+            )
+            return query.read(dataframe_type="pandas")[[feature_name]]
 
     def time_range_str_to_time_delta(self, time_range: str) -> timedelta:
         # Dummy method for now
