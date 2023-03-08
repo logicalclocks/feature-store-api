@@ -189,8 +189,8 @@ class FeatureMonitoringResultEngine:
 
         if reference_stats:
             difference = self.compute_difference(
-                detection_stats=detection_stats[feature_name],
-                reference_stats=reference_stats[feature_name],
+                detection_stats=detection_stats,
+                reference_stats=reference_stats,
                 metric=fm_config.statistics_comparison_config["compare_on"].lower(),
                 relative=fm_config.statistics_comparison_config["relative"],
             )

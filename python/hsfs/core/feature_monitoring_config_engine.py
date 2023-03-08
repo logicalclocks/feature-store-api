@@ -17,6 +17,8 @@
 from typing import Any, Dict, Hashable, Optional, Tuple
 import pandas as pd
 from datetime import datetime, timedelta
+from hsfs import engine
+import json
 
 from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
 from hsfs.core.feature_monitoring_config_api import FeatureMonitoringConfigApi
@@ -408,21 +410,34 @@ class FeatureMonitoringConfigEngine:
         )
 
         # This method should be implemented on a statistics_compute_engine rather than here
-        stats, registered_stats_id = self.compute_and_upload_statistics(entity_df)
+        stats, registered_stats_id = self.compute_and_upload_statistics(
+            entity_df,
+            feature_name,
+        )
 
         return stats, registered_stats_id
 
     def compute_and_upload_statistics(
-        self, entity_df: pd.DataFrame
+        self,
+        entity_df: pd.DataFrame,
+        feature_name: str,
     ) -> Tuple[Dict[Hashable, Any], int]:
         # Dummy method for now
         # This method should be implemented on a statistics_compute_engine rather than here
         # Or potentially just in the python/spark engines
-        stats = entity_df.describe()
+        stats = json.loads(
+            engine.get_instance().profile(
+                dataframe=entity_df,
+                relevant_columns=[feature_name],
+                correlations=False,
+                exact_uniqueness=False,
+                histograms=False,
+            )
+        )["columns"][0]
         print("Computing and faking statistics upload... ")
         registered_stats_id = 22
 
-        return stats.to_dict(), registered_stats_id
+        return stats, registered_stats_id
 
     def check_for_registered_stats(
         self, monitoring_window_config: Dict[str, Any]
@@ -459,31 +474,34 @@ class FeatureMonitoringConfigEngine:
         )
 
         if entity.ENTITY_TYPE == "FEATURE_GROUP":
-            return (
+            full_df = (
                 entity.select(features=[feature_name])
                 .as_of(
                     exclude_until=datetime.now() - time_offset,
                     wallclock_time=datetime.now() - time_offset + window_length,
                 )
-                .read(dataframe_type="pandas")
+                .read()
             )
         elif entity.ENTITY_TYPE == "featureview":
             # TODO: This is a hack to get the data from the feature view without using get_batch_data
             # Currently get_batch_data does not support returning pandas dataframes
             # We also need to pass a training data version if there are transformation
             # functions to apply for get_batch_data to work
+            full_df = (
+                entity.query.as_of(
+                    exclude_until=datetime.now() - time_offset,
+                    wallclock_time=datetime.now() - time_offset + window_length,
+                )
+                .read()
+                .select(feature_name)
+            )
 
-            # entity.init_batch_scoring(1) # Needed when using get_batch_data with TF
-            # full_df = entity.get_batch_data(
-            #     start_date=datetime.now() - time_offset,
-            #     end_date=datetime.now() - time_offset + window_length,
-            #     read_options={"dataframe_type":"pandas"},
-            # )
-            full_df = entity.query.as_of(
-                exclude_until=datetime.now() - time_offset,
-                wallclock_time=datetime.now() - time_offset + window_length,
-            ).read(dataframe_type="pandas")
-            return full_df[[feature_name]]
+        if monitoring_window_config.row_percentage < 100:
+            full_df = full_df.sample(
+                fraction=(monitoring_window_config.row_percentage / 100)
+            )
+
+        return full_df
 
     def time_range_str_to_time_delta(self, time_range: str) -> timedelta:
         # Dummy method for now
