@@ -496,7 +496,7 @@ class FeatureMonitoringConfigEngine:
                 .select(feature_name)
             )
 
-        if monitoring_window_config.row_percentage < 100:
+        if monitoring_window_config.get("row_percentage", 101) < 100:
             full_df = full_df.sample(
                 fraction=(monitoring_window_config.row_percentage / 100)
             )
