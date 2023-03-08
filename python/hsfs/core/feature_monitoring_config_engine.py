@@ -467,7 +467,7 @@ class FeatureMonitoringConfigEngine:
                 )
                 .read(dataframe_type="pandas")
             )
-        elif entity.ENTITY_TYPE == "FEATURE_VIEW":
+        elif entity.ENTITY_TYPE == "featureview":
             # TODO: This is a hack to get the data from the feature view without using get_batch_data
             # Currently get_batch_data does not support returning pandas dataframes
             # We also need to pass a training data version if there are transformation
@@ -480,8 +480,8 @@ class FeatureMonitoringConfigEngine:
             #     read_options={"dataframe_type":"pandas"},
             # )
             full_df = entity.query.as_of(
-                start_time=datetime.now() - time_offset,
-                end_time=datetime.now() - time_offset + window_length,
+                exclude_until=datetime.now() - time_offset,
+                wallclock_time=datetime.now() - time_offset + window_length,
             ).read(dataframe_type="pandas")
             return full_df[[feature_name]]
 
