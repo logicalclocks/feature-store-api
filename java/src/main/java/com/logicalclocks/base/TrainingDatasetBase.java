@@ -27,6 +27,8 @@ import com.logicalclocks.base.metadata.Statistics;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -113,6 +115,8 @@ public abstract class TrainingDatasetBase {
   @Getter
   @Setter
   protected String type = "trainingDatasetDTO";
+
+  protected static final Logger LOGGER = LoggerFactory.getLogger(TrainingDatasetBase.class);
 
   protected VectorServer vectorServer = new VectorServer();
 

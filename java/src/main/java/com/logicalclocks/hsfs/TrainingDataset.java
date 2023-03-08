@@ -44,8 +44,6 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -69,8 +67,6 @@ public class TrainingDataset extends TrainingDatasetBase {
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);
   private CodeEngine codeEngine = new CodeEngine(EntityEndpointType.TRAINING_DATASET);
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDataset.class);
 
   @Builder
   public TrainingDataset(@NonNull String name, Integer version, String description, DataFormat dataFormat,
