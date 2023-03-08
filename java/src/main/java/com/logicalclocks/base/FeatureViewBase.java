@@ -24,7 +24,6 @@ import com.logicalclocks.base.constructor.QueryBase;
 import com.logicalclocks.base.engine.VectorServer;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-@NoArgsConstructor
+
 public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends FeatureStoreBase<T4>,
     T4 extends QueryBase, T5> {
 

@@ -330,7 +330,7 @@ public class SparkEngine {
         String eventTimeType =
             query.getLeftFeatureGroup().getFeature(eventTime).getType();
 
-        if (BIGINT.name().equals(eventTimeType)) {
+        if (BIGINT.name().equalsIgnoreCase(eventTimeType)) {
           String tmpEventTime = eventTime + "_hopsworks_tmp";
           sparkSession.sqlContext()
               .udf()
@@ -355,7 +355,7 @@ public class SparkEngine {
                   split.getEndTime().getTime()
               )
           ).drop(tmpEventTime);
-        } else if (DATE.name().equals(eventTimeType) || TIMESTAMP.name().equals(eventTimeType)) {
+        } else if (DATE.name().equalsIgnoreCase(eventTimeType) || TIMESTAMP.name().equalsIgnoreCase(eventTimeType)) {
           // unix_timestamp return in second. `getTime()` return in millisecond.
           datasetSplits[i] = dataset.filter(
               String.format(
