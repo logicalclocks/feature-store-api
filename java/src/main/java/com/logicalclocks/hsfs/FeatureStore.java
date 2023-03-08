@@ -35,8 +35,6 @@ import lombok.NonNull;
 
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
@@ -44,12 +42,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FeatureStore extends FeatureStoreBase<FeatureStore, Query> {
+public class FeatureStore extends FeatureStoreBase<Query> {
 
   private FeatureGroupEngine featureGroupEngine;
   private FeatureViewEngine featureViewEngine;
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStore.class);
 
   public FeatureStore() {
     trainingDatasetApi = new TrainingDatasetApi();

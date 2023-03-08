@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 @NoArgsConstructor
-public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends FeatureStoreBase<T3, T4>,
+public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends FeatureStoreBase<T4>,
     T4 extends QueryBase, T5> {
 
   @Getter

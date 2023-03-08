@@ -22,9 +22,13 @@ import com.logicalclocks.base.constructor.QueryBase;
 import com.logicalclocks.base.metadata.FeatureGroupApi;
 import com.logicalclocks.base.metadata.StorageConnectorApi;
 import com.logicalclocks.base.metadata.TrainingDatasetApi;
+
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -48,6 +52,8 @@ public abstract class FeatureStoreBase<T2 extends QueryBase> {
   protected FeatureGroupApi featureGroupApi;
   protected TrainingDatasetApi trainingDatasetApi;
   protected StorageConnectorApi storageConnectorApi;
+
+  protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureStoreBase.class);
 
   protected static final Integer DEFAULT_VERSION = 1;
 
