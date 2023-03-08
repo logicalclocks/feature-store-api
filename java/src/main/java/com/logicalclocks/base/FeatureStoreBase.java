@@ -29,7 +29,7 @@ import lombok.Setter;
 import java.io.IOException;
 import java.util.List;
 
-public abstract class FeatureStoreBase<T extends FeatureStoreBase, T2 extends QueryBase> {
+public abstract class FeatureStoreBase<T2 extends QueryBase> {
 
   @Getter
   @Setter
