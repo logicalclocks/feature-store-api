@@ -73,6 +73,7 @@ public abstract class StorageConnector extends StorageConnectorBase {
     return SparkEngine.getInstance().read(this, dataFormat, options, path);
   }
 
+  @Override
   public StorageConnector refetch() throws FeatureStoreException, IOException {
     return storageConnectorApi.get(getFeaturestoreId(), getName(), StorageConnector.class);
   }
