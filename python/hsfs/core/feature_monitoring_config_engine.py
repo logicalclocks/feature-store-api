@@ -459,17 +459,31 @@ class FeatureMonitoringConfigEngine:
         )
 
         if entity.ENTITY_TYPE == "FEATURE_GROUP":
-            query = entity.select(features=[feature_name]).as_of(
-                exclude_until=datetime.now() - time_offset,
-                wallclock_time=datetime.now() - time_offset + window_length,
+            return (
+                entity.select(features=[feature_name])
+                .as_of(
+                    exclude_until=datetime.now() - time_offset,
+                    wallclock_time=datetime.now() - time_offset + window_length,
+                )
+                .read(dataframe_type="pandas")
             )
-            return query.read(dataframe_type="pandas")
         elif entity.ENTITY_TYPE == "FEATURE_VIEW":
-            query = entity.get_batch_query(
-                start_date=datetime.now() - time_offset,
-                end_date=datetime.now() - time_offset + window_length,
-            )
-            return query.read(dataframe_type="pandas")[[feature_name]]
+            # TODO: This is a hack to get the data from the feature view without using get_batch_data
+            # Currently get_batch_data does not support returning pandas dataframes
+            # We also need to pass a training data version if there are transformation
+            # functions to apply for get_batch_data to work
+
+            # entity.init_batch_scoring(1) # Needed when using get_batch_data with TF
+            # full_df = entity.get_batch_data(
+            #     start_date=datetime.now() - time_offset,
+            #     end_date=datetime.now() - time_offset + window_length,
+            #     read_options={"dataframe_type":"pandas"},
+            # )
+            full_df = entity.query.as_of(
+                start_time=datetime.now() - time_offset,
+                end_time=datetime.now() - time_offset + window_length,
+            ).read(dataframe_type="pandas")
+            return full_df[[feature_name]]
 
     def time_range_str_to_time_delta(self, time_range: str) -> timedelta:
         # Dummy method for now
