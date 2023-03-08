@@ -82,10 +82,10 @@ public class StatisticsEngine {
     return null;
   }
 
-  public <S> Statistics computeStatistics(FeatureGroupBase featureGroup, S genericDataFrame, Long commitId)
+  public Statistics computeStatistics(FeatureGroupBase featureGroup, Dataset<Row> dataFrame, Long commitId)
       throws FeatureStoreException, IOException {
 
-    Optional<Statistics> statistics = computeStatistics((Dataset<Row>) genericDataFrame,
+    Optional<Statistics> statistics = computeStatistics(dataFrame,
         featureGroup.getStatisticsConfig().getColumns(),
         featureGroup.getStatisticsConfig().getHistograms(),
         featureGroup.getStatisticsConfig().getCorrelations(),
@@ -145,8 +145,7 @@ public class StatisticsEngine {
     return new Statistics(commitTime, null, null, splitStatistics);
   }
 
-  public Statistics getSplitStatistics(TrainingDataset trainingDataset, Map<String, Dataset<Row>> splitDatasets)
-      throws FeatureStoreException {
+  public Statistics getSplitStatistics(TrainingDataset trainingDataset, Map<String, Dataset<Row>> splitDatasets) {
     List<SplitStatistics> splitStatistics = new ArrayList<>();
     for (Map.Entry<String, Dataset<Row>> entry : splitDatasets.entrySet()) {
       Optional<Statistics> statistics = computeStatistics(entry.getValue(),
