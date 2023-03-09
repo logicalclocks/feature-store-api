@@ -121,8 +121,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Read the feature group into a dataframe.
-   * Reads the feature group by from the offline storage as Spark DataFrame.
+   * Reads the feature group from the offline storage as Spark DataFrame.
    *
    * <pre>
    * {@code
@@ -145,7 +144,6 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Read the stream feature group into a dataframe.
    * Reads the stream feature group from the offline or online storage as Spark DataFrame.
    *
    * <pre>
@@ -172,9 +170,7 @@ public class StreamFeatureGroup extends FeatureGroupBase {
   }
 
   /**
-   * Read the stream feature group into a dataframe.
-   * Reads the stream feature group by from the offline or online storage as Spark DataFrame on Hopsworks and
-   * Databricks.
+   * Reads the stream feature group from the offline or online storage as Spark DataFrame.
    *
    * <pre>
    * {@code
