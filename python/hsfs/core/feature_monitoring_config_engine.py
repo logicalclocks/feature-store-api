@@ -100,12 +100,6 @@ class FeatureMonitoringConfigEngine:
             description=description,
         )
 
-        monitoring_job = self.setup_monitoring_job(
-            config_name=config.name,
-        )
-        config._job_id = monitoring_job.id
-        config._job_name = monitoring_job.name
-
         return self._feature_monitoring_config_api.create(
             fm_config=config,
         )
@@ -155,12 +149,6 @@ class FeatureMonitoringConfigEngine:
             alert_config=alert_config,
             description=description,
         )
-
-        monitoring_job = self.setup_monitoring_job(
-            config_name=config.name,
-        )
-        config._job_id = monitoring_job.id
-        config._job_name = monitoring_job.name
 
         return self._feature_monitoring_config_api.create(
             fm_config=config,

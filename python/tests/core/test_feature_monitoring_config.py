@@ -32,7 +32,6 @@ class TestFeatureMonitoringConfig:
         assert config._feature_group_id == 13
         assert config._href[-2:] == "32"
         assert config._feature_name == "monitored_feature"
-        assert config._job_id == 111
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert isinstance(config._alert_config, str)
@@ -65,7 +64,6 @@ class TestFeatureMonitoringConfig:
         assert config._feature_group_id is None
         assert config._href[-2:] == "32"
         assert config._feature_name == "monitored_feature"
-        assert config._job_id == 111
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert isinstance(config._alert_config, str)
@@ -104,7 +102,6 @@ class TestFeatureMonitoringConfig:
         assert config._feature_group_id is None
         assert config._href[-2:] == "32"
         assert config._feature_name == "monitored_feature"
-        assert config._job_id == 111
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert isinstance(config._alert_config, str)

@@ -15,7 +15,6 @@
 #
 
 from hsfs.core import feature_monitoring_config_engine
-from hsfs.core.job import Job
 
 DEFAULT_DESCRIPTION = "A feature monitoring configuration for unit test."
 DEFAULT_NAME = "test_monitoring_config"
@@ -128,11 +127,6 @@ class TestFeatureMonitoringConfigEngine:
         mock_config_api = mocker.patch(
             "hsfs.core.feature_monitoring_config_api.FeatureMonitoringConfigApi.create"
         )
-        job_json = backend_fixtures["job"]["get"]["response"]
-        mock_config_job_api = mocker.patch(
-            DEFAULT_FEATURE_MONITORING_CONFIG_SETUP_JOB_API,
-            return_value=Job.from_response_json(job_json),
-        )
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
@@ -168,7 +162,6 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         # Assert
-        assert mock_config_job_api.call_count == 1
         config = mock_config_api.call_args[1]["fm_config"]
         assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
         assert config._feature_group_id == DEFAULT_FEATURE_GROUP_ID
@@ -177,8 +170,6 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
-        assert config._job_id == job_json["id"]
-        assert config._job_name == job_json["name"]
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
@@ -207,11 +198,6 @@ class TestFeatureMonitoringConfigEngine:
     def test_enable_feature_monitoring_config_fv(self, backend_fixtures, mocker):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
-        job_json = backend_fixtures["job"]["get"]["response"]
-        mock_config_job_api = mocker.patch(
-            DEFAULT_FEATURE_MONITORING_CONFIG_SETUP_JOB_API,
-            return_value=Job.from_response_json(job_json),
-        )
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
@@ -250,7 +236,6 @@ class TestFeatureMonitoringConfigEngine:
 
         # Assert
         config = mock_config_api.call_args[1]["fm_config"]
-        assert mock_config_job_api.call_count == 1
         assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
         assert config._feature_group_id is None
         assert config._feature_view_id == DEFAULT_FEATURE_VIEW_ID
@@ -258,8 +243,6 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
-        assert config._job_id == job_json["id"]
-        assert config._job_name == job_json["name"]
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
@@ -327,11 +310,6 @@ class TestFeatureMonitoringConfigEngine:
     ):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
-        job_json = backend_fixtures["job"]["get"]["response"]
-        mock_config_job_api = mocker.patch(
-            DEFAULT_FEATURE_MONITORING_CONFIG_SETUP_JOB_API,
-            return_value=Job.from_response_json(job_json),
-        )
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
@@ -355,7 +333,6 @@ class TestFeatureMonitoringConfigEngine:
 
         # Assert
         config = mock_config_api.call_args[1]["fm_config"]
-        assert mock_config_job_api.call_count == 1
         assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
         assert config._feature_group_id == DEFAULT_FEATURE_GROUP_ID
         assert config._feature_view_id is None
@@ -363,8 +340,6 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
-        assert config._job_id == job_json["id"]
-        assert config._job_name == job_json["name"]
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config["window_config_type"] == "INSERT"
@@ -376,11 +351,6 @@ class TestFeatureMonitoringConfigEngine:
     ):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
-        job_json = backend_fixtures["job"]["get"]["response"]
-        mock_config_job_api = mocker.patch(
-            DEFAULT_FEATURE_MONITORING_CONFIG_SETUP_JOB_API,
-            return_value=Job.from_response_json(job_json),
-        )
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
@@ -405,7 +375,6 @@ class TestFeatureMonitoringConfigEngine:
 
         # Assert
         config = mock_config_api.call_args[1]["fm_config"]
-        assert mock_config_job_api.call_count == 1
         assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
         assert config._feature_group_id is None
         assert config._feature_view_id == DEFAULT_FEATURE_VIEW_ID
@@ -413,8 +382,6 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._name == DEFAULT_NAME
         assert config._description is None
-        assert config._job_id == job_json["id"]
-        assert config._job_name == job_json["name"]
         assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config["window_config_type"] == "BATCH"
