@@ -1,0 +1,9 @@
+{
+    "host": "host.docker.internal",
+    "port": 8180,
+    "project": "test",
+    "external": true,
+    "rows": 100000,
+    "schema_repetitions": 1,
+    "recreate_feature_group": true
+}
