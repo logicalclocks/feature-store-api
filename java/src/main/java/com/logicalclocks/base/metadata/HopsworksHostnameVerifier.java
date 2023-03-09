@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020-2022. Hopsworks AB
+ *  Copyright (c) 2020-2023. Hopsworks AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -33,8 +33,5 @@ public class HopsworksHostnameVerifier implements HostnameVerifier {
   @Override
   public boolean verify(String string, SSLSession ssls) {
     return true;
-    //LOGGER.info("Verifying: " + string);
-    //LOGGER.info("against: " + hopsworksHost);
-    //return insecure || string.equals(hopsworksHost);
   }
 }
