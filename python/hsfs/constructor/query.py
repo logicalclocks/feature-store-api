@@ -64,6 +64,10 @@ class Query:
                 sql_query = query.query
             online_conn = None
 
+            if engine.get_instance().flyingduck_supported(self):
+                read_options["use_flyingduck"] = True
+                return (self, query), online_conn
+
             # Register on demand feature groups as temporary tables
             query.register_external()
 
@@ -153,10 +157,11 @@ class Query:
             n: Number of rows to show.
             online: Show from online storage. Defaults to `False`.
         """
-        sql_query, online_conn = self._prep_read(online, {})
+        read_options = {}
+        sql_query, online_conn = self._prep_read(online, read_options)
 
         return engine.get_instance().show(
-            sql_query, self._feature_store_name, n, online_conn
+            sql_query, self._feature_store_name, n, online_conn, read_options
         )
 
     def join(

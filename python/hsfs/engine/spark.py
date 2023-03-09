@@ -121,13 +121,16 @@ class Engine:
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
 
+    def flyingduck_supported(self, query):
+        return False  # we do not support flyingduck on pyspark clients
+
     def _sql_offline(self, sql_query, feature_store):
         # set feature store
         self._spark_session.sql("USE {}".format(feature_store))
         return self._spark_session.sql(sql_query)
 
-    def show(self, sql_query, feature_store, n, online_conn):
-        return self.sql(sql_query, feature_store, online_conn, "default", {}).show(n)
+    def show(self, sql_query, feature_store, n, online_conn, read_options):
+        return self.sql(sql_query, feature_store, online_conn, "default", read_options).show(n)
 
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)

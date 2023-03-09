@@ -55,6 +55,7 @@ from hsfs.core import (
     training_dataset_job_conf,
     feature_view_api,
     transformation_function_engine,
+    arrow_flight_client,
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -98,21 +99,28 @@ class Engine:
                 dataframe_type,
                 schema,
                 hive_config=read_options.get("hive_config") if read_options else None,
+                use_flyingduck=read_options.get("use_flyingduck") if read_options else None,
             )
         else:
             return self._jdbc(
                 sql_query, online_conn, dataframe_type, read_options, schema
             )
 
+    def flyingduck_supported(self, query):
+        return arrow_flight_client.get_instance().is_supported(query)  # TODO: check feature flag here
+
     def _sql_offline(
-        self, sql_query, feature_store, dataframe_type, schema=None, hive_config=None
+        self, sql_query, feature_store, dataframe_type, schema=None, hive_config=None, use_flyingduck=False
     ):
-        with self._create_hive_connection(
-            feature_store, hive_config=hive_config
-        ) as hive_conn:
-            result_df = pd.read_sql(sql_query, hive_conn)
-            if schema:
-                result_df = Engine.cast_columns(result_df, schema)
+        if use_flyingduck:
+            result_df = arrow_flight_client.get_instance().read_query(*sql_query)
+        else:
+            with self._create_hive_connection(
+                feature_store, hive_config=hive_config
+            ) as hive_conn:
+                result_df = pd.read_sql(sql_query, hive_conn)
+        if schema:
+            result_df = Engine.cast_columns(result_df, schema)
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def _jdbc(self, sql_query, connector, dataframe_type, read_options, schema=None):
@@ -265,8 +273,8 @@ class Engine:
             "Streaming Sources are not supported for pure Python Environments."
         )
 
-    def show(self, sql_query, feature_store, n, online_conn):
-        return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
+    def show(self, sql_query, feature_store, n, online_conn, read_options):
+        return self.sql(sql_query, feature_store, online_conn, "default", read_options).head(n)
 
     def register_external_temporary_table(self, external_fg, alias):
         # No op to avoid query failure
