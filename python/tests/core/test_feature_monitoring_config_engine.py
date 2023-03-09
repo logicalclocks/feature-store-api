@@ -122,7 +122,7 @@ class TestFeatureMonitoringConfigEngine:
             == stats_comparison_configuration["compare_on"]
         )
 
-    def test_enable_feature_monitoring_config_fg(self, backend_fixtures, mocker):
+    def test_enable_feature_monitoring_config_fg(self, mocker):
         # Arrange
         mock_config_api = mocker.patch(
             "hsfs.core.feature_monitoring_config_api.FeatureMonitoringConfigApi.create"
@@ -195,7 +195,7 @@ class TestFeatureMonitoringConfigEngine:
             == stats_comparison_configuration["compare_on"]
         )
 
-    def test_enable_feature_monitoring_config_fv(self, backend_fixtures, mocker):
+    def test_enable_feature_monitoring_config_fv(self, mocker):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
 
@@ -305,9 +305,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._detection_window_config["time_offset"] == "1w"
         assert config._detection_window_config["window_length"] == "1d"
 
-    def test_enable_descriptive_statistics_monitoring_fg(
-        self, backend_fixtures, mocker
-    ):
+    def test_enable_descriptive_statistics_monitoring_fg(self, mocker):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
 
@@ -346,9 +344,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._detection_window_config["time_offset"] == "1w"
         assert config._detection_window_config["window_length"] == "1d"
 
-    def test_enable_descriptive_statistics_monitoring_fv(
-        self, backend_fixtures, mocker
-    ):
+    def test_enable_descriptive_statistics_monitoring_fv(self, mocker):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
 
@@ -387,3 +383,5 @@ class TestFeatureMonitoringConfigEngine:
         assert config._detection_window_config["window_config_type"] == "BATCH"
         assert config._detection_window_config["time_offset"] == "1w"
         assert config._detection_window_config["window_length"] == "1d"
+
+    # TODO: Add unit test for the run_feature_monitoring methods when more stable
