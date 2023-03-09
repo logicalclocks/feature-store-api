@@ -12,7 +12,7 @@ def on_locust_init(environment, **kwargs):
 
     if isinstance(environment.runner, (MasterRunner, LocalRunner)):
         # create feature view
-        environment.hopsworks_client = HopsworksClient()
+        environment.hopsworks_client = HopsworksClient(environment)
         fg = environment.hopsworks_client.get_or_create_fg()
         environment.hopsworks_client.get_or_create_fv(fg)
 
@@ -34,7 +34,7 @@ class FeatureVectorLookup(User):
     def __init__(self, environment):
         super().__init__(environment)
         self.env = environment
-        self.client = HopsworksClient()
+        self.client = HopsworksClient(environment)
         self.fv = self.client.get_or_create_fv()
 
     def on_start(self):
@@ -62,7 +62,7 @@ class FeatureVectorBatchLookup(User):
     def __init__(self, environment):
         super().__init__(environment)
         self.env = environment
-        self.client = HopsworksClient()
+        self.client = HopsworksClient(environment)
         self.fv = self.client.get_or_create_fv()
 
     def on_start(self):

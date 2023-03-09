@@ -4,7 +4,7 @@ services:
   master:
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    image: locust-hsfs:latest
+    image: locust-hsfs:master
     ports:
      - "8089:8089"
     volumes:
@@ -14,7 +14,7 @@ services:
   worker:
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    image: locust-hsfs:latest
+    image: locust-hsfs:master
     volumes:
       - ./:/home/locust
     command: -f /home/locust/locustfile.py --worker --master-host master

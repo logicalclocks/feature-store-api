@@ -9,13 +9,15 @@ import hsfs
 
 from hsfs import client
 from hsfs.client.exceptions import RestAPIError
+from locust.runners import MasterRunner, LocalRunner
 
 
 class HopsworksClient:
-    def __init__(self):
+    def __init__(self, environment):
         with open("hopsworks_config.json") as json_file:
             self.hopsworks_config = json.load(json_file)
-        print(self.hopsworks_config)
+        if isinstance(environment.runner, (MasterRunner, LocalRunner)):
+            print(self.hopsworks_config)
         self.connection = hsfs.connection(
             project=self.hopsworks_config.get("project", "test"),
             host=self.hopsworks_config.get("host", "localhost"),

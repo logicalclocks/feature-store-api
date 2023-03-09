@@ -1,6 +1,6 @@
 {
-    "host": "host.docker.internal",
-    "port": 8180,
+    "host": "localhost",
+    "port": 443,
     "project": "test",
     "external": true,
     "rows": 100000,
