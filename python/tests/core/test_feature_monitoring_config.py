@@ -33,6 +33,7 @@ class TestFeatureMonitoringConfig:
         assert config._href[-2:] == "32"
         assert config._feature_name == "monitored_feature"
         assert config._enabled is True
+        assert config._name == "unit_test_config"
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert isinstance(config._alert_config, str)
         assert isinstance(config._scheduler_config, str)
@@ -65,6 +66,7 @@ class TestFeatureMonitoringConfig:
         assert config._href[-2:] == "32"
         assert config._feature_name == "monitored_feature"
         assert config._enabled is True
+        assert config._name == "unit_test_config"
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert isinstance(config._alert_config, str)
         assert isinstance(config._scheduler_config, str)
@@ -81,6 +83,56 @@ class TestFeatureMonitoringConfig:
         assert config._statistics_comparison_config["strict"] is True
         assert config._statistics_comparison_config["relative"] is False
         assert config._statistics_comparison_config["compare_on"] == "MEAN"
+
+    def test_from_response_json_stats_only_via_fg(self, backend_fixtures):
+        # Arrange
+        config_json = backend_fixtures["feature_monitoring_config"][
+            "get_scheduled_stats_only_via_feature_group"
+        ]["response"]
+
+        # Act
+        config = FeatureMonitoringConfig.from_response_json(config_json)
+
+        # Assert
+        assert config._id == 32
+        assert config._feature_store_id == 67
+        assert config._feature_view_id is None
+        assert config._feature_group_id == 13
+        assert config._href[-2:] == "32"
+        assert config._name == "unit_test_config"
+        assert config._feature_name == "monitored_feature"
+        assert config._enabled is True
+        assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
+        assert isinstance(config._scheduler_config, str)
+
+        assert config._detection_window_config["window_config_type"] == "INSERT"
+        assert config._detection_window_config["time_offset"] == "1w"
+        assert config._detection_window_config["window_length"] == "1d"
+
+    def test_from_response_json_stats_only_via_fv(self, backend_fixtures):
+        # Arrange
+        config_json = backend_fixtures["feature_monitoring_config"][
+            "get_scheduled_stats_only_via_feature_view"
+        ]["response"]
+
+        # Act
+        config = FeatureMonitoringConfig.from_response_json(config_json)
+
+        # Assert
+        assert config._id == 32
+        assert config._feature_store_id == 67
+        assert config._feature_view_id == 22
+        assert config._feature_group_id is None
+        assert config._href[-2:] == "32"
+        assert config._name == "unit_test_config"
+        assert config._feature_name == "monitored_feature"
+        assert config._enabled is True
+        assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
+        assert isinstance(config._scheduler_config, str)
+
+        assert config._detection_window_config["window_config_type"] == "BATCH"
+        assert config._detection_window_config["time_offset"] == "1w"
+        assert config._detection_window_config["window_length"] == "1d"
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
