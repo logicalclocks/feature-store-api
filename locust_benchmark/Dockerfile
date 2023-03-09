@@ -2,8 +2,7 @@ FROM hopsworks/locust:hsfs-latest
 
 USER root
 
-RUN apt-get update -y
-RUN apt-get -y install gcc python3-dev librdkafka-dev git
+RUN apt-get update -y && apt-get -y install gcc python3-dev librdkafka-dev git
 
 USER locust
 WORKDIR /home/locust
