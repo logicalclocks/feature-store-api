@@ -32,6 +32,7 @@ class HopsworksClient:
         self.recreate_feature_group = self.hopsworks_config.get(
             "recreate_feature_group", False
         )
+        self.batch_size = self.hopsworks_config.get("batch_size", 100)
 
     def get_or_create_fg(self):
         locust_fg = self.fs.get_or_create_feature_group(

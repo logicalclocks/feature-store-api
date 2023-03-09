@@ -9,7 +9,7 @@ services:
      - "8089:8089"
     volumes:
       - ./:/home/locust
-    command: -f /home/locust/locustfile.py --master --headless --expect-workers 4 -u 4 -r 1 -t 30 -s 1 --html=/home/locust/result.html
+    command: -f /home/locust/locustfile.py --master --headless --expect-workers 4 -u 16 -r 1 -t 30 -s 1 --html=/home/locust/result.html
 
   worker:
     extra_hosts:

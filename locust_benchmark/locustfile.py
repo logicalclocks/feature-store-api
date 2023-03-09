@@ -28,6 +28,8 @@ def on_locust_quitting(environment, **kwargs):
 
 class FeatureVectorLookup(User):
     wait_time = constant(0)
+    weight = 5
+    # fixed_count = 1
 
     def __init__(self, environment):
         super().__init__(environment)
@@ -50,3 +52,35 @@ class FeatureVectorLookup(User):
     @stopwatch
     def _get_feature_vector(self, pk):
         self.fv.get_feature_vector(pk)
+
+
+class FeatureVectorBatchLookup(User):
+    wait_time = constant(0)
+    weight = 1
+    # fixed_count = 1
+
+    def __init__(self, environment):
+        super().__init__(environment)
+        self.env = environment
+        self.client = HopsworksClient()
+        self.fv = self.client.get_or_create_fv()
+
+    def on_start(self):
+        print("Init user")
+        self.fv.init_serving(external=self.client.external)
+
+    def on_stop(self):
+        print("Closing user")
+        self.client.close()
+
+    @task
+    def get_feature_vector_batch(self):
+        pks = [
+            {"ip": random.randint(0, self.client.rows - 1)}
+            for i in range(self.client.batch_size)
+        ]
+        self._get_feature_vectors(pks)
+
+    @stopwatch
+    def _get_feature_vectors(self, pk):
+        self.fv.get_feature_vectors(pk)
