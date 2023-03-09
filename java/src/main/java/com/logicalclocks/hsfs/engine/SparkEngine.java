@@ -257,8 +257,8 @@ public class SparkEngine {
    * @param writeOptions Additional write options as key-value pairs, defaults to empty Map
    * @param saveMode org.apache.spark.sql.saveMode: Append, Overwrite, ErrorIfExists, Ignore
    * @return Spark dataframe
-   * @throws FeatureStoreException  FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks
+   * @throws IOException Generic IO exception.
    */
   public Dataset<Row>[] write(TrainingDataset trainingDataset, Query query, Map<String, String> queryReadOptions,
                     Map<String, String> writeOptions, SaveMode saveMode) throws FeatureStoreException, IOException {
@@ -561,8 +561,8 @@ public class SparkEngine {
    * @param featureGroupBase FeatureGroupBase Feature Group base metadata object
    * @param dataset Spark DataFrame or RDD.
    * @return Spark DataFrame.
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks
+   * @throws IOException Generic IO exception.
    */
   public Dataset<Row> encodeComplexFeatures(FeatureGroupBase featureGroupBase, Dataset<Row> dataset)
           throws FeatureStoreException, IOException {
@@ -584,8 +584,8 @@ public class SparkEngine {
    * @param featureGroupBase FeatureGroupBase Feature Group base metadata object
    * @param dataset  Spark DataFrame or RDD.
    * @return Spark DataFrame.
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks
+   * @throws IOException Generic IO exception.
    */
   private Dataset<Row> onlineFeatureGroupToAvro(FeatureGroupBase featureGroupBase, Dataset<Row> dataset)
       throws FeatureStoreException, IOException {
@@ -676,7 +676,7 @@ public class SparkEngine {
   }
 
   public void setupConnectorHadoopConf(StorageConnector storageConnector)
-          throws FeatureStoreException, IOException {
+          throws IOException {
     if (storageConnector == null) {
       return;
     }

@@ -176,8 +176,8 @@ public class FeatureGroupBase {
    *
    * @param name  name of the tag
    * @param value value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects.
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks,
+   * @throws IOException Generic IO exception.
    */
   public void addTag(String name, Object value) throws FeatureStoreException, IOException {
     featureGroupBaseEngine.addTag(this, name, value);
@@ -187,8 +187,8 @@ public class FeatureGroupBase {
    * Get all tags of the feature group.
    *
    * @return map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks,
+   * @throws IOException Generic IO exception.
    */
   @JsonIgnore
   public Map<String, Object> getTags() throws FeatureStoreException, IOException {
@@ -212,8 +212,8 @@ public class FeatureGroupBase {
    * Delete a tag of the feature group.
    *
    * @param name name of the tag to be deleted
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks,
+   * @throws IOException Generic IO exception.
    */
   public void deleteTag(String name) throws FeatureStoreException, IOException {
     featureGroupBaseEngine.deleteTag(this, name);
@@ -223,8 +223,8 @@ public class FeatureGroupBase {
    * Update the description of the feature group.
    *
    * @param description feature group description.
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks,
+   * @throws IOException Generic IO exception.
    */
   public void updateDescription(String description) throws FeatureStoreException, IOException {
     featureGroupBaseEngine.updateDescription(this, description, this.getClass());
@@ -235,8 +235,8 @@ public class FeatureGroupBase {
    *
    * @param featureName Name of the feature
    * @param description Description of the feature
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks,
+   * @throws IOException Generic IO exception.
    */
   public void updateFeatureDescription(String featureName, String description)
       throws FeatureStoreException, IOException {
@@ -250,9 +250,10 @@ public class FeatureGroupBase {
    * Currently only feature description updates are supported.
    *
    * @param features List of Feature metadata objects
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks, unable to identify date format and/or
+   *                               no commit information was found for this feature group;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse date string to date type.
    */
   public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
     featureGroupBaseEngine.appendFeatures(this, features, this.getClass());
@@ -263,9 +264,10 @@ public class FeatureGroupBase {
    * Currently only feature description updates are supported.
    *
    * @param feature Feature metadata object
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks, unable to identify date format and/or
+   *                               no commit information was found for this feature group;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse date string to date type.
    */
   public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
     featureGroupBaseEngine.appendFeatures(this, Collections.singletonList(feature), this.getClass());
@@ -276,9 +278,10 @@ public class FeatureGroupBase {
    * It is only possible to append features to a feature group. Removing features is considered a breaking change.
    *
    * @param features list of Feature metadata objects
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks, unable to identify date format and/or
+   *                               no commit information was found for this feature group;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse date string to date type.
    */
   public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
     featureGroupBaseEngine.appendFeatures(this, new ArrayList<>(features), this.getClass());
@@ -289,9 +292,10 @@ public class FeatureGroupBase {
    * It is only possible to append features to a feature group. Removing features is considered a breaking change.
    *
    * @param features List of Feature metadata objects
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks, unable to identify date format and/or
+   *                               no commit information was found for this feature group;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse date string to date type.
    */
   public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
     List<Feature> featureList = new ArrayList<>();
@@ -304,8 +308,8 @@ public class FeatureGroupBase {
    * Change the `enabled`, `histograms`, `correlations` or `columns` attributes and persist
    * the changes by calling this method.
    *
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks,
+   * @throws IOException Generic IO exception.
    */
   public void updateStatisticsConfig() throws FeatureStoreException, IOException {
     featureGroupBaseEngine.updateStatisticsConfig(this, this.getClass());
@@ -315,8 +319,8 @@ public class FeatureGroupBase {
    * Recompute the statistics for the feature group and save them to the feature store.
    *
    * @return statistics object of computed statistics
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks,
+   * @throws IOException Generic IO exception.
    */
   public Statistics computeStatistics() throws FeatureStoreException, IOException {
     if (statisticsConfig.getEnabled()) {
@@ -332,8 +336,8 @@ public class FeatureGroupBase {
    * Get the last statistics commit for the feature group.
    *
    * @return statistics object of latest commit
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks,
+   * @throws IOException Generic IO exception.
    */
   @JsonIgnore
   public Statistics getStatistics() throws FeatureStoreException, IOException {
@@ -345,8 +349,8 @@ public class FeatureGroupBase {
    *
    * @param commitTime commit time in the format "YYYYMMDDhhmmss"
    * @return statistics object for the commit time
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks and/or unable to identify date format.
+   * @throws IOException Generic IO exception.
    */
   @JsonIgnore
   public Statistics getStatistics(String commitTime) throws FeatureStoreException, IOException {
@@ -371,8 +375,8 @@ public class FeatureGroupBase {
    *
    * @param filter Filter metadata object
    * @return Query object
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
    */
   public Query filter(Filter filter) throws FeatureStoreException, IOException {
     return this.selectAll().filter(filter);
@@ -383,8 +387,8 @@ public class FeatureGroupBase {
    *
    * @param filter Filter metadata object
    * @return Query object
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
    */
   public Query filter(FilterLogic filter) throws FeatureStoreException, IOException {
     return this.selectAll().filter(filter);
@@ -395,7 +399,7 @@ public class FeatureGroupBase {
    *
    * @param name feature name
    * @return Feature metadata object
-   * @throws FeatureStoreException FeatureStoreException
+   * @throws FeatureStoreException If Client is not connected to Hopsworks.
    */
   @JsonIgnore
   public Feature getFeature(String name) throws FeatureStoreException {
