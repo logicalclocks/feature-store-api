@@ -23,7 +23,6 @@ DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API = (
     "hsfs.core.feature_monitoring_config_api.FeatureMonitoringConfigApi.create"
 )
 DEFAULT_FEATURE_MONITORING_CONFIG_SETUP_JOB_API = "hsfs.core.feature_monitoring_config_api.FeatureMonitoringConfigApi.setup_feature_monitoring_job"
-DEFAULT_FEATURE_MONITORING_TYPE = "DESCRIPTIVE_STATISTICS"
 DEFAULT_FEATURE_STORE_ID = 67
 DEFAULT_FEATURE_GROUP_ID = 13
 DEFAULT_FEATURE_VIEW_ID = 22
@@ -97,7 +96,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
-        assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
+        assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config["window_config_type"] == "INSERT"
@@ -170,7 +169,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
-        assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
+        assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config["window_config_type"] == "INSERT"
@@ -299,7 +298,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
-        assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
+        assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config["window_config_type"] == "INSERT"
         assert config._detection_window_config["time_offset"] == "1w"
@@ -338,8 +337,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
-        assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
-        assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
+        assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
         assert config._detection_window_config["window_config_type"] == "INSERT"
         assert config._detection_window_config["time_offset"] == "1w"
         assert config._detection_window_config["window_length"] == "1d"
@@ -378,7 +376,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._name == DEFAULT_NAME
         assert config._description is None
-        assert config._feature_monitoring_type == DEFAULT_FEATURE_MONITORING_TYPE
+        assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
         assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config["window_config_type"] == "BATCH"
         assert config._detection_window_config["time_offset"] == "1w"

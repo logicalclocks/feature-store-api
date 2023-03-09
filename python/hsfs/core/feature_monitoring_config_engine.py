@@ -223,7 +223,7 @@ class FeatureMonitoringConfigEngine:
             feature_name=feature_name,
             name=name,
             description=description,
-            feature_monitoring_type="DESCRIPTIVE_STATISTICS",
+            feature_monitoring_type="SCHEDULED_STATISTICS",
             detection_window_config=detection_window_config,
             scheduler_config=scheduler_config,
             enabled=True,
