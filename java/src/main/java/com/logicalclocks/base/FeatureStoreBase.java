@@ -70,6 +70,10 @@ public abstract class FeatureStoreBase<T2 extends QueryBase> {
                                                  boolean onlineEnabled,
                                                  String eventTime) throws IOException, FeatureStoreException;
 
+  public abstract Object getOrCreateFeatureGroup(String name, Integer version, List<String> primaryKeys,
+                                                 boolean onlineEnabled, String eventTime)
+      throws IOException, FeatureStoreException;
+
   public abstract Object getOrCreateFeatureGroup(String name, Integer version, String description,
                                                  List<String> primaryKeys, List<String> partitionKeys,
                                                  String hudiPrecombineKey,
@@ -80,7 +84,7 @@ public abstract class FeatureStoreBase<T2 extends QueryBase> {
   /**
    * Get a feature group object from the feature store.
    *
-   * @param name    the name of the feature group
+   * @param name the name of the feature group
    * @param version the version of the feature group
    * @return FeatureGroup
    * @throws FeatureStoreException

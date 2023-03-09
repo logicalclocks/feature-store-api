@@ -83,10 +83,53 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
   protected static VectorServer vectorServer = new VectorServer();
   protected Integer extraFilterVersion = null;
 
+  /**
+   * Initialise feature view to retrieve feature vector from online feature store.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // Initialise feature view serving
+   *        fv.initServing();
+   * }
+   * </pre>
+   *
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
+   */
   public void initServing() throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     vectorServer.initServing(this, false);
   }
 
+  /**
+   * Initialise feature view to retrieve feature vector from online feature store.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // Initialise feature view batch serving
+   *        fv.initServing(true, false);
+   * }
+   * </pre>
+   *
+   * @param batch Whether to initialise feature view to retrieve feature vector from offline feature store.
+   * @param external If set to `true`, the connection to the online feature store is established using the same host as
+   *                 for the `host` parameter in the connection object.
+   *                 If set to False, the online feature store storage connector is used which relies on the private IP.
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
+   */
+  @Deprecated
   public void initServing(Boolean batch, Boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     vectorServer.initServing(this, batch, external);
@@ -124,28 +167,156 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
     }
   }
 
+  /**
+   * Initialise feature view to retrieve feature vector from offline feature store.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // Initialise feature view batch scoring
+   *        fv.initBatchScoring(1);
+   * }
+   * </pre>
+   *
+   * @param trainingDatasetVersion Version of training dataset to identify additional filters attached to the training
+   *                               dataset and statistics to use for transformation functions.
+   */
   public void initBatchScoring(Integer trainingDatasetVersion) {
     this.extraFilterVersion = trainingDatasetVersion;
   }
 
+  /**
+   * Returns assembled feature vector from online feature store.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // define primary key values to fetch data from online feature store
+   *        Map<String, Object> pkMap = new HashMap<String, Object>() {
+   *               {put("customer_id", 1);
+   *                put("contract_id" , 100);
+   *                }
+   *        };
+   *        // get feature vector
+   *        fv.getFeatureVector(entry);
+   * }
+   * </pre>
+   *
+   * @param entry Fictionary of feature group primary key and values provided by serving application.
+   * @return List of feature values related to provided primary keys, ordered according to positions of the features
+   *         in the feature view query.
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
+   */
   @JsonIgnore
   public List<Object> getFeatureVector(Map<String, Object> entry)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
     return vectorServer.getFeatureVector(this, entry);
   }
 
+  /**
+   * Returns assembled feature vector from online feature store.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // define primary key values to fetch data from online feature store
+   *        Map<String, Object> pkMap = new HashMap<String, Object>() {
+   *               {put("customer_id", 1);
+   *                put("contract_id" , 100);
+   *                }
+   *        };
+   *        // get feature vector
+   *        fv.getFeatureVector(entry, false);
+   * }
+   * </pre>
+   *
+   * @param entry Dictionary of feature group primary key and values provided by serving application.
+   * @param external If set to true, the connection to the online feature store is established using the same host as
+   *                 for the `host` parameter in the connection object.
+   *                 If set to false, the online feature store storage connector is used which relies on the private IP.
+   *                 Defaults to True if connection to Hopsworks is established from external environment
+   * @return List of feature values related to provided primary keys, ordered according to positions of the features
+   *         in the feature view query.
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
+   */
   @JsonIgnore
   public List<Object> getFeatureVector(Map<String, Object> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
     return vectorServer.getFeatureVector(this, entry, external);
   }
 
+  /**
+   * Returns assembled feature vectors in batches from online feature store.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // define primary key values to fetch data from online feature store
+   *        Map<String, List<Long>> entry = ...;
+   *        // get feature vector
+   *        fv.getFeatureVector(entry);
+   * }
+   * </pre>
+   *
+   * @param entry A list of dictionaries of feature group primary key and values provided by serving application.
+   * @return List of lists of feature values related to provided primary keys, ordered according to
+   *         positions of the features in the feature view query.
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
+   */
   @JsonIgnore
   public List<List<Object>> getFeatureVectors(Map<String, List<Object>> entry)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {
     return vectorServer.getFeatureVectors(this, entry);
   }
 
+  /**
+   *Returns assembled feature vectors in batches from online feature store.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // define primary key values to fetch data from online feature store
+   *        Map<String, List<Long>> entry = ...;
+   *        // get feature vector
+   *        fv.getFeatureVectors(entry, false);
+   * }
+   * </pre>
+   *
+   * @param entry A list of dictionaries of feature group primary key and values provided by serving application.
+   * @param external If set to `true`, the connection to the  online feature store is established using the same host as
+   *                 for the `host` parameter in the connection object.
+   *                 If set to False, the online feature store storage connector is used which relies on the private IP.
+   * @return List of lists of feature values related to provided primary keys, ordered according to
+   *         positions of this features in the feature view query.
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
+   */
   @JsonIgnore
   public List<List<Object>> getFeatureVectors(Map<String, List<Object>> entry, boolean external)
       throws SQLException, FeatureStoreException, IOException, ClassNotFoundException {

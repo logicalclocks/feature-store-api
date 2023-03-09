@@ -67,6 +67,20 @@ import java.util.stream.Collectors;
 
 public abstract class StorageConnector extends StorageConnectorBase {
 
+  /**
+   * Reads a query or a path into a dataframe using the storage connector.
+   *
+   * @param query By default, the storage connector will read the table configured together with the connector, if any.
+   *              It's possible to overwrite this by passing a SQL query here.
+   * @param dataFormat When reading from object stores such as S3, HopsFS and ADLS, specify the file format to be read,
+   *                  e.g. `csv`, `parquet`.
+   * @param options Any additional key/value options to be passed to the connector.
+   * @param path Path to be read from within the bucket of the storage connector. Not relevant for JDBC or database
+   *             based connectors such as Snowflake, JDBC or Redshift.
+   * @return DataFrame.
+   * @throws FeatureStoreException If ...
+   * @throws IOException If ...
+   */
   @Override
   public Dataset<Row> read(String query, String dataFormat, Map<String, String> options, String path)
       throws FeatureStoreException, IOException {

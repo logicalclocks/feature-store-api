@@ -31,7 +31,6 @@ import com.logicalclocks.base.metadata.PartitionDetails;
 import com.logicalclocks.base.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.FeatureGroup;
 import com.logicalclocks.hsfs.FeatureStore;
-import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.StreamFeatureGroup;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -218,14 +217,9 @@ public class HudiEngine {
   }
 
   private Map<String, String> setupHudiWriteOpts(FeatureGroupBase featureGroup, HudiOperationType operation,
-                                                Map<String, String> writeOptions)
-      throws IOException, FeatureStoreException {
+                                                 Map<String, String> writeOptions)
+      throws FeatureStoreException {
     Map<String, String> hudiArgs = new HashMap<String, String>();
-
-    final StorageConnector.JdbcConnector storageConnector = storageConnectorApi.getByName(
-        featureGroup.getFeatureStore(),
-        featureGroup.getFeatureStore().getName(), StorageConnector.JdbcConnector.class);
-
 
     hudiArgs.put(HUDI_TABLE_STORAGE_TYPE, HUDI_COPY_ON_WRITE);
 
@@ -256,6 +250,7 @@ public class HudiEngine {
     List<Feature> features = featureGroup.getFeatures();
     String precombineKey = features.stream().filter(Feature::getHudiPrecombineKey).findFirst()
         .orElseThrow(() -> new FeatureStoreException("Can't find hudi precombine key")).getName();
+
     hudiArgs.put(HUDI_PRECOMBINE_FIELD, precombineKey);
 
     // Hive args

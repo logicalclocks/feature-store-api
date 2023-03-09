@@ -66,9 +66,10 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
    *                           key.
    * @param writeOptions Additional write options as key-value pairs, defaults to empty Map.
    * @return Feature Group metadata object
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
+   * @throws FeatureStoreException In case Client is not connected to Hopsworks, unable to identify date format and/or
+   *                               no commit information was found for  the feature group;
+   * @throws IOException Generic IO exception.
+   * @throws ParseException In case it's unable to parse HUDI and or statistics commit date string to date type.
    */
   public FeatureGroup save(FeatureGroup featureGroup, Dataset<Row> dataset, List<String> partitionKeys,
                            String hudiPrecombineKey, Map<String, String> writeOptions)
