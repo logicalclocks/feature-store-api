@@ -79,6 +79,7 @@ class Engine:
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
         self._kafka_api = kafka_api.KafkaApi()
+        self._arrow_flight_client = arrow_flight_client.ArrowFlightClient.get_instance()
 
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None
@@ -107,13 +108,13 @@ class Engine:
             )
 
     def flyingduck_supported(self, query):
-        return arrow_flight_client.get_instance().is_supported(query)  # TODO: check feature flag here
+        return self._arrow_flight_client.is_supported(query)  # TODO: check feature flag here
 
     def _sql_offline(
         self, sql_query, feature_store, dataframe_type, schema=None, hive_config=None, use_flyingduck=False
     ):
         if use_flyingduck:
-            result_df = arrow_flight_client.get_instance().read_query(*sql_query)
+            result_df = self._arrow_flight_client.read_query(*sql_query)
         else:
             with self._create_hive_connection(
                 feature_store, hive_config=hive_config
