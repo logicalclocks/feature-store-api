@@ -13,10 +13,12 @@ from locust.runners import MasterRunner, LocalRunner
 
 
 class HopsworksClient:
-    def __init__(self, environment):
+    def __init__(self, environment=None):
         with open("hopsworks_config.json") as json_file:
             self.hopsworks_config = json.load(json_file)
-        if isinstance(environment.runner, (MasterRunner, LocalRunner)):
+        if environment is None or isinstance(
+            environment.runner, (MasterRunner, LocalRunner)
+        ):
             print(self.hopsworks_config)
         self.connection = hsfs.connection(
             project=self.hopsworks_config.get("project", "test"),
