@@ -5,11 +5,12 @@ import json
 
 import numpy as np
 import pandas as pd
+
+from locust.runners import MasterRunner, LocalRunner
 import hsfs
 
 from hsfs import client
 from hsfs.client.exceptions import RestAPIError
-from locust.runners import MasterRunner, LocalRunner
 
 
 class HopsworksClient:
