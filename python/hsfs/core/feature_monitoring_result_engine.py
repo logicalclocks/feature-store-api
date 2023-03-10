@@ -167,7 +167,6 @@ class FeatureMonitoringResultEngine:
 
     def run_and_save_statistics_comparison(
         self,
-        feature_name: str,
         detection_stats_id: int,
         detection_stats: Dict[Hashable, Any],
         fm_config: FeatureMonitoringConfig,

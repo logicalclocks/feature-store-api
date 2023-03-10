@@ -348,7 +348,6 @@ class FeatureMonitoringConfigEngine:
             )
 
         result = result_engine.run_and_save_statistics_comparison(
-            feature_name=config.feature_name,
             detection_stats_id=detection_stats_id,
             reference_stats_id=reference_stats_id if reference_stats_id else None,
             detection_stats=detection_stats,
@@ -459,7 +458,7 @@ class FeatureMonitoringConfigEngine:
             monitoring_window_config["window_length"]
         )
 
-        if entity.ENTITY_TYPE == "FEATURE_GROUP":
+        if entity.ENTITY_TYPE == "featuregroups":
             full_df = (
                 entity.select(features=[feature_name])
                 .as_of(
