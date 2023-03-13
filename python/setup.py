@@ -59,7 +59,7 @@ setup(
             "gcsfs==2022.7.1",
             "pyarrow",
             "confluent-kafka==1.8.2",
-            "fastavro==1.4.11",
+            "fastavro>=1.4.11,<=1.7.3",
         ],
         "python": [
             "pyhopshive[thrift]",
@@ -67,7 +67,7 @@ setup(
             "gcsfs==2022.7.1",
             "pyarrow",
             "confluent-kafka==1.8.2",
-            "fastavro==1.4.11",
+            "fastavro>=1.4.11,<=1.7.3",
             "tqdm",
         ],
     },
