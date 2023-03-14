@@ -2481,6 +2481,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         statistics_config=None,
         event_time=None,
         expectation_suite=None,
+        online_enabled=False,
         href=None,
     ):
         super().__init__(featurestore_id, location, event_time=event_time)
@@ -2495,6 +2496,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._path = path
         self._id = id
         self._expectation_suite = expectation_suite
+        self._online_enabled = online_enabled
 
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
@@ -2680,6 +2682,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
             "eventTime": self._event_time,
             "expectationSuite": self._expectation_suite,
+            "onlineEnabled": self._online_enabled,
         }
 
     @property
@@ -2729,6 +2732,15 @@ class ExternalFeatureGroup(FeatureGroupBase):
     @property
     def created(self):
         return self._created
+
+    @property
+    def online_enabled(self):
+        """Setting if the feature group is available in online storage."""
+        return self._online_enabled
+
+    @online_enabled.setter
+    def online_enabled(self, online_enabled):
+        self._online_enabled = online_enabled
 
     @version.setter
     def version(self, version):
