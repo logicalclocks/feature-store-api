@@ -17,12 +17,14 @@
 
 package com.logicalclocks;
 
-import com.logicalclocks.base.FeatureStoreException;
-import com.logicalclocks.base.StorageConnectorType;
-import com.logicalclocks.base.util.Constants;
-import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.StorageConnectorType;
+import com.logicalclocks.hsfs.util.Constants;
 
+import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.spark.engine.SparkEngine;
+
+import com.logicalclocks.hsfs.spark.util.StorageConnectorUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.parquet.Strings;
 import org.apache.spark.SparkContext;
@@ -71,11 +73,12 @@ public class TestStorageConnector {
 
     SparkEngine sparkEngine = Mockito.mock(SparkEngine.class);
     SparkEngine.setInstance(sparkEngine);
+    StorageConnectorUtils storageConnectorUtils = new StorageConnectorUtils();
     ArgumentCaptor<Map> mapArg = ArgumentCaptor.forClass(Map.class);
     String query = "select * from dbtable";
 
     // Act
-    snowflakeConnector.read(query, null, null, null);
+    storageConnectorUtils.read(snowflakeConnector, query, null, null, null);
     Mockito.verify(sparkEngine).read(Mockito.any(), Mockito.any(), mapArg.capture(), Mockito.any());
 
     // Assert
@@ -102,7 +105,7 @@ public class TestStorageConnector {
     }
     gcsConnector.setStorageConnectorType(StorageConnectorType.GCS);
     // Act
-    gcsConnector.prepareSpark();
+    SparkEngine.getInstance().setupConnectorHadoopConf(gcsConnector);
     SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
     // Assert
     Assertions.assertEquals(
@@ -139,7 +142,7 @@ public class TestStorageConnector {
     gcsConnector.setEncryptionKey("encryptionkey");
     gcsConnector.setEncryptionKeyHash("encryptionkeyhash");
     // Act
-    gcsConnector.prepareSpark();
+    SparkEngine.getInstance().setupConnectorHadoopConf(gcsConnector);
     SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
 
     // Assert
