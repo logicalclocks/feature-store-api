@@ -64,7 +64,7 @@ public class HudiEngine {
 
   public static final String HUDI_SPARK_FORMAT = "org.apache.hudi";
 
-  protected static final String HUDI_BASE_PATH = "hoodie.hsfs.path";
+  protected static final String HUDI_BASE_PATH = "hoodie.base.path";
   protected static final String HUDI_TABLE_NAME = "hoodie.table.name";
   protected static final String HUDI_TABLE_STORAGE_TYPE = "hoodie.datasource.write.storage.type";
   protected static final String HUDI_TABLE_OPERATION = "hoodie.datasource.write.operation";
@@ -111,17 +111,16 @@ public class HudiEngine {
   protected static final String COMMIT_METADATA_KEYPREFIX_OPT_KEY = "hoodie.datasource.write.commitmeta.key.prefix";
   protected static final String DELTASTREAMER_CHECKPOINT_KEY = "deltastreamer.checkpoint.key";
   protected static final String INITIAL_CHECKPOINT_STRING = "initialCheckPointString";
-  protected static final String FEATURE_GROUP_SCHEMA = "com.logicalclocks.hsfs.FeatureGroup.schema";
+  protected static final String FEATURE_GROUP_SCHEMA = "com.logicalclocks.hsfs.spark.StreamFeatureGroup.avroSchema";
   protected static final String FEATURE_GROUP_ENCODED_SCHEMA =
-      "com.logicalclocks.hsfs.FeatureGroup.encodedSchema";
+      "com.logicalclocks.hsfs.spark.StreamFeatureGroup.encodedAvroSchema";
   protected static final String FEATURE_GROUP_COMPLEX_FEATURES =
-      "com.logicalclocks.hsfs.FeatureGroup.complexFeatures";
-  protected static final String KAFKA_SOURCE =
-      "com.logicalclocks.hsfs.engine.hudi.DeltaStreamerKafkaSource";
+      "com.logicalclocks.hsfs.spark.StreamFeatureGroup.complexFeatures";
+  protected static final String KAFKA_SOURCE = "com.logicalclocks.hsfs.spark.engine.hudi.DeltaStreamerKafkaSource";
   protected static final String SCHEMA_PROVIDER =
-      "com.logicalclocks.hsfs.engine.hudi.DeltaStreamerSchemaProvider";
+      "com.logicalclocks.hsfs.spark.engine.hudi.DeltaStreamerSchemaProvider";
   protected static final String DELTA_STREAMER_TRANSFORMER =
-      "com.logicalclocks.hsfs.engine.hudi.DeltaStreamerTransformer";
+      "com.logicalclocks.hsfs.spark.engine.hudi.DeltaStreamerTransformer";
   protected static final String DELTA_SOURCE_ORDERING_FIELD_OPT_KEY = "sourceOrderingField";
 
   protected static final String MIN_SYNC_INTERVAL_SECONDS = "minSyncIntervalSeconds";
@@ -169,7 +168,7 @@ public class HudiEngine {
     }
   }
 
-  public <S> FeatureGroupCommit deleteRecord(SparkSession sparkSession, FeatureGroupBase featureGroup,
+  public FeatureGroupCommit deleteRecord(SparkSession sparkSession, FeatureGroupBase featureGroup,
                                              Dataset<Row> deleteDF, Map<String, String> writeOptions)
       throws IOException, FeatureStoreException,
       ParseException {

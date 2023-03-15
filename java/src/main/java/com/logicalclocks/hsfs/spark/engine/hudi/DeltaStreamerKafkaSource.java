@@ -72,6 +72,7 @@ public class DeltaStreamerKafkaSource extends AvroSource {
         throw new HoodieException(error, var9);
       }
     }
+
     HoodieWriteConfig.Builder builder = HoodieWriteConfig.newBuilder();
     this.metrics = new HoodieDeltaStreamerMetrics(builder.withProperties(props).build());
     this.offsetGen = new KafkaOffsetGen(props);
