@@ -27,8 +27,8 @@ class TestJob:
         j = job.Job.from_response_json(json)
 
         # Assert
-        assert j.id == "test_id"
-        assert j.name == "test_name"
+        assert j.id == 111
+        assert j.name == "test_job_name"
         assert j.executions == "test_executions"
         assert j.href == "test_href"
 
@@ -40,7 +40,7 @@ class TestJob:
         j = job.Job.from_response_json(json)
 
         # Assert
-        assert j.id == "test_id"
-        assert j.name == "test_name"
+        assert j.id == 111
+        assert j.name == "test_job_name"
         assert j.executions is None
         assert j.href is None

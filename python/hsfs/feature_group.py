@@ -54,6 +54,7 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core import great_expectation_engine
+from hsfs.core import feature_monitoring_config_engine
 
 
 class FeatureGroupBase:
@@ -1274,6 +1275,12 @@ class FeatureGroup(FeatureGroupBase):
             self._validation_result_engine = (
                 validation_result_engine.ValidationResultEngine(
                     self._feature_store_id, self._id
+                )
+            )
+            self._feature_monitoring_config_engine = (
+                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                    feature_store_id=featurestore_id,
+                    feature_group_id=self._id,
                 )
             )
 
