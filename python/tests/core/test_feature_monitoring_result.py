@@ -33,8 +33,8 @@ class TestFeatureMonitoringResult:
         assert result._execution_id == 123
         assert result._detection_stats_id == 333
         assert result._reference_stats_id == 222
-        assert result._feature_monitoring_config_id == 32
-        assert result._monitoring_time == 1676457000
+        assert result._config_id == 32
+        assert result._monitoring_time == 1676457000000
         assert result._difference == 0.3
         assert result._shift_detected is True
         assert result._href[-2:] == "32"
@@ -54,8 +54,8 @@ class TestFeatureMonitoringResult:
         assert result._execution_id == 123
         assert result._detection_stats_id == 333
         assert result._reference_stats_id == 222
-        assert result._feature_monitoring_config_id == 32
-        assert result._monitoring_time == 1676457000
+        assert result._config_id == 32
+        assert result._monitoring_time == 1676457000000
         assert result._difference == 0.3
         assert result._shift_detected is True
         assert result._href[-2:] == "32"
@@ -78,8 +78,8 @@ class TestFeatureMonitoringResult:
         assert result._execution_id == 123
         assert result._detection_stats_id == 333
         assert result._reference_stats_id == 222
-        assert result._feature_monitoring_config_id == 32
-        assert result._monitoring_time == 1676457000
+        assert result._config_id == 32
+        assert result._monitoring_time == 1676457000000
         assert result._difference == 0.3
         assert result._shift_detected is True
         assert result._href[-2:] == "32"
