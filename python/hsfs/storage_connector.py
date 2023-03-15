@@ -48,7 +48,7 @@ class StorageConnector(ABC):
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
+        _ = json_decamelized.pop("type", None)
         for subcls in cls.__subclasses__():
             if subcls.type == json_decamelized["storage_connector_type"]:
                 _ = json_decamelized.pop("storage_connector_type")
@@ -57,7 +57,7 @@ class StorageConnector(ABC):
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
+        _ = json_decamelized.pop("type", None)
         if self.type == json_decamelized["storage_connector_type"]:
             _ = json_decamelized.pop("storage_connector_type")
             self.__init__(**json_decamelized)
@@ -66,9 +66,10 @@ class StorageConnector(ABC):
         return self
 
     def to_dict(self):
-        # Currently we use this method only when creating on demand feature groups.
-        # The backend needs only the id.
-        return {"id": self._id}
+        return {"id": self._id,
+                "name": self._name,
+                "featurestoreId": self._featurestore_id,
+                "storageConnectorType": self.type}
 
     @property
     def type(self):

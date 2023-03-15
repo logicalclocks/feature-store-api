@@ -156,8 +156,8 @@ class TestExternalFeatureGroupEngine:
         # Assert
         assert mock_fg_api.return_value.update_metadata.call_count == 1
         assert (
-            mock_fg_api.return_value.update_metadata.call_args[0][1].storage_connector
-            == external_fg.storage_connector
+            mock_fg_api.return_value.update_metadata.call_args[0][1].storage_connector.id
+            == external_fg.storage_connector.id
         )
         assert (
             mock_fg_api.return_value.update_metadata.call_args[0][1].id
@@ -234,8 +234,16 @@ class TestExternalFeatureGroupEngine:
             feature_store_id=feature_store_id
         )
 
+        jdbc_connector = storage_connector.JdbcConnector(
+            id=1,
+            name="test_connector",
+            featurestore_id=1,
+            connection_string="",
+            arguments="",
+        )
+
         external_fg = feature_group.ExternalFeatureGroup(
-            storage_connector=None, primary_key=[], id=10
+            storage_connector=jdbc_connector, primary_key=[], id=10
         )
 
         # Act

@@ -190,7 +190,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def _update_features_metadata(self, feature_group, features):
         # perform changes on copy in case the update fails, so we don't leave
         # the user object in corrupted state
-        copy_feature_group = fg.FeatureGroup.from_response_json(feature_group.json())
+        copy_feature_group = fg.FeatureGroup.from_response_json(feature_group.to_dict())
         copy_feature_group.features = features
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
@@ -214,7 +214,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
-        copy_feature_group = fg.FeatureGroup.from_response_json(feature_group.json())
+        copy_feature_group = fg.FeatureGroup.from_response_json(feature_group.to_dict())
         copy_feature_group.description = description
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
