@@ -203,6 +203,46 @@
       }
     }
   },
+  "get_scheduled_stats_only_via_feature_group": {
+    "response": {
+      "id": 32,
+      "feature_name": "monitored_feature",
+      "feature_group_id": 13,
+      "feature_store_id": 67,
+      "job_name": "test_job_name",
+      "name": "unit_test_config",
+      "description": "I am a unit test fixture",
+      "enabled": true,
+      "feature_monitoring_type": "SCHEDULED_STATISTICS",
+      "detection_window_config": {
+        "window_config_type": "INSERT",
+        "time_offset": "1w",
+        "window_length": "1d"
+      },
+      "scheduler_config": "daily",
+      "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
+    }
+  },
+  "get_scheduled_stats_only_via_feature_view": {
+    "response": {
+      "id": 32,
+      "feature_name": "monitored_feature",
+      "feature_view_id": 22,
+      "feature_store_id": 67,
+      "job_name": "test_job_name",
+      "name": "unit_test_config",
+      "description": "I am a unit test fixture",
+      "enabled": true,
+      "feature_monitoring_type": "SCHEDULED_STATISTICS",
+      "detection_window_config": {
+        "window_config_type": "BATCH",
+        "time_offset": "1w",
+        "window_length": "1d"
+      },
+      "scheduler_config": "daily",
+      "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
+    }
+  },
   "get_list": {
     "response": {
       "count": 1,

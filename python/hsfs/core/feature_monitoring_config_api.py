@@ -61,7 +61,7 @@ class FeatureMonitoringConfigApi:
         :rtype: FeatureMonitoringConfiguration
         """
         _client = client.get_instance()
-        path_params = self._build_path_params(
+        path_params = self.build_path_params(
             project_id=_client._project_id,
         )
 
@@ -83,7 +83,7 @@ class FeatureMonitoringConfigApi:
         :rtype: FeatureMonitoringConfig
         """
         _client = client.get_instance()
-        path_params = self._build_path_params(
+        path_params = self.build_path_params(
             project_id=_client._project_id,
             config_id=fm_config._id,
         )
@@ -107,7 +107,7 @@ class FeatureMonitoringConfigApi:
         :rtype: FeatureMonitoringConfig || None
         """
         _client = client.get_instance()
-        path_params = self._build_path_params(
+        path_params = self.build_path_params(
             project_id=_client._project_id,
             config_id=config_id,
         )
@@ -126,7 +126,7 @@ class FeatureMonitoringConfigApi:
         :rtype: FeatureMonitoringConfig || None
         """
         _client = client.get_instance()
-        path_params = self._build_path_params(
+        path_params = self.build_path_params(
             project_id=_client._project_id,
             config_id=config_id,
         )
@@ -147,7 +147,7 @@ class FeatureMonitoringConfigApi:
         :rtype: List[FeatureMonitoringConfig] || None
         """
         _client = client.get_instance()
-        path_params = self._build_path_params(
+        path_params = self.build_path_params(
             project_id=_client._project_id,
             feature_name=feature_name,
         )
@@ -168,7 +168,7 @@ class FeatureMonitoringConfigApi:
         :rtype: List[FeatureMonitoringConfig] || None
         """
         _client = client.get_instance()
-        path_params = self._build_path_params(
+        path_params = self.build_path_params(
             project_id=_client._project_id,
             name=name,
         )
@@ -188,7 +188,7 @@ class FeatureMonitoringConfigApi:
         :type config_id: int
         """
         _client = client.get_instance()
-        path_params = self._build_path_params(
+        path_params = self.build_path_params(
             project_id=_client._project_id,
             config_id=config_id,
         )
@@ -212,7 +212,7 @@ class FeatureMonitoringConfigApi:
         :rtype: Job
         """
         _client = client.get_instance()
-        path_params = self._build_path_params(
+        path_params = self.build_path_params(
             project_id=_client._project_id,
         )
         path_params.extend(["setup", config_name])
@@ -231,7 +231,7 @@ class FeatureMonitoringConfigApi:
         :rtype: Job
         """
         _client = client.get_instance()
-        path_params = self._build_path_params(
+        path_params = self.build_path_params(
             project_id=_client._project_id,
             config_id=config_id,
         )
@@ -239,7 +239,7 @@ class FeatureMonitoringConfigApi:
 
         return Job.from_response_json(_client._send_request("POST", path_params))
 
-    def _build_path_params(
+    def build_path_params(
         self,
         project_id: int,
         feature_name: Optional[str] = None,
