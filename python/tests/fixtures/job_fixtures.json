@@ -1,8 +1,8 @@
 {
   "get": {
     "response": {
-      "id": "test_id",
-      "name": "test_name",
+      "id": 111,
+      "name": "test_job_name",
       "creation_time": "test_creation_time",
       "config": "test_config",
       "job_type": "test_job_type",
@@ -17,8 +17,8 @@
   },
   "get_empty": {
     "response": {
-      "id": "test_id",
-      "name": "test_name",
+      "id": 111,
+      "name": "test_job_name",
       "creation_time": "test_creation_time",
       "config": "test_config",
       "job_type": "test_job_type",
