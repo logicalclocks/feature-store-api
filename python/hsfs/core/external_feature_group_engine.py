@@ -50,11 +50,8 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
     def _update_features_metadata(self, feature_group, features):
         # perform changes on copy in case the update fails, so we don't leave
         # the user object in corrupted state
-        copy_feature_group = fg.ExternalFeatureGroup(
-            storage_connector=feature_group.storage_connector,
-            id=feature_group.id,
-            features=features,
-        )
+        copy_feature_group = fg.ExternalFeatureGroup.from_response_json(feature_group.json())
+        copy_feature_group.features = features
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
         )
@@ -74,12 +71,8 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
 
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
-        copy_feature_group = fg.ExternalFeatureGroup(
-            storage_connector=feature_group.storage_connector,
-            id=feature_group.id,
-            description=description,
-            features=feature_group.features,
-        )
+        copy_feature_group = fg.ExternalFeatureGroup.from_response_json(feature_group.json())
+        copy_feature_group.description = description
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
         )
