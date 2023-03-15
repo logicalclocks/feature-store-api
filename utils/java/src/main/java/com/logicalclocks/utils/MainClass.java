@@ -73,6 +73,12 @@ public class MainClass {
         .hasArg()
         .build());
 
+    options.addOption(Option.builder("start_time")
+        .argName("start_time")
+        .required(false)
+        .hasArg()
+        .build());
+
     CommandLineParser parser = new DefaultParser();
     CommandLine commandLine = parser.parse(options, args);
 
