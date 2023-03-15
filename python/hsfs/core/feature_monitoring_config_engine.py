@@ -129,7 +129,7 @@ class FeatureMonitoringConfigEngine:
                 Configuration of the reference window.
             statistics_comparison_config: Dict[str, Any], required
                 Configuration of the statistics comparison.
-            alert_config: str, required
+            alert_config: str, optional
                 Configuration of the alert.
             scheduler_config: str, required
                 Configuration of the scheduler.
@@ -259,7 +259,7 @@ class FeatureMonitoringConfigEngine:
                 Configuration of the statistics comparison.
             scheduler_config: str, required
                 Configuration of the scheduler.
-            alert_config: str, required
+            alert_config: str, optional
                 Configuration of the alert.
             description: str, optional
                 Description of the monitoring configuration.
