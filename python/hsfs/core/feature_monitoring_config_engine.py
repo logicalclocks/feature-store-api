@@ -26,6 +26,7 @@ from hsfs.core.feature_monitoring_result_engine import FeatureMonitoringResultEn
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 
 from hsfs.core.job import Job
+from hsfs.core.job_api import JobApi
 
 DEFAULT_REFERENCE_STATS_ID = 234
 
@@ -280,43 +281,26 @@ class FeatureMonitoringConfigEngine:
             statistics_comparison_config=statistics_comparison_config,
         )
 
-    def setup_monitoring_job(
-        self,
-        config_name: str,
-    ) -> Job:
-        """Setup a feature monitoring job based on the entity and config name.
-
-        Args:
-            config_name: name of the monitoring config.
-
-        Returns:
-            Job: monitoring job object.
-        """
-
-        return self._feature_monitoring_config_api.setup_feature_monitoring_job(
-            config_name=config_name,
-        )
-
     def trigger_monitoring_job(
         self,
-        config_id: int,
+        job_name: str,
     ) -> Job:
-        """Trigger a feature monitoring job based on the entity and config id.
+        """Make a REST call to start an execution of the monitoring job.
 
         Args:
-            config_id: id of the monitoring config.
+            job_name: Name of the job to trigger.
 
         Returns:
             Job object.
         """
-        return self._feature_monitoring_config_api.trigger_feature_monitoring_job(
-            config_id=config_id,
-        )
+        job_api = JobApi()
+
+        return job_api.launch(name=job_name)
 
     def run_feature_monitoring(
         self, entity, config_name: str, result_engine: FeatureMonitoringResultEngine
     ) -> FeatureMonitoringResult:
-        """Run by feature monitoring job, monitoring is based on the config id.
+        """Main function used by the job to actually perform the monitoring.
 
         Args:
             entity (Union[Featuregroup, FeatureView]): Featuregroup or Featureview
@@ -351,9 +335,9 @@ class FeatureMonitoringConfigEngine:
 
         result = result_engine.run_and_save_statistics_comparison(
             detection_stats_id=detection_stats_id,
-            reference_stats_id=reference_stats_id if reference_stats_id else None,
+            reference_stats_id=reference_stats_id,
             detection_stats=detection_stats,
-            reference_stats=reference_stats if reference_stats else None,
+            reference_stats=reference_stats,
             fm_config=config,
         )
 
@@ -366,7 +350,7 @@ class FeatureMonitoringConfigEngine:
         feature_name: str,
         check_existing: bool = False,
     ) -> Tuple[Dict[str, Any], int]:
-        """Run monitoring for a single window.
+        """Fetch the entity data based on monitoring window configuration and compute statistics.
 
         Args:
             entity: FeatureStore: Feature store to fetch the entity to monitor.

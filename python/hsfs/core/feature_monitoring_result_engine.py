@@ -241,11 +241,11 @@ class FeatureMonitoringResultEngine:
             reference_stats[metric] = reference_stats["specific_value"]
 
         if relative:
-            if (reference_stats[metric] + detection_stats[metric]) == 0:
+            if reference_stats[metric] == 0:
                 return float("inf")
             else:
-                return (detection_stats[metric] - reference_stats[metric]) / (
-                    reference_stats[metric] + detection_stats[metric]
-                )
+                return (
+                    detection_stats[metric] - reference_stats[metric]
+                ) / reference_stats[metric]
         else:
             return detection_stats[metric] - reference_stats[metric]
