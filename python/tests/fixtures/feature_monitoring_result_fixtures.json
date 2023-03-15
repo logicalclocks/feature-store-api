@@ -3,7 +3,7 @@
     "response": {
       "id": 42,
       "feature_store_id": 67,
-      "feature_monitoring_config_id": 32,
+      "config_id": 32,
       "detection_stats_id": 333,
       "reference_stats_id": 222,
       "execution_id": 123,
@@ -17,7 +17,7 @@
     "response": {
       "id": 42,
       "feature_store_id": 67,
-      "feature_monitoring_config_id": 32,
+      "config_id": 32,
       "detection_stats_id": 333,
       "reference_stats_id": 222,
       "execution_id": 123,
@@ -34,7 +34,7 @@
         {
           "id": 42,
           "feature_store_id": 67,
-          "feature_monitoring_config_id": 32,
+          "config_id": 32,
           "detection_stats_id": 333,
           "reference_stats_id": 222,
           "execution_id": 123,
