@@ -66,10 +66,12 @@ class StorageConnector(ABC):
         return self
 
     def to_dict(self):
-        return {"id": self._id,
-                "name": self._name,
-                "featurestoreId": self._featurestore_id,
-                "storageConnectorType": self.type}
+        return {
+            "id": self._id,
+            "name": self._name,
+            "featurestoreId": self._featurestore_id,
+            "storageConnectorType": self.type,
+        }
 
     @property
     def type(self):
