@@ -156,7 +156,9 @@ class TestExternalFeatureGroupEngine:
         # Assert
         assert mock_fg_api.return_value.update_metadata.call_count == 1
         assert (
-            mock_fg_api.return_value.update_metadata.call_args[0][1].storage_connector.id
+            mock_fg_api.return_value.update_metadata.call_args[0][
+                1
+            ].storage_connector.id
             == external_fg.storage_connector.id
         )
         assert (
