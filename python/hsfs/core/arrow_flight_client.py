@@ -20,6 +20,7 @@ import pyarrow.flight
 from pyarrow.flight import FlightServerError
 from hsfs import client
 from hsfs import feature_group
+from hsfs.core.variable_api import VariableApi
 
 
 class ArrowFlightClient:
@@ -33,30 +34,27 @@ class ArrowFlightClient:
         return cls.instance
 
     def __init__(self):
-        self.client = client.get_instance()
-        host_ip = self.client._get_host_port_pair()[0]
-        self.host_url = f"grpc+tls://{host_ip}:5005"
-        (tls_root_certs, cert_chain, private_key) = self._extract_certs(self.client)
-        self.connection = pyarrow.flight.FlightClient(
-            location=self.host_url,
+        self._client = client.get_instance()
+        self._variable_api = VariableApi()
+        self._is_enabled = self._variable_api.get_flyingduck_enabled() == "true"
+        if self._is_enabled:
+            self._initialize_connection()
+
+    def _initialize_connection(self):
+        host_ip = self._client._get_host_port_pair()[0]
+        host_url = f"grpc+tls://{host_ip}:5005"
+        (tls_root_certs, cert_chain, private_key) = self._extract_certs(self._client)
+        self._connection = pyarrow.flight.FlightClient(
+            location=host_url,
             tls_root_certs=tls_root_certs,
             cert_chain=cert_chain,
             private_key=private_key,
             override_hostname="flyingduck.service.consul"
         )
-        self._check_connection()
         self._register_certificates()
 
-    def _check_connection(self):
-        while True:
-            try:
-                action = pyarrow.flight.Action("healthcheck", b"")
-                options = pyarrow.flight.FlightCallOptions(timeout=1)
-                list(self.connection.do_action(action, options=options))
-                break
-            except pyarrow.flight.FlightTimedOutError as e:
-                if "Deadline" in str(e):
-                    print("Server is not ready, waiting...")
+    def is_enabled(self):
+        return self._is_enabled
 
     def _handle_afs_errors(method):
         def afs_error_handler_wrapper(*args, **kw):
@@ -82,44 +80,50 @@ class ArrowFlightClient:
         return tls_root_certs, cert_chain, private_key
 
     def _register_certificates(self):
-        with open(self.client._get_jks_key_store_path(), "rb") as f:
+        with open(self._client._get_jks_key_store_path(), "rb") as f:
             kstore = f.read()
-        with open(self.client._get_jks_trust_store_path(), "rb") as f:
+        with open(self._client._get_jks_trust_store_path(), "rb") as f:
             tstore = f.read()
-        cert_key = self.client._cert_key
+        cert_key = self._client._cert_key
         certificates_pickled = pickle.dumps((kstore,tstore,cert_key)) # TODO dump kstore, tstore, priv-key
         certificates_pickled_buf = pyarrow.py_buffer(certificates_pickled)
         action = pyarrow.flight.Action("register-client-certificates", certificates_pickled_buf)
         try:
-            self.connection.do_action(action)
+            self._connection.do_action(action)
         except pyarrow.lib.ArrowIOError as e:
             print("Error calling action:", e)
 
     def _get_dataset(self, descriptor):
-        info = self.connection.get_flight_info(descriptor)
-        reader = self.connection.do_get(self._info_to_ticket(info))
+        info = self._connection.get_flight_info(descriptor)
+        reader = self._connection.do_get(self._info_to_ticket(info))
         return reader.read_pandas()
 
     @_handle_afs_errors
     def read_query(self, query, query_str):
+        if not self._is_enabled:
+            raise Exception("Arrow Flight Service is not enabled.")
         query_encoded = pickle.dumps(self._get_query_object(query, query_str))
         descriptor = pyarrow.flight.FlightDescriptor.for_command(query_encoded)
         return self._get_dataset(descriptor)
 
     @_handle_afs_errors
     def get_training_dataset(self, feature_view, tds_version=1):
+        if not self._is_enabled:
+            raise Exception("Arrow Flight Service is not enabled.")
         training_dataset_path = self._path_from_feature_view(feature_view, tds_version)
         descriptor = pyarrow.flight.FlightDescriptor.for_path(training_dataset_path)
         return self._get_dataset(descriptor)
 
     @_handle_afs_errors
     def create_training_dataset(self, feature_view, tds_version=1):
+        if not self._is_enabled:
+            raise Exception("Arrow Flight Service is not enabled.")
         training_dataset_metadata = self._training_dataset_metadata_from_feature_view(feature_view, tds_version)
         try:
             training_dataset_encoded = pickle.dumps(training_dataset_metadata)
             buf = pyarrow.py_buffer(training_dataset_encoded)
             action = pyarrow.flight.Action("create-training-dataset", buf)
-            for result in self.connection.do_action(action):
+            for result in self._connection.do_action(action):
                 return result.body.to_pybytes()
         except pyarrow.lib.ArrowIOError as e:
             print("Error calling action:", e)
