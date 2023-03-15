@@ -179,7 +179,7 @@ def import_fg(job_conf: Dict[Any, Any]) -> None:
     fg.insert(df)
 
 
-def run_feature_monitoring(job_conf: Dict[str, Any]) -> None:
+def run_feature_monitoring(job_conf: Dict[str, str]) -> None:
     """
     Run feature monitoring for a given entity (feature_group or feature_view)
     based on a feature monitoring configuration.
@@ -187,6 +187,46 @@ def run_feature_monitoring(job_conf: Dict[str, Any]) -> None:
     # Dummy job for now.
     feature_store = job_conf.pop("feature_store")
     fs = get_feature_store_handle(feature_store)
+
+    if job_conf["entity_type"].upper() == "FEATUREGROUPS":
+        entity = fs.get_feature_group(
+            name=job_conf["name"], version=job_conf["version"]
+        )
+        feature_group_id = entity._id
+        feature_view_id, feature_view_name, feature_view_version = None, None, None
+    else:
+        feature_group_id = None
+        entity = fs.get_feature_view(name=job_conf["name"], version=job_conf["version"])
+        feature_view_id, feature_view_name, feature_view_version = (
+            entity._id,
+            entity.name,
+            entity.version,
+        )
+
+    monitoring_config_engine = (
+        hsfs.core.feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=fs._id,
+            feature_group_id=feature_group_id,
+            feature_view_id=feature_view_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+        )
+    )
+    monitoring_result_engine = (
+        hsfs.core.feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+            feature_store_id=fs._id,
+            feature_group_id=feature_group_id,
+            feature_view_id=feature_view_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+        )
+    )
+
+    monitoring_config_engine.run_feature_monitoring(
+        entity=entity,
+        config_name=job_conf["config_name"],
+        result_engine=monitoring_result_engine,
+    )
 
     assert isinstance(fs, hsfs.feature_store.FeatureStore)
 
