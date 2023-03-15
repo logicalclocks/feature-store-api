@@ -40,6 +40,7 @@ from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.training_dataset_split import TrainingDatasetSplit
+from hsfs.core import feature_monitoring_config_engine
 
 
 class FeatureView:
@@ -83,6 +84,15 @@ class FeatureView:
         self._single_vector_server = None
         self._batch_vectors_server = None
         self._batch_scoring_server = None
+        if id:
+            self._feature_monitoring_config_engine = (
+                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                    feature_store_id=featurestore_id,
+                    feature_view_id=id,
+                    feature_view_name=name,
+                    feature_view_version=version,
+                )
+            )
 
     def delete(self):
         """Delete current feature view, all associated metadata and training data.

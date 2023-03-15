@@ -55,6 +55,7 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core import great_expectation_engine
+from hsfs.core import feature_monitoring_config_engine
 
 
 class FeatureGroupBase:

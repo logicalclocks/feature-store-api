@@ -18,6 +18,7 @@ from hsfs.core import feature_monitoring_result_engine
 from datetime import datetime, date
 import dateutil
 from hsfs import util
+import time
 
 DEFAULT_MONITORING_TIME_SORT_BY = "monitoring_time:desc"
 DEFAULT_FEATURE_STORE_ID = 67
@@ -39,24 +40,19 @@ class TestFeatureMonitoringResultEngine:
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
         # Act
         result_engine.fetch_all_feature_monitoring_results_by_config_id(
             config_id=DEFAULT_CONFIG_ID,
-            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
             start_time=start_time,
             end_time=end_time,
         )
 
         # Assert
         assert mock_result_api.call_args[1]["config_id"] == DEFAULT_CONFIG_ID
-        assert (
-            mock_result_api.call_args[1]["feature_group_id"] == DEFAULT_FEATURE_GROUP_ID
-        )
-        assert mock_result_api.call_args[1]["feature_view_name"] is None
-        assert mock_result_api.call_args[1]["feature_view_version"] is None
         assert isinstance(mock_result_api.call_args[1]["query_params"], dict)
         assert (
             mock_result_api.call_args[1]["query_params"]["filter_by"][0]
@@ -81,29 +77,21 @@ class TestFeatureMonitoringResultEngine:
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_view_id=DEFAULT_FEATURE_VIEW_ID,
+            feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
+            feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
         )
 
         # Act
         result_engine.fetch_all_feature_monitoring_results_by_config_id(
             config_id=DEFAULT_CONFIG_ID,
-            feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
-            feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
             start_time=start_time,
             end_time=end_time,
         )
 
         # Assert
         assert mock_result_api.call_args[1]["config_id"] == DEFAULT_CONFIG_ID
-        assert mock_result_api.call_args[1]["feature_group_id"] is None
-        assert (
-            mock_result_api.call_args[1]["feature_view_name"]
-            == DEFAULT_FEATURE_VIEW_NAME
-        )
-        assert (
-            mock_result_api.call_args[1]["feature_view_version"]
-            == DEFAULT_FEATURE_VIEW_VERSION
-        )
         assert isinstance(mock_result_api.call_args[1]["query_params"], dict)
         assert (
             mock_result_api.call_args[1]["query_params"]["filter_by"][0]
@@ -131,30 +119,27 @@ class TestFeatureMonitoringResultEngine:
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
         before_time = datetime.now()
+        time.sleep(1)
 
         # Act
         result_engine.save_feature_monitoring_result(
-            feature_monitoring_config_id=DEFAULT_CONFIG_ID,
+            config_id=DEFAULT_CONFIG_ID,
             execution_id=execution_id,
             detection_stats_id=detection_stats_id,
             reference_stats_id=reference_stats_id,
-            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
             difference=difference,
             shift_detected=shift_detected,
         )
+        time.sleep(1)
         after_time = datetime.now()
 
         # Assert
-        assert (
-            mock_result_api.call_args[1]["feature_group_id"] == DEFAULT_FEATURE_GROUP_ID
-        )
-        assert mock_result_api.call_args[1]["feature_view_name"] is None
-        assert mock_result_api.call_args[1]["feature_view_version"] is None
         result = mock_result_api.call_args[0][0]
-        assert result._feature_monitoring_config_id == DEFAULT_CONFIG_ID
+        assert result._config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
         assert result._detection_stats_id == detection_stats_id
         assert result._reference_stats_id == reference_stats_id
@@ -181,36 +166,29 @@ class TestFeatureMonitoringResultEngine:
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID
-        )
-        before_time = datetime.now()
-
-        # Act
-        result_engine.save_feature_monitoring_result(
-            feature_monitoring_config_id=DEFAULT_CONFIG_ID,
-            execution_id=execution_id,
-            detection_stats_id=detection_stats_id,
-            reference_stats_id=reference_stats_id,
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
             feature_view_id=DEFAULT_FEATURE_VIEW_ID,
             feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
             feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
+        )
+        before_time = datetime.now()
+        time.sleep(1)
+
+        # Act
+        result_engine.save_feature_monitoring_result(
+            config_id=DEFAULT_CONFIG_ID,
+            execution_id=execution_id,
+            detection_stats_id=detection_stats_id,
+            reference_stats_id=reference_stats_id,
             difference=difference,
             shift_detected=shift_detected,
         )
+        time.sleep(1)
         after_time = datetime.now()
 
         # Assert
-        assert mock_result_api.call_args[1]["feature_group_id"] is None
-        assert (
-            mock_result_api.call_args[1]["feature_view_name"]
-            == DEFAULT_FEATURE_VIEW_NAME
-        )
-        assert (
-            mock_result_api.call_args[1]["feature_view_version"]
-            == DEFAULT_FEATURE_VIEW_VERSION
-        )
         result = mock_result_api.call_args[0][0]
-        assert result._feature_monitoring_config_id == DEFAULT_CONFIG_ID
+        assert result._config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
         assert result._detection_stats_id == detection_stats_id
         assert result._reference_stats_id == reference_stats_id
@@ -230,7 +208,8 @@ class TestFeatureMonitoringResultEngine:
         end_time = None
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=67
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
         # Act
@@ -252,7 +231,8 @@ class TestFeatureMonitoringResultEngine:
         end_timestamp = 1643767322000
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=67
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
         # Act
@@ -276,7 +256,8 @@ class TestFeatureMonitoringResultEngine:
         end_timestamp = 1643760000000
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=67
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
         # Act
@@ -300,7 +281,8 @@ class TestFeatureMonitoringResultEngine:
         end_timestamp = 1643767322000
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=67
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
         # Act
@@ -322,7 +304,8 @@ class TestFeatureMonitoringResultEngine:
         end_time = 1643767322000
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=67
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
         # Act
