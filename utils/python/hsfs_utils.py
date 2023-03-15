@@ -215,6 +215,11 @@ if __name__ == "__main__":
         type=str,
         help="Location on HopsFS of the JSON containing the full configuration",
     )
+    parser.add_argument(
+        "-start_time",
+        type=int,
+        help="Job start time",
+    )
 
     args = parser.parse_args()
     job_conf = read_job_conf(args.path)
