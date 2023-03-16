@@ -294,8 +294,9 @@ class FeatureMonitoringConfigEngine:
             Job object.
         """
         job_api = JobApi()
+        job_api.launch(name=job_name)
 
-        return job_api.launch(name=job_name)
+        return job_api.get(name=job_name)
 
     def run_feature_monitoring(
         self, entity, config_name: str, result_engine: FeatureMonitoringResultEngine
