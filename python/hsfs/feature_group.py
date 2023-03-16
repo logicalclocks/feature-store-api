@@ -1205,6 +1205,7 @@ class FeatureGroup(FeatureGroupBase):
         expectation_suite=None,
         parents=None,
         href=None,
+        delta_streamer_job_conf=None,
     ):
         super().__init__(featurestore_id, location, event_time=event_time)
 
@@ -1229,7 +1230,7 @@ class FeatureGroup(FeatureGroupBase):
         self._online_topic_name = online_topic_name
         self._stream = stream
         self._parents = parents
-        self._deltastreamer_jobconf = None
+        self._deltastreamer_jobconf = delta_streamer_job_conf
 
         self._backfill_job = None
 
