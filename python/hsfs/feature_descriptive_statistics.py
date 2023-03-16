@@ -16,7 +16,7 @@
 
 import json
 import humps
-from typings import Optional, Mapping
+from typing import Optional, Mapping
 from hsfs.util import FeatureStoreEncoder
 
 
