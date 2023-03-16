@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
+from hsfs.feature_monitoring_config import FeatureMonitoringConfig
 
 
 class TestFeatureMonitoringConfig:

@@ -78,6 +78,15 @@ class StatisticsApi:
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
+    def get_by_feature_monitoring_window_config(self, monitoring_window_config):
+        """Gets statistics based on a feature monitoring window configuration"""
+        # TODO: Check if the statistics are already computed
+        print(
+            "Checking for registered stats for window config: ",
+            monitoring_window_config.get("id", "unregistered"),
+        )
+        return None
+
     def compute(self, metadata_instance, training_dataset_version=None):
         _client = client.get_instance()
         path_params = self.get_path(metadata_instance, training_dataset_version) + [

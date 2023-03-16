@@ -360,7 +360,7 @@ class TestStatisticsEngine:
         assert mock_statistics_engine_save_statistics.call_count == 0
         assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 0
 
-    def test_profile_statistics(self, mocker):
+    def test_profile_statistics_with_config(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -383,8 +383,8 @@ class TestStatisticsEngine:
         feature_dataframe.head.return_value = []
 
         # Act
-        s_engine.profile_statistics(
-            metadata_instance=fg, feature_dataframe=feature_dataframe
+        s_engine.profile_statistics_with_config(
+            feature_dataframe=feature_dataframe, statistics_config=fg.statistics_config
         )
 
         # Assert
@@ -397,7 +397,7 @@ class TestStatisticsEngine:
             "storage of a feature group."
         )
 
-    def test_profile_statistics_head(self, mocker):
+    def test_profile_statistics_with_config_head(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -424,8 +424,8 @@ class TestStatisticsEngine:
         feature_dataframe.head.return_value = [1]
 
         # Act
-        s_engine.profile_statistics(
-            metadata_instance=fg, feature_dataframe=feature_dataframe
+        s_engine.profile_statistics_with_config(
+            feature_dataframe=feature_dataframe, statistics_config=fg.statistics_config
         )
 
         # Assert
