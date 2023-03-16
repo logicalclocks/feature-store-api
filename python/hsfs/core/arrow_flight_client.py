@@ -166,7 +166,7 @@ class ArrowFlightClient:
                                        or query._left_feature_group_start_time == 0) and
                                       query._left_feature_group_end_time is None)
         for j in query._joins:
-            query_supported &= j._query._check_flyingduck_supported()
+            query_supported &= self.is_supported(j._query)
 
         return query_supported
 
