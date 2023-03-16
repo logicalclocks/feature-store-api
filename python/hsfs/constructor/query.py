@@ -64,7 +64,7 @@ class Query:
                 sql_query = query.query
             online_conn = None
 
-            if engine.get_instance().flyingduck_supported(self):
+            if engine.get_instance().flyingduck_supported_and_enabled(self):
                 read_options["use_flyingduck"] = True
                 return (self, query), online_conn
 

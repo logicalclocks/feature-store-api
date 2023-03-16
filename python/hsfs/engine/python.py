@@ -100,15 +100,15 @@ class Engine:
                 dataframe_type,
                 schema,
                 hive_config=read_options.get("hive_config") if read_options else None,
-                use_flyingduck=read_options.get("use_flyingduck") if read_options else None,
+                use_flyingduck=(read_options.get("use_flyingduck") if read_options else False),
             )
         else:
             return self._jdbc(
                 sql_query, online_conn, dataframe_type, read_options, schema
             )
 
-    def flyingduck_supported(self, query):
-        return self._arrow_flight_client.is_supported(query)  # TODO: check feature flag here
+    def flyingduck_supported_and_enabled(self, query):
+        return self._arrow_flight_client.is_supported(query) and self._arrow_flight_client.is_enabled()
 
     def _sql_offline(
         self, sql_query, feature_store, dataframe_type, schema=None, hive_config=None, use_flyingduck=False
@@ -174,6 +174,11 @@ class Engine:
         try:
             from pydoop import hdfs
         except ModuleNotFoundError:
+            if self._arrow_flight_client.is_enabled():
+                try:
+                    return self._arrow_flight_client.read_files_from_dir(location, data_format)
+                except Exception as e:
+                    print("Failed to read training dataset using Arrow Flight: {}. Will use HopsFS instead".format(e))
             return self._read_hopsfs_rest(location, data_format)
 
         util.setup_pydoop()

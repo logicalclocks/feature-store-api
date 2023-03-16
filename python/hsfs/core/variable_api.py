@@ -51,4 +51,4 @@ class VariableApi:
         ]
 
         resp = _client._send_request("GET", path_params)
-        return resp
+        return resp["successMessage"] == "true"

@@ -36,7 +36,7 @@ class ArrowFlightClient:
     def __init__(self):
         self._client = client.get_instance()
         self._variable_api = VariableApi()
-        self._is_enabled = self._variable_api.get_flyingduck_enabled() == "true"
+        self._is_enabled = True #self._variable_api.get_flyingduck_enabled() # TODO: enable this when new backend is deployed
         if self._is_enabled:
             self._initialize_connection()
 
@@ -112,6 +112,13 @@ class ArrowFlightClient:
             raise Exception("Arrow Flight Service is not enabled.")
         training_dataset_path = self._path_from_feature_view(feature_view, tds_version)
         descriptor = pyarrow.flight.FlightDescriptor.for_path(training_dataset_path)
+        return self._get_dataset(descriptor)
+
+    @_handle_afs_errors
+    def read_files_from_dir(self, location, data_format):
+        if not self._is_enabled:
+            raise Exception("Arrow Flight Service is not enabled.")
+        descriptor = pyarrow.flight.FlightDescriptor.for_path(location) # TODO: create now command in backend that takes dir and data_format
         return self._get_dataset(descriptor)
 
     @_handle_afs_errors
