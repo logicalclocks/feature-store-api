@@ -110,15 +110,14 @@ class ArrowFlightClient:
     def get_training_dataset(self, feature_view, tds_version=1):
         if not self._is_enabled:
             raise Exception("Arrow Flight Service is not enabled.")
-        training_dataset_path = self._path_from_feature_view(feature_view, tds_version)
-        descriptor = pyarrow.flight.FlightDescriptor.for_path(training_dataset_path)
-        return self._get_dataset(descriptor)
+        path = self._path_from_feature_view(feature_view, tds_version)
+        return self.read_path(self, path)
 
     @_handle_afs_errors
-    def read_files_from_dir(self, location, data_format):
+    def read_path(self, path):
         if not self._is_enabled:
             raise Exception("Arrow Flight Service is not enabled.")
-        descriptor = pyarrow.flight.FlightDescriptor.for_path(location) # TODO: create now command in backend that takes dir and data_format
+        descriptor = pyarrow.flight.FlightDescriptor.for_path(path)
         return self._get_dataset(descriptor)
 
     @_handle_afs_errors

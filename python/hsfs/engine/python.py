@@ -174,9 +174,9 @@ class Engine:
         try:
             from pydoop import hdfs
         except ModuleNotFoundError:
-            if self._arrow_flight_client.is_enabled():
+            if self._arrow_flight_client.is_enabled() and data_format == "parquet":
                 try:
-                    return self._arrow_flight_client.read_files_from_dir(location, data_format)
+                    return self._arrow_flight_client.read_path(location)
                 except Exception as e:
                     print("Failed to read training dataset using Arrow Flight: {}. Will use HopsFS instead".format(e))
             return self._read_hopsfs_rest(location, data_format)
