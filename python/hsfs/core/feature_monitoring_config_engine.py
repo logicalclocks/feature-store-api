@@ -99,7 +99,7 @@ class FeatureMonitoringConfigEngine:
         Returns:
             FeatureMonitoringConfig
         """
-        config = self.build_stats_monitoring_only_config(
+        config = self._build_stats_monitoring_only_config(
             name=name,
             feature_name=feature_name,
             detection_window_config=detection_window_config,
@@ -146,7 +146,7 @@ class FeatureMonitoringConfigEngine:
             FeatureMonitoringConfig The registered monitoring configuration.
         """
 
-        config = self.build_feature_monitoring_config(
+        config = self._build_feature_monitoring_config(
             name=name,
             feature_name=feature_name,
             detection_window_config=detection_window_config,
@@ -170,7 +170,7 @@ class FeatureMonitoringConfigEngine:
         specific_value: Optional[float] = None,
         row_percentage: Optional[int] = None,
     ) -> FeatureMonitoringWindowConfig:
-        """Builds a monitoring window config dictionary.
+        """Builds a monitoring window config.
 
         Args:
             window_config_type: str, required
@@ -199,7 +199,7 @@ class FeatureMonitoringConfigEngine:
             row_percentage,
         )
 
-    def build_stats_monitoring_only_config(
+    def _build_stats_monitoring_only_config(
         self,
         name: str,
         feature_name: str,
@@ -241,7 +241,7 @@ class FeatureMonitoringConfigEngine:
             statistics_comparison_config=None,
         )
 
-    def build_feature_monitoring_config(
+    def _build_feature_monitoring_config(
         self,
         feature_name: str,
         name: str,
@@ -368,7 +368,10 @@ class FeatureMonitoringConfigEngine:
             FeatureDescriptiveStatitics: Descriptive statistics
         """
 
-        if monitoring_window_config.type == WindowConfigType.SPECIFIC_VALUE:
+        if (
+            monitoring_window_config.window_config_type
+            == WindowConfigType.SPECIFIC_VALUE
+        ):
             # if window config type is specific value, there is no stats to compute
             return monitoring_window_config.specific_value
 

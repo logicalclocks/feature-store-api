@@ -62,19 +62,23 @@ class FeatureMonitoringConfig:
         self._scheduler_config = scheduler_config
         self._alert_config = alert_config
         self._statistics_comparison_config = statistics_comparison_config
-        self._detection_window_config = (
+        self._detection_window_config = self._parse_window_config(
             detection_window_config
-            if isinstance(detection_window_config, FeatureMonitoringWindowConfig)
-            else FeatureMonitoringWindowConfig.from_response_json(
-                detection_window_config
-            )
         )
-        self._reference_window_config = (
+        self._reference_window_config = self._parse_window_config(
             reference_window_config
-            if isinstance(reference_window_config, FeatureMonitoringWindowConfig)
-            else FeatureMonitoringWindowConfig.from_response_json(
-                reference_window_config
-            )
+        )
+
+    @classmethod
+    def _parse_window_config(
+        cls, window_config: Optional[Union[FeatureMonitoringWindowConfig, dict]]
+    ):
+        if window_config is None:
+            return None
+        return (
+            window_config
+            if isinstance(window_config, FeatureMonitoringWindowConfig)
+            else FeatureMonitoringWindowConfig.from_response_json(window_config)
         )
 
     @classmethod

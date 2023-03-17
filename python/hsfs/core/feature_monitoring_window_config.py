@@ -31,7 +31,7 @@ class WindowConfigType:
 class FeatureMonitoringWindowConfig:
     def __init__(
         self,
-        type: Optional[str] = WindowConfigType.SPECIFIC_VALUE,
+        window_config_type: Optional[str] = WindowConfigType.SPECIFIC_VALUE,
         window_length: Optional[str] = None,
         time_offset: Optional[str] = None,
         specific_id: Optional[int] = None,
@@ -40,7 +40,7 @@ class FeatureMonitoringWindowConfig:
         id: Optional[int] = None,
     ):
         self._id = id
-        self._type = type
+        self._window_config_type = window_config_type
         self._window_length = window_length
         self._time_offset = time_offset
         self._specific_id = specific_id
@@ -55,7 +55,7 @@ class FeatureMonitoringWindowConfig:
     def to_dict(self):
         return {
             "id": self._id,
-            "windowConfigType": self._type,
+            "windowConfigType": self._window_config_type,
             "windowLength": self._window_length,
             "timeOffset": self._time_offset,
             "specificId": self._specific_id,
@@ -77,8 +77,8 @@ class FeatureMonitoringWindowConfig:
         return self._id
 
     @property
-    def type(self) -> Optional[str]:
-        return self._type
+    def window_config_type(self) -> Optional[str]:
+        return self._window_config_type
 
     @property
     def window_length(self) -> Optional[str]:
