@@ -178,6 +178,11 @@ class ArrowFlightClient:
         query = {"query_string": query_string, "featuregroups": featuregroups, "features": features, "filters": filters}
         return query
 
+    def _update_features(self, features, fg_name, new_features):
+        updated_features = features.get(fg_name, set())
+        updated_features.update(new_features)
+        features[fg_name] = updated_features
+
     def _collect_featuregroups_features_and_filters(self, query):
         featuregroups = {}
         fg = query._left_feature_group
@@ -186,12 +191,25 @@ class ArrowFlightClient:
         filters = self._filter_to_expression(query._filter, featuregroups)
 
         features = {}
-        features[fg_name] = [feat._name for feat in query._left_features]
+        features[fg_name] = set([feat._name for feat in query._left_features])
 
+        if fg.event_time:
+            features[fg_name].update([fg.event_time])
+        if fg.primary_key:
+            features[fg_name].update(fg.primary_key)
         for join in query._joins:
+            join_fg = join._query._left_feature_group
+            join_fg_name = f"{join_fg.feature_store_name.replace('_featurestore','')}.{join_fg.name}_{join_fg.version}" # featurestore.name_version
+            if len(join._on) > 0:
+                self._update_features(features, fg_name, [feat._name for feat in join._on])
+                self._update_features(features, join_fg_name, [feat._name for feat in join._on])
+            else:
+                self._update_features(features, fg_name, [feat._name for feat in join._left_on])
+                self._update_features(features, join_fg_name, [feat._name for feat in join._right_on])
             join_featuregroups, join_features, join_filters = self._collect_featuregroups_features_and_filters(join._query)
             featuregroups.update(join_featuregroups)
-            features.update(join_features)
+            for join_fg_name in join_features:
+                self._update_features(features, join_fg_name, join_features[join_fg_name])
             filters = (filters & join_filters) if join_filters is not None else filters
 
         return featuregroups, features, filters
