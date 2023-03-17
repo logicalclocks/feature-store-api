@@ -15,6 +15,7 @@
 #
 
 from hsfs.core import feature_monitoring_result_engine
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 from datetime import datetime, date
 import dateutil
 from hsfs import util
@@ -106,13 +107,18 @@ class TestFeatureMonitoringResultEngine:
             == DEFAULT_MONITORING_TIME_SORT_BY
         )
 
-    def test_save_feature_monitoring_result_via_fg(self, mocker):
+    def test_save_feature_monitoring_result_via_fg(self, mocker, backend_fixtures):
         # Arrange
         execution_id = 123
-        detection_stats_id = 333
-        reference_stats_id = 222
         shift_detected = False
         difference = 0.3
+
+        detection_statistics = backend_fixtures["feature_descriptive_statistics"][
+            "get_fractional_feature_statistics"
+        ]["response"]
+        reference_statistics = backend_fixtures["feature_descriptive_statistics"][
+            "get_fractional_feature_statistics"
+        ]["response"]
 
         mock_result_api = mocker.patch(
             "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create",
@@ -129,8 +135,8 @@ class TestFeatureMonitoringResultEngine:
         result_engine.save_feature_monitoring_result(
             config_id=DEFAULT_CONFIG_ID,
             execution_id=execution_id,
-            detection_stats_id=detection_stats_id,
-            reference_stats_id=reference_stats_id,
+            detection_statistics=detection_statistics,
+            reference_statistics=reference_statistics,
             difference=difference,
             shift_detected=shift_detected,
         )
@@ -141,8 +147,10 @@ class TestFeatureMonitoringResultEngine:
         result = mock_result_api.call_args[0][0]
         assert result._config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
-        assert result._detection_stats_id == detection_stats_id
-        assert result._reference_stats_id == reference_stats_id
+        assert result._detection_stats_id is None
+        assert result._reference_stats_id is None
+        assert isinstance(result.detection_statistics, FeatureDescriptiveStatistics)
+        assert isinstance(result.reference_statistics, FeatureDescriptiveStatistics)
         assert result._difference == difference
         assert result._shift_detected == shift_detected
         assert isinstance(result._monitoring_time, int)
@@ -153,13 +161,18 @@ class TestFeatureMonitoringResultEngine:
             util.convert_event_time_to_timestamp(after_time) >= result._monitoring_time
         )
 
-    def test_save_feature_monitoring_result_via_fv(self, mocker):
+    def test_save_feature_monitoring_result_via_fv(self, mocker, backend_fixtures):
         # Arrange
         execution_id = 123
-        detection_stats_id = 333
-        reference_stats_id = 222
         shift_detected = False
         difference = 0.3
+
+        detection_statistics = backend_fixtures["feature_descriptive_statistics"][
+            "get_fractional_feature_statistics"
+        ]["response"]
+        reference_statistics = backend_fixtures["feature_descriptive_statistics"][
+            "get_fractional_feature_statistics"
+        ]["response"]
 
         mock_result_api = mocker.patch(
             "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create",
@@ -178,8 +191,8 @@ class TestFeatureMonitoringResultEngine:
         result_engine.save_feature_monitoring_result(
             config_id=DEFAULT_CONFIG_ID,
             execution_id=execution_id,
-            detection_stats_id=detection_stats_id,
-            reference_stats_id=reference_stats_id,
+            detection_statistics=detection_statistics,
+            reference_statistics=reference_statistics,
             difference=difference,
             shift_detected=shift_detected,
         )
@@ -190,8 +203,10 @@ class TestFeatureMonitoringResultEngine:
         result = mock_result_api.call_args[0][0]
         assert result._config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
-        assert result._detection_stats_id == detection_stats_id
-        assert result._reference_stats_id == reference_stats_id
+        assert result._detection_stats_id is None
+        assert result._reference_stats_id is None
+        assert isinstance(result.detection_statistics, FeatureDescriptiveStatistics)
+        assert isinstance(result.reference_statistics, FeatureDescriptiveStatistics)
         assert result._difference == difference
         assert result._shift_detected == shift_detected
         assert isinstance(result._monitoring_time, int)
@@ -213,14 +228,13 @@ class TestFeatureMonitoringResultEngine:
         )
 
         # Act
-        query_params = result_engine.build_query_params(
-            start_time=start_time, end_time=end_time
+        query_params = result_engine._build_query_params(
+            start_time=start_time, end_time=end_time, with_statistics=False
         )
 
         # Assert
         assert isinstance(query_params, dict)
-        assert isinstance(query_params["filter_by"], list)
-        assert len(query_params["filter_by"]) == 0
+        assert "filter_by" not in query_params
         assert query_params["sort_by"] == DEFAULT_MONITORING_TIME_SORT_BY
 
     def test_build_query_params_datetime(self):
@@ -236,8 +250,8 @@ class TestFeatureMonitoringResultEngine:
         )
 
         # Act
-        query_params = result_engine.build_query_params(
-            start_time=start_time, end_time=end_time
+        query_params = result_engine._build_query_params(
+            start_time=start_time, end_time=end_time, with_statistics=False
         )
 
         # Assert
@@ -261,8 +275,8 @@ class TestFeatureMonitoringResultEngine:
         )
 
         # Act
-        query_params = result_engine.build_query_params(
-            start_time=start_time, end_time=end_time
+        query_params = result_engine._build_query_params(
+            start_time=start_time, end_time=end_time, with_statistics=False
         )
 
         # Assert
@@ -286,8 +300,8 @@ class TestFeatureMonitoringResultEngine:
         )
 
         # Act
-        query_params = result_engine.build_query_params(
-            start_time=start_time, end_time=end_time
+        query_params = result_engine._build_query_params(
+            start_time=start_time, end_time=end_time, with_statistics=False
         )
 
         # Assert
@@ -309,8 +323,8 @@ class TestFeatureMonitoringResultEngine:
         )
 
         # Act
-        query_params = result_engine.build_query_params(
-            start_time=start_time, end_time=end_time
+        query_params = result_engine._build_query_params(
+            start_time=start_time, end_time=end_time, with_statistics=False
         )
 
         # Assert

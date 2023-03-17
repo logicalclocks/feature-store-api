@@ -69,56 +69,36 @@ class FeatureDescriptiveStatistics:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        if "count" in json_decamelized:
-            if json_decamelized["count"] == 0:
-                return []
-            return [cls(**result) for result in json_decamelized["items"]]
-        else:
-            return cls(**json_decamelized)
+        return cls(**json_decamelized)
 
     @classmethod
-    def from_deequ_json(
-        cls,
-        json_str: str,
-        feature_name: None,
-    ):
+    def from_deequ_json(cls, json_dict):
         # TODO: to be removed after replacing deequ
-        json_dict = json.loads(json_str)
-        json_decamelized = humps.decamelize(json_dict)
-        cols_stats = json_decamelized["columns"]
-        stats = cols_stats[0]
-        if len(cols_stats) > 0:
-            if feature_name is None:
-                raise ValueError("Feature name is missing")
-            for col_stats in cols_stats:
-                if col_stats["column"] == feature_name:
-                    stats = col_stats
-                    break
-
         # common for all data types
         stats_dict = {
-            "feature_type": stats["data_type"],
-            "completeness": stats["completeness"],
-            "num_non_null_values": stats["numRecordsNonNull"],
-            "num_null_values": stats["numRecordsNull"],
-            "approx_num_distinct_values": stats["approximateNumDistinctValues"],
+            "feature_type": json_dict["dataType"],
+            "completeness": json_dict["completeness"],
+            "num_non_null_values": json_dict["numRecordsNonNull"],
+            "num_null_values": json_dict["numRecordsNull"],
+            "approx_num_distinct_values": json_dict["approximateNumDistinctValues"],
         }
-        if stats["uniqueness"]:
+        if json_dict["uniqueness"]:
             # commmon for all data types if exact_uniqueness is enabled
-            stats_dict["uniqueness"] = stats["uniqueness"]
-            stats_dict["entropy"] = stats["entropy"]
-            stats_dict["distinctness"] = stats["distinctness"]
-            stats_dict["exact_num_distinct_values"] = stats["exactNumDistinctValues"]
-        if stats["dataType"] == "Fractional" or stats["dataType"] == "Integral":
-            stats_dict["min"] = stats["minimum"]
-            stats_dict["max"] = stats["maximum"]
-            stats_dict["sum"] = stats["sum"]
-            stats_dict["count"] = stats["numRecordsNull"] + stats["numRecordsNonNull"]
-            stats_dict["mean"] = stats["mean"]
-            stats_dict["stddev"] = stats["stdDev"]
-            stats_dict["completeness"] = stats["completeness"]
-            stats_dict["num_non_null_values"] = stats["numRecordsNonNull"]
-            stats_dict["num_null_values"] = stats["numRecordsNull"]
+            stats_dict["uniqueness"] = json_dict["uniqueness"]
+            stats_dict["entropy"] = json_dict["entropy"]
+            stats_dict["distinctness"] = json_dict["distinctness"]
+            stats_dict["exact_num_distinct_values"] = json_dict[
+                "exactNumDistinctValues"
+            ]
+        if json_dict["dataType"] == "Fractional" or json_dict["dataType"] == "Integral":
+            stats_dict["min"] = json_dict["minimum"]
+            stats_dict["max"] = json_dict["maximum"]
+            stats_dict["sum"] = json_dict["sum"]
+            stats_dict["count"] = (
+                json_dict["numRecordsNull"] + json_dict["numRecordsNonNull"]
+            )
+            stats_dict["mean"] = json_dict["mean"]
+            stats_dict["stddev"] = json_dict["stdDev"]
 
         return cls(**stats_dict)
 

@@ -34,8 +34,12 @@ class FeatureMonitoringResult:
         shift_detected: bool = False,
         detection_stats_id: Optional[int] = None,
         reference_stats_id: Optional[int] = None,
-        detection_statistics: Optional[FeatureDescriptiveStatistics] = None,
-        reference_statistics: Optional[FeatureDescriptiveStatistics] = None,
+        detection_statistics: Optional[
+            Union[FeatureDescriptiveStatistics, dict]
+        ] = None,
+        reference_statistics: Optional[
+            Union[FeatureDescriptiveStatistics, dict]
+        ] = None,
         id: Optional[int] = None,
         href: Optional[str] = None,
         items: Optional[List[Dict[str, Any]]] = None,
@@ -49,12 +53,28 @@ class FeatureMonitoringResult:
 
         self._detection_stats_id = detection_stats_id
         self._reference_stats_id = reference_stats_id
-        self._detection_statistics = detection_statistics
-        self._reference_statistics = reference_statistics
+        self._detection_statistics = self._parse_feature_statistics(
+            detection_statistics
+        )
+        self._reference_statistics = self._parse_feature_statistics(
+            reference_statistics
+        )
 
         self._monitoring_time = util.convert_event_time_to_timestamp(monitoring_time)
         self._difference = difference
         self._shift_detected = shift_detected
+
+    @classmethod
+    def _parse_feature_statistics(
+        cls, statistics: Optional[Union[FeatureDescriptiveStatistics, dict]]
+    ):
+        if statistics is None:
+            return None
+        return (
+            statistics
+            if isinstance(statistics, FeatureDescriptiveStatistics)
+            else FeatureDescriptiveStatistics.from_response_json(statistics)
+        )
 
     @classmethod
     def from_response_json(cls, json_dict):

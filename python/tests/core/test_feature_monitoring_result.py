@@ -15,6 +15,7 @@
 #
 
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 
 class TestFeatureMonitoringResult:
@@ -31,8 +32,10 @@ class TestFeatureMonitoringResult:
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
         assert result._execution_id == 123
-        assert result._detection_stats_id == 333
-        assert result._reference_stats_id == 222
+        assert result._detection_stats_id is None
+        assert result._reference_stats_id is None
+        assert isinstance(result.detection_statistics, FeatureDescriptiveStatistics)
+        assert isinstance(result.reference_statistics, FeatureDescriptiveStatistics)
         assert result._config_id == 32
         assert result._monitoring_time == 1676457000000
         assert result._difference == 0.3
@@ -52,8 +55,10 @@ class TestFeatureMonitoringResult:
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
         assert result._execution_id == 123
-        assert result._detection_stats_id == 333
-        assert result._reference_stats_id == 222
+        assert result._detection_stats_id is None
+        assert result._reference_stats_id is None
+        assert isinstance(result.detection_statistics, FeatureDescriptiveStatistics)
+        assert isinstance(result.reference_statistics, FeatureDescriptiveStatistics)
         assert result._config_id == 32
         assert result._monitoring_time == 1676457000000
         assert result._difference == 0.3
@@ -76,8 +81,34 @@ class TestFeatureMonitoringResult:
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
         assert result._execution_id == 123
-        assert result._detection_stats_id == 333
-        assert result._reference_stats_id == 222
+        assert result._detection_stats_id == 52
+        assert result._reference_stats_id == 53
+        assert result._config_id == 32
+        assert result._monitoring_time == 1676457000000
+        assert result._difference == 0.3
+        assert result._shift_detected is True
+        assert result._href[-2:] == "32"
+
+    def test_from_response_json_list_with_statistics(self, backend_fixtures):
+        # Arrange
+        result_json = backend_fixtures["feature_monitoring_result"][
+            "get_list_with_statistics"
+        ]["response"]
+
+        # Act
+        result_list = FeatureMonitoringResult.from_response_json(result_json)
+        result = result_list[0]
+
+        # Assert
+        assert isinstance(result_list, list)
+        assert len(result_list) == 1
+        assert isinstance(result, FeatureMonitoringResult)
+        assert result._id == 42
+        assert result._execution_id == 123
+        assert result._detection_stats_id is None
+        assert result._reference_stats_id is None
+        assert isinstance(result.detection_statistics, FeatureDescriptiveStatistics)
+        assert isinstance(result.reference_statistics, FeatureDescriptiveStatistics)
         assert result._config_id == 32
         assert result._monitoring_time == 1676457000000
         assert result._difference == 0.3

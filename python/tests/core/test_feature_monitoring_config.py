@@ -38,11 +38,11 @@ class TestFeatureMonitoringConfig:
         assert isinstance(config._alert_config, str)
         assert isinstance(config._scheduler_config, str)
 
-        assert config._detection_window_config["window_config_type"] == "INSERT"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
-        assert config._reference_window_config["window_config_type"] == "SNAPSHOT"
-        assert config._reference_window_config["time_offset"] == "LAST"
+        assert config._detection_window_config.window_config_type == "INSERT"
+        assert config._detection_window_config.time_offset == "1w"
+        assert config._detection_window_config.window_length == "1d"
+        assert config._reference_window_config.window_config_type == "SNAPSHOT"
+        assert config._reference_window_config.time_offset == "LAST"
 
         assert config._statistics_comparison_config["threshold"] == 1
         assert config._statistics_comparison_config["strict"] is True
@@ -71,13 +71,11 @@ class TestFeatureMonitoringConfig:
         assert isinstance(config._alert_config, str)
         assert isinstance(config._scheduler_config, str)
 
-        assert config._detection_window_config["window_config_type"] == "BATCH"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
-        assert (
-            config._reference_window_config["window_config_type"] == "TRAINING_DATASET"
-        )
-        assert config._reference_window_config["specific_id"] == 33
+        assert config._detection_window_config.window_config_type == "BATCH"
+        assert config._detection_window_config.time_offset == "1w"
+        assert config._detection_window_config.window_length == "1d"
+        assert config._reference_window_config.window_config_type == "TRAINING_DATASET"
+        assert config._reference_window_config.specific_id == 33
 
         assert config._statistics_comparison_config["threshold"] == 1
         assert config._statistics_comparison_config["strict"] is True
@@ -105,9 +103,9 @@ class TestFeatureMonitoringConfig:
         assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
         assert isinstance(config._scheduler_config, str)
 
-        assert config._detection_window_config["window_config_type"] == "INSERT"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
+        assert config._detection_window_config.window_config_type == "INSERT"
+        assert config._detection_window_config.time_offset == "1w"
+        assert config._detection_window_config.window_length == "1d"
 
     def test_from_response_json_stats_only_via_fv(self, backend_fixtures):
         # Arrange
@@ -130,9 +128,9 @@ class TestFeatureMonitoringConfig:
         assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
         assert isinstance(config._scheduler_config, str)
 
-        assert config._detection_window_config["window_config_type"] == "BATCH"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
+        assert config._detection_window_config.window_config_type == "BATCH"
+        assert config._detection_window_config.time_offset == "1w"
+        assert config._detection_window_config.window_length == "1d"
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
@@ -159,13 +157,11 @@ class TestFeatureMonitoringConfig:
         assert isinstance(config._alert_config, str)
         assert isinstance(config._scheduler_config, str)
 
-        assert config._detection_window_config["window_config_type"] == "BATCH"
-        assert config._detection_window_config["time_offset"] == "1w"
-        assert config._detection_window_config["window_length"] == "1d"
-        assert (
-            config._reference_window_config["window_config_type"] == "TRAINING_DATASET"
-        )
-        assert config._reference_window_config["specific_id"] == 33
+        assert config._detection_window_config.window_config_type == "BATCH"
+        assert config._detection_window_config.time_offset == "1w"
+        assert config._detection_window_config.window_length == "1d"
+        assert config._reference_window_config.window_config_type == "TRAINING_DATASET"
+        assert config._reference_window_config.specific_id == 33
 
         assert config._statistics_comparison_config["threshold"] == 1
         assert config._statistics_comparison_config["strict"] is True

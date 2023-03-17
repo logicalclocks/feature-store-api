@@ -97,10 +97,13 @@ class StatisticsEngine:
         # TODO: Future work. Persisting the statistics and returning the stats together with the ID
 
         if engine.get_type() == "spark":
-            statistics_str = StatisticsEngine.profile_statistics(
+            statistics_str = self.profile_statistics(
                 feature_dataframe, [feature_name], False, False, False
             )
-            return FeatureDescriptiveStatistics.from_deequ_json(statistics_str)
+            statistics_dict = json.loads(statistics_str)
+            return FeatureDescriptiveStatistics.from_deequ_json(
+                statistics_dict[feature_name]
+            )
         else:
             # TODO: Only compute statistics with Spark at the moment. This method is expected to be called
             # only through run_feature_monitoring(), which is the entrypoint of the feature monitoring job.
@@ -137,14 +140,14 @@ class StatisticsEngine:
         )
 
     def profile_transformation_fn_statistics(
-        self, feature_dataframe, columns, label_encoder_features
+        self, features_dataframe, columns, label_encoder_features
     ):
         if (
             engine.get_type() == "spark"
-            and len(feature_dataframe.select(*columns).head(1)) == 0
+            and len(features_dataframe.select(*columns).head(1)) == 0
         ) or (
             (engine.get_type() == "hive" or engine.get_type() == "python")
-            and len(feature_dataframe.head()) == 0
+            and len(features_dataframe.head()) == 0
         ):
             raise exceptions.FeatureStoreException(
                 "There is no data in the entity that you are trying to compute "
@@ -152,12 +155,12 @@ class StatisticsEngine:
                 "to the online storage of a feature group."
             )
         content_str = engine.get_instance().profile(
-            feature_dataframe, columns, False, True, False
+            features_dataframe, columns, False, True, False
         )
 
         # add unique value profile to String type columns
         return self.profile_unique_values(
-            feature_dataframe, label_encoder_features, content_str
+            features_dataframe, label_encoder_features, content_str
         )
 
     def register_split_statistics(
@@ -194,12 +197,12 @@ class StatisticsEngine:
         td_metadata_instance,
         columns,
         label_encoder_features,
-        feature_dataframe=None,
+        features_dataframe=None,
         feature_view_obj=None,
     ):
         commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
         content_str = self.profile_transformation_fn_statistics(
-            feature_dataframe, columns, label_encoder_features
+            features_dataframe, columns, label_encoder_features
         )
         stats = statistics.Statistics(
             commit_time=commit_time,

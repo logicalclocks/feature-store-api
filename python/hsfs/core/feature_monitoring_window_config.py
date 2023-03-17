@@ -32,8 +32,8 @@ class FeatureMonitoringWindowConfig:
     def __init__(
         self,
         window_config_type: Optional[str] = WindowConfigType.SPECIFIC_VALUE,
-        window_length: Optional[str] = None,
         time_offset: Optional[str] = None,
+        window_length: Optional[str] = None,
         specific_id: Optional[int] = None,
         specific_value: Optional[float] = None,
         row_percentage: Optional[int] = None,
@@ -41,8 +41,8 @@ class FeatureMonitoringWindowConfig:
     ):
         self._id = id
         self._window_config_type = window_config_type
-        self._window_length = window_length
         self._time_offset = time_offset
+        self._window_length = window_length
         self._specific_id = specific_id
         self._specific_value = specific_value
         self._row_percentage = row_percentage
@@ -56,8 +56,8 @@ class FeatureMonitoringWindowConfig:
         return {
             "id": self._id,
             "windowConfigType": self._window_config_type,
-            "windowLength": self._window_length,
             "timeOffset": self._time_offset,
+            "windowLength": self._window_length,
             "specificId": self._specific_id,
             "specificValue": self._specific_value,
             "rowPercentage": self._row_percentage,
@@ -81,12 +81,12 @@ class FeatureMonitoringWindowConfig:
         return self._window_config_type
 
     @property
-    def window_length(self) -> Optional[str]:
-        return self._window_length
-
-    @property
     def time_offset(self) -> Optional[str]:
         return self._time_offset
+
+    @property
+    def window_length(self) -> Optional[str]:
+        return self._window_length
 
     @property
     def specific_id(self) -> Optional[int]:
