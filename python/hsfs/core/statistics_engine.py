@@ -21,7 +21,7 @@ import warnings
 from hsfs import engine, statistics, util, split_statistics
 from hsfs.client import exceptions
 from hsfs.core import statistics_api
-from hsfs.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 
 class StatisticsEngine:
@@ -103,10 +103,11 @@ class StatisticsEngine:
             return FeatureDescriptiveStatistics.from_deequ_json(statistics_str)
         else:
             # TODO: Only compute statistics with Spark at the moment. This method is expected to be called
-            # only through run_feature_monitoring() which is the entrypoint of the feature monitoring job.
-            # Pending work is to use Python jobs if the dataframe is relatively small.
+            # only through run_feature_monitoring(), which is the entrypoint of the feature monitoring job.
+            # Pending work for next sprint is to compute statistics on the Python client as well, as part of
+            # the deequ replacement work.
             raise exceptions.FeatureStoreException(
-                "Descriptive statistics for feature monitoring cannot be computed from a Python engine."
+                "Descriptive statistics for feature monitoring cannot be computed from the Python engine."
             )
 
     @staticmethod
@@ -230,6 +231,32 @@ class StatisticsEngine:
             commit_timestamp,
             for_transformation,
             training_dataset_version,
+        )
+
+    def get_by_feature_commit_time_window_and_row_percentage(
+        self,
+        metadata_instance,
+        feature_name: str,
+        start_time: int,
+        end_time: int,
+        row_percentage: int,
+    ) -> FeatureDescriptiveStatistics:
+        """Get feature statistics based on commit time window and row percentage
+
+        Args:
+            metadata_instance: Union[FeatureGroup, FeatureView]: Entity on which statistics where computed.
+            feature_name: str: Name of the feature from which statistics where computed.
+            start_time: Window start commit time
+            end_time: Window end commit time
+            row_percentage: Percentage of rows used in the computation of statitics
+
+        Returns:
+            FeatureDescriptiveStatistics: Descriptive statistics
+        """
+        return (
+            self._statistics_api.get_by_feature_commit_time_window_and_row_percentage(
+                metadata_instance, feature_name, start_time, end_time, row_percentage
+            )
         )
 
     def _save_statistics(self, stats, td_metadata_instance, feature_view_obj):

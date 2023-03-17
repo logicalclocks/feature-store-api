@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs.feature_monitoring_result import FeatureMonitoringResult
+from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 
 
 class TestFeatureMonitoringResult:

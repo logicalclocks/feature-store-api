@@ -16,13 +16,15 @@
 
 import json
 import humps
-from typing import Optional, Mapping
+from typing import Optional, Mapping, Union
 from hsfs.util import FeatureStoreEncoder
+from datetime import datetime, date
 
 
 class FeatureDescriptiveStatistics:
     def __init__(
         self,
+        feature_type: str,
         min: float,
         max: float,
         sum: float,
@@ -39,8 +41,12 @@ class FeatureDescriptiveStatistics:
         exact_num_distinct_values: Optional[int] = None,
         percentiles: Optional[Mapping[str, float]] = None,
         id: Optional[int] = None,
+        start_time: Optional[Union[int, datetime, date, str]] = None,
+        end_time: Optional[Union[int, datetime, date, str]] = None,
+        row_percentage: Optional[int] = None,
     ):
         self._id = id
+        self._feature_type = feature_type
         self._min = min
         self._max = max
         self._sum = sum
@@ -56,6 +62,9 @@ class FeatureDescriptiveStatistics:
         self._approx_num_distinct_values = approx_num_distinct_values
         self._exact_num_distinct_values = exact_num_distinct_values
         self._percentiles = percentiles
+        self._start_time = start_time
+        self._end_time = end_time
+        self._row_percentage = row_percentage
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -68,8 +77,13 @@ class FeatureDescriptiveStatistics:
             return cls(**json_decamelized)
 
     @classmethod
-    def from_deequ_json(cls, json_dict, feature_name: None):
+    def from_deequ_json(
+        cls,
+        json_str: str,
+        feature_name: None,
+    ):
         # TODO: to be removed after replacing deequ
+        json_dict = json.loads(json_str)
         json_decamelized = humps.decamelize(json_dict)
         cols_stats = json_decamelized["columns"]
         stats = cols_stats[0]
@@ -83,6 +97,7 @@ class FeatureDescriptiveStatistics:
 
         # common for all data types
         stats_dict = {
+            "feature_type": stats["data_type"],
             "completeness": stats["completeness"],
             "num_non_null_values": stats["numRecordsNonNull"],
             "num_null_values": stats["numRecordsNull"],
@@ -110,12 +125,16 @@ class FeatureDescriptiveStatistics:
     def to_dict(self):
         return {
             "id": self._id,
+            "featureType": self._feature_type,
             "min": self._min,
             "max": self._max,
             "sum": self._sum,
             "count": self._count,
             "mean": self._mean,
             "stddev": self._stddev,
+            "startTime": self._start_time,
+            "endTime": self._end_time,
+            "rowPercentage": self._row_percentage,
             "completeness": self._completeness,
             "numNonNullValues": self._num_non_null_values,
             "numNullValues": self._num_null_values,
@@ -141,6 +160,10 @@ class FeatureDescriptiveStatistics:
         return self._id
 
     @property
+    def feature_type(self) -> str:
+        return self._feature_type
+
+    @property
     def min(self) -> float:
         return self._min
 
@@ -163,6 +186,18 @@ class FeatureDescriptiveStatistics:
     @property
     def stddev(self) -> float:
         return self._stddev
+
+    @property
+    def start_time(self) -> int:
+        return self._start_time
+
+    @property
+    def end_time(self) -> int:
+        return self._end_time
+
+    @property
+    def row_percentage(self) -> int:
+        return self._row_percentage
 
     @property
     def completeness(self) -> Optional[float]:

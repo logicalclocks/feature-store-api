@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Union
 from hsfs import util
 from datetime import datetime, date
 
-from hsfs.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 
 class FeatureMonitoringResult:

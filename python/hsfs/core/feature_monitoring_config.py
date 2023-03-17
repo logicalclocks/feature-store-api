@@ -19,7 +19,7 @@ import humps
 from typing import Any, Dict, List, Optional, Union
 from hsfs import util
 
-from hsfs.feature_monitoring_window_config import FeatureMonitoringWindowConfig
+from hsfs.core.feature_monitoring_window_config import FeatureMonitoringWindowConfig
 
 
 class FeatureMonitoringConfig:

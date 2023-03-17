@@ -78,13 +78,25 @@ class StatisticsApi:
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
-    def get_by_feature_monitoring_window_config(self, monitoring_window_config):
-        """Gets statistics based on a feature monitoring window configuration"""
-        # TODO: Check if the statistics are already computed
-        print(
-            "Checking for registered stats for window config: ",
-            monitoring_window_config.get("id", "unregistered"),
-        )
+    def get_by_feature_commit_time_window_and_row_percentage(
+        self, metadata_instance, feature_name, start_time, end_time, row_percentage
+    ):
+        """Gets statistics based on a commit time window and row percentage"""
+        # _client = client.get_instance()
+        # path_params = self.get_path(metadata_instance)
+        # headers = {"content-type": "application/json"}
+        # query_params = {
+        #     "feature": feature_name,  # TODO: Or using endpoint .../statistics/feature/{name}
+        #     "start_time": start_time,
+        #     "end_time": end_time,
+        #     "row_percentage": row_percentage,
+        # }
+
+        # TODO: Backend implementation
+        # return statistics.Statistics.from_response_json(
+        #     _client._send_request("GET", path_params, query_params, headers=headers)
+        # )
+
         return None
 
     def compute(self, metadata_instance, training_dataset_version=None):

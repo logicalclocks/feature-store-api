@@ -14,12 +14,12 @@
 #   limitations under the License.
 #
 
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Tuple
 from datetime import date, datetime
-from hsfs.feature_monitoring_result import FeatureMonitoringResult
+from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.core.feature_monitoring_result_api import FeatureMonitoringResultApi
-from hsfs.feature_monitoring_config import FeatureMonitoringConfig
-from hsfs.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 from hsfs import util
 
 DEFAULT_EXECUTION_ID = 123
@@ -220,7 +220,7 @@ class FeatureMonitoringResultEngine:
         fm_config: FeatureMonitoringConfig,
         detection_stats: FeatureDescriptiveStatistics,
         reference_stats: Union[FeatureDescriptiveStatistics, int, float],
-    ):
+    ) -> Tuple[float, bool]:
         """Compute the difference and detect shift between the reference and detection statistics.
 
         Args:
@@ -230,8 +230,8 @@ class FeatureMonitoringResultEngine:
                 Computed statistics for reference data or a specific value.
 
         Returns:
-            `(float, float)`. The difference between the reference and detection statistics,
-                              and whether shift was detected or not
+            `(float, bool)`. The difference between the reference and detection statistics,
+                             and whether shift was detected or not
         """
 
         difference = self._compute_difference_between_stats(

@@ -16,7 +16,7 @@
 
 from typing import List, Optional
 from hsfs import client
-from hsfs import feature_monitoring_config as fmc
+from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core.job import Job
 
 

@@ -14,21 +14,20 @@
 #   limitations under the License.
 #
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 import pandas as pd
 from datetime import datetime, timedelta
 
-from hsfs.feature_monitoring_config import FeatureMonitoringConfig
+from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
 from hsfs.core.feature_monitoring_config_api import FeatureMonitoringConfigApi
 from hsfs.core.feature_monitoring_result_engine import FeatureMonitoringResultEngine
-from hsfs.core.statistics_api import StatisticsApi
 from hsfs.core.statistics_engine import StatisticsEngine
-from hsfs.feature_monitoring_result import FeatureMonitoringResult
-from hsfs.feature_monitoring_window_config import (
+from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
+from hsfs.core.feature_monitoring_window_config import (
     FeatureMonitoringWindowConfig,
     WindowConfigType,
 )
-from hsfs.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 from hsfs.core.job import Job
 from hsfs.core.job_api import JobApi
@@ -73,7 +72,6 @@ class FeatureMonitoringConfigEngine:
             feature_view_name=feature_view_name,
             feature_view_version=feature_view_version,
         )
-        self._statistics_api = StatisticsApi(feature_store_id, entity_type)
         self._statistics_engine = StatisticsEngine(feature_store_id, entity_type)
 
     def enable_descriptive_statistics_monitoring(
@@ -377,7 +375,7 @@ class FeatureMonitoringConfigEngine:
         if check_existing:
             # TODO: Fetch existing statistics and return them here if they are found
             registered_stats = (
-                self._statistics_api.get_by_feature_monitoring_window_config(
+                self._statistics_engine.get_by_feature_monitoring_window_config(
                     monitoring_window_config
                 )
             )
@@ -385,24 +383,34 @@ class FeatureMonitoringConfigEngine:
                 return registered_stats
 
         # Fetch the actual data for which to compute statistics based on row_percentage and time window
-        entity_feature_df = self.fetch_entity_data_based_on_monitoring_window_config(
+        (
+            entity_feature_df,
+            start_time,
+            end_time,
+        ) = self.fetch_entity_data_based_on_monitoring_window_config(
             entity=entity,
             feature_name=feature_name,
             monitoring_window_config=monitoring_window_config,
         )
 
         # Compute statistics on the feature dataframe
-        return self._statistics_engine.compute_single_feature_statistics(
+        descriptive_stats = self._statistics_engine.compute_single_feature_statistics(
             entity_feature_df,
             feature_name,
         )
+        # set commit times and row percentage
+        descriptive_stats.start_time = start_time
+        descriptive_stats.end_time = end_time
+        descriptive_stats.row_percentage = monitoring_window_config.row_percentage
+
+        return descriptive_stats
 
     def fetch_entity_data_based_on_monitoring_window_config(
         self,
         entity,  #: Union[feature_group.FeatureGroup, feature_view.FeatureView],
         feature_name: str,
         monitoring_window_config: FeatureMonitoringWindowConfig,
-    ) -> pd.DataFrame:
+    ) -> Tuple[pd.DataFrame, int, int]:
         """Fetch the entity data based on the monitoring window config.
 
         Args:
@@ -411,7 +419,7 @@ class FeatureMonitoringConfigEngine:
             monitoring_window_config: FeatureMonitoringWindowConfig: Monitoring window config.
 
         Returns:
-            pd.DataFrame: Entity data.
+            Tuple[pd.DataFrame, int, int]: Entity data and commit start and end times
         """
         # Lots of work to be done here to suport all the different cases
         time_offset = self.time_range_str_to_time_delta(
@@ -420,14 +428,14 @@ class FeatureMonitoringConfigEngine:
         window_length = self.time_range_str_to_time_delta(
             monitoring_window_config.window_length
         )
+        start_time, end_time = self.get_window_start_end_times(
+            time_offset, window_length
+        )
 
         if entity.ENTITY_TYPE == "featuregroups":
             full_df = (
                 entity.select(features=[feature_name])
-                .as_of(
-                    exclude_until=datetime.now() - time_offset,
-                    wallclock_time=datetime.now() - time_offset + window_length,
-                )
+                .as_of(exclude_until=start_time, wallclock_time=end_time)
                 .read()
             )
         elif entity.ENTITY_TYPE == "featureview":
@@ -436,10 +444,7 @@ class FeatureMonitoringConfigEngine:
             # We also need to pass a training data version if there are transformation
             # functions to apply for get_batch_data to work
             full_df = (
-                entity.query.as_of(
-                    exclude_until=datetime.now() - time_offset,
-                    wallclock_time=datetime.now() - time_offset + window_length,
-                )
+                entity.query.as_of(exclude_until=start_time, wallclock_time=end_time)
                 .read()
                 .select(feature_name)
             )
@@ -449,7 +454,32 @@ class FeatureMonitoringConfigEngine:
                 fraction=(monitoring_window_config.row_percentage / 100)
             )
 
-        return full_df
+        return full_df, start_time, end_time
+
+    def fetch_statistics_based_on_monitoring_window_config(
+        self,
+        entity,  #: Union[feature_group.FeatureGroup, feature_view.FeatureView],
+        feature_name: str,
+        monitoring_window_config: FeatureMonitoringWindowConfig,
+    ) -> FeatureDescriptiveStatistics:
+        """Fetch feature statistics based on a feature monitoring window configuration
+
+        Args:
+            entity: Union[FeatureGroup, FeatureView]: Entity on which statistics where computed.
+            feature_name: str: Name of the feature from which statistics where computed.
+            monitoring_window_config: FeatureMonitoringWindowConfig: Monitoring window config.
+
+        Returns:
+            FeatureDescriptiveStatistics: Descriptive statistics
+        """
+        start_time, end_time = self.get_window_start_end_times(monitoring_window_config)
+        return self._statistics_engine.get_by_feature_commit_time_window_and_row_percentage(
+            entity,
+            feature_name,
+            start_time,
+            end_time,
+            monitoring_window_config.row_percentage,
+        )
 
     def time_range_str_to_time_delta(self, time_range: str) -> timedelta:
         # Dummy method for now
@@ -463,3 +493,9 @@ class FeatureMonitoringConfigEngine:
             time_offset = timedelta(hours=1)
 
         return time_offset
+
+    def get_window_start_end_times(self, time_offset, window_length):
+        return (
+            datetime.now() - time_offset,
+            datetime.now() - time_offset + window_length,
+        )
