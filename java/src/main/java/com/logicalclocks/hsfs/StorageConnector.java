@@ -374,13 +374,13 @@ public abstract class StorageConnector {
     @Getter @Setter
     protected SecurityProtocol securityProtocol;
 
-    @Getter
+    @Getter @Setter
     protected String sslTruststoreLocation;
 
     @Getter @Setter
     protected String sslTruststorePassword;
 
-    @Getter
+    @Getter @Setter
     protected String sslKeystoreLocation;
 
     @Getter @Setter
@@ -394,14 +394,6 @@ public abstract class StorageConnector {
 
     @Getter @Setter
     protected List<Option> options;
-
-    public void setSslTruststoreLocation(String sslTruststoreLocation) {
-      this.sslTruststoreLocation = sslTruststoreLocation;
-    }
-
-    public void setSslKeystoreLocation(String sslKeystoreLocation) {
-      this.sslKeystoreLocation = sslKeystoreLocation;
-    }
 
     @Override
     public Map<String, String> sparkOptions() {
