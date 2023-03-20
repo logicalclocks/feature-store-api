@@ -37,9 +37,7 @@ class FeatureMonitoringWindowConfig:
         specific_id: Optional[int] = None,
         specific_value: Optional[float] = None,
         row_percentage: Optional[int] = None,
-        id: Optional[int] = None,
     ):
-        self._id = id
         self._window_config_type = window_config_type
         self._time_offset = time_offset
         self._window_length = window_length
@@ -54,7 +52,6 @@ class FeatureMonitoringWindowConfig:
 
     def to_dict(self):
         return {
-            "id": self._id,
             "windowConfigType": self._window_config_type,
             "timeOffset": self._time_offset,
             "windowLength": self._window_length,
@@ -71,10 +68,6 @@ class FeatureMonitoringWindowConfig:
 
     def __repr__(self):
         return json.dumps(humps.decamelize(self.to_dict()), indent=2)
-
-    @property
-    def id(self) -> Optional[int]:
-        return self._id
 
     @property
     def window_config_type(self) -> Optional[str]:
