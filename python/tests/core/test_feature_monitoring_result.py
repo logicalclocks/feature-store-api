@@ -34,8 +34,8 @@ class TestFeatureMonitoringResult:
         assert result._execution_id == 123
         assert result._detection_stats_id is None
         assert result._reference_stats_id is None
-        assert isinstance(result.detection_statistics, FeatureDescriptiveStatistics)
-        assert isinstance(result.reference_statistics, FeatureDescriptiveStatistics)
+        assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
+        assert isinstance(result._reference_statistics, FeatureDescriptiveStatistics)
         assert result._config_id == 32
         assert result._monitoring_time == 1676457000000
         assert result._difference == 0.3
@@ -57,8 +57,8 @@ class TestFeatureMonitoringResult:
         assert result._execution_id == 123
         assert result._detection_stats_id is None
         assert result._reference_stats_id is None
-        assert isinstance(result.detection_statistics, FeatureDescriptiveStatistics)
-        assert isinstance(result.reference_statistics, FeatureDescriptiveStatistics)
+        assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
+        assert isinstance(result._reference_statistics, FeatureDescriptiveStatistics)
         assert result._config_id == 32
         assert result._monitoring_time == 1676457000000
         assert result._difference == 0.3
@@ -107,8 +107,8 @@ class TestFeatureMonitoringResult:
         assert result._execution_id == 123
         assert result._detection_stats_id is None
         assert result._reference_stats_id is None
-        assert isinstance(result.detection_statistics, FeatureDescriptiveStatistics)
-        assert isinstance(result.reference_statistics, FeatureDescriptiveStatistics)
+        assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
+        assert isinstance(result._reference_statistics, FeatureDescriptiveStatistics)
         assert result._config_id == 32
         assert result._monitoring_time == 1676457000000
         assert result._difference == 0.3

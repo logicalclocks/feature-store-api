@@ -236,7 +236,7 @@ class StatisticsEngine:
             training_dataset_version,
         )
 
-    def get_by_feature_commit_time_window_and_row_percentage(
+    def get_by_feature_name_time_window_and_row_percentage(
         self,
         metadata_instance,
         feature_name: str,
@@ -256,10 +256,8 @@ class StatisticsEngine:
         Returns:
             FeatureDescriptiveStatistics: Descriptive statistics
         """
-        return (
-            self._statistics_api.get_by_feature_commit_time_window_and_row_percentage(
-                metadata_instance, feature_name, start_time, end_time, row_percentage
-            )
+        return self._statistics_api.get_by_feature_name_time_window_and_row_percentage(
+            metadata_instance, feature_name, start_time, end_time, row_percentage
         )
 
     def _save_statistics(self, stats, td_metadata_instance, feature_view_obj):

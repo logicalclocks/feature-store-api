@@ -19,7 +19,7 @@ import humps
 from typing import Any, Dict, List, Optional, Union
 from hsfs import util
 
-from hsfs.core.feature_monitoring_window_config import FeatureMonitoringWindowConfig
+from hsfs.core.monitoring_window_config import MonitoringWindowConfig
 
 
 class FeatureMonitoringConfig:
@@ -30,12 +30,8 @@ class FeatureMonitoringConfig:
         name: str,
         feature_monitoring_type: str = "DESCRIPTIVE_STATISTICS",
         job_name: Optional[str] = None,
-        detection_window_config: Optional[
-            Union[FeatureMonitoringWindowConfig, dict]
-        ] = None,
-        reference_window_config: Optional[
-            Union[FeatureMonitoringWindowConfig, dict]
-        ] = None,
+        detection_window_config: Optional[Union[MonitoringWindowConfig, dict]] = None,
+        reference_window_config: Optional[Union[MonitoringWindowConfig, dict]] = None,
         statistics_comparison_config: Optional[Dict[str, Any]] = None,
         alert_config: Optional[str] = None,
         scheduler_config: Optional[str] = None,
@@ -69,16 +65,15 @@ class FeatureMonitoringConfig:
             reference_window_config
         )
 
-    @classmethod
     def _parse_window_config(
-        cls, window_config: Optional[Union[FeatureMonitoringWindowConfig, dict]]
+        self, window_config: Optional[Union[MonitoringWindowConfig, dict]]
     ):
         if window_config is None:
             return None
         return (
             window_config
-            if isinstance(window_config, FeatureMonitoringWindowConfig)
-            else FeatureMonitoringWindowConfig.from_response_json(window_config)
+            if isinstance(window_config, MonitoringWindowConfig)
+            else MonitoringWindowConfig.from_response_json(window_config)
         )
 
     @classmethod
@@ -190,11 +185,11 @@ class FeatureMonitoringConfig:
         return self._scheduler_config
 
     @property
-    def detection_window_config(self) -> FeatureMonitoringWindowConfig:
+    def detection_window_config(self) -> MonitoringWindowConfig:
         return self._detection_window_config
 
     @property
-    def reference_window_config(self) -> FeatureMonitoringWindowConfig:
+    def reference_window_config(self) -> MonitoringWindowConfig:
         return self._reference_window_config
 
     @property

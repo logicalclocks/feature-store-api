@@ -217,7 +217,7 @@ class TestFeatureMonitoringResultEngine:
             util.convert_event_time_to_timestamp(after_time) >= result._monitoring_time
         )
 
-    def test_build_query_params_none(self):
+    def test_build_query_params_time_none(self):
         # Arrange
         start_time = None
         end_time = None
@@ -237,7 +237,7 @@ class TestFeatureMonitoringResultEngine:
         assert "filter_by" not in query_params
         assert query_params["sort_by"] == DEFAULT_MONITORING_TIME_SORT_BY
 
-    def test_build_query_params_datetime(self):
+    def test_build_query_params_time_datetime(self):
         # Arrange
         start_time = dateutil.parser.parse("2022-01-01T01:01:01Z")
         end_time = dateutil.parser.parse("2022-02-02T02:02:02Z")
@@ -262,7 +262,7 @@ class TestFeatureMonitoringResultEngine:
         assert query_params["filter_by"][1] == f"monitoring_time_lte:{end_timestamp}"
         assert query_params["sort_by"] == DEFAULT_MONITORING_TIME_SORT_BY
 
-    def test_build_query_params_date(self):
+    def test_build_query_params_time_date(self):
         # Arrange
         start_time = date(year=2022, month=1, day=1)
         end_time = date(year=2022, month=2, day=2)
@@ -287,7 +287,7 @@ class TestFeatureMonitoringResultEngine:
         assert query_params["filter_by"][1] == f"monitoring_time_lte:{end_timestamp}"
         assert query_params["sort_by"] == DEFAULT_MONITORING_TIME_SORT_BY
 
-    def test_build_query_params_str(self):
+    def test_build_query_params_time_str(self):
         # Arrange
         start_time = "2022-01-01 01:01:01"
         end_time = "2022-02-02 02:02:02"
@@ -312,7 +312,7 @@ class TestFeatureMonitoringResultEngine:
         assert query_params["filter_by"][1] == f"monitoring_time_lte:{end_timestamp}"
         assert query_params["sort_by"] == DEFAULT_MONITORING_TIME_SORT_BY
 
-    def test_build_query_params_int(self):
+    def test_build_query_params_time_int(self):
         # Arrange
         start_time = 1640998861000
         end_time = 1643767322000
@@ -334,3 +334,27 @@ class TestFeatureMonitoringResultEngine:
         assert query_params["filter_by"][0] == f"monitoring_time_gte:{start_time}"
         assert query_params["filter_by"][1] == f"monitoring_time_lte:{end_time}"
         assert query_params["sort_by"] == DEFAULT_MONITORING_TIME_SORT_BY
+
+    def test_build_query_params_time_int_with_statistics(self):
+        # Arrange
+        start_time = 1640998861000
+        end_time = 1643767322000
+
+        result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
+        )
+
+        # Act
+        query_params = result_engine._build_query_params(
+            start_time=start_time, end_time=end_time, with_statistics=True
+        )
+
+        # Assert
+        assert isinstance(query_params, dict)
+        assert isinstance(query_params["filter_by"], list)
+        assert len(query_params["filter_by"]) == 2
+        assert query_params["filter_by"][0] == f"monitoring_time_gte:{start_time}"
+        assert query_params["filter_by"][1] == f"monitoring_time_lte:{end_time}"
+        assert query_params["sort_by"] == DEFAULT_MONITORING_TIME_SORT_BY
+        assert query_params["expand"] == "statistics"

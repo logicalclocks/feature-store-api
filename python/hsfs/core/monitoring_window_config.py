@@ -28,7 +28,7 @@ class WindowConfigType:
     SPECIFIC_VALUE = "SPECIFIC_VALUE"
 
 
-class FeatureMonitoringWindowConfig:
+class MonitoringWindowConfig:
     def __init__(
         self,
         window_config_type: Optional[str] = WindowConfigType.SPECIFIC_VALUE,

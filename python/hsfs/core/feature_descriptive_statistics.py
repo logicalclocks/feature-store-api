@@ -25,46 +25,50 @@ class FeatureDescriptiveStatistics:
     def __init__(
         self,
         feature_type: str,
-        min: float,
-        max: float,
-        sum: float,
         count: int,
-        mean: float,
-        stddev: float,
+        end_time: Union[int, datetime, date, str],
+        row_percentage: int,
+        # for any feature type
         completeness: Optional[float] = None,
         num_non_null_values: Optional[int] = None,
         num_null_values: Optional[int] = None,
+        approx_num_distinct_values: Optional[int] = None,
+        # for numerical features
+        min: Optional[float] = None,
+        max: Optional[float] = None,
+        sum: Optional[float] = None,
+        mean: Optional[float] = None,
+        stddev: Optional[float] = None,
+        percentiles: Optional[Mapping[str, float]] = None,
+        # with exact uniqueness
         distinctness: Optional[float] = None,
         entropy: Optional[float] = None,
         uniqueness: Optional[float] = None,
-        approx_num_distinct_values: Optional[int] = None,
         exact_num_distinct_values: Optional[int] = None,
-        percentiles: Optional[Mapping[str, float]] = None,
-        id: Optional[int] = None,
+        # for filtering
         start_time: Optional[Union[int, datetime, date, str]] = None,
-        end_time: Optional[Union[int, datetime, date, str]] = None,
-        row_percentage: Optional[int] = None,
+        id: Optional[int] = None,
     ):
         self._id = id
         self._feature_type = feature_type
-        self._min = min
-        self._max = max
-        self._sum = sum
         self._count = count
-        self._mean = mean
-        self._stddev = stddev
+        self._end_time = end_time
+        self._row_percentage = row_percentage
         self._completeness = completeness
         self._num_non_null_values = num_non_null_values
         self._num_null_values = num_null_values
+        self._approx_num_distinct_values = approx_num_distinct_values
+        self._min = min
+        self._max = max
+        self._sum = sum
+        self._mean = mean
+        self._stddev = stddev
+        self._percentiles = percentiles
         self._distinctness = distinctness
         self._entropy = entropy
         self._uniqueness = uniqueness
-        self._approx_num_distinct_values = approx_num_distinct_values
         self._exact_num_distinct_values = exact_num_distinct_values
-        self._percentiles = percentiles
         self._start_time = start_time
-        self._end_time = end_time
-        self._row_percentage = row_percentage
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -74,9 +78,12 @@ class FeatureDescriptiveStatistics:
     @classmethod
     def from_deequ_json(cls, json_dict):
         # TODO: to be removed after replacing deequ
-        # common for all data types
         stats_dict = {
             "feature_type": json_dict["dataType"],
+            "count": json_dict["numRecordsNull"] + json_dict["numRecordsNonNull"],
+            "end_time": None,
+            "row_percentage": None,
+            # common for all data types
             "completeness": json_dict["completeness"],
             "num_non_null_values": json_dict["numRecordsNonNull"],
             "num_null_values": json_dict["numRecordsNull"],
@@ -94,9 +101,6 @@ class FeatureDescriptiveStatistics:
             stats_dict["min"] = json_dict["minimum"]
             stats_dict["max"] = json_dict["maximum"]
             stats_dict["sum"] = json_dict["sum"]
-            stats_dict["count"] = (
-                json_dict["numRecordsNull"] + json_dict["numRecordsNonNull"]
-            )
             stats_dict["mean"] = json_dict["mean"]
             stats_dict["stddev"] = json_dict["stdDev"]
 
@@ -106,15 +110,12 @@ class FeatureDescriptiveStatistics:
         return {
             "id": self._id,
             "featureType": self._feature_type,
+            "count": self._count,
             "min": self._min,
             "max": self._max,
             "sum": self._sum,
-            "count": self._count,
             "mean": self._mean,
             "stddev": self._stddev,
-            "startTime": self._start_time,
-            "endTime": self._end_time,
-            "rowPercentage": self._row_percentage,
             "completeness": self._completeness,
             "numNonNullValues": self._num_non_null_values,
             "numNullValues": self._num_null_values,
@@ -124,6 +125,9 @@ class FeatureDescriptiveStatistics:
             "approxNumDistinctValues": self._approx_num_distinct_values,
             "exactNumDistinctValues": self._exact_num_distinct_values,
             "percentiles": self._percentiles,
+            "startTime": self._start_time,
+            "endTime": self._end_time,
+            "rowPercentage": self._row_percentage,
         }
 
     def json(self) -> str:
@@ -144,32 +148,8 @@ class FeatureDescriptiveStatistics:
         return self._feature_type
 
     @property
-    def min(self) -> float:
-        return self._min
-
-    @property
-    def max(self) -> float:
-        return self._max
-
-    @property
-    def sum(self) -> float:
-        return self._sum
-
-    @property
     def count(self) -> int:
         return self._count
-
-    @property
-    def mean(self) -> float:
-        return self._mean
-
-    @property
-    def stddev(self) -> float:
-        return self._stddev
-
-    @property
-    def start_time(self) -> int:
-        return self._start_time
 
     @property
     def end_time(self) -> int:
@@ -192,6 +172,34 @@ class FeatureDescriptiveStatistics:
         return self._num_null_values
 
     @property
+    def approx_num_distinct_values(self) -> Optional[int]:
+        return self._approx_num_distinct_values
+
+    @property
+    def min(self) -> Optional[float]:
+        return self._min
+
+    @property
+    def max(self) -> Optional[float]:
+        return self._max
+
+    @property
+    def sum(self) -> Optional[float]:
+        return self._sum
+
+    @property
+    def mean(self) -> Optional[float]:
+        return self._mean
+
+    @property
+    def stddev(self) -> Optional[float]:
+        return self._stddev
+
+    @property
+    def percentiles(self) -> Optional[Mapping[str, float]]:
+        return self._percentiles
+
+    @property
     def distinctness(self) -> Optional[float]:
         return self._distinctness
 
@@ -204,13 +212,9 @@ class FeatureDescriptiveStatistics:
         return self._uniqueness
 
     @property
-    def approx_num_distinct_values(self) -> Optional[int]:
-        return self._approx_num_distinct_values
-
-    @property
     def exact_num_distinct_values(self) -> Optional[int]:
         return self._exact_num_distinct_values
 
     @property
-    def percentiles(self) -> Optional[Mapping[str, float]]:
-        return self._percentiles
+    def start_time(self) -> Optional[int]:
+        return self._start_time

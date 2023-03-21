@@ -188,9 +188,9 @@ class FeatureMonitoringResultEngine:
 
         Args:
             fm_config: FeatureMonitoringConfig. Feature monitoring configuration.
-            detection_statistics: FeatureDescriptiveStatistics. Computed statistics for detection data.
+            detection_statistics: FeatureDescriptiveStatistics. Computed statistics from detection data.
             reference_statistics: Optional[Union[FeatureDescriptiveStatistics, int, float]].
-                Computed statistics for reference data.
+                Computed statistics from reference data, or a specific value to use as reference.
 
         Returns:
             FeatureMonitoringResult. Feature monitoring result.
@@ -200,7 +200,7 @@ class FeatureMonitoringResultEngine:
             difference, shift_detected = self._compute_difference_and_shift(
                 fm_config,
                 detection_statistics,
-                fm_config.reference_window_config.specific_value,
+                reference_statistics,
             )
         else:
             difference = 0
@@ -218,16 +218,16 @@ class FeatureMonitoringResultEngine:
     def _compute_difference_and_shift(
         self,
         fm_config: FeatureMonitoringConfig,
-        detection_stats: FeatureDescriptiveStatistics,
-        reference_stats: Union[FeatureDescriptiveStatistics, int, float],
+        detection_statistics: FeatureDescriptiveStatistics,
+        reference_statistics: Union[FeatureDescriptiveStatistics, int, float],
     ) -> Tuple[float, bool]:
         """Compute the difference and detect shift between the reference and detection statistics.
 
         Args:
             fm_config: FeatureMonitoringConfig. Feature monitoring configuration.
-            detection_statistics: FeatureDescriptiveStatistics. Computed statistics for detection data.
+            detection_statistics: FeatureDescriptiveStatistics. Computed statistics from detection data.
             reference_statistics: Union[FeatureDescriptiveStatistics, int, float].
-                Computed statistics for reference data or a specific value.
+                Computed statistics from reference data, or a specific value to use as reference.
 
         Returns:
             `(float, bool)`. The difference between the reference and detection statistics,
@@ -235,8 +235,8 @@ class FeatureMonitoringResultEngine:
         """
 
         difference = self._compute_difference_between_stats(
-            detection_stats=detection_stats,
-            reference_stats=reference_stats,
+            detection_statistics,
+            reference_statistics,
             metric=fm_config.statistics_comparison_config["compare_on"].lower(),
             relative=fm_config.statistics_comparison_config["relative"],
         )
@@ -257,17 +257,17 @@ class FeatureMonitoringResultEngine:
 
     def _compute_difference_between_stats(
         self,
-        detection_stats: FeatureDescriptiveStatistics,
-        reference_stats: Union[FeatureDescriptiveStatistics, int, float],
+        detection_statistics: FeatureDescriptiveStatistics,
+        reference_statistics: Union[FeatureDescriptiveStatistics, int, float],
         metric: str,
         relative: bool = False,
     ) -> float:
         """Compute the difference between the reference and detection statistics.
 
         Args:
-            detection_stats: FeatureDescriptiveStatistics. The statistics computed from detection data.
-            reference_stats: Union[FeatureDescriptiveStatistics, int, float].
-                The statistics computed from reference data or a specific value
+            detection_statistics: FeatureDescriptiveStatistics. Computed statistics from detection data.
+            reference_statistics: Union[FeatureDescriptiveStatistics, int, float].
+                Computed statistics from reference data, or a specific value to use as reference
             metric: `str`. The metric to compute the difference for.
             relative: `bool`. Whether to compute the relative difference or not.
 
@@ -275,11 +275,11 @@ class FeatureMonitoringResultEngine:
             `float`. The difference between the reference and detection statistics.
         """
 
-        detection_value = detection_stats[metric]
+        detection_value = detection_statistics[metric]
         reference_value = (
-            reference_stats
-            if isinstance(reference_stats, (int, float))
-            else reference_stats[metric]
+            reference_statistics
+            if isinstance(reference_statistics, (int, float))
+            else reference_statistics[metric]
         )
         return self._compute_difference_between_specific_values(
             detection_value, reference_value, relative
