@@ -221,36 +221,37 @@ class ArrowFlightClient:
         return filter_expression
 
     def _resolve_logic(self, l, featuregroups):
-        logic_type = l._type
+        filter_expression = {}
+        filter_expression["type"] = "logic"
+        filter_expression["logic_type"] = l._type
         if l._left_f:
-            left_filter = self._resolve_filter(l._left_f, featuregroups)
+            filter_expression["left_filter"] = self._resolve_filter(l._left_f, featuregroups)
         elif l._left_l:
-            left_filter = self._resolve_logic(l._left_l, featuregroups)
+            filter_expression["left_filter"] = self._resolve_logic(l._left_l, featuregroups)
         else:
-            left_filter = None
+            filter_expression["left_filter"] = None
 
         if l._right_f:
-            right_filter = self._resolve_filter(l._right_f, featuregroups)
+            filter_expression["right_filter"] = self._resolve_filter(l._right_f, featuregroups)
         elif l._right_l:
-            right_filter = self._resolve_logic(l._right_l, featuregroups)
+            filter_expression["right_filter"] = self._resolve_logic(l._right_l, featuregroups)
         else:
-            right_filter = None
-
-        filter_expression = (left_filter, logic_type, right_filter)
+            filter_expression["right_filter"] = None
 
         return filter_expression
 
     def _resolve_filter(self, filter, featuregroups):
-        condition = filter._condition
-        value = filter._value
+        filter_expression = {}
+        filter_expression["type"] = "filter"
+        filter_expression["condition"] = filter._condition
+        filter_expression["value"] = filter._value
         feature_name = filter._feature._name
         feature_type = filter._feature._type
         feature_group_name = featuregroups[filter._feature._feature_group_id]
-        feature = f"{feature_group_name}.{feature_name}"
+        filter_expression["feature"] = f"{feature_group_name}.{feature_name}"
         numeric_types = ["bigint", "tinyint", "smallint", "int", "float", "double"]
-        numeric = feature_type in numeric_types
+        filter_expression["numeric"] = feature_type in numeric_types
 
-        filter_expression = (feature, condition, value, numeric)
         return filter_expression
 
     def _info_to_ticket(self, info):
