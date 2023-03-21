@@ -15,7 +15,6 @@
 #
 
 from typing import Any, Dict, Optional, Union
-import pandas as pd
 from datetime import datetime, timedelta
 
 from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
@@ -428,7 +427,7 @@ class FeatureMonitoringConfigEngine:
         start_time: int,
         end_time: int,
         row_percentage: int = 100,
-    ) -> pd.DataFrame:
+    ):
         """Fetch the entity data based on time window and row percentage.
 
         Args:
@@ -439,7 +438,7 @@ class FeatureMonitoringConfigEngine:
             row_percentage: Percentage of rows to include
 
         Returns:
-            pd.DataFrame: Entity data
+            `pyspark.DataFrame`. A Spark DataFrame with the entity data
         """
         if entity.ENTITY_TYPE == "featuregroups":
             full_df = (
