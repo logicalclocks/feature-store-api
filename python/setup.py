@@ -25,7 +25,7 @@ setup(
         "numpy",
         "pyjks",
         "mock",
-        "avro==1.10.2",
+        "avro==1.11.0",
         "sqlalchemy",
         "PyMySQL[rsa]",
         "great_expectations==0.14.12",
