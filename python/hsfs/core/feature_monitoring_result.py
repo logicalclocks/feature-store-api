@@ -51,14 +51,14 @@ class FeatureMonitoringResult:
         self._execution_id = execution_id
         self._config_id = config_id
 
-        self._detection_stats_id = detection_stats_id
-        self._reference_stats_id = reference_stats_id
-        self._detection_statistics = self._parse_feature_statistics(
-            detection_statistics
-        )
-        self._reference_statistics = self._parse_feature_statistics(
-            reference_statistics
-        )
+        (
+            self._detection_stats_id,
+            self._detection_statistics,
+        ) = self._parse_feature_statistics(detection_stats_id, detection_statistics)
+        (
+            self._reference_stats_id,
+            self._reference_statistics,
+        ) = self._parse_feature_statistics(reference_stats_id, reference_statistics)
 
         self._monitoring_time = util.convert_event_time_to_timestamp(monitoring_time)
         self._difference = difference
@@ -66,14 +66,17 @@ class FeatureMonitoringResult:
 
     @classmethod
     def _parse_feature_statistics(
-        cls, statistics: Optional[Union[FeatureDescriptiveStatistics, dict]]
+        cls,
+        stats_id: Optional[int],
+        statistics: Optional[Union[FeatureDescriptiveStatistics, dict]],
     ):
         if statistics is None:
-            return None
+            return stats_id, None
         return (
+            None,
             statistics
             if isinstance(statistics, FeatureDescriptiveStatistics)
-            else FeatureDescriptiveStatistics.from_response_json(statistics)
+            else FeatureDescriptiveStatistics.from_response_json(statistics),
         )
 
     @classmethod
@@ -98,11 +101,13 @@ class FeatureMonitoringResult:
             "difference": self._difference,
             "shiftDetected": self._shift_detected,
         }
-        if self._detection_statistics is not None:
-            del result_json["detectionStatsId"]
+        if self._detection_statistics is None:
+            result_json["detectionStatsId"] = self._detection_stats_id
+        else:
             result_json["detectionStatistics"] = self._detection_statistics.to_dict()
-        if self._reference_statistics is not None:
-            del result_json["referenceStatsId"]
+        if self._reference_statistics is None:
+            result_json["referenceStatsId"] = self._reference_stats_id
+        else:
             result_json["referenceStatistics"] = self._reference_statistics.to_dict()
 
         return result_json

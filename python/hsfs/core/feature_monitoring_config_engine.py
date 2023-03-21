@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 import pandas as pd
 from datetime import datetime, timedelta
 
@@ -355,7 +355,7 @@ class FeatureMonitoringConfigEngine:
         monitoring_window_config: FeatureMonitoringWindowConfig,
         feature_name: str,
         check_existing: bool = False,
-    ) -> FeatureDescriptiveStatistics:
+    ) -> Union[FeatureDescriptiveStatistics, float]:
         """Fetch the entity data based on monitoring window configuration and compute statistics.
 
         Args:
@@ -365,7 +365,7 @@ class FeatureMonitoringConfigEngine:
             check_existing: bool: Whether to check for existing stats.
 
         Returns:
-            FeatureDescriptiveStatitics: Descriptive statistics
+            Union[FeatureDescriptiveStatitics, float]: Descriptive statistics or a specific value
         """
 
         if (
