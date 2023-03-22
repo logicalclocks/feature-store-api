@@ -184,6 +184,12 @@ class ArrowFlightClient:
         features[fg_name] = updated_features
 
     def _collect_featuregroups_features_and_filters(self, query):
+        featuregroups, features, filters = self._collect_featuregroups_features_and_filters_rec(query)
+        for feature in features:
+            features[feature] = list(features[feature])
+        return featuregroups, features, filters
+
+    def _collect_featuregroups_features_and_filters_rec(self, query):
         featuregroups = {}
         fg = query._left_feature_group
         fg_name = f"{fg.feature_store_name.replace('_featurestore','')}.{fg.name}_{fg.version}" # featurestore.name_version
