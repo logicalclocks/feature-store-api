@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-import pickle
+import json
 import pyarrow
 import pyarrow.flight
 from pyarrow.flight import FlightServerError
@@ -85,9 +85,9 @@ class ArrowFlightClient:
         with open(self._client._get_jks_trust_store_path(), "rb") as f:
             tstore = f.read()
         cert_key = self._client._cert_key
-        certificates_pickled = pickle.dumps((kstore,tstore,cert_key)) # TODO dump kstore, tstore, priv-key
-        certificates_pickled_buf = pyarrow.py_buffer(certificates_pickled)
-        action = pyarrow.flight.Action("register-client-certificates", certificates_pickled_buf)
+        certificates_json = json.dumps({"kstore": kstore, "tstore": tstore, "cert_key": cert_key}).encode("ascii")
+        certificates_json_buf = pyarrow.py_buffer(certificates_json)
+        action = pyarrow.flight.Action("register-client-certificates", certificates_json_buf)
         try:
             self._connection.do_action(action)
         except pyarrow.lib.ArrowIOError as e:
@@ -102,7 +102,7 @@ class ArrowFlightClient:
     def read_query(self, query, query_str):
         if not self._is_enabled:
             raise Exception("Arrow Flight Service is not enabled.")
-        query_encoded = pickle.dumps(self._get_query_object(query, query_str))
+        query_encoded = json.dumps(self._get_query_object(query, query_str)).encode("ascii")
         descriptor = pyarrow.flight.FlightDescriptor.for_command(query_encoded)
         return self._get_dataset(descriptor)
 
@@ -126,7 +126,7 @@ class ArrowFlightClient:
             raise Exception("Arrow Flight Service is not enabled.")
         training_dataset_metadata = self._training_dataset_metadata_from_feature_view(feature_view, tds_version)
         try:
-            training_dataset_encoded = pickle.dumps(training_dataset_metadata)
+            training_dataset_encoded = json.dumps(training_dataset_metadata).encode("ascii")
             buf = pyarrow.py_buffer(training_dataset_encoded)
             action = pyarrow.flight.Action("create-training-dataset", buf)
             for result in self._connection.do_action(action):
