@@ -202,9 +202,12 @@ class FeatureMonitoringResultEngine:
                 detection_statistics,
                 reference_statistics,
             )
+            if not isinstance(reference_statistics, FeatureDescriptiveStatistics):
+                # if specific value, don't save it with the fm result
+                reference_statistics = None
         else:
-            difference = 0
-            shift_detected = False
+            difference = None
+            shift_detected = None
 
         return self.save_feature_monitoring_result(
             config_id=fm_config.id,
@@ -275,11 +278,11 @@ class FeatureMonitoringResultEngine:
             `float`. The difference between the reference and detection statistics.
         """
 
-        detection_value = detection_statistics[metric]
+        detection_value = detection_statistics.get_value(metric)
         reference_value = (
             reference_statistics
             if isinstance(reference_statistics, (int, float))
-            else reference_statistics[metric]
+            else reference_statistics.get_value(metric)
         )
         return self._compute_difference_between_specific_values(
             detection_value, reference_value, relative

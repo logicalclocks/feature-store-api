@@ -21,7 +21,7 @@ class TestFeatureMonitoringConfig:
         # Arrange
         config_json = backend_fixtures["feature_monitoring_config"][
             "get_via_feature_group"
-        ]["response"]
+        ]["detection_insert_reference_snapshot"]["response"]
 
         # Act
         config = FeatureMonitoringConfig.from_response_json(config_json)
@@ -53,7 +53,7 @@ class TestFeatureMonitoringConfig:
         # Arrange
         config_json = backend_fixtures["feature_monitoring_config"][
             "get_via_feature_view"
-        ]["response"]
+        ]["detection_insert_reference_snapshot"]["response"]
 
         # Act
         config = FeatureMonitoringConfig.from_response_json(config_json)
@@ -85,8 +85,8 @@ class TestFeatureMonitoringConfig:
     def test_from_response_json_stats_only_via_fg(self, backend_fixtures):
         # Arrange
         config_json = backend_fixtures["feature_monitoring_config"][
-            "get_scheduled_stats_only_via_feature_group"
-        ]["response"]
+            "get_via_feature_group"
+        ]["detection_insert_scheduled_stats_only"]["response"]
 
         # Act
         config = FeatureMonitoringConfig.from_response_json(config_json)
@@ -110,8 +110,8 @@ class TestFeatureMonitoringConfig:
     def test_from_response_json_stats_only_via_fv(self, backend_fixtures):
         # Arrange
         config_json = backend_fixtures["feature_monitoring_config"][
-            "get_scheduled_stats_only_via_feature_view"
-        ]["response"]
+            "get_via_feature_view"
+        ]["detection_insert_scheduled_stats_only"]["response"]
 
         # Act
         config = FeatureMonitoringConfig.from_response_json(config_json)

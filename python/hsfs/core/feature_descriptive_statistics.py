@@ -22,6 +22,23 @@ from datetime import datetime, date
 
 
 class FeatureDescriptiveStatistics:
+    _SINGLE_VALUE_STATISTICS = [
+        "count",
+        "completeness",
+        "num_non_null_values",
+        "num_null_values",
+        "approx_num_distinct_values",
+        "min",
+        "max",
+        "sum",
+        "mean",
+        "stddev",
+        "distinctness",
+        "entropy",
+        "uniqueness",
+        "exact_num_distinct_values",
+    ]
+
     def __init__(
         self,
         feature_type: str,
@@ -69,6 +86,15 @@ class FeatureDescriptiveStatistics:
         self._uniqueness = uniqueness
         self._exact_num_distinct_values = exact_num_distinct_values
         self._start_time = start_time
+
+    def get_value(self, name):
+        stat_name = name.lower()
+        if stat_name not in self._SINGLE_VALUE_STATISTICS:
+            return None
+        try:
+            return getattr(self, stat_name)
+        except KeyError:
+            raise AttributeError(f"'{name}' statistic has not been computed")
 
     @classmethod
     def from_response_json(cls, json_dict):

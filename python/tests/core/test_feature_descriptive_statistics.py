@@ -239,7 +239,7 @@ class TestFeatureDescriptiveStatistics:
         # Arrange
         result_json = backend_fixtures["feature_monitoring_result"][
             "get_via_feature_group"
-        ]["response"]
+        ]["detection_and_reference_statistics"]["response"]
 
         # Act
         result = FeatureMonitoringResult.from_response_json(result_json)
@@ -299,7 +299,7 @@ class TestFeatureDescriptiveStatistics:
         # Arrange
         result_json = backend_fixtures["feature_monitoring_result"][
             "get_via_feature_view"
-        ]["response"]
+        ]["detection_and_reference_statistics"]["response"]
 
         # Act
         result = FeatureMonitoringResult.from_response_json(result_json)
@@ -361,7 +361,7 @@ class TestFeatureDescriptiveStatistics:
         # Arrange
         result_json = backend_fixtures["feature_monitoring_result"][
             "get_list_with_statistics"
-        ]["response"]
+        ]["detection_and_reference_statistics"]["response"]
 
         # Act
         result_list = FeatureMonitoringResult.from_response_json(result_json)
