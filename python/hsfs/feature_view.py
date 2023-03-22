@@ -18,6 +18,9 @@ import json
 import warnings
 from datetime import datetime, date
 from typing import Optional, Union, List, Dict, Any
+import pandas as pd
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 import humps
@@ -2127,6 +2130,100 @@ class FeatureView:
             `hsfs.client.exceptions.RestAPIError` in case the backend fails to delete the training datasets.
         """
         self._feature_view_engine.delete_training_data(self)
+
+    def _enable_scheduled_statistics_monitoring(
+        self,
+        name: str,
+        job_frequency: str = "DAILY",
+        feature_name: Optional[str] = None,
+        description: Optional[str] = None,
+        start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+    ) -> FeatureMonitoringConfig:
+        """Run a job to compute statistics on snapshot of feature data on a schedule.
+
+        # Arguments
+            name: Name of the feature monitoring configuration.
+                name must be unique for all configurations attached to the feature group.
+            feature_name: Name of the feature to monitor.
+            job_frequency: Frequency at which to compute the statistics for the feature.
+                Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
+            description: Description of the feature monitoring configuration.
+            start_date_time: Start date and time from which to start computing statistics.
+
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+
+        # Return
+            `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
+                Additional information are required before feature monitoring is enabled.
+        """
+        if self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
+            )
+
+        if start_date_time is None:
+            start_date_time = util.convert_event_time_to_timestamp(datetime.now())
+
+        return FeatureMonitoringConfig(
+            feature_view_id=self._id,
+            feature_store_id=self._featurestore_id,
+            name=name,
+            feature_name=feature_name,
+            description=description,
+            feature_monitoring_type="SCHEDULED_STATISTICS",
+            scheduler_config=job_frequency
+            + " "
+            + str(util.convert_event_time_to_timestamp(start_date_time)),
+            enabled=True,
+        )
+
+    def _enable_feature_monitoring(
+        self,
+        name: str,
+        feature_name: str,
+        job_frequency: str = "DAILY",
+        description: Optional[str] = None,
+        start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+    ) -> FeatureMonitoringConfig:
+        """Enable feature monitoring to compare statistics on snapshots of feature data over time.
+
+        # Arguments
+            name: Name of the feature monitoring configuration.
+                name must be unique for all configurations attached to the feature group.
+            feature_name: Name of the feature to monitor.
+            job_frequency: Frequency at which to compute the statistics for the feature.
+                Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
+            description: Description of the feature monitoring configuration.
+            start_date_time: Start date and time from which to start computing statistics.
+
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+
+        # Return
+            `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
+                Additional information are required before feature monitoring is enabled.
+        """
+        if self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can enable feature monitoring."
+            )
+
+        if start_date_time is None:
+            start_date_time = util.convert_event_time_to_timestamp(datetime.now())
+
+        return FeatureMonitoringConfig(
+            feature_view_id=self._id,
+            feature_store_id=self._featurestore_id,
+            name=name,
+            feature_name=feature_name,
+            description=description,
+            feature_monitoring_type="DESCRIPTIVE_STATISTICS",
+            scheduler_config=job_frequency
+            + " "
+            + str(util.convert_event_time_to_timestamp(start_date_time)),
+            enabled=True,
+        )
 
     @classmethod
     def from_response_json(cls, json_dict):

@@ -152,6 +152,73 @@ class FeatureMonitoringConfig:
     def __repr__(self):
         return json.dumps(humps.decamelize(self.to_dict()), indent=2)
 
+    def detection_window(
+        self,
+        time_offset: Optional[str],
+        window_length: Optional[str],
+        row_percentage: Optional[int],
+    ) -> "FeatureMonitoringConfig":
+        # TODO: Add input verification steps
+
+        self._detection_window_config = {
+            "window_config_type": "INSERT",
+            "time_offset": time_offset,
+            "window_length": window_length,
+            "row_percentage": row_percentage,
+        }
+
+        # TODO: Should this be saved with the backend automatically?
+
+        return self
+
+    def reference_window(
+        self,
+        time_offset: Optional[str],
+        window_length: Optional[str],
+        row_percentage: Optional[int],
+        specific_value: Optional[float],
+        specific_id: Optional[int],
+    ) -> "FeatureMonitoringConfig":
+        # TODO: Add input verification steps
+        self._reference_window_config = {
+            "window_config_type": "INSERT",
+            "time_offset": time_offset,
+            "window_length": window_length,
+            "specific_value": specific_value,
+            "specific_id": specific_id,
+            "row_percentage": row_percentage,
+        }
+
+        return self
+
+    def compare_on(
+        self,
+        metric: Optional[str],
+        threshold: Optional[float],
+        strict: Optional[bool] = False,
+        relative: Optional[bool] = False,
+    ) -> "FeatureMonitoringConfig":
+        # TODO: Add input verification steps
+
+        self._statistics_comparison_config = {
+            "compare_on": metric,
+            "threshold": threshold,
+            "strict": strict,
+            "relative": relative,
+        }
+
+        return self
+
+    def alert_on(
+        self,
+        severity: Optional[str],
+        channel: Optional[str],
+    ) -> "FeatureMonitoringConfig":
+        # TODO: Fake the method for now
+        self._alert_config = severity + "_" + channel
+
+        return self
+
     @property
     def id(self) -> Optional[int]:
         return self._id
