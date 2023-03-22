@@ -40,6 +40,7 @@ FIXTURES = [
     "ingestion_job",
     "inode",
     "job",
+    "job_scheduler",
     "join",
     "logic",
     "prepared_statement_parameter",

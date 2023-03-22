@@ -16,8 +16,9 @@
 
 
 import json
+from hsfs.core.job_scheduler import JobScheduler
 import humps
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from hsfs import util
 
 
@@ -33,7 +34,7 @@ class FeatureMonitoringConfig:
         reference_window_config: Optional[Dict[str, Any]] = None,
         statistics_comparison_config: Optional[Dict[str, Any]] = None,
         alert_config: Optional[str] = None,
-        scheduler_config: Optional[str] = None,
+        scheduler_config: Optional[Union[Dict[str, Any], JobScheduler]] = None,
         enabled: bool = True,
         id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
@@ -184,7 +185,7 @@ class FeatureMonitoringConfig:
         return self._alert_config
 
     @property
-    def scheduler_config(self) -> Optional[str]:
+    def scheduler_config(self) -> Optional[JobScheduler]:
         return self._scheduler_config
 
     @property
