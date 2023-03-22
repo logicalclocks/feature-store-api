@@ -36,7 +36,7 @@ class TestJobScheduler:
         assert schedule.enabled is True
         assert (
             schedule.job_name
-            == "fg_or_fv_name_version_fm_config_name_rn_feature_monitoring"
+            == "fg_or_fv_name_version_fm_config_name_run_feature_monitoring"
         )
         assert (
             schedule._href

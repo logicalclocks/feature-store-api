@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from typing import Any, Dict, Hashable, Optional, Tuple
+from typing import Any, Dict, Hashable, Optional, Tuple, Union
 import pandas as pd
 from datetime import datetime, timedelta
 from hsfs import engine
@@ -27,6 +27,7 @@ from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 
 from hsfs.core.job import Job
 from hsfs.core.job_api import JobApi
+from hsfs.core.job_scheduler import JobScheduler
 
 DEFAULT_REFERENCE_STATS_ID = 234
 
@@ -73,7 +74,7 @@ class FeatureMonitoringConfigEngine:
         name: str,
         feature_name: str,
         detection_window_config: Dict[str, Any],
-        scheduler_config: Optional[str] = None,
+        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
         description: Optional[str] = None,
     ) -> FeatureMonitoringConfig:
         """Enable descriptive statistics monitoring for a feature.
@@ -85,7 +86,7 @@ class FeatureMonitoringConfigEngine:
                 Name of the feature to monitor.
             detection_window_config: Dict[str, Any], required
                 Configuration of the detection window.
-            scheduler_config: str, optional
+            scheduler_config: Union[JobScheduler, Dict[str, Any]], optional
                 Configuration of the scheduler.
             description: str, optional
                 Description of the monitoring configuration.
@@ -113,7 +114,7 @@ class FeatureMonitoringConfigEngine:
         reference_window_config: Dict[str, Any],
         statistics_comparison_config: Dict[str, Any],
         alert_config: str,
-        scheduler_config: str,
+        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
         description: Optional[str] = None,
     ) -> FeatureMonitoringConfig:
         """Enable feature monitoring for a feature.
@@ -131,7 +132,7 @@ class FeatureMonitoringConfigEngine:
                 Configuration of the statistics comparison.
             alert_config: str, optional
                 Configuration of the alert.
-            scheduler_config: str, required
+            scheduler_config: Union[JobScheduler, Dict[str, Any]], optional
                 Configuration of the scheduler.
             description: str, optional
                 Description of the monitoring configuration.
@@ -196,7 +197,7 @@ class FeatureMonitoringConfigEngine:
         name: str,
         feature_name: str,
         detection_window_config: Dict[str, Any],
-        scheduler_config: Dict[str, Any],
+        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
         description: Optional[str] = None,
     ) -> FeatureMonitoringConfig:
         """Builds a feature monitoring config for descriptive statistics only.
@@ -208,7 +209,7 @@ class FeatureMonitoringConfigEngine:
                 Name of the feature to monitor.
             detection_window_config: Dict[str, Any], required
                 Configuration of the detection window.
-            scheduler_config: str, required
+            scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]], optional
                 Configuration of the scheduler.
             description: str, optional
                 Description of the monitoring configuration.
@@ -240,7 +241,7 @@ class FeatureMonitoringConfigEngine:
         detection_window_config: Dict[str, Any],
         reference_window_config: Dict[str, Any],
         statistics_comparison_config: Dict[str, Any],
-        scheduler_config: str,
+        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]],
         alert_config: str,
         description: Optional[str] = None,
     ) -> FeatureMonitoringConfig:
@@ -257,7 +258,7 @@ class FeatureMonitoringConfigEngine:
                 Configuration of the reference window.
             statistics_comparison_config: Dict[str, Any], required
                 Configuration of the statistics comparison.
-            scheduler_config: str, required
+            scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]], optional
                 Configuration of the scheduler.
             alert_config: str, optional
                 Configuration of the alert.

@@ -2,9 +2,9 @@
   "get": {
     "response": {
       "id": 222,
-      "job_name": "fg_or_fv_name_version_fm_config_name_rn_feature_monitoring",
-      "start_date_time": 1676457000,
-      "job_frequency": "DAILY",
+      "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+      "startDateTime": 1676457000,
+      "jobFrequency": "DAILY",
       "enabled": true,
       "href": "https://hopsworks.ai/hopsworks-api/project/33/jobs/111/schedulev2/222"
     }
