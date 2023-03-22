@@ -56,7 +56,7 @@ class FeatureMonitoringConfig:
         self._job_name = job_name
         self._feature_monitoring_type = feature_monitoring_type
         self._enabled = enabled
-        self._scheduler_config = scheduler_config
+        self._scheduler_config = self._parse_schedule_config(scheduler_config)
         self._alert_config = alert_config
         self._statistics_comparison_config = statistics_comparison_config
         self._detection_window_config = self._parse_window_config(
@@ -86,6 +86,17 @@ class FeatureMonitoringConfig:
             return [cls(**config) for config in json_decamelized["items"]]
         else:
             return cls(**json_decamelized)
+
+    def _parse_schedule_config(
+        self, schedule_config: Optional[Union[JobScheduler, dict]]
+    ):
+        if schedule_config is None:
+            return None
+        return (
+            schedule_config
+            if isinstance(schedule_config, JobScheduler)
+            else JobScheduler.from_response_json(schedule_config)
+        )
 
     def to_dict(self):
         detection_window_config = (
@@ -121,7 +132,7 @@ class FeatureMonitoringConfig:
             "description": self._description,
             "jobName": self._job_name,
             "featureMonitoringType": self._feature_monitoring_type,
-            "schedulerConfig": self._scheduler_config,
+            "schedulerConfig": self._scheduler_config.to_dict(),
             "alertConfig": self._alert_config,
             "detectionWindowConfig": detection_window_config,
             "referenceWindowConfig": reference_window_config,
