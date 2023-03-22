@@ -15,6 +15,7 @@
 #
 
 import json
+import base64
 import pyarrow
 import pyarrow.flight
 from pyarrow.flight import FlightServerError
@@ -82,8 +83,10 @@ class ArrowFlightClient:
     def _register_certificates(self):
         with open(self._client._get_jks_key_store_path(), "rb") as f:
             kstore = f.read()
+            kstore = base64.b64encode(kstore).decode('utf-8')
         with open(self._client._get_jks_trust_store_path(), "rb") as f:
             tstore = f.read()
+            tstore = base64.b64encode(tstore).decode('utf-8')
         cert_key = self._client._cert_key
         certificates_json = json.dumps({"kstore": kstore, "tstore": tstore, "cert_key": cert_key}).encode("ascii")
         certificates_json_buf = pyarrow.py_buffer(certificates_json)
