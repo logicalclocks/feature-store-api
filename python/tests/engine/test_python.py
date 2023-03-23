@@ -1759,6 +1759,63 @@ class TestPython:
         for column in list(result):
             assert not result[column].empty
 
+    def test_random_split_size_precision_2(self, mocker):
+        # In python sum([0.6, 0.3, 0.1]) != 1.0 due to floating point precision.
+        # This test checks if different split ratios can be handled.
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2]*10, "col2": [3, 4]*10}
+        df = pd.DataFrame(data=d)
+
+        td = training_dataset.TrainingDataset(
+            name="test",
+            version=1,
+            data_format="CSV",
+            featurestore_id=99,
+            splits={"train": 0.6, "validation": 0.3, "test": 0.1},
+            label=["f", "f_wrong"],
+            id=10,
+        )
+
+        # Act
+        result = python_engine._random_split(df=df, training_dataset_obj=td)
+
+        # Assert
+        assert list(result) == ["train", "validation", "test"]
+        for column in list(result):
+            assert not result[column].empty
+
+    def test_random_split_size_precision_2(self, mocker):
+        # This test checks if the method can handle split ratio with high precision.
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2]*10, "col2": [3, 4]*10}
+        df = pd.DataFrame(data=d)
+
+        td = training_dataset.TrainingDataset(
+            name="test",
+            version=1,
+            data_format="CSV",
+            featurestore_id=99,
+            splits={"train": 1/3, "validation": 1-1/3-0.1, "test": 0.1},
+            label=["f", "f_wrong"],
+            id=10,
+        )
+
+        # Act
+        result = python_engine._random_split(df=df, training_dataset_obj=td)
+
+        # Assert
+        assert list(result) == ["train", "validation", "test"]
+        for column in list(result):
+            assert not result[column].empty
+
     def test_random_split_bad_percentage(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
