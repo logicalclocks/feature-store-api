@@ -37,7 +37,7 @@ class ArrowFlightClient:
     def __init__(self):
         self._client = client.get_instance()
         self._variable_api = VariableApi()
-        self._is_enabled = True #self._variable_api.get_flyingduck_enabled() # TODO: enable this when new backend is deployed
+        self._is_enabled = True  # self._variable_api.get_flyingduck_enabled() # TODO: enable this when new backend is deployed
         if self._is_enabled:
             self._initialize_connection()
 
@@ -50,7 +50,7 @@ class ArrowFlightClient:
             tls_root_certs=tls_root_certs,
             cert_chain=cert_chain,
             private_key=private_key,
-            override_hostname="flyingduck.service.consul"
+            override_hostname="flyingduck.service.consul",
         )
         self._register_certificates()
 
@@ -69,28 +69,33 @@ class ArrowFlightClient:
                     return method(*args, **kw)
                 else:
                     raise
+
         return afs_error_handler_wrapper
 
     def _extract_certs(self, client):
-        with open(client._get_ca_chain_path(),"rb") as f:
+        with open(client._get_ca_chain_path(), "rb") as f:
             tls_root_certs = f.read()
-        with open(client._get_client_cert_path(),"r") as f:
+        with open(client._get_client_cert_path(), "r") as f:
             cert_chain = f.read()
-        with open(client._get_client_key_path(),"r") as f:
+        with open(client._get_client_key_path(), "r") as f:
             private_key = f.read()
         return tls_root_certs, cert_chain, private_key
 
     def _register_certificates(self):
         with open(self._client._get_jks_key_store_path(), "rb") as f:
             kstore = f.read()
-            kstore = base64.b64encode(kstore).decode('utf-8')
+            kstore = base64.b64encode(kstore).decode("utf-8")
         with open(self._client._get_jks_trust_store_path(), "rb") as f:
             tstore = f.read()
-            tstore = base64.b64encode(tstore).decode('utf-8')
+            tstore = base64.b64encode(tstore).decode("utf-8")
         cert_key = self._client._cert_key
-        certificates_json = json.dumps({"kstore": kstore, "tstore": tstore, "cert_key": cert_key}).encode("ascii")
+        certificates_json = json.dumps(
+            {"kstore": kstore, "tstore": tstore, "cert_key": cert_key}
+        ).encode("ascii")
         certificates_json_buf = pyarrow.py_buffer(certificates_json)
-        action = pyarrow.flight.Action("register-client-certificates", certificates_json_buf)
+        action = pyarrow.flight.Action(
+            "register-client-certificates", certificates_json_buf
+        )
         try:
             self._connection.do_action(action)
         except pyarrow.lib.ArrowIOError as e:
@@ -105,7 +110,9 @@ class ArrowFlightClient:
     def read_query(self, query, query_str):
         if not self._is_enabled:
             raise Exception("Arrow Flight Service is not enabled.")
-        query_encoded = json.dumps(self._get_query_object(query, query_str)).encode("ascii")
+        query_encoded = json.dumps(self._get_query_object(query, query_str)).encode(
+            "ascii"
+        )
         descriptor = pyarrow.flight.FlightDescriptor.for_command(query_encoded)
         return self._get_dataset(descriptor)
 
@@ -127,9 +134,13 @@ class ArrowFlightClient:
     def create_training_dataset(self, feature_view, tds_version=1):
         if not self._is_enabled:
             raise Exception("Arrow Flight Service is not enabled.")
-        training_dataset_metadata = self._training_dataset_metadata_from_feature_view(feature_view, tds_version)
+        training_dataset_metadata = self._training_dataset_metadata_from_feature_view(
+            feature_view, tds_version
+        )
         try:
-            training_dataset_encoded = json.dumps(training_dataset_metadata).encode("ascii")
+            training_dataset_encoded = json.dumps(training_dataset_metadata).encode(
+                "ascii"
+            )
             buf = pyarrow.py_buffer(training_dataset_encoded)
             action = pyarrow.flight.Action("create-training-dataset", buf)
             for result in self._connection.do_action(action):
@@ -156,29 +167,50 @@ class ArrowFlightClient:
         training_dataset_metadata["name"] = feature_view.name
         training_dataset_metadata["version"] = f"{feature_view.version}"
         training_dataset_metadata["tds_version"] = f"{tds_version}"
-        training_dataset_metadata["query"] = self._get_query_object(feature_view.query, feature_view.query.to_string())
-        training_dataset_metadata["featurestore_name"] = feature_view.query._left_feature_group.feature_store_name.replace("_featurestore","")
+        training_dataset_metadata["query"] = self._get_query_object(
+            feature_view.query, feature_view.query.to_string()
+        )
+        training_dataset_metadata[
+            "featurestore_name"
+        ] = feature_view.query._left_feature_group.feature_store_name.replace(
+            "_featurestore", ""
+        )
 
         return training_dataset_metadata
 
     def is_supported(self, query):
-        query_supported = (isinstance(query._left_feature_group, feature_group.FeatureGroup) and
-                                      query._left_feature_group.time_travel_format == "HUDI" and
-                                      (query._left_feature_group_start_time is None
-                                       or query._left_feature_group_start_time == 0) and
-                                      query._left_feature_group_end_time is None)
+        query_supported = (
+            isinstance(query._left_feature_group, feature_group.FeatureGroup)
+            and query._left_feature_group.time_travel_format == "HUDI"
+            and (
+                query._left_feature_group_start_time is None
+                or query._left_feature_group_start_time == 0
+            )
+            and query._left_feature_group_end_time is None
+        )
         for j in query._joins:
             query_supported &= self.is_supported(j._query)
 
         return query_supported
 
     def _get_query_object(self, query, query_str):
-        query_string = query_str.replace(f"`{query._left_feature_group.feature_store_name}`.`",
-                                         f"`{query._left_feature_group.feature_store_name.replace('_featurestore','')}.").replace("`","\"")
+        query_string = query_str.replace(
+            f"`{query._left_feature_group.feature_store_name}`.`",
+            f"`{query._left_feature_group.feature_store_name.replace('_featurestore','')}.",
+        ).replace("`", '"')
 
-        featuregroups, features, filters = self._collect_featuregroups_features_and_filters(query)
+        (
+            featuregroups,
+            features,
+            filters,
+        ) = self._collect_featuregroups_features_and_filters(query)
 
-        query = {"query_string": query_string, "featuregroups": featuregroups, "features": features, "filters": filters}
+        query = {
+            "query_string": query_string,
+            "featuregroups": featuregroups,
+            "features": features,
+            "filters": filters,
+        }
         return query
 
     def _update_features(self, features, fg_name, new_features):
@@ -187,7 +219,11 @@ class ArrowFlightClient:
         features[fg_name] = updated_features
 
     def _collect_featuregroups_features_and_filters(self, query):
-        featuregroups, features, filters = self._collect_featuregroups_features_and_filters_rec(query)
+        (
+            featuregroups,
+            features,
+            filters,
+        ) = self._collect_featuregroups_features_and_filters_rec(query)
         for feature in features:
             features[feature] = list(features[feature])
         return featuregroups, features, filters
@@ -195,7 +231,7 @@ class ArrowFlightClient:
     def _collect_featuregroups_features_and_filters_rec(self, query):
         featuregroups = {}
         fg = query._left_feature_group
-        fg_name = f"{fg.feature_store_name.replace('_featurestore','')}.{fg.name}_{fg.version}" # featurestore.name_version
+        fg_name = f"{fg.feature_store_name.replace('_featurestore','')}.{fg.name}_{fg.version}"  # featurestore.name_version
         featuregroups[fg._id] = fg_name
         filters = self._filter_to_expression(query._filter, featuregroups)
 
@@ -208,17 +244,31 @@ class ArrowFlightClient:
             features[fg_name].update(fg.primary_key)
         for join in query._joins:
             join_fg = join._query._left_feature_group
-            join_fg_name = f"{join_fg.feature_store_name.replace('_featurestore','')}.{join_fg.name}_{join_fg.version}" # featurestore.name_version
+            join_fg_name = f"{join_fg.feature_store_name.replace('_featurestore','')}.{join_fg.name}_{join_fg.version}"  # featurestore.name_version
             if len(join._on) > 0:
-                self._update_features(features, fg_name, [feat._name for feat in join._on])
-                self._update_features(features, join_fg_name, [feat._name for feat in join._on])
+                self._update_features(
+                    features, fg_name, [feat._name for feat in join._on]
+                )
+                self._update_features(
+                    features, join_fg_name, [feat._name for feat in join._on]
+                )
             else:
-                self._update_features(features, fg_name, [feat._name for feat in join._left_on])
-                self._update_features(features, join_fg_name, [feat._name for feat in join._right_on])
-            join_featuregroups, join_features, join_filters = self._collect_featuregroups_features_and_filters(join._query)
+                self._update_features(
+                    features, fg_name, [feat._name for feat in join._left_on]
+                )
+                self._update_features(
+                    features, join_fg_name, [feat._name for feat in join._right_on]
+                )
+            (
+                join_featuregroups,
+                join_features,
+                join_filters,
+            ) = self._collect_featuregroups_features_and_filters(join._query)
             featuregroups.update(join_featuregroups)
             for join_fg_name in join_features:
-                self._update_features(features, join_fg_name, join_features[join_fg_name])
+                self._update_features(
+                    features, join_fg_name, join_features[join_fg_name]
+                )
             filters = (filters & join_filters) if join_filters is not None else filters
 
         return featuregroups, features, filters
@@ -229,21 +279,29 @@ class ArrowFlightClient:
         filter_expression = self._resolve_logic(filters, featuregroups)
         return filter_expression
 
-    def _resolve_logic(self, l, featuregroups):
+    def _resolve_logic(self, logic, featuregroups):
         filter_expression = {}
         filter_expression["type"] = "logic"
-        filter_expression["logic_type"] = l._type
-        if l._left_f:
-            filter_expression["left_filter"] = self._resolve_filter(l._left_f, featuregroups)
-        elif l._left_l:
-            filter_expression["left_filter"] = self._resolve_logic(l._left_l, featuregroups)
+        filter_expression["logic_type"] = logic._type
+        if logic._left_f:
+            filter_expression["left_filter"] = self._resolve_filter(
+                logic._left_f, featuregroups
+            )
+        elif logic._left_l:
+            filter_expression["left_filter"] = self._resolve_logic(
+                logic._left_l, featuregroups
+            )
         else:
             filter_expression["left_filter"] = None
 
-        if l._right_f:
-            filter_expression["right_filter"] = self._resolve_filter(l._right_f, featuregroups)
-        elif l._right_l:
-            filter_expression["right_filter"] = self._resolve_logic(l._right_l, featuregroups)
+        if logic._right_f:
+            filter_expression["right_filter"] = self._resolve_filter(
+                logic._right_f, featuregroups
+            )
+        elif logic._right_l:
+            filter_expression["right_filter"] = self._resolve_logic(
+                logic._right_l, featuregroups
+            )
         else:
             filter_expression["right_filter"] = None
 

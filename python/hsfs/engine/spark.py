@@ -130,7 +130,9 @@ class Engine:
         return self._spark_session.sql(sql_query)
 
     def show(self, sql_query, feature_store, n, online_conn, read_options):
-        return self.sql(sql_query, feature_store, online_conn, "default", read_options).show(n)
+        return self.sql(
+            sql_query, feature_store, online_conn, "default", read_options
+        ).show(n)
 
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)

@@ -100,7 +100,9 @@ class Engine:
                 dataframe_type,
                 schema,
                 hive_config=read_options.get("hive_config") if read_options else None,
-                use_flyingduck=(read_options.get("use_flyingduck") if read_options else False),
+                use_flyingduck=(
+                    read_options.get("use_flyingduck") if read_options else False
+                ),
             )
         else:
             return self._jdbc(
@@ -108,10 +110,19 @@ class Engine:
             )
 
     def flyingduck_supported_and_enabled(self, query):
-        return self._arrow_flight_client.is_supported(query) and self._arrow_flight_client.is_enabled()
+        return (
+            self._arrow_flight_client.is_supported(query)
+            and self._arrow_flight_client.is_enabled()
+        )
 
     def _sql_offline(
-        self, sql_query, feature_store, dataframe_type, schema=None, hive_config=None, use_flyingduck=False
+        self,
+        sql_query,
+        feature_store,
+        dataframe_type,
+        schema=None,
+        hive_config=None,
+        use_flyingduck=False,
     ):
         if use_flyingduck:
             result_df = self._arrow_flight_client.read_query(*sql_query)
@@ -176,10 +187,14 @@ class Engine:
         except ModuleNotFoundError:
             if self._arrow_flight_client.is_enabled() and data_format == "parquet":
                 try:
-                    return self._read_hopsfs_remote(location, data_format, use_flyingduck=True)
+                    return self._read_hopsfs_remote(
+                        location, data_format, use_flyingduck=True
+                    )
                 except Exception as e:
-                    print("Failed to read training dataset using Arrow Flight: {}. "
-                          "Will use HopsFS Rest instead".format(e))
+                    print(
+                        "Failed to read training dataset using Arrow Flight: {}. "
+                        "Will use HopsFS Rest instead".format(e)
+                    )
             return self._read_hopsfs_remote(location, data_format, use_flyingduck=False)
 
         util.setup_pydoop()
@@ -214,11 +229,11 @@ class Engine:
                         df = self._arrow_flight_client.read_path(inode.path)
                     else:
                         content_stream = self._dataset_api.read_content(inode.path)
-                        df = self._read_pandas(data_format, BytesIO(content_stream.content))
+                        df = self._read_pandas(
+                            data_format, BytesIO(content_stream.content)
+                        )
 
-                    df_list.append(
-                        df
-                    )
+                    df_list.append(df)
                 offset += 1
 
         return df_list
@@ -286,7 +301,9 @@ class Engine:
         )
 
     def show(self, sql_query, feature_store, n, online_conn, read_options):
-        return self.sql(sql_query, feature_store, online_conn, "default", read_options).head(n)
+        return self.sql(
+            sql_query, feature_store, online_conn, "default", read_options
+        ).head(n)
 
     def register_external_temporary_table(self, external_fg, alias):
         # No op to avoid query failure
