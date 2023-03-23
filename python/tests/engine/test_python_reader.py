@@ -138,7 +138,7 @@ class TestPythonReader:
             )
 
         # Act
-        df_list = python.Engine()._read_hopsfs_rest(
+        df_list = python.Engine()._read_hopsfs_remote(
             location=None, data_format="parquet"
         )
 
@@ -159,7 +159,7 @@ class TestPythonReader:
             )
 
         # Act
-        df_list = python.Engine()._read_hopsfs_rest(location=None, data_format="csv")
+        df_list = python.Engine()._read_hopsfs_remote(location=None, data_format="csv")
         df_list[0]["event_date"] = pd.to_datetime(
             df_list[0]["event_date"], format="%Y-%m-%d"
         ).dt.date

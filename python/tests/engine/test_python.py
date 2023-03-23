@@ -420,7 +420,7 @@ class TestPython:
         mock_dataset_api.return_value.read_content.return_value.content = bytes()
 
         # Act
-        python_engine._read_hopsfs_rest(location=None, data_format=None)
+        python_engine._read_hopsfs_remote(location=None, data_format=None)
 
         # Assert
         assert mock_dataset_api.return_value.list_files.call_count == 1
