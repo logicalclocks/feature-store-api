@@ -153,7 +153,7 @@ class Engine:
 
     def read(self, storage_connector, data_format, read_options, location):
         if storage_connector.type == storage_connector.HOPSFS:
-            df_list = self._read_hopsfs(location, data_format)
+            df_list = self._read_hopsfs(location, data_format, read_options)
         elif storage_connector.type == storage_connector.S3:
             df_list = self._read_s3(storage_connector, location, data_format)
         else:
@@ -180,12 +180,16 @@ class Engine:
                 )
             )
 
-    def _read_hopsfs(self, location, data_format):
+    def _read_hopsfs(self, location, data_format, read_options={}):
         # providing more informative error
         try:
             from pydoop import hdfs
         except ModuleNotFoundError:
-            if self._arrow_flight_client.is_enabled() and data_format == "parquet":
+            if (
+                self._arrow_flight_client.is_enabled()
+                and data_format == "parquet"
+                and not read_options.get("use_hopsfs_rest", False)
+            ):
                 try:
                     return self._read_hopsfs_remote(
                         location, data_format, use_flyingduck=True
@@ -195,7 +199,7 @@ class Engine:
                         "Failed to read training dataset using Arrow Flight: {}. "
                         "Will use HopsFS Rest instead".format(e)
                     )
-            return self._read_hopsfs_remote(location, data_format, use_flyingduck=False)
+            return self._read_hopsfs_remote(location, data_format)
 
         util.setup_pydoop()
         path_list = hdfs.ls(location, recursive=True)
