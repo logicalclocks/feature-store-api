@@ -176,11 +176,11 @@ class Engine:
         except ModuleNotFoundError:
             if self._arrow_flight_client.is_enabled() and data_format == "parquet":
                 try:
-                    return self._read_hopsfs_remote(location, data_format, use_flyginduck=True)
+                    return self._read_hopsfs_remote(location, data_format, use_flyingduck=True)
                 except Exception as e:
                     print("Failed to read training dataset using Arrow Flight: {}. "
                           "Will use HopsFS Rest instead".format(e))
-            return self._read_hopsfs_remote(location, data_format, use_flyginduck=False)
+            return self._read_hopsfs_remote(location, data_format, use_flyingduck=False)
 
         util.setup_pydoop()
         path_list = hdfs.ls(location, recursive=True)
@@ -198,7 +198,7 @@ class Engine:
     # This is a version of the read method that uses the Hopsworks REST APIs or Flyginduck Server
     # To read the training dataset content, this to avoid the pydoop dependency
     # requirement and allow users to read Hopsworks training dataset from outside
-    def _read_hopsfs_remote(self, location, data_format, use_flyginduck=False):
+    def _read_hopsfs_remote(self, location, data_format, use_flyingduck=False):
         total_count = 10000
         offset = 0
         df_list = []
@@ -210,7 +210,7 @@ class Engine:
 
             for inode in inode_list:
                 if not inode.path.endswith("_SUCCESS"):
-                    if use_flyginduck:
+                    if use_flyingduck:
                         df = self._arrow_flight_client.read_path(inode.path)
                     else:
                         content_stream = self._dataset_api.read_content(inode.path)
