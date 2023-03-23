@@ -1759,7 +1759,7 @@ class TestPython:
         for column in list(result):
             assert not result[column].empty
 
-    def test_random_split_size_precision_2(self, mocker):
+    def test_random_split_size_precision_1(self, mocker):
         # In python sum([0.6, 0.3, 0.1]) != 1.0 due to floating point precision.
         # This test checks if different split ratios can be handled.
         # Arrange
