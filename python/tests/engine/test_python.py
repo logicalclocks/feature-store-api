@@ -1767,7 +1767,7 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        d = {"col1": [1, 2]*10, "col2": [3, 4]*10}
+        d = {"col1": [1, 2] * 10, "col2": [3, 4] * 10}
         df = pd.DataFrame(data=d)
 
         td = training_dataset.TrainingDataset(
@@ -1795,7 +1795,7 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        d = {"col1": [1, 2]*10, "col2": [3, 4]*10}
+        d = {"col1": [1, 2] * 10, "col2": [3, 4] * 10}
         df = pd.DataFrame(data=d)
 
         td = training_dataset.TrainingDataset(
@@ -1803,7 +1803,7 @@ class TestPython:
             version=1,
             data_format="CSV",
             featurestore_id=99,
-            splits={"train": 1/3, "validation": 1-1/3-0.1, "test": 0.1},
+            splits={"train": 1 / 3, "validation": 1 - 1 / 3 - 0.1, "test": 0.1},
             label=["f", "f_wrong"],
             id=10,
         )
