@@ -109,14 +109,19 @@ class ArrowFlightClient:
                 return method(*args, **kw)
             except Exception as e:
                 message = str(e)
-                if isinstance(e, FlightServerError) and "Please register client certificates first." in message:
+                if (
+                    isinstance(e, FlightServerError)
+                    and "Please register client certificates first." in message
+                ):
                     self = args[0]
                     self._register_certificates()
                     return method(*args, **kw)
                 else:
-                    raise FeatureStoreException('Could not read data using FlyingDuck.'
-                                                'If the issue persists, '
-                                                'use read_options={"use_spark": True} instead.') from e
+                    raise FeatureStoreException(
+                        "Could not read data using FlyingDuck."
+                        "If the issue persists, "
+                        'use read_options={"use_spark": True} instead.'
+                    ) from e
 
         return afs_error_handler_wrapper
 
