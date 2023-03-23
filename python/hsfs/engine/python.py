@@ -188,7 +188,7 @@ class Engine:
             if (
                 self._arrow_flight_client.is_enabled()
                 and data_format == "parquet"
-                and not read_options.get("use_hopsfs_rest", False)
+                and not read_options.get("use_spark", False)
             ):
                 try:
                     return self._read_hopsfs_remote(
