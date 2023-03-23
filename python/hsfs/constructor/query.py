@@ -64,8 +64,9 @@ class Query:
                 sql_query = query.query
             online_conn = None
 
-            if not read_options.get("use_spark", False) \
-                    and engine.get_instance().flyingduck_supported_and_enabled(self):
+            if not read_options.get(
+                "use_spark", False
+            ) and engine.get_instance().flyingduck_supported_and_enabled(self):
                 read_options["use_flyingduck"] = True
                 return (self, sql_query), online_conn
 

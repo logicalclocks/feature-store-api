@@ -48,7 +48,9 @@ class ArrowFlightClient:
         try:
             host_ip = self._client._get_host_port_pair()[0]
             host_url = f"grpc+tls://{host_ip}:5005"
-            (tls_root_certs, cert_chain, private_key) = self._extract_certs(self._client)
+            (tls_root_certs, cert_chain, private_key) = self._extract_certs(
+                self._client
+            )
             self._connection = pyarrow.flight.FlightClient(
                 location=host_url,
                 tls_root_certs=tls_root_certs,
@@ -60,9 +62,11 @@ class ArrowFlightClient:
             self._is_initialized = True
         except Exception as e:
             self._is_initialized = False
-            print(f"Count not establish connection to FlyingDuck. ({e})"
-                  f"Will fall back to spark for this session. "
-                  f"If the error persists, set read_options={{\"use_spark\": True}}.")
+            print(
+                f"Count not establish connection to FlyingDuck. ({e})"
+                f"Will fall back to spark for this session. "
+                f'If the error persists, set read_options={{"use_spark": True}}.'
+            )
 
     def is_enabled(self):
         return self._is_enabled
