@@ -113,6 +113,7 @@ class Engine:
         return (
             self._arrow_flight_client.is_supported(query)
             and self._arrow_flight_client.is_enabled()
+            and self._arrow_flight_client.is_initialized()
         )
 
     def _sql_offline(
@@ -186,9 +187,10 @@ class Engine:
             from pydoop import hdfs
         except ModuleNotFoundError:
             if (
-                self._arrow_flight_client.is_enabled()
+                not read_options.get("use_spark", False)
                 and data_format == "parquet"
-                and not read_options.get("use_spark", False)
+                and self._arrow_flight_client.is_enabled()
+                and self._arrow_flight_client.is_initialized()
             ):
                 try:
                     return self._read_hopsfs_remote(

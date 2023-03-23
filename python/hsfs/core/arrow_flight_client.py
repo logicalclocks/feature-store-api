@@ -32,30 +32,43 @@ class ArrowFlightClient:
     def get_instance(cls):
         if not cls.instance:
             cls.instance = ArrowFlightClient()
+            if cls.instance._is_enabled and not cls.instance._is_initialized:
+                cls.instance._initialize_connection()
         return cls.instance
 
     def __init__(self):
         self._client = client.get_instance()
         self._variable_api = VariableApi()
         self._is_enabled = True  # self._variable_api.get_flyingduck_enabled() # TODO: enable this when new backend is deployed
+        self._is_initialized = False
         if self._is_enabled:
             self._initialize_connection()
 
     def _initialize_connection(self):
-        host_ip = self._client._get_host_port_pair()[0]
-        host_url = f"grpc+tls://{host_ip}:5005"
-        (tls_root_certs, cert_chain, private_key) = self._extract_certs(self._client)
-        self._connection = pyarrow.flight.FlightClient(
-            location=host_url,
-            tls_root_certs=tls_root_certs,
-            cert_chain=cert_chain,
-            private_key=private_key,
-            override_hostname="flyingduck.service.consul",
-        )
-        self._register_certificates()
+        try:
+            host_ip = self._client._get_host_port_pair()[0]
+            host_url = f"grpc+tls://{host_ip}:5005"
+            (tls_root_certs, cert_chain, private_key) = self._extract_certs(self._client)
+            self._connection = pyarrow.flight.FlightClient(
+                location=host_url,
+                tls_root_certs=tls_root_certs,
+                cert_chain=cert_chain,
+                private_key=private_key,
+                override_hostname="flyingduck.service.consul",
+            )
+            self._register_certificates()
+            self._is_initialized = True
+        except Exception as e:
+            self._is_initialized = False
+            print(f"Count not establish connection to FlyingDuck. ({e})"
+                  f"Will fall back to spark for this session. "
+                  f"If the error persists, set read_options={{\"use_spark\": True}}.")
 
     def is_enabled(self):
         return self._is_enabled
+
+    def is_initialized(self):
+        return self._is_initialized
 
     def _handle_afs_errors(method):
         def afs_error_handler_wrapper(*args, **kw):
