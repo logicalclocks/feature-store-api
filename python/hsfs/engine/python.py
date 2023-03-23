@@ -126,12 +126,22 @@ class Engine:
         use_flyingduck=False,
     ):
         if use_flyingduck:
-            result_df = self._arrow_flight_client.read_query(*sql_query)
-        else:
-            with self._create_hive_connection(
-                feature_store, hive_config=hive_config
-            ) as hive_conn:
-                result_df = pd.read_sql(sql_query, hive_conn)
+            try:
+                result_df = self._arrow_flight_client.read_query(*sql_query)
+                return self._convert_result_dataframe(result_df, schema, dataframe_type)
+            except Exception as e:
+                print(
+                    "Failed to read training query using Arrow Flight: {}. "
+                    "Will use Hive instead".format(e)
+                )
+
+        with self._create_hive_connection(
+            feature_store, hive_config=hive_config
+        ) as hive_conn:
+            result_df = pd.read_sql(sql_query, hive_conn)
+        return self._convert_result_dataframe(result_df, schema, dataframe_type)
+
+    def _convert_result_dataframe(self, result_df, schema, dataframe_type):
         if schema:
             result_df = Engine.cast_columns(result_df, schema)
         return self._return_dataframe_type(result_df, dataframe_type)
