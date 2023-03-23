@@ -21,6 +21,7 @@ import pyarrow.flight
 from pyarrow.flight import FlightServerError
 from hsfs import client
 from hsfs import feature_group
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi
 
 
@@ -32,8 +33,6 @@ class ArrowFlightClient:
     def get_instance(cls):
         if not cls.instance:
             cls.instance = ArrowFlightClient()
-            if cls.instance._is_enabled and not cls.instance._is_initialized:
-                cls.instance._initialize_connection()
         return cls.instance
 
     def __init__(self):
@@ -65,7 +64,8 @@ class ArrowFlightClient:
             print(
                 f"Count not establish connection to FlyingDuck. ({e})"
                 f"Will fall back to spark for this session. "
-                f'If the error persists, set read_options={{"use_spark": True}}.'
+                f"If the error persists, you can disable FlyingDuck "
+                f"by changing the cluster configuration (set 'enable_flyingduck'=False)."
             )
 
     def is_enabled(self):
@@ -73,21 +73,6 @@ class ArrowFlightClient:
 
     def is_initialized(self):
         return self._is_initialized
-
-    def _handle_afs_errors(method):
-        def afs_error_handler_wrapper(*args, **kw):
-            try:
-                return method(*args, **kw)
-            except FlightServerError as e:
-                message = str(e)
-                if "Please register client certificates first." in message:
-                    self = args[0]
-                    self._register_certificates()
-                    return method(*args, **kw)
-                else:
-                    raise
-
-        return afs_error_handler_wrapper
 
     def _extract_certs(self, client):
         with open(client._get_ca_chain_path(), "rb") as f:
@@ -118,39 +103,45 @@ class ArrowFlightClient:
         except pyarrow.lib.ArrowIOError as e:
             print("Error calling action:", e)
 
+    def _handle_afs_exception(method):
+        def afs_error_handler_wrapper(*args, **kw):
+            try:
+                return method(*args, **kw)
+            except Exception as e:
+                message = str(e)
+                if isinstance(e, FlightServerError) and "Please register client certificates first." in message:
+                    self = args[0]
+                    self._register_certificates()
+                    return method(*args, **kw)
+                else:
+                    raise FeatureStoreException('Could not read data using FlyingDuck.'
+                                                'If the issue persists, '
+                                                'use read_options={"use_spark": True} instead.') from e
+
+        return afs_error_handler_wrapper
+
     def _get_dataset(self, descriptor):
         info = self._connection.get_flight_info(descriptor)
         reader = self._connection.do_get(self._info_to_ticket(info))
         return reader.read_pandas()
 
-    @_handle_afs_errors
+    @_handle_afs_exception
     def read_query(self, query, query_str):
-        if not self._is_enabled:
-            raise Exception("Arrow Flight Service is not enabled.")
         query_encoded = json.dumps(self._get_query_object(query, query_str)).encode(
             "ascii"
         )
         descriptor = pyarrow.flight.FlightDescriptor.for_command(query_encoded)
         return self._get_dataset(descriptor)
 
-    @_handle_afs_errors
-    def get_training_dataset(self, feature_view, tds_version=1):
-        if not self._is_enabled:
-            raise Exception("Arrow Flight Service is not enabled.")
-        path = self._path_from_feature_view(feature_view, tds_version)
-        return self.read_path(self, path)
-
-    @_handle_afs_errors
+    @_handle_afs_exception
     def read_path(self, path):
-        if not self._is_enabled:
-            raise Exception("Arrow Flight Service is not enabled.")
         descriptor = pyarrow.flight.FlightDescriptor.for_path(path)
         return self._get_dataset(descriptor)
 
-    @_handle_afs_errors
+    @_handle_afs_exception
     def create_training_dataset(self, feature_view, tds_version=1):
         if not self._is_enabled:
-            raise Exception("Arrow Flight Service is not enabled.")
+            raise FeatureStoreException("Arrow Flight Service is not enabled.")
         training_dataset_metadata = self._training_dataset_metadata_from_feature_view(
             feature_view, tds_version
         )
