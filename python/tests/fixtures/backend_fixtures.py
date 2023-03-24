@@ -28,6 +28,7 @@ FIXTURES = [
     "feature",
     "feature_monitoring_config",
     "feature_monitoring_result",
+    "feature_descriptive_statistics",
     "feature_group_commit",
     "feature_group",
     "feature_store",
