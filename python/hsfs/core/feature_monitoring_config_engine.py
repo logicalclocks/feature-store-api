@@ -14,21 +14,22 @@
 #   limitations under the License.
 #
 
-from typing import Any, Dict, Hashable, Optional, Tuple
-import pandas as pd
+from typing import Any, Dict, Optional, Union
 from datetime import datetime, timedelta
-from hsfs import engine
-import json
 
 from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
 from hsfs.core.feature_monitoring_config_api import FeatureMonitoringConfigApi
 from hsfs.core.feature_monitoring_result_engine import FeatureMonitoringResultEngine
+from hsfs.core.statistics_engine import StatisticsEngine
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
+from hsfs.core.monitoring_window_config import (
+    MonitoringWindowConfig,
+    WindowConfigType,
+)
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 from hsfs.core.job import Job
 from hsfs.core.job_api import JobApi
-
-DEFAULT_REFERENCE_STATS_ID = 234
 
 
 class FeatureMonitoringConfigEngine:
@@ -60,6 +61,9 @@ class FeatureMonitoringConfigEngine:
             assert feature_view_id is not None
             assert feature_view_name is not None
             assert feature_view_version is not None
+            entity_type = "featuregroups"
+        else:
+            entity_type = "featureview"
 
         self._feature_monitoring_config_api = FeatureMonitoringConfigApi(
             feature_store_id=feature_store_id,
@@ -67,12 +71,13 @@ class FeatureMonitoringConfigEngine:
             feature_view_name=feature_view_name,
             feature_view_version=feature_view_version,
         )
+        self._statistics_engine = StatisticsEngine(feature_store_id, entity_type)
 
     def enable_descriptive_statistics_monitoring(
         self,
         name: str,
         feature_name: str,
-        detection_window_config: Dict[str, Any],
+        detection_window_config: MonitoringWindowConfig,
         scheduler_config: Optional[str] = None,
         description: Optional[str] = None,
     ) -> FeatureMonitoringConfig:
@@ -83,7 +88,7 @@ class FeatureMonitoringConfigEngine:
                 Name of the monitoring configuration.
             feature_name: str, required
                 Name of the feature to monitor.
-            detection_window_config: Dict[str, Any], required
+            detection_window_config: MonitoringWindowConfig, required
                 Configuration of the detection window.
             scheduler_config: str, optional
                 Configuration of the scheduler.
@@ -93,7 +98,7 @@ class FeatureMonitoringConfigEngine:
         Returns:
             FeatureMonitoringConfig
         """
-        config = self.build_stats_monitoring_only_config(
+        config = self._build_stats_monitoring_only_config(
             name=name,
             feature_name=feature_name,
             detection_window_config=detection_window_config,
@@ -109,8 +114,8 @@ class FeatureMonitoringConfigEngine:
         self,
         feature_name: str,
         name: str,
-        detection_window_config: Dict[str, Any],
-        reference_window_config: Dict[str, Any],
+        detection_window_config: MonitoringWindowConfig,
+        reference_window_config: MonitoringWindowConfig,
         statistics_comparison_config: Dict[str, Any],
         alert_config: str,
         scheduler_config: str,
@@ -123,9 +128,9 @@ class FeatureMonitoringConfigEngine:
                 Name of the feature to monitor.
             name: str, required
                 Name of the monitoring configuration.
-            detection_window_config: Dict[str, Any], required
+            detection_window_config: MonitoringWindowConfig, required
                 Configuration of the detection window.
-            reference_window_config: Dict[str, Any], required
+            reference_window_config: MonitoringWindowConfig, required
                 Configuration of the reference window.
             statistics_comparison_config: Dict[str, Any], required
                 Configuration of the statistics comparison.
@@ -140,7 +145,7 @@ class FeatureMonitoringConfigEngine:
             FeatureMonitoringConfig The registered monitoring configuration.
         """
 
-        config = self.build_feature_monitoring_config(
+        config = self._build_feature_monitoring_config(
             name=name,
             feature_name=feature_name,
             detection_window_config=detection_window_config,
@@ -160,11 +165,11 @@ class FeatureMonitoringConfigEngine:
         window_config_type: str,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
-        specific_value: Optional[float] = None,
         specific_id: Optional[int] = None,
+        specific_value: Optional[float] = None,
         row_percentage: Optional[int] = None,
-    ) -> Dict[str, Any]:
-        """Builds a monitoring window config dictionary.
+    ) -> MonitoringWindowConfig:
+        """Builds a monitoring window config.
 
         Args:
             window_config_type: str, required
@@ -175,23 +180,25 @@ class FeatureMonitoringConfigEngine:
             window_length: str, optional
                 monitoring window end time is computed as
                     "now - time_offset + window_length".
-            specific_value: float, optional
-                Specific value instead of a statistics computed on data.
             specific_id: int, optional
                 Specific id of an entity that has fixed
+            specific_value: float, optional
+                Specific value instead of a statistics computed on data.
 
+        Returns:
+            MonitoringWindowConfig The monitoring window configuration.
         """
 
-        return {
-            "window_config_type": window_config_type,
-            "time_offset": time_offset,
-            "window_length": window_length,
-            "specific_id": specific_id,
-            "specific_value": specific_value,
-            "row_percentage": row_percentage,
-        }
+        return MonitoringWindowConfig(
+            window_config_type,
+            time_offset,
+            window_length,
+            specific_id,
+            specific_value,
+            row_percentage,
+        )
 
-    def build_stats_monitoring_only_config(
+    def _build_stats_monitoring_only_config(
         self,
         name: str,
         feature_name: str,
@@ -233,12 +240,12 @@ class FeatureMonitoringConfigEngine:
             statistics_comparison_config=None,
         )
 
-    def build_feature_monitoring_config(
+    def _build_feature_monitoring_config(
         self,
         feature_name: str,
         name: str,
-        detection_window_config: Dict[str, Any],
-        reference_window_config: Dict[str, Any],
+        detection_window_config: MonitoringWindowConfig,
+        reference_window_config: MonitoringWindowConfig,
         statistics_comparison_config: Dict[str, Any],
         scheduler_config: str,
         alert_config: str,
@@ -317,7 +324,8 @@ class FeatureMonitoringConfigEngine:
 
         config = self._feature_monitoring_config_api.get_by_name(config_name)
 
-        detection_stats, detection_stats_id = self.run_single_window_monitoring(
+        # TODO: Future work. Parallelize both single_window_monitoring calls and wait
+        detection_stats = self.run_single_window_monitoring(
             entity=entity,
             monitoring_window_config=config.detection_window_config,
             feature_name=config.feature_name,
@@ -325,133 +333,117 @@ class FeatureMonitoringConfigEngine:
         )
 
         if config.reference_window_config is not None:
-            reference_stats, reference_stats_id = self.run_single_window_monitoring(
+            reference_stats = self.run_single_window_monitoring(
                 entity=entity,
                 monitoring_window_config=config.reference_window_config,
                 feature_name=config.feature_name,
                 check_existing=True,
             )
         else:
-            reference_stats, reference_stats_id = None, None
+            reference_stats = None
 
-        result = result_engine.run_and_save_statistics_comparison(
-            detection_stats_id=detection_stats_id,
-            reference_stats_id=reference_stats_id,
-            detection_stats=detection_stats,
-            reference_stats=reference_stats,
-            fm_config=config,
+        return result_engine.run_and_save_statistics_comparison(
+            config,
+            detection_stats,
+            reference_stats,
         )
-
-        return result
 
     def run_single_window_monitoring(
         self,
         entity,
-        monitoring_window_config: Dict[str, Any],
+        monitoring_window_config: MonitoringWindowConfig,
         feature_name: str,
         check_existing: bool = False,
-    ) -> Tuple[Dict[str, Any], int]:
+    ) -> Union[FeatureDescriptiveStatistics, float]:
         """Fetch the entity data based on monitoring window configuration and compute statistics.
 
         Args:
             entity: FeatureStore: Feature store to fetch the entity to monitor.
-            monitoring_window_config: Dict[str, Any]: Monitoring window config.
+            monitoring_window_config: MonitoringWindowConfig: Monitoring window config.
             feature_name: str: Name of the feature to monitor.
             check_existing: bool: Whether to check for existing stats.
 
         Returns:
-            Tuple[Dict[str, Any], int]: Tuple of stats and stats id.
+            Union[FeatureDescriptiveStatitics, float]: Descriptive statistics or a specific value
         """
+
+        if (
+            monitoring_window_config.window_config_type
+            == WindowConfigType.SPECIFIC_VALUE
+        ):
+            # if window config type is specific value, there is no stats to compute
+            return monitoring_window_config.specific_value
+
         if check_existing:
-            registered_stats_id = self.check_for_registered_stats(
+            start_time, end_time = self.get_window_start_end_times(
                 monitoring_window_config
             )
-            if registered_stats_id is not None:
-                return {}, registered_stats_id
-
-        if monitoring_window_config["window_config_type"] == "SPECIFIC_VALUE":
-            return {
-                "specific_value": monitoring_window_config["specific_value"]
-            }, DEFAULT_REFERENCE_STATS_ID
+            registered_stats = self._statistics_engine.get_by_feature_name_time_window_and_row_percentage(
+                entity,
+                feature_name,
+                start_time,
+                end_time,
+                monitoring_window_config.row_percentage,
+            )
+            if registered_stats is not None:
+                return registered_stats
 
         # Fetch the actual data for which to compute statistics based on row_percentage and time window
-        entity_df = self.fetch_entity_data_based_on_monitoring_window_config(
-            entity=entity,
-            feature_name=feature_name,
-            monitoring_window_config=monitoring_window_config,
+        time_offset = self.time_range_str_to_time_delta(
+            monitoring_window_config.time_offset
+        )
+        window_length = self.time_range_str_to_time_delta(
+            monitoring_window_config.window_length
+        )
+        start_time, end_time = self.get_window_start_end_times(
+            time_offset, window_length
+        )
+        entity_feature_df = (
+            self.fetch_entity_data_based_on_time_window_and_row_percentage(
+                entity=entity,
+                feature_name=feature_name,
+                start_time=start_time,
+                end_time=end_time,
+                row_percentage=monitoring_window_config.row_percentage,
+            )
         )
 
-        # This method should be implemented on a statistics_compute_engine rather than here
-        stats, registered_stats_id = self.compute_and_upload_statistics(
-            entity_df,
+        # Compute statistics on the feature dataframe
+        descriptive_stats = self._statistics_engine.compute_single_feature_statistics(
+            entity_feature_df,
             feature_name,
         )
+        # set commit times and row percentage
+        descriptive_stats.start_time = start_time
+        descriptive_stats.end_time = end_time
+        descriptive_stats.row_percentage = monitoring_window_config.row_percentage
 
-        return stats, registered_stats_id
+        return descriptive_stats
 
-    def compute_and_upload_statistics(
-        self,
-        entity_df: pd.DataFrame,
-        feature_name: str,
-    ) -> Tuple[Dict[Hashable, Any], int]:
-        # Dummy method for now
-        # This method should be implemented on a statistics_compute_engine rather than here
-        # Or potentially just in the python/spark engines
-        stats = json.loads(
-            engine.get_instance().profile(
-                dataframe=entity_df,
-                relevant_columns=[feature_name],
-                correlations=False,
-                exact_uniqueness=False,
-                histograms=False,
-            )
-        )["columns"][0]
-        print("Computing and faking statistics upload... ")
-        registered_stats_id = 22
-
-        return stats, registered_stats_id
-
-    def check_for_registered_stats(
-        self, monitoring_window_config: Dict[str, Any]
-    ) -> Optional[int]:
-        # Dummy method for now
-        print(
-            "Checking for registered stats for window config: ",
-            monitoring_window_config.get("id", "unregistered"),
-        )
-        return None
-
-    def fetch_entity_data_based_on_monitoring_window_config(
+    def fetch_entity_data_based_on_time_window_and_row_percentage(
         self,
         entity,  #: Union[feature_group.FeatureGroup, feature_view.FeatureView],
         feature_name: str,
-        monitoring_window_config: Dict[str, Any],
-    ) -> pd.DataFrame:
-        """Fetch the entity data based on the monitoring window config.
+        start_time: int,
+        end_time: int,
+        row_percentage: int = 100,
+    ):
+        """Fetch the entity data based on time window and row percentage.
 
         Args:
             entity: Union[FeatureGroup, FeatureView]: Entity to monitor.
             feature_name: str: Name of the feature to monitor.
-            monitoring_window_config: Dict[str, Any]: Monitoring window config.
+            start_time: int: Window start commit time
+            end_time: int: Window end commit time
+            row_percentage: Percentage of rows to include
 
         Returns:
-            pd.DataFrame: Entity data.
+            `pyspark.DataFrame`. A Spark DataFrame with the entity data
         """
-        # Lots of work to be done here to suport all the different cases
-        time_offset = self.time_range_str_to_time_delta(
-            monitoring_window_config["time_offset"]
-        )
-        window_length = self.time_range_str_to_time_delta(
-            monitoring_window_config["window_length"]
-        )
-
         if entity.ENTITY_TYPE == "featuregroups":
             full_df = (
                 entity.select(features=[feature_name])
-                .as_of(
-                    exclude_until=datetime.now() - time_offset,
-                    wallclock_time=datetime.now() - time_offset + window_length,
-                )
+                .as_of(exclude_until=start_time, wallclock_time=end_time)
                 .read()
             )
         elif entity.ENTITY_TYPE == "featureview":
@@ -460,20 +452,42 @@ class FeatureMonitoringConfigEngine:
             # We also need to pass a training data version if there are transformation
             # functions to apply for get_batch_data to work
             full_df = (
-                entity.query.as_of(
-                    exclude_until=datetime.now() - time_offset,
-                    wallclock_time=datetime.now() - time_offset + window_length,
-                )
+                entity.query.as_of(exclude_until=start_time, wallclock_time=end_time)
                 .read()
                 .select(feature_name)
             )
 
-        if monitoring_window_config.get("row_percentage", 101) < 100:
-            full_df = full_df.sample(
-                fraction=(monitoring_window_config.row_percentage / 100)
-            )
+        if row_percentage < 100:
+            full_df = full_df.sample(fraction=(row_percentage / 100))
 
         return full_df
+
+    def fetch_statistics_based_on_monitoring_window_config(
+        self,
+        entity,  #: Union[feature_group.FeatureGroup, feature_view.FeatureView],
+        feature_name: str,
+        monitoring_window_config: MonitoringWindowConfig,
+    ) -> FeatureDescriptiveStatistics:
+        """Fetch feature statistics based on a feature monitoring window configuration
+
+        Args:
+            entity: Union[FeatureGroup, FeatureView]: Entity on which statistics where computed.
+            feature_name: str: Name of the feature from which statistics where computed.
+            monitoring_window_config: MonitoringWindowConfig: Monitoring window config.
+
+        Returns:
+            FeatureDescriptiveStatistics: Descriptive statistics
+        """
+        start_time, end_time = self.get_window_start_end_times(monitoring_window_config)
+        return (
+            self._statistics_engine.get_by_feature_name_time_window_and_row_percentage(
+                entity,
+                feature_name,
+                start_time,
+                end_time,
+                monitoring_window_config.row_percentage,
+            )
+        )
 
     def time_range_str_to_time_delta(self, time_range: str) -> timedelta:
         # Dummy method for now
@@ -487,3 +501,9 @@ class FeatureMonitoringConfigEngine:
             time_offset = timedelta(hours=1)
 
         return time_offset
+
+    def get_window_start_end_times(self, time_offset, window_length):
+        return (
+            datetime.now() - time_offset,
+            datetime.now() - time_offset + window_length,
+        )

@@ -20,18 +20,26 @@ from typing import Any, Dict, List, Optional, Union
 from hsfs import util
 from datetime import datetime, date
 
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
+
 
 class FeatureMonitoringResult:
     def __init__(
         self,
         feature_store_id: int,
         execution_id: int,
-        detection_stats_id: int,
         monitoring_time: Union[int, datetime, date, str],
         config_id: int,
         difference: Optional[float] = None,
         shift_detected: bool = False,
+        detection_stats_id: Optional[int] = None,
         reference_stats_id: Optional[int] = None,
+        detection_statistics: Optional[
+            Union[FeatureDescriptiveStatistics, dict]
+        ] = None,
+        reference_statistics: Optional[
+            Union[FeatureDescriptiveStatistics, dict]
+        ] = None,
         id: Optional[int] = None,
         href: Optional[str] = None,
         items: Optional[List[Dict[str, Any]]] = None,
@@ -41,13 +49,30 @@ class FeatureMonitoringResult:
         self._href = href
         self._feature_store_id = feature_store_id
         self._execution_id = execution_id
+        self._config_id = config_id
         self._detection_stats_id = detection_stats_id
         self._reference_stats_id = reference_stats_id
-        self._config_id = config_id
-
+        self._detection_statistics = self._parse_feature_statistics(
+            detection_statistics
+        )
+        self._reference_statistics = self._parse_feature_statistics(
+            reference_statistics
+        )
         self._monitoring_time = util.convert_event_time_to_timestamp(monitoring_time)
         self._difference = difference
         self._shift_detected = shift_detected
+
+    def _parse_feature_statistics(
+        self,
+        statistics: Optional[Union[FeatureDescriptiveStatistics, dict]],
+    ):
+        if statistics is None:
+            return None
+        return (
+            statistics
+            if isinstance(statistics, FeatureDescriptiveStatistics)
+            else FeatureDescriptiveStatistics.from_response_json(statistics)
+        )
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -60,7 +85,6 @@ class FeatureMonitoringResult:
             return cls(**json_decamelized)
 
     def to_dict(self):
-
         return {
             "id": self._id,
             "featureStoreId": self._feature_store_id,
@@ -68,6 +92,8 @@ class FeatureMonitoringResult:
             "executionId": self._execution_id,
             "detectionStatsId": self._detection_stats_id,
             "referenceStatsId": self._reference_stats_id,
+            "detectionStatistics": self._detection_statistics,
+            "referenceStatistics": self._reference_statistics,
             "monitoringTime": self._monitoring_time,
             "difference": self._difference,
             "shiftDetected": self._shift_detected,
@@ -101,6 +127,14 @@ class FeatureMonitoringResult:
     @property
     def reference_stats_id(self) -> Optional[int]:
         return self._reference_stats_id
+
+    @property
+    def detection_statistics(self) -> Optional[FeatureDescriptiveStatistics]:
+        return self._detection_statistics
+
+    @property
+    def reference_statistics(self) -> Optional[FeatureDescriptiveStatistics]:
+        return self._reference_statistics
 
     @property
     def execution_id(self) -> Optional[int]:
