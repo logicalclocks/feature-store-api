@@ -14,11 +14,12 @@
 #   limitations under the License.
 #
 
-from typing import Any, Dict, Hashable, List, Optional, Union
+from typing import Dict, List, Optional, Union, Tuple
 from datetime import date, datetime
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.core.feature_monitoring_result_api import FeatureMonitoringResultApi
 from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 from hsfs import util
 
 DEFAULT_EXECUTION_ID = 123
@@ -43,7 +44,6 @@ class FeatureMonitoringResultEngine:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
     ):
-
         if feature_group_id is None:
             assert feature_view_id is not None
             assert feature_view_name is not None
@@ -66,23 +66,23 @@ class FeatureMonitoringResultEngine:
         self,
         config_id: int,
         execution_id: int,
-        detection_stats_id: int,
+        detection_statistics: FeatureDescriptiveStatistics,
+        reference_statistics: Optional[FeatureDescriptiveStatistics] = None,
         shift_detected: bool = False,
         difference: Optional[float] = None,
-        reference_stats_id: Optional[int] = None,
     ) -> FeatureMonitoringResult:
         """Save feature monitoring result.
 
         Args:
             config_id: int. Id of the feature monitoring configuration.
             execution_id: int. Id of the job execution.
-            detection_stats_id: int. Id of the detection statistics.
+            detection_statistics: FeatureDescriptiveStatistics. Statistics computed from the detection data.
+            reference_statistics: Optional[FeatureDescriptiveStatistics]. Statistics computed from the reference data.
+                Defaults to None if no reference is provided.
             shift_detected: bool. Whether a shift is detected between the detection and reference window.
                 It is used to decide whether to trigger an alert.
             difference: Optional[float]. Difference between detection statistics and reference statistics.
                 Defaults to zero if no reference is provided.
-            reference_stats_id: Optional[int]. Id of the reference statistics.
-                Defaults to None if no reference is provided.
 
         Returns:
             FeatureMonitoringResult. Saved Feature monitoring result.
@@ -95,8 +95,8 @@ class FeatureMonitoringResultEngine:
             feature_store_id=self._feature_store_id,
             config_id=config_id,
             execution_id=execution_id,
-            detection_stats_id=detection_stats_id,
-            reference_stats_id=reference_stats_id,
+            detection_statistics=detection_statistics,
+            reference_statistics=reference_statistics,
             difference=difference,
             shift_detected=shift_detected,
             monitoring_time=monitoring_time,
@@ -111,6 +111,7 @@ class FeatureMonitoringResultEngine:
         config_id: int,
         start_time: Union[str, int, datetime, date, None] = None,
         end_time: Union[str, int, datetime, date, None] = None,
+        with_statistics: bool = False,
     ) -> List[FeatureMonitoringResult]:
         """Fetch all feature monitoring results by config id.
 
@@ -120,14 +121,17 @@ class FeatureMonitoringResultEngine:
                 Query results with monitoring time greater than or equal to start_time.
             end_time: Union[str, int, datetime, date, None].
                 Query results with monitoring time less than or equal to end_time.
+            with_statistics: bool.
+                Whether to include the statistics attached to the results or not
 
         Returns:
             List[FeatureMonitoringResult]. List of feature monitoring results.
         """
 
-        query_params = self.build_query_params(
+        query_params = self._build_query_params(
             start_time=start_time,
             end_time=end_time,
+            with_statistics=with_statistics,
         )
 
         return self._feature_monitoring_result_api.get_by_config_id(
@@ -135,10 +139,11 @@ class FeatureMonitoringResultEngine:
             query_params=query_params,
         )
 
-    def build_query_params(
+    def _build_query_params(
         self,
         start_time: Union[str, int, datetime, date, None],
         end_time: Union[str, int, datetime, date, None],
+        with_statistics: bool,
     ) -> Dict[str, str]:
         """Build query parameters for feature monitoring result API calls.
 
@@ -147,105 +152,163 @@ class FeatureMonitoringResultEngine:
                 Query results with monitoring time greater than or equal to start_time.
             end_time: Union[str, int, datetime, date, None].
                 Query results with monitoring time less than or equal to end_time.
+            with_statistics: bool.
+                Whether to include the statistics attached to the results or not
 
         Returns:
             Dict[str, str]. Query parameters.
         """
-        filter_by = []
 
+        query_params = {"sort_by": "monitoring_time:desc"}
+
+        filter_by = []
         if start_time:
             timestamp_start_time = util.convert_event_time_to_timestamp(start_time)
             filter_by.append(f"monitoring_time_gte:{timestamp_start_time}")
         if end_time:
             timestamp_end_time = util.convert_event_time_to_timestamp(end_time)
             filter_by.append(f"monitoring_time_lte:{timestamp_end_time}")
+        if len(filter_by) > 0:
+            query_params["filter_by"] = filter_by
 
-        return {
-            "filter_by": filter_by,
-            "sort_by": "monitoring_time:desc",
-        }
+        if with_statistics:
+            query_params["expand"] = "statistics"
+
+        return query_params
 
     def run_and_save_statistics_comparison(
         self,
-        detection_stats_id: int,
-        detection_stats: Dict[Hashable, Any],
         fm_config: FeatureMonitoringConfig,
-        reference_stats_id: Optional[int] = None,
-        reference_stats: Optional[Dict[Hashable, Any]] = None,
+        detection_statistics: FeatureDescriptiveStatistics,
+        reference_statistics: Optional[
+            Union[FeatureDescriptiveStatistics, int, float]
+        ] = None,
     ) -> FeatureMonitoringResult:
         """Run and upload statistics comparison between detection and reference stats.
 
         Args:
-            detection_stats_id: int. Id of the detection statistics.
-            detection_stats: Computed statistics for detection data.
             fm_config: FeatureMonitoringConfig. Feature monitoring configuration.
-            reference_stats_id: int. Id of the reference statistics.
-            reference_stats: Computed statistics for reference data.
+            detection_statistics: FeatureDescriptiveStatistics. Computed statistics from detection data.
+            reference_statistics: Optional[Union[FeatureDescriptiveStatistics, int, float]].
+                Computed statistics from reference data, or a specific value to use as reference.
 
         Returns:
             FeatureMonitoringResult. Feature monitoring result.
         """
 
-        if reference_stats:
-            difference = self.compute_difference(
-                detection_stats=detection_stats,
-                reference_stats=reference_stats,
-                metric=fm_config.statistics_comparison_config["compare_on"].lower(),
-                relative=fm_config.statistics_comparison_config["relative"],
+        if reference_statistics is not None:
+            difference, shift_detected = self._compute_difference_and_shift(
+                fm_config,
+                detection_statistics,
+                reference_statistics,
             )
-
-            if fm_config.statistics_comparison_config["strict"]:
-                shift_detected = (
-                    True
-                    if difference >= fm_config.statistics_comparison_config["threshold"]
-                    else False
-                )
-            else:
-                shift_detected = (
-                    True
-                    if difference > fm_config.statistics_comparison_config["threshold"]
-                    else False
-                )
+            if not isinstance(reference_statistics, FeatureDescriptiveStatistics):
+                # if specific value, don't save it with the fm result
+                reference_statistics = None
         else:
-            difference = 0
-            shift_detected = False
+            difference = None
+            shift_detected = None
 
         return self.save_feature_monitoring_result(
             config_id=fm_config.id,
             execution_id=DEFAULT_EXECUTION_ID,
-            detection_stats_id=detection_stats_id,
-            reference_stats_id=reference_stats_id,
+            detection_statistics=detection_statistics,
+            reference_statistics=reference_statistics,
             difference=difference,
             shift_detected=shift_detected,
         )
 
-    def compute_difference(
+    def _compute_difference_and_shift(
         self,
-        detection_stats: Dict[Hashable, Any],
-        reference_stats: Dict[Hashable, Any],
+        fm_config: FeatureMonitoringConfig,
+        detection_statistics: FeatureDescriptiveStatistics,
+        reference_statistics: Union[FeatureDescriptiveStatistics, int, float],
+    ) -> Tuple[float, bool]:
+        """Compute the difference and detect shift between the reference and detection statistics.
+
+        Args:
+            fm_config: FeatureMonitoringConfig. Feature monitoring configuration.
+            detection_statistics: FeatureDescriptiveStatistics. Computed statistics from detection data.
+            reference_statistics: Union[FeatureDescriptiveStatistics, int, float].
+                Computed statistics from reference data, or a specific value to use as reference.
+
+        Returns:
+            `(float, bool)`. The difference between the reference and detection statistics,
+                             and whether shift was detected or not
+        """
+
+        difference = self._compute_difference_between_stats(
+            detection_statistics,
+            reference_statistics,
+            metric=fm_config.statistics_comparison_config["compare_on"].lower(),
+            relative=fm_config.statistics_comparison_config["relative"],
+        )
+
+        if fm_config.statistics_comparison_config["strict"]:
+            shift_detected = (
+                True
+                if difference >= fm_config.statistics_comparison_config["threshold"]
+                else False
+            )
+        else:
+            shift_detected = (
+                True
+                if difference > fm_config.statistics_comparison_config["threshold"]
+                else False
+            )
+        return difference, shift_detected
+
+    def _compute_difference_between_stats(
+        self,
+        detection_statistics: FeatureDescriptiveStatistics,
+        reference_statistics: Union[FeatureDescriptiveStatistics, int, float],
         metric: str,
         relative: bool = False,
     ) -> float:
         """Compute the difference between the reference and detection statistics.
 
         Args:
-            detection_stats: `Dict[Hashable, Any]`. The statistics computed from detection data.
-            reference_stats: `Dict[Hashable, Any]`. The statistics computed from reference data.
+            detection_statistics: FeatureDescriptiveStatistics. Computed statistics from detection data.
+            reference_statistics: Union[FeatureDescriptiveStatistics, int, float].
+                Computed statistics from reference data, or a specific value to use as reference
             metric: `str`. The metric to compute the difference for.
             relative: `bool`. Whether to compute the relative difference or not.
 
         Returns:
             `float`. The difference between the reference and detection statistics.
         """
-        if reference_stats.get("specific_value", None) is not None:
-            reference_stats[metric] = reference_stats["specific_value"]
+
+        detection_value = detection_statistics.get_value(metric)
+        reference_value = (
+            reference_statistics
+            if isinstance(reference_statistics, (int, float))
+            else reference_statistics.get_value(metric)
+        )
+        return self._compute_difference_between_specific_values(
+            detection_value, reference_value, relative
+        )
+
+    def _compute_difference_between_specific_values(
+        self,
+        detection_value: Union[int, float],
+        reference_value: Union[int, float],
+        relative: bool = False,
+    ) -> float:
+        """Compute the difference between a reference and detection value.
+
+        Args:
+            detection_value: Union[int, float]. The detection value.
+            reference_value: Union[int, float]. The reference value
+            relative: `bool`. Whether to compute the relative difference or not.
+
+        Returns:
+            `float`. The difference between the reference and detection values.
+        """
 
         if relative:
-            if reference_stats[metric] == 0:
+            if reference_value == 0:
                 return float("inf")
             else:
-                return (
-                    detection_stats[metric] - reference_stats[metric]
-                ) / reference_stats[metric]
+                return (detection_value - reference_value) / reference_value
         else:
-            return detection_stats[metric] - reference_stats[metric]
+            return detection_value - reference_value
