@@ -29,10 +29,22 @@ jobs:
         run: cp ../README.md . && pip3 install pip==22.0.3 && pip3 install -e .[python,dev,docs]
 
       - name: use dev mike
-        run: pip3 uninstall -y mike && pip3 install git+'https://github.com/jimporter/mike.git'  
+        run: pip3 uninstall -y mike && pip3 install git+'https://github.com/jimporter/mike.git'
 
       - name: generate autodoc
         run: python3 auto_doc.py
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('java/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build java doc documentation
+        working-directory: ./java
+        run: mvn clean package javadoc:javadoc -DskipTests && cp -r target/apidocs ../docs/javadoc
 
       - name: setup git
         run: |

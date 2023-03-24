@@ -21,7 +21,7 @@ setup(
         "requests",
         "furl",
         "boto3",
-        "pandas>=1.2.0",
+        "pandas>=1.2.0,<2.0.0",
         "numpy",
         "pyjks",
         "mock",
@@ -55,19 +55,15 @@ setup(
         ],
         "hive": [
             "pyhopshive[thrift]",
-            # Pin gcsfs version since there is a bug in fsspec which gcsfs depends on in newer version: https://github.com/fsspec/filesystem_spec/pull/1103
-            "gcsfs==2022.7.1",
             "pyarrow",
             "confluent-kafka==1.8.2",
-            "fastavro==1.4.11",
+            "fastavro>=1.4.11,<=1.7.3",
         ],
         "python": [
             "pyhopshive[thrift]",
-            # Pin gcsfs version since there is a bug in fsspec which gcsfs depends on in newer version: https://github.com/fsspec/filesystem_spec/pull/1103
-            "gcsfs==2022.7.1",
             "pyarrow",
             "confluent-kafka==1.8.2",
-            "fastavro==1.4.11",
+            "fastavro>=1.4.11,<=1.7.3",
             "tqdm",
         ],
     },
