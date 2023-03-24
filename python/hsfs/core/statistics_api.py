@@ -78,6 +78,28 @@ class StatisticsApi:
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
+    def get_by_feature_name_time_window_and_row_percentage(
+        self, metadata_instance, feature_name, start_time, end_time, row_percentage
+    ):
+        """Gets statistics based on a commit time window and row percentage"""
+        # TODO: Fetch existing statistics and return them here if they are found
+        # _client = client.get_instance()
+        # path_params = self.get_path(metadata_instance)
+        # headers = {"content-type": "application/json"}
+        # query_params = {
+        #     "feature": feature_name,  # TODO: Or using endpoint .../statistics/feature/{name}
+        #     "start_time": start_time,
+        #     "end_time": end_time,
+        #     "row_percentage": row_percentage,
+        # }
+
+        # TODO: Backend implementation
+        # return statistics.Statistics.from_response_json(
+        #     _client._send_request("GET", path_params, query_params, headers=headers)
+        # )
+
+        return None
+
     def compute(self, metadata_instance, training_dataset_version=None):
         _client = client.get_instance()
         path_params = self.get_path(metadata_instance, training_dataset_version) + [
