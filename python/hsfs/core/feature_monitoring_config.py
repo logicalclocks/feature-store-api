@@ -14,11 +14,12 @@
 #   limitations under the License.
 #
 
-
 import json
 import humps
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from hsfs import util
+
+from hsfs.core.monitoring_window_config import MonitoringWindowConfig
 
 
 class FeatureMonitoringConfig:
@@ -29,8 +30,8 @@ class FeatureMonitoringConfig:
         name: str,
         feature_monitoring_type: str = "DESCRIPTIVE_STATISTICS",
         job_name: Optional[str] = None,
-        detection_window_config: Optional[Dict[str, Any]] = None,
-        reference_window_config: Optional[Dict[str, Any]] = None,
+        detection_window_config: Optional[Union[MonitoringWindowConfig, dict]] = None,
+        reference_window_config: Optional[Union[MonitoringWindowConfig, dict]] = None,
         statistics_comparison_config: Optional[Dict[str, Any]] = None,
         alert_config: Optional[str] = None,
         scheduler_config: Optional[str] = None,
@@ -57,8 +58,23 @@ class FeatureMonitoringConfig:
         self._scheduler_config = scheduler_config
         self._alert_config = alert_config
         self._statistics_comparison_config = statistics_comparison_config
-        self._detection_window_config = detection_window_config
-        self._reference_window_config = reference_window_config
+        self._detection_window_config = self._parse_window_config(
+            detection_window_config
+        )
+        self._reference_window_config = self._parse_window_config(
+            reference_window_config
+        )
+
+    def _parse_window_config(
+        self, window_config: Optional[Union[MonitoringWindowConfig, dict]]
+    ):
+        if window_config is None:
+            return None
+        return (
+            window_config
+            if isinstance(window_config, MonitoringWindowConfig)
+            else MonitoringWindowConfig.from_response_json(window_config)
+        )
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -70,36 +86,17 @@ class FeatureMonitoringConfig:
         else:
             return cls(**json_decamelized)
 
-    def _window_config_to_dict(self, window_config: Dict[str, Any]) -> Dict[str, Any]:
-
-        return {
-            "windowConfigType": window_config.get(
-                "window_config_type", "SPECIFIC_VALUE"
-            ),
-            "windowLength": window_config.get("window_length", None),
-            "timeOffset": window_config.get("time_offset", None),
-            "specificValue": window_config.get("specific_value", None),
-            "specificId": window_config.get("specific_id", None),
-            "rowPercentage": window_config.get("row_percentage", None),
-            "id": window_config.get("id", None),
-        }
-
     def to_dict(self):
-
-        if isinstance(self._detection_window_config, dict):
-            detection_window_config = self._window_config_to_dict(
-                self._detection_window_config
-            )
-        else:
-            detection_window_config = None
-
-        if isinstance(self._reference_window_config, dict):
-            reference_window_config = self._window_config_to_dict(
-                self._reference_window_config
-            )
-        else:
-            reference_window_config = None
-
+        detection_window_config = (
+            self._detection_window_config.to_dict()
+            if self._detection_window_config is not None
+            else None
+        )
+        reference_window_config = (
+            self._reference_window_config.to_dict()
+            if self._reference_window_config is not None
+            else None
+        )
         if isinstance(self._statistics_comparison_config, dict):
             statistics_comparison_config = {
                 "threshold": self._statistics_comparison_config.get("threshold", 0.0),
@@ -188,11 +185,11 @@ class FeatureMonitoringConfig:
         return self._scheduler_config
 
     @property
-    def detection_window_config(self) -> Dict[str, Any]:
+    def detection_window_config(self) -> MonitoringWindowConfig:
         return self._detection_window_config
 
     @property
-    def reference_window_config(self) -> Optional[Dict[str, Any]]:
+    def reference_window_config(self) -> MonitoringWindowConfig:
         return self._reference_window_config
 
     @property
