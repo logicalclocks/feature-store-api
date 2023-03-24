@@ -377,7 +377,8 @@ class FeatureMonitoringConfigEngine:
 
         if check_existing:
             start_time, end_time = self.get_window_start_end_times(
-                monitoring_window_config
+                time_offset=monitoring_window_config.time_offset,
+                window_length=monitoring_window_config.window_length,
             )
             registered_stats = self._statistics_engine.get_by_feature_name_time_window_and_row_percentage(
                 entity,
@@ -479,7 +480,10 @@ class FeatureMonitoringConfigEngine:
         Returns:
             FeatureDescriptiveStatistics: Descriptive statistics
         """
-        start_time, end_time = self.get_window_start_end_times(monitoring_window_config)
+        start_time, end_time = self.get_window_start_end_times(
+            time_offset=monitoring_window_config.time_offset,
+            window_length=monitoring_window_config.window_length,
+        )
         return (
             self._statistics_engine.get_by_feature_name_time_window_and_row_percentage(
                 entity,
