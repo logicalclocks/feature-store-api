@@ -152,7 +152,7 @@ class FeatureMonitoringConfig:
     def __repr__(self):
         return json.dumps(humps.decamelize(self.to_dict()), indent=2)
 
-    def detection_window(
+    def with_detection_window(
         self,
         time_offset: Optional[str],
         window_length: Optional[str],
@@ -171,7 +171,7 @@ class FeatureMonitoringConfig:
 
         return self
 
-    def reference_window(
+    def with_reference_window(
         self,
         time_offset: Optional[str],
         window_length: Optional[str],
