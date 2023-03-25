@@ -563,7 +563,7 @@ public class FeatureStore {
    *                      for low latency access.
    * @param eventTime Name of the feature containing the event time for the features in this feature group. If
    *                  eventTime is the feature group can be used for point-in-time joins.
-   *                  The supported data types for the eventTime columns are: timestamp, date and bigint
+   *                  The supported data types for the eventTime column are: timestamp, date and bigint
    * @return FeatureGroup: The feature group metadata object
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
@@ -597,7 +597,7 @@ public class FeatureStore {
    *                      for low latency access.
    * @param eventTime Name of the feature containing the event time for the features in this feature group. If
    *                  eventTime is set the feature group can be used for point-in-time joins.
-   *                  The supported data types for the eventTime columns are: timestamp, date and bigint
+   *                  The supported data types for the eventTime column are: timestamp, date and bigint
    * @return FeatureGroup: The feature group metadata object
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
@@ -644,7 +644,7 @@ public class FeatureStore {
    *                          setting. To fully turn off statistics computation pass `statisticsConfig=false`.
    * @param eventTime Name of the feature containing the event time for the features in this feature group. If
    *                  eventTime is set the feature group can be used for point-in-time joins.
-   *                  The supported data types for the eventTime columns are: timestamp, date and bigint
+   *                  The supported data types for the eventTime column are: timestamp, date and bigint
    * @return FeatureGroup: The feature group metadata object.
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
@@ -708,7 +708,7 @@ public class FeatureStore {
    *                      for low latency access.
    * @param eventTime Name of the feature containing the event time for the features in this feature group. If
    *                  eventTime is set the feature group can be used for point-in-time joins.
-   *                  The supported data types for the eventTime columns are: timestamp, date and bigint
+   *                  The supported data types for the eventTime column are: timestamp, date and bigint
    * @return FeatureGroup The feature group metadata object.
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve StreamFeatureGroup from the feature store.
@@ -743,7 +743,7 @@ public class FeatureStore {
    *                      for low latency access.
    * @param eventTime Name of the feature containing the event time for the features in this feature group. If
    *                  eventTime is set the feature group can be used for point-in-time joins.
-   *                  The supported data types for the eventTime columns are: timestamp, date and bigint
+   *                  The supported data types for the eventTime column are: timestamp, date and bigint
    * @return FeatureGroup: The feature group metadata object
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve StreamFeatureGroup from the feature store.
