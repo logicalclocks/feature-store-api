@@ -57,7 +57,7 @@ public class StorageConnectorUtils {
     } else if (connector instanceof StorageConnector.SnowflakeConnector) {
       return read((StorageConnector.SnowflakeConnector) connector, query);
     } else if (connector instanceof StorageConnector.JdbcConnector) {
-      read((StorageConnector.JdbcConnector) connector, query);
+      return read((StorageConnector.JdbcConnector) connector, query);
     } else if (connector instanceof StorageConnector.GcsConnector) {
       return read((StorageConnector.GcsConnector) connector, dataFormat, options, path);
     } else if (connector instanceof StorageConnector.BigqueryConnector) {
