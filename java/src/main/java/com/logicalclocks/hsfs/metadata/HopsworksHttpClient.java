@@ -34,9 +34,15 @@ public interface HopsworksHttpClient {
 
   String getTrustStorePath();
 
+  void setTrustStorePath(String trustStorePath);
+
   String getKeyStorePath();
 
+  void setKeyStorePath(String keyStorePath);
+
   String getCertKey();
+
+  void setCertKey(String certKey);
 
   static String readCertKey(String materialPwd) {
     try {

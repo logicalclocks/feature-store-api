@@ -23,6 +23,7 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.SecretStore;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
@@ -80,39 +81,36 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
   protected String apiKey = "";
 
   @Getter
+  @Setter
   protected String trustStorePath;
 
   @Getter
+  @Setter
   protected String keyStorePath;
 
   @Getter
+  @Setter
   protected String certKey;
 
   public HopsworksExternalClient(String host, int port, String apiKeyFilepath,
-                                 boolean hostnameVerification, String trustStorePath, String frameworkTrustStorePath,
-                                 String keyStorePath, String certKey)
+                                 boolean hostnameVerification, String trustStorePath)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, null, null, hostnameVerification, trustStorePath, apiKeyFilepath, null,
-        frameworkTrustStorePath, keyStorePath, certKey);
+    this(host, port, null, null, hostnameVerification, trustStorePath, apiKeyFilepath, null);
   }
 
   public HopsworksExternalClient(String host, int port, boolean hostnameVerification,
-                                 String trustStorePath, Region region, SecretStore secretStore,
-                                 String frameworkTrustStorePath, String keyStorePath, String certKey)
+                                 String trustStorePath, Region region, SecretStore secretStore)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, region, secretStore, hostnameVerification, trustStorePath, null, null,
-        frameworkTrustStorePath, keyStorePath, certKey);
+    this(host, port, region, secretStore, hostnameVerification, trustStorePath, null, null);
   }
 
   public HopsworksExternalClient(String host, int port, boolean hostnameVerification,
-                                 String trustStorePath, String apiKeyValue, String frameworkTrustStorePath,
-                                 String keyStorePath, String certKey)
+                                 String trustStorePath, String apiKeyValue)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, null, null, hostnameVerification, trustStorePath, null, apiKeyValue,
-        frameworkTrustStorePath, keyStorePath, certKey);
+    this(host, port, null, null, hostnameVerification, trustStorePath, null, apiKeyValue);
   }
 
   public HopsworksExternalClient(CloseableHttpClient httpClient, HttpHost httpHost) {
@@ -122,8 +120,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
 
   HopsworksExternalClient(String host, int port, Region region,
                           SecretStore secretStore, boolean hostnameVerification,
-                          String trustStorePath, String apiKeyFilepath, String apiKeyValue,
-                          String frameworkTrustStorePath, String keyStorePath, String certKey)
+                          String trustStorePath, String apiKeyFilepath, String apiKeyValue)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
 
@@ -144,10 +141,6 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     } else {
       this.apiKey = readApiKey(secretStore, region, apiKeyFilepath);
     }
-
-    this.trustStorePath = frameworkTrustStorePath;
-    this.keyStorePath = keyStorePath;
-    this.certKey = HopsworksHttpClient.readCertKey(certKey);
   }
 
   protected Registry<ConnectionSocketFactory> createConnectionFactory(HttpHost httpHost, boolean hostnameVerification,

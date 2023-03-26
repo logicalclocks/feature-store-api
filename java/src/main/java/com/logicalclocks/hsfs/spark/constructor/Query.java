@@ -75,7 +75,7 @@ public class Query extends QueryBase<Query, StreamFeatureGroup, Dataset<Row>> {
       StorageConnector.JdbcConnector onlineConnector =
           storageConnectorApi.getOnlineStorageConnector(
               leftFeatureGroup.getFeatureStore(), StorageConnector.JdbcConnector.class);
-      return storageConnectorUtils.read(onlineConnector, fsQuery.getStorageQuery(Storage.ONLINE),null, null, null);
+      return storageConnectorUtils.read(onlineConnector, fsQuery.getStorageQuery(Storage.ONLINE));
     } else {
       fsQuery.registerOnDemandFeatureGroups();
       fsQuery.registerHudiFeatureGroups(readOptions);

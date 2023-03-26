@@ -22,6 +22,7 @@ import com.logicalclocks.hsfs.HopsworksConnectionBase;
 import com.logicalclocks.hsfs.SecretStore;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 
+import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import lombok.Builder;
@@ -48,22 +49,18 @@ public class HopsworksConnection extends HopsworksConnectionBase {
     this.apiKeyFilePath = apiKeyFilePath;
     this.apiKeyValue = apiKeyValue;
 
-    String frameworkTrustStorePath = null;
-    String keyStorePath = null;
-    String certKey = null;
-    if (!System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
-      SparkEngine.getInstance().validateSparkConfiguration();
-      frameworkTrustStorePath = SparkEngine.getInstance().getTrustStorePath();
-      keyStorePath = SparkEngine.getInstance().getKeyStorePath();
-      certKey = SparkEngine.getInstance().getCertKey();
-    }
     HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
-        hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue,
-        frameworkTrustStorePath,
-        keyStorePath,
-        certKey);
+        hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue);
     this.projectObj = getProject();
     HopsworksClient.getInstance().setProject(this.projectObj);
+    if (!System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
+      SparkEngine.getInstance().validateSparkConfiguration();
+      HopsworksHttpClient hopsworksHttpClient =  HopsworksClient.getInstance().getHopsworksHttpClient();
+      hopsworksHttpClient.setTrustStorePath(SparkEngine.getInstance().getTrustStorePath());
+      hopsworksHttpClient.setKeyStorePath(SparkEngine.getInstance().getKeyStorePath());
+      hopsworksHttpClient.setCertKey(HopsworksHttpClient.readCertKey(SparkEngine.getInstance().getCertKey()));
+      HopsworksClient.getInstance().setHopsworksHttpClient(hopsworksHttpClient);
+    }
   }
 
   /**

@@ -17,6 +17,7 @@
 
 package com.logicalclocks.hsfs.metadata;
 
+import com.damnhandy.uri.template.UriTemplate;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +33,7 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
@@ -39,8 +41,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.regions.Region;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.util.Base64;
 
 public class HopsworksClient {
 
@@ -71,8 +80,7 @@ public class HopsworksClient {
   public static synchronized HopsworksClient setupHopsworksClient(String host, int port, Region region,
                                                                   SecretStore secretStore, boolean hostnameVerification,
                                                                   String trustStorePath, String apiKeyFilePath,
-                                                                  String apiKeyValue, String frameworkTrustStorePath,
-                                                                  String keyStorePath, String certKey)
+                                                                  String apiKeyValue)
       throws FeatureStoreException {
     if (hopsworksClientInstance != null) {
       return hopsworksClientInstance;
@@ -84,8 +92,7 @@ public class HopsworksClient {
         hopsworksHttpClient = new HopsworksInternalClient();
       } else {
         hopsworksHttpClient = new HopsworksExternalClient(host, port, region,
-            secretStore, hostnameVerification, trustStorePath, apiKeyFilePath, apiKeyValue, frameworkTrustStorePath,
-            keyStorePath, certKey);
+            secretStore, hostnameVerification, trustStorePath, apiKeyFilePath, apiKeyValue);
       }
     } catch (Exception e) {
       throw new FeatureStoreException("Could not setup Hopsworks client", e);
@@ -95,7 +102,39 @@ public class HopsworksClient {
     return hopsworksClientInstance;
   }
 
+  public Credentials getCredentials(Project project) throws FeatureStoreException, IOException,
+      KeyStoreException, CertificateException, NoSuchAlgorithmException {
+    HopsworksClient hopsworksClient = getInstance();
+    String pathTemplate = PROJECT_PATH
+        + "/credentials";
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+        .set("projectId", project.getProjectId())
+        .expand();
+
+    LOGGER.info("Sending metadata request: " + uri);
+    Credentials credentials = hopsworksClient.handleRequest(new HttpGet(uri), Credentials.class);
+
+    KeyStore ks = KeyStore.getInstance("JKS");
+    ks.load(new ByteArrayInputStream(Base64.getDecoder().decode(credentials.getkStore())),
+        credentials.getPassword().toCharArray());
+    String keyStorePath = System.getProperty("java.io.tmpdir") + "/keyStore.jks";
+    ks.store(new FileOutputStream(keyStorePath), credentials.getPassword().toCharArray());
+
+    KeyStore ts =  KeyStore.getInstance("JKS");
+    ts.load(new ByteArrayInputStream(Base64.getDecoder().decode(credentials.gettStore())),
+        credentials.getPassword().toCharArray());
+    String trustStorePath = System.getProperty("java.io.tmpdir") + "/trustStore.jks";
+    ts.store(new FileOutputStream(trustStorePath), credentials.getPassword().toCharArray());
+
+    credentials.setkStore(keyStorePath);
+    credentials.settStore(trustStorePath);
+
+    return credentials;
+  }
+
   @Getter
+  @Setter
   protected HopsworksHttpClient hopsworksHttpClient;
 
   @Getter

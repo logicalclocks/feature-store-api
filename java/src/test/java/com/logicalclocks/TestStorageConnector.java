@@ -78,7 +78,7 @@ public class TestStorageConnector {
     String query = "select * from dbtable";
 
     // Act
-    storageConnectorUtils.read(snowflakeConnector, query, null, null, null);
+    storageConnectorUtils.read(snowflakeConnector, query);
     Mockito.verify(sparkEngine).read(Mockito.any(), Mockito.any(), mapArg.capture(), Mockito.any());
 
     // Assert

@@ -20,6 +20,7 @@ package com.logicalclocks.hsfs.metadata;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import jdk.nashorn.internal.runtime.regexp.joni.exception.InternalException;
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -74,12 +75,15 @@ public class HopsworksInternalClient implements HopsworksHttpClient {
   private String jwt = "";
 
   @Getter
+  @Setter
   private String trustStorePath = T_CERTIFICATE;
 
   @Getter
+  @Setter
   private String keyStorePath = K_CERTIFICATE;
 
   @Getter
+  @Setter
   private String certKey;
 
   public HopsworksInternalClient() throws IOException, KeyStoreException, CertificateException,
