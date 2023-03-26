@@ -67,8 +67,6 @@ public class StorageConnectorUtils {
     } else {
       throw new FeatureStoreException("Unknown type of StorageConnector.");
     }
-
-    return SparkEngine.getInstance().read(connector,  dataFormat, options, path);
   }
 
   /**
