@@ -73,11 +73,18 @@ public class MainClass {
         .hasArg()
         .build());
 
+    options.addOption(Option.builder("kafkaOffsetReset")
+        .argName("kafkaOffsetReset")
+        .required(false)
+        .hasArg()
+        .build());
+
     CommandLineParser parser = new DefaultParser();
     CommandLine commandLine = parser.parse(options, args);
 
     String op = commandLine.getOptionValue("op");
     String path = commandLine.getOptionValue("path");
+    String kafkaOffsetsReset = commandLine.getOptionValue("kafkaOffsetReset");
 
     // read jobs config
     Map<String, Object> jobConf = readJobConf(path);
@@ -92,6 +99,13 @@ public class MainClass {
         jobConf.get("version")));
 
     Map<String, String> writeOptions = (Map<String, String>) jobConf.get("write_options");
+    if (kafkaOffsetsReset != null) {
+      if (writeOptions == null) {
+        writeOptions = new HashMap<>();
+      }
+      writeOptions.put("kafkaOffsetReset", kafkaOffsetsReset);
+    }
+    LOGGER.info("Hsfs utils write options: {}", writeOptions);
 
     if (op.equals("offline_fg_backfill")) {
       SparkEngine.getInstance().streamToHudiTable(streamFeatureGroup, writeOptions);
