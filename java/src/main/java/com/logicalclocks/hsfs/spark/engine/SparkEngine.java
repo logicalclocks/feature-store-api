@@ -30,7 +30,7 @@ import com.logicalclocks.hsfs.HudiOperationType;
 import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TimeTravelFormat;
-import com.logicalclocks.hsfs.constructor.HudiFeatureGroupAlias;
+import com.logicalclocks.hsfs.constructor.FeatureGroupAlias;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
@@ -245,20 +245,20 @@ public class SparkEngine {
         .collect(Collectors.toMap(OnDemandOptions::getName, OnDemandOptions::getValue));
   }
 
-  public void registerHudiTemporaryTable(HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> readOptions)
+  public void registerHudiTemporaryTable(FeatureGroupAlias featureGroupAlias, Map<String, String> readOptions)
           throws FeatureStoreException {
     Map<String, String> hudiArgs = hudiEngine.setupHudiReadOpts(
-        hudiFeatureGroupAlias.getLeftFeatureGroupStartTimestamp(),
-        hudiFeatureGroupAlias.getLeftFeatureGroupEndTimestamp(),
+        featureGroupAlias.getLeftFeatureGroupStartTimestamp(),
+        featureGroupAlias.getLeftFeatureGroupEndTimestamp(),
         readOptions);
 
     sparkSession.read()
         .format(HudiEngine.HUDI_SPARK_FORMAT)
         .options(hudiArgs)
-        .load(hudiFeatureGroupAlias.getFeatureGroup().getLocation())
-        .createOrReplaceTempView(hudiFeatureGroupAlias.getAlias());
+        .load(featureGroupAlias.getFeatureGroup().getLocation())
+        .createOrReplaceTempView(featureGroupAlias.getAlias());
 
-    hudiEngine.reconcileHudiSchema(sparkSession, hudiFeatureGroupAlias, hudiArgs);
+    hudiEngine.reconcileHudiSchema(sparkSession, featureGroupAlias, hudiArgs);
   }
 
   /**

@@ -19,8 +19,8 @@ package com.logicalclocks.hsfs.spark.constructor;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.constructor.FeatureGroupAlias;
 import com.logicalclocks.hsfs.constructor.FsQueryBase;
-import com.logicalclocks.hsfs.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.hsfs.spark.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.spark.StreamFeatureGroup;
 import com.logicalclocks.hsfs.spark.engine.SparkEngine;
@@ -31,17 +31,17 @@ import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @AllArgsConstructor
-public class FsQuery extends FsQueryBase<StreamFeatureGroup> {
+public class FsQuery extends FsQueryBase<StreamFeatureGroup, ExternalFeatureGroup> {
   @Override
   public void registerOnDemandFeatureGroups() throws FeatureStoreException, IOException {
     if (getOnDemandFeatureGroups() == null || getOnDemandFeatureGroups().isEmpty()) {
       return;
     }
 
-    for (HudiFeatureGroupAlias externalFeatureGroupAlias : getOnDemandFeatureGroups()) {
+    for (FeatureGroupAlias externalFeatureGroupAlias : getOnDemandFeatureGroups()) {
       String alias = externalFeatureGroupAlias.getAlias();
       ExternalFeatureGroup onDemandFeatureGroup =
-          (ExternalFeatureGroup) externalFeatureGroupAlias.getFeatureGroup();
+          (ExternalFeatureGroup) externalFeatureGroupAlias.getOnDemandFeatureGroup();
 
       SparkEngine.getInstance().registerOnDemandTemporaryTable(onDemandFeatureGroup, alias);
     }
@@ -49,8 +49,8 @@ public class FsQuery extends FsQueryBase<StreamFeatureGroup> {
 
   @Override
   public void registerHudiFeatureGroups(Map<String, String> readOptions) throws FeatureStoreException {
-    for (HudiFeatureGroupAlias hudiFeatureGroupAlias : getHudiCachedFeatureGroups()) {
-      SparkEngine.getInstance().registerHudiTemporaryTable(hudiFeatureGroupAlias, readOptions);
+    for (FeatureGroupAlias featureGroupAlias : getHudiCachedFeatureGroups()) {
+      SparkEngine.getInstance().registerHudiTemporaryTable(featureGroupAlias, readOptions);
     }
   }
 }

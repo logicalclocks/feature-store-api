@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public abstract class FsQueryBase<T extends FeatureGroupBase> {
+public abstract class FsQueryBase<T extends FeatureGroupBase, T2 extends FeatureGroupBase> {
   @Getter
   @Setter
   private String query;
@@ -43,11 +43,11 @@ public abstract class FsQueryBase<T extends FeatureGroupBase> {
 
   @Getter
   @Setter
-  private List<HudiFeatureGroupAlias<T>> onDemandFeatureGroups;
+  private List<FeatureGroupAlias<T2>> onDemandFeatureGroups;
 
   @Getter
   @Setter
-  private List<HudiFeatureGroupAlias<T>> hudiCachedFeatureGroups;
+  private List<FeatureGroupAlias<T>> hudiCachedFeatureGroups;
 
   public void removeNewLines() {
     query = query != null ? query.replace("\n", " ") : null;

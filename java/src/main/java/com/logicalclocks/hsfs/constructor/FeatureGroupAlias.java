@@ -25,7 +25,7 @@ import lombok.Setter;
 
 @AllArgsConstructor
 @NoArgsConstructor
-public class HudiFeatureGroupAlias<T extends FeatureGroupBase> {
+public class FeatureGroupAlias<T extends FeatureGroupBase> {
 
   @Getter
   @Setter
@@ -34,6 +34,10 @@ public class HudiFeatureGroupAlias<T extends FeatureGroupBase> {
   @Getter
   @Setter
   private T featureGroup;
+
+  @Getter
+  @Setter
+  private T onDemandFeatureGroup;
 
   @Getter
   @Setter

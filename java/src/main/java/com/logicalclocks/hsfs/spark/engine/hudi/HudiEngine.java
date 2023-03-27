@@ -21,7 +21,7 @@ import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HudiOperationType;
-import com.logicalclocks.hsfs.constructor.HudiFeatureGroupAlias;
+import com.logicalclocks.hsfs.constructor.FeatureGroupAlias;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.FeatureGroupBase;
@@ -191,7 +191,7 @@ public class HudiEngine {
     }
   }
 
-  public void registerTemporaryTable(SparkSession sparkSession, HudiFeatureGroupAlias hudiFeatureGroupAlias,
+  public void registerTemporaryTable(SparkSession sparkSession, FeatureGroupAlias featureGroupAlias,
                                      Map<String, String> readOptions) {
 
   }
@@ -308,20 +308,20 @@ public class HudiEngine {
   }
 
   public void reconcileHudiSchema(SparkSession sparkSession,
-                                  HudiFeatureGroupAlias hudiFeatureGroupAlias, Map<String, String> hudiArgs)
+                                  FeatureGroupAlias featureGroupAlias, Map<String, String> hudiArgs)
           throws FeatureStoreException {
-    String fgTableName = utils.getTableName(hudiFeatureGroupAlias.getFeatureGroup());
-    String[] hudiSchema = sparkSession.table(hudiFeatureGroupAlias.getAlias()).columns();
+    String fgTableName = utils.getTableName(featureGroupAlias.getFeatureGroup());
+    String[] hudiSchema = sparkSession.table(featureGroupAlias.getAlias()).columns();
     String[] hiveSchema = sparkSession.table(fgTableName).columns();
     if (!sparkSchemasMatch(hudiSchema, hiveSchema)) {
       Dataset dataframe = sparkSession.table(fgTableName).limit(0);
 
-      FeatureStore featureStore = (FeatureStore) hudiFeatureGroupAlias.getFeatureGroup().getFeatureStore();
+      FeatureStore featureStore = (FeatureStore) featureGroupAlias.getFeatureGroup().getFeatureStore();
 
       try {
         FeatureGroup fullFG = featureStore.getFeatureGroup(
-                hudiFeatureGroupAlias.getFeatureGroup().getName(),
-                hudiFeatureGroupAlias.getFeatureGroup().getVersion());
+                featureGroupAlias.getFeatureGroup().getName(),
+                featureGroupAlias.getFeatureGroup().getVersion());
         saveHudiFeatureGroup(sparkSession, fullFG, dataframe,
                   HudiOperationType.UPSERT, new HashMap<>(), null);
       } catch (IOException | ParseException e) {
@@ -331,8 +331,8 @@ public class HudiEngine {
       sparkSession.read()
               .format(HudiEngine.HUDI_SPARK_FORMAT)
               .options(hudiArgs)
-              .load(hudiFeatureGroupAlias.getFeatureGroup().getLocation())
-              .createOrReplaceTempView(hudiFeatureGroupAlias.getAlias());
+              .load(featureGroupAlias.getFeatureGroup().getLocation())
+              .createOrReplaceTempView(featureGroupAlias.getAlias());
     }
   }
 

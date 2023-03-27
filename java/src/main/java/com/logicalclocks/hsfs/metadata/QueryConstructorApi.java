@@ -19,8 +19,8 @@ package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.FeatureGroupBase;
+import com.logicalclocks.hsfs.constructor.FeatureGroupAlias;
 import com.logicalclocks.hsfs.constructor.FsQueryBase;
-import com.logicalclocks.hsfs.constructor.HudiFeatureGroupAlias;
 import com.logicalclocks.hsfs.constructor.QueryBase;
 import com.logicalclocks.hsfs.FeatureStoreBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -59,14 +59,14 @@ public class QueryConstructorApi {
     LOGGER.info("Sending query: " + queryJson);
     FsQueryBase fsQueryBase = (FsQueryBase) hopsworksClient.handleRequest(putRequest, fsQueryType);
     fsQueryBase.removeNewLines();
-    List<HudiFeatureGroupAlias> onDemandFeatureGroupAliases = fsQueryBase.getOnDemandFeatureGroups();
-    List<HudiFeatureGroupAlias> hudiCachedFeatureAliases = fsQueryBase.getHudiCachedFeatureGroups();
-    for (HudiFeatureGroupAlias onDemandFeatureGroupAlias : onDemandFeatureGroupAliases) {
-      FeatureGroupBase updatedFG = onDemandFeatureGroupAlias.getFeatureGroup();
+    List<FeatureGroupAlias> onDemandFeatureGroupAliases = fsQueryBase.getOnDemandFeatureGroups();
+    for (FeatureGroupAlias onDemandFeatureGroupAlias : onDemandFeatureGroupAliases) {
+      FeatureGroupBase updatedFG = onDemandFeatureGroupAlias.getOnDemandFeatureGroup();
       updatedFG.setFeatureStore(featureStoreBase);
-      onDemandFeatureGroupAlias.setFeatureGroup(updatedFG);
+      onDemandFeatureGroupAlias.setOnDemandFeatureGroup(updatedFG);
     }
-    for (HudiFeatureGroupAlias hudiCachedFeatureAlias : hudiCachedFeatureAliases) {
+    List<FeatureGroupAlias> hudiCachedFeatureAliases = fsQueryBase.getHudiCachedFeatureGroups();
+    for (FeatureGroupAlias hudiCachedFeatureAlias : hudiCachedFeatureAliases) {
       FeatureGroupBase updatedFG = hudiCachedFeatureAlias.getFeatureGroup();
       updatedFG.setFeatureStore(featureStoreBase);
       hudiCachedFeatureAlias.setFeatureGroup(updatedFG);

@@ -346,10 +346,14 @@ public abstract class StorageConnector {
 
     @Override
     public Map<String, String> sparkOptions() {
-      Map<String, String> readOptions = arguments.stream()
-          .collect(Collectors.toMap(arg -> arg.getName(), arg -> arg.getValue()));
-      readOptions.put(Constants.JDBC_URL, connectionString);
-      return readOptions;
+      Map<String, String> options = new HashMap<>();
+      if (arguments != null && !arguments.isEmpty()) {
+        Map<String, String> readOptions = arguments.stream()
+            .collect(Collectors.toMap(Option::getName, Option::getValue));
+        options.putAll(readOptions);
+      }
+      options.put(Constants.JDBC_URL, connectionString);
+      return options;
     }
 
     public void update() throws FeatureStoreException, IOException {

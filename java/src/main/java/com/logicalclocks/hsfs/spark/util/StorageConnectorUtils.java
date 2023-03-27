@@ -33,43 +33,6 @@ import java.util.Map;
 public class StorageConnectorUtils {
 
   /**
-   * Reads a query or a path into a spark dataframe using the storage connector.
-   *
-   * @param connector Storage connector object.
-   * @param query SQL query string.
-   * @param dataFormat When reading from object stores such as S3, HopsFS and ADLS, specify the file format to be read,
-   *                  e.g. `csv`, `parquet`.
-   * @param options Any additional key/value options to be passed to the connector.
-   * @param path Path to be read from within the bucket of the storage connector. Not relevant for JDBC or database
-   *             based connectors such as Snowflake, JDBC or Redshift.
-   * @return Spark dataframe.
-   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException Generic IO exception.
-   */
-  public Dataset<Row> read(StorageConnector connector, String query, String dataFormat, Map<String, String> options,
-                           String path) throws FeatureStoreException, IOException {
-    if (connector instanceof StorageConnector.HopsFsConnector) {
-      return read((StorageConnector.HopsFsConnector) connector, dataFormat,options, path);
-    } else if (connector instanceof StorageConnector.RedshiftConnector) {
-      return read((StorageConnector.RedshiftConnector) connector, query);
-    } else if (connector instanceof StorageConnector.AdlsConnector) {
-      return read((StorageConnector.AdlsConnector) connector, dataFormat, options, path);
-    } else if (connector instanceof StorageConnector.SnowflakeConnector) {
-      return read((StorageConnector.SnowflakeConnector) connector, query);
-    } else if (connector instanceof StorageConnector.JdbcConnector) {
-      return read((StorageConnector.JdbcConnector) connector, query);
-    } else if (connector instanceof StorageConnector.GcsConnector) {
-      return read((StorageConnector.GcsConnector) connector, dataFormat, options, path);
-    } else if (connector instanceof StorageConnector.BigqueryConnector) {
-      return read((StorageConnector.BigqueryConnector) connector, query, options, path);
-    } else if (connector instanceof StorageConnector.KafkaConnector) {
-      throw new NotSupportedException("Reading a Kafka Stream into a static Spark Dataframe is not supported.");
-    } else {
-      throw new FeatureStoreException("Unknown type of StorageConnector.");
-    }
-  }
-
-  /**
    * Reads path into a spark dataframe using the HopsFsConnector.
    *
    * @param connector HopsFsConnector object.
@@ -227,6 +190,45 @@ public class StorageConnectorUtils {
     }
 
     return SparkEngine.getInstance().read(connector, Constants.BIGQUERY_FORMAT, readOptions, path);
+  }
+
+  /**
+   * Reads a query or a path into a spark dataframe using the storage connector.
+   *
+   * @param connector Storage connector object.
+   * @param query SQL query string.
+   * @param dataFormat When reading from object stores such as S3, HopsFS and ADLS, specify the file format to be read,
+   *                  e.g. `csv`, `parquet`.
+   * @param options Any additional key/value options to be passed to the connector.
+   * @param path Path to be read from within the bucket of the storage connector. Not relevant for JDBC or database
+   *             based connectors such as Snowflake, JDBC or Redshift.
+   * @return Spark dataframe.
+   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
+   * @throws IOException Generic IO exception.
+   */
+  public Dataset<Row> read(StorageConnector connector, String query, String dataFormat, Map<String, String> options,
+                           String path) throws FeatureStoreException, IOException {
+    if (connector instanceof StorageConnector.HopsFsConnector) {
+      return read((StorageConnector.HopsFsConnector) connector, dataFormat,options, path);
+    } else if (connector instanceof  StorageConnector.S3Connector) {
+      return read((StorageConnector.S3Connector) connector, dataFormat, options, path);
+    } else if (connector instanceof StorageConnector.RedshiftConnector) {
+      return read((StorageConnector.RedshiftConnector) connector, query);
+    } else if (connector instanceof StorageConnector.AdlsConnector) {
+      return read((StorageConnector.AdlsConnector) connector, dataFormat, options, path);
+    } else if (connector instanceof StorageConnector.SnowflakeConnector) {
+      return read((StorageConnector.SnowflakeConnector) connector, query);
+    } else if (connector instanceof StorageConnector.JdbcConnector) {
+      return read((StorageConnector.JdbcConnector) connector, query);
+    } else if (connector instanceof StorageConnector.GcsConnector) {
+      return read((StorageConnector.GcsConnector) connector, dataFormat, options, path);
+    } else if (connector instanceof StorageConnector.BigqueryConnector) {
+      return read((StorageConnector.BigqueryConnector) connector, query, options, path);
+    } else if (connector instanceof StorageConnector.KafkaConnector) {
+      throw new NotSupportedException("Reading a Kafka Stream into a static Spark Dataframe is not supported.");
+    } else {
+      throw new FeatureStoreException("Unknown type of StorageConnector.");
+    }
   }
 
   /**
