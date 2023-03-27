@@ -1,9 +1,15 @@
 [
   {
+    "version": "3.1.1-RC4",
+    "title": "3.1.1-RC4",
+    "aliases": [
+      "3.1"
+    ]
+  },
+  {
     "version": "3.1.1-RC3",
     "title": "3.1.1-RC3",
     "aliases": [
-      "3.1",
       "latest"
     ]
   },
