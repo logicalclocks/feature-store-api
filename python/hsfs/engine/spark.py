@@ -129,7 +129,7 @@ class Engine:
         self._spark_session.sql("USE {}".format(feature_store))
         return self._spark_session.sql(sql_query)
 
-    def show(self, sql_query, feature_store, n, online_conn, read_options):
+    def show(self, sql_query, feature_store, n, online_conn, read_options={}):
         return self.sql(
             sql_query, feature_store, online_conn, "default", read_options
         ).show(n)

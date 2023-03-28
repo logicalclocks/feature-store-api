@@ -302,7 +302,7 @@ class Engine:
             "Streaming Sources are not supported for pure Python Environments."
         )
 
-    def show(self, sql_query, feature_store, n, online_conn, read_options):
+    def show(self, sql_query, feature_store, n, online_conn, read_options={}):
         return self.sql(
             sql_query, feature_store, online_conn, "default", read_options
         ).head(n)
