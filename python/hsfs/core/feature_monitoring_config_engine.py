@@ -191,12 +191,12 @@ class FeatureMonitoringConfigEngine:
         """
 
         return MonitoringWindowConfig(
-            window_config_type,
-            time_offset,
-            window_length,
-            specific_id,
-            specific_value,
-            row_percentage,
+            window_config_type=window_config_type,
+            time_offset=time_offset,
+            window_length=window_length,
+            specific_id=specific_id,
+            specific_value=specific_value,
+            row_percentage=row_percentage,
         )
 
     def _build_stats_monitoring_only_config(
