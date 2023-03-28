@@ -57,8 +57,11 @@ from hsfs.core import great_expectation_engine
 
 
 class FeatureGroupBase:
-    def __init__(self, featurestore_id, location, event_time=None):
+    def __init__(
+        self, featurestore_id, location, event_time=None, online_enabled=False
+    ):
         self.event_time = event_time
+        self._online_enabled = online_enabled
         self._location = location
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
@@ -1175,6 +1178,15 @@ class FeatureGroupBase:
                 )
             )
 
+    @property
+    def online_enabled(self):
+        """Setting if the feature group is available in online storage."""
+        return self._online_enabled
+
+    @online_enabled.setter
+    def online_enabled(self, online_enabled):
+        self._online_enabled = online_enabled
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -1206,7 +1218,12 @@ class FeatureGroup(FeatureGroupBase):
         parents=None,
         href=None,
     ):
-        super().__init__(featurestore_id, location, event_time=event_time)
+        super().__init__(
+            featurestore_id,
+            location,
+            event_time=event_time,
+            online_enabled=online_enabled,
+        )
 
         self._feature_store_name = featurestore_name
         self._description = description
@@ -1220,7 +1237,6 @@ class FeatureGroup(FeatureGroupBase):
             for feat in (features or [])
         ]
 
-        self._online_enabled = online_enabled
         self._time_travel_format = (
             time_travel_format.upper() if time_travel_format is not None else None
         )
@@ -2346,11 +2362,6 @@ class FeatureGroup(FeatureGroupBase):
         return self._features
 
     @property
-    def online_enabled(self):
-        """Setting if the feature group is available in online storage."""
-        return self._online_enabled
-
-    @property
     def time_travel_format(self):
         """Setting of the feature group time travel format."""
         return self._time_travel_format
@@ -2443,10 +2454,6 @@ class FeatureGroup(FeatureGroupBase):
     def hudi_precombine_key(self, hudi_precombine_key):
         self._hudi_precombine_key = hudi_precombine_key.lower()
 
-    @online_enabled.setter
-    def online_enabled(self, new_online_enabled):
-        self._online_enabled = new_online_enabled
-
     @stream.setter
     def stream(self, stream):
         self._stream = stream
@@ -2484,7 +2491,12 @@ class ExternalFeatureGroup(FeatureGroupBase):
         online_enabled=False,
         href=None,
     ):
-        super().__init__(featurestore_id, location, event_time=event_time)
+        super().__init__(
+            featurestore_id,
+            location,
+            event_time=event_time,
+            online_enabled=online_enabled,
+        )
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
@@ -2496,7 +2508,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._path = path
         self._id = id
         self._expectation_suite = expectation_suite
-        self._online_enabled = online_enabled
 
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
@@ -2732,15 +2743,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
     @property
     def created(self):
         return self._created
-
-    @property
-    def online_enabled(self):
-        """Setting if the feature group is available in online storage."""
-        return self._online_enabled
-
-    @online_enabled.setter
-    def online_enabled(self, online_enabled):
-        self._online_enabled = online_enabled
 
     @version.setter
     def version(self, version):
