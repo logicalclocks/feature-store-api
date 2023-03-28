@@ -41,6 +41,7 @@ import org.apache.hudi.common.table.timeline.HoodieTimeline;
 import org.apache.hudi.HoodieDataSourceHelpers;
 
 import org.apache.hudi.common.util.Option;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.parquet.Strings;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.Dataset;
@@ -129,6 +130,7 @@ public class HudiEngine {
   protected static final String FEATURE_STORE_NAME = "featureStoreName";
   protected static final String FEATURE_GROUP_NAME = "featureGroupName";
   protected static final String FEATURE_GROUP_VERSION = "featureGroupVersion";
+  protected static final String FEATURE_GROUP_KAFKA_OFFSET_RESET = "kafkaOffsetReset";
   protected static final String FUNCTION_TYPE = "functionType";
   protected static final String STREAMING_QUERY = "streamingQuery";
 
@@ -384,22 +386,27 @@ public class HudiEngine {
         new JSONArray(streamFeatureGroup.getComplexFeatures()).toString());
     hudiWriteOpts.put(DELTA_SOURCE_ORDERING_FIELD_OPT_KEY,
         hudiWriteOpts.get(HUDI_PRECOMBINE_FIELD));
-    writeOptions.putAll(hudiWriteOpts);
 
     // check if table was initiated and if not initiate
     Path basePath = new Path(streamFeatureGroup.getLocation());
     FileSystem fs = basePath.getFileSystem(sparkSession.sparkContext().hadoopConfiguration());
     if (!fs.exists(new Path(basePath, HoodieTableMetaClient.METAFOLDER_NAME))) {
       createEmptyTable(sparkSession, streamFeatureGroup);
-      writeOptions.put(HudiEngine.INITIAL_CHECKPOINT_STRING, generetaInitialCheckPointStr(streamFeatureGroup));
+      // set "kafka.auto.offset.reset": "earliest"
+      hudiWriteOpts.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
     }
 
     // it is possible that table was generated from empty topic, thus we need to generate InitialCheckPointStr
     if (getLastCommitMetadata(sparkSession, streamFeatureGroup.getLocation()) == null) {
-      writeOptions.put(HudiEngine.INITIAL_CHECKPOINT_STRING, generetaInitialCheckPointStr(streamFeatureGroup));
+      // set "kafka.auto.offset.reset": "earliest"
+      hudiWriteOpts.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
     }
 
-    deltaStreamerConfig.streamToHoodieTable(writeOptions, sparkSession);
+    if (writeOptions.getOrDefault(HudiEngine.FEATURE_GROUP_KAFKA_OFFSET_RESET, "false").equalsIgnoreCase("true")) {
+      hudiWriteOpts.put(HudiEngine.INITIAL_CHECKPOINT_STRING, generetaInitialCheckPointStr(streamFeatureGroup));
+    }
+
+    deltaStreamerConfig.streamToHoodieTable(hudiWriteOpts, sparkSession);
     FeatureGroupCommit fgCommit = getLastCommitMetadata(sparkSession, streamFeatureGroup.getLocation());
     if (fgCommit != null) {
       featureGroupApi.featureGroupCommit(streamFeatureGroup, fgCommit);

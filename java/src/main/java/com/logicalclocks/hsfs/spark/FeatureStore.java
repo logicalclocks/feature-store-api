@@ -199,9 +199,9 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    *                     features and will be used as joining key.
    * @param onlineEnabled Define whether the feature group should be made available also in the online feature store
    *                      for low latency access.
-   * @param eventTime Name of the feature containing the event
-   *                 time for the features in this feature group. If eventTime is set
-   *                 the feature group can be used for point-in-time joins.
+   * @param eventTime Name of the feature containing the event time for the features in this feature group. If
+   *                  eventTime is set the feature group can be used for point-in-time joins.
+   *                  The supported data types for the eventTime column are: timestamp, date and bigint
    * @return FeatureGroup: The feature group metadata object
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
@@ -235,9 +235,9 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    *                      offline storage.
    * @param onlineEnabled Define whether the feature group should be made available also in the online feature store
    *                      for low latency access.
-   * @param eventTime Name of the feature containing the event
-   *                 time for the features in this feature group. If eventTime is set
-   *                 the feature group can be used for point-in-time joins.
+   * @param eventTime Name of the feature containing the event time for the features in this feature group. If
+   *                  eventTime is set the feature group can be used for point-in-time joins.
+   *                  The supported data types for the eventTime column are: timestamp, date and bigint
    * @return FeatureGroup: The feature group metadata object
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
@@ -284,9 +284,9 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    *                          `"histograms"` to compute feature value frequencies and `"exact_uniqueness"` to compute
    *                          uniqueness, distinctness and entropy. The values should be booleans indicating the
    *                          setting. To fully turn off statistics computation pass `statisticsConfig=false`.
-   * @param eventTime Name of the feature containing the event
-   *                 time for the features in this feature group. If eventTime is set
-   *                 the feature group can be used for point-in-time joins.
+   * @param eventTime Name of the feature containing the event time for the features in this feature group. If
+   *                  eventTime is set the feature group can be used for point-in-time joins.
+   *                  The supported data types for the eventTime column are: timestamp, date and bigint
    * @return FeatureGroup: The feature group metadata object.
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
@@ -419,9 +419,9 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    *                     features and will be used as joining key.
    * @param onlineEnabled Define whether the feature group should be made available also in the online feature store
    *                      for low latency access.
-   * @param eventTime name of the feature containing the event
-   *                 time for the features in this feature group. If eventTime is set
-   *                 the feature group can be used for point-in-time joins.
+   * @param eventTime Name of the feature containing the event time for the features in this feature group. If
+   *                  eventTime is set the feature group can be used for point-in-time joins.
+   *                  The supported data types for the eventTime column are: timestamp, date and bigint
    * @return FeatureGroup The feature group metadata object.
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve StreamFeatureGroup from the feature store.
@@ -456,9 +456,9 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    *                      offline storage.
    * @param onlineEnabled Define whether the feature group should be made available also in the online feature store
    *                      for low latency access.
-   * @param eventTime name of the feature containing the event
-   *                 time for the features in this feature group. If eventTime is set
-   *                 the feature group can be used for point-in-time joins.
+   * @param eventTime Name of the feature containing the event time for the features in this feature group. If
+   *                  eventTime is set the feature group can be used for point-in-time joins.
+   *                  The supported data types for the eventTime column are: timestamp, date and bigint
    * @return FeatureGroup: The feature group metadata object
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve StreamFeatureGroup from the feature store.

@@ -81,8 +81,9 @@ public class DeltaStreamerKafkaSource extends AvroSource {
   protected InputBatch<JavaRDD<GenericRecord>> fetchNewData(Option<String> lastCheckpointStr, long sourceLimit) {
     OffsetRange[] offsetRanges = this.offsetGen.getNextOffsetRanges(lastCheckpointStr, sourceLimit, this.metrics);
     long totalNewMsgs = KafkaOffsetGen.CheckpointUtils.totalNewMessages(offsetRanges);
-    LOG.info("About to read " + totalNewMsgs + " from Kafka for topic :" + this.offsetGen.getTopicName()
-        + " from lastCheckpointStr " + lastCheckpointStr);
+    LOG.info("About to read " + totalNewMsgs + " from Kafka for topic: " + this.offsetGen.getTopicName()
+        + " from lastCheckpointStr " + lastCheckpointStr + " Offset range: "
+        + KafkaOffsetGen.CheckpointUtils.offsetsToStr(offsetRanges));
     if (totalNewMsgs <= 0L) {
       return new InputBatch(Option.empty(), KafkaOffsetGen.CheckpointUtils.offsetsToStr(offsetRanges));
     } else {
