@@ -16,6 +16,7 @@
 
 import json
 import base64
+import warnings
 import pyarrow
 import pyarrow.flight
 from pyarrow.flight import FlightServerError
@@ -63,7 +64,7 @@ class ArrowFlightClient:
             self._register_certificates()
         except Exception as e:
             self._is_enabled = False
-            print(
+            warnings.warn(
                 f"Could not establish connection to FlyingDuck. ({e}) "
                 f"Will fall back to spark for this session. "
                 f"If the error persists, you can disable FlyingDuck "
@@ -97,10 +98,7 @@ class ArrowFlightClient:
         action = pyarrow.flight.Action(
             "register-client-certificates", certificates_json_buf
         )
-        try:
-            self._connection.do_action(action)
-        except pyarrow.lib.ArrowIOError as e:
-            print("Error calling action:", e)
+        self._connection.do_action(action)
 
     def _handle_afs_exception(method):
         def afs_error_handler_wrapper(*args, **kw):
@@ -149,16 +147,13 @@ class ArrowFlightClient:
         training_dataset_metadata = self._training_dataset_metadata_from_feature_view(
             feature_view, tds_version
         )
-        try:
-            training_dataset_encoded = json.dumps(training_dataset_metadata).encode(
-                "ascii"
-            )
-            buf = pyarrow.py_buffer(training_dataset_encoded)
-            action = pyarrow.flight.Action("create-training-dataset", buf)
-            for result in self._connection.do_action(action):
-                return result.body.to_pybytes()
-        except pyarrow.lib.ArrowIOError as e:
-            print("Error calling action:", e)
+        training_dataset_encoded = json.dumps(training_dataset_metadata).encode(
+            "ascii"
+        )
+        buf = pyarrow.py_buffer(training_dataset_encoded)
+        action = pyarrow.flight.Action("create-training-dataset", buf)
+        for result in self._connection.do_action(action):
+            return result.body.to_pybytes()
 
     def _path_from_feature_view(self, feature_view, tds_version):
         training_dataset_metadata = self._training_dataset_metadata_from_feature_view(
