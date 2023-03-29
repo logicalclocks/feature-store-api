@@ -80,7 +80,7 @@ class Engine:
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
         self._kafka_api = kafka_api.KafkaApi()
-        self._arrow_flight_client = arrow_flight_client.ArrowFlightClient.get_instance()
+        self._arrow_flight_client = arrow_flight_client.get_instance()
 
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None

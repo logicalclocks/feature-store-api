@@ -28,24 +28,21 @@ from hsfs.core.variable_api import VariableApi
 
 class ArrowFlightClient:
 
-    instance = None
-
-    @classmethod
-    def get_instance(cls):
-        if not cls.instance:
-            cls.instance = ArrowFlightClient()
-        return cls.instance
-
     def __init__(self):
-        self._client = client.get_instance()
-        self._variable_api = VariableApi()
+        try:
+            self._client = client.get_instance()
+        except Exception:
+            # if client cannot be retrieved, assume it is disabled
+            self._is_enabled = False
+            return
 
         try:
+            self._variable_api = VariableApi()
             self._is_enabled = self._variable_api.get_flyingduck_enabled()
         except Exception:
-            self._is_enabled = (
-                False  # if feature flag cannot be retrieved, assume it is disabled
-            )
+            # if feature flag cannot be retrieved, assume it is disabled
+            self._is_enabled = False
+            return
 
         if self._is_enabled:
             self._initialize_connection()
@@ -336,3 +333,10 @@ class ArrowFlightClient:
 
     def _info_to_ticket(self, info):
         return info.endpoints[0].ticket
+
+
+def get_instance():
+    global _arrow_flight_instance
+    if not _arrow_flight_instance:
+        _arrow_flight_instance = ArrowFlightClient()
+    return _arrow_flight_instance
