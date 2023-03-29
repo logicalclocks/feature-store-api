@@ -71,7 +71,7 @@ class ArrowFlightClient:
                 f"Could not establish connection to FlyingDuck. ({e}) "
                 f"Will fall back to spark for this session. "
                 f"If the error persists, you can disable FlyingDuck "
-                f"by changing the cluster configuration (set 'enable_flyingduck'=False)."
+                f"by changing the cluster configuration (set 'enable_flyingduck'='false')."
             )
 
     def _health_check(self):
