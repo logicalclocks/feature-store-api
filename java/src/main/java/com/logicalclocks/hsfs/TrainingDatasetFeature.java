@@ -1,17 +1,18 @@
 /*
- * Copyright (c) 2020 Logical Clocks AB
+ *  Copyright (c) 2020-2023. Hopsworks AB
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *
- * See the License for the specific language governing permissions and limitations under the License.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.logicalclocks.hsfs;
@@ -35,7 +36,7 @@ public class TrainingDatasetFeature {
 
   @Getter
   @Setter
-  private FeatureGroup featuregroup;
+  private FeatureGroupBase featureGroup;
 
   @Getter
   @Setter
@@ -68,9 +69,9 @@ public class TrainingDatasetFeature {
     this.label = label;
   }
 
-  public TrainingDatasetFeature(FeatureGroup featuregroup, String name, Boolean label) {
+  public TrainingDatasetFeature(FeatureGroupBase featuregroup, String name, Boolean label) {
     setName(name);
-    this.featuregroup = featuregroup;
+    this.featureGroup = featuregroup;
     this.label = label;
   }
 

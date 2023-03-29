@@ -1,34 +1,31 @@
 /*
- * Copyright (c) 2022 Logical Clocks AB
+ *  Copyright (c) 2022-2023. Hopsworks AB
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *
- * See the License for the specific language governing permissions and limitations under the License.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.logicalclocks.hsfs.engine;
 
-import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.Feature;
-import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.FeatureStoreBase;
+import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
+import com.logicalclocks.hsfs.FeatureGroupBase;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.StreamFeatureGroup;
-import com.logicalclocks.hsfs.TimeTravelFormat;
-import com.logicalclocks.hsfs.engine.hudi.HudiEngine;
-import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
-import com.logicalclocks.hsfs.metadata.FeatureGroupBase;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
-import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
-import com.logicalclocks.hsfs.metadata.KafkaApi;
+
 import com.logicalclocks.hsfs.metadata.Subject;
 import lombok.SneakyThrows;
 import org.apache.avro.Schema;
@@ -41,8 +38,6 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -56,27 +51,19 @@ public class FeatureGroupUtils {
   private KafkaApi kafkaApi = new KafkaApi();
   private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 
-  public <S> List<Feature> parseFeatureGroupSchema(S datasetGeneric, TimeTravelFormat timeTravelFormat)
-      throws FeatureStoreException {
-    return SparkEngine.getInstance().parseFeatureGroupSchema(datasetGeneric, timeTravelFormat);
-  }
-
-  public <S> S convertToDefaultDataframe(S datasetGeneric) throws FeatureStoreException {
-    return SparkEngine.getInstance().convertToDefaultDataframe(datasetGeneric);
-  }
-
   // TODO(Fabio): this should be moved in the backend
   public String getTableName(FeatureGroupBase offlineFeatureGroup) {
     return offlineFeatureGroup.getFeatureStore().getName() + "."
         + offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
   }
 
-  public String getOnlineTableName(FeatureGroup offlineFeatureGroup) {
+  public String getOnlineTableName(FeatureGroupBase offlineFeatureGroup) {
     return offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
   }
 
   public Seq<String> getPartitionColumns(FeatureGroupBase offlineFeatureGroup) {
-    List<String> partitionCols = offlineFeatureGroup.getFeatures().stream()
+    List<Feature> features = offlineFeatureGroup.getFeatures();
+    List<String> partitionCols = features.stream()
         .filter(Feature::getPartition)
         .map(Feature::getName)
         .collect(Collectors.toList());
@@ -85,7 +72,8 @@ public class FeatureGroupUtils {
   }
 
   public Seq<String> getPrimaryColumns(FeatureGroupBase offlineFeatureGroup) {
-    List<String> primaryCols = offlineFeatureGroup.getFeatures().stream()
+    List<Feature> features = offlineFeatureGroup.getFeatures();
+    List<String> primaryCols = features.stream()
         .filter(Feature::getPrimary)
         .map(Feature::getName)
         .collect(Collectors.toList());
@@ -95,6 +83,19 @@ public class FeatureGroupUtils {
 
   public String getFgName(FeatureGroupBase featureGroup) {
     return featureGroup.getName() + "_" + featureGroup.getVersion();
+  }
+
+  public String getHiveServerConnection(FeatureGroupBase featureGroup, String connectionString)
+      throws IOException, FeatureStoreException {
+    Map<String, String> credentials = new HashMap<>();
+    credentials.put("sslTrustStore", HopsworksClient.getInstance().getHopsworksHttpClient().getTrustStorePath());
+    credentials.put("trustStorePassword", HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey());
+    credentials.put("sslKeyStore", HopsworksClient.getInstance().getHopsworksHttpClient().getKeyStorePath());
+    credentials.put("keyStorePassword", HopsworksClient.getInstance().getHopsworksHttpClient().getCertKey());
+
+    return connectionString
+        + credentials.entrySet().stream().map(cred -> cred.getKey() + "=" + cred.getValue())
+        .collect(Collectors.joining(";"));
   }
 
   public static Date getDateFromDateString(String inputDate) throws FeatureStoreException, ParseException {
@@ -144,40 +145,8 @@ public class FeatureGroupUtils {
     return dateFormat.format(commitedOnDate);
   }
 
-
-  public String constructCheckpointPath(FeatureGroup featureGroup, String queryName, String queryPrefix)
-      throws FeatureStoreException {
-    if (Strings.isNullOrEmpty(queryName)) {
-      queryName = queryPrefix + featureGroup.getOnlineTopicName() + "_" + LocalDateTime.now().format(
-          DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-    }
-    return "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
-        + "/Resources/" + queryName + "-checkpoint";
-  }
-
-  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
-    Map<String, String> config = new HashMap<>();
-    if (writeOptions != null) {
-      config.putAll(writeOptions);
-    }
-    HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
-
-    config.put("kafka.bootstrap.servers",
-        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
-            "INTERNAL://", "")).collect(Collectors.joining(",")));
-    config.put("kafka.security.protocol", "SSL");
-    config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
-    config.put("kafka.ssl.truststore.password", client.getCertKey());
-    config.put("kafka.ssl.keystore.location", client.getKeyStorePath());
-    config.put("kafka.ssl.keystore.password", client.getCertKey());
-    config.put("kafka.ssl.key.password", client.getCertKey());
-    config.put("kafka.ssl.endpoint.identification.algorithm", "");
-    return config;
-  }
-
-  private Map<Long, Map<String, String>>  getCommitDetails(FeatureGroupBase featureGroup, String wallclockTime,
-                                                           Integer limit)
+  public Map<Long, Map<String, String>>  getCommitDetails(FeatureGroupBase featureGroup, String wallclockTime,
+                                                          Integer limit)
       throws FeatureStoreException, IOException, ParseException {
 
     Long wallclockTimestamp =  wallclockTime != null ? getTimeStampFromDateString(wallclockTime) : null;
@@ -202,50 +171,9 @@ public class FeatureGroupUtils {
     return commitDetails;
   }
 
-  public Map<Long, Map<String, String>> commitDetails(FeatureGroupBase featureGroupBase, Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    // operation is only valid for time travel enabled feature group
-    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.HUDI)
-        || featureGroupBase instanceof StreamFeatureGroup)) {
-      // operation is only valid for time travel enabled feature group
-      throw new FeatureStoreException("commitDetails function is only valid for "
-            + "time travel enabled feature group");
-    }
-    return getCommitDetails(featureGroupBase, null, limit);
-  }
-
-  public Map<Long, Map<String, String>> commitDetailsByWallclockTime(FeatureGroupBase featureGroup,
-                                                                     String wallclockTime, Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    return getCommitDetails(featureGroup, wallclockTime, limit);
-  }
-
-  public <S> FeatureGroupCommit commitDelete(FeatureGroupBase featureGroupBase, S genericDataset,
-                                         Map<String, String> writeOptions)
-      throws IOException, FeatureStoreException, ParseException {
-    if (!((featureGroupBase instanceof FeatureGroup && featureGroupBase.getTimeTravelFormat() == TimeTravelFormat.HUDI)
-        || featureGroupBase instanceof StreamFeatureGroup)) {
-      // operation is only valid for time travel enabled feature group
-      throw new FeatureStoreException("delete function is only valid for "
-            + "time travel enabled feature group");
-    }
-
-    HudiEngine hudiEngine = new HudiEngine();
-    return hudiEngine.deleteRecord(SparkEngine.getInstance().getSparkSession(), featureGroupBase, genericDataset,
-        writeOptions);
-  }
-
-  public Subject getSubject(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
-    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName());
-  }
-
-  public String checkpointDirPath(String queryName, String onlineTopicName) throws FeatureStoreException {
-    if (Strings.isNullOrEmpty(queryName)) {
-      queryName = "insert_stream_" + onlineTopicName;
-    }
-    return "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
-        + "/Resources/" + queryName + "-checkpoint";
-
+  public String getAvroSchema(FeatureGroupBase featureGroup, FeatureStoreBase featureStoreBase)
+      throws FeatureStoreException, IOException {
+    return kafkaApi.getTopicSubject(featureStoreBase, featureGroup.getOnlineTopicName()).getSchema();
   }
 
   public List<String> getComplexFeatures(List<Feature> features) {
@@ -281,7 +209,8 @@ public class FeatureGroupUtils {
 
   public void verifyAttributeKeyNames(FeatureGroupBase featureGroup, List<String> partitionKeyNames,
                                       String precombineKeyName) throws FeatureStoreException {
-    List<String> featureNames = featureGroup.getFeatures().stream().map(Feature::getName).collect(Collectors.toList());
+    List<Feature> features = featureGroup.getFeatures();
+    List<String> featureNames = features.stream().map(Feature::getName).collect(Collectors.toList());
     if (featureGroup.getPrimaryKeys() != null && !featureGroup.getPrimaryKeys().isEmpty()) {
       checkListdiff(featureGroup.getPrimaryKeys(), featureNames, "primary");
     }
@@ -311,5 +240,9 @@ public class FeatureGroupUtils {
       throw new FeatureStoreException("Provided " + attributeName + " key(s) " + String.join(", ",
           differences) +  " doesn't exist in feature dataframe");
     }
+  }
+
+  public Subject getSubject(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
+    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName());
   }
 }

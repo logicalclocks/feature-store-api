@@ -1,32 +1,33 @@
 /*
- * Copyright (c) 2020 Logical Clocks AB
+ *  Copyright (c) 2020-2023. Hopsworks AB
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *
- * See the License for the specific language governing permissions and limitations under the License.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
-import com.logicalclocks.hsfs.FeatureGroup;
+import com.logicalclocks.hsfs.DeltaStreamerJobConf;
+import com.logicalclocks.hsfs.Feature;
+import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
-import com.logicalclocks.hsfs.FeatureStore;
+import com.logicalclocks.hsfs.FeatureStoreBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.ExternalFeatureGroup;
-import com.logicalclocks.hsfs.StatisticsConfig;
-import com.logicalclocks.hsfs.StreamFeatureGroup;
-import com.logicalclocks.hsfs.TimeTravelFormat;
+import com.logicalclocks.hsfs.JobConfiguration;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
@@ -34,10 +35,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-
-import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class FeatureGroupApi {
 
@@ -51,76 +51,16 @@ public class FeatureGroupApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
-  public List<FeatureGroup> getFeatureGroups(FeatureStore featureStore, String fgName)
-      throws FeatureStoreException, IOException {
-    FeatureGroup[] offlineFeatureGroups =
-        getInternal(featureStore, fgName, null, FeatureGroup[].class);
-
-    return Arrays.asList(offlineFeatureGroups);
-  }
-
-  public FeatureGroup getFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
-      throws IOException, FeatureStoreException {
-    FeatureGroup[] offlineFeatureGroups =
-        getInternal(featureStore, fgName, fgVersion, FeatureGroup[].class);
-
-    // There can be only one single feature group with a specific name and version in a feature store
-    // There has to be one otherwise an exception would have been thrown.
-    FeatureGroup resultFg = offlineFeatureGroups[0];
-    resultFg.setFeatureStore(featureStore);
-    return resultFg;
-  }
-
-  public StreamFeatureGroup getStreamFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
-      throws IOException, FeatureStoreException {
-    StreamFeatureGroup[] streamFeatureGroups =
-      getInternal(featureStore, fgName, fgVersion, StreamFeatureGroup[].class);
-
-    // There can be only one single feature group with a specific name and version in a feature store
-    // There has to be one otherwise an exception would have been thrown.
-    StreamFeatureGroup resultFg = streamFeatureGroups[0];
-    resultFg.setFeatureStore(featureStore);
-    return resultFg;
-  }
-
-  public List<StreamFeatureGroup> getStreamFeatureGroups(FeatureStore featureStore, String fgName)
-      throws FeatureStoreException, IOException {
-    StreamFeatureGroup[] streamFeatureGroups =
-      getInternal(featureStore, fgName, null, StreamFeatureGroup[].class);
-
-    return Arrays.asList(streamFeatureGroups);
-  }
-
-  public List<ExternalFeatureGroup> getExternalFeatureGroups(FeatureStore featureStore, String fgName)
-      throws FeatureStoreException, IOException {
-    ExternalFeatureGroup[] offlineFeatureGroups =
-        getInternal(featureStore, fgName, null, ExternalFeatureGroup[].class);
-
-    return Arrays.asList(offlineFeatureGroups);
-  }
-
-  public ExternalFeatureGroup getExternalFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)
-      throws IOException, FeatureStoreException {
-    ExternalFeatureGroup[] offlineFeatureGroups =
-        getInternal(featureStore, fgName, fgVersion, ExternalFeatureGroup[].class);
-
-    // There can be only one single feature group with a specific name and version in a feature store
-    // There has to be one otherwise an exception would have been thrown.
-    ExternalFeatureGroup resultFg = offlineFeatureGroups[0];
-    resultFg.setFeatureStore(featureStore);
-    return resultFg;
-  }
-
-  private <U> U getInternal(FeatureStore featureStore, String fgName, Integer fgVersion, Class<U> fgType)
+  public <T> T getInternal(FeatureStoreBase featureStoreBase, String fgName, Integer fgVersion, Class<T> fgType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
+    String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_PATH;
 
     UriTemplate uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .set("fgName", fgName);
 
     if (fgVersion != null) {
@@ -132,27 +72,17 @@ public class FeatureGroupApi {
     return hopsworksClient.handleRequest(new HttpGet(uriString), fgType);
   }
 
-  public ExternalFeatureGroup save(ExternalFeatureGroup externalFeatureGroup)
+  public <U extends FeatureGroupBase> FeatureGroupBase save(FeatureGroupBase featureGroup, Class<U> fgType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    return saveInternal(externalFeatureGroup,
-        hopsworksClient.buildStringEntity(externalFeatureGroup),
-        ExternalFeatureGroup.class);
+    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
+
+    return saveInternal(featureGroup, new StringEntity(featureGroupJson), fgType);
   }
 
-  public FeatureGroup save(FeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    return saveInternal(featureGroup, hopsworksClient.buildStringEntity(featureGroup), FeatureGroup.class);
-  }
-
-  public StreamFeatureGroup save(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    return saveInternal(featureGroup, hopsworksClient.buildStringEntity(featureGroup), StreamFeatureGroup.class);
-  }
-
-  private <U> U saveInternal(FeatureGroupBase featureGroupBase,
+  public <U extends FeatureGroupBase> FeatureGroupBase saveInternal(FeatureGroupBase featureGroupBase,
                              StringEntity entity, Class<U> fgType) throws FeatureStoreException, IOException {
-    String pathTemplate = PROJECT_PATH
+    String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_ROOT_PATH;
 
@@ -162,6 +92,7 @@ public class FeatureGroupApi {
         .expand();
 
     HttpPost postRequest = new HttpPost(uri);
+    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
     postRequest.setEntity(entity);
 
     LOGGER.info("Sending metadata request: " + uri);
@@ -171,7 +102,7 @@ public class FeatureGroupApi {
 
   public void delete(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
+    String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_ID_PATH;
 
@@ -189,7 +120,7 @@ public class FeatureGroupApi {
 
   public void deleteContent(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
+    String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_CLEAR_PATH;
 
@@ -214,7 +145,7 @@ public class FeatureGroupApi {
                                                        Object value, Class<T> fgType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
+    String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_ID_PATH;
 
@@ -225,16 +156,20 @@ public class FeatureGroupApi {
         .set(queryParameter, value)
         .expand();
 
-    LOGGER.info("Sending metadata request: " + uri);
+    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroup);
     HttpPut putRequest = new HttpPut(uri);
-    putRequest.setEntity(hopsworksClient.buildStringEntity(featureGroup));
+    putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    putRequest.setEntity(new StringEntity(featureGroupJson));
+
+    LOGGER.info("Sending metadata request: " + uri);
+    LOGGER.info(featureGroupJson);
     return hopsworksClient.handleRequest(putRequest, fgType);
   }
 
   public FeatureGroupCommit featureGroupCommit(FeatureGroupBase featureGroup, FeatureGroupCommit featureGroupCommit)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
+    String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_COMMIT_PATH;
 
@@ -244,16 +179,19 @@ public class FeatureGroupApi {
         .set("fgId", featureGroup.getId())
         .expand();
 
-    LOGGER.info("Sending metadata request: " + uri);
+    String featureGroupCommitJson = hopsworksClient.getObjectMapper().writeValueAsString(featureGroupCommit);
     HttpPost postRequest = new HttpPost(uri);
-    postRequest.setEntity(hopsworksClient.buildStringEntity(featureGroupCommit));
+    postRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    postRequest.setEntity(new StringEntity(featureGroupCommitJson));
+
+    LOGGER.info("Sending metadata request: " + uri);
     return hopsworksClient.handleRequest(postRequest, FeatureGroupCommit.class);
   }
 
   public List<FeatureGroupCommit> getCommitDetails(FeatureGroupBase featureGroupBase, Long wallclockTimestamp,
                                                    Integer limit) throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
+    String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + FEATURE_GROUP_COMMIT_PATH;
 
@@ -276,72 +214,75 @@ public class FeatureGroupApi {
     return featureGroupCommit.getItems();
   }
 
-  public FeatureGroup getOrCreateFeatureGroup(FeatureStore featureStore, String name, Integer version,
-                                              String description, List<String> primaryKeys, List<String> partitionKeys,
-                                              String hudiPrecombineKey, boolean onlineEnabled,
-                                              TimeTravelFormat timeTravelFormat,
-                                              StatisticsConfig statisticsConfig, String eventTime)
-      throws IOException, FeatureStoreException {
+  public <U extends FeatureGroupBase> FeatureGroupBase saveFeatureGroupMetaData(
+      FeatureGroupBase featureGroup, List<String> partitionKeys,
+      String hudiPrecombineKey, Map<String, String> writeOptions,
+      JobConfiguration  jobConfiguration, Class<U> fgType) throws FeatureStoreException, IOException {
 
+    LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
-    FeatureGroup featureGroup;
-    try {
-      featureGroup =  getFeatureGroup(featureStore, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270009")) {
-        featureGroup =  FeatureGroup.builder()
-            .featureStore(featureStore)
-            .name(name)
-            .version(version)
-            .description(description)
-            .primaryKeys(primaryKeys)
-            .partitionKeys(partitionKeys)
-            .hudiPrecombineKey(hudiPrecombineKey)
-            .onlineEnabled(onlineEnabled)
-            .timeTravelFormat(timeTravelFormat)
-            .statisticsConfig(statisticsConfig)
-            .eventTime(eventTime)
-            .build();
-
-        featureGroup.setFeatureStore(featureStore);
-      } else {
-        throw e;
-      }
+    List<Feature> features = featureGroup.getFeatures();
+    /* set primary features */
+    if (featureGroup.getPrimaryKeys() != null) {
+      featureGroup.getPrimaryKeys().forEach(pk ->
+          features.forEach(f -> {
+            if (f.getName().equals(pk)) {
+              f.setPrimary(true);
+            }
+          }));
     }
 
-    return featureGroup;
-  }
+    /* set partition key features */
+    if (partitionKeys != null) {
+      partitionKeys.forEach(pk ->
+          features.forEach(f -> {
+            if (f.getName().equals(pk)) {
+              f.setPartition(true);
+            }
+          }));
+    }
 
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(FeatureStore featureStore, String name, Integer version,
-                                                          String description, List<String> primaryKeys,
-                                                          List<String> partitionKeys, String hudiPrecombineKey,
-                                                          boolean onlineEnabled,
-                                                          StatisticsConfig statisticsConfig,
-                                                          String eventTime) throws IOException, FeatureStoreException {
+    /* set hudi precombine key name */
+    if (hudiPrecombineKey != null) {
+      features.forEach(f -> {
+        if (f.getName().equals(hudiPrecombineKey)) {
+          f.setHudiPrecombineKey(true);
+        }
+      });
+    }
 
+    // set write options for delta streamer job
+    if (writeOptions != null) {
+      // set write options for delta streamer job
+      DeltaStreamerJobConf deltaStreamerJobConf = new DeltaStreamerJobConf();
+      deltaStreamerJobConf.setWriteOptions(writeOptions != null ? writeOptions.entrySet().stream()
+          .map(e -> new Option(e.getKey(), e.getValue()))
+          .collect(Collectors.toList())
+          : null);
+      deltaStreamerJobConf.setSparkJobConfiguration(jobConfiguration);
 
-    StreamFeatureGroup featureGroup;
-    try {
-      featureGroup =  getStreamFeatureGroup(featureStore, name, version);
-    } catch (IOException | FeatureStoreException e) {
-      if (e.getMessage().contains("Error: 404") && e.getMessage().contains("\"errorCode\":270009")) {
-        featureGroup =  StreamFeatureGroup.builder()
-            .featureStore(featureStore)
-            .name(name)
-            .version(version)
-            .description(description)
-            .primaryKeys(primaryKeys)
-            .partitionKeys(partitionKeys)
-            .hudiPrecombineKey(hudiPrecombineKey)
-            .onlineEnabled(onlineEnabled)
-            .statisticsConfig(statisticsConfig)
-            .eventTime(eventTime)
-            .build();
+      featureGroup.setDeltaStreamerJobConf(deltaStreamerJobConf);
+    }
 
-        featureGroup.setFeatureStore(featureStore);
-      } else {
-        throw e;
-      }
+    // Send Hopsworks the request to create a new feature group
+    FeatureGroupBase apiFG = save(featureGroup, fgType);
+
+    if (featureGroup.getVersion() == null) {
+      LOGGER.info("VersionWarning: No version provided for creating feature group `" + featureGroup.getName()
+          + "`, incremented version to `" + apiFG.getVersion() + "`.");
+    }
+
+    // Update the original object - Hopsworks returns the incremented version
+    featureGroup.setId(apiFG.getId());
+    featureGroup.setVersion(apiFG.getVersion());
+    featureGroup.setLocation(apiFG.getLocation());
+    featureGroup.setStatisticsConfig(apiFG.getStatisticsConfig());
+    featureGroup.setOnlineTopicName(apiFG.getOnlineTopicName());
+
+    /* if hudi precombine key was not provided and TimeTravelFormat is HUDI, retrieve from backend and set */
+    if (hudiPrecombineKey == null) {
+      List<Feature> updatedFeatures = apiFG.getFeatures();
+      featureGroup.setFeatures(updatedFeatures);
     }
 
     return featureGroup;

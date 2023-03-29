@@ -3385,7 +3385,7 @@ class TestSpark:
 
         # Assert
         assert (
-            mock_pyspark_getOrCreate.return_value.sparkContext._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance.return_value.profile.call_count
+            mock_pyspark_getOrCreate.return_value.sparkContext._jvm.com.logicalclocks.hsfs.spark.engine.SparkEngine.getInstance.return_value.profile.call_count
             == 1
         )
 
