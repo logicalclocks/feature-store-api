@@ -43,14 +43,16 @@ class ArrowFlightClient:
         try:
             self._is_enabled = self._variable_api.get_flyingduck_enabled()
         except Exception:
-            self._is_enabled = False # if feature flag cannot be retrieved, assume it is disabled
+            self._is_enabled = (
+                False  # if feature flag cannot be retrieved, assume it is disabled
+            )
 
         if self._is_enabled:
             self._initialize_connection()
 
     def _initialize_connection(self):
         try:
-            host_url = f"grpc+tls://flyingduck.service.consul:5005"
+            host_url = "grpc+tls://flyingduck.service.consul:5005"
             (tls_root_certs, cert_chain, private_key) = self._extract_certs(
                 self._client
             )
@@ -153,9 +155,7 @@ class ArrowFlightClient:
         training_dataset_metadata = self._training_dataset_metadata_from_feature_view(
             feature_view, tds_version
         )
-        training_dataset_encoded = json.dumps(training_dataset_metadata).encode(
-            "ascii"
-        )
+        training_dataset_encoded = json.dumps(training_dataset_metadata).encode("ascii")
         buf = pyarrow.py_buffer(training_dataset_encoded)
         action = pyarrow.flight.Action("create-training-dataset", buf)
         for result in self._connection.do_action(action):
