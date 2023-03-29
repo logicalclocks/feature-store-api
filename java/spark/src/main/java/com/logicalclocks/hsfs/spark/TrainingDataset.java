@@ -339,7 +339,7 @@ public class TrainingDataset extends TrainingDatasetBase {
    */
   @Override
   public void delete() throws FeatureStoreException, IOException {
-    LOGGER.warn("JobWarning: All jobs associated to training dataset `" + name + "`, version `"
+    TrainingDatasetBase.LOGGER.warn("JobWarning: All jobs associated to training dataset `" + name + "`, version `"
         + version + "` will be removed.");
     trainingDatasetEngine.delete(this);
   }

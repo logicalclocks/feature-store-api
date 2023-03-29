@@ -235,7 +235,7 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
           featureGroup.getTimeTravelFormat()));
     }
 
-    LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
+    FeatureGroupEngineBase.LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
     // verify primary, partition, event time or hudi precombine keys
     utils.verifyAttributeKeyNames(featureGroup, partitionKeys, hudiPrecombineKey);
@@ -270,7 +270,7 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
               featureGroup.getTimeTravelFormat()));
     }
 
-    LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
+    FeatureGroupEngineBase.LOGGER.info("Featuregroup features: " + featureGroup.getFeatures());
 
     // verify primary, partition, event time or hudi precombine keys
     utils.verifyAttributeKeyNames(featureGroup, partitionKeys, hudiPrecombineKey);

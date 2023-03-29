@@ -71,7 +71,7 @@ public class Query extends QueryBase<Query, StreamFeatureGroup, Dataset<Row>> {
         queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this, FsQuery.class);
 
     if (online) {
-      LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.ONLINE));
+      QueryBase.LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.ONLINE));
       StorageConnector.JdbcConnector onlineConnector =
           storageConnectorApi.getOnlineStorageConnector(
               leftFeatureGroup.getFeatureStore(), StorageConnector.JdbcConnector.class);
@@ -80,7 +80,7 @@ public class Query extends QueryBase<Query, StreamFeatureGroup, Dataset<Row>> {
       fsQuery.registerOnDemandFeatureGroups();
       fsQuery.registerHudiFeatureGroups(readOptions);
 
-      LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.OFFLINE));
+      QueryBase.LOGGER.info("Executing query: " + fsQuery.getStorageQuery(Storage.OFFLINE));
       return SparkEngine.getInstance().sql(fsQuery.getStorageQuery(Storage.OFFLINE));
     }
   }

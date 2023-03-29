@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022-2022. Hopsworks AB
+ *  Copyright (c) 2022-2023. Hopsworks AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  *
  */
 
-package com.logicalclocks;
+package com.logicalclocks.hsfs.spark;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnectorType;
@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Map;
 
@@ -57,12 +58,16 @@ public class TestStorageConnector {
     } else {
       bigqueryConnector.setKeyPath("file://" + credentialsFile);
     }
+
+    SparkEngine sparkEngine = new SparkEngine("local");
     // Act
-    Map<String, String> sparkOptions = bigqueryConnector.sparkOptions();
+    // Base64 encode the credentials file
+    String localKeyPath = sparkEngine.addFile(bigqueryConnector.getKeyPath());
+    String fileContent = Base64.getEncoder().encodeToString(Files.readAllBytes(Paths.get(localKeyPath)));
 
     // Assert
     Assertions.assertEquals(credentials,
-      new String(Base64.getDecoder().decode(sparkOptions.get(Constants.BIGQ_CREDENTIALS)), StandardCharsets.UTF_8));
+      new String(Base64.getDecoder().decode(fileContent), StandardCharsets.UTF_8));
   }
 
   @Test
@@ -104,9 +109,11 @@ public class TestStorageConnector {
       gcsConnector.setKeyPath("file://" + credentialsFile);
     }
     gcsConnector.setStorageConnectorType(StorageConnectorType.GCS);
+
+    SparkEngine sparkEngine = new SparkEngine("local");
     // Act
-    SparkEngine.getInstance().setupConnectorHadoopConf(gcsConnector);
-    SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
+    sparkEngine.setupConnectorHadoopConf(gcsConnector);
+    SparkContext sc = sparkEngine.getSparkSession().sparkContext();
     // Assert
     Assertions.assertEquals(
       "test@project.iam.gserviceaccount.com",
@@ -141,9 +148,12 @@ public class TestStorageConnector {
     gcsConnector.setAlgorithm("AES256");
     gcsConnector.setEncryptionKey("encryptionkey");
     gcsConnector.setEncryptionKeyHash("encryptionkeyhash");
+
+    SparkEngine sparkEngine = new SparkEngine("local");
+
     // Act
-    SparkEngine.getInstance().setupConnectorHadoopConf(gcsConnector);
-    SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
+    sparkEngine.setupConnectorHadoopConf(gcsConnector);
+    SparkContext sc = sparkEngine.getSparkSession().sparkContext();
 
     // Assert
     Assertions.assertEquals("test@project.iam.gserviceaccount.com",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_EMAIL));

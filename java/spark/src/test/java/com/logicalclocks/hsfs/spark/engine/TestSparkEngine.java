@@ -35,7 +35,7 @@ public class TestSparkEngine {
     @Test
     public void testConvertToDefaultDataframe() {
         // Arrange
-        SparkEngine sparkEngine = SparkEngine.getInstance();
+        SparkEngine sparkEngine = new SparkEngine("local");
 
         // Act
         StructType structType = new StructType();

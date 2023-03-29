@@ -153,6 +153,14 @@ public class SparkEngine {
     sparkSession.conf().set("spark.sql.session.timeZone", "UTC");
   }
 
+  // for testing
+  public SparkEngine(String url) {
+    sparkSession = SparkSession.builder()
+        .enableHiveSupport()
+        .config("spark.master", url)
+        .getOrCreate();
+  }
+
   public void validateSparkConfiguration() throws FeatureStoreException {
     String exceptionText = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: ";
 
@@ -617,7 +625,7 @@ public class SparkEngine {
     return dataset.select(
         to_avro(concat(pks.stream().map(name -> col(name).cast("string"))
             .toArray(Column[]::new))).alias("key"),
-        to_avro(struct(featureGroupBase.getDeserializedAvroSchema().getFields().stream()
+        to_avro(functions.struct(featureGroupBase.getDeserializedAvroSchema().getFields().stream()
                 .map(f -> col(f.name())).toArray(Column[]::new)),
             featureGroupBase.getEncodedAvroSchema()).alias("value"));
   }

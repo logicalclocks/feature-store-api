@@ -90,7 +90,7 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
     public FeatureViewBuilder query(Query query) {
       this.query = query;
       if (query.isTimeTravel()) {
-        LOGGER.info("`as_of` argument in the `Query` will be ignored because "
+        FeatureViewBase.LOGGER.info("`as_of` argument in the `Query` will be ignored because "
             + "feature view does not support time travel query.");
       }
       return this;
@@ -137,7 +137,7 @@ public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Quer
    */
   @Override
   public void delete() throws FeatureStoreException, IOException {
-    LOGGER.warn("JobWarning: All jobs associated to feature view `" + name + "`, version `"
+    FeatureViewBase.LOGGER.warn("JobWarning: All jobs associated to feature view `" + name + "`, version `"
         + version + "` will be removed.");
     featureViewEngine.delete(this.featureStore, this.name, this.version);
   }

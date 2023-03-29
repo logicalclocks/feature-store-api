@@ -25,7 +25,6 @@ import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 
 import com.logicalclocks.hsfs.util.Constants;
-import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,10 +32,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -491,16 +487,10 @@ public abstract class StorageConnector {
     /**
      * Set spark options specific to BigQuery.
      * @return Map
-     * @throws IOException IOException
      */
     @Override
-    public Map<String, String> sparkOptions() throws IOException {
+    public Map<String, String> sparkOptions() {
       Map<String, String> options = new HashMap<>();
-
-      // Base64 encode the credentials file
-      String localKeyPath = SparkEngine.getInstance().addFile(keyPath);
-      byte[] fileContent = Files.readAllBytes(Paths.get(localKeyPath));
-      options.put(Constants.BIGQ_CREDENTIALS, Base64.getEncoder().encodeToString(fileContent));
 
       options.put(Constants.BIGQ_PARENT_PROJECT, parentProject);
       if (!Strings.isNullOrEmpty(materializationDataset)) {

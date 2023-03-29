@@ -102,8 +102,8 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    */
   public FeatureGroup getFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getFeatureGroup(name, DEFAULT_VERSION);
+        + FeatureStoreBase.DEFAULT_VERSION + "`.");
+    return getFeatureGroup(name, FeatureStoreBase.DEFAULT_VERSION);
   }
 
   /**
@@ -326,8 +326,8 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   @Override
   public StreamFeatureGroup getStreamFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getStreamFeatureGroup(name, DEFAULT_VERSION);
+        + FeatureStoreBase.DEFAULT_VERSION + "`.");
+    return getStreamFeatureGroup(name, FeatureStoreBase.DEFAULT_VERSION);
   }
 
   /**
@@ -625,8 +625,8 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   @Override
   public ExternalFeatureGroup getExternalFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getExternalFeatureGroup(name, DEFAULT_VERSION);
+        + FeatureStoreBase.DEFAULT_VERSION + "`.");
+    return getExternalFeatureGroup(name, FeatureStoreBase.DEFAULT_VERSION);
   }
 
   /**
@@ -881,8 +881,8 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   @Deprecated
   public ExternalFeatureGroup getOnDemandFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getExternalFeatureGroup(name, DEFAULT_VERSION);
+        + FeatureStoreBase.DEFAULT_VERSION + "`.");
+    return getExternalFeatureGroup(name, FeatureStoreBase.DEFAULT_VERSION);
   }
 
   @Deprecated
@@ -992,8 +992,8 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   @Override
   public FeatureView getFeatureView(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature view `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getFeatureView(name, DEFAULT_VERSION);
+        + FeatureStoreBase.DEFAULT_VERSION + "`.");
+    return getFeatureView(name, FeatureStoreBase.DEFAULT_VERSION);
   }
 
   @Override
@@ -1016,8 +1016,8 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   @Deprecated
   public TrainingDataset getTrainingDataset(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting training dataset `" + name + "`, defaulting to `"
-        + DEFAULT_VERSION + "`.");
-    return getTrainingDataset(name, DEFAULT_VERSION);
+        + FeatureStoreBase.DEFAULT_VERSION + "`.");
+    return getTrainingDataset(name, FeatureStoreBase.DEFAULT_VERSION);
   }
 
   @Deprecated

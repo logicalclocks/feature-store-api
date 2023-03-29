@@ -27,7 +27,10 @@ import org.apache.spark.sql.Row;
 
 import javax.ws.rs.NotSupportedException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Map;
 
 public class StorageConnectorUtils {
@@ -173,6 +176,12 @@ public class StorageConnectorUtils {
                            Map<String, String> options, String path) throws FeatureStoreException, IOException {
 
     Map<String, String> readOptions = connector.sparkOptions();
+
+    // Base64 encode the credentials file
+    String localKeyPath = SparkEngine.getInstance().addFile(connector.getKeyPath());
+    byte[] fileContent = Files.readAllBytes(Paths.get(localKeyPath));
+    options.put(Constants.BIGQ_CREDENTIALS, Base64.getEncoder().encodeToString(fileContent));
+
     // merge user spark options on top of default spark options
     if (options != null && !options.isEmpty()) {
       readOptions.putAll(options);
