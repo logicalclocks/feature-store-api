@@ -27,7 +27,6 @@ from hsfs.core.variable_api import VariableApi
 
 
 class ArrowFlightClient:
-
     def __init__(self):
         try:
             self._client = client.get_instance()
