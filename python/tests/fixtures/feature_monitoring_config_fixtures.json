@@ -32,8 +32,7 @@
           "jobFrequency": "DAILY",
           "startDateTime": 1676457000,
           "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
-          "enabled": true,
-          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/jobs/111/schedulerv2"
+          "enabled": true
         },
         "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
       }
@@ -70,8 +69,7 @@
           "jobFrequency": "DAILY",
           "startDateTime": 1676457000,
           "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
-          "enabled": true,
-          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/jobs/111/schedulerv2"
+          "enabled": true
         },
         "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
       }
@@ -97,8 +95,7 @@
           "jobFrequency": "HOURLY",
           "startDateTime": 1676457000,
           "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
-          "enabled": false,
-          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/jobs/111/schedulerv2"
+          "enabled": false
         },
         "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
       }
@@ -137,8 +134,7 @@
           "jobFrequency": "DAILY",
           "startDateTime": 1676457000,
           "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
-          "enabled": true,
-          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/jobs/111/schedulerv2"
+          "enabled": true
         },
         "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
       }
@@ -175,8 +171,7 @@
           "jobFrequency": "DAILY",
           "startDateTime": 1676457000,
           "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
-          "enabled": true,
-          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/jobs/111/schedulerv2"
+          "enabled": true
         },
         "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
       }
@@ -202,8 +197,7 @@
         "jobFrequency": "HOURLY",
         "startDateTime": 1676457000,
         "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
-        "enabled": false,
-        "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/jobs/111/schedulerv2"
+        "enabled": false
         },
         "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
       }
@@ -244,8 +238,7 @@
             "jobFrequency": "HOURLY",
             "startDateTime": 1676457000,
             "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
-            "enabled": false,
-            "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/jobs/111/schedulerv2"
+            "enabled": false
           },
           "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
         }

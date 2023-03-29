@@ -30,7 +30,6 @@ class JobScheduler:
         enabled: bool = True,
         job_name: Optional[str] = None,
         id: Optional[int] = None,
-        href: Optional[str] = None,
     ) -> None:
         """Contains the scheduler configuration for a Hopsworks job.
 
@@ -51,7 +50,6 @@ class JobScheduler:
         self._job_frequency = job_frequency
         self._job_name = job_name
         self._enabled = enabled
-        self._href = href
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -64,7 +62,6 @@ class JobScheduler:
             "jobFrequency": self._job_frequency,
             "jobName": self._job_name,
             "enabled": self._enabled,
-            "href": self._href,
         }
 
     def json(self) -> str:

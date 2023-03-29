@@ -5,8 +5,7 @@
       "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
       "startDateTime": 1676457000,
       "jobFrequency": "DAILY",
-      "enabled": true,
-      "href": "https://hopsworks.ai/hopsworks-api/project/33/jobs/111/schedulev2/222"
+      "enabled": true
     }
   }
 }

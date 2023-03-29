@@ -38,10 +38,6 @@ class TestJobScheduler:
             schedule.job_name
             == "fg_or_fv_name_version_fm_config_name_run_feature_monitoring"
         )
-        assert (
-            schedule._href
-            == "https://hopsworks.ai/hopsworks-api/project/33/jobs/111/schedulev2/222"
-        )
 
     def test_on_local_init_with_timestamp(self):
         # Arrange
@@ -61,7 +57,6 @@ class TestJobScheduler:
         assert schedule.job_frequency == "HOURLY"
         assert schedule.enabled is True
         assert schedule.job_name is None
-        assert schedule._href is None
 
     def test_on_local_init_with_datetime(self):
         # Arrange
@@ -81,7 +76,6 @@ class TestJobScheduler:
         assert schedule.job_frequency == "HOURLY"
         assert schedule.enabled is True
         assert schedule.job_name is None
-        assert schedule._href is None
 
     def test_on_local_init_with_int(self):
         # Arrange
@@ -101,7 +95,6 @@ class TestJobScheduler:
         assert schedule.job_frequency == "WEEKLY"
         assert schedule.enabled is True
         assert schedule.job_name is None
-        assert schedule._href is None
 
     def test_on_local_init_with_str(self):
         # Arrange
@@ -121,4 +114,3 @@ class TestJobScheduler:
         assert schedule.job_frequency == "DAILY"
         assert schedule.enabled is False
         assert schedule.job_name is None
-        assert schedule._href is None

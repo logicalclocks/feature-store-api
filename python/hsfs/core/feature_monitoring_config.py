@@ -120,6 +120,10 @@ class FeatureMonitoringConfig:
             }
         else:
             statistics_comparison_config = None
+        if isinstance(self._scheduler_config, JobScheduler):
+            scheduler_config = self._scheduler_config.to_dict()
+        else:
+            scheduler_config = None
 
         return {
             "id": self._id,
@@ -132,7 +136,7 @@ class FeatureMonitoringConfig:
             "description": self._description,
             "jobName": self._job_name,
             "featureMonitoringType": self._feature_monitoring_type,
-            "schedulerConfig": self._scheduler_config.to_dict(),
+            "schedulerConfig": scheduler_config,
             "alertConfig": self._alert_config,
             "detectionWindowConfig": detection_window_config,
             "referenceWindowConfig": reference_window_config,
