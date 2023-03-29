@@ -38,15 +38,18 @@ class ArrowFlightClient:
     def __init__(self):
         self._client = client.get_instance()
         self._variable_api = VariableApi()
-        self._is_enabled = True  # self._variable_api.get_flyingduck_enabled() # TODO: enable this when new backend is deployed
-        self._is_initialized = False
+
+        try:
+            self._is_enabled = self._variable_api.get_flyingduck_enabled()
+        except Exception:
+            self._is_enabled = False # if feature flag cannot be retrieved, assume it is disabled
+
         if self._is_enabled:
             self._initialize_connection()
 
     def _initialize_connection(self):
         try:
-            host_ip = self._client._get_host_port_pair()[0]
-            host_url = f"grpc+tls://{host_ip}:5005"
+            host_url = f"grpc+tls://flyingduck.service.consul:5005"
             (tls_root_certs, cert_chain, private_key) = self._extract_certs(
                 self._client
             )
@@ -58,11 +61,10 @@ class ArrowFlightClient:
                 override_hostname="flyingduck.service.consul",
             )
             self._register_certificates()
-            self._is_initialized = True
         except Exception as e:
-            self._is_initialized = False
+            self._is_enabled = False
             print(
-                f"Count not establish connection to FlyingDuck. ({e})"
+                f"Could not establish connection to FlyingDuck. ({e}) "
                 f"Will fall back to spark for this session. "
                 f"If the error persists, you can disable FlyingDuck "
                 f"by changing the cluster configuration (set 'enable_flyingduck'=False)."
@@ -70,9 +72,6 @@ class ArrowFlightClient:
 
     def is_enabled(self):
         return self._is_enabled
-
-    def is_initialized(self):
-        return self._is_initialized
 
     def _extract_certs(self, client):
         with open(client._get_ca_chain_path(), "rb") as f:
@@ -118,7 +117,7 @@ class ArrowFlightClient:
                     return method(*args, **kw)
                 else:
                     raise FeatureStoreException(
-                        "Could not read data using FlyingDuck."
+                        "Could not read data using FlyingDuck. "
                         "If the issue persists, "
                         'use read_options={"use_spark": True} instead.'
                     ) from e

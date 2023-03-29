@@ -113,7 +113,6 @@ class Engine:
         return (
             self._arrow_flight_client.is_supported(query)
             and self._arrow_flight_client.is_enabled()
-            and self._arrow_flight_client.is_initialized()
         )
 
     def _sql_offline(
@@ -191,7 +190,6 @@ class Engine:
                 not read_options.get("use_spark", False)
                 and data_format == "parquet"
                 and self._arrow_flight_client.is_enabled()
-                and self._arrow_flight_client.is_initialized()
             ):
                 return self._read_hopsfs_remote(
                     location, data_format, use_flyingduck=True
