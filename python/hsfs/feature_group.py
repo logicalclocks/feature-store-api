@@ -2586,6 +2586,47 @@ class ExternalFeatureGroup(FeatureGroupBase):
         if self.statistics_config.enabled:
             self._statistics_engine.compute_statistics(self)
 
+    def insert(
+        self,
+        features: Union[
+            pd.DataFrame,
+            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+            TypeVar("pyspark.RDD"),  # noqa: F821
+            np.ndarray,
+            List[list],
+        ],
+        write_options: Optional[Dict[str, Any]] = {},
+        validation_options: Optional[Dict[str, Any]] = {},
+        save_code: Optional[bool] = True,
+    ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
+        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+
+        job, ge_report = self._feature_group_engine.insert(
+            self,
+            feature_dataframe=feature_dataframe,
+            write_options=write_options,
+            validation_options=validation_options,
+        )
+
+        if save_code and (
+            ge_report is None or ge_report.ingestion_result == "INGESTED"
+        ):
+            self._code_engine.save_code(self)
+
+        if self.statistics_config.enabled:
+            warnings.warn(
+                (
+                    "Statistics are not computed for insertion to online enabled external feature group `{}`, with version"
+                    " `{}`. Call `compute_statistics` explicitly to compute statistics over the data in the external storage system."
+                ).format(self._name, self._version),
+                util.StorageWarning,
+            )
+
+        return (
+            job,
+            ge_report.to_ge_type() if ge_report is not None else None,
+        )
+
     def read(self, dataframe_type="default"):
         """Get the feature group as a DataFrame.
 

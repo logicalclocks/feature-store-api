@@ -17,7 +17,6 @@ import warnings
 from hsfs import engine, client, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
-from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_group_base_engine, hudi_engine
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 
@@ -304,49 +303,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         return streaming_query
-
-    def _verify_schema_compatibility(self, feature_group_features, dataframe_features):
-        err = []
-        feature_df_dict = {feat.name: feat.type for feat in dataframe_features}
-        for feature_fg in feature_group_features:
-            fg_type = feature_fg.type.lower().replace(" ", "")
-            # check if feature exists dataframe
-            if feature_fg.name in feature_df_dict:
-                df_type = feature_df_dict[feature_fg.name].lower().replace(" ", "")
-                # remove match from lookup table
-                del feature_df_dict[feature_fg.name]
-
-                # check if types match
-                if fg_type != df_type:
-                    # don't check structs for exact match
-                    if fg_type.startswith("struct") and df_type.startswith("struct"):
-                        continue
-
-                    err += [
-                        f"{feature_fg.name} ("
-                        f"expected type: '{fg_type}', "
-                        f"derived from input: '{df_type}') has the wrong type."
-                    ]
-
-            else:
-                err += [
-                    f"{feature_fg.name} (type: '{feature_fg.type}') is missing from "
-                    f"input dataframe."
-                ]
-
-        # any features that are left in lookup table are superfluous
-        for feature_df_name, feature_df_type in feature_df_dict.items():
-            err += [
-                f"{feature_df_name} (type: '{feature_df_type}') does not exist "
-                f"in feature group."
-            ]
-
-        # raise exception if any errors were found.
-        if len(err) > 0:
-            raise FeatureStoreException(
-                "Features are not compatible with Feature Group schema: "
-                + "".join(["\n - " + e for e in err])
-            )
 
     def _save_feature_group_metadata(
         self, feature_group, dataframe_features, write_options

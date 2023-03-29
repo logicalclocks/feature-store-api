@@ -44,6 +44,7 @@ from botocore.response import StreamingBody
 from sqlalchemy import sql
 
 from hsfs import client, feature, util
+from hsfs.feature_group import ExternalFeatureGroup
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import (
     feature_group_api,
@@ -436,7 +437,10 @@ class Engine:
         online_write_options: dict,
         validation_id: int = None,
     ):
-        if feature_group.stream:
+        if feature_group.stream or (
+            isinstance(feature_group, ExternalFeatureGroup)
+            and feature_group.online_enabled
+        ):
             return self._write_dataframe_kafka(
                 feature_group, dataframe, offline_write_options
             )
