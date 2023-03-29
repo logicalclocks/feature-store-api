@@ -34,6 +34,7 @@
         <junit.version>5.9.1</junit.version>
         <surefire-plugin.version>2.22.0</surefire-plugin.version>
         <mockito.version>4.3.1</mockito.version>
+        <avro.version>1.11.1</avro.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <delombok.output>${project.basedir}/delombok</delombok.output>
@@ -177,6 +178,21 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.avro/avro -->
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${avro.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.scala-lang/scala-library -->
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>
