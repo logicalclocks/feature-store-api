@@ -125,7 +125,7 @@ class TestPythonReader:
         # Assert
         assert dataframe_fixture_basic.equals(df)
 
-    def test_read_hopsfs_rest_parquet(self, mocker, dataframe_fixture_basic):
+    def test_read_hopsfs_remote_parquet(self, mocker, dataframe_fixture_basic):
         # Arrange
         mock_dataset_api = mocker.patch("hsfs.core.dataset_api.DatasetApi")
         i = inode.Inode(attributes={"path": "test_path"})
@@ -146,7 +146,7 @@ class TestPythonReader:
         assert len(df_list) == 1
         assert dataframe_fixture_basic.equals(df_list[0])
 
-    def test_read_hopsfs_rest_csv(self, mocker, dataframe_fixture_basic):
+    def test_read_hopsfs_remote_csv(self, mocker, dataframe_fixture_basic):
         # Arrange
         mock_dataset_api = mocker.patch("hsfs.core.dataset_api.DatasetApi")
         i = inode.Inode(attributes={"path": "test_path"})

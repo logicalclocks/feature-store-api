@@ -296,8 +296,8 @@ class TestPython:
 
     def test_read_hopsfs(self, mocker):
         # Arrange
-        mock_python_engine_read_hopsfs_rest = mocker.patch(
-            "hsfs.engine.python.Engine._read_hopsfs_rest"
+        mock_python_engine_read_hopsfs_remote = mocker.patch(
+            "hsfs.engine.python.Engine._read_hopsfs_remote"
         )
 
         python_engine = python.Engine()
@@ -306,7 +306,7 @@ class TestPython:
         python_engine._read_hopsfs(location=None, data_format=None)
 
         # Assert
-        assert mock_python_engine_read_hopsfs_rest.call_count == 1
+        assert mock_python_engine_read_hopsfs_remote.call_count == 1
 
     def test_read_hopsfs_pydoop(self, mocker):
         # Arrange
@@ -316,8 +316,8 @@ class TestPython:
         mymodule.hdfs.path.isfile.return_value = False
         mymodule.hdfs.path.getsize.return_value = 0
         mocker.patch.dict("sys.modules", pydoop=mymodule)
-        mock_python_engine_read_hopsfs_rest = mocker.patch(
-            "hsfs.engine.python.Engine._read_hopsfs_rest"
+        mock_python_engine_read_hopsfs_remote = mocker.patch(
+            "hsfs.engine.python.Engine._read_hopsfs_remote"
         )
         mock_python_engine_read_pandas = mocker.patch(
             "hsfs.engine.python.Engine._read_pandas"
@@ -330,7 +330,7 @@ class TestPython:
 
         # Assert
         assert mymodule.call_count == 0
-        assert mock_python_engine_read_hopsfs_rest.call_count == 0
+        assert mock_python_engine_read_hopsfs_remote.call_count == 0
         assert mock_python_engine_read_pandas.call_count == 0
 
     def test_read_hopsfs_pydoop_isfile(self, mocker):
@@ -341,8 +341,8 @@ class TestPython:
         mymodule.hdfs.path.isfile.return_value = True
         mymodule.hdfs.path.getsize.return_value = 0
         mocker.patch.dict("sys.modules", pydoop=mymodule)
-        mock_python_engine_read_hopsfs_rest = mocker.patch(
-            "hsfs.engine.python.Engine._read_hopsfs_rest"
+        mock_python_engine_read_hopsfs_remote = mocker.patch(
+            "hsfs.engine.python.Engine._read_hopsfs_remote"
         )
         mock_python_engine_read_pandas = mocker.patch(
             "hsfs.engine.python.Engine._read_pandas"
@@ -354,7 +354,7 @@ class TestPython:
         python_engine._read_hopsfs(location=None, data_format=None)
 
         # Assert
-        assert mock_python_engine_read_hopsfs_rest.call_count == 0
+        assert mock_python_engine_read_hopsfs_remote.call_count == 0
         assert mock_python_engine_read_pandas.call_count == 0
 
     def test_read_hopsfs_pydoop_getsize(self, mocker):
@@ -365,8 +365,8 @@ class TestPython:
         mymodule.hdfs.path.isfile.return_value = False
         mymodule.hdfs.path.getsize.return_value = 100
         mocker.patch.dict("sys.modules", pydoop=mymodule)
-        mock_python_engine_read_hopsfs_rest = mocker.patch(
-            "hsfs.engine.python.Engine._read_hopsfs_rest"
+        mock_python_engine_read_hopsfs_remote = mocker.patch(
+            "hsfs.engine.python.Engine._read_hopsfs_remote"
         )
         mock_python_engine_read_pandas = mocker.patch(
             "hsfs.engine.python.Engine._read_pandas"
@@ -378,7 +378,7 @@ class TestPython:
         python_engine._read_hopsfs(location=None, data_format=None)
 
         # Assert
-        assert mock_python_engine_read_hopsfs_rest.call_count == 0
+        assert mock_python_engine_read_hopsfs_remote.call_count == 0
         assert mock_python_engine_read_pandas.call_count == 0
 
     def test_read_hopsfs_pydoop_isfile_getsize(self, mocker):
@@ -389,8 +389,8 @@ class TestPython:
         mymodule.hdfs.path.isfile.return_value = True
         mymodule.hdfs.path.getsize.return_value = 100
         mocker.patch.dict("sys.modules", pydoop=mymodule)
-        mock_python_engine_read_hopsfs_rest = mocker.patch(
-            "hsfs.engine.python.Engine._read_hopsfs_rest"
+        mock_python_engine_read_hopsfs_remote = mocker.patch(
+            "hsfs.engine.python.Engine._read_hopsfs_remote"
         )
         mock_python_engine_read_pandas = mocker.patch(
             "hsfs.engine.python.Engine._read_pandas"
@@ -402,10 +402,10 @@ class TestPython:
         python_engine._read_hopsfs(location=None, data_format=None)
 
         # Assert
-        assert mock_python_engine_read_hopsfs_rest.call_count == 0
+        assert mock_python_engine_read_hopsfs_remote.call_count == 0
         assert mock_python_engine_read_pandas.call_count == 2
 
-    def test_read_hopsfs_rest(self, mocker):
+    def test_read_hopsfs_remote(self, mocker):
         # Arrange
         mock_dataset_api = mocker.patch("hsfs.core.dataset_api.DatasetApi")
         mock_python_engine_read_pandas = mocker.patch(
