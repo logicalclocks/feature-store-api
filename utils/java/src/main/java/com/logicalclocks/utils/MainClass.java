@@ -18,10 +18,10 @@ package com.logicalclocks.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.logicalclocks.hsfs.FeatureStore;
-import com.logicalclocks.hsfs.HopsworksConnection;
-import com.logicalclocks.hsfs.StreamFeatureGroup;
-import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.spark.FeatureStore;
+import com.logicalclocks.hsfs.spark.HopsworksConnection;
+import com.logicalclocks.hsfs.spark.StreamFeatureGroup;
+import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -73,11 +73,18 @@ public class MainClass {
         .hasArg()
         .build());
 
+    options.addOption(Option.builder("kafkaOffsetReset")
+        .argName("kafkaOffsetReset")
+        .required(false)
+        .hasArg()
+        .build());
+
     CommandLineParser parser = new DefaultParser();
     CommandLine commandLine = parser.parse(options, args);
 
     String op = commandLine.getOptionValue("op");
     String path = commandLine.getOptionValue("path");
+    String kafkaOffsetsReset = commandLine.getOptionValue("kafkaOffsetReset");
 
     // read jobs config
     Map<String, Object> jobConf = readJobConf(path);
@@ -92,6 +99,13 @@ public class MainClass {
         jobConf.get("version")));
 
     Map<String, String> writeOptions = (Map<String, String>) jobConf.get("write_options");
+    if (kafkaOffsetsReset != null) {
+      if (writeOptions == null) {
+        writeOptions = new HashMap<>();
+      }
+      writeOptions.put("kafkaOffsetReset", kafkaOffsetsReset);
+    }
+    LOGGER.info("Hsfs utils write options: {}", writeOptions);
 
     if (op.equals("offline_fg_backfill")) {
       SparkEngine.getInstance().streamToHudiTable(streamFeatureGroup, writeOptions);

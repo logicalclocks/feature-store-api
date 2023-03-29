@@ -29,6 +29,7 @@ import random
 import uuid
 import decimal
 import numbers
+import math
 from datetime import datetime, timezone
 
 import great_expectations as ge
@@ -597,7 +598,9 @@ class Engine:
         result_dfs = {}
         splits = training_dataset_obj.splits
         if (
-            sum([split.percentage for split in splits]) != 1
+            not math.isclose(
+                sum([split.percentage for split in splits]), 1
+            )  # relative tolerance = 1e-09
             or sum([split.percentage > 1 or split.percentage < 0 for split in splits])
             > 1
         ):

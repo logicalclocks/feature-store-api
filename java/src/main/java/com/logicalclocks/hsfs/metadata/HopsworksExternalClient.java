@@ -1,17 +1,18 @@
 /*
- * Copyright (c) 2020 Logical Clocks AB
+ *  Copyright (c) 2020-2023. Hopsworks AB
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *
- * See the License for the specific language governing permissions and limitations under the License.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.logicalclocks.hsfs.metadata;
@@ -20,8 +21,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.SecretStore;
-import com.logicalclocks.hsfs.engine.SparkEngine;
+
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
@@ -62,30 +64,33 @@ import java.util.HashMap;
 
 public class HopsworksExternalClient implements HopsworksHttpClient {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(HopsworksExternalClient.class.getName());
-  private static final String PARAM_NAME_SECRET_STORE = "hopsworks/role/";
-  private static final String PARAM_NAME_PARAMETER_STORE = "/hopsworks/role/";
+  protected static final Logger LOGGER = LoggerFactory.getLogger(HopsworksExternalClient.class.getName());
+  protected static final String PARAM_NAME_SECRET_STORE = "hopsworks/role/";
+  protected static final String PARAM_NAME_PARAMETER_STORE = "/hopsworks/role/";
 
 
-  private static final String MATERIAL_PASSWD = "material_passwd";
-  private static final String T_CERTIFICATE = "t_certificate";
-  private static final String K_CERTIFICATE = "k_certificate";
+  protected static final String MATERIAL_PASSWD = "material_passwd";
+  protected static final String T_CERTIFICATE = "t_certificate";
+  protected static final String K_CERTIFICATE = "k_certificate";
 
-  private PoolingHttpClientConnectionManager connectionPool = null;
+  protected PoolingHttpClientConnectionManager connectionPool = null;
 
-  private HttpHost httpHost = null;
-  private CloseableHttpClient httpClient = null;
+  protected HttpHost httpHost = null;
+  protected CloseableHttpClient httpClient = null;
 
-  private String apiKey = "";
-
-  @Getter
-  private String trustStorePath;
+  protected String apiKey = "";
 
   @Getter
-  private String keyStorePath;
+  @Setter
+  protected String trustStorePath;
 
   @Getter
-  private String certKey;
+  @Setter
+  protected String keyStorePath;
+
+  @Getter
+  @Setter
+  protected String certKey;
 
   public HopsworksExternalClient(String host, int port, String apiKeyFilepath,
                                  boolean hostnameVerification, String trustStorePath)
@@ -100,7 +105,6 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
       NoSuchAlgorithmException, KeyManagementException {
     this(host, port, region, secretStore, hostnameVerification, trustStorePath, null, null);
   }
-
 
   public HopsworksExternalClient(String host, int port, boolean hostnameVerification,
                                  String trustStorePath, String apiKeyValue)
@@ -137,14 +141,9 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     } else {
       this.apiKey = readApiKey(secretStore, region, apiKeyFilepath);
     }
-
-    SparkEngine.getInstance().validateSparkConfiguration();
-    this.trustStorePath = SparkEngine.getInstance().getTrustStorePath();
-    this.keyStorePath = SparkEngine.getInstance().getKeyStorePath();
-    this.certKey = HopsworksHttpClient.readCertKey(SparkEngine.getInstance().getCertKey());
   }
 
-  private Registry<ConnectionSocketFactory> createConnectionFactory(HttpHost httpHost, boolean hostnameVerification,
+  protected Registry<ConnectionSocketFactory> createConnectionFactory(HttpHost httpHost, boolean hostnameVerification,
                                                                     String trustStorePath)
       throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, KeyManagementException {
 
@@ -171,7 +170,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
         .build();
   }
 
-  private static String readCertKey(String materialPwd) {
+  protected static String readCertKey(String materialPwd) {
     try (FileInputStream fis = new FileInputStream(materialPwd)) {
       StringBuilder sb = new StringBuilder();
       int content;
@@ -215,7 +214,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     }
   }
 
-  private String readApiKeyParamStore(Region region, String secretKey) throws FeatureStoreException {
+  protected String readApiKeyParamStore(Region region, String secretKey) throws FeatureStoreException {
     SsmClient ssmClient = SsmClient.builder()
         .region(region)
         .build();
@@ -233,7 +232,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     }
   }
 
-  private String readApiKeySecretManager(Region region, String secretKey) throws FeatureStoreException, IOException {
+  protected String readApiKeySecretManager(Region region, String secretKey) throws FeatureStoreException, IOException {
     SecretsManagerClient secretsManagerClient = SecretsManagerClient.builder()
         .region(region)
         .build();
@@ -252,7 +251,7 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
     }
   }
 
-  private String getAssumedRole() throws FeatureStoreException {
+  protected String getAssumedRole() throws FeatureStoreException {
     try (StsClient stsClient = StsClient.create()) {
       GetCallerIdentityResponse callerIdentityResponse = stsClient.getCallerIdentity();
       // arns for assumed roles in SageMaker follow the following schema
