@@ -61,6 +61,7 @@ class ArrowFlightClient:
                 private_key=private_key,
                 override_hostname="flyingduck.service.consul",
             )
+            self._health_check()
             self._register_certificates()
         except Exception as e:
             self._is_enabled = False
@@ -70,6 +71,11 @@ class ArrowFlightClient:
                 f"If the error persists, you can disable FlyingDuck "
                 f"by changing the cluster configuration (set 'enable_flyingduck'=False)."
             )
+
+    def _health_check(self):
+        action = pyarrow.flight.Action("healthcheck", b"")
+        options = pyarrow.flight.FlightCallOptions(timeout=1)
+        list(self._connection.do_action(action, options=options))
 
     def is_enabled(self):
         return self._is_enabled
