@@ -17,10 +17,10 @@
 
 package com.logicalclocks.hsfs.spark;
 
+import com.logicalclocks.hsfs.spark.constructor.Query;
+import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.Split;
-import com.logicalclocks.hsfs.spark.engine.SparkEngine;
-import com.logicalclocks.hsfs.spark.constructor.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

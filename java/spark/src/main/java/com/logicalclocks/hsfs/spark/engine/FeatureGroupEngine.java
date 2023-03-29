@@ -17,6 +17,7 @@
 
 package com.logicalclocks.hsfs.spark.engine;
 
+import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -32,7 +33,6 @@ import com.logicalclocks.hsfs.spark.StreamFeatureGroup;
 import com.logicalclocks.hsfs.spark.FeatureGroup;
 
 import com.logicalclocks.hsfs.spark.FeatureStore;
-import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
 
 import lombok.SneakyThrows;
 import org.apache.spark.sql.Dataset;

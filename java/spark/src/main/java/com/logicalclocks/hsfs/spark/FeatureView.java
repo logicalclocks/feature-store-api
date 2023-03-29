@@ -20,6 +20,8 @@ package com.logicalclocks.hsfs.spark;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.logicalclocks.hsfs.spark.constructor.Query;
+import com.logicalclocks.hsfs.spark.engine.FeatureViewEngine;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.FeatureViewBase;
@@ -30,8 +32,6 @@ import com.logicalclocks.hsfs.TrainingDatasetType;
 import com.logicalclocks.hsfs.constructor.Filter;
 import com.logicalclocks.hsfs.constructor.FilterLogic;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
-import com.logicalclocks.hsfs.spark.constructor.Query;
-import com.logicalclocks.hsfs.spark.engine.FeatureViewEngine;
 
 import lombok.NoArgsConstructor;
 import lombok.NonNull;

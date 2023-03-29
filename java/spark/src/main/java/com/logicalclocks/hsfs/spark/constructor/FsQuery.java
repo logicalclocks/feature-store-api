@@ -18,12 +18,12 @@
 package com.logicalclocks.hsfs.spark.constructor;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.constructor.FeatureGroupAlias;
 import com.logicalclocks.hsfs.constructor.FsQueryBase;
 import com.logicalclocks.hsfs.spark.ExternalFeatureGroup;
 import com.logicalclocks.hsfs.spark.StreamFeatureGroup;
-import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import lombok.AllArgsConstructor;
 
 import java.io.IOException;

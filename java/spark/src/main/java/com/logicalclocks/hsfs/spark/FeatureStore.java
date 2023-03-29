@@ -17,6 +17,10 @@
 
 package com.logicalclocks.hsfs.spark;
 
+import com.logicalclocks.hsfs.spark.constructor.Query;
+import com.logicalclocks.hsfs.spark.engine.FeatureGroupEngine;
+import com.logicalclocks.hsfs.spark.engine.FeatureViewEngine;
+import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import com.logicalclocks.hsfs.FeatureStoreBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StatisticsConfig;
@@ -26,11 +30,6 @@ import com.logicalclocks.hsfs.TrainingDatasetBase;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
-
-import com.logicalclocks.hsfs.spark.constructor.Query;
-import com.logicalclocks.hsfs.spark.engine.FeatureViewEngine;
-import com.logicalclocks.hsfs.spark.engine.FeatureGroupEngine;
-import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 
 import lombok.NonNull;
 

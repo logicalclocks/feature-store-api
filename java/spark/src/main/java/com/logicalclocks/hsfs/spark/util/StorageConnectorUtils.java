@@ -18,10 +18,10 @@
 package com.logicalclocks.hsfs.spark.util;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.util.Constants;
-import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 

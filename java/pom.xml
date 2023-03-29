@@ -5,10 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.logicalclocks</groupId>
-    <artifactId>hsfs</artifactId>
+    <artifactId>hsfs-sdk</artifactId>
     <packaging>pom</packaging>
     <version>3.2.0-SNAPSHOT</version>
     <modules>
+        <module>hsfs</module>
         <module>spark</module>
     </modules>
 
@@ -193,6 +194,12 @@
             <version>${scala.version}</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-io -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.3.2</version>
+        </dependency>
     </dependencies>
 
     <build>

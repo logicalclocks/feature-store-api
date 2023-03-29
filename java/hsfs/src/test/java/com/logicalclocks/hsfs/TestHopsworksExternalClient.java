@@ -14,10 +14,9 @@
  *  See the License for the specific language governing permissions and limitations under the License.
  *
  */
-package com.logicalclocks;
+package com.logicalclocks.hsfs;
 
 import com.logicalclocks.hsfs.metadata.HopsworksExternalClient;
-import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.metadata.Credentials;
 import io.specto.hoverfly.junit.core.SimulationSource;
 import io.specto.hoverfly.junit.dsl.HttpBodyConverter;

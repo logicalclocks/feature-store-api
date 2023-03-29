@@ -17,6 +17,7 @@
 
 package com.logicalclocks.hsfs.spark;
 
+import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HopsworksConnectionBase;
 import com.logicalclocks.hsfs.SecretStore;
@@ -24,7 +25,6 @@ import com.logicalclocks.hsfs.metadata.HopsworksClient;
 
 import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
-import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import lombok.Builder;
 
 import software.amazon.awssdk.regions.Region;

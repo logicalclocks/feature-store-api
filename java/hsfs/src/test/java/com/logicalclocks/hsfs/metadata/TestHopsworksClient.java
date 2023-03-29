@@ -42,7 +42,7 @@ public class TestHopsworksClient {
     Assertions.assertEquals("Content-Type: application/json; charset=UTF-8",
         stringEntity.getContentType().toString());
 
-    String json = IOUtils.toString(stringEntity.getContent(), StandardCharsets.UTF_8);
+    String json = IOUtils.toString(stringEntity.getContent(), String.valueOf(StandardCharsets.UTF_8));
     Assertions.assertEquals("{\"email\":\"test@test.com\",\"firstName\":\"test\",\"lastName\":\"de la Rúa Martínez\"}",
         json);
   }

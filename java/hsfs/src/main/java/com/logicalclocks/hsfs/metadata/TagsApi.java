@@ -38,16 +38,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
-
 public class TagsApi {
 
   public static final String ENTITY_ROOT_PATH = "{/entityType}";
   public static final String ENTITY_ID_PATH = ENTITY_ROOT_PATH + "{/entityId}";
   public static final String TAGS_PATH = ENTITY_ID_PATH + "/tags{/name}{?value}";
-  public static final String FV_TAGS_PATH = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH
+  public static final String FV_TAGS_PATH = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH
       + "/featureview{/fvName}/version{/fvVersion}/tags{/name}";
-  public static final String FV_TD_TAGS_PATH = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH
+  public static final String FV_TD_TAGS_PATH = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH
       + "/featureview{/fvName}/version{/fvVersion}"
       + "/trainingdatasets/version{/tdVersion}/tags{/name}";
 
@@ -62,7 +60,7 @@ public class TagsApi {
   private void add(Integer projectId, Integer featurestoreId, Integer entityId, String name, Object value)
       throws FeatureStoreException, IOException {
 
-    String pathTemplate = PROJECT_PATH
+    String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + TAGS_PATH;
 
@@ -147,7 +145,7 @@ public class TagsApi {
 
   private Map<String, Object> get(Integer projectId, Integer featurestoreId, Integer entityId, Optional<String> name)
       throws FeatureStoreException, IOException {
-    String pathTemplate = PROJECT_PATH
+    String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + TAGS_PATH;
 
@@ -238,7 +236,7 @@ public class TagsApi {
 
   private void deleteTag(Integer projectId, Integer featurestoreId, Integer entityId, String name)
       throws FeatureStoreException, IOException {
-    String pathTemplate = PROJECT_PATH
+    String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + TAGS_PATH;
 

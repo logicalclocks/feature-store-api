@@ -31,9 +31,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import static com.logicalclocks.hsfs.metadata.HopsworksClient.PROJECT_PATH;
-import static com.logicalclocks.hsfs.metadata.HopsworksClient.getInstance;
-
 public class StatisticsApi {
 
   private static final String ENTITY_ROOT_PATH = "{/entityType}";
@@ -65,7 +62,7 @@ public class StatisticsApi {
 
   private Statistics post(Integer projectId, Integer featurestoreId, Integer entityId, Statistics statistics)
       throws FeatureStoreException, IOException {
-    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + STATISTICS_PATH;
+    String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", projectId)
@@ -79,7 +76,7 @@ public class StatisticsApi {
   public Statistics post(FeatureViewBase featureViewBase,
                          Integer trainingDataVersion, Statistics statistics)
       throws FeatureStoreException, IOException {
-    String pathTemplate = PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FV_STATISTICS_PATH;
+    String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + FV_STATISTICS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureViewBase.getFeatureStore().getProjectId())
@@ -92,7 +89,7 @@ public class StatisticsApi {
   }
 
   private Statistics post(String uri, Statistics statistics) throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = getInstance();
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     LOGGER.info("Sending metadata request: " + uri);
     HttpPost postRequest = new HttpPost(uri);
     postRequest.setEntity(hopsworksClient.buildStringEntity(statistics));
@@ -114,7 +111,7 @@ public class StatisticsApi {
   private Statistics get(Integer projectId, Integer featurestoreId, Integer entityId, String commitTime)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
+    String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + STATISTICS_PATH;
 
@@ -152,7 +149,7 @@ public class StatisticsApi {
   private Statistics getLast(Integer projectId, Integer featurestoreId, Integer entityId)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = PROJECT_PATH
+    String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + STATISTICS_PATH;
 

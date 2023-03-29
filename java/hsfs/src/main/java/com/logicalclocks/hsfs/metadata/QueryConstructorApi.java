@@ -18,10 +18,10 @@
 package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
-import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.constructor.FeatureGroupAlias;
 import com.logicalclocks.hsfs.constructor.FsQueryBase;
 import com.logicalclocks.hsfs.constructor.QueryBase;
+import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.FeatureStoreBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import org.apache.http.HttpHeaders;

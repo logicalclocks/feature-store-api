@@ -18,6 +18,9 @@
 package com.logicalclocks.hsfs.spark;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.logicalclocks.hsfs.spark.constructor.Query;
+import com.logicalclocks.hsfs.spark.engine.FeatureGroupEngine;
+import com.logicalclocks.hsfs.spark.engine.StatisticsEngine;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.ExternalDataFormat;
 import com.logicalclocks.hsfs.Feature;
@@ -33,9 +36,6 @@ import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Statistics;
-import com.logicalclocks.hsfs.spark.constructor.Query;
-import com.logicalclocks.hsfs.spark.engine.FeatureGroupEngine;
-import com.logicalclocks.hsfs.spark.engine.StatisticsEngine;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

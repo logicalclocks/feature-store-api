@@ -20,6 +20,7 @@ package com.logicalclocks.hsfs.spark.engine;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
+import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Split;
@@ -30,7 +31,6 @@ import com.logicalclocks.hsfs.metadata.Statistics;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.spark.FeatureView;
 import com.logicalclocks.hsfs.spark.StreamFeatureGroup;
-import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.FeatureStore;
 import com.logicalclocks.hsfs.spark.TrainingDataset;
 import com.logicalclocks.hsfs.spark.TrainingDatasetBundle;

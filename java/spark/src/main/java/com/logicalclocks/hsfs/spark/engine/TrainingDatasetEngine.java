@@ -18,6 +18,7 @@
 package com.logicalclocks.hsfs.spark.engine;
 
 import com.google.common.collect.Maps;
+import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
@@ -25,7 +26,6 @@ import com.logicalclocks.hsfs.constructor.FsQueryBase;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
 import com.logicalclocks.hsfs.spark.TrainingDataset;
-import com.logicalclocks.hsfs.spark.constructor.Query;
 
 import com.logicalclocks.hsfs.spark.util.StorageConnectorUtils;
 import org.apache.hadoop.fs.Path;
