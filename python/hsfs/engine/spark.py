@@ -706,14 +706,12 @@ class Engine:
         exact_uniqueness=True,
     ):
         """Profile a dataframe with Deequ."""
-        return (
-            self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-                dataframe._jdf,
-                relevant_columns,
-                correlations,
-                histograms,
-                exact_uniqueness,
-            )
+        return self._jvm.com.logicalclocks.hsfs.spark.engine.SparkEngine.getInstance().profile(
+            dataframe._jdf,
+            relevant_columns,
+            correlations,
+            histograms,
+            exact_uniqueness,
         )
 
     def validate_with_great_expectations(
@@ -914,7 +912,7 @@ class Engine:
                 if transformation_fn.output_type != "TIMESTAMP":
                     return func
 
-                current_timezone = datetime.now().astimezone().tzinfo
+                current_timezone = tzlocal.get_localzone()
 
                 def decorated_func(x):
                     result = func(x)
