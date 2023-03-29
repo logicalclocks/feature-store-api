@@ -153,14 +153,6 @@ public class SparkEngine {
     sparkSession.conf().set("spark.sql.session.timeZone", "UTC");
   }
 
-  // for testing
-  public SparkEngine(String url) {
-    sparkSession = SparkSession.builder()
-        .enableHiveSupport()
-        .config("spark.master", url)
-        .getOrCreate();
-  }
-
   public void validateSparkConfiguration() throws FeatureStoreException {
     String exceptionText = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: ";
 

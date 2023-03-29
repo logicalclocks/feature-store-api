@@ -59,10 +59,9 @@ public class TestStorageConnector {
       bigqueryConnector.setKeyPath("file://" + credentialsFile);
     }
 
-    SparkEngine sparkEngine = new SparkEngine("local");
     // Act
     // Base64 encode the credentials file
-    String localKeyPath = sparkEngine.addFile(bigqueryConnector.getKeyPath());
+    String localKeyPath = SparkEngine.getInstance().addFile(bigqueryConnector.getKeyPath());
     String fileContent = Base64.getEncoder().encodeToString(Files.readAllBytes(Paths.get(localKeyPath)));
 
     // Assert
@@ -110,10 +109,9 @@ public class TestStorageConnector {
     }
     gcsConnector.setStorageConnectorType(StorageConnectorType.GCS);
 
-    SparkEngine sparkEngine = new SparkEngine("local");
     // Act
-    sparkEngine.setupConnectorHadoopConf(gcsConnector);
-    SparkContext sc = sparkEngine.getSparkSession().sparkContext();
+    SparkEngine.getInstance().setupConnectorHadoopConf(gcsConnector);
+    SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
     // Assert
     Assertions.assertEquals(
       "test@project.iam.gserviceaccount.com",
@@ -149,11 +147,9 @@ public class TestStorageConnector {
     gcsConnector.setEncryptionKey("encryptionkey");
     gcsConnector.setEncryptionKeyHash("encryptionkeyhash");
 
-    SparkEngine sparkEngine = new SparkEngine("local");
-
     // Act
-    sparkEngine.setupConnectorHadoopConf(gcsConnector);
-    SparkContext sc = sparkEngine.getSparkSession().sparkContext();
+    SparkEngine.getInstance().setupConnectorHadoopConf(gcsConnector);
+    SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
 
     // Assert
     Assertions.assertEquals("test@project.iam.gserviceaccount.com",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_EMAIL));
