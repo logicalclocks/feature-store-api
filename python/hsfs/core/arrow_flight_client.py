@@ -26,6 +26,16 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi
 
 
+_arrow_flight_instance = None
+
+
+def get_instance():
+    global _arrow_flight_instance
+    if not _arrow_flight_instance:
+        _arrow_flight_instance = ArrowFlightClient()
+    return _arrow_flight_instance
+
+
 class ArrowFlightClient:
     def __init__(self):
         try:
@@ -332,10 +342,3 @@ class ArrowFlightClient:
 
     def _info_to_ticket(self, info):
         return info.endpoints[0].ticket
-
-
-def get_instance():
-    global _arrow_flight_instance
-    if not _arrow_flight_instance:
-        _arrow_flight_instance = ArrowFlightClient()
-    return _arrow_flight_instance
