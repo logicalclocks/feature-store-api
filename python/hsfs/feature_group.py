@@ -2507,6 +2507,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             event_time=event_time,
             online_enabled=online_enabled,
             id=id,
+            expectation_suite=expectation_suite,
         )
         self._feature_store_name = featurestore_name
         self._description = description
@@ -2545,7 +2546,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 else []
             )
             self.statistics_config = statistics_config
-            self.expectation_suite = expectation_suite
 
             self._options = (
                 {option["name"]: option["value"] for option in options}

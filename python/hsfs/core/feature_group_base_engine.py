@@ -151,3 +151,6 @@ class FeatureGroupBaseEngine:
                 "Features are not compatible with Feature Group schema: "
                 + "".join(["\n - " + e for e in err])
             )
+
+    def get_subject(self, feature_group):
+        return self._kafka_api.get_topic_subject(feature_group._online_topic_name)
