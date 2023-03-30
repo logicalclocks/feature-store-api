@@ -65,13 +65,14 @@ class FeatureGroupBase:
         online_enabled=False,
         id=None,
         expectation_suite=None,
+        online_topic_name=None,
     ):
         self.event_time = event_time
         self._online_enabled = online_enabled
         self._location = location
         self._id = id
         self._subject = None
-        self._online_topic_name = None
+        self._online_topic_name = online_topic_name
         # use setter for correct conversion
         self.expectation_suite = expectation_suite
         self._statistics_engine = statistics_engine.StatisticsEngine(
@@ -1302,6 +1303,7 @@ class FeatureGroup(FeatureGroupBase):
             online_enabled=online_enabled,
             id=id,
             expectation_suite=expectation_suite,
+            online_topic_name=online_topic_name,
         )
 
         self._feature_store_name = featurestore_name
@@ -1319,7 +1321,6 @@ class FeatureGroup(FeatureGroupBase):
             time_travel_format.upper() if time_travel_format is not None else None
         )
 
-        self._online_topic_name = online_topic_name
         self._stream = stream
         self._parents = parents
         self._deltastreamer_jobconf = None
@@ -2502,6 +2503,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         expectation_suite=None,
         online_enabled=False,
         href=None,
+        online_topic_name=None,
     ):
         super().__init__(
             featurestore_id,
@@ -2510,6 +2512,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             online_enabled=online_enabled,
             id=id,
             expectation_suite=expectation_suite,
+            online_topic_name=online_topic_name,
         )
 
         self._feature_store_name = featurestore_name
@@ -2707,11 +2710,9 @@ class ExternalFeatureGroup(FeatureGroupBase):
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         if isinstance(json_decamelized, dict):
-            _ = json_decamelized.pop("online_topic_name", None)
             _ = json_decamelized.pop("type", None)
             return cls(**json_decamelized)
         for fg in json_decamelized:
-            _ = fg.pop("online_topic_name", None)
             _ = fg.pop("type", None)
         return [cls(**fg) for fg in json_decamelized]
 
