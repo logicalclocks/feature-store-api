@@ -103,6 +103,7 @@ class FeatureGroupBase:
 
         self._feature_store_id = featurestore_id
         self._variable_api = VariableApi()
+        self._feature_group_engine = None
 
     def delete(self):
         """Drop the entire feature group along with its feature data.
@@ -2509,6 +2510,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             id=id,
             expectation_suite=expectation_suite,
         )
+
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
