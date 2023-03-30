@@ -18,10 +18,10 @@ package com.logicalclocks.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.logicalclocks.hsfs.FeatureStore;
-import com.logicalclocks.hsfs.HopsworksConnection;
-import com.logicalclocks.hsfs.StreamFeatureGroup;
-import com.logicalclocks.hsfs.engine.SparkEngine;
+import com.logicalclocks.hsfs.spark.FeatureStore;
+import com.logicalclocks.hsfs.spark.HopsworksConnection;
+import com.logicalclocks.hsfs.spark.StreamFeatureGroup;
+import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

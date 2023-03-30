@@ -124,7 +124,7 @@ td.save(feature_join)
 
 A short introduction to the Scala API:
 ```scala
-import com.logicalclocks.hsfs._
+import com.logicalclocks.hsfs.spark._
 val connection = HopsworksConnection.builder().build()
 val fs = connection.getFeatureStore();
 val attendances_features_fg = fs.getFeatureGroup("games_features", 1);
