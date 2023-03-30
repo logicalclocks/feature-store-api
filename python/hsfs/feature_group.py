@@ -64,11 +64,14 @@ class FeatureGroupBase:
         event_time=None,
         online_enabled=False,
         id=None,
+        expectation_suite=None,
     ):
         self.event_time = event_time
         self._online_enabled = online_enabled
         self._location = location
         self._id = id
+        # use setter for correct conversion
+        self.expectation_suite = expectation_suite
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
@@ -77,6 +80,10 @@ class FeatureGroupBase:
             great_expectation_engine.GreatExpectationEngine(featurestore_id)
         )
         if self._id is not None:
+            if expectation_suite:
+                self._expectation_suite._init_expectation_engine(
+                    feature_store_id=featurestore_id, feature_group_id=self._id
+                )
             self._expectation_suite_engine = (
                 expectation_suite_engine.ExpectationSuiteEngine(
                     feature_store_id=featurestore_id, feature_group_id=self._id
@@ -92,6 +99,7 @@ class FeatureGroupBase:
                     featurestore_id, self._id
                 )
             )
+
         self._feature_store_id = featurestore_id
         self._variable_api = VariableApi()
 
@@ -1246,6 +1254,7 @@ class FeatureGroup(FeatureGroupBase):
             event_time=event_time,
             online_enabled=online_enabled,
             id=id,
+            expectation_suite=expectation_suite,
         )
 
         self._feature_store_name = featurestore_name
@@ -1294,26 +1303,6 @@ class FeatureGroup(FeatureGroupBase):
                 self._hudi_precombine_key = None
 
             self.statistics_config = statistics_config
-            self.expectation_suite = expectation_suite
-            if expectation_suite:
-                self._expectation_suite._init_expectation_engine(
-                    feature_store_id=featurestore_id, feature_group_id=self._id
-                )
-            self._expectation_suite_engine = (
-                expectation_suite_engine.ExpectationSuiteEngine(
-                    feature_store_id=self._feature_store_id, feature_group_id=self._id
-                )
-            )
-            self._validation_report_engine = (
-                validation_report_engine.ValidationReportEngine(
-                    self._feature_store_id, self._id
-                )
-            )
-            self._validation_result_engine = (
-                validation_result_engine.ValidationResultEngine(
-                    self._feature_store_id, self._id
-                )
-            )
 
         else:
             # initialized by user
@@ -1343,7 +1332,6 @@ class FeatureGroup(FeatureGroupBase):
                 else None
             )
             self.statistics_config = statistics_config
-            self.expectation_suite = expectation_suite
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
@@ -2529,7 +2517,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._query = query
         self._data_format = data_format.upper() if data_format else None
         self._path = path
-        self._expectation_suite = expectation_suite
 
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
@@ -2568,7 +2555,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         else:
             self.primary_key = primary_key
             self.statistics_config = statistics_config
-            self.expectation_suite = expectation_suite
             self._features = features
             self._options = options
 
@@ -2579,7 +2565,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         else:
             self._storage_connector = storage_connector
 
-        self.expectation_suite = expectation_suite
         self._href = href
 
     def save(self):
