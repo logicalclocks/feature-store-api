@@ -5,8 +5,6 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.ReflectDatumWriter;
-import org.apache.beam.sdk.extensions.avro.schemas.utils.AvroUtils;
-import org.apache.beam.sdk.values.Row;
 import org.apache.kafka.common.serialization.Serializer;
 
 import java.io.ByteArrayOutputStream;
@@ -14,17 +12,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PojoSerializer implements Serializer<Row> {
+public class GenericAvroSerializer implements Serializer<GenericRecord> {
+
 
   @Override
-  public byte[] serialize(String topic, Row input) {
-
-    DatumWriter<GenericRecord> datumWriter = new ReflectDatumWriter<>(AvroUtils.toAvroSchema(input.getSchema()));
+  public byte[] serialize(String topic, GenericRecord genericRecord) {
+    DatumWriter<GenericRecord> datumWriter = new ReflectDatumWriter<>(genericRecord.getSchema());
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     byteArrayOutputStream.reset();
 
     List<GenericRecord> records = new ArrayList<>();
-    records.add(AvroUtils.toGenericRecord(input, AvroUtils.toAvroSchema(input.getSchema())));
+    records.add(genericRecord);
 
     BinaryEncoder binaryEncoder = new EncoderFactory().binaryEncoder(byteArrayOutputStream, null);
     for (GenericRecord segment: records) {
@@ -41,4 +39,5 @@ public class PojoSerializer implements Serializer<Row> {
     }
     return byteArrayOutputStream.toByteArray();
   }
+
 }

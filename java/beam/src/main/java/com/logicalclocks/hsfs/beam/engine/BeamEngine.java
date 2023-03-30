@@ -29,7 +29,8 @@ public class BeamEngine {
   }
 
   public HsfsBeamProducer insertStream(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    return new HsfsBeamProducer(featureGroup.getOnlineTopicName(), getKafkaProperties(featureGroup));
+    return new HsfsBeamProducer(featureGroup.getOnlineTopicName(), getKafkaProperties(featureGroup),
+      featureGroup.getDeserializedAvroSchema());
   }
 
   private Map<String, Object> getKafkaProperties(StreamFeatureGroup featureGroup) throws FeatureStoreException,
