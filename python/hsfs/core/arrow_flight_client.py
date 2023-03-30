@@ -38,12 +38,7 @@ def get_instance():
 
 class ArrowFlightClient:
     def __init__(self):
-        try:
-            self._client = client.get_instance()
-        except Exception:
-            # if client cannot be retrieved, assume it is disabled
-            self._is_enabled = False
-            return
+        self._is_initialized = False
 
         try:
             self._variable_api = VariableApi()
@@ -54,39 +49,85 @@ class ArrowFlightClient:
             return
 
         if self._is_enabled:
-            self._initialize_connection()
+            try:
+                self._initialize_connection_if_needed()
+            except Exception as e:
+                self._is_enabled = False
+                warnings.warn(
+                    f"Could not establish connection to FlyingDuck. ({e}) "
+                    f"Will fall back to spark for this session. "
+                    f"If the error persists, you can disable FlyingDuck "
+                    f"by changing the cluster configuration (set 'enable_flyingduck'='false')."
+                )
 
-    def _initialize_connection(self):
-        try:
-            host_url = "grpc+tls://flyingduck.service.consul:5005"
-            (tls_root_certs, cert_chain, private_key) = self._extract_certs(
-                self._client
-            )
-            self._connection = pyarrow.flight.FlightClient(
-                location=host_url,
-                tls_root_certs=tls_root_certs,
-                cert_chain=cert_chain,
-                private_key=private_key,
-                override_hostname="flyingduck.service.consul",
-            )
-            self._health_check()
-            self._register_certificates()
-        except Exception as e:
-            self._is_enabled = False
-            warnings.warn(
-                f"Could not establish connection to FlyingDuck. ({e}) "
-                f"Will fall back to spark for this session. "
-                f"If the error persists, you can disable FlyingDuck "
-                f"by changing the cluster configuration (set 'enable_flyingduck'='false')."
-            )
+    def _initialize_connection_if_needed(self):
+        if self._is_initialized is True:
+            return
+
+        self._client = client.get_instance()
+
+        host_url = "grpc+tls://flyingduck.service.consul:5005"
+        (tls_root_certs, cert_chain, private_key) = self._extract_certs(self._client)
+        self._connection = pyarrow.flight.FlightClient(
+            location=host_url,
+            tls_root_certs=tls_root_certs,
+            cert_chain=cert_chain,
+            private_key=private_key,
+            override_hostname="flyingduck.service.consul",
+        )
+        self._health_check()
+        self._register_certificates()
+        self._is_initialized = True
 
     def _health_check(self):
         action = pyarrow.flight.Action("healthcheck", b"")
         options = pyarrow.flight.FlightCallOptions(timeout=1)
         list(self._connection.do_action(action, options=options))
 
-    def is_enabled(self):
-        return self._is_enabled
+    def should_be_used(self, read_options):
+        if "use_spark" in read_options and read_options["use_spark"] is True:
+            return False
+
+        if "use_flyingduck" in read_options and read_options["use_flyingduck"] is False:
+            return False
+
+        if self._is_enabled:
+            return True
+
+        if "use_flyingduck" in read_options and read_options["use_flyingduck"] is True:
+            try:
+                self._initialize_connection_if_needed()
+                return True
+            except Exception as e:
+                warnings.warn(
+                    f"Could not establish connection to FlyingDuck. ({e}) "
+                    f"Will fall back to spark for this operation. "
+                    f"If the error persists, you can disable FlyingDuck for this operation "
+                    f"by changing the read_options (read_options={{'enable_flyingduck'=False}} "
+                    f"or read_options={{'use_spark'=True}})."
+                )
+                return False
+
+    def is_query_supported(self, query):
+        query_supported = (
+            isinstance(query._left_feature_group, feature_group.FeatureGroup)
+            and query._left_feature_group.time_travel_format == "HUDI"
+            and (
+                query._left_feature_group_start_time is None
+                or query._left_feature_group_start_time == 0
+            )
+            and query._left_feature_group_end_time is None
+        )
+        for j in query._joins:
+            query_supported &= self.is_query_supported(j._query)
+
+        return query_supported
+
+    def is_data_format_supported(self, data_format):
+        if data_format == "parquet":
+            return True
+        else:
+            return False
 
     def _extract_certs(self, client):
         with open(client._get_ca_chain_path(), "rb") as f:
@@ -196,21 +237,6 @@ class ArrowFlightClient:
         )
 
         return training_dataset_metadata
-
-    def is_supported(self, query):
-        query_supported = (
-            isinstance(query._left_feature_group, feature_group.FeatureGroup)
-            and query._left_feature_group.time_travel_format == "HUDI"
-            and (
-                query._left_feature_group_start_time is None
-                or query._left_feature_group_start_time == 0
-            )
-            and query._left_feature_group_end_time is None
-        )
-        for j in query._joins:
-            query_supported &= self.is_supported(j._query)
-
-        return query_supported
 
     def _get_query_object(self, query, query_str):
         query_string = query_str.replace(

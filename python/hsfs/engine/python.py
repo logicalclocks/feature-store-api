@@ -110,11 +110,10 @@ class Engine:
                 sql_query, online_conn, dataframe_type, read_options, schema
             )
 
-    def flyingduck_supported_and_enabled(self, query):
-        return (
-            self._arrow_flight_client.is_supported(query)
-            and self._arrow_flight_client.is_enabled()
-        )
+    def flyingduck_supported_and_enabled(self, query, read_options):
+        return self._arrow_flight_client.is_query_supported(
+            query
+        ) and self._arrow_flight_client.should_be_used(read_options)
 
     def _sql_offline(
         self,
@@ -187,11 +186,9 @@ class Engine:
         try:
             from pydoop import hdfs
         except ModuleNotFoundError:
-            if (
-                not read_options.get("use_spark", False)
-                and data_format == "parquet"
-                and self._arrow_flight_client.is_enabled()
-            ):
+            if self._arrow_flight_client.is_data_format_supported(
+                data_format
+            ) and self._arrow_flight_client.should_be_used(read_options):
                 return self._read_hopsfs_remote(
                     location, data_format, use_flyingduck=True
                 )
