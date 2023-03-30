@@ -1065,6 +1065,42 @@ class FeatureGroupBase:
     def primary_key(self, new_primary_key):
         self._primary_key = [pk.lower() for pk in new_primary_key]
 
+    @property
+    def avro_schema(self):
+        """Avro schema representation of the feature group."""
+        return self.subject["schema"]
+
+    def get_complex_features(self):
+        """Returns the names of all features with a complex data type in this
+        feature group.
+
+        !!! example
+            ```python
+            complex_dtype_features = fg.get_complex_features()
+            ```
+        """
+        return [f.name for f in self.features if f.is_complex()]
+
+    def _get_encoded_avro_schema(self):
+        complex_features = self.get_complex_features()
+        schema = json.loads(self.avro_schema)
+
+        for field in schema["fields"]:
+            if field["name"] in complex_features:
+                field["type"] = ["null", "bytes"]
+
+        schema_s = json.dumps(schema)
+        try:
+            avro.schema.parse(schema_s)
+        except avro.schema.SchemaParseException as e:
+            raise FeatureStoreException("Failed to construct Avro Schema: {}".format(e))
+        return schema_s
+
+    def _get_feature_avro_schema(self, feature_name):
+        for field in json.loads(self.avro_schema)["fields"]:
+            if field["name"] == feature_name:
+                return json.dumps(field["type"])
+
     def get_statistics(
         self, commit_time: Optional[Union[str, int, datetime, date]] = None
     ):
@@ -2315,37 +2351,6 @@ class FeatureGroup(FeatureGroupBase):
     def _get_online_table_name(self):
         return self.name + "_" + str(self.version)
 
-    def get_complex_features(self):
-        """Returns the names of all features with a complex data type in this
-        feature group.
-
-        !!! example
-            ```python
-            complex_dtype_features = fg.get_complex_features()
-            ```
-        """
-        return [f.name for f in self.features if f.is_complex()]
-
-    def _get_encoded_avro_schema(self):
-        complex_features = self.get_complex_features()
-        schema = json.loads(self.avro_schema)
-
-        for field in schema["fields"]:
-            if field["name"] in complex_features:
-                field["type"] = ["null", "bytes"]
-
-        schema_s = json.dumps(schema)
-        try:
-            avro.schema.parse(schema_s)
-        except avro.schema.SchemaParseException as e:
-            raise FeatureStoreException("Failed to construct Avro Schema: {}".format(e))
-        return schema_s
-
-    def _get_feature_avro_schema(self, feature_name):
-        for field in json.loads(self.avro_schema)["fields"]:
-            if field["name"] == feature_name:
-                return json.dumps(field["type"])
-
     @property
     def id(self):
         """Feature group id."""
@@ -2412,11 +2417,6 @@ class FeatureGroup(FeatureGroupBase):
             # cache the schema
             self._subject = self._feature_group_engine.get_subject(self)
         return self._subject
-
-    @property
-    def avro_schema(self):
-        """Avro schema representation of the feature group."""
-        return self.subject["schema"]
 
     @property
     def stream(self):
