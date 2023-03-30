@@ -70,6 +70,7 @@ class FeatureGroupBase:
         self._online_enabled = online_enabled
         self._location = location
         self._id = id
+        self._subject = None
         # use setter for correct conversion
         self.expectation_suite = expectation_suite
         self._statistics_engine = statistics_engine.StatisticsEngine(
@@ -1066,6 +1067,14 @@ class FeatureGroupBase:
         self._primary_key = [pk.lower() for pk in new_primary_key]
 
     @property
+    def subject(self):
+        """Subject of the feature group."""
+        if self._subject is None:
+            # cache the schema
+            self._subject = self._feature_group_engine.get_subject(self)
+        return self._subject
+
+    @property
     def avro_schema(self):
         """Avro schema representation of the feature group."""
         return self.subject["schema"]
@@ -1308,7 +1317,6 @@ class FeatureGroup(FeatureGroupBase):
             time_travel_format.upper() if time_travel_format is not None else None
         )
 
-        self._subject = None
         self._online_topic_name = online_topic_name
         self._stream = stream
         self._parents = parents
@@ -2409,14 +2417,6 @@ class FeatureGroup(FeatureGroupBase):
     def created(self):
         """Timestamp when the feature group was created."""
         return self._created
-
-    @property
-    def subject(self):
-        """Subject of the feature group."""
-        if self._subject is None:
-            # cache the schema
-            self._subject = self._feature_group_engine.get_subject(self)
-        return self._subject
 
     @property
     def stream(self):
