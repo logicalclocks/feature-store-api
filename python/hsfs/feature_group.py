@@ -79,17 +79,17 @@ class FeatureGroupBase:
         if self._id is not None:
             self._expectation_suite_engine = (
                 expectation_suite_engine.ExpectationSuiteEngine(
-                    feature_store_id=self._feature_store_id, feature_group_id=self._id
+                    feature_store_id=featurestore_id, feature_group_id=self._id
                 )
             )
             self._validation_report_engine = (
                 validation_report_engine.ValidationReportEngine(
-                    self._feature_store_id, self._id
+                    featurestore_id, self._id
                 )
             )
             self._validation_result_engine = (
                 validation_result_engine.ValidationResultEngine(
-                    self._feature_store_id, self._id
+                    featurestore_id, self._id
                 )
             )
         self._feature_store_id = featurestore_id
@@ -1245,6 +1245,7 @@ class FeatureGroup(FeatureGroupBase):
             location,
             event_time=event_time,
             online_enabled=online_enabled,
+            id=id,
         )
 
         self._feature_store_name = featurestore_name
@@ -1253,7 +1254,6 @@ class FeatureGroup(FeatureGroupBase):
         self._creator = user.User.from_response_json(creator)
         self._version = version
         self._name = name
-        self._id = id
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in (features or [])
