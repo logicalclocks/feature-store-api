@@ -66,6 +66,7 @@ except ImportError:
     pass
 
 from hsfs import feature, training_dataset_feature, client, util
+from hsfs.feature_group import ExternalFeatureGroup
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine, transformation_function_engine, kafka_api
@@ -261,7 +262,10 @@ class Engine:
         validation_id=None,
     ):
         try:
-            if feature_group.stream:
+            if (
+                isinstance(feature_group, ExternalFeatureGroup)
+                and feature_group.online_enabled
+            ) or feature_group.stream:
                 self._save_online_dataframe(
                     feature_group, dataframe, online_write_options
                 )
