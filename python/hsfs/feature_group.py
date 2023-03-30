@@ -58,11 +58,17 @@ from hsfs.core import great_expectation_engine
 
 class FeatureGroupBase:
     def __init__(
-        self, featurestore_id, location, event_time=None, online_enabled=False
+        self,
+        featurestore_id,
+        location,
+        event_time=None,
+        online_enabled=False,
+        id=None,
     ):
         self.event_time = event_time
         self._online_enabled = online_enabled
         self._location = location
+        self._id = id
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
@@ -70,6 +76,22 @@ class FeatureGroupBase:
         self._great_expectation_engine = (
             great_expectation_engine.GreatExpectationEngine(featurestore_id)
         )
+        if self._id is not None:
+            self._expectation_suite_engine = (
+                expectation_suite_engine.ExpectationSuiteEngine(
+                    feature_store_id=self._feature_store_id, feature_group_id=self._id
+                )
+            )
+            self._validation_report_engine = (
+                validation_report_engine.ValidationReportEngine(
+                    self._feature_store_id, self._id
+                )
+            )
+            self._validation_result_engine = (
+                validation_result_engine.ValidationResultEngine(
+                    self._feature_store_id, self._id
+                )
+            )
         self._feature_store_id = featurestore_id
         self._variable_api = VariableApi()
 
@@ -2496,6 +2518,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             location,
             event_time=event_time,
             online_enabled=online_enabled,
+            id=id,
         )
         self._feature_store_name = featurestore_name
         self._description = description
@@ -2506,7 +2529,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._query = query
         self._data_format = data_format.upper() if data_format else None
         self._path = path
-        self._id = id
         self._expectation_suite = expectation_suite
 
         self._features = [
