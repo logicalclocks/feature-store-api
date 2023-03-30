@@ -71,6 +71,7 @@ class FeatureGroupBase:
         self._location = location
         self._id = id
         self._subject = None
+        self._online_topic_name = None
         # use setter for correct conversion
         self.expectation_suite = expectation_suite
         self._statistics_engine = statistics_engine.StatisticsEngine(
