@@ -73,6 +73,7 @@ class FeatureGroupBase:
         self._id = id
         self._subject = None
         self._online_topic_name = online_topic_name
+        self._feature_store_id = featurestore_id
         # use setter for correct conversion
         self.expectation_suite = expectation_suite
         self._statistics_engine = statistics_engine.StatisticsEngine(
