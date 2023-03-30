@@ -437,10 +437,10 @@ class Engine:
         online_write_options: dict,
         validation_id: int = None,
     ):
-        if feature_group.stream or (
+        if (
             isinstance(feature_group, ExternalFeatureGroup)
             and feature_group.online_enabled
-        ):
+        ) or feature_group.stream:
             return self._write_dataframe_kafka(
                 feature_group, dataframe, offline_write_options
             )
