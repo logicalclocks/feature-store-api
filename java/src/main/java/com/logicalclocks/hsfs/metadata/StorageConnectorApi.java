@@ -1,25 +1,25 @@
 /*
- * Copyright (c) 2020 Logical Clocks AB
+ *  Copyright (c) 2020-2023. Hopsworks AB
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *
- * See the License for the specific language governing permissions and limitations under the License.
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
  */
 
 package com.logicalclocks.hsfs.metadata;
 
 import com.damnhandy.uri.template.UriTemplate;
-import com.logicalclocks.hsfs.FeatureStore;
+import com.logicalclocks.hsfs.FeatureStoreBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.StorageConnector;
 import org.apache.http.client.methods.HttpGet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +35,8 @@ public class StorageConnectorApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageConnectorApi.class);
 
-  public StorageConnector get(Integer featureStoreId, String name) throws FeatureStoreException, IOException {
+  public <U> U get(Integer featureStoreId, String name, Class<U> storageConnectorType)
+      throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
@@ -49,15 +50,15 @@ public class StorageConnectorApi {
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    return hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector.class);
+    return hopsworksClient.handleRequest(new HttpGet(uri), storageConnectorType);
   }
 
-  public StorageConnector getByName(FeatureStore featureStore, String name)
+  public <T> T getByName(FeatureStoreBase featureStoreBase, String name, Class<T> storageConnectorType)
       throws IOException, FeatureStoreException {
-    return get(featureStore.getId(), name);
+    return get(featureStoreBase.getId(), name, storageConnectorType);
   }
 
-  public StorageConnector.JdbcConnector getOnlineStorageConnector(FeatureStore featureStore)
+  public <T> T  getOnlineStorageConnector(FeatureStoreBase featureStoreBase, Class<T> storageConnectorType)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -65,11 +66,11 @@ public class StorageConnectorApi {
         + ONLINE_CONNECTOR_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStore.getProjectId())
-        .set("fsId", featureStore.getId())
+        .set("projectId", featureStoreBase.getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
-    return hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector.JdbcConnector.class);
+    return hopsworksClient.handleRequest(new HttpGet(uri), storageConnectorType);
   }
 }
