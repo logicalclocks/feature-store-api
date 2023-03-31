@@ -269,6 +269,7 @@ class ArrowFlightClient:
             features,
             filters,
         ) = self._collect_featuregroups_features_and_filters_rec(query)
+        filters = self._filter_to_expression(filters, featuregroups)
         for feature in features:
             features[feature] = list(features[feature])
         return featuregroups, features, filters
@@ -278,7 +279,7 @@ class ArrowFlightClient:
         fg = query._left_feature_group
         fg_name = f"{fg.feature_store_name.replace('_featurestore','')}.{fg.name}_{fg.version}"  # featurestore.name_version
         featuregroups[fg._id] = fg_name
-        filters = self._filter_to_expression(query._filter, featuregroups)
+        filters = query._filter
 
         features = {}
         features[fg_name] = set([feat._name for feat in query._left_features])
@@ -308,7 +309,7 @@ class ArrowFlightClient:
                 join_featuregroups,
                 join_features,
                 join_filters,
-            ) = self._collect_featuregroups_features_and_filters(join._query)
+            ) = self._collect_featuregroups_features_and_filters_rec(join._query)
             featuregroups.update(join_featuregroups)
             for join_fg_name in join_features:
                 self._update_features(
