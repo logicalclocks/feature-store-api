@@ -47,12 +47,12 @@ public class Query extends QueryBase<Query, StreamFeatureGroup, DataStream<?>> {
   }
 
   @Override
-  public Object read(boolean b) throws FeatureStoreException, IOException {
+  public Object read(boolean online) throws FeatureStoreException, IOException {
     throw new UnsupportedOperationException("Not supported for Flink");
   }
 
   @Override
-  public Object read(boolean b, Map<String, String> map) throws FeatureStoreException, IOException {
+  public Object read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
     throw new UnsupportedOperationException("Not supported for Flink");
   }
 
@@ -62,7 +62,7 @@ public class Query extends QueryBase<Query, StreamFeatureGroup, DataStream<?>> {
   }
 
   @Override
-  public void show(boolean b, int i) throws FeatureStoreException, IOException {
+  public void show(boolean online, int numRows) throws FeatureStoreException, IOException {
     throw new UnsupportedOperationException("Not supported for Flink");
   }
 }

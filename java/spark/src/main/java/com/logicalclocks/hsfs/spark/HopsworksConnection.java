@@ -66,9 +66,9 @@ public class HopsworksConnection extends HopsworksConnectionBase {
   /**
    * Retrieve the project feature store.
    *
-   * @return FeatureStore
-   * @throws IOException IOException
-   * @throws FeatureStoreException FeatureStoreException
+   * @return FeatureStore object.
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks
    */
   @Override
   public FeatureStore getFeatureStore() throws IOException, FeatureStoreException {
@@ -80,9 +80,9 @@ public class HopsworksConnection extends HopsworksConnectionBase {
    * the connection's project. The name is the project name of the feature store.
    *
    * @param name the name of the feature store to get the handle for
-   * @return FeatureStore
-   * @throws IOException IOException
-   * @throws FeatureStoreException FeatureStoreException
+   * @return FeatureStore object.
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks
    */
   @Override
   public FeatureStore getFeatureStore(String name) throws IOException, FeatureStoreException {

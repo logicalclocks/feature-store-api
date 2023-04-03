@@ -15,17 +15,15 @@
  *
  */
 
-package com.logicalclocks.hsfs.flink.engine;
+package com.logicalclocks.hsfs.beam.engine;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.beam.FeatureStore;
+import com.logicalclocks.hsfs.beam.FeatureView;
+import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
+import com.logicalclocks.hsfs.beam.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureViewEngineBase;
-
-import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
-import com.logicalclocks.hsfs.flink.constructor.Query;
-import com.logicalclocks.hsfs.flink.FeatureView;
-import com.logicalclocks.hsfs.flink.FeatureStore;
-
-import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.beam.sdk.values.PCollection;
 
 import java.io.IOException;
 import java.util.Date;
@@ -33,12 +31,10 @@ import java.util.List;
 import java.util.Map;
 
 public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView, FeatureStore, StreamFeatureGroup,
-    DataStream<?>> {
-
+    PCollection<Object>> {
   @Override
   public FeatureView update(FeatureView featureView) throws FeatureStoreException, IOException {
-    featureViewApi.update(featureView, FeatureView.class);
-    return featureView;
+    throw new UnsupportedOperationException("Not supported for Beam");
   }
 
   @Override
@@ -50,26 +46,26 @@ public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView,
   }
 
   @Override
-  public Query getBatchQuery(FeatureView featureView, Date date, Date date1, Boolean withLabels, Integer integer)
-      throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
+  public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime, Boolean withLabels,
+      Integer trainingDataVersion) throws FeatureStoreException, IOException {
+    throw new UnsupportedOperationException("Not supported for Beam");
   }
 
   @Override
   public String getBatchQueryString(FeatureView featureView, Date startTime, Date endTime, Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
+    throw new UnsupportedOperationException("Not supported for Beam");
   }
 
   @Override
   public FeatureView getOrCreateFeatureView(FeatureStore featureStore, String name, Integer version, Query query,
       String description, List<String> labels) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
+    throw new UnsupportedOperationException("Not supported for Beam");
   }
 
   @Override
-  public DataStream getBatchData(FeatureView featureView, Date startTime, Date endTime, Map<String, String> readOptions,
-      Integer trainingDataVersion) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
+  public PCollection<Object> getBatchData(FeatureView featureView, Date startTime, Date endTime,
+      Map<String, String> readOptions, Integer trainingDataVersion) throws FeatureStoreException, IOException {
+    throw new UnsupportedOperationException("Not supported for Beam");
   }
 }

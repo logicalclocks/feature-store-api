@@ -413,13 +413,24 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
   public abstract void deleteTrainingDatasetTag(Integer version, String name) throws FeatureStoreException, IOException;
 
   /**
-   * Set of primary key names that is used as keys in input dict object for `get_serving_vector` method.
+   * Get set of primary key names that is used as keys in input dict object for `getServingVector` method.
    *
-   * @return Set of serving keys
-   * @throws SQLException
-   * @throws IOException
-   * @throws FeatureStoreException
-   * @throws ClassNotFoundException
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature view handle
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   *        // get set of primary key names
+   *        fv.getPrimaryKeys();
+   * }
+   * </pre>
+   *
+   * @return {@code HashSet<String>}  Set of serving keys
+   * @throws FeatureStoreException In case client is not connected to Hopsworks.
+   * @throws IOException Generic IO exception.
+   * @throws SQLException In case there is online storage (RonDB) access error or other errors.
+   * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
    */
   @JsonIgnore
   public HashSet<String> getPrimaryKeys()

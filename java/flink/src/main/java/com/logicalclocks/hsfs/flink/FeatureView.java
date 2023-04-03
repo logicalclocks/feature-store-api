@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022-2022. Hopsworks AB
+ *  Copyright (c) 2023. Hopsworks AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -31,8 +31,7 @@ import java.text.ParseException;
 import java.util.Map;
 
 @NoArgsConstructor
-public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Query,
-    DataStream<?>> {
+public class FeatureView extends FeatureViewBase<FeatureView, FeatureStore, Query, DataStream<?>> {
 
   @Override
   public void addTag(String s, Object o) throws FeatureStoreException, IOException {

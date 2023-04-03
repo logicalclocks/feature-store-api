@@ -1,3 +1,20 @@
+/*
+ *  Copyright (c) 2023. Hopsworks AB
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
+ */
+
 package com.logicalclocks.hsfs.beam;
 
 import com.logicalclocks.hsfs.Feature;
@@ -8,7 +25,7 @@ import com.logicalclocks.hsfs.JobConfiguration;
 import com.logicalclocks.hsfs.StatisticsConfig;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.beam.engine.FeatureGroupEngine;
-import com.logicalclocks.hsfs.beam.engine.HsfsBeamProducer;
+import com.logicalclocks.hsfs.beam.engine.BeamProducer;
 import com.logicalclocks.hsfs.constructor.QueryBase;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.Builder;
@@ -52,278 +69,6 @@ public class StreamFeatureGroup extends FeatureGroupBase<PCollection<Object>> {
     this.type = "streamFeatureGroupDTO";
   }
 
-  @Override
-  public PCollection<Object> read() throws FeatureStoreException, IOException {
-    return null;
-  }
-
-  @Override
-  public PCollection<Object> read(boolean b) throws FeatureStoreException, IOException {
-    return null;
-  }
-
-  @Override
-  public PCollection<Object> read(Map<String, String> map) throws FeatureStoreException, IOException {
-    return null;
-  }
-
-  @Override
-  public PCollection<Object> read(boolean b, Map<String, String> map) throws FeatureStoreException, IOException {
-    return null;
-  }
-
-  @Override
-  public PCollection<Object> read(String s) throws FeatureStoreException, IOException, ParseException {
-    return null;
-  }
-
-  @Override
-  public PCollection<Object> read(String s, Map<String, String> map)
-      throws FeatureStoreException, IOException, ParseException {
-    return null;
-  }
-
-  @Override
-  public QueryBase asOf(String s) throws FeatureStoreException, ParseException {
-    return null;
-  }
-
-  @Override
-  public QueryBase asOf(String s, String s1) throws FeatureStoreException, ParseException {
-    return null;
-  }
-
-  @Override
-  public void show(int i) throws FeatureStoreException, IOException {
-
-  }
-
-  @Override
-  public void show(int i, boolean b) throws FeatureStoreException, IOException {
-
-  }
-
-  @Override
-  public void insert(PCollection<Object> objectPCollection) throws IOException, FeatureStoreException, ParseException {
-
-  }
-
-  @Override
-  public void insert(PCollection<Object> objectPCollection, Map<String, String> map)
-      throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void insert(PCollection<Object> objectPCollection, Storage storage)
-      throws IOException, FeatureStoreException, ParseException {
-
-  }
-
-  @Override
-  public void insert(PCollection<Object> objectPCollection, boolean b)
-      throws IOException, FeatureStoreException, ParseException {
-
-  }
-
-  @Override
-  public void insert(PCollection<Object> objectPCollection, Storage storage, boolean b)
-      throws IOException, FeatureStoreException, ParseException {
-
-  }
-
-  @Override
-  public void insert(PCollection<Object> objectPCollection, boolean b, Map<String, String> map)
-      throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void insert(PCollection<Object> objectPCollection, HudiOperationType hudiOperationType)
-      throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void insert(PCollection<Object> objectPCollection, Storage storage, boolean b,
-      HudiOperationType hudiOperationType, Map<String, String> map)
-      throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void insert(PCollection<Object> objectPCollection, JobConfiguration jobConfiguration)
-      throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void insert(PCollection<Object> objectPCollection, boolean b, Map<String, String> map,
-      JobConfiguration jobConfiguration) throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void commitDeleteRecord(PCollection<Object> objectPCollection)
-      throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void commitDeleteRecord(PCollection<Object> objectPCollection, Map<String, String> map)
-      throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
-    return null;
-  }
-
-  @Override
-  public Map<Long, Map<String, String>> commitDetails(Integer integer)
-      throws IOException, FeatureStoreException, ParseException {
-    return null;
-  }
-
-  @Override
-  public Map<Long, Map<String, String>> commitDetails(String s)
-      throws IOException, FeatureStoreException, ParseException {
-    return null;
-  }
-
-  @Override
-  public Map<Long, Map<String, String>> commitDetails(String s, Integer integer)
-      throws IOException, FeatureStoreException, ParseException {
-    return null;
-  }
-
-  @Override
-  public QueryBase selectFeatures(List<Feature> list) {
-    return null;
-  }
-
-  @Override
-  public QueryBase select(List<String> list) {
-    return null;
-  }
-
-  @Override
-  public QueryBase selectAll() {
-    return null;
-  }
-
-  @Override
-  public QueryBase selectExceptFeatures(List<Feature> list) {
-    return null;
-  }
-
-  @Override
-  public QueryBase selectExcept(List<String> list) {
-    return null;
-  }
-
-  public HsfsBeamProducer insertStream() throws Exception {
-    return featureGroupEngine.insertStream(this);
-  }
-
-
-  @Override
-  public Object insertStream(PCollection<Object> objectPCollection) throws Exception {
-    return null;
-  }
-
-  @Override
-  public Object insertStream(PCollection<Object> objectPCollection, String s) throws Exception {
-    return null;
-  }
-
-  @Override
-  public Object insertStream(PCollection<Object> objectPCollection, Map<String, String> map) throws Exception {
-    return null;
-  }
-
-  @Override
-  public Object insertStream(PCollection<Object> objectPCollection, String s, Map<String, String> map)
-      throws Exception {
-    return null;
-  }
-
-  @Override
-  public Object insertStream(PCollection<Object> objectPCollection, String s, String s1) throws Exception {
-    return null;
-  }
-
-  @Override
-  public Object insertStream(PCollection<Object> objectPCollection, String s, String s1, String s2) throws Exception {
-    return null;
-  }
-
-  @Override
-  public Object insertStream(PCollection<Object> objectPCollection, String s, String s1, boolean b, Long timeOut)
-      throws Exception {
-    return null;
-  }
-
-  @Override
-  public Object insertStream(PCollection<Object> objectPCollection, String s, String s1, boolean b, Long timeout,
-      String s2) throws Exception {
-    return null;
-  }
-
-  @Override
-  public Object insertStream(PCollection<Object> objectPCollection, String s, String s1, boolean b, Long timeout,
-      String s2, Map<String, String> map) throws Exception {
-    return null;
-  }
-
-  @Override
-  public Object insertStream(PCollection<Object> objectPCollection, String s, String s1, boolean b, String s2)
-      throws Exception {
-    return null;
-  }
-
-  @Override
-  public Object insertStream(PCollection<Object> objectPCollection, String s, String s1, boolean b, Long timeout,
-      String s2, Map<String, String> map, JobConfiguration jobConfiguration) throws Exception {
-    return null;
-  }
-
-  @Override
-  public void updateFeatures(List<Feature> list) throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void appendFeatures(List<Feature> list) throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void appendFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public Statistics computeStatistics() throws FeatureStoreException, IOException, ParseException {
-    return null;
-  }
-
-  @Override
-  public Statistics computeStatistics(String s) throws FeatureStoreException, IOException, ParseException {
-    return null;
-  }
-
-  @Override
-  public Statistics getStatistics() throws FeatureStoreException, IOException {
-    return null;
-  }
-
   // used for updates
   public StreamFeatureGroup(Integer id, String description, List<Feature> features) {
     this();
@@ -338,6 +83,301 @@ public class StreamFeatureGroup extends FeatureGroupBase<PCollection<Object>> {
     this.id = id;
   }
 
+  @Override
+  public PCollection<Object> read() throws FeatureStoreException, IOException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
 
+  @Override
+  public PCollection<Object> read(boolean online) throws FeatureStoreException, IOException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
 
+  @Override
+  public PCollection<Object> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public PCollection<Object> read(boolean online, Map<String, String> readOptions)
+      throws FeatureStoreException, IOException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public PCollection<Object> read(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public PCollection<Object> read(String wallclockTime, Map<String, String> readOptions)
+      throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public QueryBase asOf(String wallclockTime) throws FeatureStoreException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public QueryBase asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void show(int numRows) throws FeatureStoreException, IOException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void show(int numRows, boolean online) throws FeatureStoreException, IOException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void insert(PCollection<Object> featureData) throws IOException, FeatureStoreException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void insert(PCollection<Object> featureData, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void insert(PCollection<Object> featureData, Storage storage)
+      throws IOException, FeatureStoreException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void insert(PCollection<Object> featureData, boolean overwrite)
+      throws IOException, FeatureStoreException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void insert(PCollection<Object> featureData, Storage storage, boolean overwrite)
+      throws IOException, FeatureStoreException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void insert(PCollection<Object> featureData, boolean online, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void insert(PCollection<Object> featureData, HudiOperationType hudiOperationType)
+      throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void insert(PCollection<Object> featureData, Storage storage, boolean online,
+      HudiOperationType hudiOperationType, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void insert(PCollection<Object> featureData, JobConfiguration jobConfiguration)
+      throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void insert(PCollection<Object> featureData, boolean online, Map<String, String> writeOptions,
+      JobConfiguration jobConfiguration) throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void commitDeleteRecord(PCollection<Object> featureData)
+      throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void commitDeleteRecord(PCollection<Object> featureData, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Map<Long, Map<String, String>> commitDetails(Integer integer)
+      throws IOException, FeatureStoreException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Map<Long, Map<String, String>> commitDetails(String limit)
+      throws IOException, FeatureStoreException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
+      throws IOException, FeatureStoreException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public QueryBase selectFeatures(List<Feature> features) {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public QueryBase select(List<String> features) {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public QueryBase selectAll() {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public QueryBase selectExceptFeatures(List<Feature> features) {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public QueryBase selectExcept(List<String> features) {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  /**
+   * Ingest a feature data to the online feature store using Beam Pipeline object. Currently,
+   * only org.apache.beam.sdk.values.Row types as feature data type are supported.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *
+   *        // get feature group handle
+   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("taxi_ride", 1);
+   *
+   *        // create Beam pipeline
+   *        Pipeline pipeline = Pipeline.create();
+   *        pipeline
+   *         .apply("read stream from the source", PubsubIO.readStrings().fromTopic(options.getInputTopic()))
+   *         .apply("Parse JSON to Beam Rows", JsonToRow.withSchema(schema))
+   *         .apply("insert streaming feature data", fg.insertStream());
+   * }
+   * </pre>
+   *
+   * @return BeamProducer object, that can be wrapped inside Beam Pipeline `apply` method.
+   */
+  public BeamProducer insertStream() throws Exception {
+    return featureGroupEngine.insertStream(this);
+  }
+
+  @Override
+  public Object insertStream(PCollection<Object> featureData) throws Exception {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Object insertStream(PCollection<Object> featureData, String queryName) throws Exception {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Object insertStream(PCollection<Object> featureData, Map<String, String> writeOptions) throws Exception {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Object insertStream(PCollection<Object> featureData, String queryName, Map<String, String> writeOptions)
+      throws Exception {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Object insertStream(PCollection<Object> featureData, String queryName, String outputMode) throws Exception {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Object insertStream(PCollection<Object> featureData, String queryName, String outputMode,
+      String checkpointLocation) throws Exception {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Object insertStream(PCollection<Object> featureData,String queryName, String outputMode,
+      boolean awaitTermination, Long timeout) throws Exception {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Object insertStream(PCollection<Object> featureData, String queryName, String outputMode,
+      boolean awaitTermination, Long timeout, String checkpointLocation) throws Exception {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Object insertStream(PCollection<Object> featureData, String queryName, String outputMode,
+      boolean awaitTermination, Long timeout, String checkpointLocation, Map<String, String> writeOptions)
+      throws Exception {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Object insertStream(PCollection<Object> featureData, String queryName, String outputMode,
+      boolean awaitTermination, String checkpointLocation) throws Exception {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Object insertStream(PCollection<Object> featureData, String queryName, String outputMode,
+      boolean awaitTermination, Long timeout, String checkpointLocation, Map<String, String> writeOptions,
+      JobConfiguration jobConfiguration) throws Exception {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void updateFeatures(List<Feature> feature) throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void appendFeatures(List<Feature> feature) throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public void appendFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Statistics computeStatistics() throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
+
+  @Override
+  public Statistics getStatistics() throws FeatureStoreException, IOException {
+    throw new UnsupportedOperationException("Not supported for Beam");
+  }
 }

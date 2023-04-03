@@ -1,3 +1,20 @@
+/*
+ *  Copyright (c) 2023. Hopsworks AB
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *
+ *  See the License for the specific language governing permissions and limitations under the License.
+ *
+ */
+
 package com.logicalclocks.hsfs.beam;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -6,7 +23,9 @@ import com.logicalclocks.hsfs.SecretStore;
 import com.logicalclocks.hsfs.metadata.Credentials;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
+
 import lombok.Builder;
+
 import software.amazon.awssdk.regions.Region;
 
 import java.io.IOException;
@@ -48,9 +67,9 @@ public class HopsworksConnection extends HopsworksConnectionBase {
   /**
    * Retrieve the project feature store.
    *
-   * @return FeatureStore
-   * @throws IOException
-   * @throws FeatureStoreException
+   * @return FeatureStore object.
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks
    */
   public FeatureStore getFeatureStore() throws IOException, FeatureStoreException {
     return getFeatureStore(rewriteFeatureStoreName(project));
@@ -61,9 +80,9 @@ public class HopsworksConnection extends HopsworksConnectionBase {
    * the connection's project. The name is the project name of the feature store.
    *
    * @param name the name of the feature store to get the handle for
-   * @return FeatureStore
-   * @throws IOException
-   * @throws FeatureStoreException
+   * @return FeatureStore object.
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks
    */
   public FeatureStore getFeatureStore(String name) throws IOException, FeatureStoreException {
     return featureStoreApi.get(projectObj.getProjectId(), rewriteFeatureStoreName(name), FeatureStore.class);

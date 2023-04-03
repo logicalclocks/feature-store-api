@@ -51,62 +51,87 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   }
 
   @Override
-  public Object getFeatureGroups(@NonNull String s) throws FeatureStoreException, IOException {
+  public Object getFeatureGroups(@NonNull String name) throws FeatureStoreException, IOException {
     throw new UnsupportedOperationException("Not supported for Flink");
   }
 
   @Override
-  public Object getOrCreateFeatureGroup(String s, Integer integer) throws IOException, FeatureStoreException {
+  public Object getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
+    throw new UnsupportedOperationException("Not supported for Flink");
+  }
+
+
+  @Override
+  public Object getOrCreateFeatureGroup(String name, Integer integer, List<String> primaryKeys,
+      boolean onlineEnabled, String eventTime) throws IOException, FeatureStoreException {
     throw new UnsupportedOperationException("Not supported for Flink");
   }
 
   @Override
-  public Object getOrCreateFeatureGroup(String s, Integer integer, List<String> list, List<String> list1, boolean b,
-      String s1) throws IOException, FeatureStoreException {
+  public Object getOrCreateFeatureGroup(String name, Integer version, List<String> primaryKeys,
+      List<String> partitionKeys, boolean onlineEnabled, String eventTime) throws IOException, FeatureStoreException {
     throw new UnsupportedOperationException("Not supported for Flink");
   }
 
   @Override
-  public Object getOrCreateFeatureGroup(String s, Integer integer, List<String> list, boolean b, String s1)
-      throws IOException, FeatureStoreException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getOrCreateFeatureGroup(String s, Integer integer, String s1, List<String> list, List<String> list1,
-      String s2, boolean b, TimeTravelFormat timeTravelFormat, StatisticsConfig statisticsConfig, String s3)
-      throws IOException, FeatureStoreException {
+  public Object getOrCreateFeatureGroup(String name, Integer version, String description, List<String> primaryKeys,
+      List<String> partitionKeys, String hudiPrecombineKey, boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
+      StatisticsConfig statisticsConfig, String eventTime) throws IOException, FeatureStoreException {
     throw new UnsupportedOperationException("Not supported for Flink");
   }
 
   /**
-   * Get a feature group object from the feature store.
+   * Get a stream feature group object from the feature store.
    *
-   * @param name    the name of the feature group
-   * @param version the version of the feature group
-   * @return FeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  @Override
-  public StreamFeatureGroup getStreamFeatureGroup(@NonNull String name, @NonNull Integer version)
-      throws FeatureStoreException, IOException {
-    return featureGroupEngine.getStreamFeatureGroup(this, name, version);
-  }
-
-  /**
-   * Get a feature group object with default version `1` from the feature store.
+   * <p>Getting a stream feature group metadata handle enables to interact with the feature group,
+   * such as read the data or use the `Query`-API to perform joins between feature groups and create feature
+   * views.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        FeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
+   * }
+   * </pre>
    *
    * @param name the name of the feature group
-   * @return FeatureGroup
-   * @throws FeatureStoreException
-   * @throws IOException
+   * @return StreamFeatureGroup The stream feature group metadata object.
+   * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
+   * @throws IOException Generic IO exception.
    */
   @Override
   public StreamFeatureGroup getStreamFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
     return getStreamFeatureGroup(name, DEFAULT_VERSION);
+  }
+
+  /**
+   * Get a stream feature group object from the feature store.
+   *
+   * <p>Getting a stream feature group metadata handle enables to interact with the feature group,
+   * such as read the data or use the `Query`-API to perform joins between feature groups and create feature
+   * views.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        FeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
+   * }
+   * </pre>
+   *
+   * @param name the name of the feature group
+   * @param version the version of the feature group
+   * @return StreamFeatureGroup The stream feature group metadata object.
+   * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
+   * @throws IOException Generic IO exception.
+   */
+  @Override
+  public StreamFeatureGroup getStreamFeatureGroup(@NonNull String name, @NonNull Integer version)
+      throws FeatureStoreException, IOException {
+    return featureGroupEngine.getStreamFeatureGroup(this, name, version);
   }
 
   @Override
@@ -155,13 +180,13 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   }
 
   @Override
-  public StorageConnector getStorageConnector(String s) throws FeatureStoreException, IOException {
+  public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {
     throw new UnsupportedOperationException("Not supported for Flink");
   }
 
   @Override
-  public Object getHopsFsConnector(String s) throws FeatureStoreException, IOException {
-    return null;
+  public Object getHopsFsConnector(String name) throws FeatureStoreException, IOException {
+    throw new UnsupportedOperationException("Not supported for Flink");
   }
 
   @Override
@@ -250,11 +275,19 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   /**
    * Get a feature view object from the selected feature store.
    *
-   * @param name    name of the feature view
-   * @param version version to get
-   * @return FeatureView
-   * @throws FeatureStoreException
-   * @throws IOException
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   * }
+   * </pre>
+   *
+   * @param name    Name of the feature view.
+   * @param version Version to get.
+   * @return FeatureView The feature view metadata object.
+   * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
+   * @throws IOException Generic IO exception.
    */
   public FeatureView getFeatureView(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
@@ -262,12 +295,20 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   }
 
   /**
-   * Get a feature view object with the default version `1` from the selected feature store.
+   * Get a feature view object from the selected feature store.
    *
-   * @param name name of the feature view
-   * @return FeatureView
-   * @throws FeatureStoreException
-   * @throws IOException
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        FeatureView fv = fs.getFeatureView("fv_name", 1);
+   * }
+   * </pre>
+   *
+   * @param name    Name of the feature view.
+   * @return FeatureView The feature view metadata object.
+   * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
+   * @throws IOException Generic IO exception.
    */
   public FeatureView getFeatureView(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature view `" + name + "`, defaulting to `"
