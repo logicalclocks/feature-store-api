@@ -2641,7 +2641,9 @@ class ExternalFeatureGroup(FeatureGroupBase):
             ge_report.to_ge_type() if ge_report is not None else None,
         )
 
-    def read(self, dataframe_type="default"):
+    def read(
+        self, dataframe_type: Optional[str] = "default", online: Optional[bool] = False
+    ):
         """Get the feature group as a DataFrame.
 
         !!! example
@@ -2666,6 +2668,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
         # Arguments
             dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
                 `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            online: bool, optional. If `True` read from online feature store, defaults
+                to `False`.
 
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
@@ -2683,7 +2687,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().read(dataframe_type=dataframe_type)
+        return self.select_all().read(dataframe_type=dataframe_type, online=online)
 
     def show(self, n):
         """Show the first n rows of the feature group.
