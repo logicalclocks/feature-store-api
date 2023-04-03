@@ -107,6 +107,7 @@ class FeatureGroupBase:
         self._feature_store_id = featurestore_id
         self._variable_api = VariableApi()
         self._feature_group_engine = None
+        self._multi_part_insert = False
 
     def delete(self):
         """Drop the entire feature group along with its feature data.
@@ -1387,7 +1388,6 @@ class FeatureGroup(FeatureGroupBase):
         self._href = href
 
         # cache for optimized writes
-        self._multi_part_insert = False
         self._kafka_producer = None
         self._feature_writers = None
         self._writer = None
