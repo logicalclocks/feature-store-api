@@ -51,8 +51,8 @@ class FeatureMonitoringConfigApi:
 
     def create(
         self,
-        fm_config: fmc.FeatureMonitoringConfig,
-    ) -> fmc.FeatureMonitoringConfig:
+        fm_config: "fmc.FeatureMonitoringConfig",
+    ) -> "fmc.FeatureMonitoringConfig":
         """Create an feature monitoring configuration attached to the Feature of a Feature Group.
 
         :param fm_config: feature monitoring config object to be attached to a Feature
@@ -73,8 +73,8 @@ class FeatureMonitoringConfigApi:
 
     def update(
         self,
-        fm_config: fmc.FeatureMonitoringConfig,
-    ) -> fmc.FeatureMonitoringConfig:
+        fm_config: "fmc.FeatureMonitoringConfig",
+    ) -> "fmc.FeatureMonitoringConfig":
         """Update a feature monitoring configuration attached to a Feature.
 
         :param fm_config: feature monitoring configuration to be attached to a Feature
@@ -117,7 +117,7 @@ class FeatureMonitoringConfigApi:
     def get(
         self,
         config_id: int,
-    ) -> Optional[fmc.FeatureMonitoringConfig]:
+    ) -> Optional["fmc.FeatureMonitoringConfig"]:
         """Get the Feature Monitoring Configuration attached to a Feature.
 
         :param config_id: Id of the feature monitoring configuration to fetch
@@ -138,7 +138,7 @@ class FeatureMonitoringConfigApi:
     def get_by_feature_name(
         self,
         feature_name: str,
-    ) -> Optional[fmc.FeatureMonitoringConfig]:
+    ) -> Optional["fmc.FeatureMonitoringConfig"]:
         """Get all Feature Monitoring Configurations attached to a Feature Name.
 
         :param feature_name: Name of the feature for which to fetch monitoring configuration
@@ -159,7 +159,7 @@ class FeatureMonitoringConfigApi:
     def get_by_name(
         self,
         name: str,
-    ) -> Optional[fmc.FeatureMonitoringConfig]:
+    ) -> Optional["fmc.FeatureMonitoringConfig"]:
         """Get all Feature Monitoring Configurations attached to a Feature Name.
 
         :param name: Name of the feature monitoring configuration to fetch

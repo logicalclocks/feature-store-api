@@ -17,8 +17,9 @@
 from typing import Any, Dict, Optional, Union
 from datetime import datetime, timedelta
 
-from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
-from hsfs.core.feature_monitoring_config_api import FeatureMonitoringConfigApi
+
+from hsfs.core import feature_monitoring_config_api
+from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core.feature_monitoring_result_engine import FeatureMonitoringResultEngine
 from hsfs.core.statistics_engine import StatisticsEngine
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
@@ -66,11 +67,13 @@ class FeatureMonitoringConfigEngine:
         else:
             entity_type = "featureview"
 
-        self._feature_monitoring_config_api = FeatureMonitoringConfigApi(
-            feature_store_id=feature_store_id,
-            feature_group_id=feature_group_id,
-            feature_view_name=feature_view_name,
-            feature_view_version=feature_view_version,
+        self._feature_monitoring_config_api = (
+            feature_monitoring_config_api.FeatureMonitoringConfigApi(
+                feature_store_id=feature_store_id,
+                feature_group_id=feature_group_id,
+                feature_view_name=feature_view_name,
+                feature_view_version=feature_view_version,
+            )
         )
         self._statistics_engine = StatisticsEngine(feature_store_id, entity_type)
 
@@ -81,7 +84,7 @@ class FeatureMonitoringConfigEngine:
         detection_window_config: MonitoringWindowConfig,
         scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
         description: Optional[str] = None,
-    ) -> FeatureMonitoringConfig:
+    ) -> "fmc.FeatureMonitoringConfig":
         """Enable descriptive statistics monitoring for a feature.
 
         Args:
@@ -121,7 +124,7 @@ class FeatureMonitoringConfigEngine:
         alert_config: str,
         scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
         description: Optional[str] = None,
-    ) -> FeatureMonitoringConfig:
+    ) -> "fmc.FeatureMonitoringConfig":
         """Enable feature monitoring for a feature.
 
         Args:
@@ -206,7 +209,7 @@ class FeatureMonitoringConfigEngine:
         detection_window_config: Dict[str, Any],
         scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
         description: Optional[str] = None,
-    ) -> FeatureMonitoringConfig:
+    ) -> "fmc.FeatureMonitoringConfig":
         """Builds a feature monitoring config for descriptive statistics only.
 
         Args:
@@ -225,7 +228,7 @@ class FeatureMonitoringConfigEngine:
             FeatureMonitoringConfig The monitoring configuration.
         """
 
-        return FeatureMonitoringConfig(
+        return fmc.FeatureMonitoringConfig(
             feature_store_id=self._feature_store_id,
             feature_group_id=self._feature_group_id,
             feature_view_id=self._feature_view_id,
@@ -251,7 +254,7 @@ class FeatureMonitoringConfigEngine:
         scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]],
         alert_config: str,
         description: Optional[str] = None,
-    ) -> FeatureMonitoringConfig:
+    ) -> "fmc.FeatureMonitoringConfig":
         """Builds a feature monitoring config.
 
         Args:
@@ -273,7 +276,7 @@ class FeatureMonitoringConfigEngine:
                 Description of the monitoring configuration.
         """
 
-        return FeatureMonitoringConfig(
+        return fmc.FeatureMonitoringConfig(
             feature_store_id=self._feature_store_id,
             feature_group_id=self._feature_group_id,
             feature_view_id=self._feature_view_id,

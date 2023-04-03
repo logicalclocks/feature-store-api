@@ -16,7 +16,7 @@
 
 from hsfs.core import feature_monitoring_result_engine
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
-from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
+from hsfs.core import feature_monitoring_config as fmc
 from datetime import datetime, date
 import dateutil
 from hsfs import util
@@ -341,7 +341,7 @@ class TestFeatureMonitoringResultEngine:
         config_json = backend_fixtures["feature_monitoring_config"][
             "get_via_feature_group"
         ]["detection_insert_reference_snapshot"]["response"]
-        config = FeatureMonitoringConfig.from_response_json(config_json)
+        config = fmc.FeatureMonitoringConfig.from_response_json(config_json)
 
         detection_stats_json = backend_fixtures["feature_descriptive_statistics"][
             "get_fractional_feature_statistics"
@@ -404,7 +404,7 @@ class TestFeatureMonitoringResultEngine:
         config_json = backend_fixtures["feature_monitoring_config"][
             "get_via_feature_group"
         ]["detection_insert_reference_specific_value"]["response"]
-        config = FeatureMonitoringConfig.from_response_json(config_json)
+        config = fmc.FeatureMonitoringConfig.from_response_json(config_json)
 
         detection_stats_json = backend_fixtures["feature_descriptive_statistics"][
             "get_fractional_feature_statistics"
@@ -459,7 +459,7 @@ class TestFeatureMonitoringResultEngine:
         config_json = backend_fixtures["feature_monitoring_config"][
             "get_via_feature_group"
         ]["detection_insert_scheduled_stats_only"]["response"]
-        config = FeatureMonitoringConfig.from_response_json(config_json)
+        config = fmc.FeatureMonitoringConfig.from_response_json(config_json)
 
         detection_stats_json = backend_fixtures["feature_descriptive_statistics"][
             "get_fractional_feature_statistics"

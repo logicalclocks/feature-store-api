@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 from hsfs.core.job_scheduler import JobScheduler
-from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
+from hsfs.core import feature_monitoring_config as fmc
 
 
 class TestFeatureMonitoringConfig:
@@ -25,7 +25,7 @@ class TestFeatureMonitoringConfig:
         ]["detection_insert_reference_snapshot"]["response"]
 
         # Act
-        config = FeatureMonitoringConfig.from_response_json(config_json)
+        config = fmc.FeatureMonitoringConfig.from_response_json(config_json)
 
         # Assert
         assert config._id == 32
@@ -66,7 +66,7 @@ class TestFeatureMonitoringConfig:
         ]["detection_insert_reference_snapshot"]["response"]
 
         # Act
-        config = FeatureMonitoringConfig.from_response_json(config_json)
+        config = fmc.FeatureMonitoringConfig.from_response_json(config_json)
 
         # Assert
         assert config._id == 32
@@ -108,7 +108,7 @@ class TestFeatureMonitoringConfig:
         ]["detection_insert_scheduled_stats_only"]["response"]
 
         # Act
-        config = FeatureMonitoringConfig.from_response_json(config_json)
+        config = fmc.FeatureMonitoringConfig.from_response_json(config_json)
 
         # Assert
         assert config._id == 32
@@ -142,7 +142,7 @@ class TestFeatureMonitoringConfig:
         ]["detection_insert_scheduled_stats_only"]["response"]
 
         # Act
-        config = FeatureMonitoringConfig.from_response_json(config_json)
+        config = fmc.FeatureMonitoringConfig.from_response_json(config_json)
 
         # Assert
         assert config._id == 32
@@ -176,13 +176,13 @@ class TestFeatureMonitoringConfig:
         ]
 
         # Act
-        config_list = FeatureMonitoringConfig.from_response_json(config_json)
+        config_list = fmc.FeatureMonitoringConfig.from_response_json(config_json)
         config = config_list[0]
 
         # Assert
         assert isinstance(config_list, list)
         assert len(config_list) == 1
-        assert isinstance(config, FeatureMonitoringConfig)
+        assert isinstance(config, fmc.FeatureMonitoringConfig)
         assert config._id == 32
         assert config._feature_store_id == 67
         assert config._feature_view_id == 22
@@ -221,7 +221,7 @@ class TestFeatureMonitoringConfig:
         ]
 
         # Act
-        config_list = FeatureMonitoringConfig.from_response_json(config_json)
+        config_list = fmc.FeatureMonitoringConfig.from_response_json(config_json)
 
         # Assert
         assert isinstance(config_list, list)

@@ -20,7 +20,7 @@ from datetime import datetime, date
 from typing import Optional, Union, List, Dict, Any
 import pandas as pd
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
+from hsfs.core import feature_monitoring_config as fmc
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 import humps
@@ -36,7 +36,8 @@ from hsfs.core import (
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.core.feature_view_api import FeatureViewApi
-from hsfs.core import feature_monitoring_config_engine
+
+# from hsfs.core import feature_monitoring_config_engine
 
 
 class FeatureView:
@@ -80,15 +81,15 @@ class FeatureView:
         self._single_vector_server = None
         self._batch_vectors_server = None
         self._batch_scoring_server = None
-        if id:
-            self._feature_monitoring_config_engine = (
-                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-                    feature_store_id=featurestore_id,
-                    feature_view_id=id,
-                    feature_view_name=name,
-                    feature_view_version=version,
-                )
-            )
+        # if id:
+        #     self._feature_monitoring_config_engine = (
+        #         feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+        #             feature_store_id=featurestore_id,
+        #             feature_view_id=id,
+        #             feature_view_name=name,
+        #             feature_view_version=version,
+        #         )
+        #     )
 
     def delete(self):
         """Delete current feature view, all associated metadata and training data.
@@ -2138,7 +2139,7 @@ class FeatureView:
         feature_name: Optional[str] = None,
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
-    ) -> FeatureMonitoringConfig:
+    ) -> "fmc.FeatureMonitoringConfig":
         """Run a job to compute statistics on snapshot of feature data on a schedule.
 
         # Arguments
@@ -2165,7 +2166,7 @@ class FeatureView:
         if start_date_time is None:
             start_date_time = util.convert_event_time_to_timestamp(datetime.now())
 
-        return FeatureMonitoringConfig(
+        return fmc.FeatureMonitoringConfig(
             feature_view_id=self._id,
             feature_store_id=self._featurestore_id,
             name=name,
@@ -2185,7 +2186,7 @@ class FeatureView:
         job_frequency: str = "DAILY",
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
-    ) -> FeatureMonitoringConfig:
+    ) -> "fmc.FeatureMonitoringConfig":
         """Enable feature monitoring to compare statistics on snapshots of feature data over time.
 
         # Arguments
@@ -2212,7 +2213,7 @@ class FeatureView:
         if start_date_time is None:
             start_date_time = util.convert_event_time_to_timestamp(datetime.now())
 
-        return FeatureMonitoringConfig(
+        return fmc.FeatureMonitoringConfig(
             feature_view_id=self._id,
             feature_store_id=self._featurestore_id,
             name=name,

@@ -49,12 +49,13 @@ from hsfs.core import (
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.validation_report import ValidationReport
-from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
+from hsfs.core import feature_monitoring_config as fmc
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core import great_expectation_engine
+from hsfs.core import job_scheduler
 
 
 class FeatureGroupBase:
@@ -1086,8 +1087,10 @@ class FeatureGroupBase:
         feature_name: Optional[str] = None,
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
-    ) -> FeatureMonitoringConfig:
+    ) -> "fmc.FeatureMonitoringConfig":
         """Run a job to compute statistics on snapshot of feature data on a schedule.
+
+        !!! Experimental, not suitable for production use. Public API is subject to change.
 
         # Arguments
             name: Name of the feature monitoring configuration.
@@ -1113,28 +1116,33 @@ class FeatureGroupBase:
         if start_date_time is None:
             start_date_time = util.convert_event_time_to_timestamp(datetime.now())
 
-        return FeatureMonitoringConfig(
+        scheduler = job_scheduler.JobScheduler(
+            job_frequency=job_frequency,
+            start_date_time=start_date_time,
+        )
+
+        return fmc.FeatureMonitoringConfig(
             feature_group_id=self._id,
             feature_store_id=self._feature_store_id,
             name=name,
             feature_name=feature_name,
             description=description,
             feature_monitoring_type="SCHEDULED_STATISTICS",
-            scheduler_config=job_frequency
-            + " "
-            + str(util.convert_event_time_to_timestamp(start_date_time)),
+            scheduler_config=scheduler,
             enabled=True,
         )
 
-    def _enable_feature_monitoring(
+    def _enable_feature_monitoring_fluent(
         self,
         name: str,
         feature_name: str,
         job_frequency: str = "DAILY",
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
-    ) -> FeatureMonitoringConfig:
+    ) -> "fmc.FeatureMonitoringConfig":
         """Enable feature monitoring to compare statistics on snapshots of feature data over time.
+
+        !!! Experimental, not suitable for production use. Public API is subject to change.
 
         # Arguments
             name: Name of the feature monitoring configuration.
@@ -1160,16 +1168,19 @@ class FeatureGroupBase:
         if start_date_time is None:
             start_date_time = util.convert_event_time_to_timestamp(datetime.now())
 
-        return FeatureMonitoringConfig(
+        scheduler = job_scheduler.JobScheduler(
+            job_frequency=job_frequency,
+            start_date_time=start_date_time,
+        )
+
+        return fmc.FeatureMonitoringConfig(
             feature_group_id=self._id,
             feature_store_id=self._feature_store_id,
             name=name,
             feature_name=feature_name,
             description=description,
             feature_monitoring_type="DESCRIPTIVE_STATISTICS",
-            scheduler_config=job_frequency
-            + " "
-            + str(util.convert_event_time_to_timestamp(start_date_time)),
+            scheduler_config=scheduler,
             enabled=True,
         )
 

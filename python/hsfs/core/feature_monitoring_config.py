@@ -18,9 +18,10 @@ import json
 from hsfs.core.job_scheduler import JobScheduler
 import humps
 from typing import Any, Dict, List, Optional, Union
-from hsfs import util
+from hsfs.util import FeatureStoreEncoder
 
 from hsfs.core.monitoring_window_config import MonitoringWindowConfig
+from hsfs.core import feature_monitoring_config_engine
 
 
 class FeatureMonitoringConfig:
@@ -40,6 +41,8 @@ class FeatureMonitoringConfig:
         id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
         feature_view_id: Optional[int] = None,
+        feature_view_name: Optional[str] = None,
+        feature_view_version: Optional[int] = None,
         description: Optional[str] = None,
         href: Optional[str] = None,
         items: Optional[List[Dict[str, Any]]] = None,
@@ -65,6 +68,17 @@ class FeatureMonitoringConfig:
         self._reference_window_config = self._parse_window_config(
             reference_window_config
         )
+
+        if self._id:
+            self._feature_monitoring_config_engine = (
+                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                    feature_store_id=feature_store_id,
+                    feature_group_id=feature_group_id,
+                    feature_view_id=feature_view_id,
+                    feature_view_name=feature_view_name,
+                    feature_view_version=feature_view_version,
+                )
+            )
 
     def _parse_window_config(
         self, window_config: Optional[Union[MonitoringWindowConfig, dict]]
@@ -144,7 +158,7 @@ class FeatureMonitoringConfig:
         }
 
     def json(self) -> str:
-        return json.dumps(self, cls=util.FeatureStoreEncoder)
+        return json.dumps(self, cls=FeatureStoreEncoder)
 
     def __str__(self):
         return self.json()

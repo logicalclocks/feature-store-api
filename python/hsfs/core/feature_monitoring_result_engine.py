@@ -18,7 +18,7 @@ from typing import Dict, List, Optional, Union, Tuple
 from datetime import date, datetime
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.core.feature_monitoring_result_api import FeatureMonitoringResultApi
-from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
+from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 from hsfs import util
 
@@ -178,7 +178,7 @@ class FeatureMonitoringResultEngine:
 
     def run_and_save_statistics_comparison(
         self,
-        fm_config: FeatureMonitoringConfig,
+        fm_config: "fmc.FeatureMonitoringConfig",
         detection_statistics: FeatureDescriptiveStatistics,
         reference_statistics: Optional[
             Union[FeatureDescriptiveStatistics, int, float]
@@ -220,7 +220,7 @@ class FeatureMonitoringResultEngine:
 
     def _compute_difference_and_shift(
         self,
-        fm_config: FeatureMonitoringConfig,
+        fm_config: "fmc.FeatureMonitoringConfig",
         detection_statistics: FeatureDescriptiveStatistics,
         reference_statistics: Union[FeatureDescriptiveStatistics, int, float],
     ) -> Tuple[float, bool]:
