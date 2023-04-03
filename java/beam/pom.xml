@@ -21,6 +21,12 @@
       <artifactId>hsfs</artifactId>
       <version>${project.version}</version>
       <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.xml.bind</groupId>
+          <artifactId>jaxb-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Adds a dependency on the Beam SDK. -->

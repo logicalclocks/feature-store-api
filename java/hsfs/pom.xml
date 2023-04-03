@@ -11,4 +11,18 @@
 
   <artifactId>hsfs</artifactId>
 
+  <properties>
+    <javax.version>2.2.11</javax.version>
+  </properties>
+
+  <dependencies>
+    <!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>${javax.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
 </project>
