@@ -37,13 +37,13 @@ class FeatureMonitoringConfig:
         statistics_comparison_config: Optional[Dict[str, Any]] = None,
         alert_config: Optional[str] = None,
         scheduler_config: Optional[Union[Dict[str, Any], JobScheduler]] = None,
+        description: Optional[str] = None,
         enabled: bool = True,
         id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
         feature_view_id: Optional[int] = None,
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
-        description: Optional[str] = None,
         href: Optional[str] = None,
         items: Optional[List[Dict[str, Any]]] = None,
         count: Optional[int] = None,
@@ -59,37 +59,43 @@ class FeatureMonitoringConfig:
         self._job_name = job_name
         self._feature_monitoring_type = feature_monitoring_type
         self._enabled = enabled
-        self._scheduler_config = self._parse_schedule_config(scheduler_config)
-        self._alert_config = alert_config
-        self._statistics_comparison_config = statistics_comparison_config
-        self._detection_window_config = self._parse_window_config(
-            detection_window_config
-        )
-        self._reference_window_config = self._parse_window_config(
-            reference_window_config
-        )
 
-        if self._id:
-            self._feature_monitoring_config_engine = (
-                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-                    feature_store_id=feature_store_id,
-                    feature_group_id=feature_group_id,
-                    feature_view_id=feature_view_id,
-                    feature_view_name=feature_view_name,
-                    feature_view_version=feature_view_version,
-                )
+        self._feature_monitoring_config_engine = (
+            feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                feature_store_id=feature_store_id,
+                feature_group_id=feature_group_id,
+                feature_view_id=feature_view_id,
+                feature_view_name=feature_view_name,
+                feature_view_version=feature_view_version,
             )
-
-    def _parse_window_config(
-        self, window_config: Optional[Union[MonitoringWindowConfig, dict]]
-    ):
-        if window_config is None:
-            return None
-        return (
-            window_config
-            if isinstance(window_config, MonitoringWindowConfig)
-            else MonitoringWindowConfig.from_response_json(window_config)
         )
+
+        self.detection_window_config = detection_window_config
+        self.reference_window_config = reference_window_config
+        self.statistics_comparison_config = statistics_comparison_config
+        self.scheduler_config = scheduler_config
+        self.alert_config = alert_config
+
+        # self._detection_window_config = self._parse_window_config(
+        #     detection_window_config
+        # )
+        # self._reference_window_config = self._parse_window_config(
+        #     reference_window_config
+        # )
+        # self._statistics_comparison_config = statistics_comparison_config
+        # self._scheduler_config = self._parse_schedule_config(scheduler_config)
+        # self._alert_config = alert_config
+
+    # def _parse_window_config(
+    #     self, window_config: Optional[Union[MonitoringWindowConfig, dict]]
+    # ):
+    #     if window_config is None:
+    #         return None
+    #     return (
+    #         window_config
+    #         if isinstance(window_config, MonitoringWindowConfig)
+    #         else MonitoringWindowConfig.from_response_json(window_config)
+    #     )
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -101,16 +107,16 @@ class FeatureMonitoringConfig:
         else:
             return cls(**json_decamelized)
 
-    def _parse_schedule_config(
-        self, schedule_config: Optional[Union[JobScheduler, dict]]
-    ):
-        if schedule_config is None:
-            return None
-        return (
-            schedule_config
-            if isinstance(schedule_config, JobScheduler)
-            else JobScheduler.from_response_json(schedule_config)
-        )
+    # def _parse_schedule_config(
+    #     self, schedule_config: Optional[Union[JobScheduler, dict]]
+    # ):
+    #     if schedule_config is None:
+    #         return None
+    #     return (
+    #         schedule_config
+    #         if isinstance(schedule_config, JobScheduler)
+    #         else JobScheduler.from_response_json(schedule_config)
+    #     )
 
     def to_dict(self):
         detection_window_config = (
@@ -172,9 +178,46 @@ class FeatureMonitoringConfig:
         window_length: Optional[str],
         row_percentage: Optional[int],
     ) -> "FeatureMonitoringConfig":
-        # TODO: Add input verification steps
+        """Sets the detection window for the feature monitoring job.
 
-        self._detection_window_config = {
+        !!! example
+            ```python
+            # fetch your feature group or feature view
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # Compute statistics on a regular basis
+            fg._enable_scheduled_statistics_fluent(
+                name="regular_stats",
+                job_frequency="DAILY",
+            ).with_detection_window(
+                time_offset="1d",
+                window_length="1d",
+                row_percentage=10,
+            ).save()
+
+            # Compute and compare statistics
+            fg._enable_feature_monitoring_fluent(
+                name="regular_stats",
+                feature_name="my_feature",
+                job_frequency="DAILY",
+            ).with_detection_window(
+                time_offset="1d",
+                window_length="1d",
+                row_percentage=10,
+            ).with_reference_window(...).compare_on(...).save()
+            ```
+
+        # Arguments
+            time_offset: The time offset from the current time to the start of the time window.
+            window_length: The length of the time window.
+            row_percentage: The percentage of rows to use when computing the statistics.
+
+        # Returns
+            `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
+        """
+        # Setter using the engine class. Input verification will be done there.
+
+        self.detection_window_config = {
             "window_config_type": "INSERT",
             "time_offset": time_offset,
             "window_length": window_length,
@@ -191,15 +234,57 @@ class FeatureMonitoringConfig:
         window_length: Optional[str],
         row_percentage: Optional[int],
         specific_value: Optional[float],
-        specific_id: Optional[int],
+        training_dataset_id: Optional[int],
     ) -> "FeatureMonitoringConfig":
+        """Sets the reference window for the feature monitoring job.
+
+        !!! example
+            ```python
+            # fethc your feature group or feature view
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # Setup feature monitoring and a detection window
+            my_monitoring_config = fg._enable_feature_monitoring_fluent(...).with_detection_window(...)
+
+            # Simplest reference window is a specific value
+            my_monitoring_config.with_reference_window(
+                specific_value=0.0,
+                row_percentage=10, # optional
+            ).compare_on(...).save()
+
+            # Statistics computed on a rolling time window, e.g. same day last week
+            my_monitoring_config.with_reference_window(
+                time_offset="1w",
+                window_length="1d",
+            ).compare_on(...).save()
+
+            # Only for feature views: Compare to the statistics computed for one of your training datasets
+            # particularly useful if it has been used to train a model currently in production
+            my_monitoring_config.with_reference_window(
+                training_dataset_id=123,
+            ).compare_on(...).save()
+            ```
+
+        !!! note
+            You must provide a comparison configuration via compare_on(...) before saving the feature monitoring config.
+
+        # Arguments
+            specific_value: A specific value to use as reference.
+            time_offset: The time offset from the current time to the start of the time window.
+            window_length: The length of the time window.
+            training_dataset_id: The id of the training dataset to use as reference. For feature view monitoring only.
+            row_percentage: The percentage of rows to use when computing the statistics. Defaults to 20%.
+
+        # Returns
+            `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
+        """
         # TODO: Add input verification steps
-        self._reference_window_config = {
+        self.reference_window_config = {
             "window_config_type": "INSERT",
             "time_offset": time_offset,
             "window_length": window_length,
             "specific_value": specific_value,
-            "specific_id": specific_id,
+            "specific_id": training_dataset_id,
             "row_percentage": row_percentage,
         }
 
@@ -212,9 +297,42 @@ class FeatureMonitoringConfig:
         strict: Optional[bool] = False,
         relative: Optional[bool] = False,
     ) -> "FeatureMonitoringConfig":
+        """Sets the comparison configuration for monitoring involving a reference window.
+
+        !!! example
+            ```python
+            # fetch your feature group or feature view
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # Setup feature monitoring, a detection window and a reference window
+            my_monitoring_config = fg._enable_feature_monitoring_fluent(
+                ...
+            ).with_detection_window(...).with_reference_window(...)
+
+            # Choose a metric and set a threshold for the difference
+            # e.g compare the relative mean of detection and reference window
+            my_monitoring_config.compare_on(
+                metric="mean",
+                threshold=1.0,
+                relative=True,
+            ).save()
+            ```
+
+        !!! note
+            Detection and reference window must be set prior to comparison configuration.
+
+        # Arguments
+            metric: The metric to use for comparison. Different metric are available for different feature type.
+            threshold: The threshold to apply to the difference to potentially trigger an alert.
+            strict: Whether to use a strict comparison (e.g. > or <) or a non-strict comparison (e.g. >= or <=).
+            relative: Whether to use a relative comparison (e.g. relative mean) or an absolute comparison (e.g. absolute mean).
+
+        # Returns
+            `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
+        """
         # TODO: Add input verification steps
 
-        self._statistics_comparison_config = {
+        self.statistics_comparison_config = {
             "compare_on": metric,
             "threshold": threshold,
             "strict": strict,
@@ -232,6 +350,9 @@ class FeatureMonitoringConfig:
         self._alert_config = severity + "_" + channel
 
         return self
+
+    def save(self):
+        return self._feature_monitoring_config_engine.save(self)
 
     @property
     def id(self) -> Optional[int]:
@@ -281,16 +402,85 @@ class FeatureMonitoringConfig:
     def scheduler_config(self) -> Optional[JobScheduler]:
         return self._scheduler_config
 
+    @scheduler_config.setter
+    def scheduler_config(self, scheduler_config):
+        if isinstance(scheduler_config, JobScheduler):
+            self._scheduler_config = scheduler_config
+        elif isinstance(self._scheduler_config, dict):
+            self._scheduler_config = (
+                self._feature_monitoring_config_engine.build_job_scheduler(
+                    **self._scheduler_config
+                )
+            )
+        elif scheduler_config is None:
+            self._scheduler_config = scheduler_config
+        else:
+            raise TypeError(
+                "scheduler_config must be of type JobScheduler, dict or None"
+            )
+
     @property
     def detection_window_config(self) -> MonitoringWindowConfig:
         return self._detection_window_config
 
+    @detection_window_config.setter
+    def detection_window_config(
+        self,
+        detection_window_config: Optional[
+            Union[MonitoringWindowConfig, Dict[str, Any]]
+        ],
+    ):
+        if isinstance(detection_window_config, MonitoringWindowConfig):
+            self._detection_window_config = detection_window_config
+        elif isinstance(detection_window_config, dict):
+            self._detection_window_config = (
+                self._feature_monitoring_config_engine.build_monitoring_window_config(
+                    **detection_window_config
+                )
+            )
+        elif detection_window_config is None:
+            self._detection_window_config = detection_window_config
+        else:
+            raise TypeError(
+                "detection_window_config must be of type MonitoringWindowConfig, dict or None"
+            )
+
     @property
     def reference_window_config(self) -> MonitoringWindowConfig:
         return self._reference_window_config
+
+    @reference_window_config.setter
+    def reference_window_config(self, reference_window_config: MonitoringWindowConfig):
+        if isinstance(reference_window_config, MonitoringWindowConfig):
+            self._reference_window_config = reference_window_config
+        elif isinstance(reference_window_config, dict):
+            self._reference_window_config = (
+                self._feature_monitoring_config_engine.build_monitoring_window_config(
+                    **reference_window_config
+                )
+            )
+        elif reference_window_config is None:
+            self._reference_window_config = None
+        else:
+            raise TypeError(
+                "reference_window_config must be of type MonitoringWindowConfig, dict or None"
+            )
 
     @property
     def statistics_comparison_config(
         self,
     ) -> Optional[Dict[str, Any]]:
         return self._statistics_comparison_config
+
+    @statistics_comparison_config.setter
+    def statistics_comparison_config(
+        self, statistics_comparison_config: Optional[Dict[str, Any]]
+    ):
+        if isinstance(statistics_comparison_config, dict):
+            self._statistics_comparison_config = self._feature_monitoring_config_engine.validate_statistics_comparison_config(
+                **statistics_comparison_config
+            )
+        elif statistics_comparison_config is None:
+            self._statistics_comparison_config = statistics_comparison_config
+        else:
+            raise TypeError("statistics_comparison_config must be of type dict or None")
