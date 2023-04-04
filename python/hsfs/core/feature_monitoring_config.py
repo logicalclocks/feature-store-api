@@ -28,12 +28,16 @@ class FeatureMonitoringConfig:
     def __init__(
         self,
         feature_store_id: int,
-        feature_name: str,
         name: str,
+        feature_name: Optional[str] = None,
         feature_monitoring_type: str = "DESCRIPTIVE_STATISTICS",
         job_name: Optional[str] = None,
-        detection_window_config: Optional[Union[MonitoringWindowConfig, dict]] = None,
-        reference_window_config: Optional[Union[MonitoringWindowConfig, dict]] = None,
+        detection_window_config: Optional[
+            Union[MonitoringWindowConfig, Dict[str, Any]]
+        ] = None,
+        reference_window_config: Optional[
+            Union[MonitoringWindowConfig, Dict[str, Any]]
+        ] = None,
         statistics_comparison_config: Optional[Dict[str, Any]] = None,
         alert_config: Optional[str] = None,
         scheduler_config: Optional[Union[Dict[str, Any], JobScheduler]] = None,
@@ -75,27 +79,6 @@ class FeatureMonitoringConfig:
         self.statistics_comparison_config = statistics_comparison_config
         self.scheduler_config = scheduler_config
         self.alert_config = alert_config
-
-        # self._detection_window_config = self._parse_window_config(
-        #     detection_window_config
-        # )
-        # self._reference_window_config = self._parse_window_config(
-        #     reference_window_config
-        # )
-        # self._statistics_comparison_config = statistics_comparison_config
-        # self._scheduler_config = self._parse_schedule_config(scheduler_config)
-        # self._alert_config = alert_config
-
-    # def _parse_window_config(
-    #     self, window_config: Optional[Union[MonitoringWindowConfig, dict]]
-    # ):
-    #     if window_config is None:
-    #         return None
-    #     return (
-    #         window_config
-    #         if isinstance(window_config, MonitoringWindowConfig)
-    #         else MonitoringWindowConfig.from_response_json(window_config)
-    #     )
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -422,6 +405,16 @@ class FeatureMonitoringConfig:
     @property
     def enabled(self) -> bool:
         return self._enabled
+
+    @enabled.setter
+    def enabled(self, enabled: bool):
+        if not isinstance(enabled, bool):
+            raise TypeError("enabled must be of type bool")
+        if self._id is not None:
+            self._feature_monitoring_config_engine.pause_or_resume_monitoring(
+                config_id=self._id, enabled=enabled
+            )
+        self._enabled = enabled
 
     @property
     def feature_monitoring_type(self) -> Optional[str]:

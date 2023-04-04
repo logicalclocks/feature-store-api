@@ -44,6 +44,7 @@ from hsfs.core import (
     external_feature_group_engine,
     validation_result_engine,
     job_api,
+    feature_monitoring_config_engine,
 )
 
 from hsfs.statistics_config import StatisticsConfig
@@ -55,7 +56,6 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core import great_expectation_engine
-from hsfs.core import job_scheduler
 
 
 class FeatureGroupBase:
@@ -1090,12 +1090,32 @@ class FeatureGroupBase:
     ) -> "fmc.FeatureMonitoringConfig":
         """Run a job to compute statistics on snapshot of feature data on a schedule.
 
-        !!! Experimental, not suitable for production use. Public API is subject to change.
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+
+        !!! example
+            ```python3
+            # fetch feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # enable scheduled statistics monitoring
+            my_config = fg._enable_scheduled_statistics_monitoring(
+                name="my_config",
+                job_frequency="DAILY",
+                start_date_time="2021-01-01 00:00:00",
+                description="my description",
+            ).with_detection_window(
+                # Statistics computed on 10% of the last week of data
+                time_offset="1w",
+                row_percentage=10,
+            ).save()
+            ```
 
         # Arguments
             name: Name of the feature monitoring configuration.
                 name must be unique for all configurations attached to the feature group.
-            feature_name: Name of the feature to monitor.
+            feature_name: Name of the feature to monitor. If not specified, statistics
+                will be computed for all features.
             job_frequency: Frequency at which to compute the statistics for the feature.
                 Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
             description: Description of the feature monitoring configuration.
@@ -1112,24 +1132,18 @@ class FeatureGroupBase:
             raise FeatureStoreException(
                 "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
             )
-
-        if start_date_time is None:
-            start_date_time = util.convert_event_time_to_timestamp(datetime.now())
-
-        scheduler = job_scheduler.JobScheduler(
-            job_frequency=job_frequency,
-            start_date_time=start_date_time,
+        fm_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=self._feature_store_id,
+            feature_group_id=self._id,
         )
 
-        return fmc.FeatureMonitoringConfig(
-            feature_group_id=self._id,
-            feature_store_id=self._feature_store_id,
+        return fm_engine._build_default_scheduled_statistics_config(
             name=name,
             feature_name=feature_name,
             description=description,
-            feature_monitoring_type="SCHEDULED_STATISTICS",
-            scheduler_config=scheduler,
-            enabled=True,
+            job_frequency=job_frequency,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
         )
 
     def _enable_feature_monitoring_fluent(
@@ -1142,7 +1156,33 @@ class FeatureGroupBase:
     ) -> "fmc.FeatureMonitoringConfig":
         """Enable feature monitoring to compare statistics on snapshots of feature data over time.
 
-        !!! Experimental, not suitable for production use. Public API is subject to change.
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+
+        !!! example
+            ```python3
+            # fetch feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # enable feature monitoring
+            my_config = fg._enable_feature_monitoring_fluent(
+                name="my_monitoring_config",
+                feature_name="my_feature",
+                job_frequency="DAILY",
+                description="my monitoring config description",
+            ).with_detection_window(
+                # Data inserted in the last day
+                time_offset="1d",
+                window_length="1d",
+            ).with_reference_window(
+                # Data inserted last week on the same day
+                time_offset="1w1d",
+                window_length="1d",
+            ).compare_on(
+                metric="mean",
+                threshold=0.5,
+            ).save()
+            ```
 
         # Arguments
             name: Name of the feature monitoring configuration.
@@ -1164,24 +1204,18 @@ class FeatureGroupBase:
             raise FeatureStoreException(
                 "Only Feature Group registered with Hopsworks can enable feature monitoring."
             )
-
-        if start_date_time is None:
-            start_date_time = util.convert_event_time_to_timestamp(datetime.now())
-
-        scheduler = job_scheduler.JobScheduler(
-            job_frequency=job_frequency,
-            start_date_time=start_date_time,
+        fm_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=self._feature_store_id,
+            feature_group_id=self._id,
         )
 
-        return fmc.FeatureMonitoringConfig(
-            feature_group_id=self._id,
-            feature_store_id=self._feature_store_id,
+        return fm_engine._build_default_scheduled_statistics_config(
             name=name,
             feature_name=feature_name,
             description=description,
-            feature_monitoring_type="DESCRIPTIVE_STATISTICS",
-            scheduler_config=scheduler,
-            enabled=True,
+            job_frequency=job_frequency,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
         )
 
     def __getattr__(self, name):

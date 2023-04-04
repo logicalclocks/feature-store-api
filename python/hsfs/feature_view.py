@@ -32,12 +32,11 @@ from hsfs.core import (
     feature_view_engine,
     transformation_function_engine,
     vector_server,
+    feature_monitoring_config_engine,
 )
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.core.feature_view_api import FeatureViewApi
-
-# from hsfs.core import feature_monitoring_config_engine
 
 
 class FeatureView:
@@ -81,15 +80,6 @@ class FeatureView:
         self._single_vector_server = None
         self._batch_vectors_server = None
         self._batch_scoring_server = None
-        # if id:
-        #     self._feature_monitoring_config_engine = (
-        #         feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-        #             feature_store_id=featurestore_id,
-        #             feature_view_id=id,
-        #             feature_view_name=name,
-        #             feature_view_version=version,
-        #         )
-        #     )
 
     def delete(self):
         """Delete current feature view, all associated metadata and training data.
@@ -2142,10 +2132,32 @@ class FeatureView:
     ) -> "fmc.FeatureMonitoringConfig":
         """Run a job to compute statistics on snapshot of feature data on a schedule.
 
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+
+        !!! example
+            ```python3
+            # fetch feature view
+            fv = fs.get_feature_view(name="my_feature_view", version=1)
+
+            # enable scheduled statistics monitoring
+            my_config = fv._enable_scheduled_statistics_monitoring(
+                name="my_config",
+                job_frequency="DAILY",
+                start_date_time="2021-01-01 00:00:00",
+                description="my description",
+            ).with_detection_window(
+                # Statistics computed on 10% of the last week of data
+                time_offset="1w",
+                row_percentage=10,
+            ).save()
+            ```
+
         # Arguments
             name: Name of the feature monitoring configuration.
-                name must be unique for all configurations attached to the feature group.
-            feature_name: Name of the feature to monitor.
+                name must be unique for all configurations attached to the feature view.
+            feature_name: Name of the feature to monitor. If not specified, statistics
+                will be computed for all features.
             job_frequency: Frequency at which to compute the statistics for the feature.
                 Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
             description: Description of the feature monitoring configuration.
@@ -2162,24 +2174,23 @@ class FeatureView:
             raise FeatureStoreException(
                 "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
             )
-
-        if start_date_time is None:
-            start_date_time = util.convert_event_time_to_timestamp(datetime.now())
-
-        return fmc.FeatureMonitoringConfig(
-            feature_view_id=self._id,
+        fm_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=self._featurestore_id,
+            feature_view_id=self._id,
+            feature_view_name=self._name,
+            feature_view_version=self._version,
+        )
+
+        return fm_engine._build_default_scheduled_statistics_config(
             name=name,
             feature_name=feature_name,
             description=description,
-            feature_monitoring_type="SCHEDULED_STATISTICS",
-            scheduler_config=job_frequency
-            + " "
-            + str(util.convert_event_time_to_timestamp(start_date_time)),
-            enabled=True,
+            job_frequency=job_frequency,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
         )
 
-    def _enable_feature_monitoring(
+    def _enable_feature_monitoring_fluent(
         self,
         name: str,
         feature_name: str,
@@ -2188,6 +2199,33 @@ class FeatureView:
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Enable feature monitoring to compare statistics on snapshots of feature data over time.
+
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+
+        !!! example
+            ```python3
+            # fetch feature view
+            fg = fs.get_feature_view(name="my_feature_view", version=1)
+
+            # enable feature monitoring
+            my_config = fg._enable_feature_monitoring_fluent(
+                name="my_monitoring_config",
+                feature_name="my_feature",
+                job_frequency="DAILY",
+                description="my monitoring config description",
+            ).with_detection_window(
+                # Data inserted in the last day
+                time_offset="1d",
+                window_length="1d",
+            ).with_reference_window(
+                # compare to a given value
+                specific_value=0.5,
+            ).compare_on(
+                metric="mean",
+                threshold=0.5,
+            ).save()
+            ```
 
         # Arguments
             name: Name of the feature monitoring configuration.
@@ -2209,21 +2247,20 @@ class FeatureView:
             raise FeatureStoreException(
                 "Only Feature Group registered with Hopsworks can enable feature monitoring."
             )
-
-        if start_date_time is None:
-            start_date_time = util.convert_event_time_to_timestamp(datetime.now())
-
-        return fmc.FeatureMonitoringConfig(
-            feature_view_id=self._id,
+        fm_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=self._featurestore_id,
+            feature_view_id=self._id,
+            feature_view_name=self._name,
+            feature_view_version=self._version,
+        )
+
+        return fm_engine._build_default_scheduled_statistics_config(
             name=name,
             feature_name=feature_name,
             description=description,
-            feature_monitoring_type="DESCRIPTIVE_STATISTICS",
-            scheduler_config=job_frequency
-            + " "
-            + str(util.convert_event_time_to_timestamp(start_date_time)),
-            enabled=True,
+            job_frequency=job_frequency,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
         )
 
     @classmethod

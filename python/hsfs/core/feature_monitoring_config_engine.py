@@ -33,6 +33,7 @@ from hsfs.core.job import Job
 from hsfs.core.job_api import JobApi
 from hsfs.core.job_scheduler import JobScheduler
 from hsfs.util import convert_event_time_to_timestamp
+from hsfs.client.exceptions import FeatureStoreException
 
 
 class FeatureMonitoringConfigEngine:
@@ -354,7 +355,63 @@ class FeatureMonitoringConfigEngine:
         start_date_time: Optional[Union[str, int, date, datetime]] = None,
         description: Optional[str] = None,
         valid_feature_names: Optional[List[str]] = None,
-    ):
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Builds the default scheduled statistics config, default detection window is full snapshot.
+
+        Args:
+            name: str, required
+                Name of the feature monitoring configuration, must be unique for
+                the feature view or feature group.
+            feature_name: str, optional
+                If provided, compute statistics only for this feature. If none,
+                defaults, compute statistics for all features.
+            job_frequency: str, optional
+                defines how often the statistics should be computed. Defaults to daily.
+            start_date_time: Union[str, int, date, datetime], optional
+                Statistics will start being computed on schedule from that time.
+            description: str, optional
+                Description of the feature monitoring configuration.
+            valid_feature_names: List[str], optional
+                List of the feature names for the feature view or feature group.
+
+        Returns:
+            FeatureMonitoringConfig A Feature Monitoring Configuration to compute
+              the statistics of a snapshot of all data present in the entity.
+        """
+        self.validate_config_name(name)
+        self.validate_description(description)
+        if feature_name is not None:
+            self.validate_feature_name(feature_name, valid_feature_names)
+
+        return fmc.FeatureMonitoringConfig(
+            feature_store_id=self._feature_store_id,
+            feature_group_id=self._feature_group_id,
+            feature_view_id=self._feature_view_id,
+            feature_view_name=self._feature_view_name,
+            feature_view_version=self._feature_view_version,
+            name=name,
+            description=description,
+            feature_name=feature_name,
+            feature_monitoring_type="SCHEDULED_STATISTICS",
+            job_scheduler={
+                "job_frequency": job_frequency,
+                "start_date_time": start_date_time,
+                "ebabled": True,
+            },
+        ).with_detection_window(
+            window_config_type="FULL_SNAPSHOT",
+            row_percentage=20,
+        )
+
+    def _build_default_feature_monitoring_config(
+        self,
+        name: str,
+        feature_name: str,
+        job_frequency: Optional[str] = "DAILY",
+        start_date_time: Optional[Union[str, int, date, datetime]] = None,
+        description: Optional[str] = None,
+        valid_feature_names: Optional[List[str]] = None,
+    ) -> "fmc.FeatureMonitoringConfig":
         """Builds the default scheduled statistics config, default detection window is full snapshot.
 
         Args:
@@ -390,6 +447,9 @@ class FeatureMonitoringConfigEngine:
             name=name,
             description=description,
             feature_name=feature_name,
+            # setting feature_monitoring_type to "SCHEDULED_STATISTICS" allows
+            # to raise an error if no reference window and comparison config are provided
+            feature_monitoring_type="DESCRIPTIVE_STATISTICS",
             job_scheduler={
                 "job_frequency": job_frequency,
                 "start_date_time": start_date_time,
@@ -398,7 +458,7 @@ class FeatureMonitoringConfigEngine:
         ).with_detection_window(
             window_config_type="FULL_SNAPSHOT",
             row_percentage=20,
-        )
+        )  # TODO: Do we want to have a default reference window + stat comparison?
 
     def _build_stats_monitoring_only_config(
         self,
@@ -425,7 +485,6 @@ class FeatureMonitoringConfigEngine:
         Returns:
             FeatureMonitoringConfig The monitoring configuration.
         """
-
         return fmc.FeatureMonitoringConfig(
             feature_store_id=self._feature_store_id,
             feature_group_id=self._feature_group_id,
@@ -440,6 +499,64 @@ class FeatureMonitoringConfigEngine:
             alert_config=None,
             reference_window_config=None,
             statistics_comparison_config=None,
+        )
+
+    def save(
+        self, config: "fmc.FeatureMonitoringConfig"
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Saves a feature monitoring config.
+
+        Args:
+            config: FeatureMonitoringConfig, required
+                The feature monitoring config to save.
+
+        Returns:
+            FeatureMonitoringConfig The saved feature monitoring config.
+
+        Raises:
+            FeatureStoreException: If the config is already registered.
+        """
+        if config._id is not None:
+            raise FeatureStoreException(
+                "Cannot save a config that is already registered."
+                " Please use update() instead."
+            )
+        return self._feature_monitoring_config_api.create(config)
+
+    def update(
+        self, config: "fmc.FeatureMonitoringConfig"
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Updates a feature monitoring config.
+
+        Args:
+            config: FeatureMonitoringConfig, required
+                The feature monitoring config to update.
+
+        Returns:
+            FeatureMonitoringConfig The updated feature monitoring config.
+
+        Raises:
+            FeatureStoreException: If the config is not registered.
+        """
+        if config._id is None:
+            raise FeatureStoreException(
+                "Cannot update a config that is not registered."
+                " Please use save() instead."
+            )
+        return self._feature_monitoring_config_api.update(config)
+
+    def pause_or_resume_monitoring(self, config_id: int, enabled: bool) -> None:
+        """Enable or disable a feature monitoring config.
+
+        Args:
+            config_id: int, required
+                The id of the feature monitoring config to enable.
+            enabled: bool, required
+                Whether to enable (true) or disable (true) the feature monitoring config.
+        """
+        self._feature_monitoring_config_api.pause_or_resume_monitoring(
+            config_id=config_id,
+            enabled=enabled,
         )
 
     def _build_feature_monitoring_config(
