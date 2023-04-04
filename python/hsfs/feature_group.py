@@ -2619,7 +2619,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             self,
             feature_dataframe=feature_dataframe,
             write_options=write_options,
-            validation_options=validation_options,
+            validation_options={"save_report": True, **validation_options},
         )
 
         if save_code and (
