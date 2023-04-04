@@ -11,8 +11,6 @@
     <modules>
         <module>hsfs</module>
         <module>spark</module>
-        <module>flink</module>
-        <module>beam</module>
     </modules>
 
     <properties>
