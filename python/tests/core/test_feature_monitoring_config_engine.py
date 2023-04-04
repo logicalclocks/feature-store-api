@@ -31,8 +31,8 @@ DEFAULT_FEATURE_VIEW_NAME = "feature_view_unittest"
 DEFAULT_FEATURE_VIEW_VERSION = 2
 DEFAULT_ALERT_CONFIG = "alert_config"
 DEFAULT_SCHEDULER_CONFIG = {
-    "jobFrequency": "HOURLY",
-    "startDateTime": 1676457000,
+    "job_frequency": "HOURLY",
+    "start_date_time": 1676457000,
     "enabled": True,
 }
 

@@ -78,7 +78,7 @@ class FeatureMonitoringConfig:
         self.reference_window_config = reference_window_config
         self.statistics_comparison_config = statistics_comparison_config
         self.scheduler_config = scheduler_config
-        self.alert_config = alert_config
+        self._alert_config = alert_config
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -432,10 +432,10 @@ class FeatureMonitoringConfig:
     def scheduler_config(self, scheduler_config):
         if isinstance(scheduler_config, JobScheduler):
             self._scheduler_config = scheduler_config
-        elif isinstance(self._scheduler_config, dict):
+        elif isinstance(scheduler_config, dict):
             self._scheduler_config = (
                 self._feature_monitoring_config_engine.build_job_scheduler(
-                    **self._scheduler_config
+                    **scheduler_config
                 )
             )
         elif scheduler_config is None:
@@ -503,7 +503,8 @@ class FeatureMonitoringConfig:
 
     @statistics_comparison_config.setter
     def statistics_comparison_config(
-        self, statistics_comparison_config: Optional[Dict[str, Any]]
+        self,
+        statistics_comparison_config: Optional[Dict[str, Any]] = None,
     ):
         if isinstance(statistics_comparison_config, dict):
             self._statistics_comparison_config = self._feature_monitoring_config_engine.validate_statistics_comparison_config(
@@ -552,7 +553,7 @@ class FeatureMonitoringConfig:
                 " not for scheduled statistics."
             )
         if isinstance(self._statistics_comparison_config, dict):
-            return self._statistics_comparison_config.get("metric", None)
+            return self._statistics_comparison_config.get("compare_on", None)
         else:
             return None
 
