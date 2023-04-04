@@ -44,7 +44,7 @@ jobs:
 
       - name: Build java doc documentation
         working-directory: ./java
-        run: mvn clean package javadoc:javadoc javadoc:aggregate -DskipTests && cp -r target/site/apidocs ../docs/javadoc
+        run: mvn clean install javadoc:javadoc javadoc:aggregate -DskipTests && cp -r target/site/apidocs ../docs/javadoc
 
       - name: setup git
         run: |
