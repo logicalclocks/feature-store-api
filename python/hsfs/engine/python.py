@@ -908,8 +908,9 @@ class Engine:
             feature_group.backfill_job.run(
                 await_termination=offline_write_options.get("wait_for_job", True)
             )
-            return feature_group.backfill_job
-        return None
+        if isinstance(feature_group, ExternalFeatureGroup):
+            return None
+        return feature_group.backfill_job
 
     def _kafka_produce(
         self, producer, feature_group, key, encoded_row, acked, offline_write_options
