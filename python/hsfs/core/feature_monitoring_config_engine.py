@@ -14,9 +14,9 @@
 #   limitations under the License.
 #
 
-from typing import Any, Dict, Optional, Union
-from datetime import datetime, timedelta
-
+from typing import Any, Dict, List, Optional, Union
+from datetime import date, datetime, timedelta
+import re
 
 from hsfs.core import feature_monitoring_config_api
 from hsfs.core import feature_monitoring_config as fmc
@@ -32,6 +32,7 @@ from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistic
 from hsfs.core.job import Job
 from hsfs.core.job_api import JobApi
 from hsfs.core.job_scheduler import JobScheduler
+from hsfs.util import convert_event_time_to_timestamp
 
 
 class FeatureMonitoringConfigEngine:
@@ -267,6 +268,137 @@ class FeatureMonitoringConfigEngine:
                 "relative": relative,
                 "strict": strict,
             }
+
+    def build_job_scheduler(
+        self,
+        job_frequency: Optional[str] = "DAILY",
+        start_date_time: Optional[Union[str, int, date, datetime]] = None,
+        job_name: Optional[str] = None,
+        enabled: Optional[bool] = True,
+        id: Optional[int] = None,
+    ) -> JobScheduler:
+        """Builds a job scheduler.
+
+        Args:
+            job_frequency: str, required
+                Frequency of the job. Defaults to daily.
+            start_date_time: Union[str, int, date, datetime], optional
+                Job will start being executed on schedule from that time.
+                Defaults to datetime.now().
+            job_name: str, optional
+                Name of the job. Populated when registering the feature monitoring
+                configuration to the backend. Defaults to None.
+            enabled: bool, optional
+                If enabled is false, the scheduled job is not executed.
+                Defaults to True.
+            id: int, optional
+                Id of the job scheduler. Populated when registering the feature monitoring
+                configuration to the backend. Defaults to None.
+
+        Returns:
+            JobScheduler The job scheduler.
+        """
+        if start_date_time is None:
+            start_date_time = convert_event_time_to_timestamp(datetime.now())
+        else:
+            start_date_time = convert_event_time_to_timestamp(start_date_time)
+
+        if job_frequency.upper() not in ["HOURLY", "DAILY", "WEEKLY"]:
+            raise ValueError(
+                "Invalid job frequency. Supported frequencies are HOURLY, DAILY, WEEKLY."
+            )
+
+        return JobScheduler(
+            id=id,
+            job_frequency=job_frequency,
+            start_date_time=start_date_time,
+            job_name=job_name,
+            enabled=enabled,
+        )
+
+    def validate_config_name(self, name: str):
+        if not isinstance(name, str):
+            raise TypeError("Invalid config name. Config name must be a string.")
+        if len(name) > 64:
+            raise ValueError(
+                "Invalid config name. Config name must be less than 64 characters."
+            )
+        if not re.match(r"^[\w]*$", name):
+            raise ValueError(
+                "Invalid config name. Config name must be alphanumeric or underscore."
+            )
+
+    def validate_description(self, description: Optional[str]):
+        if description is not None and not isinstance(description, str):
+            raise TypeError("Invalid description. Description must be a string.")
+        if description is not None and len(description) > 256:
+            raise ValueError(
+                "Invalid description. Description must be less than 256 characters."
+            )
+
+    def validate_feature_name(
+        self, feature_name: Optional[str], valid_feature_names: Optional[List[str]]
+    ):
+        if feature_name is not None and not isinstance(feature_name, str):
+            raise TypeError("Invalid feature name. Feature name must be a string.")
+        if feature_name is not None and feature_name not in valid_feature_names:
+            raise ValueError(
+                f"Invalid feature name. Feature name must be one of {valid_feature_names}."
+            )
+
+    def _build_default_scheduled_statistics_config(
+        self,
+        name: str,
+        feature_name: Optional[str] = None,
+        job_frequency: Optional[str] = "DAILY",
+        start_date_time: Optional[Union[str, int, date, datetime]] = None,
+        description: Optional[str] = None,
+        valid_feature_names: Optional[List[str]] = None,
+    ):
+        """Builds the default scheduled statistics config, default detection window is full snapshot.
+
+        Args:
+            name: str, required
+                Name of the feature monitoring configuration, must be unique for
+                the feature view or feature group.
+            feature_name: str, optional
+                If provided, compute statistics only for this feature. If none,
+                defaults, compute statistics for all features.
+            job_frequency: str, optional
+                defines how often the statistics should be computed. Defaults to daily.
+            start_date_time: Union[str, int, date, datetime], optional
+                Statistics will start being computed on schedule from that time.
+            description: str, optional
+                Description of the feature monitoring configuration.
+            valid_feature_names: List[str], optional
+                List of the feature names for the feature view or feature group.
+
+        Returns:
+            FeatureMonitoringConfig A Feature Monitoring Configuration to compute
+              the statistics of a snapshot of all data present in the entity.
+        """
+        self.validate_feature_name(feature_name, valid_feature_names)
+        self.validate_config_name(name)
+        self.validate_description(description)
+
+        return fmc.FeatureMonitoringConfig(
+            feature_store_id=self._feature_store_id,
+            feature_group_id=self._feature_group_id,
+            feature_view_id=self._feature_view_id,
+            feature_view_name=self._feature_view_name,
+            feature_view_version=self._feature_view_version,
+            name=name,
+            description=description,
+            feature_name=feature_name,
+            job_scheduler={
+                "job_frequency": job_frequency,
+                "start_date_time": start_date_time,
+                "ebabled": True,
+            },
+        ).with_detection_window(
+            window_config_type="FULL_SNAPSHOT",
+            row_percentage=20,
+        )
 
     def _build_stats_monitoring_only_config(
         self,
