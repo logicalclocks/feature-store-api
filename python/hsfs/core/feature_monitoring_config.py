@@ -215,8 +215,7 @@ class FeatureMonitoringConfig:
         # Returns
             `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
         """
-        # Setter using the engine class. Input verification will be done there.
-
+        # Setter is using the engine class to perform input validation.
         self.detection_window_config = {
             "window_config_type": "INSERT",
             "time_offset": time_offset,
@@ -224,17 +223,15 @@ class FeatureMonitoringConfig:
             "row_percentage": row_percentage,
         }
 
-        # TODO: Should this be saved with the backend automatically?
-
         return self
 
     def with_reference_window(
         self,
-        time_offset: Optional[str],
-        window_length: Optional[str],
-        row_percentage: Optional[int],
-        specific_value: Optional[float],
-        training_dataset_id: Optional[int],
+        time_offset: Optional[str] = None,
+        window_length: Optional[str] = None,
+        row_percentage: Optional[int] = None,
+        specific_value: Optional[float] = None,
+        training_dataset_id: Optional[int] = None,
     ) -> "FeatureMonitoringConfig":
         """Sets the reference window for the feature monitoring job.
 
@@ -278,7 +275,7 @@ class FeatureMonitoringConfig:
         # Returns
             `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
         """
-        # TODO: Add input verification steps
+        # Setter is using the engine class to perform input validation.
         self.reference_window_config = {
             "window_config_type": "INSERT",
             "time_offset": time_offset,
@@ -330,8 +327,7 @@ class FeatureMonitoringConfig:
         # Returns
             `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
         """
-        # TODO: Add input verification steps
-
+        # Setter is using the engine class to perform input validation.
         self.statistics_comparison_config = {
             "compare_on": metric,
             "threshold": threshold,
@@ -352,7 +348,44 @@ class FeatureMonitoringConfig:
         return self
 
     def save(self):
+        """Saves the feature monitoring configuration to the backend.
+
+        !!! example
+            ```python
+            # fetch your feature group or feature view
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # Setup feature monitoring and a detection window
+            my_monitoring_config = fg._enable_scheduled_statistics(
+                name="my_monitoring_config",
+            ).save()
+            ```
+
+        # Returns
+            `FeatureMonitoringConfig`. The saved FeatureMonitoringConfig object.
+        """
         return self._feature_monitoring_config_engine.save(self)
+
+    def update(self):
+        """Updates allowed fields of the saved feature monitoring configuration.
+
+        !!! example
+            ```python
+            # fetch your feature group or feature view
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # fetch registered config by name
+            my_monitoring_config = fg.get_feature_monitoring_config(name="my_monitoring_config")
+
+            # update the percentage of rows to use when computing the statistics
+            my_monitoring_config.detection_window.row_percentage = 10
+            my_monitoring_config.update()
+            ```
+
+        # Returns
+            `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
+        """
+        return self._feature_monitoring_config_engine.update(self)
 
     @property
     def id(self) -> Optional[int]:
@@ -450,7 +483,10 @@ class FeatureMonitoringConfig:
         return self._reference_window_config
 
     @reference_window_config.setter
-    def reference_window_config(self, reference_window_config: MonitoringWindowConfig):
+    def reference_window_config(
+        self, reference_window_config: Union[MonitoringWindowConfig, Dict[str, Any]]
+    ):
+        """Sets the reference window for monitoring."""
         if isinstance(reference_window_config, MonitoringWindowConfig):
             self._reference_window_config = reference_window_config
         elif isinstance(reference_window_config, dict):
@@ -484,3 +520,98 @@ class FeatureMonitoringConfig:
             self._statistics_comparison_config = statistics_comparison_config
         else:
             raise TypeError("statistics_comparison_config must be of type dict or None")
+
+    @property
+    def threshold(self) -> Optional[float]:
+        if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
+            raise AttributeError(
+                "threshold is only available for feature monitoring"
+                " not for scheduled statistics."
+            )
+        if isinstance(self._statistics_comparison_config, dict):
+            return self._statistics_comparison_config.get("threshold", None)
+        else:
+            return None
+
+    @threshold.setter
+    def threshold(self, threshold: Optional[float]):
+        if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
+            raise AttributeError(
+                "threshold setter can only be used when monitoring "
+                "uses a reference window"
+            )
+        if isinstance(self._statistics_comparison_config, dict):
+            if threshold is None or isinstance(threshold, float):
+                self._statistics_comparison_config["threshold"] = threshold
+            else:
+                raise TypeError("threshold must be of type float or None")
+        else:
+            raise AttributeError(
+                "threshold setter can only be used to update an existing"
+                "value. Use compare_on to set the statistics comparison configuration first."
+            )
+
+    @property
+    def metric(self) -> Optional[str]:
+        if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
+            raise AttributeError(
+                "metric is only available for feature monitoring"
+                " not for scheduled statistics."
+            )
+        if isinstance(self._statistics_comparison_config, dict):
+            return self._statistics_comparison_config.get("metric", None)
+        else:
+            return None
+
+    @metric.setter
+    def metric(self, metric: Optional[str]):
+        raise AttributeError("metric field cannot be updated.")
+
+    @property
+    def relative(self):
+        if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
+            raise AttributeError(
+                "relative is only available for feature monitoring"
+                " not for scheduled statistics."
+            )
+        if isinstance(self._statistics_comparison_config, dict):
+            return self._statistics_comparison_config.get("relative", None)
+        else:
+            return None
+
+    @relative.setter
+    def relative(self, relative: Optional[bool]):
+        raise AttributeError(
+            "relative field cannot be updated. Use compare_on "
+            "to set the statistics comparison configuration."
+        )
+
+    @property
+    def strict(self) -> Optional[bool]:
+        if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
+            raise AttributeError(
+                "strict is only available for feature monitoring"
+                " not for scheduled statistics."
+            )
+        if isinstance(self._statistics_comparison_config, dict):
+            return self._statistics_comparison_config.get("strict", False)
+        else:
+            return None
+
+    @strict.setter
+    def strict(self, strict: Optional[bool]):
+        if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
+            raise AttributeError(
+                "strict setter can only be used when monitoring "
+                "uses a reference window"
+            )
+        if isinstance(self._statistics_comparison_config, dict):
+            if isinstance(strict, bool):
+                self._statistics_comparison_config["strict"] = strict
+            else:
+                raise TypeError("strict must be of type bool")
+        else:
+            raise AttributeError(
+                "threshold setter can only be used to update an existing"
+                "value. Use compare_on to set the statistics comparison configuration first."
+            )

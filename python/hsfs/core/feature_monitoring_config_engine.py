@@ -76,6 +76,35 @@ class FeatureMonitoringConfigEngine:
             )
         )
         self._statistics_engine = StatisticsEngine(feature_store_id, entity_type)
+        # TODO: Should
+        self._VALID_CATEGORICAL_METRICS = [
+            "column",
+            "dataType",
+            "isDataTypeInferred",
+            "completeness",
+            "numRecordsNonNull",
+            "numRecordsNull",
+            "distinctness",
+            "entropy",
+            "uniqueness",
+            "approximateNumDistinctValues",
+            "exactNumDistinctValues",
+        ]
+        self._VALID_FRACTIONAL_METRICS = [
+            "completeness",
+            "numRecordsNonNull",
+            "numRecordsNull",
+            "distinctness",
+            "entropy",
+            "uniqueness",
+            "approximateNumDistinctValues",
+            "exactNumDistinctValues",
+            "mean",
+            "maximum",
+            "minimum",
+            "sum",
+            "stdDev",
+        ]
 
     def enable_descriptive_statistics_monitoring(
         self,
@@ -148,7 +177,6 @@ class FeatureMonitoringConfigEngine:
         Returns:
             FeatureMonitoringConfig The registered monitoring configuration.
         """
-
         config = self._build_feature_monitoring_config(
             name=name,
             feature_name=feature_name,
@@ -185,7 +213,7 @@ class FeatureMonitoringConfigEngine:
                 monitoring window end time is computed as
                     "now - time_offset + window_length".
             specific_id: int, optional
-                Specific id of an entity that has fixed
+                Specific id of an entity that has fixed statistics.
             specific_value: float, optional
                 Specific value instead of a statistics computed on data.
 
@@ -201,6 +229,44 @@ class FeatureMonitoringConfigEngine:
             specific_value=specific_value,
             row_percentage=row_percentage,
         )
+
+    def validate_statistics_comparison_config(
+        self,
+        metric: str,
+        threshold: float,
+        relative: bool = False,
+        strict: bool = False,
+    ) -> Dict[str, Any]:
+        """Validates the statistics comparison config.
+
+        Args:
+            metric: str, required
+                Statistical metric to perform comparison on.
+            threshold: float, required
+                If statistics difference is above threshold, trigger an alert if configured.
+            relative: bool, optional
+                If true, compute the relative difference between the detection and reference statistics.
+                Defaults to false.
+            strict: bool, optional
+                If true, the statistics difference must be strictly above threshold to trigger an alert.
+                Defaults to false.
+
+        Raises:
+            ValueError: If the statistics comparison config is invalid.
+        """
+        # TODO: Add more validation logic based on detection and reference window config.
+        if metric.lower() not in self._VALID_METRICS:
+            raise ValueError(
+                f"Invalid metric {metric}."
+                f"Supported metrics are mean, stddev, min, max, median, quantile."
+            )
+        else:
+            return {
+                "metric": metric.upper(),
+                "threshold": threshold,
+                "relative": relative,
+                "strict": strict,
+            }
 
     def _build_stats_monitoring_only_config(
         self,
