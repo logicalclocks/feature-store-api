@@ -1012,6 +1012,71 @@ class FeatureGroupBase:
                 "Only Feature Group registered with Hopsworks can fetch validation history."
             )
 
+    def validate(
+        self,
+        dataframe: Optional[
+            Union[pd.DataFrame, TypeVar("pyspark.sql.DataFrame")]  # noqa: F821
+        ] = None,
+        expectation_suite: Optional[ExpectationSuite] = None,
+        save_report: Optional[bool] = False,
+        validation_options: Optional[Dict[Any, Any]] = {},
+        ingestion_result: str = "UNKNOWN",
+        ge_type: bool = True,
+    ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
+        """Run validation based on the attached expectations.
+
+        Runs any expectation attached with Deequ. But also runs attached Great Expectation
+        Suites.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get feature group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            ge_report = fg.validate(df, save_report=False)
+            ```
+
+        # Arguments
+            dataframe: The dataframe to run the data validation expectations against.
+            expectation_suite: Optionally provide an Expectation Suite to override the
+                one that is possibly attached to the feature group. This is useful for
+                testing new Expectation suites. When an extra suite is provided, the results
+                will never be persisted. Defaults to `None`.
+            validation_options: Additional validation options as key-value pairs, defaults to `{}`.
+                * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
+                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+            ingestion_result: Specify the fate of the associated data, defaults
+                to "UNKNOWN". Supported options are  "UNKNOWN", "INGESTED", "REJECTED",
+                "EXPERIMENT", "FG_DATA". Use "INGESTED" or "REJECTED" for validation
+                of DataFrames to be inserted in the Feature Group. Use "EXPERIMENT"
+                for testing and development and "FG_DATA" when validating data
+                already in the Feature Group.
+            save_report: Whether to save the report to the backend. This is only possible if the Expectation suite
+                is initialised and attached to the Feature Group. Defaults to False.
+            ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.
+
+        # Returns
+            A Validation Report produced by Great Expectations.
+        """
+        # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
+        if dataframe is None:
+            dataframe = self.read()
+            if ingestion_result == "UNKNOWN":
+                ingestion_result = "FG_DATA"
+
+        return self._great_expectation_engine.validate(
+            self,
+            dataframe=engine.get_instance().convert_to_default_dataframe(dataframe),
+            expectation_suite=expectation_suite,
+            save_report=save_report,
+            validation_options=validation_options,
+            ingestion_result=ingestion_result,
+            ge_type=ge_type,
+        )
+
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
@@ -2168,71 +2233,6 @@ class FeatureGroup(FeatureGroupBase):
             `Query`. The query object with the applied time travel condition.
         """
         return self.select_all().as_of(wallclock_time, exclude_until)
-
-    def validate(
-        self,
-        dataframe: Optional[
-            Union[pd.DataFrame, TypeVar("pyspark.sql.DataFrame")]  # noqa: F821
-        ] = None,
-        expectation_suite: Optional[ExpectationSuite] = None,
-        save_report: Optional[bool] = False,
-        validation_options: Optional[Dict[Any, Any]] = {},
-        ingestion_result: str = "UNKNOWN",
-        ge_type: bool = True,
-    ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
-        """Run validation based on the attached expectations.
-
-        Runs any expectation attached with Deequ. But also runs attached Great Expectation
-        Suites.
-
-        !!! example
-            ```python
-            # connect to the Feature Store
-            fs = ...
-
-            # get feature group instance
-            fg = fs.get_or_create_feature_group(...)
-
-            ge_report = fg.validate(df, save_report=False)
-            ```
-
-        # Arguments
-            dataframe: The dataframe to run the data validation expectations against.
-            expectation_suite: Optionally provide an Expectation Suite to override the
-                one that is possibly attached to the feature group. This is useful for
-                testing new Expectation suites. When an extra suite is provided, the results
-                will never be persisted. Defaults to `None`.
-            validation_options: Additional validation options as key-value pairs, defaults to `{}`.
-                * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
-                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
-            ingestion_result: Specify the fate of the associated data, defaults
-                to "UNKNOWN". Supported options are  "UNKNOWN", "INGESTED", "REJECTED",
-                "EXPERIMENT", "FG_DATA". Use "INGESTED" or "REJECTED" for validation
-                of DataFrames to be inserted in the Feature Group. Use "EXPERIMENT"
-                for testing and development and "FG_DATA" when validating data
-                already in the Feature Group.
-            save_report: Whether to save the report to the backend. This is only possible if the Expectation suite
-                is initialised and attached to the Feature Group. Defaults to False.
-            ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.
-
-        # Returns
-            A Validation Report produced by Great Expectations.
-        """
-        # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
-        if dataframe is None:
-            dataframe = self.read()
-            if ingestion_result == "UNKNOWN":
-                ingestion_result = "FG_DATA"
-
-        return self._great_expectation_engine.validate(
-            self,
-            dataframe=engine.get_instance().convert_to_default_dataframe(dataframe),
-            expectation_suite=expectation_suite,
-            save_report=save_report,
-            validation_options=validation_options,
-            ingestion_result=ingestion_result,
-            ge_type=ge_type,
-        )
 
     def compute_statistics(
         self, wallclock_time: Optional[Union[str, int, datetime, date]] = None
