@@ -15,6 +15,7 @@
 #
 
 from hsfs.core import feature_group_api, storage_connector_api, tags_api, kafka_api
+from hsfs.client.exceptions import FeatureStoreException
 
 
 class FeatureGroupBaseEngine:
@@ -107,3 +108,49 @@ class FeatureGroupBaseEngine:
             ):
                 new_features.append(feature)
         return new_features + updated_features
+
+    def _verify_schema_compatibility(self, feature_group_features, dataframe_features):
+        err = []
+        feature_df_dict = {feat.name: feat.type for feat in dataframe_features}
+        for feature_fg in feature_group_features:
+            fg_type = feature_fg.type.lower().replace(" ", "")
+            # check if feature exists dataframe
+            if feature_fg.name in feature_df_dict:
+                df_type = feature_df_dict[feature_fg.name].lower().replace(" ", "")
+                # remove match from lookup table
+                del feature_df_dict[feature_fg.name]
+
+                # check if types match
+                if fg_type != df_type:
+                    # don't check structs for exact match
+                    if fg_type.startswith("struct") and df_type.startswith("struct"):
+                        continue
+
+                    err += [
+                        f"{feature_fg.name} ("
+                        f"expected type: '{fg_type}', "
+                        f"derived from input: '{df_type}') has the wrong type."
+                    ]
+
+            else:
+                err += [
+                    f"{feature_fg.name} (type: '{feature_fg.type}') is missing from "
+                    f"input dataframe."
+                ]
+
+        # any features that are left in lookup table are superfluous
+        for feature_df_name, feature_df_type in feature_df_dict.items():
+            err += [
+                f"{feature_df_name} (type: '{feature_df_type}') does not exist "
+                f"in feature group."
+            ]
+
+        # raise exception if any errors were found.
+        if len(err) > 0:
+            raise FeatureStoreException(
+                "Features are not compatible with Feature Group schema: "
+                + "".join(["\n - " + e for e in err])
+            )
+
+    def get_subject(self, feature_group):
+        return self._kafka_api.get_topic_subject(feature_group._online_topic_name)
