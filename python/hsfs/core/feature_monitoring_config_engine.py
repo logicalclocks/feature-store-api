@@ -412,7 +412,7 @@ class FeatureMonitoringConfigEngine:
             scheduler_config={
                 "job_frequency": job_frequency,
                 "start_date_time": start_date_time,
-                "ebabled": True,
+                "enabled": True,
             },
         ).with_detection_window(
             window_config_type="FULL_SNAPSHOT",
@@ -469,7 +469,7 @@ class FeatureMonitoringConfigEngine:
             job_scheduler={
                 "job_frequency": job_frequency,
                 "start_date_time": start_date_time,
-                "ebabled": True,
+                "enabled": True,
             },
         ).with_detection_window(
             window_config_type="FULL_SNAPSHOT",
