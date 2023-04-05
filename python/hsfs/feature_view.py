@@ -2122,7 +2122,7 @@ class FeatureView:
         """
         self._feature_view_engine.delete_training_data(self)
 
-    def _enable_scheduled_statistics_monitoring(
+    def _enable_scheduled_statistics_monitoring_fluent(
         self,
         name: str,
         job_frequency: str = "DAILY",
@@ -2170,7 +2170,7 @@ class FeatureView:
             `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
                 Additional information are required before feature monitoring is enabled.
         """
-        if self._id:
+        if not self._id:
             raise FeatureStoreException(
                 "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
             )
@@ -2243,7 +2243,7 @@ class FeatureView:
             `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
                 Additional information are required before feature monitoring is enabled.
         """
-        if self._id:
+        if not self._id:
             raise FeatureStoreException(
                 "Only Feature Group registered with Hopsworks can enable feature monitoring."
             )
