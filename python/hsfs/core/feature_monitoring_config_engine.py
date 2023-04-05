@@ -13,7 +13,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
 from typing import Any, Dict, List, Optional, Union
 from datetime import date, datetime, timedelta
 import re
@@ -78,11 +77,9 @@ class FeatureMonitoringConfigEngine:
             )
         )
         self._statistics_engine = StatisticsEngine(feature_store_id, entity_type)
-        # TODO: Should
+
+        # Should we promote the variables below to static?
         self._VALID_CATEGORICAL_METRICS = [
-            "column",
-            "dataType",
-            "isDataTypeInferred",
             "completeness",
             "numRecordsNonNull",
             "numRecordsNull",
@@ -91,6 +88,9 @@ class FeatureMonitoringConfigEngine:
             "uniqueness",
             "approximateNumDistinctValues",
             "exactNumDistinctValues",
+        ]
+        self._VALID_CATEGORICAL_METRICS = [
+            metric.lower() for metric in self._VALID_CATEGORICAL_METRICS
         ]
         self._VALID_FRACTIONAL_METRICS = [
             "completeness",
@@ -106,7 +106,12 @@ class FeatureMonitoringConfigEngine:
             "minimum",
             "sum",
             "stdDev",
+            "count",
         ]
+        self._VALID_FRACTIONAL_METRICS = [
+            metric.lower() for metric in self._VALID_FRACTIONAL_METRICS
+        ]
+        self._DEFAULT_ROW_PERCENTAGE = 20
 
     def enable_descriptive_statistics_monitoring(
         self,
@@ -197,6 +202,7 @@ class FeatureMonitoringConfigEngine:
     def build_monitoring_window_config(
         self,
         window_config_type: str,
+        id: Optional[int] = None,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
         specific_id: Optional[int] = None,
@@ -224,6 +230,7 @@ class FeatureMonitoringConfigEngine:
         """
 
         return MonitoringWindowConfig(
+            id=id,
             window_config_type=window_config_type,
             time_offset=time_offset,
             window_length=window_length,
@@ -234,15 +241,16 @@ class FeatureMonitoringConfigEngine:
 
     def validate_statistics_comparison_config(
         self,
-        compare_on: str,
+        metric: str,
         threshold: float,
+        id: Optional[int] = None,
         relative: bool = False,
         strict: bool = False,
     ) -> Dict[str, Any]:
         """Validates the statistics comparison config.
 
         Args:
-            compare_on: str, required
+            metric: str, required
                 Statistical metric to perform comparison on.
             threshold: float, required
                 If statistics difference is above threshold, trigger an alert if configured.
@@ -258,16 +266,21 @@ class FeatureMonitoringConfigEngine:
         """
         # TODO: Add more validation logic based on detection and reference window config.
         if (
-            compare_on.lower() not in self._VALID_CATEGORICAL_METRICS
-            and compare_on.lower() not in self._VALID_FRACTIONAL_METRICS
+            metric.lower() not in self._VALID_CATEGORICAL_METRICS
+            and metric.lower() not in self._VALID_FRACTIONAL_METRICS
         ):
             raise ValueError(
-                f"Invalid metric {compare_on.lower()}. "
-                f"Supported metrics are mean, stddev, min, max, median, quantile."
+                f"Invalid metric {metric.lower()}. "
+                "Supported metrics are {}.".format(
+                    set(self._VALID_FRACTIONAL_METRICS).union(
+                        set(self._VALID_CATEGORICAL_METRICS)
+                    )
+                )
             )
         else:
             return {
-                "compare_on": compare_on.upper(),
+                "id": id,
+                "metric": metric.upper(),
                 "threshold": threshold,
                 "relative": relative,
                 "strict": strict,
@@ -403,7 +416,7 @@ class FeatureMonitoringConfigEngine:
             },
         ).with_detection_window(
             window_config_type="FULL_SNAPSHOT",
-            row_percentage=20,
+            row_percentage=self._DEFAULT_ROW_PERCENTAGE,
         )
 
     def _build_default_feature_monitoring_config(
@@ -460,7 +473,7 @@ class FeatureMonitoringConfigEngine:
             },
         ).with_detection_window(
             window_config_type="FULL_SNAPSHOT",
-            row_percentage=20,
+            row_percentage=self._DEFAULT_ROW_PERCENTAGE,
         )  # TODO: Do we want to have a default reference window + stat comparison?
 
     def _build_stats_monitoring_only_config(
@@ -820,17 +833,12 @@ class FeatureMonitoringConfigEngine:
         )
 
     def time_range_str_to_time_delta(self, time_range: str) -> timedelta:
-        # Dummy method for now
-        if time_range == "1m":
-            time_offset = timedelta(months=1)
-        elif time_range == "1w":
-            time_offset = timedelta(weeks=1)
-        elif time_range == "1d":
-            time_offset = timedelta(days=1)
-        elif time_range == "1h":
-            time_offset = timedelta(hours=1)
+        months, weeks, days, hours = re.search(
+            r"(\d+)m(\d+)w(\d+)d(\d+)h",
+            time_range,
+        ).groups(0)
 
-        return time_offset
+        return timedelta(months=months, weeks=weeks, days=days, hours=hours)
 
     def get_window_start_end_times(self, time_offset, window_length):
         return (

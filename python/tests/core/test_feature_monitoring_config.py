@@ -57,7 +57,7 @@ class TestFeatureMonitoringConfig:
         assert config._statistics_comparison_config["threshold"] == 1
         assert config._statistics_comparison_config["strict"] is True
         assert config._statistics_comparison_config["relative"] is False
-        assert config._statistics_comparison_config["compare_on"] == "MEAN"
+        assert config._statistics_comparison_config["metric"] == "MEAN"
 
     def test_from_response_json_via_fv(self, backend_fixtures):
         # Arrange
@@ -99,7 +99,7 @@ class TestFeatureMonitoringConfig:
         assert config._statistics_comparison_config["threshold"] == 1
         assert config._statistics_comparison_config["strict"] is True
         assert config._statistics_comparison_config["relative"] is False
-        assert config._statistics_comparison_config["compare_on"] == "MEAN"
+        assert config._statistics_comparison_config["metric"] == "MEAN"
 
     def test_from_response_json_stats_only_via_fg(self, backend_fixtures):
         # Arrange
@@ -212,7 +212,7 @@ class TestFeatureMonitoringConfig:
         assert config._statistics_comparison_config["threshold"] == 1
         assert config._statistics_comparison_config["strict"] is True
         assert config._statistics_comparison_config["relative"] is False
-        assert config._statistics_comparison_config["compare_on"] == "MEAN"
+        assert config._statistics_comparison_config["metric"] == "MEAN"
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange

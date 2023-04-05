@@ -24,7 +24,7 @@
           "threshold": 1,
           "relative": false,
           "strict": true,
-          "compareOn": "MEAN"
+          "metric": "MEAN"
         },
         "alertConfig": "I will alert you on slack when implemented",
         "schedulerConfig": {
@@ -61,7 +61,7 @@
           "threshold": 1,
           "relative": false,
           "strict": true,
-          "compareOn": "MEAN"
+          "metric": "MEAN"
         },
         "alertConfig": "I will alert you on slack when implemented",
         "schedulerConfig": {
@@ -128,7 +128,7 @@
           "threshold": 1,
           "relative": false,
           "strict": true,
-          "compareOn": "MEAN"
+          "metric": "MEAN"
         },
         "alertConfig": "I will alert you on slack when implemented",
         "schedulerConfig": {
@@ -167,7 +167,7 @@
           "threshold": 1,
           "relative": false,
           "strict": true,
-          "compareOn": "MEAN"
+          "metric": "MEAN"
         },
         "alertConfig": "I will alert you on slack when implemented",
         "schedulerConfig": {
@@ -278,7 +278,7 @@
             "threshold": 1,
             "relative": false,
             "strict": true,
-            "compareOn": "MEAN"
+            "metric": "MEAN"
           },
           "alertConfig": "I will alert you on slack when implemented",
           "schedulerConfig": {

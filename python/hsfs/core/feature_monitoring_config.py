@@ -115,9 +115,7 @@ class FeatureMonitoringConfig:
         if isinstance(self._statistics_comparison_config, dict):
             statistics_comparison_config = {
                 "threshold": self._statistics_comparison_config.get("threshold", 0.0),
-                "compareOn": self._statistics_comparison_config.get(
-                    "compare_on", "MEAN"
-                ),
+                "metric": self._statistics_comparison_config.get("metric", "MEAN"),
                 "strict": self._statistics_comparison_config.get("strict", False),
                 "relative": self._statistics_comparison_config.get("relative", False),
             }
@@ -312,7 +310,7 @@ class FeatureMonitoringConfig:
         """
         # Setter is using the engine class to perform input validation.
         self.statistics_comparison_config = {
-            "compare_on": metric,
+            "metric": metric,
             "threshold": threshold,
             "strict": strict,
             "relative": relative,
@@ -553,7 +551,7 @@ class FeatureMonitoringConfig:
                 " not for scheduled statistics."
             )
         if isinstance(self._statistics_comparison_config, dict):
-            return self._statistics_comparison_config.get("compare_on", None)
+            return self._statistics_comparison_config.get("metric", None)
         else:
             return None
 

@@ -79,7 +79,7 @@ class TestFeatureMonitoringConfigEngine:
             "threshold": 1,
             "strict": True,
             "relative": False,
-            "compare_on": "MEAN",
+            "metric": "MEAN",
         }
 
         # Act
@@ -121,8 +121,8 @@ class TestFeatureMonitoringConfigEngine:
             == stats_comparison_configuration["relative"]
         )
         assert (
-            config._statistics_comparison_config["compare_on"]
-            == stats_comparison_configuration["compare_on"]
+            config._statistics_comparison_config["metric"]
+            == stats_comparison_configuration["metric"]
         )
 
         assert isinstance(config._scheduler_config, JobScheduler)
@@ -154,7 +154,7 @@ class TestFeatureMonitoringConfigEngine:
             "threshold": 1,
             "strict": True,
             "relative": False,
-            "compare_on": "MEAN",
+            "metric": "MEAN",
         }
 
         # Act
@@ -198,8 +198,8 @@ class TestFeatureMonitoringConfigEngine:
             == stats_comparison_configuration["relative"]
         )
         assert (
-            config._statistics_comparison_config["compare_on"]
-            == stats_comparison_configuration["compare_on"]
+            config._statistics_comparison_config["metric"]
+            == stats_comparison_configuration["metric"]
         )
         assert isinstance(config._scheduler_config, JobScheduler)
         assert config._scheduler_config.job_frequency == "HOURLY"
@@ -230,7 +230,7 @@ class TestFeatureMonitoringConfigEngine:
             "threshold": 1,
             "strict": True,
             "relative": False,
-            "compare_on": "MEAN",
+            "metric": "MEAN",
         }
 
         # Act
@@ -274,8 +274,8 @@ class TestFeatureMonitoringConfigEngine:
             == stats_comparison_configuration["relative"]
         )
         assert (
-            config._statistics_comparison_config["compare_on"]
-            == stats_comparison_configuration["compare_on"]
+            config._statistics_comparison_config["metric"]
+            == stats_comparison_configuration["metric"]
         )
         assert isinstance(config._scheduler_config, JobScheduler)
         assert config._scheduler_config.job_frequency == "HOURLY"
