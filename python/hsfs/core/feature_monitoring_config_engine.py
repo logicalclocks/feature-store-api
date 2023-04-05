@@ -415,7 +415,6 @@ class FeatureMonitoringConfigEngine:
                 "enabled": True,
             },
         ).with_detection_window(
-            window_config_type="FULL_SNAPSHOT",
             row_percentage=self._DEFAULT_ROW_PERCENTAGE,
         )
 
@@ -472,7 +471,6 @@ class FeatureMonitoringConfigEngine:
                 "enabled": True,
             },
         ).with_detection_window(
-            window_config_type="FULL_SNAPSHOT",
             row_percentage=self._DEFAULT_ROW_PERCENTAGE,
         )  # TODO: Do we want to have a default reference window + stat comparison?
 
