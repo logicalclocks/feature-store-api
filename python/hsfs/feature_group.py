@@ -2681,10 +2681,12 @@ class ExternalFeatureGroup(FeatureGroupBase):
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        if engine.get_type() == "python":
+        if engine.get_type() == "python" and not online:
             raise FeatureStoreException(
                 "Reading an External Feature Group directly into a Pandas Dataframe using "
-                + "Python/Pandas as Engine is not supported, however, you can use the "
+                + "Python/Pandas as Engine from the external storage system "
+                + "is not supported, however, if the feature group is online enabled, you can read "
+                + "from online storage or you can use the "
                 + "Query API to create Feature Views/Training Data containing External "
                 + "Feature Groups."
             )
