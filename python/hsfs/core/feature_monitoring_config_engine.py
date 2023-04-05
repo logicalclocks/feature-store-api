@@ -409,7 +409,7 @@ class FeatureMonitoringConfigEngine:
             description=description,
             feature_name=feature_name,
             feature_monitoring_type="SCHEDULED_STATISTICS",
-            job_scheduler={
+            scheduler_config={
                 "job_frequency": job_frequency,
                 "start_date_time": start_date_time,
                 "ebabled": True,
