@@ -155,9 +155,9 @@ class FeatureMonitoringConfig:
 
     def with_detection_window(
         self,
-        time_offset: Optional[str],
-        window_length: Optional[str],
-        row_percentage: Optional[int],
+        time_offset: Optional[str] = None,
+        window_length: Optional[str] = None,
+        row_percentage: Optional[int] = None,
     ) -> "FeatureMonitoringConfig":
         """Sets the detection window for the feature monitoring job.
 
