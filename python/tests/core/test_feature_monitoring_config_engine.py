@@ -72,7 +72,7 @@ class TestFeatureMonitoringConfigEngine:
             window_length="1d",
         )
         reference_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="SNAPSHOT", specific_value=2
+            window_config_type="SPECIFIC_VALUE", specific_value=2
         )
 
         stats_comparison_configuration = {
@@ -106,7 +106,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._detection_window_config.window_config_type == "INSERT"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
-        assert config._reference_window_config.window_config_type == "SNAPSHOT"
+        assert config._reference_window_config.window_config_type == "SPECIFIC_VALUE"
         assert config._reference_window_config.specific_value == 2
         assert (
             config._statistics_comparison_config["threshold"]

@@ -346,9 +346,9 @@ class TestFeatureMonitoringResultEngine:
         detection_stats_json = backend_fixtures["feature_descriptive_statistics"][
             "get_fractional_feature_statistics"
         ]["response"]
-        detection_statistics = FeatureDescriptiveStatistics.from_response_json(
-            detection_stats_json
-        )
+        detection_statistics = [
+            FeatureDescriptiveStatistics.from_response_json(detection_stats_json)
+        ]
         reference_stats_json = backend_fixtures["feature_descriptive_statistics"][
             "get_fractional_feature_statistics"
         ]["response"]
@@ -409,9 +409,9 @@ class TestFeatureMonitoringResultEngine:
         detection_stats_json = backend_fixtures["feature_descriptive_statistics"][
             "get_fractional_feature_statistics"
         ]["response"]
-        detection_statistics = FeatureDescriptiveStatistics.from_response_json(
-            detection_stats_json
-        )
+        detection_statistics = [
+            FeatureDescriptiveStatistics.from_response_json(detection_stats_json)
+        ]
 
         mock_result_api = mocker.patch(
             "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create",
@@ -464,9 +464,9 @@ class TestFeatureMonitoringResultEngine:
         detection_stats_json = backend_fixtures["feature_descriptive_statistics"][
             "get_fractional_feature_statistics"
         ]["response"]
-        detection_statistics = FeatureDescriptiveStatistics.from_response_json(
-            detection_stats_json
-        )
+        detection_statistics = [
+            FeatureDescriptiveStatistics.from_response_json(detection_stats_json)
+        ]
 
         mock_result_api = mocker.patch(
             "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create",
@@ -495,7 +495,7 @@ class TestFeatureMonitoringResultEngine:
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
         assert result._reference_statistics is None
         assert result._difference is None
-        assert result._shift_detected is None
+        assert result._shift_detected is False
         assert isinstance(result._monitoring_time, int)
         assert (
             util.convert_event_time_to_timestamp(before_time) <= result._monitoring_time

@@ -114,7 +114,7 @@ class FeatureMonitoringConfigApi:
 
         _client._send_request("DELETE", path_params)
 
-    def get(
+    def get_by_id(
         self,
         config_id: int,
     ) -> Optional["fmc.FeatureMonitoringConfig"]:
@@ -165,12 +165,30 @@ class FeatureMonitoringConfigApi:
         :param name: Name of the feature monitoring configuration to fetch
         :type name: str
         :return: fetched feature monitoring configuration attached to the Feature Group
-        :rtype: List[FeatureMonitoringConfig] || None
+        :rtype: FeatureMonitoringConfig || None
         """
         _client = client.get_instance()
         path_params = self.build_path_params(
             project_id=_client._project_id,
             name=name,
+        )
+
+        return fmc.FeatureMonitoringConfig.from_response_json(
+            _client._send_request("GET", path_params)
+        )
+
+    def get_by_entity(self) -> List["fmc.FeatureMonitoringConfig"]:
+        """Get all Feature Monitoring Configurations attached to a Feature Name.
+
+        :param name: Name of the feature monitoring configuration to fetch
+        :type name: str
+        :return: fetched feature monitoring configuration attached to the Feature Group
+        :rtype: List[FeatureMonitoringConfig] || None
+        """
+        _client = client.get_instance()
+        path_params = self._build_path_params(
+            project_id=_client._project_id,
+            entity=True,
         )
 
         return fmc.FeatureMonitoringConfig.from_response_json(
@@ -245,16 +263,21 @@ class FeatureMonitoringConfigApi:
         feature_name: Optional[str] = None,
         config_id: Optional[int] = None,
         name: Optional[str] = None,
+        entity: Optional[bool] = False,
     ) -> List[str]:
         """Builds the path parameters for the Feature Monitoring Config API.
 
         :param project_id: Id of the project
         :type project_id: int
         :type feature_name: str, optional
-        :param config_id: Id of the feature monitoring configuration. Only to fetch feature monitoring configuration by id.
+        :param config_id: Id of the feature monitoring configuration.
+            Only to fetch feature monitoring configuration by id.
         :type config_id: int, optional
-        :param name: Name of the feature monitoring configuration. Only to fetch feature monitoring configuration by name.
+        :param name: Name of the feature monitoring configuration.
+            Only to fetch feature monitoring configuration by name.
         :type name: str, optional
+        :param entity: Whether to append entity to path params. Defaults to False.
+            Only to fetch all feature monitoring configurations attached to an entity.
         :return: path parameters
         :rtype: List[str]
         """
@@ -283,5 +306,7 @@ class FeatureMonitoringConfigApi:
             path_params.extend(["feature", feature_name])
         elif name:
             path_params.extend(["name", name])
+        elif entity:
+            path_params.append("entity")
 
         return path_params

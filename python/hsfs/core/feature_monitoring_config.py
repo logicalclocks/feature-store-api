@@ -19,6 +19,7 @@ from hsfs.core.job_scheduler import JobScheduler
 import humps
 from typing import Any, Dict, List, Optional, Union
 from hsfs.util import FeatureStoreEncoder
+from hsfs.client.exceptions import FeatureStoreException
 
 from hsfs.core.monitoring_window_config import MonitoringWindowConfig
 from hsfs.core import feature_monitoring_config_engine
@@ -54,12 +55,14 @@ class FeatureMonitoringConfig:
     ):
         self._id = id
         self._href = href
+        # TODO: Validate name and description string length and character set
+        # in setter to avoid issues with the backend
         self._name = name
         self._description = description
+        self._feature_name = feature_name
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
         self._feature_view_id = feature_view_id
-        self._feature_name = feature_name
         self._job_name = job_name
         self._feature_monitoring_type = feature_monitoring_type
         self._enabled = enabled
@@ -368,6 +371,37 @@ class FeatureMonitoringConfig:
         """
         return self._feature_monitoring_config_engine.update(self)
 
+    def run_job(self):
+        """Trigger the monitoring job which computes statistics on detection and reference window.
+
+        !!! example
+            ```python3
+            # fetch your feature group or feature view
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # fetch registered config by name
+            my_monitoring_config = fg.get_feature_monitoring_config(name="my_monitoring_config")
+
+            # trigger the job which computes statistics on detection and reference window
+            my_monitoring_config.run_job()
+            ```
+
+        # Raises
+            `FeatureStoreException`: If the feature monitoring config has not been saved.
+
+        # Returns
+            `Job`. A handle for the job computing the statistics.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Feature monitoring config must be registered via `.save()` before computing statistics."
+            )
+
+        return self._feature_monitoring_config_engine.trigger_monitoring_job(
+            job_name=self.job_name
+        )
+
+    # TODO: Add read-only setters to match update() method
     @property
     def id(self) -> Optional[int]:
         return self._id
@@ -391,6 +425,14 @@ class FeatureMonitoringConfig:
     @property
     def name(self) -> str:
         return self._name
+
+    @name.setter
+    def name(self, name: str):
+        if self._id:
+            raise AttributeError("The name of a registered config is read-only.")
+        elif not isinstance(name, str):
+            raise TypeError("name must be of type str")
+        self._name = name
 
     @property
     def description(self) -> Optional[str]:
@@ -478,6 +520,7 @@ class FeatureMonitoringConfig:
         self, reference_window_config: Union[MonitoringWindowConfig, Dict[str, Any]]
     ):
         """Sets the reference window for monitoring."""
+        # TODO: improve setter documentation
         if isinstance(reference_window_config, MonitoringWindowConfig):
             self._reference_window_config = reference_window_config
         elif isinstance(reference_window_config, dict):
@@ -504,6 +547,14 @@ class FeatureMonitoringConfig:
         self,
         statistics_comparison_config: Optional[Dict[str, Any]] = None,
     ):
+        if (
+            self._feature_monitoring_type == "SCHEDULED_STATISTICS"
+            and statistics_comparison_config is not None
+        ):
+            raise AttributeError(
+                "statistics_comparison_config is only available for feature monitoring"
+                " not for scheduled statistics."
+            )
         if isinstance(statistics_comparison_config, dict):
             self._statistics_comparison_config = self._feature_monitoring_config_engine.validate_statistics_comparison_config(
                 **statistics_comparison_config
@@ -513,97 +564,98 @@ class FeatureMonitoringConfig:
         else:
             raise TypeError("statistics_comparison_config must be of type dict or None")
 
-    @property
-    def threshold(self) -> Optional[float]:
-        if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
-            raise AttributeError(
-                "threshold is only available for feature monitoring"
-                " not for scheduled statistics."
-            )
-        if isinstance(self._statistics_comparison_config, dict):
-            return self._statistics_comparison_config.get("threshold", None)
-        else:
-            return None
+    # TODO: Should the comparison config parameters be exposed as properties?
+    # @property
+    # def threshold(self) -> Optional[float]:
+    #     if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
+    #         raise AttributeError(
+    #             "threshold is only available for feature monitoring"
+    #             " not for scheduled statistics."
+    #         )
+    #     if isinstance(self._statistics_comparison_config, dict):
+    #         return self._statistics_comparison_config.get("threshold", None)
+    #     else:
+    #         return None
 
-    @threshold.setter
-    def threshold(self, threshold: Optional[float]):
-        if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
-            raise AttributeError(
-                "threshold setter can only be used when monitoring "
-                "uses a reference window"
-            )
-        if isinstance(self._statistics_comparison_config, dict):
-            if threshold is None or isinstance(threshold, float):
-                self._statistics_comparison_config["threshold"] = threshold
-            else:
-                raise TypeError("threshold must be of type float or None")
-        else:
-            raise AttributeError(
-                "threshold setter can only be used to update an existing"
-                "value. Use compare_on to set the statistics comparison configuration first."
-            )
+    # @threshold.setter
+    # def threshold(self, threshold: Optional[float]):
+    #     if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
+    #         raise AttributeError(
+    #             "threshold setter can only be used when monitoring "
+    #             "uses a reference window"
+    #         )
+    #     if isinstance(self._statistics_comparison_config, dict):
+    #         if threshold is None or isinstance(threshold, float):
+    #             self._statistics_comparison_config["threshold"] = threshold
+    #         else:
+    #             raise TypeError("threshold must be of type float or None")
+    #     else:
+    #         raise AttributeError(
+    #             "threshold setter can only be used to update an existing"
+    #             "value. Use compare_on to set the statistics comparison configuration first."
+    #         )
 
-    @property
-    def metric(self) -> Optional[str]:
-        if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
-            raise AttributeError(
-                "metric is only available for feature monitoring"
-                " not for scheduled statistics."
-            )
-        if isinstance(self._statistics_comparison_config, dict):
-            return self._statistics_comparison_config.get("metric", None)
-        else:
-            return None
+    # @property
+    # def metric(self) -> Optional[str]:
+    #     if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
+    #         raise AttributeError(
+    #             "metric is only available for feature monitoring"
+    #             " not for scheduled statistics."
+    #         )
+    #     if isinstance(self._statistics_comparison_config, dict):
+    #         return self._statistics_comparison_config.get("metric", None)
+    #     else:
+    #         return None
 
-    @metric.setter
-    def metric(self, metric: Optional[str]):
-        raise AttributeError("metric field cannot be updated.")
+    # @metric.setter
+    # def metric(self, metric: Optional[str]):
+    #     raise AttributeError("metric field cannot be updated.")
 
-    @property
-    def relative(self):
-        if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
-            raise AttributeError(
-                "relative is only available for feature monitoring"
-                " not for scheduled statistics."
-            )
-        if isinstance(self._statistics_comparison_config, dict):
-            return self._statistics_comparison_config.get("relative", None)
-        else:
-            return None
+    # @property
+    # def relative(self):
+    #     if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
+    #         raise AttributeError(
+    #             "relative is only available for feature monitoring"
+    #             " not for scheduled statistics."
+    #         )
+    #     if isinstance(self._statistics_comparison_config, dict):
+    #         return self._statistics_comparison_config.get("relative", None)
+    #     else:
+    #         return None
 
-    @relative.setter
-    def relative(self, relative: Optional[bool]):
-        raise AttributeError(
-            "relative field cannot be updated. Use compare_on "
-            "to set the statistics comparison configuration."
-        )
+    # @relative.setter
+    # def relative(self, relative: Optional[bool]):
+    #     raise AttributeError(
+    #         "relative field cannot be updated. Use compare_on "
+    #         "to set the statistics comparison configuration."
+    #     )
 
-    @property
-    def strict(self) -> Optional[bool]:
-        if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
-            raise AttributeError(
-                "strict is only available for feature monitoring"
-                " not for scheduled statistics."
-            )
-        if isinstance(self._statistics_comparison_config, dict):
-            return self._statistics_comparison_config.get("strict", False)
-        else:
-            return None
+    # @property
+    # def strict(self) -> Optional[bool]:
+    #     if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
+    #         raise AttributeError(
+    #             "strict is only available for feature monitoring"
+    #             " not for scheduled statistics."
+    #         )
+    #     if isinstance(self._statistics_comparison_config, dict):
+    #         return self._statistics_comparison_config.get("strict", False)
+    #     else:
+    #         return None
 
-    @strict.setter
-    def strict(self, strict: Optional[bool]):
-        if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
-            raise AttributeError(
-                "strict setter can only be used when monitoring "
-                "uses a reference window"
-            )
-        if isinstance(self._statistics_comparison_config, dict):
-            if isinstance(strict, bool):
-                self._statistics_comparison_config["strict"] = strict
-            else:
-                raise TypeError("strict must be of type bool")
-        else:
-            raise AttributeError(
-                "threshold setter can only be used to update an existing"
-                "value. Use compare_on to set the statistics comparison configuration first."
-            )
+    # @strict.setter
+    # def strict(self, strict: Optional[bool]):
+    #     if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
+    #         raise AttributeError(
+    #             "strict setter can only be used when monitoring "
+    #             "uses a reference window"
+    #         )
+    #     if isinstance(self._statistics_comparison_config, dict):
+    #         if isinstance(strict, bool):
+    #             self._statistics_comparison_config["strict"] = strict
+    #         else:
+    #             raise TypeError("strict must be of type bool")
+    #     else:
+    #         raise AttributeError(
+    #             "threshold setter can only be used to update an existing"
+    #             "value. Use compare_on to set the statistics comparison configuration first."
+    #         )

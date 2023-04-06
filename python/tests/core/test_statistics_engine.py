@@ -360,7 +360,7 @@ class TestStatisticsEngine:
         assert mock_statistics_engine_save_statistics.call_count == 0
         assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 0
 
-    def test_compute_single_feature_statistics(self, mocker):
+    def test_compute_monitoring_feature_statistics(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -378,9 +378,8 @@ class TestStatisticsEngine:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            s_engine.compute_single_feature_statistics(
+            s_engine.compute_monitoring_statistics(
                 feature_dataframe=None,
-                feature_name=None,
             )
 
         # Assert
@@ -392,7 +391,7 @@ class TestStatisticsEngine:
             == "Descriptive statistics for feature monitoring cannot be computed from the Python engine."
         )
 
-    def test_compute_single_feature_statistics_get_type_spark(self, mocker):
+    def test_compute_monitoring_statistics_get_type_spark(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -414,9 +413,8 @@ class TestStatisticsEngine:
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
 
         # Act
-        s_engine.compute_single_feature_statistics(
+        s_engine.compute_monitoring_statistics(
             feature_dataframe=None,
-            feature_name="amount",
         )
 
         # Assert

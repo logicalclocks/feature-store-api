@@ -474,49 +474,6 @@ class FeatureMonitoringConfigEngine:
             row_percentage=self._DEFAULT_ROW_PERCENTAGE,
         )  # TODO: Do we want to have a default reference window + stat comparison?
 
-    def _build_stats_monitoring_only_config(
-        self,
-        name: str,
-        feature_name: str,
-        detection_window_config: Dict[str, Any],
-        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
-        description: Optional[str] = None,
-    ) -> "fmc.FeatureMonitoringConfig":
-        """Builds a feature monitoring config for descriptive statistics only.
-
-        Args:
-            name: str, required
-                Name of the monitoring configuration.
-            feature_name: str, required
-                Name of the feature to monitor.
-            detection_window_config: Dict[str, Any], required
-                Configuration of the detection window.
-            scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]], optional
-                Configuration of the scheduler.
-            description: str, optional
-                Description of the monitoring configuration.
-
-        Returns:
-            FeatureMonitoringConfig The monitoring configuration.
-        """
-        return fmc.FeatureMonitoringConfig(
-            feature_store_id=self._feature_store_id,
-            feature_group_id=self._feature_group_id,
-            feature_view_id=self._feature_view_id,
-            feature_view_name=self._feature_view_name,
-            feature_view_version=self._feature_view_version,
-            feature_name=feature_name,
-            name=name,
-            description=description,
-            feature_monitoring_type="SCHEDULED_STATISTICS",
-            detection_window_config=detection_window_config,
-            scheduler_config=scheduler_config,
-            enabled=True,
-            alert_config=None,
-            reference_window_config=None,
-            statistics_comparison_config=None,
-        )
-
     def save(
         self, config: "fmc.FeatureMonitoringConfig"
     ) -> "fmc.FeatureMonitoringConfig":
@@ -573,6 +530,94 @@ class FeatureMonitoringConfigEngine:
         self._feature_monitoring_config_api.pause_or_resume_monitoring(
             config_id=config_id,
             enabled=enabled,
+        )
+
+    def get_feature_monitoring_configs(
+        self,
+        name: Optional[str] = None,
+        feature_name: Optional[str] = None,
+    ) -> Union[
+        "fmc.FeatureMonitoringConfig", List["fmc.FeatureMonitoringConfig"], None
+    ]:
+        """Fetch feature monitoring configuration by entity, name or feature name.
+
+        If no arguments are provided, fetches all feature monitoring configurations
+        attached to the given entity. If a name is provided, it fetches a single configuration
+        and returns None if not found.
+
+        Args:
+            name: str, optional
+                If provided, fetch only configuration with given name.
+                Defaults to None.
+            feature_name: str, optional
+                If provided, fetch all configurations attached to a specific feature.
+                Defaults to None.
+
+        Raises:
+            ValueError: If both name and feature_name are provided.
+            TypeError: If name or feature_name are not strings.
+
+        Returns:
+            FeatureMonitoringConfig or List[FeatureMonitoringConfig] The monitoring
+            configuration(s).
+        """
+        if name is not None and feature_name is not None:
+            raise ValueError("Cannot provide both name and feature_name.")
+
+        if name is not None:
+            if not isinstance(name, str):
+                raise TypeError("name must be a string or None.")
+            return self._feature_monitoring_config_api.get_by_name(name=name)
+        elif feature_name is not None:
+            if not isinstance(feature_name, str):
+                raise TypeError("feature_name must be a string or None.")
+            return self._feature_monitoring_config_api.get_by_feature_name(
+                feature_name=feature_name
+            )
+
+        return self._feature_monitoring_config_api.get_by_entity()
+
+    def _build_stats_monitoring_only_config(
+        self,
+        name: str,
+        feature_name: str,
+        detection_window_config: Dict[str, Any],
+        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
+        description: Optional[str] = None,
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Builds a feature monitoring config for descriptive statistics only.
+
+        Args:
+            name: str, required
+                Name of the monitoring configuration.
+            feature_name: str, required
+                Name of the feature to monitor.
+            detection_window_config: Dict[str, Any], required
+                Configuration of the detection window.
+            scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]], optional
+                Configuration of the scheduler.
+            description: str, optional
+                Description of the monitoring configuration.
+
+        Returns:
+            FeatureMonitoringConfig The monitoring configuration.
+        """
+        return fmc.FeatureMonitoringConfig(
+            feature_store_id=self._feature_store_id,
+            feature_group_id=self._feature_group_id,
+            feature_view_id=self._feature_view_id,
+            feature_view_name=self._feature_view_name,
+            feature_view_version=self._feature_view_version,
+            feature_name=feature_name,
+            name=name,
+            description=description,
+            feature_monitoring_type="SCHEDULED_STATISTICS",
+            detection_window_config=detection_window_config,
+            scheduler_config=scheduler_config,
+            enabled=True,
+            alert_config=None,
+            reference_window_config=None,
+            statistics_comparison_config=None,
         )
 
     def _build_feature_monitoring_config(
@@ -670,12 +715,20 @@ class FeatureMonitoringConfigEngine:
         )
 
         if config.reference_window_config is not None:
-            reference_stats = self.run_single_window_monitoring(
-                entity=entity,
-                monitoring_window_config=config.reference_window_config,
-                feature_name=config.feature_name,
-                check_existing=True,
-            )
+            if (
+                config.reference_window_config.window_config_type
+                == WindowConfigType.SPECIFIC_VALUE
+            ):
+                reference_stats = config.reference_window_config.specific_value
+            else:
+                reference_stats = self.run_single_window_monitoring(
+                    entity=entity,
+                    monitoring_window_config=config.reference_window_config,
+                    feature_name=config.feature_name,
+                    check_existing=True,
+                )[
+                    0
+                ]  # reference window is only supported for single features
         else:
             reference_stats = None
 
@@ -691,7 +744,7 @@ class FeatureMonitoringConfigEngine:
         monitoring_window_config: MonitoringWindowConfig,
         feature_name: str,
         check_existing: bool = False,
-    ) -> Union[FeatureDescriptiveStatistics, float]:
+    ) -> List[FeatureDescriptiveStatistics]:
         """Fetch the entity data based on monitoring window configuration and compute statistics.
 
         Args:
@@ -701,16 +754,8 @@ class FeatureMonitoringConfigEngine:
             check_existing: bool: Whether to check for existing stats.
 
         Returns:
-            Union[FeatureDescriptiveStatitics, float]: Descriptive statistics or a specific value
+            List[FeatureDescriptiveStatitics]: List of Descriptive statistics.
         """
-
-        if (
-            monitoring_window_config.window_config_type
-            == WindowConfigType.SPECIFIC_VALUE
-        ):
-            # if window config type is specific value, there is no stats to compute
-            return monitoring_window_config.specific_value
-
         if check_existing:
             start_time, end_time = self.get_window_start_end_times(
                 time_offset=monitoring_window_config.time_offset,
@@ -747,16 +792,40 @@ class FeatureMonitoringConfigEngine:
         )
 
         # Compute statistics on the feature dataframe
-        descriptive_stats = self._statistics_engine.compute_single_feature_statistics(
-            entity_feature_df,
-            feature_name,
+        descriptive_stats = (
+            self._statistics_engine.compute_monitoring_feature_statistics(
+                entity_feature_df,
+            )
         )
         # set commit times and row percentage
-        descriptive_stats.start_time = start_time
-        descriptive_stats.end_time = end_time
-        descriptive_stats.row_percentage = monitoring_window_config.row_percentage
+        for stats_entity in descriptive_stats:
+            self.set_start_end_time_and_row_percentage(
+                stats_entity,
+                start_time,
+                end_time,
+                monitoring_window_config.row_percentage,
+            )
 
         return descriptive_stats
+
+    def set_start_end_time_and_row_percentage(
+        self,
+        descriptive_stats: FeatureDescriptiveStatistics,
+        start_time: int,
+        end_time: int,
+        row_percentage: int,
+    ):
+        """Set the start time, end time and row percentage for all descriptive statistics.
+
+        Args:
+            descriptive_stats: FeatureDescriptiveStatistics: Descriptive statistics entity.
+            start_time: int: start_time for the data
+            end_time: int: Window end commit time
+            row_percentage: Percentage of rows included in the statistics computation
+        """
+        descriptive_stats.start_time = start_time
+        descriptive_stats.end_time = end_time
+        descriptive_stats.row_percentage = row_percentage
 
     def fetch_entity_data_based_on_time_window_and_row_percentage(
         self,
@@ -779,21 +848,24 @@ class FeatureMonitoringConfigEngine:
             `pyspark.DataFrame`. A Spark DataFrame with the entity data
         """
         if entity.ENTITY_TYPE == "featuregroups":
-            full_df = (
-                entity.select(features=[feature_name])
-                .as_of(exclude_until=start_time, wallclock_time=end_time)
-                .read()
-            )
+            if feature_name:
+                pre_df = entity.select(features=[feature_name])
+            else:
+                pre_df = entity
+
+            full_df = pre_df.as_of(
+                exclude_until=start_time, wallclock_time=end_time
+            ).read()
+
         elif entity.ENTITY_TYPE == "featureview":
-            # TODO: This is a hack to get the data from the feature view without using get_batch_data
-            # Currently get_batch_data does not support returning pandas dataframes
-            # We also need to pass a training data version if there are transformation
+            # TODO: This is a hack to get the data from the feature view without
+            # passing a training data version if there are transformation
             # functions to apply for get_batch_data to work
-            full_df = (
-                entity.query.as_of(exclude_until=start_time, wallclock_time=end_time)
-                .read()
-                .select(feature_name)
-            )
+            full_df = entity.query.as_of(
+                exclude_until=start_time, wallclock_time=end_time
+            ).read()
+            if feature_name:
+                full_df = full_df.select(feature_name)
 
         if row_percentage < 100:
             full_df = full_df.sample(fraction=(row_percentage / 100))

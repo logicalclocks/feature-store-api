@@ -1015,6 +1015,7 @@ class FeatureGroupBase:
                 "Only Feature Group registered with Hopsworks can fetch validation history."
             )
 
+<<<<<<< HEAD
     def validate(
         self,
         dataframe: Optional[
@@ -1080,6 +1081,70 @@ class FeatureGroupBase:
             ge_type=ge_type,
         )
     
+=======
+    def _get_feature_monitoring_configs(
+        self,
+        name: Optional[str] = None,
+        feature_name: Optional[str] = None,
+    ) -> Union[
+        "fmc.FeatureMonitoringConfig", List["fmc.FeatureMonitoringConfig"], None
+    ]:
+        """Fetch all feature monitoring configs attached to the feature group, or fetch by name or feature name only.
+
+        If no arguments is provided the method will return all feature monitoring configs
+        attached to the feature group, meaning all feature monitoring configs that are attach
+        to a feature in the feature group. If you wish to fetch a single config, provide the
+        its name. If you wish to fetch all configs attached to a particular feature, provide
+        the feature name.
+
+        !!! example
+            ```python3
+            # fetch your feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # fetch all feature monitoring configs attached to the feature group
+            fm_configs = fg._get_feature_monitoring_configs()
+
+            # fetch a single feature monitoring config by name
+            fm_config = fg._get_feature_monitoring_configs(name="my_config")
+
+            # fetch all feature monitoring configs attached to a particular feature
+            fm_configs = fg._get_feature_monitoring_configs(feature_name="my_feature")
+            ```
+
+        # Arguments
+            name: If provided fetch only the feature monitoring config with the given name.
+                Defaults to None.
+            feature_name: If provided, fetch only configs attached to a particular feature.
+                Defaults to None.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
+            ValueError: if both name and feature_name are provided.
+            TypeError: if name or feature_name are not string or None.
+
+        # Return
+            Union[`FeatureMonitoringConfig`, List[`FeatureMonitoringConfig`], None]
+                A list of feature monitoring configs. If name provided,
+                returns either a single config or None if not found.
+        """
+        # TODO: Should this filter out scheduled statistics only configs?
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can fetch feature monitoring configurations."
+            )
+
+        fm_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=self._feature_store_id,
+            feature_group_id=self._id,
+        )
+
+        return fm_engine.get_feature_monitoring_configs(
+            name=name, feature_name=feature_name
+        )
+
+>>>>>>> 295eed9b (Add get_config UX and multi feature scheduled stats support)
     def _enable_scheduled_statistics_monitoring_fluent(
         self,
         name: str,
