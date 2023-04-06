@@ -17,10 +17,9 @@
 from hsfs.core import feature_monitoring_result_engine
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 from hsfs.core import feature_monitoring_config as fmc
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import dateutil
 from hsfs import util
-import time
 
 DEFAULT_MONITORING_TIME_SORT_BY = "monitoring_time:desc"
 DEFAULT_FEATURE_STORE_ID = 67
@@ -29,6 +28,10 @@ DEFAULT_FEATURE_VIEW_ID = 22
 DEFAULT_FEATURE_VIEW_NAME = "test_feature_view"
 DEFAULT_FEATURE_VIEW_VERSION = 2
 DEFAULT_CONFIG_ID = 32
+
+FEATURE_MONITORING_CONFIG_CREATE_API = (
+    "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create"
+)
 
 
 class TestFeatureMonitoringResultEngine:
@@ -126,15 +129,14 @@ class TestFeatureMonitoringResultEngine:
         ]["response"]
 
         mock_result_api = mocker.patch(
-            "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create",
+            FEATURE_MONITORING_CONFIG_CREATE_API,
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
-        before_time = datetime.now()
-        time.sleep(1)
+        before_time = datetime.now() - timedelta(seconds=1)
 
         # Act
         result_engine.save_feature_monitoring_result(
@@ -145,8 +147,7 @@ class TestFeatureMonitoringResultEngine:
             difference=difference,
             shift_detected=shift_detected,
         )
-        time.sleep(1)
-        after_time = datetime.now()
+        after_time = datetime.now() + timedelta(seconds=1)
 
         # Assert
         result = mock_result_api.call_args[0][0]
@@ -179,15 +180,14 @@ class TestFeatureMonitoringResultEngine:
         ]["response"]
 
         mock_result_api = mocker.patch(
-            "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create",
+            FEATURE_MONITORING_CONFIG_CREATE_API,
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
-        before_time = datetime.now()
-        time.sleep(1)
+        before_time = datetime.now() - timedelta(seconds=1)
 
         # Act
         result_engine.save_feature_monitoring_result(
@@ -198,8 +198,7 @@ class TestFeatureMonitoringResultEngine:
             difference=difference,
             shift_detected=shift_detected,
         )
-        time.sleep(1)
-        after_time = datetime.now()
+        after_time = datetime.now() + timedelta(seconds=1)
 
         # Assert
         result = mock_result_api.call_args[0][0]
@@ -233,7 +232,7 @@ class TestFeatureMonitoringResultEngine:
         ]["response"]
 
         mock_result_api = mocker.patch(
-            "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create",
+            FEATURE_MONITORING_CONFIG_CREATE_API,
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
@@ -242,8 +241,7 @@ class TestFeatureMonitoringResultEngine:
             feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
             feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
         )
-        before_time = datetime.now()
-        time.sleep(1)
+        before_time = datetime.now() - timedelta(seconds=1)
 
         # Act
         result_engine.save_feature_monitoring_result(
@@ -254,8 +252,7 @@ class TestFeatureMonitoringResultEngine:
             difference=difference,
             shift_detected=shift_detected,
         )
-        time.sleep(1)
-        after_time = datetime.now()
+        after_time = datetime.now() + timedelta(seconds=1)
 
         # Assert
         result = mock_result_api.call_args[0][0]
@@ -288,7 +285,7 @@ class TestFeatureMonitoringResultEngine:
         ]["response"]
 
         mock_result_api = mocker.patch(
-            "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create",
+            FEATURE_MONITORING_CONFIG_CREATE_API,
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
@@ -297,8 +294,7 @@ class TestFeatureMonitoringResultEngine:
             feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
             feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
         )
-        before_time = datetime.now()
-        time.sleep(1)
+        before_time = datetime.now() - timedelta(seconds=1)
 
         # Act
         result_engine.save_feature_monitoring_result(
@@ -309,8 +305,7 @@ class TestFeatureMonitoringResultEngine:
             difference=difference,
             shift_detected=shift_detected,
         )
-        time.sleep(1)
-        after_time = datetime.now()
+        after_time = datetime.now() + timedelta(seconds=1)
 
         # Assert
         result = mock_result_api.call_args[0][0]
@@ -357,22 +352,20 @@ class TestFeatureMonitoringResultEngine:
         )
 
         mock_result_api = mocker.patch(
-            "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create",
+            FEATURE_MONITORING_CONFIG_CREATE_API,
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
-        before_time = datetime.now()
-        time.sleep(1)
+        before_time = datetime.now() - timedelta(seconds=1)
 
         # Act
         result_engine.run_and_save_statistics_comparison(
             config, detection_statistics, reference_statistics
         )
-        time.sleep(1)
-        after_time = datetime.now()
+        after_time = datetime.now() + timedelta(seconds=1)
 
         # Assert
         result = mock_result_api.call_args[0][0]
@@ -414,22 +407,20 @@ class TestFeatureMonitoringResultEngine:
         ]
 
         mock_result_api = mocker.patch(
-            "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create",
+            FEATURE_MONITORING_CONFIG_CREATE_API,
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
-        before_time = datetime.now()
-        time.sleep(1)
+        before_time = datetime.now() - timedelta(seconds=1)
 
         # Act
         result_engine.run_and_save_statistics_comparison(
             config, detection_statistics, reference_specific_value
         )
-        time.sleep(1)
-        after_time = datetime.now()
+        after_time = datetime.now() + timedelta(seconds=1)
 
         # Assert
         result = mock_result_api.call_args[0][0]
@@ -469,22 +460,20 @@ class TestFeatureMonitoringResultEngine:
         ]
 
         mock_result_api = mocker.patch(
-            "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create",
+            FEATURE_MONITORING_CONFIG_CREATE_API,
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
-        before_time = datetime.now()
-        time.sleep(1)
+        before_time = datetime.now() - timedelta(seconds=1)
 
         # Act
         result_engine.run_and_save_statistics_comparison(
             config, detection_statistics, reference_statistics
         )
-        time.sleep(1)
-        after_time = datetime.now()
+        after_time = datetime.now() + timedelta(seconds=1)
 
         # Assert
         result = mock_result_api.call_args[0][0]

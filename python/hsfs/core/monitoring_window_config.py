@@ -29,6 +29,8 @@ class WindowConfigType:
 
 
 class MonitoringWindowConfig:
+    _DEFAULT_ROW_PERCENTAGE = 20
+
     def __init__(
         self,
         id: Optional[int] = None,
@@ -45,7 +47,7 @@ class MonitoringWindowConfig:
         self._window_length = window_length
         self._specific_id = specific_id
         self._specific_value = specific_value
-        self._row_percentage = row_percentage
+        self.row_percentage = row_percentage
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -58,15 +60,13 @@ class MonitoringWindowConfig:
             "windowConfigType": self._window_config_type,
         }
 
-        if self._row_percentage is not None:
-            the_dict["rowPercentage"] = self._row_percentage
-
-        elif (
+        if (
             self._window_config_type == "INSERT"
             or self._window_config_type == "SNAPSHOT"
         ):
             the_dict["timeOffset"] = self._time_offset
             the_dict["windowLength"] = self._window_length
+            the_dict["rowPercentage"] = self.row_percentage
         elif self._window_config_type == "SPECIFIC_VALUE":
             the_dict["specificValue"] = self._specific_value
         elif self._window_config_type == "TRAINING_DATASET":
@@ -110,3 +110,24 @@ class MonitoringWindowConfig:
     @property
     def row_percentage(self) -> Optional[int]:
         return self._row_percentage
+
+    @row_percentage.setter
+    def row_percentage(self, row_percentage: Optional[int]):
+        if (
+            self._window_config_type == WindowConfigType.SPECIFIC_VALUE
+            or self._window_config_type == WindowConfigType.TRAINING_DATASET
+        ) and row_percentage is not None:
+
+            raise AttributeError(
+                "Row percentage can only be set for INSERT or "
+                "SNAPSHOT window config types."
+            )
+
+        if isinstance(row_percentage, int) and (
+            row_percentage < 0 or row_percentage > 100
+        ):
+            raise ValueError("Row percentage must be an integer between 0 and 100.")
+        elif row_percentage is None:
+            self._row_percentage = self._DEFAULT_ROW_PERCENTAGE
+        else:
+            self._row_percentage = row_percentage

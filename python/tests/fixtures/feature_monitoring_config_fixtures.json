@@ -14,11 +14,12 @@
         "detectionWindowConfig": {
           "windowConfigType": "INSERT",
           "timeOffset": "1w",
-          "windowLength": "1d"
+          "windowLength": "1d",
+          "rowPercentage": 50
         },
         "referenceWindowConfig": {
           "windowConfigType": "SNAPSHOT",
-          "timeOffset": "LAST"
+          "timeOffset": "1w"
         },
         "statisticsComparisonConfig": {
           "threshold": 1,
@@ -118,7 +119,8 @@
         "detectionWindowConfig": {
           "windowConfigType": "BATCH",
           "timeOffset": "1w",
-          "windowLength": "1d"
+          "windowLength": "1d",
+          "rowPercentage": 50
         },
         "referenceWindowConfig": {
           "windowConfigType": "TRAINING_DATASET",
@@ -157,7 +159,8 @@
         "detectionWindowConfig": {
           "windowConfigType": "BATCH",
           "timeOffset": "1w",
-          "windowLength": "1d"
+          "windowLength": "1d",
+          "rowPercentage": 50
         },
         "referenceWindowConfig": {
           "windowConfigType": "TRAINING_DATASET",
@@ -268,7 +271,8 @@
           "detectionWindowConfig": {
             "windowConfigType": "BATCH",
             "timeOffset": "1w",
-            "windowLength": "1d"
+            "windowLength": "1d",
+            "rowPercentage": 50
           },
           "referenceWindowConfig": {
             "windowConfigType": "TRAINING_DATASET",

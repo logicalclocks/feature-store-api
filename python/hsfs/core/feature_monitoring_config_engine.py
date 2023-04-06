@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from datetime import date, datetime, timedelta
 import re
 
@@ -36,16 +36,6 @@ from hsfs.client.exceptions import FeatureStoreException
 
 
 class FeatureMonitoringConfigEngine:
-    """Logic and helper methods to perform feature monitoring based on a given configuration.
-
-    Attributes:
-        feature_store_id: int. Id of the respective Feature Store.
-        feature_group_id: int. Id of the feature group, if monitoring a feature group.
-        feature_view_id: int. Id of the feature view, if monitoring a feature view.
-        feature_view_name: str. Name of the feature view, if monitoring a feature view.
-        feature_view_version: int. Version of the feature view, if monitoring a feature view.
-    """
-
     def __init__(
         self,
         feature_store_id: int,
@@ -54,6 +44,22 @@ class FeatureMonitoringConfigEngine:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
     ) -> None:
+        """Business logic for feature monitoring configuration.
+
+        This class encapsulates the business logic for feature monitoring configuration.
+        It is responsible for routing methods from the public python API to the
+        appropriate REST calls. It should also contain validation and error handling logic
+        for payloads or default object. Additionally, it contains logic necessary
+        to run the feature monitoring job, including taking a monitoring window configuration
+        and fetching the associated data.
+
+        Attributes:
+            feature_store_id: int. Id of the respective Feature Store.
+            feature_group_id: int. Id of the feature group, if monitoring a feature group.
+            feature_view_id: int. Id of the feature view, if monitoring a feature view.
+            feature_view_name: str. Name of the feature view, if monitoring a feature view.
+            feature_view_version: int. Version of the feature view, if monitoring a feature view.
+        """
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
         self._feature_view_id = feature_view_id
@@ -112,7 +118,6 @@ class FeatureMonitoringConfigEngine:
         self._VALID_FRACTIONAL_METRICS = [
             metric.lower() for metric in self._VALID_FRACTIONAL_METRICS
         ]
-        self._DEFAULT_ROW_PERCENTAGE = 20
 
     def enable_descriptive_statistics_monitoring(
         self,
@@ -415,9 +420,7 @@ class FeatureMonitoringConfigEngine:
                 "start_date_time": start_date_time,
                 "enabled": True,
             },
-        ).with_detection_window(
-            row_percentage=self._DEFAULT_ROW_PERCENTAGE,
-        )
+        ).with_detection_window()
 
     def _build_default_feature_monitoring_config(
         self,
@@ -471,9 +474,7 @@ class FeatureMonitoringConfigEngine:
                 "start_date_time": start_date_time,
                 "enabled": True,
             },
-        ).with_detection_window(
-            row_percentage=self._DEFAULT_ROW_PERCENTAGE,
-        )  # TODO: Do we want to have a default reference window + stat comparison?
+        ).with_detection_window()  # TODO: Do we want to have a default reference window + stat comparison?
 
     def save(
         self, config: "fmc.FeatureMonitoringConfig"
@@ -772,8 +773,7 @@ class FeatureMonitoringConfigEngine:
         """
         if check_existing:
             start_time, end_time = self.get_window_start_end_times(
-                time_offset=monitoring_window_config.time_offset,
-                window_length=monitoring_window_config.window_length,
+                monitoring_window_config=monitoring_window_config,
             )
             registered_stats = self._statistics_engine.get_by_feature_name_time_window_and_row_percentage(
                 entity,
@@ -786,14 +786,8 @@ class FeatureMonitoringConfigEngine:
                 return registered_stats
 
         # Fetch the actual data for which to compute statistics based on row_percentage and time window
-        time_offset = self.time_range_str_to_time_delta(
-            monitoring_window_config.time_offset
-        )
-        window_length = self.time_range_str_to_time_delta(
-            monitoring_window_config.window_length
-        )
         start_time, end_time = self.get_window_start_end_times(
-            time_offset, window_length
+            monitoring_window_config=monitoring_window_config,
         )
         entity_feature_df = (
             self.fetch_entity_data_based_on_time_window_and_row_percentage(
@@ -825,16 +819,16 @@ class FeatureMonitoringConfigEngine:
     def set_start_end_time_and_row_percentage(
         self,
         descriptive_stats: FeatureDescriptiveStatistics,
-        start_time: int,
-        end_time: int,
-        row_percentage: int,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        row_percentage: Optional[int] = None,
     ):
         """Set the start time, end time and row percentage for all descriptive statistics.
 
         Args:
             descriptive_stats: FeatureDescriptiveStatistics: Descriptive statistics entity.
-            start_time: int: start_time for the data
-            end_time: int: Window end commit time
+            start_time: datetime: statistics is computed on data inserted posterior to this time.
+            end_time: datetime: statistics is computed on data inserted anterior to this time.
             row_percentage: Percentage of rows included in the statistics computation
         """
         descriptive_stats.start_time = start_time
@@ -847,7 +841,7 @@ class FeatureMonitoringConfigEngine:
         feature_name: str,
         start_time: int,
         end_time: int,
-        row_percentage: int = 100,
+        row_percentage: int,
     ):
         """Fetch the entity data based on time window and row percentage.
 
@@ -903,8 +897,7 @@ class FeatureMonitoringConfigEngine:
             FeatureDescriptiveStatistics: Descriptive statistics
         """
         start_time, end_time = self.get_window_start_end_times(
-            time_offset=monitoring_window_config.time_offset,
-            window_length=monitoring_window_config.window_length,
+            monitoring_window_config=monitoring_window_config,
         )
         return (
             self._statistics_engine.get_by_feature_name_time_window_and_row_percentage(
@@ -924,8 +917,33 @@ class FeatureMonitoringConfigEngine:
 
         return timedelta(months=months, weeks=weeks, days=days, hours=hours)
 
-    def get_window_start_end_times(self, time_offset, window_length):
-        return (
-            datetime.now() - time_offset,
-            datetime.now() - time_offset + window_length,
-        )
+    def get_window_start_end_times(
+        self,
+        monitoring_window_config: MonitoringWindowConfig,
+    ) -> Tuple[Optional[datetime], Optional[datetime]]:
+        end_time = datetime.now()
+        if (
+            monitoring_window_config.window_config_type != "INSERT"
+            or monitoring_window_config.window_config_type != "SNAPSHOT"
+        ):
+            return (None, end_time)
+
+        if monitoring_window_config.time_offset is not None:
+            time_offset = self.time_range_str_to_time_delta(
+                monitoring_window_config.time_offset
+            )
+            start_time = datetime.now() - time_offset
+        else:
+            # case where time_offset is None and window_length is None
+            return (None, end_time)
+
+        if monitoring_window_config.window_length is not None:
+            window_length = self.time_range_str_to_time_delta(
+                monitoring_window_config.window_length
+            )
+            return (
+                start_time,
+                start_time + window_length,
+            )
+        else:
+            return (start_time, end_time)

@@ -52,7 +52,7 @@ class TestFeatureMonitoringConfig:
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
         assert config._reference_window_config.window_config_type == "SNAPSHOT"
-        assert config._reference_window_config.time_offset == "LAST"
+        assert config._reference_window_config.time_offset == "1w"
 
         assert config._statistics_comparison_config["threshold"] == 1
         assert config._statistics_comparison_config["strict"] is True
