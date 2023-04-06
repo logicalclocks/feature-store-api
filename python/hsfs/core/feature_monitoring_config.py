@@ -357,7 +357,19 @@ class FeatureMonitoringConfig:
         # Returns
             `FeatureMonitoringConfig`. The saved FeatureMonitoringConfig object.
         """
-        self = self._feature_monitoring_config_engine.save(self)
+        registered_config = self._feature_monitoring_config_engine.save(self)
+        self.detection_window_config = registered_config._detection_window_config
+        self.scheduler_config = registered_config._scheduler_config
+
+        if self._feature_monitoring_type != "SCHEDULED_STATISTICS":
+            self.reference_window_config = registered_config._reference_window_config
+            self.statistics_comparison_config = (
+                registered_config._statistics_comparison_config
+            )
+            self._alert_config = registered_config._alert_config
+
+        self._job_name = registered_config._job_name
+        self._id = registered_config._id
         return self
 
     def update(self):
@@ -379,8 +391,7 @@ class FeatureMonitoringConfig:
         # Returns
             `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
         """
-        self = self._feature_monitoring_config_engine.update(self)
-        return self
+        return self._feature_monitoring_config_engine.update(self)
 
     def run_job(self):
         """Trigger the monitoring job which computes statistics on detection and reference window.
