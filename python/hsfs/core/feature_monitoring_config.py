@@ -357,10 +357,6 @@ class FeatureMonitoringConfig:
         # Returns
             `FeatureMonitoringConfig`. The saved FeatureMonitoringConfig object.
         """
-        if self._id:
-            raise FeatureStoreException(
-                "Feature monitoring config already registered. Use `.update()` to update the config."
-            )
         self = self._feature_monitoring_config_engine.save(self)
         return self
 
@@ -383,11 +379,8 @@ class FeatureMonitoringConfig:
         # Returns
             `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
         """
-        if not self._id:
-            raise FeatureStoreException(
-                "Feature monitoring config must be registered via `.save()` before updating."
-            )
-        return self._feature_monitoring_config_engine.update(self)
+        self = self._feature_monitoring_config_engine.update(self)
+        return self
 
     def run_job(self):
         """Trigger the monitoring job which computes statistics on detection and reference window.
