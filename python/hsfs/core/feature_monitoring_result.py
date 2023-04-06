@@ -16,7 +16,7 @@
 
 import json
 import humps
-from typing import Any, Dict, List, Optional, Union
+from typing import Optional, Union
 from hsfs import util
 from datetime import datetime, date
 
@@ -42,8 +42,6 @@ class FeatureMonitoringResult:
         ] = None,
         id: Optional[int] = None,
         href: Optional[str] = None,
-        items: Optional[List[Dict[str, Any]]] = None,
-        count: Optional[int] = None,
     ):
         self._id = id
         self._href = href
@@ -92,8 +90,8 @@ class FeatureMonitoringResult:
             "executionId": self._execution_id,
             "detectionStatsId": self._detection_stats_id,
             "referenceStatsId": self._reference_stats_id,
-            "detectionStatistics": self._detection_statistics.to_dict(),
-            "referenceStatistics": self._reference_statistics.to_dict(),
+            "detectionStatistics": self._detection_statistics,
+            "referenceStatistics": self._reference_statistics,
             "monitoringTime": self._monitoring_time,
             "difference": self._difference,
             "shiftDetected": self._shift_detected,

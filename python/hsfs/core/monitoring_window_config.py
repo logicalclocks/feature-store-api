@@ -53,15 +53,26 @@ class MonitoringWindowConfig:
         return cls(**json_decamelized)
 
     def to_dict(self):
-        return {
+        the_dict = {
             "id": self._id,
             "windowConfigType": self._window_config_type,
-            "timeOffset": self._time_offset,
-            "windowLength": self._window_length,
-            "specificId": self._specific_id,
-            "specificValue": self._specific_value,
-            "rowPercentage": self._row_percentage,
         }
+
+        if self._row_percentage is not None:
+            the_dict["rowPercentage"] = self._row_percentage
+
+        elif (
+            self._window_config_type == "INSERT"
+            or self._window_config_type == "SNAPSHOT"
+        ):
+            the_dict["timeOffset"] = self._time_offset
+            the_dict["windowLength"] = self._window_length
+        elif self._window_config_type == "SPECIFIC_VALUE":
+            the_dict["specificValue"] = self._specific_value
+        elif self._window_config_type == "TRAINING_DATASET":
+            the_dict["specificId"] = self._specific_id
+
+        return the_dict
 
     def json(self) -> str:
         return json.dumps(self, cls=FeatureStoreEncoder)

@@ -77,6 +77,7 @@ class FeatureMonitoringConfigEngine:
             )
         )
         self._statistics_engine = StatisticsEngine(feature_store_id, entity_type)
+        self._job_api = JobApi()
 
         # Should we promote the variables below to static?
         self._VALID_CATEGORICAL_METRICS = [
@@ -682,10 +683,23 @@ class FeatureMonitoringConfigEngine:
         Returns:
             Job object.
         """
-        job_api = JobApi()
-        job_api.launch(name=job_name)
+        self._job_api.launch(name=job_name)
 
-        return job_api.get(name=job_name)
+        return self._job_api.get(name=job_name)
+
+    def get_monitoring_job(
+        self,
+        job_name: str,
+    ) -> Job:
+        """Make a REST call to fetch the job entity.
+
+        Args:
+            job_name: Name of the job to trigger.
+
+        Returns:
+            `Job` A Hopsworks job with its metadata and execution history.
+        """
+        return self._job_api.get(name=job_name)
 
     def run_feature_monitoring(
         self, entity, config_name: str, result_engine: FeatureMonitoringResultEngine
