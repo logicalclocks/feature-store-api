@@ -47,6 +47,54 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
 
         self._feature_group_api.save(feature_group)
 
+    def insert(
+        self,
+        feature_group,
+        feature_dataframe,
+        write_options: dict,
+        validation_options: dict = {},
+    ):
+        if not feature_group.online_enabled:
+            raise FeatureStoreException(
+                "Online storage is not enabled for this feature group. External feature groups can only store data in"
+                + " online storage. To create an offline only external feature group, use the `save` method."
+            )
+
+        schema = engine.get_instance().parse_schema_feature_group(feature_dataframe)
+
+        if not feature_group._id:
+            # only save metadata if feature group does not exist
+            feature_group.features = schema
+            self.save(feature_group)
+        else:
+            # else, just verify that feature group schema matches user-provided dataframe
+            self._verify_schema_compatibility(feature_group.features, schema)
+
+        # ge validation on python and non stream feature groups on spark
+        ge_report = feature_group._great_expectation_engine.validate(
+            feature_group=feature_group,
+            dataframe=feature_dataframe,
+            validation_options=validation_options,
+            ingestion_result="INGESTED",
+            ge_type=False,
+        )
+
+        if ge_report is not None and ge_report.ingestion_result == "REJECTED":
+            return None, ge_report
+
+        return (
+            engine.get_instance().save_dataframe(
+                feature_group=feature_group,
+                dataframe=feature_dataframe,
+                operation=None,
+                online_enabled=feature_group.online_enabled,
+                storage="online",
+                offline_write_options=write_options,
+                online_write_options=write_options,
+            ),
+            ge_report,
+        )
+
     def _update_features_metadata(self, feature_group, features):
         # perform changes on copy in case the update fails, so we don't leave
         # the user object in corrupted state
