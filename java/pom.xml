@@ -5,12 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.logicalclocks</groupId>
-    <artifactId>hsfs-sdk</artifactId>
+    <artifactId>hsfs-parent</artifactId>
     <packaging>pom</packaging>
     <version>3.2.0-SNAPSHOT</version>
     <modules>
         <module>hsfs</module>
         <module>spark</module>
+        <module>beam</module>
     </modules>
 
     <properties>
