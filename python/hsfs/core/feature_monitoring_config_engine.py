@@ -800,10 +800,8 @@ class FeatureMonitoringConfigEngine:
         )
 
         # Compute statistics on the feature dataframe
-        descriptive_stats = (
-            self._statistics_engine.compute_monitoring_feature_statistics(
-                entity_feature_df,
-            )
+        descriptive_stats = self._statistics_engine.compute_monitoring_statistics(
+            entity_feature_df,
         )
         # set commit times and row percentage
         for stats_entity in descriptive_stats:

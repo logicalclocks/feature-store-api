@@ -70,7 +70,7 @@ class MonitoringWindowConfig:
 
             ## Rolling Snapshot (not supported yet)
             monitoring_window_config = MonitoringWindowConfig(
-                time_offset="LATEST", # Use the latest available snapshot statistics
+                time_offset="LATEST", # Use the latest available feature statistics
             )
 
             ## Fix Time Window (not supported yet)
