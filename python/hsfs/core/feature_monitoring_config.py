@@ -210,7 +210,7 @@ class FeatureMonitoringConfig:
         """
         # Setter is using the engine class to perform input validation.
         self.detection_window_config = {
-            "window_config_type": "INSERT",
+            "window_config_type": "ROLLING_TIME",
             "time_offset": time_offset,
             "window_length": window_length,
             "row_percentage": row_percentage,
@@ -270,7 +270,7 @@ class FeatureMonitoringConfig:
         """
         # Setter is using the engine class to perform input validation.
         self.reference_window_config = {
-            "window_config_type": "INSERT",
+            "window_config_type": "ROLLING_TIME",
             "time_offset": time_offset,
             "window_length": window_length,
             "specific_value": specific_value,

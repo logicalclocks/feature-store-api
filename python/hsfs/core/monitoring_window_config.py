@@ -21,11 +21,13 @@ from hsfs.util import FeatureStoreEncoder
 
 
 class WindowConfigType:
-    INSERT = "INSERT"
-    SNAPSHOT = "SNAPSHOT"
-    BATCH = "BATCH"
+    ALL_TIME = "ALL_TIME"
+    ROLLING_TIME = "ROLLING_TIME"
+    ROLLING_COMMITS = "ROLLING_COMMITS"
     TRAINING_DATASET = "TRAINING_DATASET"
     SPECIFIC_VALUE = "SPECIFIC_VALUE"
+    MOST_RECENT = "MOST_RECENT"
+    FIXED_TIME = "FIXED_TIME"
 
 
 class MonitoringWindowConfig:
@@ -68,12 +70,12 @@ class MonitoringWindowConfig:
                 specific_id=my_training_dataset.id
             )
 
-            ## Rolling Snapshot (not supported yet)
+            ## MOST_RECENT (not supported yet)
             monitoring_window_config = MonitoringWindowConfig(
                 time_offset="LATEST", # Use the latest available feature statistics
             )
 
-            ## Fix Time Window (not supported yet)
+            ## Fixed Time Window (not supported yet)
             monitoring_window_config = MonitoringWindowConfig(
                 time_offset="2020-01-01 00:00:00", # data inserted up to 2020-01-01 00:00:00
                 window_length="1y", # data inserted until an one year after time_offset
@@ -123,15 +125,15 @@ class MonitoringWindowConfig:
         }
 
         if (
-            self._window_config_type == "INSERT"
-            or self._window_config_type == "SNAPSHOT"
+            self._window_config_type == WindowConfigType.ROLLING_TIME
+            or self._window_config_type == WindowConfigType.ALL_TIME
         ):
             the_dict["timeOffset"] = self._time_offset
             the_dict["windowLength"] = self._window_length
             the_dict["rowPercentage"] = self.row_percentage
-        elif self._window_config_type == "SPECIFIC_VALUE":
+        elif self._window_config_type == WindowConfigType.SPECIFIC_VALUE:
             the_dict["specificValue"] = self._specific_value
-        elif self._window_config_type == "TRAINING_DATASET":
+        elif self._window_config_type == WindowConfigType.TRAINING_DATASET:
             the_dict["specificId"] = self._specific_id
 
         return the_dict

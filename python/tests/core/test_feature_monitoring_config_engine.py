@@ -49,12 +49,12 @@ class TestFeatureMonitoringConfigEngine:
 
         # Act
         window_config = config_engine.build_monitoring_window_config(
-            window_config_type="SNAPSHOT",
+            window_config_type="ALL_TIME",
             time_offset="1w",
         )
 
         # Assert
-        assert window_config.window_config_type == "SNAPSHOT"
+        assert window_config.window_config_type == "ALL_TIME"
         assert window_config.time_offset == "1w"
         assert (
             window_config.row_percentage == 20
@@ -68,7 +68,7 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="INSERT",
+            window_config_type="ROLLING_TIME",
             time_offset="1w",
             window_length="1d",
         )
@@ -104,7 +104,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert config._alert_config == DEFAULT_ALERT_CONFIG
-        assert config._detection_window_config.window_config_type == "INSERT"
+        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
         assert config._reference_window_config.window_config_type == "SPECIFIC_VALUE"
@@ -143,7 +143,7 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="INSERT",
+            window_config_type="ROLLING_TIME",
             time_offset="1w",
             window_length="1d",
         )
@@ -181,7 +181,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert config._alert_config == DEFAULT_ALERT_CONFIG
-        assert config._detection_window_config.window_config_type == "INSERT"
+        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
         assert config._reference_window_config.window_config_type == "SPECIFIC_VALUE"
@@ -219,7 +219,7 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="BATCH",
+            window_config_type="ROLLING_TIME",
             time_offset="1w",
             window_length="1d",
         )
@@ -257,7 +257,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert config._alert_config == DEFAULT_ALERT_CONFIG
-        assert config._detection_window_config.window_config_type == "BATCH"
+        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
         assert config._reference_window_config.window_config_type == "TRAINING_DATASET"
@@ -291,7 +291,7 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="INSERT",
+            window_config_type="ROLLING_TIME",
             time_offset="1w",
             window_length="1d",
         )
@@ -313,7 +313,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
         assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
-        assert config._detection_window_config.window_config_type == "INSERT"
+        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
 
@@ -332,7 +332,7 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="INSERT",
+            window_config_type="ROLLING_TIME",
             time_offset="1w",
             window_length="1d",
         )
@@ -356,7 +356,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
         assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
-        assert config._detection_window_config.window_config_type == "INSERT"
+        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
 
@@ -377,7 +377,7 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="BATCH",
+            window_config_type="ROLLING_TIME",
             time_offset="1w",
             window_length="1d",
         )
@@ -400,7 +400,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description is None
         assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
-        assert config._detection_window_config.window_config_type == "BATCH"
+        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
 

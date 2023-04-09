@@ -12,13 +12,13 @@
         "enabled": true,
         "featureMonitoringType": "DESCRIPTIVE_STATISTICS",
         "detectionWindowConfig": {
-          "windowConfigType": "INSERT",
+          "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
           "windowLength": "1d",
           "rowPercentage": 50
         },
         "referenceWindowConfig": {
-          "windowConfigType": "SNAPSHOT",
+          "windowConfigType": "ALL_TIME",
           "timeOffset": "1w"
         },
         "statisticsComparisonConfig": {
@@ -50,7 +50,7 @@
         "enabled": true,
         "featureMonitoringType": "DESCRIPTIVE_STATISTICS",
         "detectionWindowConfig": {
-          "windowConfigType": "INSERT",
+          "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
           "windowLength": "1d"
         },
@@ -87,7 +87,7 @@
         "enabled": true,
         "featureMonitoringType": "SCHEDULED_STATISTICS",
         "detectionWindowConfig": {
-          "windowConfigType": "INSERT",
+          "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
           "windowLength": "1d"
         },
@@ -117,7 +117,7 @@
         "enabled": true,
         "featureMonitoringType": "DESCRIPTIVE_STATISTICS",
         "detectionWindowConfig": {
-          "windowConfigType": "BATCH",
+          "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
           "windowLength": "1d",
           "rowPercentage": 50
@@ -157,7 +157,7 @@
         "enabled": true,
         "featureMonitoringType": "DESCRIPTIVE_STATISTICS",
         "detectionWindowConfig": {
-          "windowConfigType": "BATCH",
+          "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
           "windowLength": "1d",
           "rowPercentage": 50
@@ -197,7 +197,7 @@
         "enabled": true,
         "featureMonitoringType": "SCHEDULED_STATISTICS",
         "detectionWindowConfig": {
-          "windowConfigType": "BATCH",
+          "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
           "windowLength": "1d"
         },
@@ -269,7 +269,7 @@
           "enabled": true,
           "featureMonitoringType": "DESCRIPTIVE_STATISTICS",
           "detectionWindowConfig": {
-            "windowConfigType": "BATCH",
+            "windowConfigType": "ROLLING_TIME",
             "timeOffset": "1w",
             "windowLength": "1d",
             "rowPercentage": 50

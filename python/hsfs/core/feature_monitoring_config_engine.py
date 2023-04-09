@@ -248,7 +248,7 @@ class FeatureMonitoringConfigEngine:
     def validate_statistics_comparison_config(
         self,
         metric: str,
-        threshold: float,
+        threshold: Union[float, int],
         id: Optional[int] = None,
         relative: bool = False,
         strict: bool = False,
@@ -270,6 +270,20 @@ class FeatureMonitoringConfigEngine:
         Raises:
             ValueError: If the statistics comparison config is invalid.
         """
+        if not isinstance(relative, bool):
+            raise ValueError("relative must be a boolean value.")
+
+        if not isinstance(strict, bool):
+            raise ValueError("strict must be a boolean value.")
+
+        if not isinstance(threshold, (int, float)):
+            raise TypeError("threshold must be a numeric value.")
+
+        if not isinstance(metric, str):
+            raise TypeError(
+                "metric must be a string value. "
+                "Check the documentation for a list of supported metrics."
+            )
         # TODO: Add more validation logic based on detection and reference window config.
         if (
             metric.lower() not in self._VALID_CATEGORICAL_METRICS
@@ -283,14 +297,14 @@ class FeatureMonitoringConfigEngine:
                     )
                 )
             )
-        else:
-            return {
-                "id": id,
-                "metric": metric.upper(),
-                "threshold": threshold,
-                "relative": relative,
-                "strict": strict,
-            }
+
+        return {
+            "id": id,
+            "metric": metric.upper(),
+            "threshold": threshold,
+            "relative": relative,
+            "strict": strict,
+        }
 
     def build_job_scheduler(
         self,
@@ -757,7 +771,7 @@ class FeatureMonitoringConfigEngine:
         self,
         entity,
         monitoring_window_config: MonitoringWindowConfig,
-        feature_name: str,
+        feature_name: Optional[str] = None,
         check_existing: bool = False,
     ) -> List[FeatureDescriptiveStatistics]:
         """Fetch the entity data based on monitoring window configuration and compute statistics.
@@ -836,10 +850,10 @@ class FeatureMonitoringConfigEngine:
     def fetch_entity_data_based_on_time_window_and_row_percentage(
         self,
         entity,  #: Union[feature_group.FeatureGroup, feature_view.FeatureView],
-        feature_name: str,
         start_time: int,
         end_time: int,
         row_percentage: int,
+        feature_name: Optional[str] = None,
     ):
         """Fetch the entity data based on time window and row percentage.
 
@@ -921,8 +935,8 @@ class FeatureMonitoringConfigEngine:
     ) -> Tuple[Optional[datetime], Optional[datetime]]:
         end_time = datetime.now()
         if (
-            monitoring_window_config.window_config_type != "INSERT"
-            or monitoring_window_config.window_config_type != "SNAPSHOT"
+            monitoring_window_config.window_config_type != "ROLLING_TIME"
+            or monitoring_window_config.window_config_type != "ALL_TIME"
         ):
             return (None, end_time)
 
