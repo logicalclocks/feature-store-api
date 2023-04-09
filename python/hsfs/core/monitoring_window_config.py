@@ -53,7 +53,7 @@ class MonitoringWindowConfig:
                 row_percentage=20, # include only 20% of the rows when computing statistics
             )
 
-            ## Number Of Commits (not supported yet)
+            ## Rolling Commit Window (not supported yet)
             monitoring_window_config = MonitoringWindowConfig(
                 commit_offset=10, # data inserted up to 10 commits ago
                 commit_num=5, # include 5 commits after commit_offset

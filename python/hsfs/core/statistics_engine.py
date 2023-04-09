@@ -97,7 +97,7 @@ class StatisticsEngine:
         # TODO: Future work. Persisting the statistics and returning the stats together with the ID
         if engine.get_type() == "spark":
             if feature_dataframe is not None:
-                feature_names = feature_dataframe.schema.name
+                feature_names = feature_dataframe.columns
             else:
                 feature_names = []
             statistics_str = self.profile_statistics(
