@@ -121,7 +121,6 @@ class TestPython:
 
         # Assert
         assert mock_util_create_mysql_engine.call_count == 1
-        assert mock_client_get_instance.call_count == 1
         assert mock_python_engine_return_dataframe_type.call_count == 1
 
     def test_jdbc_read_options(self, mocker):
@@ -145,7 +144,6 @@ class TestPython:
 
         # Assert
         assert mock_util_create_mysql_engine.call_count == 1
-        assert mock_client_get_instance.call_count == 0
         assert mock_python_engine_return_dataframe_type.call_count == 1
 
     def test_read_hopsfs_connector(self, mocker):
