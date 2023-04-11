@@ -106,7 +106,7 @@ class TestPython:
     def test_jdbc(self, mocker):
         # Arrange
         mock_util_create_mysql_engine = mocker.patch("hsfs.util.create_mysql_engine")
-        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.client.get_instance")
         mock_python_engine_return_dataframe_type = mocker.patch(
             "hsfs.engine.python.Engine._return_dataframe_type"
         )
@@ -126,7 +126,7 @@ class TestPython:
     def test_jdbc_read_options(self, mocker):
         # Arrange
         mock_util_create_mysql_engine = mocker.patch("hsfs.util.create_mysql_engine")
-        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.client.get_instance")
         mock_python_engine_return_dataframe_type = mocker.patch(
             "hsfs.engine.python.Engine._return_dataframe_type"
         )
