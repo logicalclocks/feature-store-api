@@ -27,6 +27,9 @@ from hsfs.core.variable_api import VariableApi
 
 
 class ArrowFlightClient:
+
+    SUPPORTED_FORMATS = ["parquet"]
+
     def __init__(self):
         self._is_initialized = False
 
@@ -98,8 +101,8 @@ class ArrowFlightClient:
                 )
                 return False
 
-    def is_query_supported(self, query):
-        query_supported = (
+    def is_query_supported(self, query, read_options):
+        supported = (
             isinstance(query._left_feature_group, feature_group.FeatureGroup)
             and query._left_feature_group.time_travel_format == "HUDI"
             and (
@@ -109,15 +112,13 @@ class ArrowFlightClient:
             and query._left_feature_group_end_time is None
         )
         for j in query._joins:
-            query_supported &= self.is_query_supported(j._query)
+            supported &= self.is_query_supported(j._query)
 
-        return query_supported
+        return supported and self.should_be_used(read_options)
 
-    def is_data_format_supported(self, data_format):
-        if data_format == "parquet":
-            return True
-        else:
-            return False
+    def is_data_format_supported(self, data_format, read_options):
+        supported = data_format in ArrowFlightClient.SUPPORTED_FORMATS
+        return supported and self.should_be_used(read_options)
 
     def _extract_certs(self, client):
         with open(client._get_ca_chain_path(), "rb") as f:
