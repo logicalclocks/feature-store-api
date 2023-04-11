@@ -113,13 +113,14 @@ class ArrowFlightClient:
             private_key = f.read()
         return tls_root_certs, cert_chain, private_key
 
+    def _encode_certs(self, path):
+        with open(path, "rb") as f:
+            content = f.read()
+            return base64.b64encode(content).decode("utf-8")
+
     def _register_certificates(self):
-        with open(self._client._get_jks_key_store_path(), "rb") as f:
-            kstore = f.read()
-            kstore = base64.b64encode(kstore).decode("utf-8")
-        with open(self._client._get_jks_trust_store_path(), "rb") as f:
-            tstore = f.read()
-            tstore = base64.b64encode(tstore).decode("utf-8")
+        kstore = self._encode_certs(self._client._get_jks_key_store_path())
+        tstore = self._encode_certs(self._client._get_jks_trust_store_path())
         cert_key = self._client._cert_key
         certificates_json = json.dumps(
             {"kstore": kstore, "tstore": tstore, "cert_key": cert_key}
