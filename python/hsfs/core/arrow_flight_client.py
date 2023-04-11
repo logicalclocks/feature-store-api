@@ -261,20 +261,15 @@ class ArrowFlightClient:
         for join in query._joins:
             join_fg = join._query._left_feature_group
             join_fg_name = f"{join_fg.feature_store_name.replace('_featurestore','')}.{join_fg.name}_{join_fg.version}"  # featurestore.name_version
-            if len(join._on) > 0:
-                self._update_features(
-                    features, fg_name, [feat._name for feat in join._on]
-                )
-                self._update_features(
-                    features, join_fg_name, [feat._name for feat in join._on]
-                )
-            else:
-                self._update_features(
-                    features, fg_name, [feat._name for feat in join._left_on]
-                )
-                self._update_features(
-                    features, join_fg_name, [feat._name for feat in join._right_on]
-                )
+            left_on = join._on if len(join._on) > 0 else join._left_on
+            right_on = join._on if len(join._on) > 0 else join._right_on
+            
+            self._update_features(
+                features, fg_name, [feat._name for feat in left_on]
+            )
+            self._update_features(
+                features, join_fg_name, [feat._name for feat in right_on]
+            )
             (
                 join_featuregroups,
                 join_features,
