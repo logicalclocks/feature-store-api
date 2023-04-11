@@ -314,8 +314,7 @@ class ArrowFlightClient:
     def _filter_to_expression(self, filters, featuregroups):
         if not filters:
             return None
-        filter_expression = self._resolve_logic(filters, featuregroups)
-        return filter_expression
+        return self._resolve_logic(filters, featuregroups)
 
     def _resolve_logic(self, logic, featuregroups):
         filter_expression = {}
