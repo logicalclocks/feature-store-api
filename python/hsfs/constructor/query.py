@@ -67,6 +67,8 @@ class Query:
             if engine.get_instance().flyingduck_query_supported(self, read_options):
                 read_options["use_flyingduck"] = True
                 return (self, sql_query), online_conn
+            else:
+                del read_options["use_flyingduck"]
 
             # Register on demand feature groups as temporary tables
             query.register_external()

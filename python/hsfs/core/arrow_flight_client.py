@@ -82,25 +82,8 @@ class ArrowFlightClient:
         if "use_spark" in read_options and read_options["use_spark"] is True:
             return False
 
-        if "use_flyingduck" in read_options and read_options["use_flyingduck"] is False:
-            return False
-
         if self._is_enabled:
             return True
-
-        if "use_flyingduck" in read_options and read_options["use_flyingduck"] is True:
-            try:
-                self._initialize_connection_if_needed()
-                return True
-            except Exception as e:
-                warnings.warn(
-                    f"Could not establish connection to FlyingDuck. ({e}) "
-                    f"Will fall back to spark for this operation. "
-                    f"If the error persists, you can disable FlyingDuck for this operation "
-                    f"by changing the read_options (read_options={{'enable_flyingduck'=False}} "
-                    f"or read_options={{'use_spark'=True}})."
-                )
-                return False
 
     def is_query_supported(self, query, read_options):
         supported = (
@@ -321,25 +304,17 @@ class ArrowFlightClient:
         filter_expression["type"] = "logic"
         filter_expression["logic_type"] = logic._type
         if logic._left_f:
-            left_filter = self._resolve_filter(
-                logic._left_f, featuregroups
-            )
+            left_filter = self._resolve_filter(logic._left_f, featuregroups)
         elif logic._left_l:
-            left_filter = self._resolve_logic(
-                logic._left_l, featuregroups
-            )
+            left_filter = self._resolve_logic(logic._left_l, featuregroups)
         else:
             left_filter = None
         filter_expression["left_filter"] = left_filter
 
         if logic._right_f:
-            right_filter = self._resolve_filter(
-                logic._right_f, featuregroups
-            )
+            right_filter = self._resolve_filter(logic._right_f, featuregroups)
         elif logic._right_l:
-            right_filter = self._resolve_logic(
-                logic._right_l, featuregroups
-            )
+            right_filter = self._resolve_logic(logic._right_l, featuregroups)
         else:
             right_filter = None
         filter_expression["right_filter"] = right_filter
@@ -355,7 +330,9 @@ class ArrowFlightClient:
         feature_type = filter._feature._type
         feature_group_name = featuregroups[filter._feature._feature_group_id]
         filter_expression["feature"] = f"{feature_group_name}.{feature_name}"
-        filter_expression["numeric"] = feature_type in ArrowFlightClient.FILTER_NUMERIC_TYPES
+        filter_expression["numeric"] = (
+            feature_type in ArrowFlightClient.FILTER_NUMERIC_TYPES
+        )
 
         return filter_expression
 
