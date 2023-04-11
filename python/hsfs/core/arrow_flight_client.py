@@ -1,5 +1,5 @@
 #
-#   Copyright 2023 Logical Clocks AB
+#   Copyright 2023 Hopsworks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -24,16 +24,6 @@ from hsfs import client
 from hsfs import feature_group
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi
-
-
-_arrow_flight_instance = None
-
-
-def get_instance():
-    global _arrow_flight_instance
-    if not _arrow_flight_instance:
-        _arrow_flight_instance = ArrowFlightClient()
-    return _arrow_flight_instance
 
 
 class ArrowFlightClient:

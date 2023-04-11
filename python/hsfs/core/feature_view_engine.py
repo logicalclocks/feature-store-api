@@ -536,7 +536,7 @@ class FeatureViewEngine:
         end_time,
         training_dataset_version,
         transformation_functions,
-        read_options=None,
+        read_options={},
     ):
         self._check_feature_group_accessibility(feature_view_obj)
 
