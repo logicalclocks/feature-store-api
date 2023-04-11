@@ -29,6 +29,7 @@ from hsfs.core.variable_api import VariableApi
 class ArrowFlightClient:
 
     SUPPORTED_FORMATS = ["parquet"]
+    FILTER_NUMERIC_TYPES = ["bigint", "tinyint", "smallint", "int", "float", "double"]
 
     def __init__(self):
         self._is_initialized = False
@@ -353,8 +354,7 @@ class ArrowFlightClient:
         feature_type = filter._feature._type
         feature_group_name = featuregroups[filter._feature._feature_group_id]
         filter_expression["feature"] = f"{feature_group_name}.{feature_name}"
-        numeric_types = ["bigint", "tinyint", "smallint", "int", "float", "double"]
-        filter_expression["numeric"] = feature_type in numeric_types
+        filter_expression["numeric"] = feature_type in ArrowFlightClient.FILTER_NUMERIC_TYPES
 
         return filter_expression
 
