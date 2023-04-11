@@ -263,10 +263,8 @@ class ArrowFlightClient:
             join_fg_name = f"{join_fg.feature_store_name.replace('_featurestore','')}.{join_fg.name}_{join_fg.version}"  # featurestore.name_version
             left_on = join._on if len(join._on) > 0 else join._left_on
             right_on = join._on if len(join._on) > 0 else join._right_on
-            
-            self._update_features(
-                features, fg_name, [feat._name for feat in left_on]
-            )
+
+            self._update_features(features, fg_name, [feat._name for feat in left_on])
             self._update_features(
                 features, join_fg_name, [feat._name for feat in right_on]
             )
