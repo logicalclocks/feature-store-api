@@ -322,26 +322,28 @@ class ArrowFlightClient:
         filter_expression["type"] = "logic"
         filter_expression["logic_type"] = logic._type
         if logic._left_f:
-            filter_expression["left_filter"] = self._resolve_filter(
+            left_filter = self._resolve_filter(
                 logic._left_f, featuregroups
             )
         elif logic._left_l:
-            filter_expression["left_filter"] = self._resolve_logic(
+            left_filter = self._resolve_logic(
                 logic._left_l, featuregroups
             )
         else:
-            filter_expression["left_filter"] = None
+            left_filter = None
+        filter_expression["left_filter"] = left_filter
 
         if logic._right_f:
-            filter_expression["right_filter"] = self._resolve_filter(
+            right_filter = self._resolve_filter(
                 logic._right_f, featuregroups
             )
         elif logic._right_l:
-            filter_expression["right_filter"] = self._resolve_logic(
+            right_filter = self._resolve_logic(
                 logic._right_l, featuregroups
             )
         else:
-            filter_expression["right_filter"] = None
+            right_filter = None
+        filter_expression["right_filter"] = right_filter
 
         return filter_expression
 
