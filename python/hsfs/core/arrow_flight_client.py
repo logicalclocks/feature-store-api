@@ -32,8 +32,6 @@ class ArrowFlightClient:
     FILTER_NUMERIC_TYPES = ["bigint", "tinyint", "smallint", "int", "float", "double"]
 
     def __init__(self):
-        self._is_initialized = False
-
         try:
             self._variable_api = VariableApi()
             self._is_enabled = self._variable_api.get_flyingduck_enabled()
@@ -44,7 +42,7 @@ class ArrowFlightClient:
 
         if self._is_enabled:
             try:
-                self._initialize_connection_if_needed()
+                self._initialize_connection()
             except Exception as e:
                 self._is_enabled = False
                 warnings.warn(
@@ -54,10 +52,7 @@ class ArrowFlightClient:
                     f"by changing the cluster configuration (set 'enable_flyingduck'='false')."
                 )
 
-    def _initialize_connection_if_needed(self):
-        if self._is_initialized is True:
-            return
-
+    def _initialize_connection(self):
         self._client = client.get_instance()
 
         host_url = "grpc+tls://flyingduck.service.consul:5005"
@@ -71,7 +66,6 @@ class ArrowFlightClient:
         )
         self._health_check()
         self._register_certificates()
-        self._is_initialized = True
 
     def _health_check(self):
         action = pyarrow.flight.Action("healthcheck", b"")
