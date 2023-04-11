@@ -784,6 +784,7 @@ class FeatureStore:
         expectation_suite: Optional[
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
+        online_enabled: Optional[bool] = False,
     ):
         """Create a external feature group metadata object.
 
@@ -807,6 +808,29 @@ class FeatureStore:
             This method is lazy and does not persist any metadata in the
             feature store on its own. To persist the feature group metadata in the feature store,
             call the `save()` method.
+
+        You can enable online storage for external feature groups, however, the sync from the
+        external storage to Hopsworks online storage needs to be done manually:
+
+        ```python
+        external_fg = fs.create_external_feature_group(
+                    name="sales",
+                    version=1,
+                    description="Physical shop sales features",
+                    query=query,
+                    storage_connector=connector,
+                    primary_key=['ss_store_sk'],
+                    event_time='sale_date',
+                    online_enabled=True
+                    )
+        external_fg.save()
+
+        # read from external storage and filter data to sync to online
+        df = external_fg.read().filter(external_fg.customer_status == "active")
+
+        # insert to online storage
+        external_fg.insert(df)
+        ```
 
         # Arguments
             name: Name of the external feature group to create.
@@ -854,6 +878,8 @@ class FeatureStore:
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
+            online_enabled: Define whether it should be possible to sync the feature group to
+                the online feature store for low latency access, defaults to `False`.
 
         # Returns
             `ExternalFeatureGroup`. The external feature group metadata object.
@@ -874,6 +900,7 @@ class FeatureStore:
             statistics_config=statistics_config,
             event_time=event_time,
             expectation_suite=expectation_suite,
+            online_enabled=online_enabled,
         )
 
     def create_training_dataset(

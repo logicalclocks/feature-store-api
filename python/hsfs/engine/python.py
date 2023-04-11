@@ -44,6 +44,7 @@ from botocore.response import StreamingBody
 from sqlalchemy import sql
 
 from hsfs import client, feature, util
+from hsfs.feature_group import ExternalFeatureGroup
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import (
     feature_group_api,
@@ -463,7 +464,10 @@ class Engine:
         online_write_options: dict,
         validation_id: int = None,
     ):
-        if feature_group.stream:
+        if (
+            isinstance(feature_group, ExternalFeatureGroup)
+            and feature_group.online_enabled
+        ) or feature_group.stream:
             return self._write_dataframe_kafka(
                 feature_group, dataframe, offline_write_options
             )
@@ -923,13 +927,16 @@ class Engine:
             progress_bar.close()
 
         # start backfilling job
-        if offline_write_options is not None and offline_write_options.get(
-            "start_offline_backfill", True
+        if (
+            not isinstance(feature_group, ExternalFeatureGroup)
+            and offline_write_options is not None
+            and offline_write_options.get("start_offline_backfill", True)
         ):
             feature_group.backfill_job.run(
                 await_termination=offline_write_options.get("wait_for_job", True)
             )
-
+        if isinstance(feature_group, ExternalFeatureGroup):
+            return None
         return feature_group.backfill_job
 
     def _kafka_produce(
