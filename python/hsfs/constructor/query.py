@@ -68,7 +68,7 @@ class Query:
                 read_options["use_flyingduck"] = True
                 return (self, sql_query), online_conn
             else:
-                del read_options["use_flyingduck"]
+                read_options.pop("use_flyingduck", None)
 
             # Register on demand feature groups as temporary tables
             query.register_external()
@@ -112,6 +112,9 @@ class Query:
         # Returns
             `DataFrame`: DataFrame depending on the chosen type.
         """
+        if not read_options:
+            read_options = {}
+
         sql_query, online_conn = self._prep_read(online, read_options)
 
         schema = None

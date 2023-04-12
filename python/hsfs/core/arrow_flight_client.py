@@ -73,7 +73,11 @@ class ArrowFlightClient:
         list(self._connection.do_action(action, options=options))
 
     def should_be_used(self, read_options):
-        if "use_spark" in read_options and read_options["use_spark"] is True:
+        if (
+            read_options
+            and "use_spark" in read_options
+            and read_options["use_spark"] is True
+        ):
             return False
 
         if self._is_enabled:
