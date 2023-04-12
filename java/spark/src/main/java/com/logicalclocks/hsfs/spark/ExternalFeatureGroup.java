@@ -88,7 +88,7 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
                               ExternalDataFormat dataFormat, String path, Map<String, String> options,
                               @NonNull StorageConnector storageConnector, String description,
                               List<String> primaryKeys, List<Feature> features, StatisticsConfig statisticsConfig,
-                              String eventTime) {
+                              String eventTime, boolean onlineEnabled, String onlineTopicName) {
     this();
     this.timeTravelFormat = null;
     this.featureStore = featureStore;
@@ -108,6 +108,8 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
     this.features = features;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.eventTime = eventTime;
+    this.onlineEnabled = onlineEnabled;
+    this.onlineTopicName = onlineTopicName;
   }
 
   public ExternalFeatureGroup() {
@@ -135,17 +137,17 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
 
   @Override
   public Dataset<Row> read(boolean online) throws FeatureStoreException, IOException {
-    return null;
+    return selectAll().read(online);
   }
 
   @Override
   public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
-    return null;
+    return selectAll().read(false, readOptions);
   }
 
   @Override
   public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
-    return null;
+    return selectAll().read(online, readOptions);
   }
 
   @Override
@@ -176,18 +178,7 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
 
   @Override
   public void show(int numRows, boolean online) throws FeatureStoreException, IOException {
-
-  }
-
-  @Override
-  public void insert(Dataset<Row> featureData) throws IOException, FeatureStoreException, ParseException {
-
-  }
-
-  @Override
-  public void insert(Dataset<Row> featureData, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException {
-
+    read(true).show(numRows);
   }
 
   @Override
@@ -236,6 +227,77 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions,
                      JobConfiguration jobConfiguration) throws FeatureStoreException, IOException, ParseException {
 
+  }
+
+  /**
+   * Incrementally insert data to the online storage of an external feature group. The feature group has to be online
+   * enabled to perform this operation.
+   * The `features` dataframe can be a Spark DataFrame or RDD.
+   * If statistics are enabled, statistics are recomputed for the entire feature group.
+   * If the feature group doesn't exist, the insert method will create the necessary metadata the first time it is
+   * invoked and write the specified `features` dataframe as feature group to the online feature store.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature group handle
+   *        ExternalFeatureGroup fg = fs.getExternalFeatureGroup("electricity_prices", 1);
+   *        // insert data
+   *        fg.insert(featureData, writeOptions);
+   * }
+   * </pre>
+   *
+   * @param featureData Spark DataFrame, RDD. Features to be saved.
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
+   *                               can't reconcile schema.
+   */
+  @Override
+  public void insert(Dataset<Row> featureData)
+      throws FeatureStoreException, IOException {
+
+    featureGroupEngine.insert(this, featureData, null);
+
+    codeEngine.saveCode(this);
+    computeStatistics();
+  }
+
+  /**
+   * Incrementally insert data to the online storage of an external feature group. The feature group has to be online
+   * enabled to perform this operation.
+   * The `features` dataframe can be a Spark DataFrame or RDD.
+   * If statistics are enabled, statistics are recomputed for the entire feature group.
+   * If the feature group doesn't exist, the insert method will create the necessary metadata the first time it is
+   * invoked and write the specified `features` dataframe as feature group to the online feature store.
+   *
+   * <pre>
+   * {@code
+   *        // get feature store handle
+   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
+   *        // get feature group handle
+   *        ExternalFeatureGroup fg = fs.getExternalFeatureGroup("electricity_prices", 1);
+   *        // Define additional write options (for example for Spark)
+   *        Map<String, String> writeOptions = = new HashMap<String, String>();
+   *        // insert data
+   *        fg.insert(featureData, writeOptions);
+   * }
+   * </pre>
+   *
+   * @param featureData Spark DataFrame, RDD. Features to be saved.
+   * @param writeOptions Additional write options as key-value pairs.
+   * @throws IOException Generic IO exception.
+   * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
+   *                               can't reconcile schema.
+   */
+  @Override
+  public void insert(Dataset<Row> featureData, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException, ParseException {
+
+    featureGroupEngine.insert(this, featureData, writeOptions);
+
+    codeEngine.saveCode(this);
+    computeStatistics();
   }
 
   @Override
