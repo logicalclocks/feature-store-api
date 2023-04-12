@@ -80,6 +80,10 @@ class ArrowFlightClient:
             return True
 
     def is_query_supported(self, query, read_options):
+        supported = self._is_query_supported_rec(query)
+        return supported and self.should_be_used(read_options)
+
+    def _is_query_supported_rec(self, query):
         supported = (
             isinstance(query._left_feature_group, feature_group.FeatureGroup)
             and query._left_feature_group.time_travel_format == "HUDI"
@@ -90,9 +94,8 @@ class ArrowFlightClient:
             and query._left_feature_group_end_time is None
         )
         for j in query._joins:
-            supported &= self.is_query_supported(j._query)
-
-        return supported and self.should_be_used(read_options)
+            supported &= self._is_query_supported_rec(j._query)
+        return supported
 
     def is_data_format_supported(self, data_format, read_options):
         supported = data_format in ArrowFlightClient.SUPPORTED_FORMATS
