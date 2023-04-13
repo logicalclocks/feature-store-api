@@ -72,7 +72,7 @@ class ArrowFlightClient:
         options = pyarrow.flight.FlightCallOptions(timeout=1)
         list(self._connection.do_action(action, options=options))
 
-    def should_be_used(self, read_options):
+    def _should_be_used(self, read_options):
         if (
             read_options
             and "use_spark" in read_options
@@ -85,7 +85,11 @@ class ArrowFlightClient:
 
     def is_query_supported(self, query, read_options):
         supported = self._is_query_supported_rec(query)
-        return supported and self.should_be_used(read_options)
+        return supported and self._should_be_used(read_options)
+
+    def is_data_format_supported(self, data_format, read_options):
+        supported = data_format in ArrowFlightClient.SUPPORTED_FORMATS
+        return supported and self._should_be_used(read_options)
 
     def _is_query_supported_rec(self, query):
         supported = (
@@ -100,10 +104,6 @@ class ArrowFlightClient:
         for j in query._joins:
             supported &= self._is_query_supported_rec(j._query)
         return supported
-
-    def is_data_format_supported(self, data_format, read_options):
-        supported = data_format in ArrowFlightClient.SUPPORTED_FORMATS
-        return supported and self.should_be_used(read_options)
 
     def _extract_certs(self, client):
         with open(client._get_ca_chain_path(), "rb") as f:
