@@ -1015,7 +1015,6 @@ class FeatureGroupBase:
                 "Only Feature Group registered with Hopsworks can fetch validation history."
             )
 
-<<<<<<< HEAD
     def validate(
         self,
         dataframe: Optional[
@@ -1080,8 +1079,7 @@ class FeatureGroupBase:
             ingestion_result=ingestion_result,
             ge_type=ge_type,
         )
-    
-=======
+
     def _get_feature_monitoring_configs(
         self,
         name: Optional[str] = None,
@@ -1144,7 +1142,6 @@ class FeatureGroupBase:
             name=name, feature_name=feature_name
         )
 
->>>>>>> 295eed9b (Add get_config UX and multi feature scheduled stats support)
     def _enable_scheduled_statistics_monitoring_fluent(
         self,
         name: str,

@@ -210,7 +210,9 @@ class FeatureMonitoringConfig:
         """
         # Setter is using the engine class to perform input validation.
         self.detection_window_config = {
-            "window_config_type": "ROLLING_TIME",
+            "window_config_type": "ROLLING_TIME"
+            if time_offset or window_length
+            else "ALL_TIME",
             "time_offset": time_offset,
             "window_length": window_length,
             "row_percentage": row_percentage,
@@ -223,7 +225,7 @@ class FeatureMonitoringConfig:
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
         row_percentage: Optional[int] = None,
-        specific_value: Optional[float] = None,
+        specific_value: Optional[Union[float, int]] = None,
         training_dataset_id: Optional[int] = None,
     ) -> "FeatureMonitoringConfig":
         """Sets the reference window for the feature monitoring job.
@@ -270,7 +272,6 @@ class FeatureMonitoringConfig:
         """
         # Setter is using the engine class to perform input validation.
         self.reference_window_config = {
-            "window_config_type": "ROLLING_TIME",
             "time_offset": time_offset,
             "window_length": window_length,
             "specific_value": specific_value,

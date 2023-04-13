@@ -234,6 +234,28 @@ class FeatureMonitoringConfigEngine:
         Returns:
             MonitoringWindowConfig The monitoring window configuration.
         """
+        if isinstance(specific_value, float) or isinstance(specific_value, int):
+            if time_offset or window_length or row_percentage or specific_id:
+                raise ValueError(
+                    "time_offset, window_length, and row_percentage, training_dataset_id "
+                    "are not supported along with specific value."
+                )
+            window_config_type = WindowConfigType.SPECIFIC_VALUE
+        else:
+            raise TypeError("specific_value must be a float or int.")
+
+        if isinstance(specific_id, int):
+            if time_offset or window_length or row_percentage or specific_value:
+                raise ValueError(
+                    "time_offset, window_length, and row_percentage, specific_value "
+                    "are not supported along with training_dataset_id."
+                )
+            window_config_type = WindowConfigType.TRAINING_DATASET
+        else:
+            raise TypeError("training_dataset_id must be an int if provided.")
+
+        if window_length and not time_offset:
+            raise ValueError("time_offset is required when window_length is specified.")
 
         return MonitoringWindowConfig(
             id=id,
