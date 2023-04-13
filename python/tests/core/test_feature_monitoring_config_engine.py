@@ -38,27 +38,44 @@ DEFAULT_SCHEDULER_CONFIG = {
 
 
 class TestFeatureMonitoringConfigEngine:
-    # This needs more extensive unit testing once we have implemented some logic to
-    # verify the compatibility of the different args
-    def test_build_monitoring_window_config(self):
+    def test_build_stats_monitoring_only_config(self):
         # Arrange
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
-        # Act
-        window_config = config_engine.build_monitoring_window_config(
-            window_config_type="ALL_TIME",
+        detection_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
+            window_config_type="ROLLING_TIME",
             time_offset="1w",
+            window_length="1d",
+        )
+
+        # Act
+        config = config_engine._build_stats_monitoring_only_config(
+            name=DEFAULT_NAME,
+            feature_name=DEFAULT_FEATURE_NAME,
+            detection_window_config=detection_window_config,
+            description=DEFAULT_DESCRIPTION,
+            scheduler_config=DEFAULT_SCHEDULER_CONFIG,
         )
 
         # Assert
-        assert window_config.window_config_type == "ALL_TIME"
-        assert window_config.time_offset == "1w"
-        assert (
-            window_config.row_percentage == 20
-        )  # Default value set in MonitoringWindowConfig
+        assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
+        assert config._feature_group_id == DEFAULT_FEATURE_GROUP_ID
+        assert config._feature_name == DEFAULT_FEATURE_NAME
+        assert config._enabled is True
+        assert config._name == DEFAULT_NAME
+        assert config._description == DEFAULT_DESCRIPTION
+        assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
+        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
+        assert config._detection_window_config.time_offset == "1w"
+        assert config._detection_window_config.window_length == "1d"
+
+        assert isinstance(config._scheduler_config, JobScheduler)
+        assert config._scheduler_config.job_frequency == "HOURLY"
+        assert config._scheduler_config.enabled is True
+        assert config._scheduler_config.start_date_time == 1676457000000
 
     def test_build_feature_monitoring_config(self):
         # Arrange
@@ -67,12 +84,12 @@ class TestFeatureMonitoringConfigEngine:
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
-        detection_window_config = config_engine.build_monitoring_window_config(
+        detection_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
             window_config_type="ROLLING_TIME",
             time_offset="1w",
             window_length="1d",
         )
-        reference_window_config = config_engine.build_monitoring_window_config(
+        reference_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
             window_config_type="SPECIFIC_VALUE", specific_value=2
         )
 
@@ -142,12 +159,12 @@ class TestFeatureMonitoringConfigEngine:
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
-        detection_window_config = config_engine.build_monitoring_window_config(
+        detection_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
             window_config_type="ROLLING_TIME",
             time_offset="1w",
             window_length="1d",
         )
-        reference_window_config = config_engine.build_monitoring_window_config(
+        reference_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
             window_config_type="SPECIFIC_VALUE", specific_value=2
         )
 
@@ -218,12 +235,12 @@ class TestFeatureMonitoringConfigEngine:
             feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
         )
 
-        detection_window_config = config_engine.build_monitoring_window_config(
+        detection_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
             window_config_type="ROLLING_TIME",
             time_offset="1w",
             window_length="1d",
         )
-        reference_window_config = config_engine.build_monitoring_window_config(
+        reference_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
             window_config_type="TRAINING_DATASET", specific_id=12
         )
 
@@ -283,45 +300,6 @@ class TestFeatureMonitoringConfigEngine:
         assert config._scheduler_config.enabled is True
         assert config._scheduler_config.start_date_time == 1676457000000
 
-    def test_build_stats_monitoring_only_config(self):
-        # Arrange
-        config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID,
-            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
-        )
-
-        detection_window_config = config_engine.build_monitoring_window_config(
-            window_config_type="ROLLING_TIME",
-            time_offset="1w",
-            window_length="1d",
-        )
-
-        # Act
-        config = config_engine._build_stats_monitoring_only_config(
-            name=DEFAULT_NAME,
-            feature_name=DEFAULT_FEATURE_NAME,
-            detection_window_config=detection_window_config,
-            description=DEFAULT_DESCRIPTION,
-            scheduler_config=DEFAULT_SCHEDULER_CONFIG,
-        )
-
-        # Assert
-        assert config._feature_store_id == DEFAULT_FEATURE_STORE_ID
-        assert config._feature_group_id == DEFAULT_FEATURE_GROUP_ID
-        assert config._feature_name == DEFAULT_FEATURE_NAME
-        assert config._enabled is True
-        assert config._name == DEFAULT_NAME
-        assert config._description == DEFAULT_DESCRIPTION
-        assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
-        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
-        assert config._detection_window_config.time_offset == "1w"
-        assert config._detection_window_config.window_length == "1d"
-
-        assert isinstance(config._scheduler_config, JobScheduler)
-        assert config._scheduler_config.job_frequency == "HOURLY"
-        assert config._scheduler_config.enabled is True
-        assert config._scheduler_config.start_date_time == 1676457000000
-
     def test_enable_descriptive_statistics_monitoring_fg(self, mocker):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
@@ -331,7 +309,7 @@ class TestFeatureMonitoringConfigEngine:
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
 
-        detection_window_config = config_engine.build_monitoring_window_config(
+        detection_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
             window_config_type="ROLLING_TIME",
             time_offset="1w",
             window_length="1d",
@@ -376,7 +354,7 @@ class TestFeatureMonitoringConfigEngine:
             feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
         )
 
-        detection_window_config = config_engine.build_monitoring_window_config(
+        detection_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
             window_config_type="ROLLING_TIME",
             time_offset="1w",
             window_length="1d",

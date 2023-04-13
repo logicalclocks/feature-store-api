@@ -22,6 +22,7 @@ from hsfs.util import FeatureStoreEncoder
 from hsfs.client.exceptions import FeatureStoreException
 
 from hsfs.core.monitoring_window_config import MonitoringWindowConfig
+from hsfs.core import monitoring_window_config_engine
 from hsfs.core import feature_monitoring_config_engine
 
 
@@ -73,6 +74,9 @@ class FeatureMonitoringConfig:
                 feature_view_name=feature_view_name,
                 feature_view_version=feature_view_version,
             )
+        )
+        self._monitoring_window_config_engine = (
+            monitoring_window_config_engine.MonitoringWindowConfigEngine()
         )
 
         self.detection_window_config = detection_window_config
@@ -554,7 +558,7 @@ class FeatureMonitoringConfig:
             self._detection_window_config = detection_window_config
         elif isinstance(detection_window_config, dict):
             self._detection_window_config = (
-                self._feature_monitoring_config_engine.build_monitoring_window_config(
+                self._monitoring_window_config_engine.build_monitoring_window_config(
                     **detection_window_config
                 )
             )
@@ -590,7 +594,7 @@ class FeatureMonitoringConfig:
             self._reference_window_config = reference_window_config
         elif isinstance(reference_window_config, dict):
             self._reference_window_config = (
-                self._feature_monitoring_config_engine.build_monitoring_window_config(
+                self._monitoring_window_config_engine.build_monitoring_window_config(
                     **reference_window_config
                 )
             )

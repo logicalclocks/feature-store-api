@@ -13,8 +13,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from typing import Any, Dict, List, Optional, Tuple, Union
-from datetime import date, datetime, timedelta
+from typing import Any, Dict, List, Optional, Union
+from datetime import date, datetime
 import re
 
 from hsfs.core import feature_monitoring_config_api
@@ -26,6 +26,7 @@ from hsfs.core.monitoring_window_config import (
     MonitoringWindowConfig,
     WindowConfigType,
 )
+from hsfs.core import monitoring_window_config_engine
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 from hsfs.core.job import Job
@@ -33,6 +34,7 @@ from hsfs.core.job_api import JobApi
 from hsfs.core.job_scheduler import JobScheduler
 from hsfs.util import convert_event_time_to_timestamp
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs import feature_group, feature_view
 
 
 class FeatureMonitoringConfigEngine:
@@ -43,7 +45,7 @@ class FeatureMonitoringConfigEngine:
         feature_view_id: Optional[int] = None,
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
-    ) -> None:
+    ) -> "FeatureMonitoringConfigEngine":
         """Business logic for feature monitoring configuration.
 
         This class encapsulates the business logic for feature monitoring configuration.
@@ -84,6 +86,9 @@ class FeatureMonitoringConfigEngine:
         )
         self._statistics_engine = StatisticsEngine(feature_store_id, entity_type)
         self._job_api = JobApi()
+        self._monitoring_window_config_engine = (
+            monitoring_window_config_engine.MonitoringWindowConfigEngine()
+        )
 
         # Should we promote the variables below to static?
         self._VALID_CATEGORICAL_METRICS = [
@@ -203,68 +208,6 @@ class FeatureMonitoringConfigEngine:
 
         return self._feature_monitoring_config_api.create(
             fm_config=config,
-        )
-
-    def build_monitoring_window_config(
-        self,
-        window_config_type: str,
-        id: Optional[int] = None,
-        time_offset: Optional[str] = None,
-        window_length: Optional[str] = None,
-        specific_id: Optional[int] = None,
-        specific_value: Optional[float] = None,
-        row_percentage: Optional[int] = None,
-    ) -> MonitoringWindowConfig:
-        """Builds a monitoring window config.
-
-        Args:
-            window_config_type: str, required
-                Type of the window config, can be either
-                `SPECIFIC_VALUE`,`FEATURE_GROUP`,`INSERT`,`BATCH` or `FEATURE_VIEW`.
-            time_offset: str, optional
-                monitoring window start time is computed as "now - time_offset".
-            window_length: str, optional
-                monitoring window end time is computed as
-                    "now - time_offset + window_length".
-            specific_id: int, optional
-                Specific id of an entity that has fixed statistics.
-            specific_value: float, optional
-                Specific value instead of a statistics computed on data.
-
-        Returns:
-            MonitoringWindowConfig The monitoring window configuration.
-        """
-        if isinstance(specific_value, float) or isinstance(specific_value, int):
-            if time_offset or window_length or row_percentage or specific_id:
-                raise ValueError(
-                    "time_offset, window_length, and row_percentage, training_dataset_id "
-                    "are not supported along with specific value."
-                )
-            window_config_type = WindowConfigType.SPECIFIC_VALUE
-        else:
-            raise TypeError("specific_value must be a float or int.")
-
-        if isinstance(specific_id, int):
-            if time_offset or window_length or row_percentage or specific_value:
-                raise ValueError(
-                    "time_offset, window_length, and row_percentage, specific_value "
-                    "are not supported along with training_dataset_id."
-                )
-            window_config_type = WindowConfigType.TRAINING_DATASET
-        else:
-            raise TypeError("training_dataset_id must be an int if provided.")
-
-        if window_length and not time_offset:
-            raise ValueError("time_offset is required when window_length is specified.")
-
-        return MonitoringWindowConfig(
-            id=id,
-            window_config_type=window_config_type,
-            time_offset=time_offset,
-            window_length=window_length,
-            specific_id=specific_id,
-            specific_value=specific_value,
-            row_percentage=row_percentage,
         )
 
     def validate_statistics_comparison_config(
@@ -808,7 +751,10 @@ class FeatureMonitoringConfigEngine:
             List[FeatureDescriptiveStatitics]: List of Descriptive statistics.
         """
         if check_existing:
-            start_time, end_time = self.get_window_start_end_times(
+            (
+                start_time,
+                end_time,
+            ) = self._monitoring_window_config_engine.get_window_start_end_times(
                 monitoring_window_config=monitoring_window_config,
             )
             registered_stats = self._statistics_engine.get_by_feature_name_time_window_and_row_percentage(
@@ -822,7 +768,10 @@ class FeatureMonitoringConfigEngine:
                 return registered_stats
 
         # Fetch the actual data for which to compute statistics based on row_percentage and time window
-        start_time, end_time = self.get_window_start_end_times(
+        (
+            start_time,
+            end_time,
+        ) = self._monitoring_window_config_engine.get_window_start_end_times(
             monitoring_window_config=monitoring_window_config,
         )
         entity_feature_df = (
@@ -871,7 +820,7 @@ class FeatureMonitoringConfigEngine:
 
     def fetch_entity_data_based_on_time_window_and_row_percentage(
         self,
-        entity,  #: Union[feature_group.FeatureGroup, feature_view.FeatureView],
+        entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"],
         start_time: int,
         end_time: int,
         row_percentage: int,
@@ -887,7 +836,7 @@ class FeatureMonitoringConfigEngine:
             row_percentage: Percentage of rows to include
 
         Returns:
-            `pyspark.DataFrame`. A Spark DataFrame with the entity data
+            `pyspark.sql.DataFrame`. A Spark DataFrame with the entity data
         """
         if entity.ENTITY_TYPE == "featuregroups":
             if feature_name:
@@ -913,71 +862,3 @@ class FeatureMonitoringConfigEngine:
             full_df = full_df.sample(fraction=(row_percentage / 100))
 
         return full_df
-
-    def fetch_statistics_based_on_monitoring_window_config(
-        self,
-        entity,  #: Union[feature_group.FeatureGroup, feature_view.FeatureView],
-        feature_name: str,
-        monitoring_window_config: MonitoringWindowConfig,
-    ) -> FeatureDescriptiveStatistics:
-        """Fetch feature statistics based on a feature monitoring window configuration
-
-        Args:
-            entity: Union[FeatureGroup, FeatureView]: Entity on which statistics where computed.
-            feature_name: str: Name of the feature from which statistics where computed.
-            monitoring_window_config: MonitoringWindowConfig: Monitoring window config.
-
-        Returns:
-            FeatureDescriptiveStatistics: Descriptive statistics
-        """
-        start_time, end_time = self.get_window_start_end_times(
-            monitoring_window_config=monitoring_window_config,
-        )
-        return (
-            self._statistics_engine.get_by_feature_name_time_window_and_row_percentage(
-                entity,
-                feature_name,
-                start_time,
-                end_time,
-                monitoring_window_config.row_percentage,
-            )
-        )
-
-    def time_range_str_to_time_delta(self, time_range: str) -> timedelta:
-        months, weeks, days, hours = re.search(
-            r"(\d+)m(\d+)w(\d+)d(\d+)h",
-            time_range,
-        ).groups(0)
-
-        return timedelta(months=months, weeks=weeks, days=days, hours=hours)
-
-    def get_window_start_end_times(
-        self,
-        monitoring_window_config: MonitoringWindowConfig,
-    ) -> Tuple[Optional[datetime], Optional[datetime]]:
-        end_time = datetime.now()
-        if (
-            monitoring_window_config.window_config_type != "ROLLING_TIME"
-            or monitoring_window_config.window_config_type != "ALL_TIME"
-        ):
-            return (None, end_time)
-
-        if monitoring_window_config.time_offset is not None:
-            time_offset = self.time_range_str_to_time_delta(
-                monitoring_window_config.time_offset
-            )
-            start_time = datetime.now() - time_offset
-        else:
-            # case where time_offset is None and window_length is None
-            return (None, end_time)
-
-        if monitoring_window_config.window_length is not None:
-            window_length = self.time_range_str_to_time_delta(
-                monitoring_window_config.window_length
-            )
-            return (
-                start_time,
-                start_time + window_length,
-            )
-        else:
-            return (start_time, end_time)

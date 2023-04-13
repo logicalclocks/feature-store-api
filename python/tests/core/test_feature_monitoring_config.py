@@ -48,10 +48,10 @@ class TestFeatureMonitoringConfig:
         assert config._scheduler_config.enabled is True
         assert config._scheduler_config.start_date_time == 1676457000000
 
-        assert config._detection_window_config.window_config_type == "INSERT"
+        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
-        assert config._reference_window_config.window_config_type == "SNAPSHOT"
+        assert config._reference_window_config.window_config_type == "ROLLING_TIME"
         assert config._reference_window_config.time_offset == "1w"
 
         assert config._statistics_comparison_config["threshold"] == 1
@@ -90,7 +90,7 @@ class TestFeatureMonitoringConfig:
         assert config._scheduler_config.enabled is True
         assert config._scheduler_config.start_date_time == 1676457000000
 
-        assert config._detection_window_config.window_config_type == "BATCH"
+        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
         assert config._reference_window_config.window_config_type == "TRAINING_DATASET"
@@ -131,7 +131,7 @@ class TestFeatureMonitoringConfig:
         assert config._scheduler_config.enabled is False
         assert config._scheduler_config.start_date_time == 1676457000000
 
-        assert config._detection_window_config.window_config_type == "INSERT"
+        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
 
@@ -165,7 +165,7 @@ class TestFeatureMonitoringConfig:
         assert config._scheduler_config.enabled is False
         assert config._scheduler_config.start_date_time == 1676457000000
 
-        assert config._detection_window_config.window_config_type == "BATCH"
+        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
 
@@ -203,7 +203,7 @@ class TestFeatureMonitoringConfig:
         assert config._scheduler_config.enabled is False
         assert config._scheduler_config.start_date_time == 1676457000000
 
-        assert config._detection_window_config.window_config_type == "BATCH"
+        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
         assert config._reference_window_config.window_config_type == "TRAINING_DATASET"

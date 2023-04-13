@@ -18,7 +18,7 @@
           "rowPercentage": 50
         },
         "referenceWindowConfig": {
-          "windowConfigType": "ALL_TIME",
+          "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w"
         },
         "statisticsComparisonConfig": {
@@ -244,7 +244,7 @@
       "enabled": true,
       "feature_monitoring_type": "SCHEDULED_STATISTICS",
       "detection_window_config": {
-        "window_config_type": "BATCH",
+        "window_config_type": "ROLLING_TIME",
         "time_offset": "1w",
         "window_length": "1d"
       },
