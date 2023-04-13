@@ -2364,7 +2364,9 @@ class FeatureGroup(FeatureGroupBase):
         return self.name + "_" + str(self.version)
 
     def _get_project_name(self):
-        return self.feature_store_name.rstrip("_featurestore")
+        if self.feature_store_name.endswith("_featurestore"):
+            return self.feature_store_name[:-13]
+        return self.feature_store_name
 
     @property
     def id(self):

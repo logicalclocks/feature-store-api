@@ -29,16 +29,16 @@ class TestArrowFlightClient:
         arrow_flight_client.get_instance()._is_enabled = True
         mocker.patch("hsfs.engine.get_instance", return_value=python_engine)
         mocker.patch("hsfs.client.get_instance")
-        json = backend_fixtures["fs_query"]["get_basic_info"]["response"]
-        q = fs_query.FsQuery.from_response_json(json)
+        json_query = backend_fixtures["fs_query"]["get_basic_info"]["response"]
+        q = fs_query.FsQuery.from_response_json(json_query)
         mocker.patch(
             "hsfs.core.query_constructor_api.QueryConstructorApi.construct_query",
             return_value=q,
         )
 
     def _arrange_featuregroup_mocks(self, mocker, backend_fixtures):
-        json = backend_fixtures["feature_group"]["get_stream_list"]["response"]
-        fg_list = feature_group.FeatureGroup.from_response_json(json)
+        json_fg = backend_fixtures["feature_group"]["get_stream_list"]["response"]
+        fg_list = feature_group.FeatureGroup.from_response_json(json_fg)
         fg = fg_list[0]
         return fg
 
@@ -242,3 +242,101 @@ class TestArrowFlightClient:
         # Assert
         assert mock_read_file.call_count == 1
         assert mock_read_pandas.call_count == 1
+
+    def _find_diff(self, dict1, dict2, path=""):
+        diff = {}
+        for key in set(dict1.keys()).union(dict2.keys()):
+            subpath = f"{path}.{key}" if path else key
+            if key not in dict1 or key not in dict2:
+                diff[subpath] = {"dict1": dict1.get(key), "dict2": dict2.get(key)}
+            elif isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
+                sub_diff = self._find_diff(dict1[key], dict2[key], subpath)
+                if sub_diff:
+                    diff.update(sub_diff)
+            elif isinstance(dict1[key], list) and isinstance(dict2[key], list):
+                if sorted(dict1[key]) != sorted(dict2[key]):
+                    diff[subpath] = {"dict1": dict1[key], "dict2": dict2[key]}
+            elif dict1[key] != dict2[key]:
+                diff[subpath] = {"dict1": dict1[key], "dict2": dict2[key]}
+
+        return diff
+
+    def test_construct_query_object(self, mocker, backend_fixtures):
+        # Arrange
+        self._arrange_engine_mocks(mocker, backend_fixtures)
+        json1 = backend_fixtures["feature_group"]["get"]["response"]
+        test_fg1 = feature_group.FeatureGroup.from_response_json(json1)
+        json2 = backend_fixtures["feature_group"]["get_stream"]["response"]
+        test_fg2 = feature_group.FeatureGroup.from_response_json(json2)
+        mocker.patch("hsfs.constructor.query.Query.to_string", return_value="")
+        mocker.patch("hsfs.constructor.query.Query._to_string", return_value="")
+        query = (
+            test_fg1.select_all()
+            .filter((test_fg1.features[0] > 500) & (test_fg1.features[1] < 0.1))
+            .join(
+                test_fg2.filter(test_fg2.features[0] > 500),
+                left_on=["intt"],
+                right_on=["intt"],
+            )
+            .filter(test_fg1.features[0] < 700)
+        )
+
+        # Act
+        query_object = arrow_flight_client.get_instance()._construct_query_object(
+            query, "SELECT * FROM..."
+        )
+
+        # Assert
+        query_object_reference = {
+            "query_string": "SELECT * FROM...",
+            "featuregroups": {15: "test.fg_test_1"},
+            "features": {"test.fg_test_1": ["intt", "stringt"]},
+            "filters": {
+                "type": "logic",
+                "logic_type": "AND",
+                "left_filter": {
+                    "type": "logic",
+                    "logic_type": "AND",
+                    "left_filter": {
+                        "type": "logic",
+                        "logic_type": "AND",
+                        "left_filter": {
+                            "type": "filter",
+                            "condition": "GREATER_THAN",
+                            "value": 500,
+                            "feature": "test.fg_test_1.intt",
+                            "numeric": True,
+                        },
+                        "right_filter": {
+                            "type": "filter",
+                            "condition": "LESS_THAN",
+                            "value": 0.1,
+                            "feature": "test.fg_test_1.stringt",
+                            "numeric": False,
+                        },
+                    },
+                    "right_filter": {
+                        "type": "filter",
+                        "condition": "LESS_THAN",
+                        "value": 700,
+                        "feature": "test.fg_test_1.intt",
+                        "numeric": True,
+                    },
+                },
+                "right_filter": {
+                    "type": "logic",
+                    "logic_type": "SINGLE",
+                    "left_filter": {
+                        "type": "filter",
+                        "condition": "GREATER_THAN",
+                        "value": 500,
+                        "feature": "test.fg_test_1.intt",
+                        "numeric": True,
+                    },
+                    "right_filter": None,
+                },
+            },
+        }
+
+        diff = self._find_diff(query_object, query_object_reference)
+        assert diff == {}

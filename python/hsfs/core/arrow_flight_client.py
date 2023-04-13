@@ -182,30 +182,6 @@ class ArrowFlightClient:
         descriptor = pyarrow.flight.FlightDescriptor.for_path(path)
         return self._get_dataset(descriptor)
 
-    @_handle_afs_exception
-    def create_training_dataset(self, feature_view, tds_version=1):
-        if not self._is_enabled:
-            raise FeatureStoreException("Arrow Flight Service is not enabled.")
-        training_dataset_object = self._construct_training_dataset_object(
-            feature_view, tds_version
-        )
-        training_dataset_encoded = json.dumps(training_dataset_object).encode("ascii")
-        buf = pyarrow.py_buffer(training_dataset_encoded)
-        action = pyarrow.flight.Action("create-training-dataset", buf)
-        for result in self._connection.do_action(action):
-            return result.body.to_pybytes()
-
-    def _construct_training_dataset_object(self, feature_view, tds_version):
-        return {
-            "name": feature_view.name,
-            "version": f"{feature_view.version}",
-            "tds_version": f"{tds_version}",
-            "query": self._construct_query_object(
-                feature_view.query, feature_view.query.to_string()
-            ),
-            "featurestore_name": feature_view.query._left_feature_group._get_project_name(),
-        }
-
     def _construct_query_object(self, query, query_str):
         (
             featuregroups,
