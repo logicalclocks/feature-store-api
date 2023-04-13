@@ -27,7 +27,13 @@
           "compare_on": "MEAN"
         },
         "alert_config": "I will alert you on slack when implemented",
-        "scheduler_config": "daily",
+        "scheduler_config": {
+          "id": 222,
+          "jobFrequency": "DAILY",
+          "startDateTime": 1676457000,
+          "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+          "enabled": true
+        },
         "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
       }
     },
@@ -58,7 +64,13 @@
           "compare_on": "MEAN"
         },
         "alert_config": "I will alert you on slack when implemented",
-        "scheduler_config": "daily",
+        "scheduler_config": {
+          "id": 222,
+          "jobFrequency": "DAILY",
+          "startDateTime": 1676457000,
+          "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+          "enabled": true
+        },
         "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
       }
     },
@@ -78,7 +90,13 @@
           "time_offset": "1w",
           "window_length": "1d"
         },
-        "scheduler_config": "daily",
+        "scheduler_config": {
+          "id": 222,
+          "jobFrequency": "HOURLY",
+          "startDateTime": 1676457000,
+          "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+          "enabled": false
+        },
         "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
       }
     }
@@ -111,7 +129,13 @@
           "compare_on": "MEAN"
         },
         "alert_config": "I will alert you on slack when implemented",
-        "scheduler_config": "daily",
+        "scheduler_config": {
+          "id": 222,
+          "jobFrequency": "DAILY",
+          "startDateTime": 1676457000,
+          "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+          "enabled": true
+        },
         "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
       }
     },
@@ -142,7 +166,13 @@
           "compare_on": "MEAN"
         },
         "alert_config": "I will alert you on slack when implemented",
-        "scheduler_config": "daily",
+        "scheduler_config": {
+          "id": 222,
+          "jobFrequency": "DAILY",
+          "startDateTime": 1676457000,
+          "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+          "enabled": true
+        },
         "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
       }
     },
@@ -162,7 +192,13 @@
           "time_offset": "1w",
           "window_length": "1d"
         },
-        "scheduler_config": "daily",
+        "scheduler_config": {
+        "id": 222,
+        "jobFrequency": "HOURLY",
+        "startDateTime": 1676457000,
+        "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+        "enabled": false
+        },
         "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
       }
     }
@@ -197,7 +233,13 @@
             "compare_on": "MEAN"
           },
           "alert_config": "I will alert you on slack when implemented",
-          "scheduler_config": "daily",
+          "schedulerConfig": {
+            "id": 222,
+            "jobFrequency": "HOURLY",
+            "startDateTime": 1676457000,
+            "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+            "enabled": false
+          },
           "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
         }
       ]
