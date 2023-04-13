@@ -15,6 +15,7 @@
 #
 
 import json
+from hsfs.core.job_scheduler import JobScheduler
 import humps
 from typing import Any, Dict, List, Optional, Union
 from hsfs import util
@@ -34,7 +35,7 @@ class FeatureMonitoringConfig:
         reference_window_config: Optional[Union[MonitoringWindowConfig, dict]] = None,
         statistics_comparison_config: Optional[Dict[str, Any]] = None,
         alert_config: Optional[str] = None,
-        scheduler_config: Optional[str] = None,
+        scheduler_config: Optional[Union[Dict[str, Any], JobScheduler]] = None,
         enabled: bool = True,
         id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
@@ -55,7 +56,7 @@ class FeatureMonitoringConfig:
         self._job_name = job_name
         self._feature_monitoring_type = feature_monitoring_type
         self._enabled = enabled
-        self._scheduler_config = scheduler_config
+        self._scheduler_config = self._parse_schedule_config(scheduler_config)
         self._alert_config = alert_config
         self._statistics_comparison_config = statistics_comparison_config
         self._detection_window_config = self._parse_window_config(
@@ -86,6 +87,17 @@ class FeatureMonitoringConfig:
         else:
             return cls(**json_decamelized)
 
+    def _parse_schedule_config(
+        self, schedule_config: Optional[Union[JobScheduler, dict]]
+    ):
+        if schedule_config is None:
+            return None
+        return (
+            schedule_config
+            if isinstance(schedule_config, JobScheduler)
+            else JobScheduler.from_response_json(schedule_config)
+        )
+
     def to_dict(self):
         detection_window_config = (
             self._detection_window_config.to_dict()
@@ -108,6 +120,10 @@ class FeatureMonitoringConfig:
             }
         else:
             statistics_comparison_config = None
+        if isinstance(self._scheduler_config, JobScheduler):
+            scheduler_config = self._scheduler_config.to_dict()
+        else:
+            scheduler_config = None
 
         return {
             "id": self._id,
@@ -120,7 +136,7 @@ class FeatureMonitoringConfig:
             "description": self._description,
             "jobName": self._job_name,
             "featureMonitoringType": self._feature_monitoring_type,
-            "schedulerConfig": self._scheduler_config,
+            "schedulerConfig": scheduler_config,
             "alertConfig": self._alert_config,
             "detectionWindowConfig": detection_window_config,
             "referenceWindowConfig": reference_window_config,
@@ -181,7 +197,7 @@ class FeatureMonitoringConfig:
         return self._alert_config
 
     @property
-    def scheduler_config(self) -> Optional[str]:
+    def scheduler_config(self) -> Optional[JobScheduler]:
         return self._scheduler_config
 
     @property
