@@ -15,7 +15,7 @@
 #
 
 import pandas as pd
-from hsfs.core import inode
+from hsfs.core import inode, arrow_flight_client
 
 from hsfs.engine import python
 
@@ -136,6 +136,7 @@ class TestPythonReader:
             mock_dataset_api.return_value.read_content.return_value.content = (
                 file.read()
             )
+        arrow_flight_client.get_instance()._is_enabled = False
 
         # Act
         df_list = python.Engine()._read_hopsfs_remote(
