@@ -157,6 +157,25 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
         SparkEngine.getInstance().getKafkaConfig(streamFeatureGroup, writeOptions));
   }
 
+  public void insert(ExternalFeatureGroup externalFeatureGroup, Dataset<Row> featureData,
+      Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+
+    if (!externalFeatureGroup.getOnlineEnabled()) {
+      throw new FeatureStoreException("Online storage is not enabled for this feature group. External feature groups "
+          + "can only store data in online storage. To create an offline only external feature group, use the `save` "
+          + "method.");
+    }
+
+    if (externalFeatureGroup.getId() == null) {
+      externalFeatureGroup = saveExternalFeatureGroup(externalFeatureGroup);
+    }
+
+    SparkEngine.getInstance().writeOnlineDataframe(externalFeatureGroup, featureData,
+        externalFeatureGroup.getOnlineTopicName(),
+        SparkEngine.getInstance().getKafkaConfig(externalFeatureGroup, writeOptions));
+  }
+
   @Deprecated
   public StreamingQuery insertStream(FeatureGroup featureGroup, Dataset<Row> featureData, String queryName,
                                      String outputMode, boolean awaitTermination, Long timeout,
@@ -461,6 +480,7 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
 
     ExternalFeatureGroup apiFg = saveExtennalFeatureGroupMetaData(externalFeatureGroup, ExternalFeatureGroup.class);
     externalFeatureGroup.setId(apiFg.getId());
+    externalFeatureGroup.setOnlineTopicName(apiFg.getOnlineTopicName());
 
     return externalFeatureGroup;
   }
