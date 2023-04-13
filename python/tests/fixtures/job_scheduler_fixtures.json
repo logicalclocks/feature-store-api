@@ -1,0 +1,11 @@
+{
+  "get": {
+    "response": {
+      "id": 222,
+      "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+      "startDateTime": 1676457000,
+      "jobFrequency": "DAILY",
+      "enabled": true
+    }
+  }
+}
