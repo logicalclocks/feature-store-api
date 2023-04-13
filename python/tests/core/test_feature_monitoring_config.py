@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from hsfs.core.job_scheduler import JobScheduler
 from hsfs.core.feature_monitoring_config import FeatureMonitoringConfig
 
 
@@ -36,7 +37,16 @@ class TestFeatureMonitoringConfig:
         assert config._name == "unit_test_config"
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert isinstance(config._alert_config, str)
-        assert isinstance(config._scheduler_config, str)
+
+        assert isinstance(config._scheduler_config, JobScheduler)
+        assert config._scheduler_config.id == 222
+        assert config._scheduler_config.job_frequency == "DAILY"
+        assert (
+            config._scheduler_config.job_name
+            == "fg_or_fv_name_version_fm_config_name_run_feature_monitoring"
+        )
+        assert config._scheduler_config.enabled is True
+        assert config._scheduler_config.start_date_time == 1676457000000
 
         assert config._detection_window_config.window_config_type == "INSERT"
         assert config._detection_window_config.time_offset == "1w"
@@ -69,7 +79,16 @@ class TestFeatureMonitoringConfig:
         assert config._name == "unit_test_config"
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert isinstance(config._alert_config, str)
-        assert isinstance(config._scheduler_config, str)
+
+        assert isinstance(config._scheduler_config, JobScheduler)
+        assert config._scheduler_config.id == 222
+        assert config._scheduler_config.job_frequency == "DAILY"
+        assert (
+            config._scheduler_config.job_name
+            == "fg_or_fv_name_version_fm_config_name_run_feature_monitoring"
+        )
+        assert config._scheduler_config.enabled is True
+        assert config._scheduler_config.start_date_time == 1676457000000
 
         assert config._detection_window_config.window_config_type == "BATCH"
         assert config._detection_window_config.time_offset == "1w"
@@ -101,7 +120,16 @@ class TestFeatureMonitoringConfig:
         assert config._feature_name == "monitored_feature"
         assert config._enabled is True
         assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
-        assert isinstance(config._scheduler_config, str)
+
+        assert isinstance(config._scheduler_config, JobScheduler)
+        assert config._scheduler_config.id == 222
+        assert config._scheduler_config.job_frequency == "HOURLY"
+        assert (
+            config._scheduler_config.job_name
+            == "fg_or_fv_name_version_fm_config_name_run_feature_monitoring"
+        )
+        assert config._scheduler_config.enabled is False
+        assert config._scheduler_config.start_date_time == 1676457000000
 
         assert config._detection_window_config.window_config_type == "INSERT"
         assert config._detection_window_config.time_offset == "1w"
@@ -126,7 +154,16 @@ class TestFeatureMonitoringConfig:
         assert config._feature_name == "monitored_feature"
         assert config._enabled is True
         assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
-        assert isinstance(config._scheduler_config, str)
+
+        assert isinstance(config._scheduler_config, JobScheduler)
+        assert config._scheduler_config.id == 222
+        assert config._scheduler_config.job_frequency == "HOURLY"
+        assert (
+            config._scheduler_config.job_name
+            == "fg_or_fv_name_version_fm_config_name_run_feature_monitoring"
+        )
+        assert config._scheduler_config.enabled is False
+        assert config._scheduler_config.start_date_time == 1676457000000
 
         assert config._detection_window_config.window_config_type == "BATCH"
         assert config._detection_window_config.time_offset == "1w"
@@ -155,7 +192,16 @@ class TestFeatureMonitoringConfig:
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert isinstance(config._alert_config, str)
-        assert isinstance(config._scheduler_config, str)
+
+        assert isinstance(config._scheduler_config, JobScheduler)
+        assert config._scheduler_config.id == 222
+        assert config._scheduler_config.job_frequency == "HOURLY"
+        assert (
+            config._scheduler_config.job_name
+            == "fg_or_fv_name_version_fm_config_name_run_feature_monitoring"
+        )
+        assert config._scheduler_config.enabled is False
+        assert config._scheduler_config.start_date_time == 1676457000000
 
         assert config._detection_window_config.window_config_type == "BATCH"
         assert config._detection_window_config.time_offset == "1w"

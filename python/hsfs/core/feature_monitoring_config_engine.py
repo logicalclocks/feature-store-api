@@ -30,6 +30,7 @@ from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistic
 
 from hsfs.core.job import Job
 from hsfs.core.job_api import JobApi
+from hsfs.core.job_scheduler import JobScheduler
 
 
 class FeatureMonitoringConfigEngine:
@@ -78,7 +79,7 @@ class FeatureMonitoringConfigEngine:
         name: str,
         feature_name: str,
         detection_window_config: MonitoringWindowConfig,
-        scheduler_config: Optional[str] = None,
+        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
         description: Optional[str] = None,
     ) -> FeatureMonitoringConfig:
         """Enable descriptive statistics monitoring for a feature.
@@ -90,7 +91,7 @@ class FeatureMonitoringConfigEngine:
                 Name of the feature to monitor.
             detection_window_config: MonitoringWindowConfig, required
                 Configuration of the detection window.
-            scheduler_config: str, optional
+            scheduler_config: Union[JobScheduler, Dict[str, Any]], optional
                 Configuration of the scheduler.
             description: str, optional
                 Description of the monitoring configuration.
@@ -118,7 +119,7 @@ class FeatureMonitoringConfigEngine:
         reference_window_config: MonitoringWindowConfig,
         statistics_comparison_config: Dict[str, Any],
         alert_config: str,
-        scheduler_config: str,
+        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
         description: Optional[str] = None,
     ) -> FeatureMonitoringConfig:
         """Enable feature monitoring for a feature.
@@ -136,7 +137,7 @@ class FeatureMonitoringConfigEngine:
                 Configuration of the statistics comparison.
             alert_config: str, optional
                 Configuration of the alert.
-            scheduler_config: str, required
+            scheduler_config: Union[JobScheduler, Dict[str, Any]], optional
                 Configuration of the scheduler.
             description: str, optional
                 Description of the monitoring configuration.
@@ -190,12 +191,12 @@ class FeatureMonitoringConfigEngine:
         """
 
         return MonitoringWindowConfig(
-            window_config_type,
-            time_offset,
-            window_length,
-            specific_id,
-            specific_value,
-            row_percentage,
+            window_config_type=window_config_type,
+            time_offset=time_offset,
+            window_length=window_length,
+            specific_id=specific_id,
+            specific_value=specific_value,
+            row_percentage=row_percentage,
         )
 
     def _build_stats_monitoring_only_config(
@@ -203,7 +204,7 @@ class FeatureMonitoringConfigEngine:
         name: str,
         feature_name: str,
         detection_window_config: Dict[str, Any],
-        scheduler_config: Dict[str, Any],
+        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
         description: Optional[str] = None,
     ) -> FeatureMonitoringConfig:
         """Builds a feature monitoring config for descriptive statistics only.
@@ -215,7 +216,7 @@ class FeatureMonitoringConfigEngine:
                 Name of the feature to monitor.
             detection_window_config: Dict[str, Any], required
                 Configuration of the detection window.
-            scheduler_config: str, required
+            scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]], optional
                 Configuration of the scheduler.
             description: str, optional
                 Description of the monitoring configuration.
@@ -247,7 +248,7 @@ class FeatureMonitoringConfigEngine:
         detection_window_config: MonitoringWindowConfig,
         reference_window_config: MonitoringWindowConfig,
         statistics_comparison_config: Dict[str, Any],
-        scheduler_config: str,
+        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]],
         alert_config: str,
         description: Optional[str] = None,
     ) -> FeatureMonitoringConfig:
@@ -264,7 +265,7 @@ class FeatureMonitoringConfigEngine:
                 Configuration of the reference window.
             statistics_comparison_config: Dict[str, Any], required
                 Configuration of the statistics comparison.
-            scheduler_config: str, required
+            scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]], optional
                 Configuration of the scheduler.
             alert_config: str, optional
                 Configuration of the alert.
@@ -376,7 +377,8 @@ class FeatureMonitoringConfigEngine:
 
         if check_existing:
             start_time, end_time = self.get_window_start_end_times(
-                monitoring_window_config
+                time_offset=monitoring_window_config.time_offset,
+                window_length=monitoring_window_config.window_length,
             )
             registered_stats = self._statistics_engine.get_by_feature_name_time_window_and_row_percentage(
                 entity,
@@ -478,7 +480,10 @@ class FeatureMonitoringConfigEngine:
         Returns:
             FeatureDescriptiveStatistics: Descriptive statistics
         """
-        start_time, end_time = self.get_window_start_end_times(monitoring_window_config)
+        start_time, end_time = self.get_window_start_end_times(
+            time_offset=monitoring_window_config.time_offset,
+            window_length=monitoring_window_config.window_length,
+        )
         return (
             self._statistics_engine.get_by_feature_name_time_window_and_row_percentage(
                 entity,
