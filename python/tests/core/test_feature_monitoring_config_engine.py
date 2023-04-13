@@ -15,6 +15,7 @@
 #
 
 from hsfs.core import feature_monitoring_config_engine
+from hsfs.core.job_scheduler import JobScheduler
 
 DEFAULT_DESCRIPTION = "A feature monitoring configuration for unit test."
 DEFAULT_NAME = "test_monitoring_config"
@@ -29,7 +30,11 @@ DEFAULT_FEATURE_VIEW_ID = 22
 DEFAULT_FEATURE_VIEW_NAME = "feature_view_unittest"
 DEFAULT_FEATURE_VIEW_VERSION = 2
 DEFAULT_ALERT_CONFIG = "alert_config"
-DEFAULT_SCHEDULER_CONFIG = "scheduler_config"
+DEFAULT_SCHEDULER_CONFIG = {
+    "jobFrequency": "HOURLY",
+    "startDateTime": 1676457000,
+    "enabled": True,
+}
 
 
 class TestFeatureMonitoringConfigEngine:
@@ -98,7 +103,6 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert config._alert_config == DEFAULT_ALERT_CONFIG
-        assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config.window_config_type == "INSERT"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
@@ -120,6 +124,11 @@ class TestFeatureMonitoringConfigEngine:
             config._statistics_comparison_config["compare_on"]
             == stats_comparison_configuration["compare_on"]
         )
+
+        assert isinstance(config._scheduler_config, JobScheduler)
+        assert config._scheduler_config.job_frequency == "HOURLY"
+        assert config._scheduler_config.enabled is True
+        assert config._scheduler_config.start_date_time == 1676457000000
 
     def test_enable_feature_monitoring_config_fg(self, mocker):
         # Arrange
@@ -171,7 +180,6 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert config._alert_config == DEFAULT_ALERT_CONFIG
-        assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config.window_config_type == "INSERT"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
@@ -193,6 +201,10 @@ class TestFeatureMonitoringConfigEngine:
             config._statistics_comparison_config["compare_on"]
             == stats_comparison_configuration["compare_on"]
         )
+        assert isinstance(config._scheduler_config, JobScheduler)
+        assert config._scheduler_config.job_frequency == "HOURLY"
+        assert config._scheduler_config.enabled is True
+        assert config._scheduler_config.start_date_time == 1676457000000
 
     def test_enable_feature_monitoring_config_fv(self, mocker):
         # Arrange
@@ -244,7 +256,6 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
         assert config._alert_config == DEFAULT_ALERT_CONFIG
-        assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config.window_config_type == "BATCH"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
@@ -266,6 +277,10 @@ class TestFeatureMonitoringConfigEngine:
             config._statistics_comparison_config["compare_on"]
             == stats_comparison_configuration["compare_on"]
         )
+        assert isinstance(config._scheduler_config, JobScheduler)
+        assert config._scheduler_config.job_frequency == "HOURLY"
+        assert config._scheduler_config.enabled is True
+        assert config._scheduler_config.start_date_time == 1676457000000
 
     def test_build_stats_monitoring_only_config(self):
         # Arrange
@@ -297,10 +312,14 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
         assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
-        assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config.window_config_type == "INSERT"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
+
+        assert isinstance(config._scheduler_config, JobScheduler)
+        assert config._scheduler_config.job_frequency == "HOURLY"
+        assert config._scheduler_config.enabled is True
+        assert config._scheduler_config.start_date_time == 1676457000000
 
     def test_enable_descriptive_statistics_monitoring_fg(self, mocker):
         # Arrange
@@ -340,6 +359,11 @@ class TestFeatureMonitoringConfigEngine:
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
 
+        assert isinstance(config._scheduler_config, JobScheduler)
+        assert config._scheduler_config.job_frequency == "HOURLY"
+        assert config._scheduler_config.enabled is True
+        assert config._scheduler_config.start_date_time == 1676457000000
+
     def test_enable_descriptive_statistics_monitoring_fv(self, mocker):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
@@ -375,9 +399,13 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description is None
         assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
-        assert config._scheduler_config == DEFAULT_SCHEDULER_CONFIG
         assert config._detection_window_config.window_config_type == "BATCH"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
+
+        assert isinstance(config._scheduler_config, JobScheduler)
+        assert config._scheduler_config.job_frequency == "HOURLY"
+        assert config._scheduler_config.enabled is True
+        assert config._scheduler_config.start_date_time == 1676457000000
 
     # TODO: Add unit test for the run_feature_monitoring methods when more stable
