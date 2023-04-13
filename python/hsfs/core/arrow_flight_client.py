@@ -25,6 +25,15 @@ from hsfs import feature_group
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi
 
+_arrow_flight_instance = None
+
+
+def get_instance():
+    global _arrow_flight_instance
+    if not _arrow_flight_instance:
+        _arrow_flight_instance = ArrowFlightClient()
+    return _arrow_flight_instance
+
 
 class ArrowFlightClient:
 
@@ -84,12 +93,15 @@ class ArrowFlightClient:
             return True
 
     def is_query_supported(self, query, read_options):
-        supported = self._is_query_supported_rec(query)
-        return supported and self._should_be_used(read_options)
+        return self._should_be_used(read_options) and self._is_query_supported_rec(
+            query
+        )
 
     def is_data_format_supported(self, data_format, read_options):
-        supported = data_format in ArrowFlightClient.SUPPORTED_FORMATS
-        return supported and self._should_be_used(read_options)
+        return (
+            self._should_be_used(read_options)
+            and data_format in ArrowFlightClient.SUPPORTED_FORMATS
+        )
 
     def _is_query_supported_rec(self, query):
         supported = (
@@ -160,10 +172,8 @@ class ArrowFlightClient:
         return reader.read_pandas()
 
     @_handle_afs_exception
-    def read_query(self, query, query_str):
-        query_encoded = json.dumps(self._get_query_object(query, query_str)).encode(
-            "ascii"
-        )
+    def read_query(self, query_object):
+        query_encoded = json.dumps(query_object).encode("ascii")
         descriptor = pyarrow.flight.FlightDescriptor.for_command(query_encoded)
         return self._get_dataset(descriptor)
 
@@ -176,51 +186,27 @@ class ArrowFlightClient:
     def create_training_dataset(self, feature_view, tds_version=1):
         if not self._is_enabled:
             raise FeatureStoreException("Arrow Flight Service is not enabled.")
-        training_dataset_metadata = self._training_dataset_metadata_from_feature_view(
+        training_dataset_object = self._construct_training_dataset_object(
             feature_view, tds_version
         )
-        training_dataset_encoded = json.dumps(training_dataset_metadata).encode("ascii")
+        training_dataset_encoded = json.dumps(training_dataset_object).encode("ascii")
         buf = pyarrow.py_buffer(training_dataset_encoded)
         action = pyarrow.flight.Action("create-training-dataset", buf)
         for result in self._connection.do_action(action):
             return result.body.to_pybytes()
 
-    def _path_from_feature_view(self, feature_view, tds_version):
-        training_dataset_metadata = self._training_dataset_metadata_from_feature_view(
-            feature_view, tds_version
-        )
-        path = (
-            f"{training_dataset_metadata['featurestore_name']}_Training_Datasets/"
-            f"{training_dataset_metadata['name']}_{training_dataset_metadata['version']}"
-            f"_{training_dataset_metadata['tds_version']}/"
-            f"{training_dataset_metadata['name']}_{training_dataset_metadata['version']}/"
-            f"{training_dataset_metadata['name']}_{training_dataset_metadata['version']}.parquet"
-        )
-        full_path = f"/Projects/{training_dataset_metadata['featurestore_name']}/{path}"
-        return full_path
+    def _construct_training_dataset_object(self, feature_view, tds_version):
+        return {
+            "name": feature_view.name,
+            "version": f"{feature_view.version}",
+            "tds_version": f"{tds_version}",
+            "query": self._construct_query_object(
+                feature_view.query, feature_view.query.to_string()
+            ),
+            "featurestore_name": feature_view.query._left_feature_group._get_project_name(),
+        }
 
-    def _training_dataset_metadata_from_feature_view(self, feature_view, tds_version):
-        training_dataset_metadata = {}
-        training_dataset_metadata["name"] = feature_view.name
-        training_dataset_metadata["version"] = f"{feature_view.version}"
-        training_dataset_metadata["tds_version"] = f"{tds_version}"
-        training_dataset_metadata["query"] = self._get_query_object(
-            feature_view.query, feature_view.query.to_string()
-        )
-        training_dataset_metadata[
-            "featurestore_name"
-        ] = feature_view.query._left_feature_group.feature_store_name.replace(
-            "_featurestore", ""
-        )
-
-        return training_dataset_metadata
-
-    def _get_query_object(self, query, query_str):
-        query_string = query_str.replace(
-            f"`{query._left_feature_group.feature_store_name}`.`",
-            f"`{query._left_feature_group.feature_store_name.replace('_featurestore','')}.",
-        ).replace("`", '"')
-
+    def _construct_query_object(self, query, query_str):
         (
             featuregroups,
             features,
@@ -228,12 +214,21 @@ class ArrowFlightClient:
         ) = self._collect_featuregroups_features_and_filters(query)
 
         query = {
-            "query_string": query_string,
+            "query_string": self._translate_to_duckdb(query, query_str),
             "featuregroups": featuregroups,
             "features": features,
             "filters": filters,
         }
         return query
+
+    def is_flyingduck_query_object(self, query_obj):
+        return isinstance(query_obj, dict) and "query_string" in query_obj
+
+    def _translate_to_duckdb(self, query, query_str):
+        return query_str.replace(
+            f"`{query._left_feature_group.feature_store_name}`.`",
+            f"`{query._left_feature_group._get_project_name()}.",
+        ).replace("`", '"')
 
     def _update_features(self, features, fg_name, new_features):
         updated_features = features.get(fg_name, set())
@@ -254,12 +249,11 @@ class ArrowFlightClient:
     def _collect_featuregroups_features_and_filters_rec(self, query):
         featuregroups = {}
         fg = query._left_feature_group
-        fg_name = f"{fg.feature_store_name.replace('_featurestore','')}.{fg.name}_{fg.version}"  # featurestore.name_version
+        fg_name = f"{fg._get_project_name()}.{fg.name}_{fg.version}"  # featurestore.name_version
         featuregroups[fg._id] = fg_name
         filters = query._filter
 
-        features = {}
-        features[fg_name] = set([feat._name for feat in query._left_features])
+        features = {fg_name: set([feat._name for feat in query._left_features])}
 
         if fg.event_time:
             features[fg_name].update([fg.event_time])
@@ -267,7 +261,9 @@ class ArrowFlightClient:
             features[fg_name].update(fg.primary_key)
         for join in query._joins:
             join_fg = join._query._left_feature_group
-            join_fg_name = f"{join_fg.feature_store_name.replace('_featurestore','')}.{join_fg.name}_{join_fg.version}"  # featurestore.name_version
+            join_fg_name = (
+                f"{join_fg._get_project_name()}.{join_fg.name}_{join_fg.version}"
+            )
             left_on = join._on if len(join._on) > 0 else join._left_on
             right_on = join._on if len(join._on) > 0 else join._right_on
 
@@ -295,41 +291,35 @@ class ArrowFlightClient:
         return self._resolve_logic(filters, featuregroups)
 
     def _resolve_logic(self, logic, featuregroups):
-        filter_expression = {}
-        filter_expression["type"] = "logic"
-        filter_expression["logic_type"] = logic._type
-        if logic._left_f:
-            left_filter = self._resolve_filter(logic._left_f, featuregroups)
-        elif logic._left_l:
-            left_filter = self._resolve_logic(logic._left_l, featuregroups)
-        else:
-            left_filter = None
-        filter_expression["left_filter"] = left_filter
+        return {
+            "type": "logic",
+            "logic_type": logic._type,
+            "left_filter": self._resolve_filter_or_logic(
+                logic._left_f, logic._left_l, featuregroups
+            ),
+            "right_filter": self._resolve_filter_or_logic(
+                logic._right_f, logic._right_l, featuregroups
+            ),
+        }
 
-        if logic._right_f:
-            right_filter = self._resolve_filter(logic._right_f, featuregroups)
-        elif logic._right_l:
-            right_filter = self._resolve_logic(logic._right_l, featuregroups)
+    def _resolve_filter_or_logic(self, filter, logic, featuregroups):
+        if filter:
+            return self._resolve_filter(filter, featuregroups)
+        elif logic:
+            return self._resolve_logic(logic, featuregroups)
         else:
-            right_filter = None
-        filter_expression["right_filter"] = right_filter
-
-        return filter_expression
+            return None
 
     def _resolve_filter(self, filter, featuregroups):
-        filter_expression = {}
-        filter_expression["type"] = "filter"
-        filter_expression["condition"] = filter._condition
-        filter_expression["value"] = filter._value
-        feature_name = filter._feature._name
-        feature_type = filter._feature._type
-        feature_group_name = featuregroups[filter._feature._feature_group_id]
-        filter_expression["feature"] = f"{feature_group_name}.{feature_name}"
-        filter_expression["numeric"] = (
-            feature_type in ArrowFlightClient.FILTER_NUMERIC_TYPES
-        )
-
-        return filter_expression
+        return {
+            "type": "filter",
+            "condition": filter._condition,
+            "value": filter._value,
+            "feature": f"{featuregroups[filter._feature._feature_group_id]}.{filter._feature._name}",
+            "numeric": (
+                filter._feature._type in ArrowFlightClient.FILTER_NUMERIC_TYPES
+            ),
+        }
 
     def _info_to_ticket(self, info):
         return info.endpoints[0].ticket

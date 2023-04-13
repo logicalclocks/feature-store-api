@@ -17,6 +17,7 @@ import pandas as pd
 
 from hsfs import feature_group, feature_view, training_dataset
 from hsfs.constructor import fs_query
+from hsfs.core import arrow_flight_client
 from hsfs.engine import python
 from hsfs.storage_connector import HopsFSConnector
 
@@ -25,7 +26,7 @@ class TestArrowFlightClient:
     def _arrange_engine_mocks(self, mocker, backend_fixtures):
         mocker.patch("hsfs.engine.get_type", return_value="python")
         python_engine = python.Engine()
-        python_engine._arrow_flight_client._is_enabled = True
+        arrow_flight_client.get_instance()._is_enabled = True
         mocker.patch("hsfs.engine.get_instance", return_value=python_engine)
         mocker.patch("hsfs.client.get_instance")
         json = backend_fixtures["fs_query"]["get_basic_info"]["response"]

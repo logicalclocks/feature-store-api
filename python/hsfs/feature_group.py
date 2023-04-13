@@ -2363,6 +2363,9 @@ class FeatureGroup(FeatureGroupBase):
     def _get_online_table_name(self):
         return self.name + "_" + str(self.version)
 
+    def _get_project_name(self):
+        return self.feature_store_name.rstrip("_featurestore")
+
     @property
     def id(self):
         """Feature group id."""

@@ -81,7 +81,6 @@ class Engine:
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
         self._kafka_api = kafka_api.KafkaApi()
-        self._arrow_flight_client = arrow_flight_client.ArrowFlightClient()
 
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None
@@ -102,17 +101,16 @@ class Engine:
                 dataframe_type,
                 schema,
                 hive_config=read_options.get("hive_config") if read_options else None,
-                use_flyingduck=(
-                    read_options.get("use_flyingduck") if read_options else False
-                ),
             )
         else:
             return self._jdbc(
                 sql_query, online_conn, dataframe_type, read_options, schema
             )
 
-    def flyingduck_query_supported(self, query, read_options):
-        return self._arrow_flight_client.is_query_supported(query, read_options)
+    def is_flyingduck_query_supported(self, query, read_options):
+        return arrow_flight_client.get_instance().is_query_supported(
+            query, read_options
+        )
 
     def _sql_offline(
         self,
@@ -121,10 +119,9 @@ class Engine:
         dataframe_type,
         schema=None,
         hive_config=None,
-        use_flyingduck=False,
     ):
-        if use_flyingduck:
-            result_df = self._arrow_flight_client.read_query(*sql_query)
+        if arrow_flight_client.get_instance().is_flyingduck_query_object(sql_query):
+            result_df = arrow_flight_client.get_instance().read_query(sql_query)
         else:
             with self._create_hive_connection(
                 feature_store, hive_config=hive_config
@@ -185,10 +182,7 @@ class Engine:
         try:
             from pydoop import hdfs
         except ModuleNotFoundError:
-            use_flyingduck = self._arrow_flight_client.is_data_format_supported(
-                data_format, read_options
-            )
-            return self._read_hopsfs_remote(location, data_format, use_flyingduck)
+            return self._read_hopsfs_remote(location, data_format, read_options)
         util.setup_pydoop()
         path_list = hdfs.ls(location, recursive=True)
 
@@ -205,7 +199,7 @@ class Engine:
     # This is a version of the read method that uses the Hopsworks REST APIs or Flyginduck Server
     # To read the training dataset content, this to avoid the pydoop dependency
     # requirement and allow users to read Hopsworks training dataset from outside
-    def _read_hopsfs_remote(self, location, data_format, use_flyingduck=False):
+    def _read_hopsfs_remote(self, location, data_format, read_options={}):
         total_count = 10000
         offset = 0
         df_list = []
@@ -217,8 +211,10 @@ class Engine:
 
             for inode in inode_list:
                 if not inode.path.endswith("_SUCCESS"):
-                    if use_flyingduck:
-                        df = self._arrow_flight_client.read_path(inode.path)
+                    if arrow_flight_client.get_instance().is_data_format_supported(
+                        data_format, read_options
+                    ):
+                        df = arrow_flight_client.get_instance().read_path(inode.path)
                     else:
                         content_stream = self._dataset_api.read_content(inode.path)
                         df = self._read_pandas(

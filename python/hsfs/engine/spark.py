@@ -122,7 +122,7 @@ class Engine:
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def flyingduck_query_supported(self, query, read_options):
+    def is_flyingduck_query_supported(self, query, read_options):
         return False  # we do not support flyingduck on pyspark clients
 
     def _sql_offline(self, sql_query, feature_store):

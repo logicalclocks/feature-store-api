@@ -20,7 +20,7 @@ from typing import Optional, List, Union
 from datetime import datetime, date
 
 from hsfs import util, engine, feature_group
-from hsfs.core import query_constructor_api, storage_connector_api
+from hsfs.core import query_constructor_api, storage_connector_api, arrow_flight_client
 from hsfs.constructor import join
 from hsfs.constructor.filter import Filter, Logic
 
@@ -52,33 +52,28 @@ class Query:
         )
 
     def _prep_read(self, online, read_options):
-        query = self._query_constructor_api.construct_query(self)
+        fs_query = self._query_constructor_api.construct_query(self)
+        sql_query = self._to_string(fs_query, online)
 
         if online:
-            sql_query = query.query_online
             online_conn = self._storage_connector_api.get_online_connector()
         else:
-            if query.pit_query is not None:
-                sql_query = query.pit_query
-            else:
-                sql_query = query.query
             online_conn = None
 
-            if engine.get_instance().flyingduck_query_supported(self, read_options):
-                read_options["use_flyingduck"] = True
-                return (self, sql_query), online_conn
+            if engine.get_instance().is_flyingduck_query_supported(self, read_options):
+                sql_query = arrow_flight_client.get_instance()._construct_query_object(
+                    self, sql_query
+                )
             else:
-                read_options.pop("use_flyingduck", None)
+                # Register on demand feature groups as temporary tables
+                fs_query.register_external()
 
-            # Register on demand feature groups as temporary tables
-            query.register_external()
-
-            # Register on hudi feature groups as temporary tables
-            query.register_hudi_tables(
-                self._feature_store_id,
-                self._feature_store_name,
-                read_options,
-            )
+                # Register on hudi feature groups as temporary tables
+                fs_query.register_hudi_tables(
+                    self._feature_store_id,
+                    self._feature_store_name,
+                    read_options,
+                )
 
         return sql_query, online_conn
 
@@ -481,6 +476,9 @@ class Query:
         """
         fs_query = self._query_constructor_api.construct_query(self)
 
+        return self._to_string(fs_query, online)
+
+    def _to_string(self, fs_query, online=False):
         if online:
             return fs_query.query_online
         if fs_query.pit_query is not None:
