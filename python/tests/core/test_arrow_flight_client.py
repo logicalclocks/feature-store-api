@@ -13,8 +13,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import sys
-
 import pandas as pd
 
 from hsfs import feature_group, feature_view, training_dataset
@@ -217,17 +215,11 @@ class TestArrowFlightClient:
             return_value=pd.DataFrame(),
         )
 
-        try:
-            pydoop_module = sys.modules.get("pydoop")
-            mocker.patch.dict(sys.modules, {"pydoop": None})
+        # Act
+        fv.get_training_data(1)
 
-            # Act
-            fv.get_training_data(1)
-
-            # Assert
-            assert mock_read_path.call_count == 1
-        finally:
-            sys.modules["module_to_hide"] = pydoop_module
+        # Assert
+        assert mock_read_path.call_count == 1
 
     def test_get_training_data_featureview_spark(self, mocker, backend_fixtures):
         # Arrange
@@ -243,15 +235,9 @@ class TestArrowFlightClient:
             "hsfs.engine.python.Engine._read_pandas", return_value=pd.DataFrame()
         )
 
-        try:
-            pydoop_module = sys.modules.get("pydoop")
-            mocker.patch.dict(sys.modules, {"pydoop": None})
+        # Act
+        fv.get_training_data(1, read_options={"use_spark": True})
 
-            # Act
-            fv.get_training_data(1, read_options={"use_spark": True})
-
-            # Assert
-            assert mock_read_file.call_count == 1
-            assert mock_read_pandas.call_count == 1
-        finally:
-            sys.modules["module_to_hide"] = pydoop_module
+        # Assert
+        assert mock_read_file.call_count == 1
+        assert mock_read_pandas.call_count == 1
