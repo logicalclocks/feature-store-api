@@ -44,7 +44,7 @@ class FeatureDescriptiveStatistics:
         feature_type: str,
         count: int,
         end_time: Union[int, datetime, date, str],
-        row_percentage: int,
+        row_percentage: float,
         # for any feature type
         completeness: Optional[float] = None,
         num_non_null_values: Optional[int] = None,
@@ -182,7 +182,7 @@ class FeatureDescriptiveStatistics:
         return self._end_time
 
     @property
-    def row_percentage(self) -> int:
+    def row_percentage(self) -> float:
         return self._row_percentage
 
     @property

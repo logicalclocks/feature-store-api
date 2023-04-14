@@ -801,10 +801,10 @@ class FeatureMonitoringConfigEngine:
 
     def set_start_end_time_and_row_percentage(
         self,
+        row_percentage: float,
         descriptive_stats: FeatureDescriptiveStatistics,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
-        row_percentage: Optional[int] = None,
     ):
         """Set the start time, end time and row percentage for all descriptive statistics.
 
@@ -823,7 +823,7 @@ class FeatureMonitoringConfigEngine:
         entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"],
         start_time: int,
         end_time: int,
-        row_percentage: int,
+        row_percentage: float,
         feature_name: Optional[str] = None,
     ):
         """Fetch the entity data based on time window and row percentage.
@@ -833,7 +833,7 @@ class FeatureMonitoringConfigEngine:
             feature_name: str: Name of the feature to monitor.
             start_time: int: Window start commit time
             end_time: int: Window end commit time
-            row_percentage: Percentage of rows to include
+            row_percentage: fraction of rows to include [0, 1.0]
 
         Returns:
             `pyspark.sql.DataFrame`. A Spark DataFrame with the entity data
@@ -858,7 +858,7 @@ class FeatureMonitoringConfigEngine:
             if feature_name:
                 full_df = full_df.select(feature_name)
 
-        if row_percentage < 100:
-            full_df = full_df.sample(fraction=(row_percentage / 100))
+        if row_percentage < 1.0:
+            full_df = full_df.sample(fraction=row_percentage)
 
         return full_df

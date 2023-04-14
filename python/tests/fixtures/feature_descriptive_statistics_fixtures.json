@@ -24,7 +24,7 @@
       "exactNumDistinctValues": 10,
       "startTime": 123123123,
       "endTime": 123123124,
-      "rowPercentage": 100
+      "rowPercentage": 1.0
     }
   },
   "get_integral_feature_statistics": {
@@ -52,7 +52,7 @@
       "exactNumDistinctValues": 10,
       "startTime": 123123123,
       "endTime": 123123124,
-      "rowPercentage": 100
+      "rowPercentage": 1.0
     }
   },
   "get_string_feature_statistics": {
@@ -70,7 +70,7 @@
       "exactNumDistinctValues": 10,
       "startTime": 123123123,
       "endTime": 123123124,
-      "rowPercentage": 100
+      "rowPercentage": 1.0
     }
   },
   "get_boolean_feature_statistics": {
@@ -88,7 +88,7 @@
       "exactNumDistinctValues": 10,
       "startTime": 123123123,
       "endTime": 123123124,
-      "rowPercentage": 100
+      "rowPercentage": 1.0
     }
   },
   "get_deequ_fractional_feature_statistics": {

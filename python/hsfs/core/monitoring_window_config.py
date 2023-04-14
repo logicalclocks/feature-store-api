@@ -31,7 +31,7 @@ class WindowConfigType:
 
 
 class MonitoringWindowConfig:
-    _DEFAULT_ROW_PERCENTAGE = 20
+    _DEFAULT_ROW_PERCENTAGE = 1.0
 
     def __init__(
         self,
@@ -41,7 +41,7 @@ class MonitoringWindowConfig:
         window_length: Optional[str] = None,
         specific_id: Optional[int] = None,
         specific_value: Optional[float] = None,
-        row_percentage: Optional[int] = None,
+        row_percentage: Optional[float] = None,
     ):
         """Configuration to define the slice of data to compute statistics on.
 
@@ -52,7 +52,7 @@ class MonitoringWindowConfig:
             monitoring_window_config = MonitoringWindowConfig(
                 time_offset="1d", # data inserted up to 1 day ago
                 window_length="1h", # data inserted until an one hour after time_offset
-                row_percentage=20, # include only 20% of the rows when computing statistics
+                row_percentage=0.2, # include only 20% of the rows when computing statistics
             )
 
             ## Rolling Commit Window (not supported yet)
@@ -86,8 +86,8 @@ class MonitoringWindowConfig:
             id: int, optional
                 The id of the monitoring window config.
             window_config_type: str, optional
-                The type of the monitoring window config. One of INSERT, SNAPSHOT,
-                BATCH, TRAINING_DATASET, SPECIFIC_VALUE.
+                The type of the monitoring window config. One of ROLLING_TIME,
+                TRAINING_DATASET, SPECIFIC_VALUE.
             time_offset: str, optional
                 The time offset of the monitoring window config. Only used for
                 INSERT and SNAPSHOT window config types.
@@ -100,6 +100,9 @@ class MonitoringWindowConfig:
             specific_value: float, optional
                 The specific value to use as reference. Only used for SPECIFIC_VALUE
                 window config type.
+            row_percentage: float, optional
+                The fraction of rows to use when computing statistics [0, 1.0]. Only used
+                for ROLLING_TIME and ALL_TIME window config types.
 
         # Raises
             AttributeError: If window_config_type is not one of INSERT, SNAPSHOT,
@@ -209,22 +212,23 @@ class MonitoringWindowConfig:
         return self._row_percentage
 
     @row_percentage.setter
-    def row_percentage(self, row_percentage: Optional[int]):
+    def row_percentage(self, row_percentage: Optional[float]):
         if (
             self._window_config_type == WindowConfigType.SPECIFIC_VALUE
             or self._window_config_type == WindowConfigType.TRAINING_DATASET
         ) and row_percentage is not None:
 
             raise AttributeError(
-                "Row percentage can only be set for INSERT or "
-                "SNAPSHOT window config types."
+                "Row percentage can only be set for ROLLING_TIME and ALL_TIME"
+                " window config types."
             )
 
-        if isinstance(row_percentage, int) and (
-            row_percentage < 0 or row_percentage > 100
-        ):
-            raise ValueError("Row percentage must be an integer between 0 and 100.")
+        if isinstance(row_percentage, int) or isinstance(row_percentage, float):
+            row_percentage = float(row_percentage)
+            if row_percentage <= 0.0 or row_percentage > 1.0:
+                raise ValueError("Row percentage must be a float between 0 and 1.")
+            self._row_percentage = row_percentage
         elif row_percentage is None:
             self._row_percentage = self._DEFAULT_ROW_PERCENTAGE
         else:
-            self._row_percentage = row_percentage
+            raise TypeError("Row percentage must be a float between 0 and 1.")

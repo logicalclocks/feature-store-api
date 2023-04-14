@@ -2211,7 +2211,7 @@ class FeatureView:
             ).with_detection_window(
                 # Statistics computed on 10% of the last week of data
                 time_offset="1w",
-                row_percentage=10,
+                row_percentage=0.1,
             ).save()
             ```
 

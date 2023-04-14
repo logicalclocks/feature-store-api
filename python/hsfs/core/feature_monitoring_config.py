@@ -189,7 +189,7 @@ class FeatureMonitoringConfig:
             ).with_detection_window(
                 time_offset="1d",
                 window_length="1d",
-                row_percentage=10,
+                row_percentage=0.1,
             ).save()
 
             # Compute and compare statistics
@@ -200,14 +200,14 @@ class FeatureMonitoringConfig:
             ).with_detection_window(
                 time_offset="1d",
                 window_length="1d",
-                row_percentage=10,
+                row_percentage=0.1,
             ).with_reference_window(...).compare_on(...).save()
             ```
 
         # Arguments
             time_offset: The time offset from the current time to the start of the time window.
             window_length: The length of the time window.
-            row_percentage: The percentage of rows to use when computing the statistics.
+            row_percentage: The fraction of rows to use when computing the statistics [0, 1.0].
 
         # Returns
             `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
@@ -228,7 +228,7 @@ class FeatureMonitoringConfig:
         self,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
-        row_percentage: Optional[int] = None,
+        row_percentage: Optional[float] = None,
         specific_value: Optional[Union[float, int]] = None,
         training_dataset_id: Optional[int] = None,
     ) -> "FeatureMonitoringConfig":
@@ -245,7 +245,7 @@ class FeatureMonitoringConfig:
             # Simplest reference window is a specific value
             my_monitoring_config.with_reference_window(
                 specific_value=0.0,
-                row_percentage=10, # optional
+                row_percentage=0.1, # optional
             ).compare_on(...).save()
 
             # Statistics computed on a rolling time window, e.g. same day last week

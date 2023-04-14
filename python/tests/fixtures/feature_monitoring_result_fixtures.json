@@ -29,7 +29,7 @@
           "exactNumDistinctValues": 10,
           "startTime": 123123123,
           "endTime": 123123124,
-          "rowPercentage": 100
+          "rowPercentage": 1.0
         },
         "referenceStatistics": {
           "id": 53,
@@ -55,7 +55,7 @@
           "exactNumDistinctValues": 10,
           "startTime": 123123123,
           "endTime": 123123124,
-          "rowPercentage": 100
+          "rowPercentage": 1.0
         },
         "executionId": 123,
         "shiftDetected": true,
@@ -93,7 +93,7 @@
           "exactNumDistinctValues": 10,
           "startTime": 123123123,
           "endTime": 123123124,
-          "rowPercentage": 100
+          "rowPercentage": 1.0
         },
         "executionId": 123,
         "shiftDetected": true,
@@ -133,7 +133,7 @@
           "exactNumDistinctValues": 10,
           "startTime": 123123123,
           "endTime": 123123124,
-          "rowPercentage": 100
+          "rowPercentage": 1.0
         },
         "referenceStatistics": {
           "id": 53,
@@ -159,7 +159,7 @@
           "exactNumDistinctValues": 10,
           "startTime": 123123123,
           "endTime": 123123124,
-          "rowPercentage": 100
+          "rowPercentage": 1.0
         },
         "executionId": 123,
         "shiftDetected": true,
@@ -197,7 +197,7 @@
           "exactNumDistinctValues": 10,
           "startTime": 123123123,
           "endTime": 123123124,
-          "rowPercentage": 100
+          "rowPercentage": 1.0
         },
         "executionId": 123,
         "shiftDetected": true,
@@ -279,7 +279,7 @@
               "exactNumDistinctValues": 10,
               "startTime": 123123123,
               "endTime": 123123124,
-              "rowPercentage": 100
+              "rowPercentage": 1.0
             },
             "referenceStatistics": {
               "id": 53,
@@ -305,7 +305,7 @@
               "exactNumDistinctValues": 10,
               "startTime": 123123123,
               "endTime": 123123124,
-              "rowPercentage": 100
+              "rowPercentage": 1.0
             },
             "executionId": 123,
             "shiftDetected": true,
@@ -348,7 +348,7 @@
               "exactNumDistinctValues": 10,
               "startTime": 123123123,
               "endTime": 123123124,
-              "rowPercentage": 100
+              "rowPercentage": 1.0
             },
             "executionId": 123,
             "shiftDetected": true,

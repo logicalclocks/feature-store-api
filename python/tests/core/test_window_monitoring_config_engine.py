@@ -35,5 +35,5 @@ class TestMonitoringWindowConfigEngine:
         assert window_config.window_config_type == WindowConfigType.ROLLING_TIME
         assert window_config.time_offset == "1w"
         assert (
-            window_config.row_percentage == 20
+            window_config.row_percentage == 1.0
         )  # Default value set in MonitoringWindowConfig

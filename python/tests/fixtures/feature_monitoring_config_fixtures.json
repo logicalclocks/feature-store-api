@@ -15,7 +15,7 @@
           "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
           "windowLength": "1d",
-          "rowPercentage": 50
+          "rowPercentage": 0.5
         },
         "referenceWindowConfig": {
           "windowConfigType": "ROLLING_TIME",
@@ -120,7 +120,7 @@
           "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
           "windowLength": "1d",
-          "rowPercentage": 50
+          "rowPercentage": 0.5
         },
         "referenceWindowConfig": {
           "windowConfigType": "TRAINING_DATASET",
@@ -160,7 +160,7 @@
           "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
           "windowLength": "1d",
-          "rowPercentage": 50
+          "rowPercentage": 0.5
         },
         "referenceWindowConfig": {
           "windowConfigType": "TRAINING_DATASET",
@@ -272,7 +272,7 @@
             "windowConfigType": "ROLLING_TIME",
             "timeOffset": "1w",
             "windowLength": "1d",
-            "rowPercentage": 50
+            "rowPercentage": 0.5
           },
           "referenceWindowConfig": {
             "windowConfigType": "TRAINING_DATASET",

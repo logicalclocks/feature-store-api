@@ -33,7 +33,7 @@ class MonitoringWindowConfigEngine:
         window_length: Optional[str] = None,
         specific_id: Optional[int] = None,
         specific_value: Optional[Union[int, float]] = None,
-        row_percentage: Optional[int] = None,
+        row_percentage: Optional[float] = None,
     ) -> WindowConfigType:
         if isinstance(specific_value, int) or isinstance(specific_value, float):
             if any(
@@ -78,7 +78,7 @@ class MonitoringWindowConfigEngine:
         window_length: Optional[str] = None,
         specific_id: Optional[int] = None,
         specific_value: Optional[Union[int, float]] = None,
-        row_percentage: Optional[int] = None,
+        row_percentage: Optional[float] = None,
     ) -> MonitoringWindowConfig:
         """Builds a monitoring window config.
 
@@ -119,6 +119,13 @@ class MonitoringWindowConfigEngine:
             raise ValueError(
                 "The window_config_type does not match the parameters set."
             )
+
+        if (
+            window_config_type
+            in [WindowConfigType.ROLLING_TIME, WindowConfigType.ALL_TIME]
+            and row_percentage is None
+        ):
+            row_percentage = 1.0
 
         return MonitoringWindowConfig(
             id=id,
