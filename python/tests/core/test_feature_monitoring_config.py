@@ -94,7 +94,7 @@ class TestFeatureMonitoringConfig:
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
         assert config._reference_window_config.window_config_type == "TRAINING_DATASET"
-        assert config._reference_window_config.specific_id == 33
+        assert config._reference_window_config.training_dataset_id == 33
 
         assert config._statistics_comparison_config["threshold"] == 1
         assert config._statistics_comparison_config["strict"] is True
@@ -207,7 +207,7 @@ class TestFeatureMonitoringConfig:
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
         assert config._reference_window_config.window_config_type == "TRAINING_DATASET"
-        assert config._reference_window_config.specific_id == 33
+        assert config._reference_window_config.training_dataset_id == 33
 
         assert config._statistics_comparison_config["threshold"] == 1
         assert config._statistics_comparison_config["strict"] is True

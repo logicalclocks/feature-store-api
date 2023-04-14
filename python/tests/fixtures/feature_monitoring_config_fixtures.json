@@ -124,7 +124,7 @@
         },
         "referenceWindowConfig": {
           "windowConfigType": "TRAINING_DATASET",
-          "specificId": 33
+          "trainingDatasetId": 33
         },
         "statisticsComparisonConfig": {
           "threshold": 1,
@@ -164,7 +164,7 @@
         },
         "referenceWindowConfig": {
           "windowConfigType": "TRAINING_DATASET",
-          "specificId": 33
+          "trainingDatasetId": 33
         },
         "statisticsComparisonConfig": {
           "threshold": 1,
@@ -276,7 +276,7 @@
           },
           "referenceWindowConfig": {
             "windowConfigType": "TRAINING_DATASET",
-            "specificId": 33
+            "trainingDatasetId": 33
           },
           "statisticsComparisonConfig": {
             "threshold": 1,

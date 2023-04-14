@@ -39,7 +39,7 @@ class MonitoringWindowConfig:
         window_config_type: Optional[str] = WindowConfigType.SPECIFIC_VALUE,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
-        specific_id: Optional[int] = None,
+        training_dataset_id: Optional[int] = None,
         specific_value: Optional[float] = None,
         row_percentage: Optional[float] = None,
     ):
@@ -67,7 +67,7 @@ class MonitoringWindowConfig:
 
             ## Training dataset
             monitoring_window_config = MonitoringWindowConfig(
-                specific_id=my_training_dataset.id
+                training_dataset_id=my_training_dataset.id
             )
 
             ## MOST_RECENT (not supported yet)
@@ -94,7 +94,7 @@ class MonitoringWindowConfig:
             window_length: str, optional
                 The window length of the monitoring window config. Only used for
                 INSERT and SNAPSHOT window config types.
-            specific_id: int, optional
+            training_dataset_id: int, optional
                 The id of the training dataset to use as reference. Only used for
                 TRAINING_DATASET window config type.
             specific_value: float, optional
@@ -112,7 +112,7 @@ class MonitoringWindowConfig:
         self._window_config_type = window_config_type
         self._time_offset = time_offset
         self._window_length = window_length
-        self._specific_id = specific_id
+        self._training_dataset_id = training_dataset_id
         self._specific_value = specific_value
         self.row_percentage = row_percentage
 
@@ -137,7 +137,7 @@ class MonitoringWindowConfig:
         elif self._window_config_type == WindowConfigType.SPECIFIC_VALUE:
             the_dict["specificValue"] = self._specific_value
         elif self._window_config_type == WindowConfigType.TRAINING_DATASET:
-            the_dict["specificId"] = self._specific_id
+            the_dict["trainingDatasetId"] = self._training_dataset_id
 
         return the_dict
 
@@ -178,19 +178,19 @@ class MonitoringWindowConfig:
         self._window_length = window_length
 
     @property
-    def specific_id(self) -> Optional[int]:
-        return self._specific_id
+    def training_dataset_id(self) -> Optional[int]:
+        return self._training_dataset_id
 
-    @specific_id.setter
-    def specific_id(self, specific_id: Optional[int]):
+    @training_dataset_id.setter
+    def training_dataset_id(self, training_dataset_id: Optional[int]):
         if (
             self._window_config_type != WindowConfigType.TRAINING_DATASET
-            and specific_id is not None
+            and training_dataset_id is not None
         ):
             raise AttributeError(
                 "Specific id can only be set for if window_config_type is TRAINING_DATASET."
             )
-        self._specific_id = specific_id
+        self._training_dataset_id = training_dataset_id
 
     @property
     def specific_value(self) -> Optional[float]:

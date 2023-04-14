@@ -241,7 +241,7 @@ class TestFeatureMonitoringConfigEngine:
             window_length="1d",
         )
         reference_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
-            window_config_type="TRAINING_DATASET", specific_id=12
+            window_config_type="TRAINING_DATASET", training_dataset_id=12
         )
 
         stats_comparison_configuration = {
@@ -278,7 +278,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
         assert config._reference_window_config.window_config_type == "TRAINING_DATASET"
-        assert config._reference_window_config.specific_id == 12
+        assert config._reference_window_config.training_dataset_id == 12
         assert (
             config._statistics_comparison_config["threshold"]
             == stats_comparison_configuration["threshold"]

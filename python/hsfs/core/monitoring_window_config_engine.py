@@ -31,7 +31,7 @@ class MonitoringWindowConfigEngine:
         self,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
-        specific_id: Optional[int] = None,
+        training_dataset_id: Optional[int] = None,
         specific_value: Optional[Union[int, float]] = None,
         row_percentage: Optional[float] = None,
     ) -> WindowConfigType:
@@ -40,7 +40,7 @@ class MonitoringWindowConfigEngine:
                 [
                     time_offset is not None,
                     window_length is not None,
-                    specific_id is not None,
+                    training_dataset_id is not None,
                     row_percentage is not None,
                 ]
             ):
@@ -49,7 +49,7 @@ class MonitoringWindowConfigEngine:
                 )
             return WindowConfigType.SPECIFIC_VALUE
 
-        if isinstance(specific_id, int):
+        if isinstance(training_dataset_id, int):
             if any(
                 [
                     time_offset is not None,
@@ -76,7 +76,7 @@ class MonitoringWindowConfigEngine:
         window_config_type: Optional[WindowConfigType] = None,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
-        specific_id: Optional[int] = None,
+        training_dataset_id: Optional[int] = None,
         specific_value: Optional[Union[int, float]] = None,
         row_percentage: Optional[float] = None,
     ) -> MonitoringWindowConfig:
@@ -91,7 +91,7 @@ class MonitoringWindowConfigEngine:
             window_length: str, optional
                 monitoring window end time is computed as
                     "now - time_offset + window_length".
-            specific_id: int, optional
+            training_dataset_id: int, optional
                 Specific id of an entity that has fixed statistics.
             specific_value: float, optional
                 Specific value instead of a statistics computed on data.
@@ -107,7 +107,7 @@ class MonitoringWindowConfigEngine:
         detected_window_config_type = self.validate_monitoring_window_config(
             time_offset=time_offset,
             window_length=window_length,
-            specific_id=specific_id,
+            training_dataset_id=training_dataset_id,
             specific_value=specific_value,
             row_percentage=row_percentage,
         )
@@ -132,7 +132,7 @@ class MonitoringWindowConfigEngine:
             window_config_type=detected_window_config_type,
             time_offset=time_offset,
             window_length=window_length,
-            specific_id=specific_id,
+            training_dataset_id=training_dataset_id,
             specific_value=specific_value,
             row_percentage=row_percentage,
         )

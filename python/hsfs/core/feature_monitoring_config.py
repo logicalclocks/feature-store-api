@@ -279,7 +279,7 @@ class FeatureMonitoringConfig:
             "time_offset": time_offset,
             "window_length": window_length,
             "specific_value": specific_value,
-            "specific_id": training_dataset_id,
+            "training_dataset_id": training_dataset_id,
             "row_percentage": row_percentage,
         }
 
