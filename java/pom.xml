@@ -30,7 +30,7 @@
         <scala.version>2.12.10</scala.version>
         <scala-short.version>2.12</scala-short.version>
         <dbutils.version>0.0.5</dbutils.version>
-        <json.version>20190722</json.version>
+        <json.version>20230227</json.version>
         <hoverfly.version>0.12.2</hoverfly.version>
         <junit.version>5.9.1</junit.version>
         <surefire-plugin.version>2.22.0</surefire-plugin.version>
