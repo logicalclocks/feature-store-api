@@ -68,7 +68,7 @@ public class FlinkEngine {
         .setKafkaProducerConfig(properties)
         .setRecordSerializer(KafkaRecordSerializationSchema.builder()
         .setTopic(streamFeatureGroup.getOnlineTopicName())
-        .setValueSerializationSchema(new PojoSerializer())
+        .setValueSerializationSchema(new PojoSerializer(streamFeatureGroup.getDeserializedAvroSchema()))
         .build())
         .setDeliverGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
         .build();

@@ -21,7 +21,6 @@ import lombok.SneakyThrows;
 import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 
@@ -32,6 +31,12 @@ import java.util.List;
 
 public class PojoSerializer implements SerializationSchema<Object> {
 
+  Schema schema;
+
+  public PojoSerializer(Schema schema) {
+    this.schema = schema;
+  }
+
   @SneakyThrows
   @Override
   public byte[] serialize(Object input) {
@@ -39,10 +44,7 @@ public class PojoSerializer implements SerializationSchema<Object> {
   }
 
   private byte[] encode(Object input) throws IOException {
-
-    Schema schema = ReflectData.get().getSchema(input.getClass());
-
-    ReflectDatumWriter<Object> datumWriter = new ReflectDatumWriter<>(schema);
+    ReflectDatumWriter<Object> datumWriter = new ReflectDatumWriter<>(this.schema);
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     byteArrayOutputStream.reset();
 
