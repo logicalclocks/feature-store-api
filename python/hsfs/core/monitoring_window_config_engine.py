@@ -72,6 +72,7 @@ class MonitoringWindowConfigEngine:
 
     def build_monitoring_window_config(
         self,
+        id: Optional[int] = None,
         window_config_type: Optional[WindowConfigType] = None,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
@@ -94,6 +95,10 @@ class MonitoringWindowConfigEngine:
                 Specific id of an entity that has fixed statistics.
             specific_value: float, optional
                 Specific value instead of a statistics computed on data.
+            row_percentage: int, optional
+                Percentage of rows to be used for statistics computation.
+            id: int, optional
+                Id of the monitoring window config in hopsworks.
 
         Returns:
             MonitoringWindowConfig The monitoring window configuration.
@@ -116,6 +121,7 @@ class MonitoringWindowConfigEngine:
             )
 
         return MonitoringWindowConfig(
+            id=id,
             window_config_type=detected_window_config_type,
             time_offset=time_offset,
             window_length=window_length,
