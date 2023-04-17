@@ -210,8 +210,8 @@ class FeatureMonitoringResultEngine:
             shift_detected = False
 
         execution = self._job_api.last_execution(self._job_api.get(fm_config.job_name))
-        if execution is not None:
-            execution_id = execution._id
+        if isinstance(execution, list) and len(execution) > 0:
+            execution_id = execution[0]._id
         else:
             execution_id = 0
 
