@@ -83,19 +83,26 @@ class FeatureMonitoringResult:
             return cls(**json_decamelized)
 
     def to_dict(self):
-        return {
+        the_dict = {
             "id": self._id,
             "featureStoreId": self._feature_store_id,
             "configId": self._config_id,
             "executionId": self._execution_id,
-            "detectionStatsId": self._detection_stats_id,
-            "referenceStatsId": self._reference_stats_id,
-            "detectionStatistics": self._detection_statistics,
-            "referenceStatistics": self._reference_statistics,
             "monitoringTime": self._monitoring_time,
             "difference": self._difference,
             "shiftDetected": self._shift_detected,
         }
+
+        if self._detection_stats_id is not None:
+            the_dict["detectionStatsId"] = self._detection_stats_id
+        if self._reference_stats_id is not None:
+            the_dict["referenceStatsId"] = self._reference_stats_id
+        if self._detection_statistics is not None:
+            the_dict["detectionStatistics"] = self._detection_statistics.to_dict()
+        if self._reference_statistics is not None:
+            the_dict["referenceStatistics"] = self._reference_statistics.to_dict()
+
+        return the_dict
 
     def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
