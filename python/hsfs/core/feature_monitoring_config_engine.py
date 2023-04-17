@@ -513,6 +513,15 @@ class FeatureMonitoringConfigEngine:
             enabled=enabled,
         )
 
+    def delete(self, config_id: int) -> None:
+        """Deletes a feature monitoring config.
+
+        Args:
+            config_id: int, required
+                The id of the feature monitoring config to delete.
+        """
+        self._feature_monitoring_config_api.delete(config_id=config_id)
+
     def get_feature_monitoring_configs(
         self,
         name: Optional[str] = None,

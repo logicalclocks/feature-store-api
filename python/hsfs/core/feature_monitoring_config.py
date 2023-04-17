@@ -17,13 +17,17 @@
 import json
 from hsfs.core.job_scheduler import JobScheduler
 import humps
-from typing import Any, Dict, Optional, Union
+from datetime import datetime, date
+from typing import Any, Dict, List, Optional, Union
 from hsfs.util import FeatureStoreEncoder
 from hsfs.client.exceptions import FeatureStoreException
 
+
 from hsfs.core.monitoring_window_config import MonitoringWindowConfig
+from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.core import monitoring_window_config_engine
 from hsfs.core import feature_monitoring_config_engine
+from hsfs.core import feature_monitoring_result_engine
 
 
 class FeatureMonitoringConfig:
@@ -77,6 +81,15 @@ class FeatureMonitoringConfig:
         )
         self._monitoring_window_config_engine = (
             monitoring_window_config_engine.MonitoringWindowConfigEngine()
+        )
+        self._feature_monitoring_result_engine = (
+            feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+                feature_store_id=feature_store_id,
+                feature_group_id=feature_group_id,
+                feature_view_id=feature_view_id,
+                feature_view_name=feature_view_name,
+                feature_view_version=feature_view_version,
+            )
         )
 
         self.detection_window_config = detection_window_config
@@ -456,6 +469,129 @@ class FeatureMonitoringConfig:
 
         return self._feature_monitoring_config_engine.get_monitoring_job(
             job_name=self.job_name
+        )
+
+    def delete(self):
+        """Deletes the feature monitoring configuration from the backend.
+
+        !!! example
+            ```python
+            # fetch your feature group or feature view
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # fetch registered config by name
+            my_monitoring_config = fg.get_feature_monitoring_config(name="my_monitoring_config")
+
+            # delete the feature monitoring config
+            my_monitoring_config.delete()
+            ```
+
+        # Raises
+            `FeatureStoreException`: If the feature monitoring config has not been saved.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Feature monitoring config must be registered via `.save()` before deleting."
+            )
+
+        self._feature_monitoring_config_engine.delete(config_id=self._id)
+
+    def disable(self):
+        """Disables the feature monitoring configuration.
+
+        !!! example
+            ```python
+            # fetch your feature group or feature view
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # fetch registered config by name
+            my_monitoring_config = fg.get_feature_monitoring_config(name="my_monitoring_config")
+
+            # disable the feature monitoring config
+            my_monitoring_config.disable()
+            ```
+
+        # Raises
+            `FeatureStoreException`: If the feature monitoring config has not been saved.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Feature monitoring config must be registered via `.save()` before disabling."
+            )
+
+        self._feature_monitoring_config_engine.pause_or_resume_monitoring(
+            config_id=self._id, enabled=False
+        )
+
+    def enable(self):
+        """Enables the feature monitoring configuration.
+
+        !!! example
+            ```python
+            # fetch your feature group or feature view
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # fetch registered config by name
+            my_monitoring_config = fg.get_feature_monitoring_config(name="my_monitoring_config")
+
+            # enable the feature monitoring config
+            my_monitoring_config.enable()
+            ```
+
+        # Raises
+            `FeatureStoreException`: If the feature monitoring config has not been saved.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Feature monitoring config must be registered via `.save()` before enabling."
+            )
+
+        self._feature_monitoring_config_engine.pause_or_resume_monitoring(
+            config_id=self._id, enabled=True
+        )
+
+    def get_history(
+        self,
+        start_time: Union[datetime, date, str, int] = None,
+        end_time: Union[datetime, date, str, int] = None,
+        with_statistics: bool = True,
+    ) -> List["FeatureMonitoringResult"]:
+        """
+        Fetch the history of the computed statistics for this configuration.
+
+        !!! example
+            ```python3
+            # fetch your feature group or feature view
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # fetch registered config by name
+            my_monitoring_config = fg.get_feature_monitoring_config(name="my_monitoring_config")
+
+            # fetch the history of the computed statistics for this configuration
+            history = my_monitoring_config.get_history(
+                start_time="2021-01-01",
+                end_time="2021-01-31",
+            )
+            ```
+
+        # Args:
+            start_time: The start time of the time range to fetch the history for.
+            end_time: The end time of the time range to fetch the history for.
+            with_statistics: Whether to include the computed statistics in the result.
+
+        # Raises
+            `FeatureStoreException`: If the feature monitoring config has not been saved.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Feature monitoring config must be registered via `.save()` before fetching"
+                "the associated history."
+            )
+        return self._feature_monitoring_result_engine.fetch_all_feature_monitoring_results_by_config_id(
+            config_id=self._id,
+            start_time=start_time,
+            end_time=end_time,
+            with_statistics=with_statistics,
         )
 
     # TODO: Add read-only setters to match update() method
