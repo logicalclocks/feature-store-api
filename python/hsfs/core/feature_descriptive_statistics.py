@@ -42,6 +42,7 @@ class FeatureDescriptiveStatistics:
     def __init__(
         self,
         feature_type: str,
+        feature_name: str,
         count: int,
         end_time: Union[int, datetime, date, str],
         row_percentage: float,
@@ -68,6 +69,7 @@ class FeatureDescriptiveStatistics:
     ):
         self._id = id
         self._feature_type = feature_type
+        self._feature_name = feature_name
         self._count = count
         self._end_time = end_time
         self._row_percentage = row_percentage
@@ -107,6 +109,7 @@ class FeatureDescriptiveStatistics:
         stats_dict = {
             "feature_type": json_dict["dataType"],
             "count": json_dict["numRecordsNull"] + json_dict["numRecordsNonNull"],
+            "feature_name": json_dict["column"],
             "end_time": None,
             "row_percentage": None,
             # common for all data types
@@ -136,6 +139,7 @@ class FeatureDescriptiveStatistics:
         return {
             "id": self._id,
             "featureType": self._feature_type,
+            "featureName": self._feature_name,
             "count": self._count,
             "min": self._min,
             "max": self._max,
@@ -172,6 +176,10 @@ class FeatureDescriptiveStatistics:
     @property
     def feature_type(self) -> str:
         return self._feature_type
+
+    @property
+    def feature_name(self) -> str:
+        return self._feature_name
 
     @property
     def count(self) -> int:

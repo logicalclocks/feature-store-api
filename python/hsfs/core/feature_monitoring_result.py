@@ -30,6 +30,7 @@ class FeatureMonitoringResult:
         execution_id: int,
         monitoring_time: Union[int, datetime, date, str],
         config_id: int,
+        feature_name: str,
         difference: Optional[float] = None,
         shift_detected: bool = False,
         detection_stats_id: Optional[int] = None,
@@ -48,6 +49,7 @@ class FeatureMonitoringResult:
         self._feature_store_id = feature_store_id
         self._execution_id = execution_id
         self._config_id = config_id
+        self._feature_name = feature_name
         self._detection_stats_id = detection_stats_id
         self._reference_stats_id = reference_stats_id
         self._detection_statistics = self._parse_feature_statistics(
@@ -91,6 +93,7 @@ class FeatureMonitoringResult:
             "monitoringTime": self._monitoring_time,
             "difference": self._difference,
             "shiftDetected": self._shift_detected,
+            "featureName": self._feature_name,
         }
 
         if self._detection_stats_id is not None:
@@ -156,3 +159,7 @@ class FeatureMonitoringResult:
     @property
     def shift_detected(self) -> bool:
         return self._shift_detected
+
+    @property
+    def feature_name(self) -> str:
+        return self._feature_name

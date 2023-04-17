@@ -20,6 +20,7 @@ from hsfs.core import feature_monitoring_config as fmc
 from datetime import datetime, date, timedelta
 import dateutil
 from hsfs import util
+from hsfs.core import job, execution
 
 DEFAULT_MONITORING_TIME_SORT_BY = "monitoring_time:desc"
 DEFAULT_FEATURE_STORE_ID = 67
@@ -28,10 +29,13 @@ DEFAULT_FEATURE_VIEW_ID = 22
 DEFAULT_FEATURE_VIEW_NAME = "test_feature_view"
 DEFAULT_FEATURE_VIEW_VERSION = 2
 DEFAULT_CONFIG_ID = 32
+DEFAULT_FEATURE_NAME = "amount"
 
 FEATURE_MONITORING_CONFIG_CREATE_API = (
     "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create"
 )
+GET_JOB_API = "hsfs.core.job_api.JobApi.get"
+LAST_EXECUTION_API = "hsfs.core.job_api.JobApi.last_execution"
 
 
 class TestFeatureMonitoringResultEngine:
@@ -142,6 +146,7 @@ class TestFeatureMonitoringResultEngine:
         result_engine.save_feature_monitoring_result(
             config_id=DEFAULT_CONFIG_ID,
             execution_id=execution_id,
+            feature_name=DEFAULT_FEATURE_NAME,
             detection_statistics=detection_statistics,
             reference_statistics=reference_statistics,
             difference=difference,
@@ -153,6 +158,7 @@ class TestFeatureMonitoringResultEngine:
         result = mock_result_api.call_args[0][0]
         assert result._config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
+        assert result._feature_name == DEFAULT_FEATURE_NAME
         assert result._detection_stats_id is None
         assert result._reference_stats_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
@@ -193,6 +199,7 @@ class TestFeatureMonitoringResultEngine:
         result_engine.save_feature_monitoring_result(
             config_id=DEFAULT_CONFIG_ID,
             execution_id=execution_id,
+            feature_name=DEFAULT_FEATURE_NAME,
             detection_statistics=detection_statistics,
             reference_statistics=None,
             difference=difference,
@@ -204,6 +211,7 @@ class TestFeatureMonitoringResultEngine:
         result = mock_result_api.call_args[0][0]
         assert result._config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
+        assert result._feature_name == DEFAULT_FEATURE_NAME
         assert result._detection_stats_id is None
         assert result._reference_stats_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
@@ -247,6 +255,7 @@ class TestFeatureMonitoringResultEngine:
         result_engine.save_feature_monitoring_result(
             config_id=DEFAULT_CONFIG_ID,
             execution_id=execution_id,
+            feature_name=DEFAULT_FEATURE_NAME,
             detection_statistics=detection_statistics,
             reference_statistics=reference_statistics,
             difference=difference,
@@ -258,6 +267,7 @@ class TestFeatureMonitoringResultEngine:
         result = mock_result_api.call_args[0][0]
         assert result._config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
+        assert result._feature_name == DEFAULT_FEATURE_NAME
         assert result._detection_stats_id is None
         assert result._reference_stats_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
@@ -300,6 +310,7 @@ class TestFeatureMonitoringResultEngine:
         result_engine.save_feature_monitoring_result(
             config_id=DEFAULT_CONFIG_ID,
             execution_id=execution_id,
+            feature_name=DEFAULT_FEATURE_NAME,
             detection_statistics=detection_statistics,
             reference_statistics=None,
             difference=difference,
@@ -311,6 +322,7 @@ class TestFeatureMonitoringResultEngine:
         result = mock_result_api.call_args[0][0]
         assert result._config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
+        assert result._feature_name == DEFAULT_FEATURE_NAME
         assert result._detection_stats_id is None
         assert result._reference_stats_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
@@ -329,6 +341,22 @@ class TestFeatureMonitoringResultEngine:
 
     def test_run_and_save_statistics_comparison(self, mocker, backend_fixtures):
         # Arrange
+        mock_result_api = mocker.patch(
+            FEATURE_MONITORING_CONFIG_CREATE_API,
+        )
+        mock_get_job_api = mocker.patch(
+            GET_JOB_API,
+            return_value=job.Job.from_response_json(
+                backend_fixtures["job"]["get"]["response"]
+            ),
+        )
+        mock_last_exec_job_api = mocker.patch(
+            LAST_EXECUTION_API,
+            return_value=execution.Execution.from_response_json(
+                backend_fixtures["execution"]["get"]["response"]
+            ),
+        )
+
         execution_id = 123
         shift_detected = False
         difference = 0
@@ -351,10 +379,6 @@ class TestFeatureMonitoringResultEngine:
             reference_stats_json
         )
 
-        mock_result_api = mocker.patch(
-            FEATURE_MONITORING_CONFIG_CREATE_API,
-        )
-
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
@@ -369,8 +393,11 @@ class TestFeatureMonitoringResultEngine:
 
         # Assert
         result = mock_result_api.call_args[0][0]
+        mock_get_job_api.assert_called_once_with(config.job_name)
+        mock_last_exec_job_api.assert_called_once()
         assert result._config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
+        assert result._feature_name == DEFAULT_FEATURE_NAME
         assert result._detection_stats_id is None
         assert result._reference_stats_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
@@ -393,6 +420,19 @@ class TestFeatureMonitoringResultEngine:
         shift_detected = False
         difference = 0
         reference_specific_value = 5.1
+
+        mock_get_job_api = mocker.patch(
+            GET_JOB_API,
+            return_value=job.Job.from_response_json(
+                backend_fixtures["job"]["get"]["response"]
+            ),
+        )
+        mock_last_exec_job_api = mocker.patch(
+            LAST_EXECUTION_API,
+            return_value=execution.Execution.from_response_json(
+                backend_fixtures["execution"]["get"]["response"]
+            ),
+        )
 
         config_json = backend_fixtures["feature_monitoring_config"][
             "get_via_feature_group"
@@ -424,8 +464,11 @@ class TestFeatureMonitoringResultEngine:
 
         # Assert
         result = mock_result_api.call_args[0][0]
+        mock_get_job_api.assert_called_once_with(config.job_name)
+        mock_last_exec_job_api.assert_called_once()
         assert result._config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
+        assert result._feature_name == DEFAULT_FEATURE_NAME
         assert result._detection_stats_id is None
         assert result._reference_stats_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
@@ -446,6 +489,19 @@ class TestFeatureMonitoringResultEngine:
         # Arrange
         execution_id = 123
         reference_statistics = None
+
+        mock_get_job_api = mocker.patch(
+            GET_JOB_API,
+            return_value=job.Job.from_response_json(
+                backend_fixtures["job"]["get"]["response"]
+            ),
+        )
+        mock_last_exec_job_api = mocker.patch(
+            LAST_EXECUTION_API,
+            return_value=execution.Execution.from_response_json(
+                backend_fixtures["execution"]["get"]["response"]
+            ),
+        )
 
         config_json = backend_fixtures["feature_monitoring_config"][
             "get_via_feature_group"
@@ -477,8 +533,11 @@ class TestFeatureMonitoringResultEngine:
 
         # Assert
         result = mock_result_api.call_args[0][0]
+        mock_get_job_api.assert_called_once_with(config.job_name)
+        mock_last_exec_job_api.assert_called_once()
         assert result._config_id == DEFAULT_CONFIG_ID
         assert result._execution_id == execution_id
+        assert result._feature_name == DEFAULT_FEATURE_NAME
         assert result._detection_stats_id is None
         assert result._reference_stats_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)

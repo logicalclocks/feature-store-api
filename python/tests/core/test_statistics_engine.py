@@ -405,7 +405,7 @@ class TestStatisticsEngine:
         )
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
 
-        mocker.patch("json.loads", return_value={"amount": {}})
+        mocker.patch("json.loads", return_value={"columns": {}})
         mocker.patch(
             "hsfs.core.feature_descriptive_statistics.FeatureDescriptiveStatistics.from_deequ_json"
         )

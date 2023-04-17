@@ -66,6 +66,7 @@ class FeatureMonitoringResultEngine:
         self,
         config_id: int,
         execution_id: int,
+        feature_name: str,
         detection_statistics: FeatureDescriptiveStatistics,
         reference_statistics: Optional[FeatureDescriptiveStatistics] = None,
         shift_detected: bool = False,
@@ -95,6 +96,7 @@ class FeatureMonitoringResultEngine:
             feature_store_id=self._feature_store_id,
             config_id=config_id,
             execution_id=execution_id,
+            feature_name=feature_name,
             detection_statistics=detection_statistics,
             reference_statistics=reference_statistics,
             difference=difference,
@@ -220,6 +222,7 @@ class FeatureMonitoringResultEngine:
                 self.save_feature_monitoring_result(
                     config_id=fm_config.id,
                     execution_id=execution_id,
+                    feature_name=stats_entity.feature_name,
                     detection_statistics=stats_entity,
                 )
                 for stats_entity in detection_statistics
@@ -228,6 +231,7 @@ class FeatureMonitoringResultEngine:
             return self.save_feature_monitoring_result(
                 config_id=fm_config.id,
                 execution_id=execution_id,
+                feature_name=detection_statistics[0].feature_name,
                 detection_statistics=detection_statistics[0],
                 reference_statistics=reference_statistics,
                 difference=difference,
