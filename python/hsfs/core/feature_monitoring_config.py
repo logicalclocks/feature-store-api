@@ -594,7 +594,6 @@ class FeatureMonitoringConfig:
             with_statistics=with_statistics,
         )
 
-    # TODO: Add read-only setters to match update() method
     @property
     def id(self) -> Optional[int]:
         return self._id

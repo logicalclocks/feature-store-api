@@ -169,11 +169,11 @@ class MonitoringWindowConfig:
     @window_length.setter
     def window_length(self, window_length: Optional[str]):
         if (
-            self._window_config_type != WindowConfigType.INSERT
+            self._window_config_type != WindowConfigType.ROLLING_TIME
             and window_length is not None
         ):
             raise AttributeError(
-                "Window length can only be set for if window_config_type is INSERT."
+                "Window length can only be set for if window_config_type is ROLLING_TIME."
             )
         self._window_length = window_length
 
