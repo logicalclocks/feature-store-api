@@ -212,6 +212,43 @@ PAGES = {
             "hsfs.core.explicit_provenance.Artifact"
         ),
     },
+    "api/feature_monitoring.md": {
+        "feature_monitoring_config": [
+            "hsfs.core.feature_monitoring_config.FeatureMonitoringConfig"
+        ],
+        "feature_monitoring_config_properties": keras_autodoc.get_properties(
+            "hsfs.core.feature_monitoring_config.FeatureMonitoringConfig"
+        ),
+        "feature_monitoring_config_methods": keras_autodoc.get_methods(
+            "hsfs.core.feature_monitoring_config.FeatureMonitoringConfig",
+            exclude=[
+                "from_response_json",
+                "update_from_response_json",
+                "json",
+                "to_dict",
+            ],
+        ),
+        "feature_monitoring_result": [
+            "hsfs.core.feature_monitoring_result.FeatureMonitoringResult"
+        ],
+        "feature_monitoring_result_properties": keras_autodoc.get_properties(
+            "hsfs.core.feature_monitoring_result.FeatureMonitoringResult"
+        ),
+        "feature_monitoring_result_methods": keras_autodoc.get_methods(
+            "hsfs.core.feature_monitoring_result.FeatureMonitoringResult",
+            exclude=["from_response_json", "json", "to_dict"],
+        ),
+        "feature_monitoring_enable": [
+            "hsfs.feature_group.FeatureGroup._enable_scheduled_statistics_monitoring_fluent",
+            "hsfs.feature_view.FeatureView._enable_scheduled_statistics_monitoring_fluent",
+            "hsfs.feature_group.FeatureGroup._enable_feature_monitoring_fluent",
+            "hsfs.feature_view.FeatureView._enable_feature_monitoring_fluent",
+        ],
+        "feature_monitoring_config_fetch": [
+            "hsfs.feature_group.FeatureGroup._get_feature_monitoring_configs",
+            "hsfs.feature_view.FeatureView._get_feature_monitoring_configs",
+        ],
+    },
 }
 
 hsfs_dir = pathlib.Path(__file__).resolve().parents[0]
