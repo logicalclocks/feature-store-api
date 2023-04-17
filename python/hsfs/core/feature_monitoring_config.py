@@ -143,8 +143,12 @@ class FeatureMonitoringConfig:
             "featureMonitoringType": self._feature_monitoring_type,
             "schedulerConfig": scheduler_config,
             "detectionWindowConfig": detection_window_config,
-            "statisticsComparisonConfig": statistics_comparison_config,
         }
+
+        if self._feature_group_id is not None:
+            the_dict["featureGroupId"] = self._feature_group_id
+        elif self._feature_view_id is not None:
+            the_dict["featureViewId"] = self._feature_view_id
 
         if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
             return the_dict
@@ -152,11 +156,6 @@ class FeatureMonitoringConfig:
         the_dict["referenceWindowConfig"] = reference_window_config
         the_dict["statisticsComparisonConfig"] = statistics_comparison_config
         the_dict["alertConfig"] = self._alert_config
-
-        if self._feature_group_id is not None:
-            the_dict["featureGroupId"] = self._feature_group_id
-        elif self._feature_view_id is not None:
-            the_dict["featureViewId"] = self._feature_view_id
 
         return the_dict
 
@@ -335,7 +334,7 @@ class FeatureMonitoringConfig:
 
         return self
 
-    def alert_on(
+    def _alert_on(
         self,
         severity: Optional[str],
         channel: Optional[str],
@@ -495,6 +494,14 @@ class FeatureMonitoringConfig:
     @property
     def description(self) -> Optional[str]:
         return self._description
+
+    @description.setter
+    def description(self, description: Optional[str]):
+        if not isinstance(description, str) and description is not None:
+            raise TypeError("description must be of type str")
+        elif isinstance(description, str) and len(description) > 2000:
+            raise ValueError("description must be less than 2000 characters")
+        self._description = description
 
     @property
     def job_name(self) -> Optional[str]:

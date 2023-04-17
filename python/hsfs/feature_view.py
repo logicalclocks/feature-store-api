@@ -2316,7 +2316,7 @@ class FeatureView:
             feature_view_version=self._version,
         )
 
-        return fm_engine._build_default_scheduled_statistics_config(
+        return fm_engine._build_default_feature_monitoring_config(
             name=name,
             feature_name=feature_name,
             description=description,

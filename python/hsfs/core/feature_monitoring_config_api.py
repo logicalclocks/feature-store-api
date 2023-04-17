@@ -212,9 +212,9 @@ class FeatureMonitoringConfigApi:
         )
         path_params.append("enabled")
         if enabled:
-            path_params.append("RESUME")
+            path_params.append("resume")
         else:
-            path_params.append("PAUSE")
+            path_params.append("pause")
 
         _client._send_request("PUT", path_params)
 
