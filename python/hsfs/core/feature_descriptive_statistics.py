@@ -17,7 +17,7 @@
 import json
 import humps
 from typing import Optional, Mapping, Union
-from hsfs.util import FeatureStoreEncoder
+from hsfs.util import FeatureStoreEncoder, convert_event_time_to_timestamp
 from datetime import datetime, date
 
 
@@ -178,14 +178,6 @@ class FeatureDescriptiveStatistics:
         return self._count
 
     @property
-    def end_time(self) -> int:
-        return self._end_time
-
-    @property
-    def row_percentage(self) -> float:
-        return self._row_percentage
-
-    @property
     def completeness(self) -> Optional[float]:
         return self._completeness
 
@@ -244,3 +236,31 @@ class FeatureDescriptiveStatistics:
     @property
     def start_time(self) -> Optional[int]:
         return self._start_time
+
+    @start_time.setter
+    def start_time(self, start_time: Optional[Union[datetime, date, str, int]]):
+        self._start_time = convert_event_time_to_timestamp(start_time)
+
+    @property
+    def end_time(self) -> int:
+        return self._end_time
+
+    @end_time.setter
+    def end_time(self, end_time: Optional[Union[datetime, date, str, int]]):
+        self._end_time = convert_event_time_to_timestamp(end_time)
+
+    @property
+    def row_percentage(self) -> float:
+        return self._row_percentage
+
+    @row_percentage.setter
+    def row_percentage(self, row_percentage: float):
+        if isinstance(row_percentage, int) or isinstance(row_percentage, float):
+            row_percentage = float(row_percentage)
+            if row_percentage <= 0.0 or row_percentage > 1.0:
+                raise ValueError("Row percentage must be a float between 0 and 1.")
+            self._row_percentage = row_percentage
+        elif row_percentage is None:
+            self._row_percentage = None
+        else:
+            raise TypeError("Row percentage must be a float between 0 and 1.")
