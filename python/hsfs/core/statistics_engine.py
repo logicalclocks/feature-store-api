@@ -103,15 +103,11 @@ class StatisticsEngine:
             statistics_str = self.profile_statistics(
                 feature_dataframe, feature_names, False, False, False
             )
-            statistics_dict = json.loads(statistics_str)
+            statistics_list = json.loads(statistics_str)["columns"]
 
-            statistics_list = [
-                statistics_dict.get(feature_name, None)
-                for feature_name in feature_names
-            ]
             return [
                 FeatureDescriptiveStatistics.from_deequ_json(stats)
-                for stats in filter(lambda x: x is not None, statistics_list)
+                for stats in statistics_list
             ]
         else:
             # TODO: Only compute statistics with Spark at the moment. This method is expected to be called

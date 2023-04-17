@@ -115,7 +115,7 @@ class FeatureDescriptiveStatistics:
             "num_null_values": json_dict["numRecordsNull"],
             "approx_num_distinct_values": json_dict["approximateNumDistinctValues"],
         }
-        if json_dict["uniqueness"]:
+        if "uniqueness" in json_dict.keys():
             # commmon for all data types if exact_uniqueness is enabled
             stats_dict["uniqueness"] = json_dict["uniqueness"]
             stats_dict["entropy"] = json_dict["entropy"]
