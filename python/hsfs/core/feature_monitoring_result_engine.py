@@ -21,6 +21,7 @@ from hsfs.core.feature_monitoring_result_api import FeatureMonitoringResultApi
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 from hsfs import util
+from hsfs.core import job_api
 
 DEFAULT_EXECUTION_ID = 123
 
@@ -209,11 +210,17 @@ class FeatureMonitoringResultEngine:
             difference = None
             shift_detected = False
 
+        execution = job_api.JobApi().last_execution(fm_config.job_name)
+        if execution is not None:
+            execution_id = execution._id
+        else:
+            execution_id = 0
+
         if len(detection_statistics) > 1:
             return [
                 self.save_feature_monitoring_result(
                     config_id=fm_config.id,
-                    execution_id=DEFAULT_EXECUTION_ID,
+                    execution_id=execution_id,
                     detection_statistics=stats_entity,
                 )
                 for stats_entity in detection_statistics
@@ -221,7 +228,7 @@ class FeatureMonitoringResultEngine:
         else:
             return self.save_feature_monitoring_result(
                 config_id=fm_config.id,
-                execution_id=DEFAULT_EXECUTION_ID,
+                execution_id=execution_id,
                 detection_statistics=detection_statistics[0],
                 reference_statistics=reference_statistics,
                 difference=difference,

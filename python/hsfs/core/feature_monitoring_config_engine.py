@@ -800,10 +800,10 @@ class FeatureMonitoringConfigEngine:
         # set commit times and row percentage
         for stats_entity in descriptive_stats:
             self.set_start_end_time_and_row_percentage(
-                stats_entity,
-                start_time,
-                end_time,
-                monitoring_window_config.row_percentage,
+                descriptive_stats=stats_entity,
+                start_time=start_time,
+                end_time=end_time,
+                row_percentage=monitoring_window_config.row_percentage,
             )
 
         return descriptive_stats
