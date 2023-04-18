@@ -1168,8 +1168,8 @@ class FeatureGroupBase:
         self,
         config_name: Optional[str] = None,
         config_id: Optional[int] = None,
-        start_date: Optional[Union[int, str, datetime, date]] = None,
-        end_date: Optional[Union[int, str, datetime, date]] = None,
+        start_time: Optional[Union[int, str, datetime, date]] = None,
+        end_time: Optional[Union[int, str, datetime, date]] = None,
         with_statistics: Optional[bool] = True,
     ) -> List["fmr.FeatureMonitoringResult"]:
         """Fetch feature monitoring history for a given feature monitoring config.
@@ -1182,14 +1182,14 @@ class FeatureGroupBase:
             # fetch feature monitoring history for a given feature monitoring config
             fm_history = fg._get_feature_monitoring_history(
                 config_name="my_config",
-                start_date="2020-01-01",
+                start_time="2020-01-01",
             )
 
             # fetch feature monitoring history for a given feature monitoring config id
             fm_history = fg._get_feature_monitoring_history(
                 config_id=1,
-                start_date=datetime.now() - timedelta(weeks=2),
-                end_date=datetime.now() - timedelta(weeks=1),
+                start_time=datetime.now() - timedelta(weeks=2),
+                end_time=datetime.now() - timedelta(weeks=1),
                 with_statistics=False,
             )
             ```
@@ -1199,9 +1199,9 @@ class FeatureGroupBase:
                 Defaults to None.
             config_id: The id of the feature monitoring config to fetch history for.
                 Defaults to None.
-            start_date: The start date of the feature monitoring history to fetch.
+            start_time: The start date of the feature monitoring history to fetch.
                 Defaults to None.
-            end_date: The end date of the feature monitoring history to fetch.
+            end_time: The end date of the feature monitoring history to fetch.
                 Defaults to None.
             with_statistics: Whether to include statistics in the feature monitoring history.
                 Defaults to True. If False, only metadata about the monitoring will be fetched.
@@ -1226,8 +1226,8 @@ class FeatureGroupBase:
         return self._feature_monitoring_result_engine.get_feature_monitoring_results(
             config_name=config_name,
             config_id=config_id,
-            start_date=start_date,
-            end_date=end_date,
+            start_time=start_time,
+            end_time=end_time,
             with_statistics=with_statistics,
         )
 
