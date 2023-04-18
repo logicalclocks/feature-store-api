@@ -115,7 +115,7 @@ class TestArrowFlightClient:
         )
 
         # Act
-        fg.read(read_options={"use_spark": True})
+        fg.read(read_options={"use_hive": True})
 
         # Assert
         assert mock_creat_hive_connection.call_count == 1
@@ -145,7 +145,7 @@ class TestArrowFlightClient:
         query = fg.select_all()
 
         # Act
-        query.read(read_options={"use_spark": True})
+        query.read(read_options={"use_hive": True})
 
         # Assert
         assert mock_creat_hive_connection.call_count == 1
@@ -173,7 +173,7 @@ class TestArrowFlightClient:
         )
 
         # Act
-        fv.training_data(read_options={"use_spark": True})
+        fv.training_data(read_options={"use_hive": True})
 
         # Assert
         assert mock_creat_hive_connection.call_count == 1
@@ -201,7 +201,7 @@ class TestArrowFlightClient:
         )
 
         # Act
-        fv.get_batch_data(read_options={"use_spark": True})
+        fv.get_batch_data(read_options={"use_hive": True})
 
         # Assert
         assert mock_creat_hive_connection.call_count == 1
@@ -237,7 +237,7 @@ class TestArrowFlightClient:
         )
 
         # Act
-        fv.get_training_data(1, read_options={"use_spark": True})
+        fv.get_training_data(1, read_options={"use_hive": True})
 
         # Assert
         assert mock_read_file.call_count == 1

@@ -84,8 +84,8 @@ class ArrowFlightClient:
     def _should_be_used(self, read_options):
         if (
             read_options
-            and "use_spark" in read_options
-            and read_options["use_spark"] is True
+            and "use_hive" in read_options
+            and read_options["use_hive"] is True
         ):
             return False
 
@@ -161,7 +161,7 @@ class ArrowFlightClient:
                     raise FeatureStoreException(
                         "Could not read data using FlyingDuck. "
                         "If the issue persists, "
-                        'use read_options={"use_spark": True} instead.'
+                        'use read_options={"use_hive": True} instead.'
                     ) from e
 
         return afs_error_handler_wrapper
