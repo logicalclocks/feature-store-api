@@ -17,9 +17,10 @@
 
 package com.logicalclocks.hsfs.flink.engine;
 
-import lombok.SneakyThrows;
-import org.apache.avro.Schema;
+
+import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.flink.api.common.serialization.SerializationSchema;
@@ -29,33 +30,33 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PojoSerializer implements SerializationSchema<Object> {
+public class GenericRecordAvroSerializer implements SerializationSchema<GenericRecord> {
 
-  Schema schema;
-
-  public PojoSerializer(Schema schema) {
-    this.schema = schema;
+  public GenericRecordAvroSerializer(){
   }
 
-  @SneakyThrows
   @Override
-  public byte[] serialize(Object input) {
-    return encode(input);
-  }
-
-  private byte[] encode(Object input) throws IOException {
-    ReflectDatumWriter<Object> datumWriter = new ReflectDatumWriter<>(this.schema);
+  public byte[] serialize(GenericRecord genericRecord) {
+    DatumWriter<GenericRecord> datumWriter = new ReflectDatumWriter<>(genericRecord.getSchema());
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     byteArrayOutputStream.reset();
 
-    List<Object> records = new ArrayList<>();
-    records.add(input);
+    List<GenericRecord> records = new ArrayList<>();
+    records.add(genericRecord);
 
     BinaryEncoder binaryEncoder = new EncoderFactory().binaryEncoder(byteArrayOutputStream, null);
-    for (Object segment: records) {
-      datumWriter.write(segment, binaryEncoder);
+    for (GenericRecord segment: records) {
+      try {
+        datumWriter.write(segment, binaryEncoder);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
-    binaryEncoder.flush();
+    try {
+      binaryEncoder.flush();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
     return byteArrayOutputStream.toByteArray();
   }
 }

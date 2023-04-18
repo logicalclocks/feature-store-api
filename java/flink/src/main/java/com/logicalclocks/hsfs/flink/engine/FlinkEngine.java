@@ -25,6 +25,7 @@ import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
 
 import lombok.Getter;
 
+import org.apache.avro.generic.GenericRecord;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
@@ -33,6 +34,8 @@ import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -63,17 +66,24 @@ public class FlinkEngine {
     DataStream<Object> genericDataStream = (DataStream<Object>) dataStream;
     Properties properties = getKafkaProperties(streamFeatureGroup);
 
-    KafkaSink<Object> sink = KafkaSink.<Object>builder()
+    KafkaSink<GenericRecord> sink = KafkaSink.<GenericRecord>builder()
         .setBootstrapServers(properties.getProperty("bootstrap.servers"))
         .setKafkaProducerConfig(properties)
         .setRecordSerializer(KafkaRecordSerializationSchema.builder()
         .setTopic(streamFeatureGroup.getOnlineTopicName())
-        .setValueSerializationSchema(new PojoSerializer(streamFeatureGroup.getDeserializedAvroSchema()))
+        .setKeySerializationSchema(new KeySerializationSchema(streamFeatureGroup.getPrimaryKeys()))
+        .setValueSerializationSchema(new GenericRecordAvroSerializer())
         .build())
         .setDeliverGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
         .build();
 
-    return genericDataStream.sinkTo(sink);
+    Map<String, String> complexFeatureSchemas = new HashMap<>();
+    for (String featureName: streamFeatureGroup.getComplexFeatures()) {
+      complexFeatureSchemas.put(featureName, streamFeatureGroup.getFeatureAvroSchema(featureName));
+    }
+
+    return genericDataStream.map(new PojoToGenericRecord(streamFeatureGroup.getEncodedAvroSchema(),
+      complexFeatureSchemas)).sinkTo(sink);
   }
 
   private Properties getKafkaProperties(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
