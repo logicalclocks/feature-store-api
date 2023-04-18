@@ -167,12 +167,12 @@ class MonitoringWindowConfigEngine:
         )
 
     def time_range_str_to_time_delta(self, time_range: str) -> timedelta:
-        months, weeks, days, hours = re.search(
-            r"(\d+)m(\d+)w(\d+)d(\d+)h",
+        weeks, days, hours = re.search(
+            r"(\d+)w(\d+)d(\d+)h",
             time_range,
         ).groups(0)
 
-        return timedelta(months=months, weeks=weeks, days=days, hours=hours)
+        return timedelta(weeks=weeks, days=days, hours=hours)
 
     def get_window_start_end_times(
         self,
