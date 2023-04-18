@@ -45,12 +45,14 @@ from hsfs.core import (
     validation_result_engine,
     job_api,
     feature_monitoring_config_engine,
+    feature_monitoring_result_engine,
 )
 
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.validation_report import ValidationReport
 from hsfs.core import feature_monitoring_config as fmc
+from hsfs.core import feature_monitoring_result as fmr
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.job import Job
@@ -103,6 +105,18 @@ class FeatureGroupBase:
             self._validation_result_engine = (
                 validation_result_engine.ValidationResultEngine(
                     featurestore_id, self._id
+                )
+            )
+            self._feature_monitoring_config_engine = (
+                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                    feature_store_id=featurestore_id,
+                    feature_group_id=self._id,
+                )
+            )
+            self._feature_monitoring_result_engine = (
+                feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+                    feature_store_id=self._feature_store_id,
+                    feature_group_id=self._id,
                 )
             )
 
@@ -1084,6 +1098,7 @@ class FeatureGroupBase:
         self,
         name: Optional[str] = None,
         feature_name: Optional[str] = None,
+        config_id: Optional[int] = None,
     ) -> Union[
         "fmc.FeatureMonitoringConfig", List["fmc.FeatureMonitoringConfig"], None
     ]:
@@ -1108,12 +1123,17 @@ class FeatureGroupBase:
 
             # fetch all feature monitoring configs attached to a particular feature
             fm_configs = fg._get_feature_monitoring_configs(feature_name="my_feature")
+
+            # fetch a single feature monitoring config with a given id
+            fm_config = fg._get_feature_monitoring_configs(config_id=1)
             ```
 
         # Arguments
             name: If provided fetch only the feature monitoring config with the given name.
                 Defaults to None.
             feature_name: If provided, fetch only configs attached to a particular feature.
+                Defaults to None.
+            config_id: If provided, fetch only the feature monitoring config with the given id.
                 Defaults to None.
 
         # Raises
@@ -1139,7 +1159,76 @@ class FeatureGroupBase:
         )
 
         return fm_engine.get_feature_monitoring_configs(
-            name=name, feature_name=feature_name
+            name=name,
+            feature_name=feature_name,
+            config_id=config_id,
+        )
+
+    def _get_feature_monitoring_history(
+        self,
+        config_name: Optional[str] = None,
+        config_id: Optional[int] = None,
+        start_date: Optional[Union[int, str, datetime, date]] = None,
+        end_date: Optional[Union[int, str, datetime, date]] = None,
+        with_statistics: Optional[bool] = True,
+    ) -> List["fmr.FeatureMonitoringResult"]:
+        """Fetch feature monitoring history for a given feature monitoring config.
+
+        !!! example
+            ```python3
+            # fetch your feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # fetch feature monitoring history for a given feature monitoring config
+            fm_history = fg._get_feature_monitoring_history(
+                config_name="my_config",
+                start_date="2020-01-01",
+            )
+
+            # fetch feature monitoring history for a given feature monitoring config id
+            fm_history = fg._get_feature_monitoring_history(
+                config_id=1,
+                start_date=datetime.now() - timedelta(weeks=2),
+                end_date=datetime.now() - timedelta(weeks=1),
+                with_statistics=False,
+            )
+            ```
+
+        # Arguments
+            config_name: The name of the feature monitoring config to fetch history for.
+                Defaults to None.
+            config_id: The id of the feature monitoring config to fetch history for.
+                Defaults to None.
+            start_date: The start date of the feature monitoring history to fetch.
+                Defaults to None.
+            end_date: The end date of the feature monitoring history to fetch.
+                Defaults to None.
+            with_statistics: Whether to include statistics in the feature monitoring history.
+                Defaults to True. If False, only metadata about the monitoring will be fetched.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
+            ValueError: if both config_name and config_id are provided.
+            TypeError: if config_name or config_id are not respectively string, int or None.
+
+        # Return
+            List[`FeatureMonitoringResult`]
+                A list of feature monitoring results containing the monitoring metadata
+                as well as the computed statistics for the detection and reference window
+                if requested.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can fetch feature monitoring history."
+            )
+
+        return self._feature_monitoring_result_engine.get_feature_monitoring_results(
+            config_name=config_name,
+            config_id=config_id,
+            start_date=start_date,
+            end_date=end_date,
+            with_statistics=with_statistics,
         )
 
     def _enable_scheduled_statistics_monitoring_fluent(

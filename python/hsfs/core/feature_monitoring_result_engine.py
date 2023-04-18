@@ -16,6 +16,7 @@
 
 from typing import Dict, List, Optional, Union, Tuple
 from datetime import date, datetime
+from hsfs.core.feature_monitoring_config_api import FeatureMonitoringConfigApi
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.core.feature_monitoring_result_api import FeatureMonitoringResultApi
 from hsfs.core import feature_monitoring_config as fmc
@@ -55,6 +56,12 @@ class FeatureMonitoringResultEngine:
         self._feature_view_version = feature_view_version
 
         self._feature_monitoring_result_api = FeatureMonitoringResultApi(
+            feature_store_id=feature_store_id,
+            feature_group_id=feature_group_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+        )
+        self._feature_monitoring_config_api = FeatureMonitoringConfigApi(
             feature_store_id=feature_store_id,
             feature_group_id=feature_group_id,
             feature_view_name=feature_view_name,
@@ -139,6 +146,60 @@ class FeatureMonitoringResultEngine:
         return self._feature_monitoring_result_api.get_by_config_id(
             config_id=config_id,
             query_params=query_params,
+        )
+
+    def get_feature_monitoring_results(
+        self,
+        config_id: Optional[int] = None,
+        config_name: Optional[str] = None,
+        start_time: Optional[Union[str, int, datetime, date]] = None,
+        end_time: Optional[Union[str, int, datetime, date]] = None,
+        with_statistics: bool = True,
+    ) -> List[FeatureMonitoringResult]:
+        """Convenience method to fetch feature monitoring results from an entity.
+
+        Args:
+            config_id: Optional[int]. Id of the feature monitoring configuration.
+                Defaults to None if config_name is provided.
+            config_name: Optional[str]. Name of the feature monitoring configuration.
+                Defaults to None if config_id is provided.
+            start_time: Optional[Union[str, int, datetime, date]].
+                Query results with monitoring time greater than or equal to start_time.
+            end_time: Optional[Union[str, int, datetime, date]].
+                Query results with monitoring time less than or equal to end_time.
+            with_statistics: bool. Whether to include the statistics attached to the results.
+                Defaults to True. Set to False to fetch only monitoring metadata.
+
+        Returns:
+            List[FeatureMonitoringResult]. List of feature monitoring results.
+        """
+        if all([config_id is None, config_name is None]):
+            raise ValueError(
+                "Either config_id or config_name must be provided to fetch feature monitoring results."
+            )
+        elif all([config_id is not None, config_name is not None]):
+            raise ValueError(
+                "Only one of config_id or config_name can be provided to fetch feature monitoring results."
+            )
+        elif config_name is not None and isinstance(config_name, str):
+            config = self._feature_monitoring_config_api.get_by_name(config_name)
+            if not isinstance(config, fmc.FeatureMonitoringConfig):
+                raise ValueError(
+                    f"Feature monitoring configuration with name {config_name} does not exist."
+                )
+            config_id = config._id
+        elif config_name is not None:
+            raise TypeError(
+                f"config_name must be of type str. Got {type(config_name)}."
+            )
+        elif config_id is not None and not isinstance(config_id, int):
+            raise TypeError(f"config_id must be of type int. Got {type(config_id)}.")
+
+        return self.fetch_all_feature_monitoring_results_by_config_id(
+            config_id=config_id,
+            start_time=start_time,
+            end_time=end_time,
+            with_statistics=with_statistics,
         )
 
     def _build_query_params(

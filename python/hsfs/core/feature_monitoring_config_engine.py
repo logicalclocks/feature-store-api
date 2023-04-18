@@ -526,6 +526,7 @@ class FeatureMonitoringConfigEngine:
         self,
         name: Optional[str] = None,
         feature_name: Optional[str] = None,
+        config_id: Optional[int] = None,
     ) -> Union[
         "fmc.FeatureMonitoringConfig", List["fmc.FeatureMonitoringConfig"], None
     ]:
@@ -533,7 +534,10 @@ class FeatureMonitoringConfigEngine:
 
         If no arguments are provided, fetches all feature monitoring configurations
         attached to the given entity. If a name is provided, it fetches a single configuration
-        and returns None if not found.
+        and returns None if not found. If a feature name is provided, it fetches all
+        configurations attached to that feature (not including those attached to the full
+        entity) and returns an empty list if none are found. If a config_id is provided,
+        it fetches a single configuration and returns None if not found.
 
         Args:
             name: str, optional
@@ -541,6 +545,9 @@ class FeatureMonitoringConfigEngine:
                 Defaults to None.
             feature_name: str, optional
                 If provided, fetch all configurations attached to a specific feature.
+                Defaults to None.
+            config_id: int, optional
+                If provided, fetch only configuration with given id.
                 Defaults to None.
 
         Raises:
@@ -551,8 +558,14 @@ class FeatureMonitoringConfigEngine:
             FeatureMonitoringConfig or List[FeatureMonitoringConfig] The monitoring
             configuration(s).
         """
-        if name is not None and feature_name is not None:
-            raise ValueError("Cannot provide both name and feature_name.")
+        if any(
+            [
+                name and feature_name,
+                feature_name and config_id,
+                config_id and name,
+            ]
+        ):
+            raise ValueError("Provide at most one of name, feature_name, or config_id.")
 
         if name is not None:
             if not isinstance(name, str):
@@ -564,6 +577,10 @@ class FeatureMonitoringConfigEngine:
             return self._feature_monitoring_config_api.get_by_feature_name(
                 feature_name=feature_name
             )
+        elif config_id is not None:
+            if not isinstance(config_id, int):
+                raise TypeError("config_id must be an integer or None.")
+            return self._feature_monitoring_config_api.get_by_id(config_id=config_id)
 
         return self._feature_monitoring_config_api.get_by_entity()
 

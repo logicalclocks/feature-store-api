@@ -21,6 +21,7 @@ from typing import Optional, Union, List, Dict, Any
 import pandas as pd
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_monitoring_config as fmc
+from hsfs.core import feature_monitoring_result as fmr
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 import humps
@@ -33,6 +34,7 @@ from hsfs.core import (
     transformation_function_engine,
     vector_server,
     feature_monitoring_config_engine,
+    feature_monitoring_result_engine,
 )
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
@@ -80,6 +82,24 @@ class FeatureView:
         self._single_vector_server = None
         self._batch_vectors_server = None
         self._batch_scoring_server = None
+
+        if self._id:
+            self._feature_monitoring_config_engine = (
+                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                    feature_store_id=self._featurestore_id,
+                    feature_view_id=self._id,
+                    feature_view_name=self._name,
+                    feature_view_version=self._version,
+                )
+            )
+            self._feature_monitoring_result_engine = (
+                feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+                    feature_store_id=self._featurestore_id,
+                    feature_view_id=self._id,
+                    feature_view_name=self._name,
+                    feature_view_version=self._version,
+                )
+            )
 
     def delete(self):
         """Delete current feature view, all associated metadata and training data.
@@ -2126,6 +2146,7 @@ class FeatureView:
         self,
         name: Optional[str] = None,
         feature_name: Optional[str] = None,
+        config_id: Optional[int] = None,
     ) -> Union[
         "fmc.FeatureMonitoringConfig", List["fmc.FeatureMonitoringConfig"], None
     ]:
@@ -2150,12 +2171,17 @@ class FeatureView:
 
             # fetch all feature monitoring configs attached to a particular feature
             fm_configs = fv._get_feature_monitoring_configs(feature_name="my_feature")
+
+            # fetch a single feature monitoring config with a particular id
+            fm_config = fv._get_feature_monitoring_configs(config_id=1)
             ```
 
         # Arguments
             name: If provided fetch only the feature monitoring config with the given name.
                 Defaults to None.
             feature_name: If provided, fetch only configs attached to a particular feature.
+                Defaults to None.
+            config_id: If provided, fetch only the feature monitoring config with the given id.
                 Defaults to None.
 
         # Raises
@@ -2175,13 +2201,77 @@ class FeatureView:
                 "Only Feature Group registered with Hopsworks can fetch feature monitoring configurations."
             )
 
-        fm_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=self._feature_store_id,
-            feature_group_id=self._id,
+        return self._feature_monitoring_config_engine.get_feature_monitoring_configs(
+            name=name,
+            feature_name=feature_name,
+            config_id=config_id,
         )
 
-        return fm_engine.get_feature_monitoring_configs(
-            name=name, feature_name=feature_name
+    def _get_feature_monitoring_history(
+        self,
+        config_name: Optional[str] = None,
+        config_id: Optional[int] = None,
+        start_date: Optional[Union[int, str, datetime, date]] = None,
+        end_date: Optional[Union[int, str, datetime, date]] = None,
+        with_statistics: Optional[bool] = True,
+    ) -> List["fmr.FeatureMonitoringResult"]:
+        """Fetch feature monitoring history for a given feature monitoring config.
+
+        !!! example
+            ```python3
+            # fetch your feature view
+            fv = fs.get_feature_view(name="my_feature_group", version=1)
+
+            # fetch feature monitoring history for a given feature monitoring config
+            fm_history = fv._get_feature_monitoring_history(
+                config_name="my_config",
+                start_date="2020-01-01",
+            )
+
+            # or use the config id
+            fm_history = fv._get_feature_monitoring_history(
+                config_id=1,
+                start_date=datetime.now() - timedelta(weeks=2),
+                end_date=datetime.now() - timedelta(weeks=1),
+                with_statistics=False,
+            )
+            ```
+
+        # Arguments
+            config_name: The name of the feature monitoring config to fetch history for.
+                Defaults to None.
+            config_id: The id of the feature monitoring config to fetch history for.
+                Defaults to None.
+            start_date: The start date of the feature monitoring history to fetch.
+                Defaults to None.
+            end_date: The end date of the feature monitoring history to fetch.
+                Defaults to None.
+            with_statistics: Whether to include statistics in the feature monitoring history.
+                Defaults to True. If False, only metadata about the monitoring will be fetched.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
+            ValueError: if both config_name and config_id are provided.
+            TypeError: if config_name or config_id are not respectively string, int or None.
+
+        # Return
+            List[`FeatureMonitoringResult`]
+                A list of feature monitoring results containing the monitoring metadata
+                as well as the computed statistics for the detection and reference window
+                if requested.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature View registered with Hopsworks can fetch feature monitoring history."
+            )
+
+        return self._feature_monitoring_result_engine.get_feature_monitoring_results(
+            config_name=config_name,
+            config_id=config_id,
+            start_date=start_date,
+            end_date=end_date,
+            with_statistics=with_statistics,
         )
 
     def _enable_scheduled_statistics_monitoring_fluent(
@@ -2236,14 +2326,8 @@ class FeatureView:
             raise FeatureStoreException(
                 "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
             )
-        fm_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=self._featurestore_id,
-            feature_view_id=self._id,
-            feature_view_name=self._name,
-            feature_view_version=self._version,
-        )
 
-        return fm_engine._build_default_scheduled_statistics_config(
+        return self._feature_monitoring_config_engine._build_default_scheduled_statistics_config(
             name=name,
             feature_name=feature_name,
             description=description,
@@ -2309,14 +2393,8 @@ class FeatureView:
             raise FeatureStoreException(
                 "Only Feature Group registered with Hopsworks can enable feature monitoring."
             )
-        fm_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=self._featurestore_id,
-            feature_view_id=self._id,
-            feature_view_name=self._name,
-            feature_view_version=self._version,
-        )
 
-        return fm_engine._build_default_feature_monitoring_config(
+        return self._feature_monitoring_config_engine._build_default_feature_monitoring_config(
             name=name,
             feature_name=feature_name,
             description=description,
