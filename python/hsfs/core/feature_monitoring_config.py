@@ -641,6 +641,7 @@ class FeatureMonitoringConfig:
                 config_id=self._id, enabled=enabled
             )
         self._enabled = enabled
+        self._scheduler_config._enabled = enabled
 
     @property
     def feature_monitoring_type(self) -> Optional[str]:
