@@ -448,7 +448,7 @@ class FeatureMonitoringConfigEngine:
             # setting feature_monitoring_type to "SCHEDULED_STATISTICS" allows
             # to raise an error if no reference window and comparison config are provided
             feature_monitoring_type="DESCRIPTIVE_STATISTICS",
-            job_scheduler={
+            scheduler_config={
                 "job_frequency": job_frequency,
                 "start_date_time": start_date_time,
                 "enabled": True,
