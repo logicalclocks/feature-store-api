@@ -820,6 +820,7 @@ class Engine:
         dataframe: pd.DataFrame,
         offline_write_options: dict,
     ):
+        reset_offsets = False
         if feature_group._multi_part_insert:
             if feature_group._kafka_producer is None:
                 producer, feature_writers, writer = self._init_kafka_resources(
