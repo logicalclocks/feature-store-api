@@ -12,7 +12,7 @@
   <artifactId>hsfs-flink</artifactId>
 
   <properties>
-    <flink.version>1.14.3.0</flink.version>
+    <flink.version>1.14.3.1</flink.version>
     <fasterxml.version>2.13.4</fasterxml.version>
     <scala.base>2.11</scala.base>
   </properties>
