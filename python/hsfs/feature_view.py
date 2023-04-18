@@ -83,24 +83,6 @@ class FeatureView:
         self._batch_vectors_server = None
         self._batch_scoring_server = None
 
-        if self._id:
-            self._feature_monitoring_config_engine = (
-                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-                    feature_store_id=self._featurestore_id,
-                    feature_view_id=self._id,
-                    feature_view_name=self._name,
-                    feature_view_version=self._version,
-                )
-            )
-            self._feature_monitoring_result_engine = (
-                feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-                    feature_store_id=self._featurestore_id,
-                    feature_view_id=self._id,
-                    feature_view_name=self._name,
-                    feature_view_version=self._version,
-                )
-            )
-
     def delete(self):
         """Delete current feature view, all associated metadata and training data.
 
@@ -2201,7 +2183,16 @@ class FeatureView:
                 "Only Feature Group registered with Hopsworks can fetch feature monitoring configurations."
             )
 
-        return self._feature_monitoring_config_engine.get_feature_monitoring_configs(
+        fm_config_engine = (
+            feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                feature_store_id=self._featurestore_id,
+                feature_view_id=self._id,
+                feature_view_name=self._name,
+                feature_view_version=self._version,
+            )
+        )
+
+        return fm_config_engine.get_feature_monitoring_configs(
             name=name,
             feature_name=feature_name,
             config_id=config_id,
@@ -2266,7 +2257,16 @@ class FeatureView:
                 "Only Feature View registered with Hopsworks can fetch feature monitoring history."
             )
 
-        return self._feature_monitoring_result_engine.get_feature_monitoring_results(
+        fm_result_engine = (
+            feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+                feature_store_id=self._featurestore_id,
+                feature_view_id=self._id,
+                feature_view_name=self._name,
+                feature_view_version=self._version,
+            )
+        )
+
+        return fm_result_engine.get_feature_monitoring_results(
             config_name=config_name,
             config_id=config_id,
             start_time=start_time,
@@ -2327,7 +2327,16 @@ class FeatureView:
                 "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
             )
 
-        return self._feature_monitoring_config_engine._build_default_scheduled_statistics_config(
+        fm_config_engine = (
+            feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                feature_store_id=self._featurestore_id,
+                feature_view_id=self._id,
+                feature_view_name=self._name,
+                feature_view_version=self._version,
+            )
+        )
+
+        return fm_config_engine._build_default_scheduled_statistics_config(
             name=name,
             feature_name=feature_name,
             description=description,
@@ -2394,7 +2403,16 @@ class FeatureView:
                 "Only Feature Group registered with Hopsworks can enable feature monitoring."
             )
 
-        return self._feature_monitoring_config_engine._build_default_feature_monitoring_config(
+        fm_config_engine = (
+            feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                feature_store_id=self._featurestore_id,
+                feature_view_id=self._id,
+                feature_view_name=self._name,
+                feature_view_version=self._version,
+            )
+        )
+
+        return fm_config_engine._build_default_feature_monitoring_config(
             name=name,
             feature_name=feature_name,
             description=description,
