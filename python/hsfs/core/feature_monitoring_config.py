@@ -514,14 +514,7 @@ class FeatureMonitoringConfig:
         # Raises
             `FeatureStoreException`: If the feature monitoring config has not been saved.
         """
-        if not self._id:
-            raise FeatureStoreException(
-                "Feature monitoring config must be registered via `.save()` before disabling."
-            )
-
-        self._feature_monitoring_config_engine.pause_or_resume_monitoring(
-            config_id=self._id, enabled=False
-        )
+        self.enabled = False
 
     def enable(self):
         """Enables the feature monitoring configuration.
@@ -541,14 +534,7 @@ class FeatureMonitoringConfig:
         # Raises
             `FeatureStoreException`: If the feature monitoring config has not been saved.
         """
-        if not self._id:
-            raise FeatureStoreException(
-                "Feature monitoring config must be registered via `.save()` before enabling."
-            )
-
-        self._feature_monitoring_config_engine.pause_or_resume_monitoring(
-            config_id=self._id, enabled=True
-        )
+        self.enabled = True
 
     def get_history(
         self,
