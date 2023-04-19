@@ -2476,7 +2476,14 @@ class TestPython:
         mock_job_api.return_value.get.return_value = job.Job(
             1, "test_job", None, None, None, None
         )
-
+        producer = mocker.MagicMock()
+        topic_mock = mocker.MagicMock()
+        topic_mock.topics = {"topic_name": "NA"}
+        producer.list_topics = mocker.MagicMock(return_value=topic_mock)
+        mocker.patch(
+            "hsfs.engine.python.Engine._init_kafka_resources",
+            return_value=(producer, mocker.MagicMock(), mocker.MagicMock()),
+        )
         python_engine = python.Engine()
 
         fg = feature_group.FeatureGroup(
@@ -2487,7 +2494,12 @@ class TestPython:
             partition_key=[],
             id=10,
             stream=False,
+            time_travel_format="HUDI",
         )
+
+        mocker.patch.object(fg, "commit_details", return_value={"commit1": 1})
+
+        fg._online_topic_name = "topic_name"
 
         df = pd.DataFrame(data={"col1": [1, 2, 2, 3]})
 
