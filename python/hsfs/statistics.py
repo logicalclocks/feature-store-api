@@ -57,19 +57,12 @@ class Statistics:
             self._content = content
 
         if feature_descriptive_statistics is not None:
-            print(
-                "Statistics __init__: feature descriptive statistics NOT null. Deserializing..."
-            )
-            print(feature_descriptive_statistics)
             self._feature_descriptive_statistics = []
             for fds in feature_descriptive_statistics:
                 self._feature_descriptive_statistics.append(
                     FeatureDescriptiveStatistics.from_response_json(fds)
                 )
-            print(type(self._feature_descriptive_statistics))
-            print(self._feature_descriptive_statistics)
 
-        self._feature_descriptive_statistics = feature_descriptive_statistics
         # feature group
         # self._feature_group_commit_id = feature_group_commit_id
         self._feature_group_id = feature_group_id

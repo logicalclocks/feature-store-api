@@ -32,8 +32,8 @@ class TestFeatureMonitoringResult:
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
         assert result._execution_id == 123
-        assert result._detection_stats_id is None
-        assert result._reference_stats_id is None
+        assert result._detection_statistics_id is None
+        assert result._reference_statistics_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
         assert isinstance(result._reference_statistics, FeatureDescriptiveStatistics)
         assert result._config_id == 32
@@ -57,8 +57,8 @@ class TestFeatureMonitoringResult:
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
         assert result._execution_id == 123
-        assert result._detection_stats_id is None
-        assert result._reference_stats_id is None
+        assert result._detection_statistics_id is None
+        assert result._reference_statistics_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
         assert result._reference_statistics is None
         assert result._config_id == 32
@@ -80,8 +80,8 @@ class TestFeatureMonitoringResult:
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
         assert result._execution_id == 123
-        assert result._detection_stats_id is None
-        assert result._reference_stats_id is None
+        assert result._detection_statistics_id is None
+        assert result._reference_statistics_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
         assert isinstance(result._reference_statistics, FeatureDescriptiveStatistics)
         assert result._config_id == 32
@@ -105,8 +105,8 @@ class TestFeatureMonitoringResult:
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
         assert result._execution_id == 123
-        assert result._detection_stats_id is None
-        assert result._reference_stats_id is None
+        assert result._detection_statistics_id is None
+        assert result._reference_statistics_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
         assert result._reference_statistics is None
         assert result._config_id == 32
@@ -131,8 +131,8 @@ class TestFeatureMonitoringResult:
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
         assert result._execution_id == 123
-        assert result._detection_stats_id == 52
-        assert result._reference_stats_id == 53
+        assert result._detection_statistics_id == 52
+        assert result._reference_statistics_id == 53
         assert result._config_id == 32
         assert result._monitoring_time == 1676457000000
         assert result._difference == 0.3
@@ -155,8 +155,8 @@ class TestFeatureMonitoringResult:
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
         assert result._execution_id == 123
-        assert result._detection_stats_id == 52
-        assert result._reference_stats_id is None
+        assert result._detection_statistics_id == 52
+        assert result._reference_statistics_id is None
         assert result._config_id == 32
         assert result._monitoring_time == 1676457000000
         assert result._difference == 0.3
@@ -179,8 +179,8 @@ class TestFeatureMonitoringResult:
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
         assert result._execution_id == 123
-        assert result._detection_stats_id is None
-        assert result._reference_stats_id is None
+        assert result._detection_statistics_id is None
+        assert result._reference_statistics_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
         assert isinstance(result._reference_statistics, FeatureDescriptiveStatistics)
         assert result._config_id == 32
@@ -207,8 +207,8 @@ class TestFeatureMonitoringResult:
         assert isinstance(result, FeatureMonitoringResult)
         assert result._id == 42
         assert result._execution_id == 123
-        assert result._detection_stats_id is None
-        assert result._reference_stats_id is None
+        assert result._detection_statistics_id is None
+        assert result._reference_statistics_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
         assert result._reference_statistics is None
         assert result._config_id == 32

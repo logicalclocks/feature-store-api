@@ -33,8 +33,8 @@ class FeatureMonitoringResult:
         feature_name: str,
         difference: Optional[float] = None,
         shift_detected: bool = False,
-        detection_stats_id: Optional[int] = None,
-        reference_stats_id: Optional[int] = None,
+        detection_statistics_id: Optional[int] = None,
+        reference_statistics_id: Optional[int] = None,
         detection_statistics: Optional[
             Union[FeatureDescriptiveStatistics, dict]
         ] = None,
@@ -50,8 +50,8 @@ class FeatureMonitoringResult:
         self._execution_id = execution_id
         self._config_id = config_id
         self._feature_name = feature_name
-        self._detection_stats_id = detection_stats_id
-        self._reference_stats_id = reference_stats_id
+        self._detection_statistics_id = detection_statistics_id
+        self._reference_statistics_id = reference_statistics_id
         self._detection_statistics = self._parse_feature_statistics(
             detection_statistics
         )
@@ -97,9 +97,9 @@ class FeatureMonitoringResult:
         }
 
         if self._detection_stats_id is not None:
-            the_dict["detectionStatsId"] = self._detection_stats_id
+            the_dict["detectionStatisticsId"] = self._detection_statistics_id
         if self._reference_stats_id is not None:
-            the_dict["referenceStatsId"] = self._reference_stats_id
+            the_dict["referenceStatisticsId"] = self._reference_statistics_id
         if self._detection_statistics is not None:
             the_dict["detectionStatistics"] = self._detection_statistics.to_dict()
         if self._reference_statistics is not None:
@@ -129,12 +129,12 @@ class FeatureMonitoringResult:
         return self._feature_store_id
 
     @property
-    def detection_stats_id(self) -> Optional[int]:
-        return self._detection_stats_id
+    def detection_statistics_id(self) -> Optional[int]:
+        return self._detection_statistics_id
 
     @property
-    def reference_stats_id(self) -> Optional[int]:
-        return self._reference_stats_id
+    def reference_statistics_id(self) -> Optional[int]:
+        return self._reference_statistics_id
 
     @property
     def detection_statistics(self) -> Optional[FeatureDescriptiveStatistics]:

@@ -246,8 +246,8 @@ class TestFeatureDescriptiveStatistics:
 
         # Assert
         assert isinstance(result, FeatureMonitoringResult)
-        assert result._detection_stats_id is None
-        assert result._reference_stats_id is None
+        assert result._detection_statistics_id is None
+        assert result._reference_statistics_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
         assert isinstance(result._reference_statistics, FeatureDescriptiveStatistics)
 
@@ -306,8 +306,8 @@ class TestFeatureDescriptiveStatistics:
 
         # Assert
         assert isinstance(result, FeatureMonitoringResult)
-        assert result._detection_stats_id is None
-        assert result._reference_stats_id is None
+        assert result._detection_statistics_id is None
+        assert result._reference_statistics_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
         assert isinstance(result._reference_statistics, FeatureDescriptiveStatistics)
 
@@ -371,8 +371,8 @@ class TestFeatureDescriptiveStatistics:
         assert isinstance(result_list, list)
         assert len(result_list) == 1
         assert isinstance(result, FeatureMonitoringResult)
-        assert result._detection_stats_id is None
-        assert result._reference_stats_id is None
+        assert result._detection_statistics_id is None
+        assert result._reference_statistics_id is None
         assert isinstance(result._detection_statistics, FeatureDescriptiveStatistics)
         assert isinstance(result._reference_statistics, FeatureDescriptiveStatistics)
 
