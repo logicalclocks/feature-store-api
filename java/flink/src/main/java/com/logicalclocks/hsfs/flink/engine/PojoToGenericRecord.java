@@ -19,10 +19,10 @@ package com.logicalclocks.hsfs.flink.engine;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
@@ -32,6 +32,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -104,15 +105,15 @@ public class PojoToGenericRecord<T> extends RichMapFunction<T, GenericRecord> im
 
   private void populateAvroRecord(GenericRecord record, String fieldName, Object fieldValue) throws IOException {
     if (this.deserializedComplexFeatureSchemas.containsKey(fieldName)) {
-      ReflectDatumWriter<Object> complexFeatureDatumWriter =
-          new ReflectDatumWriter<>(this.deserializedComplexFeatureSchemas.get(fieldName));
+      GenericDatumWriter<Object> complexFeatureDatumWriter =
+          new GenericDatumWriter<>(this.deserializedComplexFeatureSchemas.get(fieldName));
       ByteArrayOutputStream complexFeatureByteArrayOutputStream = new ByteArrayOutputStream();
       complexFeatureByteArrayOutputStream.reset();
       BinaryEncoder complexFeatureBinaryEncoder =
           new EncoderFactory().binaryEncoder(complexFeatureByteArrayOutputStream, null);
       complexFeatureDatumWriter.write(fieldValue, complexFeatureBinaryEncoder);
       complexFeatureBinaryEncoder.flush();
-      record.put(fieldName, complexFeatureByteArrayOutputStream.toByteArray());
+      record.put(fieldName, ByteBuffer.wrap(complexFeatureByteArrayOutputStream.toByteArray()));
     } else {
       record.put(fieldName, fieldValue);
     }
