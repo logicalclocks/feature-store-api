@@ -39,17 +39,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class PojoToGenericRecord<T> extends RichMapFunction<T, GenericRecord> implements
+public class PojoToAvroRecord<T> extends RichMapFunction<T, GenericRecord> implements
     ResultTypeQueryable<GenericRecord> {
 
   private final String schema;
   private final Map<String, String> complexFeatureSchemas;
 
-  // Schema cannot be serialized thus it is created in open().
+  // Created in open() and reused later on
   private transient Schema deserializedSchema;
   private transient Map<String, Schema> deserializedComplexFeatureSchemas;
 
-  public PojoToGenericRecord(String schema, Map<String, String> complexFeatureSchemas) {
+  public PojoToAvroRecord(String schema, Map<String, String> complexFeatureSchemas) {
     this.schema = schema;
     this.complexFeatureSchemas = complexFeatureSchemas;
   }

@@ -70,20 +70,20 @@ public class FlinkEngine {
         .setBootstrapServers(properties.getProperty("bootstrap.servers"))
         .setKafkaProducerConfig(properties)
         .setRecordSerializer(KafkaRecordSerializationSchema.builder()
-        .setTopic(streamFeatureGroup.getOnlineTopicName())
-        .setKeySerializationSchema(new KeySerializationSchema(streamFeatureGroup.getPrimaryKeys()))
-        .setValueSerializationSchema(new GenericRecordAvroSerializer())
-        .build())
+          .setTopic(streamFeatureGroup.getOnlineTopicName())
+          .setKeySerializationSchema(new KeySerializationSchema(streamFeatureGroup.getPrimaryKeys()))
+          .setValueSerializationSchema(new GenericRecordAvroSerializer())
+          .build())
         .setDeliverGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
         .build();
-
     Map<String, String> complexFeatureSchemas = new HashMap<>();
     for (String featureName: streamFeatureGroup.getComplexFeatures()) {
       complexFeatureSchemas.put(featureName, streamFeatureGroup.getFeatureAvroSchema(featureName));
     }
-
-    return genericDataStream.map(new PojoToGenericRecord(streamFeatureGroup.getEncodedAvroSchema(),
-      complexFeatureSchemas)).sinkTo(sink);
+    DataStream<GenericRecord> avroRecordDataStream =
+        genericDataStream.map(new PojoToAvroRecord(streamFeatureGroup.getEncodedAvroSchema(),
+        complexFeatureSchemas));
+    return avroRecordDataStream.sinkTo(sink);
   }
 
   private Properties getKafkaProperties(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
