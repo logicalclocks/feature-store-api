@@ -849,7 +849,7 @@ class Engine:
 
             reset_offsets = (
                 feature_group._online_topic_name
-                not in producer.list_topics().topics.keys()
+                not in producer.list_topics(timeout=1).topics.keys()
                 and len(feature_group.commit_details(limit=1)) == 1
             )
 
