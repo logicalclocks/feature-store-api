@@ -41,11 +41,9 @@ class FeatureDescriptiveStatistics:
 
     def __init__(
         self,
-        feature_type: str,
         feature_name: str,
+        feature_type: str,
         count: int,
-        end_time: Union[int, datetime, date, str],
-        row_percentage: float,
         # for any feature type
         completeness: Optional[float] = None,
         num_non_null_values: Optional[int] = None,
@@ -63,16 +61,13 @@ class FeatureDescriptiveStatistics:
         entropy: Optional[float] = None,
         uniqueness: Optional[float] = None,
         exact_num_distinct_values: Optional[int] = None,
-        # for filtering
-        start_time: Optional[Union[int, datetime, date, str]] = None,
         id: Optional[int] = None,
     ):
         self._id = id
+        self._feature_name = feature_name
         self._feature_type = feature_type
         self._feature_name = feature_name
         self._count = count
-        self._end_time = end_time
-        self._row_percentage = row_percentage
         self._completeness = completeness
         self._num_non_null_values = num_non_null_values
         self._num_null_values = num_null_values
@@ -87,7 +82,6 @@ class FeatureDescriptiveStatistics:
         self._entropy = entropy
         self._uniqueness = uniqueness
         self._exact_num_distinct_values = exact_num_distinct_values
-        self._start_time = start_time
 
     def get_value(self, name):
         stat_name = name.lower()
@@ -104,14 +98,12 @@ class FeatureDescriptiveStatistics:
         return cls(**json_decamelized)
 
     @classmethod
-    def from_deequ_json(cls, json_dict):
+    def from_deequ_json(cls, json_dict, feature_name):
         # TODO: to be removed after replacing deequ
         stats_dict = {
+            "feature_name": feature_name,
             "feature_type": json_dict["dataType"],
             "count": json_dict["numRecordsNull"] + json_dict["numRecordsNonNull"],
-            "feature_name": json_dict["column"],
-            "end_time": None,
-            "row_percentage": None,
             # common for all data types
             "completeness": json_dict["completeness"],
             "num_non_null_values": json_dict["numRecordsNonNull"],
@@ -138,6 +130,7 @@ class FeatureDescriptiveStatistics:
     def to_dict(self):
         return {
             "id": self._id,
+            "featureName": self._feature_name,
             "featureType": self._feature_type,
             "featureName": self._feature_name,
             "count": self._count,
@@ -155,9 +148,6 @@ class FeatureDescriptiveStatistics:
             "approxNumDistinctValues": self._approx_num_distinct_values,
             "exactNumDistinctValues": self._exact_num_distinct_values,
             "percentiles": self._percentiles,
-            "startTime": self._start_time,
-            "endTime": self._end_time,
-            "rowPercentage": self._row_percentage,
         }
 
     def json(self) -> str:
@@ -172,6 +162,10 @@ class FeatureDescriptiveStatistics:
     @property
     def id(self) -> Optional[int]:
         return self._id
+
+    @property
+    def feature_name(self) -> str:
+        return self._feature_name
 
     @property
     def feature_type(self) -> str:
@@ -240,35 +234,3 @@ class FeatureDescriptiveStatistics:
     @property
     def exact_num_distinct_values(self) -> Optional[int]:
         return self._exact_num_distinct_values
-
-    @property
-    def start_time(self) -> Optional[int]:
-        return self._start_time
-
-    @start_time.setter
-    def start_time(self, start_time: Optional[Union[datetime, date, str, int]]):
-        self._start_time = convert_event_time_to_timestamp(start_time)
-
-    @property
-    def end_time(self) -> int:
-        return self._end_time
-
-    @end_time.setter
-    def end_time(self, end_time: Optional[Union[datetime, date, str, int]]):
-        self._end_time = convert_event_time_to_timestamp(end_time)
-
-    @property
-    def row_percentage(self) -> float:
-        return self._row_percentage
-
-    @row_percentage.setter
-    def row_percentage(self, row_percentage: float):
-        if isinstance(row_percentage, int) or isinstance(row_percentage, float):
-            row_percentage = float(row_percentage)
-            if row_percentage <= 0.0 or row_percentage > 1.0:
-                raise ValueError("Row percentage must be a float between 0 and 1.")
-            self._row_percentage = row_percentage
-        elif row_percentage is None:
-            self._row_percentage = None
-        else:
-            raise TypeError("Row percentage must be a float between 0 and 1.")

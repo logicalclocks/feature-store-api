@@ -99,13 +99,16 @@ class FeatureMonitoringResultEngine:
             util.convert_event_time_to_timestamp(datetime.now()), -3
         )
 
+        reference_statistics_id = (
+            reference_statistics.id if reference_statistics is not None else None
+        )
         result = FeatureMonitoringResult(
             feature_store_id=self._feature_store_id,
             config_id=config_id,
             execution_id=execution_id,
             feature_name=feature_name,
-            detection_statistics=detection_statistics,
-            reference_statistics=reference_statistics,
+            detection_statistics_id=detection_statistics.id,
+            reference_statistics_id=reference_statistics_id,
             difference=difference,
             shift_detected=shift_detected,
             monitoring_time=monitoring_time,

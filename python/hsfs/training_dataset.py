@@ -716,7 +716,7 @@ class TrainingDataset:
     @property
     def statistics(self):
         """Get the latest computed statistics for the training dataset."""
-        return self._statistics_engine.get_last(self)
+        return self._statistics_engine.get_last_computed(self)
 
     def get_statistics(self, commit_time: Union[str, int, datetime, date] = None):
         """Returns the statistics for this training dataset at a specific time.
@@ -736,7 +736,7 @@ class TrainingDataset:
         if commit_time is None:
             return self.statistics
         else:
-            return self._statistics_engine.get(self, commit_time)
+            return self._statistics_engine.get_by_commit_time(self, commit_time)
 
     @property
     def query(self):

@@ -743,7 +743,7 @@ class TestStatisticsEngine:
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
 
         # Act
-        s_engine.get_last(
+        s_engine.get_last_computed(
             metadata_instance=None,
             for_transformation=None,
             training_dataset_version=None,

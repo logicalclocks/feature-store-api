@@ -71,7 +71,7 @@ class TestValidationReportEngine:
         mock_vr_engine_get_validation_report_url.return_value = validation_report_url
 
         # Act
-        vr_engine.get_last()
+        vr_engine.get_last_computed()
 
         # Assert
         assert mock_vr_api.return_value.get_last.call_count == 1

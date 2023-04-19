@@ -1403,8 +1403,8 @@ class FeatureGroupBase:
 
     @property
     def statistics(self):
-        """Get the latest computed statistics for the feature group."""
-        return self._statistics_engine.get_last(self)
+        """Get the latest computed statistics for the whole feature group."""
+        return self._statistics_engine.get_last_computed(self)
 
     @property
     def primary_key(self):
@@ -1416,11 +1416,13 @@ class FeatureGroupBase:
         self._primary_key = [pk.lower() for pk in new_primary_key]
 
     def get_statistics(
-        self, commit_time: Optional[Union[str, int, datetime, date]] = None
+        self,
+        commit_time: Optional[Union[str, int, datetime, date]] = None,
     ):
         """Returns the statistics for this feature group at a specific time.
 
         If `commit_time` is `None`, the most recent statistics are returned.
+        If `from_commit_time` is `None`, statistics of feature values from the first commit until commit time are returned.
 
         !!! example
             ```python
@@ -1430,11 +1432,14 @@ class FeatureGroupBase:
             # get the Feature Group instance
             fg = fs.get_or_create_feature_group(...)
 
-            fg_statistics = fg.get_statistics(commit_time=None)
+            fg_statistics = fg.get_statistics(commit_time=None, from_commit_time=None)
             ```
 
         # Arguments
             commit_time: Date and time of the commit. Defaults to `None`. Strings should
+                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
+            from_commit_time: Date and time of the commit. Defaults to `None`. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
 
@@ -1444,10 +1449,7 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        if commit_time is None:
-            return self.statistics
-        else:
-            return self._statistics_engine.get(self, commit_time)
+        return self._statistics_engine.get_by_commit_time(self, commit_time)
 
     def compute_statistics(self):
         """Recompute the statistics for the feature group and save them to the
@@ -2534,6 +2536,53 @@ class FeatureGroup(FeatureGroupBase):
         """
         return self.select_all().as_of(wallclock_time, exclude_until)
 
+    def get_statistics(
+        self,
+        commit_time: Optional[Union[str, int, datetime, date]] = None,
+        from_commit_time: Optional[Union[str, int, datetime, date]] = None,
+        feature_name: Optional[str] = None,
+        row_percentage: Optional[int] = None,
+    ):
+        """Returns the statistics for this feature group at a specific window time.
+
+        If `commit_time` is `None`, the most recent statistics are returned.
+        If `from_commit_time` is `None`, statistics of feature values from the first commit are returned.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            fg_statistics = fg.get_statistics(commit_time=None, from_commit_time=None)
+            ```
+
+        # Arguments
+            commit_time: Date and time of the commit. Defaults to `None`. Strings should
+                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
+            from_commit_time: Date and time of the commit. Defaults to `None`. Strings should
+                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
+            feature_name: Feature name on which statistics where computed. Defaults to `None`.
+            row_percentage: Percentage of rows on which statistics where computed. Defaults to `None`.
+
+        # Returns
+            `Statistics`. Statistics object.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+        """
+        return self._statistics_engine.get_by_commit_time_window(
+            self,
+            from_commit_time,
+            commit_time,
+            feature_name,
+            row_percentage,
+        )
+
     def compute_statistics(
         self, wallclock_time: Optional[Union[str, int, datetime, date]] = None
     ):
@@ -2574,9 +2623,7 @@ class FeatureGroup(FeatureGroupBase):
 
             return self._statistics_engine.compute_statistics(
                 self,
-                feature_group_commit_id=fg_commit_id
-                if fg_commit_id is not None
-                else None,
+                feature_group_commit_id=fg_commit_id,
             )
         else:
             warnings.warn(
@@ -2748,6 +2795,16 @@ class FeatureGroup(FeatureGroupBase):
             )
             self._backfill_job = job_api.JobApi().get(job_name)
         return self._backfill_job
+
+    @property
+    def statistics(self):
+        """Get the latest computed statistics for the whole feature group."""
+        if (
+            self._time_travel_format is not None
+            and self._time_travel_format.upper() == "HUDI"
+        ):
+            return self._statistics_engine.get_by_commit_time_window(self)
+        return super().statistics
 
     @version.setter
     def version(self, version):
