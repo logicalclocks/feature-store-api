@@ -18,11 +18,14 @@
 package com.logicalclocks.hsfs.flink.engine;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaValidationException;
+import org.apache.avro.SchemaValidatorBuilder;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.reflect.ReflectData;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
@@ -34,6 +37,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,30 +47,35 @@ public class PojoToAvroRecord<T> extends RichMapFunction<T, GenericRecord> imple
     ResultTypeQueryable<GenericRecord> {
 
   private final String schema;
+  private final String encodedSchema;
   private final Map<String, String> complexFeatureSchemas;
 
   // Created in open() and reused later on
   private transient Schema deserializedSchema;
+  private transient Schema deserializedEncodedSchema;
   private transient Map<String, Schema> deserializedComplexFeatureSchemas;
 
-  public PojoToAvroRecord(String schema, Map<String, String> complexFeatureSchemas) {
+  public PojoToAvroRecord(String schema, String encodedSchema,  Map<String, String> complexFeatureSchemas) {
     this.schema = schema;
+    this.encodedSchema = encodedSchema;
     this.complexFeatureSchemas = complexFeatureSchemas;
   }
 
   @Override
   public GenericRecord map(T input) throws Exception {
-    // Create a new Avro record based on the given schema
-    GenericRecord record = new GenericData.Record(this.deserializedSchema);
 
-    // Get the fields of the POJO class using reflection
+    // validate
+    validatePojoAgainstSchema(input, this.deserializedSchema);
+
+    // Create a new Avro record based on the given schema
+    GenericRecord record = new GenericData.Record(this.deserializedEncodedSchema);
+    // Get the fields of the POJO class populate fields of the Avro record
     List<Field> fields =
         Arrays.stream(input.getClass().getDeclaredFields()).filter(f -> Modifier.isPublic(f.getModifiers()))
           .filter(f -> !f.getName().equals("SCHEMA$"))
-        .collect(Collectors.toList());
-
-    // Set the fields of the Avro record based on the values of the POJO fields
+          .collect(Collectors.toList());
     if (fields.isEmpty()) {
+      // it means POJO was generated from avro schema
       Field schemaField = input.getClass().getDeclaredField("SCHEMA$");
       schemaField.setAccessible(true);
       Schema fieldSchema = (Schema) schemaField.get(null);
@@ -91,6 +100,7 @@ public class PojoToAvroRecord<T> extends RichMapFunction<T, GenericRecord> imple
   public void open(Configuration configuration) throws Exception {
     super.open(configuration);
     this.deserializedSchema = new Schema.Parser().parse(this.schema);
+    this.deserializedEncodedSchema = new Schema.Parser().parse(this.encodedSchema);
     this.deserializedComplexFeatureSchemas = new HashMap<>();
     for (String featureName: this.complexFeatureSchemas.keySet()) {
       deserializedComplexFeatureSchemas.put(featureName,
@@ -117,5 +127,11 @@ public class PojoToAvroRecord<T> extends RichMapFunction<T, GenericRecord> imple
     } else {
       record.put(fieldName, fieldValue);
     }
+  }
+
+  private void validatePojoAgainstSchema(Object pojo, Schema avroSchema) throws SchemaValidationException {
+    Schema pojoSchema = ReflectData.get().getSchema(pojo.getClass());
+    SchemaValidatorBuilder builder = new SchemaValidatorBuilder();
+    builder.canReadStrategy().validateAll().validate(avroSchema, Collections.singletonList(pojoSchema));
   }
 }
