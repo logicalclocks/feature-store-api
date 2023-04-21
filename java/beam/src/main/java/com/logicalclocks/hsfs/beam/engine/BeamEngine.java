@@ -22,6 +22,7 @@ import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
+import org.apache.avro.Schema;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 
@@ -45,9 +46,15 @@ public class BeamEngine {
   private BeamEngine() {
   }
 
-  public BeamProducer insertStream(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    return new BeamProducer(featureGroup.getOnlineTopicName(), getKafkaProperties(featureGroup),
-      featureGroup.getDeserializedAvroSchema());
+  public BeamProducer insertStream(StreamFeatureGroup streamFeatureGroup) throws FeatureStoreException, IOException {
+    Map<String, Schema> complexFeatureSchemas = new HashMap<>();
+    for (String featureName: streamFeatureGroup.getComplexFeatures()) {
+      complexFeatureSchemas.put(featureName,
+            new Schema.Parser().parse(streamFeatureGroup.getFeatureAvroSchema(featureName)));
+    }
+    Schema deserializedEncodedSchema = new Schema.Parser().parse(streamFeatureGroup.getEncodedAvroSchema());
+    return new BeamProducer(streamFeatureGroup.getOnlineTopicName(), getKafkaProperties(streamFeatureGroup),
+      streamFeatureGroup.getDeserializedAvroSchema(), deserializedEncodedSchema, complexFeatureSchemas);
   }
 
   private Map<String, Object> getKafkaProperties(StreamFeatureGroup featureGroup) throws FeatureStoreException,
@@ -69,5 +76,4 @@ public class BeamEngine {
     properties.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
     return properties;
   }
-
 }
