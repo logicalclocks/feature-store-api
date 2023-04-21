@@ -89,8 +89,7 @@ class ArrowFlightClient:
         ):
             return False
 
-        if self._is_enabled:
-            return True
+        return self._is_enabled
 
     def is_query_supported(self, query, read_options):
         return self._should_be_used(read_options) and self._is_query_supported_rec(
