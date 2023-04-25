@@ -52,3 +52,13 @@ class VariableApi:
 
         resp = _client._send_request("GET", path_params)
         return resp["successMessage"] == "true"
+
+    def get_loadbalancer_external_domain(self):
+        _client = client.get_instance()
+        path_params = [
+            "variables",
+            "loadbalancer_external_domain",
+        ]
+
+        resp = _client._send_request("GET", path_params)
+        return resp["successMessage"]

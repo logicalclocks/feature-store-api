@@ -22,7 +22,7 @@ import pyarrow.flight
 from pyarrow.flight import FlightServerError
 from hsfs import client
 from hsfs import feature_group
-from hsfs.client.exceptions import FeatureStoreException
+from hsfs.client.exceptions import FeatureStoreException, RestAPIError
 from hsfs.core.variable_api import VariableApi
 
 _arrow_flight_instance = None
@@ -64,7 +64,18 @@ class ArrowFlightClient:
     def _initialize_connection(self):
         self._client = client.get_instance()
 
-        host_url = "grpc+tls://flyingduck.service.consul:5005"
+        if isinstance(self._client, client.external.Client):
+            try:
+                external_domain = self._variable_api.get_loadbalancer_external_domain()
+            except RestAPIError:
+                # External client could not locate loadbalancer_external_domain in cluster configuration.
+                # Will try connecting to Hopsworks headnode directly.
+                external_domain = self._client._host
+
+            host_url = f"grpc+tls://{external_domain}:5005"
+        else:
+            host_url = "grpc+tls://flyingduck.service.consul:5005"
+
         (tls_root_certs, cert_chain, private_key) = self._extract_certs(self._client)
         self._connection = pyarrow.flight.FlightClient(
             location=host_url,
