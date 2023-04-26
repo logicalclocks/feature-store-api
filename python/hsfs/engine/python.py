@@ -67,7 +67,7 @@ from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
 
-from python.hsfs.storage_connector import StorageConnector
+from hsfs.storage_connector import StorageConnector
 
 # Disable pyhive INFO logging
 logging.getLogger("pyhive").setLevel(logging.WARNING)
