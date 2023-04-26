@@ -39,12 +39,16 @@ class Job:
         self._name = name
         self._executions = executions
         self._href = href
+        self._config = config
 
         self._job_api = job_api.JobApi()
 
     @classmethod
     def from_response_json(cls, json_dict):
+        # Job config should not be decamelized when updated
+        config = json_dict.pop("config")
         json_decamelized = humps.decamelize(json_dict)
+        json_decamelized["config"] = config
         return cls(**json_decamelized)
 
     @property
@@ -63,7 +67,12 @@ class Job:
     def href(self):
         return self._href
 
-    def run(self, await_termination: bool = True):
+    @property
+    def config(self):
+        """Configuration for the job"""
+        return self._config
+
+    def run(self, args: str = None, await_termination: bool = True):
         """Run the job.
 
         Runs the job, by default awaiting its completion.
@@ -84,10 +93,11 @@ class Job:
             ```
 
         # Arguments
+            args: Optional runtime arguments for the job.
             await_termination: Identifies if the client should wait for the job to complete, defaults to True.
         """
         print(f"Launching job: {self.name}")
-        self._job_api.launch(self.name)
+        self._job_api.launch(self.name, args=args)
         print(
             "Job started successfully, you can follow the progress at \n{}".format(
                 engine.get_instance().get_job_url(self.href)

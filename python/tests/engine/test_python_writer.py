@@ -49,7 +49,14 @@ class TestPythonWriter:
         mocker.patch("hsfs.core.job_api.JobApi")  # get, launch
         mocker.patch("hsfs.engine.python.Engine.get_job_url")
         mocker.patch("hsfs.engine.python.Engine.wait_for_job")
-
+        producer = mocker.MagicMock()
+        topic_mock = mocker.MagicMock()
+        topic_mock.topics = {"topic_name": "NA"}
+        producer.list_topics = mocker.MagicMock(return_value=topic_mock)
+        mocker.patch(
+            "hsfs.engine.python.Producer",
+            return_value=producer,
+        )
         python_engine = python.Engine()
 
         fg = feature_group.FeatureGroup(
@@ -61,6 +68,9 @@ class TestPythonWriter:
             id=10,
             stream=False,
         )
+
+        mocker.patch.object(fg, "commit_details", return_value={"commit1": 1})
+        fg._online_topic_name = "topic_name"
 
         # Act
         python_engine._write_dataframe_kafka(
