@@ -45,7 +45,6 @@ class FeatureMonitoringConfig:
             Union[MonitoringWindowConfig, Dict[str, Any]]
         ] = None,
         statistics_comparison_config: Optional[Dict[str, Any]] = None,
-        alert_config: Optional[str] = None,
         scheduler_config: Optional[Union[Dict[str, Any], JobScheduler]] = None,
         description: Optional[str] = None,
         enabled: bool = True,
@@ -96,7 +95,6 @@ class FeatureMonitoringConfig:
         self.reference_window_config = reference_window_config
         self.statistics_comparison_config = statistics_comparison_config
         self.scheduler_config = scheduler_config
-        self._alert_config = alert_config
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -107,17 +105,6 @@ class FeatureMonitoringConfig:
             return [cls(**config) for config in json_decamelized["items"]]
         else:
             return cls(**json_decamelized)
-
-    # def _parse_schedule_config(
-    #     self, schedule_config: Optional[Union[JobScheduler, dict]]
-    # ):
-    #     if schedule_config is None:
-    #         return None
-    #     return (
-    #         schedule_config
-    #         if isinstance(schedule_config, JobScheduler)
-    #         else JobScheduler.from_response_json(schedule_config)
-    #     )
 
     def to_dict(self):
         detection_window_config = (
@@ -168,7 +155,6 @@ class FeatureMonitoringConfig:
 
         the_dict["referenceWindowConfig"] = reference_window_config
         the_dict["statisticsComparisonConfig"] = statistics_comparison_config
-        the_dict["alertConfig"] = self._alert_config
 
         return the_dict
 
@@ -347,16 +333,6 @@ class FeatureMonitoringConfig:
 
         return self
 
-    def _alert_on(
-        self,
-        severity: Optional[str],
-        channel: Optional[str],
-    ) -> "FeatureMonitoringConfig":
-        # TODO: Fake the method for now
-        self._alert_config = severity + "_" + channel
-
-        return self
-
     def save(self):
         """Saves the feature monitoring configuration to the backend.
 
@@ -383,7 +359,6 @@ class FeatureMonitoringConfig:
             self.statistics_comparison_config = (
                 registered_config._statistics_comparison_config
             )
-            self._alert_config = registered_config._alert_config
 
         self._job_name = registered_config._job_name
         self._id = registered_config._id
@@ -646,10 +621,6 @@ class FeatureMonitoringConfig:
     @property
     def feature_monitoring_type(self) -> Optional[str]:
         return self._feature_monitoring_type
-
-    @property
-    def alert_config(self) -> Optional[str]:
-        return self._alert_config
 
     @property
     def scheduler_config(self) -> Optional[JobScheduler]:

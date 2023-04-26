@@ -36,7 +36,6 @@ class TestFeatureMonitoringConfig:
         assert config._enabled is True
         assert config._name == "unit_test_config"
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
-        assert isinstance(config._alert_config, str)
 
         assert isinstance(config._scheduler_config, JobScheduler)
         assert config._scheduler_config.id == 222
@@ -78,7 +77,6 @@ class TestFeatureMonitoringConfig:
         assert config._enabled is True
         assert config._name == "unit_test_config"
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
-        assert isinstance(config._alert_config, str)
 
         assert isinstance(config._scheduler_config, JobScheduler)
         assert config._scheduler_config.id == 222
@@ -191,7 +189,6 @@ class TestFeatureMonitoringConfig:
         assert config._feature_name == "monitored_feature"
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
-        assert isinstance(config._alert_config, str)
 
         assert isinstance(config._scheduler_config, JobScheduler)
         assert config._scheduler_config.id == 222

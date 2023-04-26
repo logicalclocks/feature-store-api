@@ -29,7 +29,6 @@ DEFAULT_FEATURE_GROUP_ID = 13
 DEFAULT_FEATURE_VIEW_ID = 22
 DEFAULT_FEATURE_VIEW_NAME = "feature_view_unittest"
 DEFAULT_FEATURE_VIEW_VERSION = 2
-DEFAULT_ALERT_CONFIG = "alert_config"
 DEFAULT_SCHEDULER_CONFIG = {
     "job_frequency": "HOURLY",
     "start_date_time": 1676457000,
@@ -109,7 +108,6 @@ class TestFeatureMonitoringConfigEngine:
             statistics_comparison_config=stats_comparison_configuration,
             description=DEFAULT_DESCRIPTION,
             scheduler_config=DEFAULT_SCHEDULER_CONFIG,
-            alert_config=DEFAULT_ALERT_CONFIG,
         )
 
         # Assert
@@ -120,7 +118,6 @@ class TestFeatureMonitoringConfigEngine:
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
-        assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
@@ -184,7 +181,6 @@ class TestFeatureMonitoringConfigEngine:
             statistics_comparison_config=stats_comparison_configuration,
             description=DEFAULT_DESCRIPTION,
             scheduler_config=DEFAULT_SCHEDULER_CONFIG,
-            alert_config=DEFAULT_ALERT_CONFIG,
         )
 
         # Assert
@@ -197,7 +193,6 @@ class TestFeatureMonitoringConfigEngine:
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
-        assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
@@ -260,7 +255,6 @@ class TestFeatureMonitoringConfigEngine:
             statistics_comparison_config=stats_comparison_configuration,
             description=DEFAULT_DESCRIPTION,
             scheduler_config=DEFAULT_SCHEDULER_CONFIG,
-            alert_config=DEFAULT_ALERT_CONFIG,
         )
 
         # Assert
@@ -273,7 +267,6 @@ class TestFeatureMonitoringConfigEngine:
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
         assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
-        assert config._alert_config == DEFAULT_ALERT_CONFIG
         assert config._detection_window_config.window_config_type == "ROLLING_TIME"
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"

@@ -1153,12 +1153,7 @@ class FeatureGroupBase:
                 "Only Feature Group registered with Hopsworks can fetch feature monitoring configurations."
             )
 
-        fm_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=self._feature_store_id,
-            feature_group_id=self._id,
-        )
-
-        return fm_engine.get_feature_monitoring_configs(
+        return self._feature_monitoring_config_engine.get_feature_monitoring_configs(
             name=name,
             feature_name=feature_name,
             config_id=config_id,
@@ -1283,12 +1278,8 @@ class FeatureGroupBase:
             raise FeatureStoreException(
                 "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
             )
-        fm_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=self._feature_store_id,
-            feature_group_id=self._id,
-        )
 
-        return fm_engine._build_default_scheduled_statistics_config(
+        return self._feature_monitoring_config_engine._build_default_scheduled_statistics_config(
             name=name,
             feature_name=feature_name,
             description=description,
@@ -1355,12 +1346,8 @@ class FeatureGroupBase:
             raise FeatureStoreException(
                 "Only Feature Group registered with Hopsworks can enable feature monitoring."
             )
-        fm_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=self._feature_store_id,
-            feature_group_id=self._id,
-        )
 
-        return fm_engine._build_default_feature_monitoring_config(
+        return self._feature_monitoring_config_engine._build_default_feature_monitoring_config(
             name=name,
             feature_name=feature_name,
             description=description,

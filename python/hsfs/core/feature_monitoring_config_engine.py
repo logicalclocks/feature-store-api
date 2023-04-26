@@ -168,7 +168,6 @@ class FeatureMonitoringConfigEngine:
         detection_window_config: MonitoringWindowConfig,
         reference_window_config: MonitoringWindowConfig,
         statistics_comparison_config: Dict[str, Any],
-        alert_config: str,
         scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
         description: Optional[str] = None,
     ) -> "fmc.FeatureMonitoringConfig":
@@ -185,8 +184,6 @@ class FeatureMonitoringConfigEngine:
                 Configuration of the reference window.
             statistics_comparison_config: Dict[str, Any], required
                 Configuration of the statistics comparison.
-            alert_config: str, optional
-                Configuration of the alert.
             scheduler_config: Union[JobScheduler, Dict[str, Any]], optional
                 Configuration of the scheduler.
             description: str, optional
@@ -202,7 +199,6 @@ class FeatureMonitoringConfigEngine:
             reference_window_config=reference_window_config,
             statistics_comparison_config=statistics_comparison_config,
             scheduler_config=scheduler_config,
-            alert_config=alert_config,
             description=description,
         )
 
@@ -622,7 +618,6 @@ class FeatureMonitoringConfigEngine:
             detection_window_config=detection_window_config,
             scheduler_config=scheduler_config,
             enabled=True,
-            alert_config=None,
             reference_window_config=None,
             statistics_comparison_config=None,
         )
@@ -635,7 +630,6 @@ class FeatureMonitoringConfigEngine:
         reference_window_config: MonitoringWindowConfig,
         statistics_comparison_config: Dict[str, Any],
         scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]],
-        alert_config: str,
         description: Optional[str] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Builds a feature monitoring config.
@@ -653,8 +647,6 @@ class FeatureMonitoringConfigEngine:
                 Configuration of the statistics comparison.
             scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]], optional
                 Configuration of the scheduler.
-            alert_config: str, optional
-                Configuration of the alert.
             description: str, optional
                 Description of the monitoring configuration.
         """
@@ -672,7 +664,6 @@ class FeatureMonitoringConfigEngine:
             enabled=True,
             name=name,
             description=description,
-            alert_config=alert_config,
             reference_window_config=reference_window_config,
             statistics_comparison_config=statistics_comparison_config,
         )

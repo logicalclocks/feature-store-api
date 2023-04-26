@@ -27,7 +27,6 @@
           "strict": true,
           "metric": "MEAN"
         },
-        "alertConfig": "I will alert you on slack when implemented",
         "schedulerConfig": {
           "id": 222,
           "jobFrequency": "DAILY",
@@ -64,7 +63,6 @@
           "strict": true,
           "metric": "MEAN"
         },
-        "alertConfig": "I will alert you on slack when implemented",
         "schedulerConfig": {
           "id": 222,
           "jobFrequency": "DAILY",
@@ -132,7 +130,6 @@
           "strict": true,
           "metric": "MEAN"
         },
-        "alertConfig": "I will alert you on slack when implemented",
         "schedulerConfig": {
           "id": 222,
           "jobFrequency": "DAILY",
@@ -172,7 +169,6 @@
           "strict": true,
           "metric": "MEAN"
         },
-        "alertConfig": "I will alert you on slack when implemented",
         "schedulerConfig": {
           "id": 222,
           "jobFrequency": "DAILY",
@@ -284,7 +280,6 @@
             "strict": true,
             "metric": "MEAN"
           },
-          "alertConfig": "I will alert you on slack when implemented",
           "schedulerConfig": {
             "id": 222,
             "jobFrequency": "HOURLY",
