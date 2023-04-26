@@ -22,7 +22,7 @@ import pyarrow.flight
 from pyarrow.flight import FlightServerError
 from hsfs import client
 from hsfs import feature_group
-from hsfs.client.exceptions import FeatureStoreException, RestAPIError
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi
 
 _arrow_flight_instance = None
@@ -53,25 +53,27 @@ class ArrowFlightClient:
             try:
                 self._initialize_connection()
             except Exception as e:
-                self._is_enabled = False
-                warnings.warn(
-                    f"Could not establish connection to FlyingDuck. ({e}) "
-                    f"Will fall back to spark for this session. "
-                    f"If the error persists, you can disable FlyingDuck "
-                    f"by changing the cluster configuration (set 'enable_flyingduck'='false')."
-                )
+                self._disable(str(e))
+
+    def _disable(self, message):
+        self._is_enabled = False
+        warnings.warn(
+            f"Could not establish connection to FlyingDuck. ({message}) "
+            f"Will fall back to hive/spark for this session. "
+            f"If the error persists, you can disable FlyingDuck "
+            f"by changing the cluster configuration (set 'enable_flyingduck'='false')."
+        )
 
     def _initialize_connection(self):
         self._client = client.get_instance()
 
         if isinstance(self._client, client.external.Client):
-            try:
-                external_domain = self._variable_api.get_loadbalancer_external_domain()
-            except RestAPIError:
-                # External client could not locate loadbalancer_external_domain in cluster configuration.
-                # Will try connecting to Hopsworks headnode directly.
-                external_domain = self._client._host
-
+            external_domain = self._variable_api.get_loadbalancer_external_domain()
+            if external_domain == "":
+                self._disable(
+                    "External client could not locate loadbalancer_external_domain "
+                    "in cluster configuration or variable is empty."
+                )
             host_url = f"grpc+tls://{external_domain}:5005"
         else:
             host_url = "grpc+tls://flyingduck.service.consul:5005"

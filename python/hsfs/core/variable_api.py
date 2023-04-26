@@ -17,6 +17,8 @@
 from hsfs import client
 import re
 
+from hsfs.client.exceptions import RestAPIError
+
 
 class VariableApi:
     def __init__(self):
@@ -60,5 +62,8 @@ class VariableApi:
             "loadbalancer_external_domain",
         ]
 
-        resp = _client._send_request("GET", path_params)
-        return resp["successMessage"]
+        try:
+            resp = _client._send_request("GET", path_params)
+            return resp["successMessage"]
+        except RestAPIError:
+            return ""
