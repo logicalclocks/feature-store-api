@@ -1146,6 +1146,9 @@ class Engine:
 
         return {**write_options, **self._kafka_config}
 
+    def _isConnectorTypeSupported(self, type):
+        return True
+
 
 class SchemaError(Exception):
     """Thrown when schemas don't match"""

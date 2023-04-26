@@ -67,6 +67,8 @@ from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
 
+from python.hsfs.storage_connector import StorageConnector
+
 # Disable pyhive INFO logging
 logging.getLogger("pyhive").setLevel(logging.WARNING)
 
@@ -1257,3 +1259,9 @@ class Engine:
                     df[_feat.name], _feat.online_type
                 )
         return df
+
+    def _isConnectorTypeSupported(self, type):
+        if type == StorageConnector.BIGQUERY or type == StorageConnector.GCS:
+            return False
+        else :
+            return True

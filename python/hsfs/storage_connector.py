@@ -1089,6 +1089,8 @@ class GcsConnector(StorageConnector):
         # Returns
             `Dataframe`: A Spark dataframe.
         """
+        if not engine.get_instance()._isConnectorTypeSupported(StorageConnector.GCS):
+            raise NotImplementedError ("GCS Connector not yet supported for engine " + engine.get_type())
 
         return engine.get_instance().read(self, data_format, options, path)
 
@@ -1244,7 +1246,8 @@ class BigQueryConnector(StorageConnector):
         # Returns
             `Dataframe`: A Spark dataframe.
         """
-
+        if not engine.get_instance()._isConnectorTypeSupported(StorageConnector.BIGQUERY):
+            raise NotImplementedError ("BigQuery Connector not yet supported for engine " + engine.get_type())
         # merge user spark options on top of default spark options
         options = (
             {**self.spark_options(), **options}
