@@ -70,7 +70,7 @@ class ArrowFlightClient:
         if isinstance(self._client, client.external.Client):
             external_domain = self._variable_api.get_loadbalancer_external_domain()
             if external_domain == "":
-                self._disable(
+                raise Exception(
                     "External client could not locate loadbalancer_external_domain "
                     "in cluster configuration or variable is empty."
                 )
