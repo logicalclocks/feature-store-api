@@ -29,6 +29,7 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
+import org.apache.flink.formats.avro.typeutils.GenericRecordAvroTypeInfo;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -83,9 +84,12 @@ public class FlinkEngine {
 
     DataStream<GenericRecord> avroRecordDataStream =
         genericDataStream.map(new PojoToAvroRecord(
-          streamFeatureGroup.getAvroSchema(),
-          streamFeatureGroup.getEncodedAvroSchema(),
-        complexFeatureSchemas));
+          streamFeatureGroup.getDeserializedAvroSchema(),
+          streamFeatureGroup.getDeserializedEncodedAvroSchema(),
+        complexFeatureSchemas))
+          .returns(
+            new GenericRecordAvroTypeInfo(streamFeatureGroup.getDeserializedEncodedAvroSchema())
+          );
 
     return avroRecordDataStream.sinkTo(sink);
   }

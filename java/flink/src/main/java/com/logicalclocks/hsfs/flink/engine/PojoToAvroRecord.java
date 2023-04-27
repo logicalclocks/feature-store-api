@@ -30,6 +30,7 @@ import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.formats.avro.typeutils.GenericRecordAvroTypeInfo;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -49,14 +50,15 @@ public class PojoToAvroRecord<T> extends RichMapFunction<T, GenericRecord> imple
   private final String encodedSchema;
   private final Map<String, String> complexFeatureSchemas;
 
-  // Created in open() and reused later on
+  // org.apache.avro.Schema$Field is not serializable. Create in open() and reused later on
   private transient Schema deserializedSchema;
   private transient Schema deserializedEncodedSchema;
   private transient Map<String, Schema> deserializedComplexFeatureSchemas;
+  private transient GenericRecordAvroTypeInfo producedType;
 
-  public PojoToAvroRecord(String schema, String encodedSchema,  Map<String, String> complexFeatureSchemas) {
-    this.schema = schema;
-    this.encodedSchema = encodedSchema;
+  public PojoToAvroRecord(Schema schema, Schema encodedSchema,  Map<String, String> complexFeatureSchemas) {
+    this.schema = schema.toString();
+    this.encodedSchema = encodedSchema.toString();
     this.complexFeatureSchemas = complexFeatureSchemas;
   }
 
@@ -105,11 +107,12 @@ public class PojoToAvroRecord<T> extends RichMapFunction<T, GenericRecord> imple
       deserializedComplexFeatureSchemas.put(featureName,
             new Schema.Parser().parse(this.complexFeatureSchemas.get(featureName)));
     }
+    this.producedType = new GenericRecordAvroTypeInfo(deserializedEncodedSchema);
   }
 
   @Override
   public TypeInformation<GenericRecord> getProducedType() {
-    return TypeInformation.of(GenericRecord.class);
+    return producedType;
   }
 
   private void populateAvroRecord(GenericRecord record, String fieldName, Object fieldValue) throws IOException {

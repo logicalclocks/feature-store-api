@@ -37,6 +37,7 @@ public class GenericRecordAvroSerializer implements SerializationSchema<GenericR
 
   @Override
   public byte[] serialize(GenericRecord genericRecord) {
+
     DatumWriter<GenericRecord> datumWriter = new ReflectDatumWriter<>(genericRecord.getSchema());
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     byteArrayOutputStream.reset();
