@@ -1146,7 +1146,8 @@ class Engine:
 
         return {**write_options, **self._kafka_config}
 
-    def _isConnectorTypeSupported(self, type):
+    @staticmethod
+    def is_connector_type_supported(type):
         return True
 
 

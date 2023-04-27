@@ -1260,8 +1260,12 @@ class Engine:
                 )
         return df
 
-    def _isConnectorTypeSupported(self, type):
-        if type == StorageConnector.BIGQUERY or type == StorageConnector.GCS:
+    @staticmethod
+    def is_connector_type_supported(connector_type):
+        if (
+            connector_type == StorageConnector.BIGQUERY
+            or connector_type == StorageConnector.GCS
+        ):
             return False
-        else :
+        else:
             return True

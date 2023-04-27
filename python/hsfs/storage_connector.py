@@ -1089,8 +1089,10 @@ class GcsConnector(StorageConnector):
         # Returns
             `Dataframe`: A Spark dataframe.
         """
-        if not engine.get_instance()._isConnectorTypeSupported(StorageConnector.GCS):
-            raise NotImplementedError("GCS Connector not yet supported for engine: " + engine.get_type())
+        if not engine.get_instance().is_connector_type_supported(StorageConnector.GCS):
+            raise NotImplementedError(
+                "GCS connector not yet supported for engine: " + engine.get_type()
+            )
 
         return engine.get_instance().read(self, data_format, options, path)
 
@@ -1246,8 +1248,12 @@ class BigQueryConnector(StorageConnector):
         # Returns
             `Dataframe`: A Spark dataframe.
         """
-        if not engine.get_instance()._isConnectorTypeSupported(StorageConnector.BIGQUERY):
-            raise NotImplementedError("BigQuery Connector not yet supported for engine: " + engine.get_type())
+        if not engine.get_instance().is_connector_type_supported(
+            StorageConnector.BIGQUERY
+        ):
+            raise NotImplementedError(
+                "BigQuery connector not yet supported for engine: " + engine.get_type()
+            )
         # merge user spark options on top of default spark options
         options = (
             {**self.spark_options(), **options}
@@ -1255,12 +1261,16 @@ class BigQueryConnector(StorageConnector):
             else self.spark_options()
         )
         if query:
-            if self.BIGQ_VIEWS_ENABLED not in options:
-                raise ValueError("BigQuery needs views enabled for SQL query. "
-                                 "Set spark option viewsEnabled=True or use a BigQuery Query type connector.")
-            if self.BIGQ_MATERIAL_DATASET not in options:
-                raise ValueError("BigQuery needs temporary dataset for SQL query. Set spark option "
-                                 + self.BIGQ_MATERIAL_DATASET + "=temporaryDatasetName")
+            if (
+                self.BIGQ_MATERIAL_DATASET not in options
+                or self.BIGQ_VIEWS_ENABLED not in options
+            ):
+                raise ValueError(
+                    "BigQuery materialization views should be enabled for SQL query. "
+                    "Set spark options viewsEnabled=True and"
+                    + self.BIGQ_MATERIAL_DATASET
+                    + "=<temporaryDatasetName> to options argument or instead use BigQuery Query type connector from UI."
+                )
             path = query
         elif self._query_table:
             path = self._query_table
