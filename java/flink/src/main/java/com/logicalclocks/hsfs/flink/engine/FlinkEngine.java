@@ -80,11 +80,13 @@ public class FlinkEngine {
     for (String featureName: streamFeatureGroup.getComplexFeatures()) {
       complexFeatureSchemas.put(featureName, streamFeatureGroup.getFeatureAvroSchema(featureName));
     }
+
     DataStream<GenericRecord> avroRecordDataStream =
         genericDataStream.map(new PojoToAvroRecord(
           streamFeatureGroup.getAvroSchema(),
           streamFeatureGroup.getEncodedAvroSchema(),
         complexFeatureSchemas));
+
     return avroRecordDataStream.sinkTo(sink);
   }
 

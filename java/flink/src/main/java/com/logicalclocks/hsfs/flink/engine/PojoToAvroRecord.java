@@ -34,7 +34,6 @@ import org.apache.flink.configuration.Configuration;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
@@ -71,10 +70,10 @@ public class PojoToAvroRecord<T> extends RichMapFunction<T, GenericRecord> imple
     GenericRecord record = new GenericData.Record(this.deserializedEncodedSchema);
     // Get the fields of the POJO class populate fields of the Avro record
     List<Field> fields =
-        Arrays.stream(input.getClass().getDeclaredFields()).filter(f -> Modifier.isPublic(f.getModifiers()))
-          .filter(f -> !f.getName().equals("SCHEMA$"))
+        Arrays.stream(input.getClass().getDeclaredFields())
+          .filter(f -> f.getName().equals("SCHEMA$"))
           .collect(Collectors.toList());
-    if (fields.isEmpty()) {
+    if (!fields.isEmpty()) {
       // it means POJO was generated from avro schema
       Field schemaField = input.getClass().getDeclaredField("SCHEMA$");
       schemaField.setAccessible(true);
