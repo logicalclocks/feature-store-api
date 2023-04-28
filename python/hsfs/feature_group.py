@@ -2364,6 +2364,11 @@ class FeatureGroup(FeatureGroupBase):
     def _get_online_table_name(self):
         return self.name + "_" + str(self.version)
 
+    def _get_project_name(self):
+        if self.feature_store_name.endswith("_featurestore"):
+            return self.feature_store_name[:-13]
+        return self.feature_store_name
+
     @property
     def id(self):
         """Feature group id."""

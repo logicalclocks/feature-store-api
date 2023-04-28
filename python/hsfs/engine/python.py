@@ -57,6 +57,7 @@ from hsfs.core import (
     training_dataset_job_conf,
     feature_view_api,
     transformation_function_engine,
+    arrow_flight_client,
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -106,15 +107,29 @@ class Engine:
                 sql_query, online_conn, dataframe_type, read_options, schema
             )
 
+    def is_flyingduck_query_supported(self, query, read_options):
+        return arrow_flight_client.get_instance().is_query_supported(
+            query, read_options
+        )
+
     def _sql_offline(
-        self, sql_query, feature_store, dataframe_type, schema=None, hive_config=None
+        self,
+        sql_query,
+        feature_store,
+        dataframe_type,
+        schema=None,
+        hive_config=None,
     ):
-        with self._create_hive_connection(
-            feature_store, hive_config=hive_config
-        ) as hive_conn:
-            result_df = pd.read_sql(sql_query, hive_conn)
-            if schema:
-                result_df = Engine.cast_columns(result_df, schema)
+        if arrow_flight_client.get_instance().is_flyingduck_query_object(sql_query):
+            result_df = arrow_flight_client.get_instance().read_query(sql_query)
+        else:
+            with self._create_hive_connection(
+                feature_store, hive_config=hive_config
+            ) as hive_conn:
+                result_df = pd.read_sql(sql_query, hive_conn)
+
+        if schema:
+            result_df = Engine.cast_columns(result_df, schema)
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def _jdbc(self, sql_query, connector, dataframe_type, read_options, schema=None):
@@ -135,7 +150,7 @@ class Engine:
 
     def read(self, storage_connector, data_format, read_options, location):
         if storage_connector.type == storage_connector.HOPSFS:
-            df_list = self._read_hopsfs(location, data_format)
+            df_list = self._read_hopsfs(location, data_format, read_options)
         elif storage_connector.type == storage_connector.S3:
             df_list = self._read_s3(storage_connector, location, data_format)
         else:
@@ -162,13 +177,12 @@ class Engine:
                 )
             )
 
-    def _read_hopsfs(self, location, data_format):
+    def _read_hopsfs(self, location, data_format, read_options={}):
         # providing more informative error
         try:
             from pydoop import hdfs
         except ModuleNotFoundError:
-            return self._read_hopsfs_rest(location, data_format)
-
+            return self._read_hopsfs_remote(location, data_format, read_options)
         util.setup_pydoop()
         path_list = hdfs.ls(location, recursive=True)
 
@@ -182,10 +196,10 @@ class Engine:
                 df_list.append(self._read_pandas(data_format, path))
         return df_list
 
-    # This is a version of the read method that uses the Hopsworks REST APIs
+    # This is a version of the read method that uses the Hopsworks REST APIs or Flyginduck Server
     # To read the training dataset content, this to avoid the pydoop dependency
     # requirement and allow users to read Hopsworks training dataset from outside
-    def _read_hopsfs_rest(self, location, data_format):
+    def _read_hopsfs_remote(self, location, data_format, read_options={}):
         total_count = 10000
         offset = 0
         df_list = []
@@ -197,10 +211,17 @@ class Engine:
 
             for inode in inode_list:
                 if not inode.path.endswith("_SUCCESS"):
-                    content_stream = self._dataset_api.read_content(inode.path)
-                    df_list.append(
-                        self._read_pandas(data_format, BytesIO(content_stream.content))
-                    )
+                    if arrow_flight_client.get_instance().is_data_format_supported(
+                        data_format, read_options
+                    ):
+                        df = arrow_flight_client.get_instance().read_path(inode.path)
+                    else:
+                        content_stream = self._dataset_api.read_content(inode.path)
+                        df = self._read_pandas(
+                            data_format, BytesIO(content_stream.content)
+                        )
+
+                    df_list.append(df)
                 offset += 1
 
         return df_list
@@ -267,8 +288,10 @@ class Engine:
             "Streaming Sources are not supported for pure Python Environments."
         )
 
-    def show(self, sql_query, feature_store, n, online_conn):
-        return self.sql(sql_query, feature_store, online_conn, "default", {}).head(n)
+    def show(self, sql_query, feature_store, n, online_conn, read_options={}):
+        return self.sql(
+            sql_query, feature_store, online_conn, "default", read_options
+        ).head(n)
 
     def register_external_temporary_table(self, external_fg, alias):
         # No op to avoid query failure
@@ -820,6 +843,7 @@ class Engine:
         dataframe: pd.DataFrame,
         offline_write_options: dict,
     ):
+        reset_offsets = False
         if feature_group._multi_part_insert:
             if feature_group._kafka_producer is None:
                 producer, feature_writers, writer = self._init_kafka_resources(
@@ -844,6 +868,12 @@ class Engine:
                 "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
                 desc="Uploading Dataframe",
                 mininterval=1,
+            )
+
+            reset_offsets = (
+                feature_group._online_topic_name
+                not in producer.list_topics(timeout=1).topics.keys()
+                and len(feature_group.commit_details(limit=1)) == 1
             )
 
         def acked(err, msg):
@@ -900,7 +930,25 @@ class Engine:
             progress_bar.close()
 
         # start backfilling job
+        # if topic didn't exist, always run the backfill job to reset the offsets except if it's a multi insert
         if (
+            not isinstance(feature_group, ExternalFeatureGroup)
+            and reset_offsets
+            and not feature_group._multi_part_insert
+        ):
+            if offline_write_options is not None and not offline_write_options.get(
+                "start_offline_backfill", True
+            ):
+                warnings.warn(
+                    "This is the first ingestion after an upgrade or backup/restore, running backfill job even though `start_offline_backfill` was set to `False`.",
+                    util.FeatureGroupWarning,
+                )
+            feature_group.backfill_job.run(
+                args=feature_group.backfill_job.config.get("defaultArgs", "")
+                + " -kafkaOffsetReset true",
+                await_termination=offline_write_options.get("wait_for_job", True),
+            )
+        elif (
             not isinstance(feature_group, ExternalFeatureGroup)
             and offline_write_options is not None
             and offline_write_options.get("start_offline_backfill", True)
