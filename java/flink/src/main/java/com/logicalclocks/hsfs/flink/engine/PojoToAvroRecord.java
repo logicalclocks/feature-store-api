@@ -126,6 +126,8 @@ public class PojoToAvroRecord<T> extends RichMapFunction<T, GenericRecord> imple
       complexFeatureDatumWriter.write(fieldValue, complexFeatureBinaryEncoder);
       complexFeatureBinaryEncoder.flush();
       record.put(fieldName, ByteBuffer.wrap(complexFeatureByteArrayOutputStream.toByteArray()));
+      complexFeatureByteArrayOutputStream.flush();
+      complexFeatureByteArrayOutputStream.close();
     } else {
       record.put(fieldName, fieldValue);
     }
