@@ -1267,7 +1267,7 @@ class BigQueryConnector(StorageConnector):
             ):
                 raise ValueError(
                     "BigQuery materialization views should be enabled for SQL query. "
-                    "Set spark options viewsEnabled=True and"
+                    "Set spark options viewsEnabled=True and "
                     + self.BIGQ_MATERIAL_DATASET
                     + "=<temporaryDatasetName> to options argument or instead use BigQuery Query type connector from UI."
                 )
