@@ -13,7 +13,7 @@
 
   <properties>
     <flink.version>1.14.3.1</flink.version>
-    <fasterxml.version>2.13.4</fasterxml.version>
+    <fasterxml.version>2.13.4.2</fasterxml.version>
     <scala.base>2.11</scala.base>
   </properties>
 
