@@ -29,7 +29,7 @@ class TestExecution:
         # Assert
         assert len(ex_list) == 1
         ex = ex_list[0]
-        assert ex.id == "test_id"
+        assert ex.id == 123
         assert ex.final_status == "test_final_status"
         assert ex.state == "test_state"
 

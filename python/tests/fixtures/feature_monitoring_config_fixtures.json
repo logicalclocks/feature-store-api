@@ -3,31 +3,31 @@
     "detection_insert_reference_snapshot": {
       "response": {
         "id": 32,
-        "feature_name": "monitored_feature",
-        "feature_group_id": 13,
-        "feature_store_id": 67,
-        "job_name": "test_job_name",
+        "featureName": "monitored_feature",
+        "featureGroupId": 13,
+        "featureStoreId": 67,
+        "jobName": "test_job_name",
         "name": "unit_test_config",
         "description": "I am a unit test fixture",
         "enabled": true,
-        "feature_monitoring_type": "DESCRIPTIVE_STATISTICS",
-        "detection_window_config": {
-          "window_config_type": "INSERT",
-          "time_offset": "1w",
-          "window_length": "1d"
+        "featureMonitoringType": "STATISTICS_COMPARISON",
+        "detectionWindowConfig": {
+          "windowConfigType": "ROLLING_TIME",
+          "timeOffset": "1w",
+          "windowLength": "1d",
+          "rowPercentage": 0.5
         },
-        "reference_window_config": {
-          "window_config_type": "SNAPSHOT",
-          "time_offset": "LAST"
+        "referenceWindowConfig": {
+          "windowConfigType": "ROLLING_TIME",
+          "timeOffset": "1w"
         },
-        "statistics_comparison_config": {
+        "statisticsComparisonConfig": {
           "threshold": 1,
           "relative": false,
           "strict": true,
-          "compare_on": "MEAN"
+          "metric": "MEAN"
         },
-        "alert_config": "I will alert you on slack when implemented",
-        "scheduler_config": {
+        "schedulerConfig": {
           "id": 222,
           "jobFrequency": "DAILY",
           "startDateTime": 1676457000,
@@ -40,31 +40,30 @@
     "detection_insert_reference_specific_value": {
       "response": {
         "id": 32,
-        "feature_name": "monitored_feature",
-        "feature_group_id": 13,
-        "feature_store_id": 67,
-        "job_name": "test_job_name",
+        "featureName": "monitored_feature",
+        "featureGroupId": 13,
+        "featureStoreId": 67,
+        "jobName": "test_job_name",
         "name": "unit_test_config",
         "description": "I am a unit test fixture",
         "enabled": true,
-        "feature_monitoring_type": "DESCRIPTIVE_STATISTICS",
-        "detection_window_config": {
-          "window_config_type": "INSERT",
-          "time_offset": "1w",
-          "window_length": "1d"
+        "featureMonitoringType": "STATISTICS_COMPARISON",
+        "detectionWindowConfig": {
+          "windowConfigType": "ROLLING_TIME",
+          "timeOffset": "1w",
+          "windowLength": "1d"
         },
-        "reference_window_config": {
-          "window_config_type": "SPECIFIC_VALUE",
+        "referenceWindowConfig": {
+          "windowConfigType": "SPECIFIC_VALUE",
           "specific_value": 6.6
         },
-        "statistics_comparison_config": {
+        "statisticsComparisonConfig": {
           "threshold": 1,
           "relative": false,
           "strict": true,
-          "compare_on": "MEAN"
+          "metric": "MEAN"
         },
-        "alert_config": "I will alert you on slack when implemented",
-        "scheduler_config": {
+        "schedulerConfig": {
           "id": 222,
           "jobFrequency": "DAILY",
           "startDateTime": 1676457000,
@@ -77,20 +76,20 @@
     "detection_insert_scheduled_stats_only": {
       "response": {
         "id": 32,
-        "feature_name": "monitored_feature",
-        "feature_group_id": 13,
-        "feature_store_id": 67,
-        "job_name": "test_job_name",
+        "featureName": "monitored_feature",
+        "featureGroupId": 13,
+        "featureStoreId": 67,
+        "jobName": "test_job_name",
         "name": "unit_test_config",
         "description": "I am a unit test fixture",
         "enabled": true,
-        "feature_monitoring_type": "SCHEDULED_STATISTICS",
-        "detection_window_config": {
-          "window_config_type": "INSERT",
-          "time_offset": "1w",
-          "window_length": "1d"
+        "featureMonitoringType": "SCHEDULED_STATISTICS",
+        "detectionWindowConfig": {
+          "windowConfigType": "ROLLING_TIME",
+          "timeOffset": "1w",
+          "windowLength": "1d"
         },
-        "scheduler_config": {
+        "schedulerConfig": {
           "id": 222,
           "jobFrequency": "HOURLY",
           "startDateTime": 1676457000,
@@ -105,31 +104,33 @@
     "detection_insert_reference_snapshot": {
       "response": {
         "id": 32,
-        "feature_name": "monitored_feature",
-        "feature_view_id": 22,
-        "feature_store_id": 67,
-        "job_name": "test_job_name",
+        "featureName": "monitored_feature",
+        "featureViewId": 22,
+        "featureViewName": "test_feature_view",
+        "featureViewVersion": 1,
+        "featureStoreId": 67,
+        "jobName": "test_job_name",
         "name": "unit_test_config",
         "description": "I am a unit test fixture",
         "enabled": true,
-        "feature_monitoring_type": "DESCRIPTIVE_STATISTICS",
-        "detection_window_config": {
-          "window_config_type": "BATCH",
-          "time_offset": "1w",
-          "window_length": "1d"
+        "featureMonitoringType": "STATISTICS_COMPARISON",
+        "detectionWindowConfig": {
+          "windowConfigType": "ROLLING_TIME",
+          "timeOffset": "1w",
+          "windowLength": "1d",
+          "rowPercentage": 0.5
         },
-        "reference_window_config": {
-          "window_config_type": "TRAINING_DATASET",
-          "specific_id": 33
+        "referenceWindowConfig": {
+          "windowConfigType": "TRAINING_DATASET",
+          "trainingDatasetId": 33
         },
-        "statistics_comparison_config": {
+        "statisticsComparisonConfig": {
           "threshold": 1,
           "relative": false,
           "strict": true,
-          "compare_on": "MEAN"
+          "metric": "MEAN"
         },
-        "alert_config": "I will alert you on slack when implemented",
-        "scheduler_config": {
+        "schedulerConfig": {
           "id": 222,
           "jobFrequency": "DAILY",
           "startDateTime": 1676457000,
@@ -142,31 +143,33 @@
     "detection_insert_reference_specific_value": {
       "response": {
         "id": 32,
-        "feature_name": "monitored_feature",
-        "feature_view_id": 22,
-        "feature_store_id": 67,
-        "job_name": "test_job_name",
+        "featureName": "monitored_feature",
+        "featureViewId": 22,
+        "featureViewName": "test_feature_view",
+        "featureViewVersion": 1,
+        "featureStoreId": 67,
+        "jobName": "test_job_name",
         "name": "unit_test_config",
         "description": "I am a unit test fixture",
         "enabled": true,
-        "feature_monitoring_type": "DESCRIPTIVE_STATISTICS",
-        "detection_window_config": {
-          "window_config_type": "BATCH",
-          "time_offset": "1w",
-          "window_length": "1d"
+        "featureMonitoringType": "STATISTICS_COMPARISON",
+        "detectionWindowConfig": {
+          "windowConfigType": "ROLLING_TIME",
+          "timeOffset": "1w",
+          "windowLength": "1d",
+          "rowPercentage": 0.5
         },
-        "reference_window_config": {
-          "window_config_type": "TRAINING_DATASET",
-          "specific_id": 33
+        "referenceWindowConfig": {
+          "windowConfigType": "TRAINING_DATASET",
+          "trainingDatasetId": 33
         },
-        "statistics_comparison_config": {
+        "statisticsComparisonConfig": {
           "threshold": 1,
           "relative": false,
           "strict": true,
-          "compare_on": "MEAN"
+          "metric": "MEAN"
         },
-        "alert_config": "I will alert you on slack when implemented",
-        "scheduler_config": {
+        "schedulerConfig": {
           "id": 222,
           "jobFrequency": "DAILY",
           "startDateTime": 1676457000,
@@ -179,28 +182,70 @@
     "detection_insert_scheduled_stats_only": {
       "response": {
         "id": 32,
-        "feature_name": "monitored_feature",
-        "feature_view_id": 22,
-        "feature_store_id": 67,
-        "job_name": "test_job_name",
+        "featureName": "monitored_feature",
+        "featureViewId": 22,
+        "featureViewName": "test_feature_view",
+        "featureViewVersion": 1,
+        "featureStoreId": 67,
+        "jobName": "test_job_name",
         "name": "unit_test_config",
         "description": "I am a unit test fixture",
         "enabled": true,
-        "feature_monitoring_type": "SCHEDULED_STATISTICS",
-        "detection_window_config": {
-          "window_config_type": "BATCH",
-          "time_offset": "1w",
-          "window_length": "1d"
+        "featureMonitoringType": "SCHEDULED_STATISTICS",
+        "detectionWindowConfig": {
+          "windowConfigType": "ROLLING_TIME",
+          "timeOffset": "1w",
+          "windowLength": "1d"
         },
-        "scheduler_config": {
-        "id": 222,
-        "jobFrequency": "HOURLY",
-        "startDateTime": 1676457000,
-        "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
-        "enabled": false
+        "schedulerConfig": {
+          "id": 222,
+          "jobFrequency": "HOURLY",
+          "startDateTime": 1676457000,
+          "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+          "enabled": false
         },
         "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
       }
+    }
+  },
+  "get_scheduled_stats_only_via_feature_group": {
+    "response": {
+      "id": 32,
+      "feature_name": "monitored_feature",
+      "feature_group_id": 13,
+      "feature_store_id": 67,
+      "job_name": "test_job_name",
+      "name": "unit_test_config",
+      "description": "I am a unit test fixture",
+      "enabled": true,
+      "feature_monitoring_type": "SCHEDULED_STATISTICS",
+      "detection_window_config": {
+        "window_config_type": "INSERT",
+        "time_offset": "1w",
+        "window_length": "1d"
+      },
+      "scheduler_config": "daily",
+      "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
+    }
+  },
+  "get_scheduled_stats_only_via_feature_view": {
+    "response": {
+      "id": 32,
+      "feature_name": "monitored_feature",
+      "feature_view_id": 22,
+      "feature_store_id": 67,
+      "job_name": "test_job_name",
+      "name": "unit_test_config",
+      "description": "I am a unit test fixture",
+      "enabled": true,
+      "feature_monitoring_type": "SCHEDULED_STATISTICS",
+      "detection_window_config": {
+        "window_config_type": "ROLLING_TIME",
+        "time_offset": "1w",
+        "window_length": "1d"
+      },
+      "scheduler_config": "daily",
+      "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
     }
   },
   "get_list": {
@@ -209,30 +254,32 @@
       "items": [
         {
           "id": 32,
-          "feature_name": "monitored_feature",
-          "feature_view_id": 22,
-          "feature_store_id": 67,
-          "job_name": "test_job_name",
+          "featureName": "monitored_feature",
+          "featureViewId": 22,
+          "featureViewName": "test_feature_view",
+          "featureViewVersion": 1,
+          "featureStoreId": 67,
+          "jobName": "test_job_name",
           "name": "unit_test_config",
           "description": "I am a unit test fixture",
           "enabled": true,
-          "feature_monitoring_type": "DESCRIPTIVE_STATISTICS",
-          "detection_window_config": {
-            "window_config_type": "BATCH",
-            "time_offset": "1w",
-            "window_length": "1d"
+          "featureMonitoringType": "STATISTICS_COMPARISON",
+          "detectionWindowConfig": {
+            "windowConfigType": "ROLLING_TIME",
+            "timeOffset": "1w",
+            "windowLength": "1d",
+            "rowPercentage": 0.5
           },
-          "reference_window_config": {
-            "window_config_type": "TRAINING_DATASET",
-            "specific_id": 33
+          "referenceWindowConfig": {
+            "windowConfigType": "TRAINING_DATASET",
+            "trainingDatasetId": 33
           },
-          "statistics_comparison_config": {
+          "statisticsComparisonConfig": {
             "threshold": 1,
             "relative": false,
             "strict": true,
-            "compare_on": "MEAN"
+            "metric": "MEAN"
           },
-          "alert_config": "I will alert you on slack when implemented",
           "schedulerConfig": {
             "id": 222,
             "jobFrequency": "HOURLY",

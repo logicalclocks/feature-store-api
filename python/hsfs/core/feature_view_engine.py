@@ -474,7 +474,7 @@ class FeatureViewEngine:
             else:
                 return self._statistics_engine.compute_statistics(
                     training_dataset_obj,
-                    feature_dataframe=td_df,
+                    features_dataframe=td_df,
                     feature_view_obj=feature_view_obj,
                 )
 
