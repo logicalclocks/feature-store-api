@@ -83,23 +83,8 @@ class FeatureView:
         self._batch_vectors_server = None
         self._batch_scoring_server = None
 
-        if id is not None:
-            self._fm_config_engine = (
-                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-                    feature_store_id=self._featurestore_id,
-                    feature_view_id=self._id,
-                    feature_view_name=self._name,
-                    feature_view_version=self._version,
-                )
-            )
-            self._fm_result_engine = (
-                feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-                    feature_store_id=self._featurestore_id,
-                    feature_view_id=self._id,
-                    feature_view_name=self._name,
-                    feature_view_version=self._version,
-                )
-            )
+        if self._id:
+            self._init_feature_monitoring_engine()
 
     def delete(self):
         """Delete current feature view, all associated metadata and training data.
@@ -2440,12 +2425,31 @@ class FeatureView:
             "schema",
         ]:
             self._update_attribute_if_present(self, other, key)
+        self._init_feature_monitoring_engine()
         return self
 
     @staticmethod
     def _update_attribute_if_present(this, new, key):
         if getattr(new, key):
             setattr(this, key, getattr(new, key))
+
+    def _init_feature_monitoring_engine(self):
+        self._fm_config_engine = (
+            feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                feature_store_id=self._featurestore_id,
+                feature_view_id=self._id,
+                feature_view_name=self._name,
+                feature_view_version=self._version,
+            )
+        )
+        self._fm_result_engine = (
+            feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+                feature_store_id=self._featurestore_id,
+                feature_view_id=self._id,
+                feature_view_name=self._name,
+                feature_view_version=self._version,
+            )
+        )
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
