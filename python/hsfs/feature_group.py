@@ -1362,6 +1362,7 @@ class FeatureGroup(FeatureGroupBase):
         expectation_suite=None,
         parents=None,
         href=None,
+        delta_streamer_job_conf=None,
     ):
         super().__init__(
             featurestore_id,
@@ -1390,7 +1391,7 @@ class FeatureGroup(FeatureGroupBase):
 
         self._stream = stream
         self._parents = parents
-        self._deltastreamer_jobconf = None
+        self._deltastreamer_jobconf = delta_streamer_job_conf
 
         self._backfill_job = None
 
@@ -2362,6 +2363,11 @@ class FeatureGroup(FeatureGroupBase):
 
     def _get_online_table_name(self):
         return self.name + "_" + str(self.version)
+
+    def _get_project_name(self):
+        if self.feature_store_name.endswith("_featurestore"):
+            return self.feature_store_name[:-13]
+        return self.feature_store_name
 
     @property
     def id(self):
