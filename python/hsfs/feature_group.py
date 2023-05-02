@@ -1647,7 +1647,7 @@ class FeatureGroup(FeatureGroupBase):
                   feature group.
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
-                  after the Hopsworks Job has finished. By default it waits.
+                  after the Hopsworks Job has finished. By default it does not wait.
                 * key `start_offline_backfill` and value `True` or `False` to configure
                   whether or not to start the backfill job to write data to the offline
                   storage. By default the backfill job gets started immediately.
