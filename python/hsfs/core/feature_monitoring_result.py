@@ -16,7 +16,7 @@
 
 import json
 import humps
-from typing import Any, Dict, List, Optional, Union
+from typing import Optional, Union
 from hsfs import util
 from datetime import datetime, date
 
@@ -30,6 +30,7 @@ class FeatureMonitoringResult:
         execution_id: int,
         monitoring_time: Union[int, datetime, date, str],
         config_id: int,
+        feature_name: str,
         difference: Optional[float] = None,
         shift_detected: bool = False,
         detection_stats_id: Optional[int] = None,
@@ -42,14 +43,13 @@ class FeatureMonitoringResult:
         ] = None,
         id: Optional[int] = None,
         href: Optional[str] = None,
-        items: Optional[List[Dict[str, Any]]] = None,
-        count: Optional[int] = None,
     ):
         self._id = id
         self._href = href
         self._feature_store_id = feature_store_id
         self._execution_id = execution_id
         self._config_id = config_id
+        self._feature_name = feature_name
         self._detection_stats_id = detection_stats_id
         self._reference_stats_id = reference_stats_id
         self._detection_statistics = self._parse_feature_statistics(
@@ -85,19 +85,27 @@ class FeatureMonitoringResult:
             return cls(**json_decamelized)
 
     def to_dict(self):
-        return {
+        the_dict = {
             "id": self._id,
             "featureStoreId": self._feature_store_id,
             "configId": self._config_id,
             "executionId": self._execution_id,
-            "detectionStatsId": self._detection_stats_id,
-            "referenceStatsId": self._reference_stats_id,
-            "detectionStatistics": self._detection_statistics,
-            "referenceStatistics": self._reference_statistics,
             "monitoringTime": self._monitoring_time,
             "difference": self._difference,
             "shiftDetected": self._shift_detected,
+            "featureName": self._feature_name,
         }
+
+        if self._detection_stats_id is not None:
+            the_dict["detectionStatsId"] = self._detection_stats_id
+        if self._reference_stats_id is not None:
+            the_dict["referenceStatsId"] = self._reference_stats_id
+        if self._detection_statistics is not None:
+            the_dict["detectionStatistics"] = self._detection_statistics.to_dict()
+        if self._reference_statistics is not None:
+            the_dict["referenceStatistics"] = self._reference_statistics.to_dict()
+
+        return the_dict
 
     def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
@@ -151,3 +159,7 @@ class FeatureMonitoringResult:
     @property
     def shift_detected(self) -> bool:
         return self._shift_detected
+
+    @property
+    def feature_name(self) -> str:
+        return self._feature_name
