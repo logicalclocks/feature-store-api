@@ -70,7 +70,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._description == DEFAULT_DESCRIPTION
         assert (
             config._feature_monitoring_type
-            == fmc.FeatureMonitoringType.STATISTICS_COMPARISON
+            == fmc.FeatureMonitoringType.SCHEDULED_STATISTICS
         )
         assert (
             config._detection_window_config.window_config_type

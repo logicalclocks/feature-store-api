@@ -20,7 +20,7 @@ from hsfs.core import feature_monitoring_config as fmc
 from datetime import datetime, date, timedelta
 import dateutil
 from hsfs import util
-from hsfs.core import job, execution
+from hsfs.core import execution
 
 DEFAULT_MONITORING_TIME_SORT_BY = "monitoring_time:desc"
 DEFAULT_FEATURE_STORE_ID = 67
@@ -345,10 +345,7 @@ class TestFeatureMonitoringResultEngine:
             FEATURE_MONITORING_CONFIG_CREATE_API,
         )
         mock_get_job_api = mocker.patch(
-            GET_JOB_API,
-            return_value=job.Job.from_response_json(
-                backend_fixtures["job"]["get"]["response"]
-            ),
+            GET_JOB_API, return_value=backend_fixtures["job"]["get"]["response"]
         )
         mock_last_exec_job_api = mocker.patch(
             LAST_EXECUTION_API,
@@ -422,10 +419,7 @@ class TestFeatureMonitoringResultEngine:
         reference_specific_value = 5.1
 
         mock_get_job_api = mocker.patch(
-            GET_JOB_API,
-            return_value=job.Job.from_response_json(
-                backend_fixtures["job"]["get"]["response"]
-            ),
+            GET_JOB_API, return_value=backend_fixtures["job"]["get"]["response"]
         )
         mock_last_exec_job_api = mocker.patch(
             LAST_EXECUTION_API,
@@ -491,10 +485,7 @@ class TestFeatureMonitoringResultEngine:
         reference_statistics = None
 
         mock_get_job_api = mocker.patch(
-            GET_JOB_API,
-            return_value=job.Job.from_response_json(
-                backend_fixtures["job"]["get"]["response"]
-            ),
+            GET_JOB_API, return_value=backend_fixtures["job"]["get"]["response"]
         )
         mock_last_exec_job_api = mocker.patch(
             LAST_EXECUTION_API,
