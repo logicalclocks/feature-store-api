@@ -20,6 +20,7 @@ package com.logicalclocks.hsfs.flink.engine;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
+import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
 
@@ -97,9 +98,18 @@ public class FlinkEngine {
   private Properties getKafkaProperties(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
     HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
     Properties properties = new Properties();
-    properties.put("bootstrap.servers",
-        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
-        "INTERNAL://", "")).collect(Collectors.joining(",")));
+    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
+      properties.put("bootstrap.servers",
+          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
+          "INTERNAL://", ""))
+            .collect(Collectors.joining(",")));
+    } else {
+      properties.put("bootstrap.servers",
+          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
+            .map(broker -> broker.replaceAll("EXTERNAL://", ""))
+            .collect(Collectors.joining(","))
+      );
+    }
     properties.put("security.protocol", "SSL");
     properties.put("ssl.truststore.location", client.getTrustStorePath());
     properties.put("ssl.truststore.password", client.getCertKey());
