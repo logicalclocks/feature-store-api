@@ -3,6 +3,7 @@
     "response": {
       "id": 52,
       "featureType": "Fractional",
+      "featureName": "amount",
       "count": 4,
       "completeness": 1,
       "numNonNullValues": 7,
@@ -24,13 +25,14 @@
       "exactNumDistinctValues": 10,
       "startTime": 123123123,
       "endTime": 123123124,
-      "rowPercentage": 100
+      "rowPercentage": 1.0
     }
   },
   "get_integral_feature_statistics": {
     "response": {
       "id": 52,
       "featureType": "Integral",
+      "featureName": "age",
       "count": 4,
       "completeness": 1,
       "numNonNullValues": 7,
@@ -52,13 +54,14 @@
       "exactNumDistinctValues": 10,
       "startTime": 123123123,
       "endTime": 123123124,
-      "rowPercentage": 100
+      "rowPercentage": 1.0
     }
   },
   "get_string_feature_statistics": {
     "response": {
       "id": 52,
       "featureType": "String",
+      "featureName": "first_name",
       "count": 4,
       "completeness": 1,
       "numNonNullValues": 7,
@@ -70,13 +73,14 @@
       "exactNumDistinctValues": 10,
       "startTime": 123123123,
       "endTime": 123123124,
-      "rowPercentage": 100
+      "rowPercentage": 1.0
     }
   },
   "get_boolean_feature_statistics": {
     "response": {
       "id": 52,
       "featureType": "Boolean",
+      "featureName": "is_active",
       "count": 4,
       "completeness": 1,
       "numNonNullValues": 7,
@@ -88,7 +92,7 @@
       "exactNumDistinctValues": 10,
       "startTime": 123123123,
       "endTime": 123123124,
-      "rowPercentage": 100
+      "rowPercentage": 1.0
     }
   },
   "get_deequ_fractional_feature_statistics": {

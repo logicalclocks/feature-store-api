@@ -32,6 +32,7 @@ nav:
       - ValidationReport: generated/api/validation_report_api.md
       - Job configuration: generated/api/job_configuration.md
       - Provenance Links: generated/api/links.md
+      - Feature Monitoring: generated/api/feature_monitoring_api.md
     - Contributing: CONTRIBUTING.md
   - Community ↗: https://community.hopsworks.ai/
 
