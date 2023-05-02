@@ -49,7 +49,7 @@ class TestFeatureDescriptiveStatistics:
         assert result._exact_num_distinct_values == 10
         assert result._start_time == 123123123
         assert result._end_time == 123123124
-        assert result._row_percentage == 100
+        assert result._row_percentage == 1.0
 
     def test_from_response_json_integral(self, backend_fixtures):
         # Arrange
@@ -81,7 +81,7 @@ class TestFeatureDescriptiveStatistics:
         assert result._exact_num_distinct_values == 10
         assert result._start_time == 123123123
         assert result._end_time == 123123124
-        assert result._row_percentage == 100
+        assert result._row_percentage == 1.0
 
     def test_from_response_json_string(self, backend_fixtures):
         # Arrange
@@ -107,7 +107,7 @@ class TestFeatureDescriptiveStatistics:
         assert result._exact_num_distinct_values == 10
         assert result._start_time == 123123123
         assert result._end_time == 123123124
-        assert result._row_percentage == 100
+        assert result._row_percentage == 1.0
 
     def test_from_response_json_boolean(self, backend_fixtures):
         # Arrange
@@ -133,7 +133,7 @@ class TestFeatureDescriptiveStatistics:
         assert result._exact_num_distinct_values == 10
         assert result._start_time == 123123123
         assert result._end_time == 123123124
-        assert result._row_percentage == 100
+        assert result._row_percentage == 1.0
 
     def test_from_deequ_json_fractional(self, backend_fixtures):
         # Arrange
@@ -271,7 +271,7 @@ class TestFeatureDescriptiveStatistics:
         assert det_stats._exact_num_distinct_values == 10
         assert det_stats._start_time == 123123123
         assert det_stats._end_time == 123123124
-        assert det_stats._row_percentage == 100
+        assert det_stats._row_percentage == 1.0
 
         ref_stats = result._reference_statistics
         assert ref_stats._id == 53
@@ -293,7 +293,7 @@ class TestFeatureDescriptiveStatistics:
         assert ref_stats._exact_num_distinct_values == 10
         assert ref_stats._start_time == 123123123
         assert ref_stats._end_time == 123123124
-        assert ref_stats._row_percentage == 100
+        assert ref_stats._row_percentage == 1.0
 
     def test_from_response_json_via_fv_fm_result(self, backend_fixtures):
         # Arrange
@@ -331,7 +331,7 @@ class TestFeatureDescriptiveStatistics:
         assert det_stats._exact_num_distinct_values == 10
         assert det_stats._start_time == 123123123
         assert det_stats._end_time == 123123124
-        assert det_stats._row_percentage == 100
+        assert det_stats._row_percentage == 1.0
 
         ref_stats = result._reference_statistics
         assert ref_stats._id == 53
@@ -353,7 +353,7 @@ class TestFeatureDescriptiveStatistics:
         assert ref_stats._exact_num_distinct_values == 10
         assert ref_stats._start_time == 123123123
         assert ref_stats._end_time == 123123124
-        assert ref_stats._row_percentage == 100
+        assert ref_stats._row_percentage == 1.0
 
     def test_from_response_json_via_fm_result_list_with_statistics(
         self, backend_fixtures
@@ -396,7 +396,7 @@ class TestFeatureDescriptiveStatistics:
         assert det_stats._exact_num_distinct_values == 10
         assert det_stats._start_time == 123123123
         assert det_stats._end_time == 123123124
-        assert det_stats._row_percentage == 100
+        assert det_stats._row_percentage == 1.0
 
         ref_stats = result._reference_statistics
         assert ref_stats._id == 53
@@ -418,4 +418,4 @@ class TestFeatureDescriptiveStatistics:
         assert ref_stats._exact_num_distinct_values == 10
         assert ref_stats._start_time == 123123123
         assert ref_stats._end_time == 123123124
-        assert ref_stats._row_percentage == 100
+        assert ref_stats._row_percentage == 1.0
