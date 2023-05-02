@@ -4,7 +4,7 @@
       "count": 1,
       "items": [
         {
-          "id": "test_id",
+          "id": 123,
           "state": "test_state",
           "final_status": "test_final_status",
           "submission_time": "test_submission_time",

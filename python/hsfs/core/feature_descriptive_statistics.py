@@ -17,7 +17,7 @@
 import json
 import humps
 from typing import Optional, Mapping, Union
-from hsfs.util import FeatureStoreEncoder
+from hsfs.util import FeatureStoreEncoder, convert_event_time_to_timestamp
 from datetime import datetime, date
 
 
@@ -42,9 +42,10 @@ class FeatureDescriptiveStatistics:
     def __init__(
         self,
         feature_type: str,
+        feature_name: str,
         count: int,
         end_time: Union[int, datetime, date, str],
-        row_percentage: int,
+        row_percentage: float,
         # for any feature type
         completeness: Optional[float] = None,
         num_non_null_values: Optional[int] = None,
@@ -68,6 +69,7 @@ class FeatureDescriptiveStatistics:
     ):
         self._id = id
         self._feature_type = feature_type
+        self._feature_name = feature_name
         self._count = count
         self._end_time = end_time
         self._row_percentage = row_percentage
@@ -107,6 +109,7 @@ class FeatureDescriptiveStatistics:
         stats_dict = {
             "feature_type": json_dict["dataType"],
             "count": json_dict["numRecordsNull"] + json_dict["numRecordsNonNull"],
+            "feature_name": json_dict["column"],
             "end_time": None,
             "row_percentage": None,
             # common for all data types
@@ -115,7 +118,7 @@ class FeatureDescriptiveStatistics:
             "num_null_values": json_dict["numRecordsNull"],
             "approx_num_distinct_values": json_dict["approximateNumDistinctValues"],
         }
-        if json_dict["uniqueness"]:
+        if "uniqueness" in json_dict.keys():
             # commmon for all data types if exact_uniqueness is enabled
             stats_dict["uniqueness"] = json_dict["uniqueness"]
             stats_dict["entropy"] = json_dict["entropy"]
@@ -136,6 +139,7 @@ class FeatureDescriptiveStatistics:
         return {
             "id": self._id,
             "featureType": self._feature_type,
+            "featureName": self._feature_name,
             "count": self._count,
             "min": self._min,
             "max": self._max,
@@ -174,16 +178,12 @@ class FeatureDescriptiveStatistics:
         return self._feature_type
 
     @property
+    def feature_name(self) -> str:
+        return self._feature_name
+
+    @property
     def count(self) -> int:
         return self._count
-
-    @property
-    def end_time(self) -> int:
-        return self._end_time
-
-    @property
-    def row_percentage(self) -> int:
-        return self._row_percentage
 
     @property
     def completeness(self) -> Optional[float]:
@@ -244,3 +244,31 @@ class FeatureDescriptiveStatistics:
     @property
     def start_time(self) -> Optional[int]:
         return self._start_time
+
+    @start_time.setter
+    def start_time(self, start_time: Optional[Union[datetime, date, str, int]]):
+        self._start_time = convert_event_time_to_timestamp(start_time)
+
+    @property
+    def end_time(self) -> int:
+        return self._end_time
+
+    @end_time.setter
+    def end_time(self, end_time: Optional[Union[datetime, date, str, int]]):
+        self._end_time = convert_event_time_to_timestamp(end_time)
+
+    @property
+    def row_percentage(self) -> float:
+        return self._row_percentage
+
+    @row_percentage.setter
+    def row_percentage(self, row_percentage: float):
+        if isinstance(row_percentage, int) or isinstance(row_percentage, float):
+            row_percentage = float(row_percentage)
+            if row_percentage <= 0.0 or row_percentage > 1.0:
+                raise ValueError("Row percentage must be a float between 0 and 1.")
+            self._row_percentage = row_percentage
+        elif row_percentage is None:
+            self._row_percentage = None
+        else:
+            raise TypeError("Row percentage must be a float between 0 and 1.")
