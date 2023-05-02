@@ -76,7 +76,13 @@ class ArrowFlightClient:
                 )
             host_url = f"grpc+tls://{external_domain}:5005"
         else:
-            host_url = "grpc+tls://flyingduck.service.consul:5005"
+            service_discovery_domain = self._variable_api.get_service_discovery_domain()
+            if service_discovery_domain == "":
+                raise Exception(
+                    "Client could not locate service_discovery_domain "
+                    "in cluster configuration or variable is empty."
+                )
+            host_url = f"grpc+tls://flyingduck.service.{service_discovery_domain}:5005"
 
         (tls_root_certs, cert_chain, private_key) = self._extract_certs(self._client)
         self._connection = pyarrow.flight.FlightClient(
