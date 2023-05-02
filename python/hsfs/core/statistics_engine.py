@@ -16,6 +16,7 @@
 
 import datetime
 import json
+from typing import List, TypeVar
 import warnings
 
 from hsfs import engine, statistics, util, split_statistics
@@ -79,31 +80,35 @@ class StatisticsEngine:
             # Python engine
             engine.get_instance().profile_by_spark(metadata_instance)
 
-    def compute_single_feature_statistics(
+    def compute_monitoring_statistics(
         self,
-        feature_dataframe,
-        feature_name,
-    ) -> FeatureDescriptiveStatistics:
-        """Compute statistics for a single feature without sending the result to Hopsworks.
+        feature_dataframe: TypeVar("pyspark.sql.DataFrame"),
+    ) -> List[FeatureDescriptiveStatistics]:
+        """Compute statistics for a DataFrame without sending the result to Hopsworks.
 
         Args:
-            feature_dataframe: Single-feature Spark or Pandas DataFrame to compute the statistics on.
-            feature_name: str. Name of the feature.
+            feature_dataframe: DataFrame to compute the statistics on.
 
         Returns:
-            FeatureDescriptiveStatistics. Descriptive statistics of the given feature dataframe.
+            List[FeatureDescriptiveStatistics]. List of the Descriptive statistics
+                for each feature in the DataFrame.
         """
 
         # TODO: Future work. Persisting the statistics and returning the stats together with the ID
-
         if engine.get_type() == "spark":
+            if feature_dataframe is not None:
+                feature_names = feature_dataframe.columns
+            else:
+                feature_names = []
             statistics_str = self.profile_statistics(
-                feature_dataframe, [feature_name], False, False, False
+                feature_dataframe, feature_names, False, False, False
             )
-            statistics_dict = json.loads(statistics_str)
-            return FeatureDescriptiveStatistics.from_deequ_json(
-                statistics_dict[feature_name]
-            )
+            statistics_list = json.loads(statistics_str)["columns"]
+
+            return [
+                FeatureDescriptiveStatistics.from_deequ_json(stats)
+                for stats in statistics_list
+            ]
         else:
             # TODO: Only compute statistics with Spark at the moment. This method is expected to be called
             # only through run_feature_monitoring(), which is the entrypoint of the feature monitoring job.

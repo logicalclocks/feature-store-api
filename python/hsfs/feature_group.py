@@ -45,17 +45,20 @@ from hsfs.core import (
     spine_group_engine,
     validation_result_engine,
     job_api,
+    feature_monitoring_config_engine,
+    feature_monitoring_result_engine,
 )
 
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.validation_report import ValidationReport
+from hsfs.core import feature_monitoring_config as fmc
+from hsfs.core import feature_monitoring_result as fmr
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core import great_expectation_engine
-from hsfs.core import feature_monitoring_config_engine
 
 
 class FeatureGroupBase:
@@ -103,6 +106,18 @@ class FeatureGroupBase:
             self._validation_result_engine = (
                 validation_result_engine.ValidationResultEngine(
                     featurestore_id, self._id
+                )
+            )
+            self._feature_monitoring_config_engine = (
+                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                    feature_store_id=featurestore_id,
+                    feature_group_id=self._id,
+                )
+            )
+            self._feature_monitoring_result_engine = (
+                feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+                    feature_store_id=self._feature_store_id,
+                    feature_group_id=self._id,
                 )
             )
 
@@ -989,6 +1004,7 @@ class FeatureGroupBase:
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
 
         # Return
             Union[List[`ValidationResult`], List[`ExpectationValidationResult`]] A list of validation result connected to the expectation_id
@@ -1077,6 +1093,268 @@ class FeatureGroupBase:
             validation_options=validation_options,
             ingestion_result=ingestion_result,
             ge_type=ge_type,
+        )
+
+    def _get_feature_monitoring_configs(
+        self,
+        name: Optional[str] = None,
+        feature_name: Optional[str] = None,
+        config_id: Optional[int] = None,
+    ) -> Union[
+        "fmc.FeatureMonitoringConfig", List["fmc.FeatureMonitoringConfig"], None
+    ]:
+        """Fetch all feature monitoring configs attached to the feature group, or fetch by name or feature name only.
+
+        If no arguments is provided the method will return all feature monitoring configs
+        attached to the feature group, meaning all feature monitoring configs that are attach
+        to a feature in the feature group. If you wish to fetch a single config, provide the
+        its name. If you wish to fetch all configs attached to a particular feature, provide
+        the feature name.
+
+        !!! example
+            ```python3
+            # fetch your feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # fetch all feature monitoring configs attached to the feature group
+            fm_configs = fg._get_feature_monitoring_configs()
+
+            # fetch a single feature monitoring config by name
+            fm_config = fg._get_feature_monitoring_configs(name="my_config")
+
+            # fetch all feature monitoring configs attached to a particular feature
+            fm_configs = fg._get_feature_monitoring_configs(feature_name="my_feature")
+
+            # fetch a single feature monitoring config with a given id
+            fm_config = fg._get_feature_monitoring_configs(config_id=1)
+            ```
+
+        # Arguments
+            name: If provided fetch only the feature monitoring config with the given name.
+                Defaults to None.
+            feature_name: If provided, fetch only configs attached to a particular feature.
+                Defaults to None.
+            config_id: If provided, fetch only the feature monitoring config with the given id.
+                Defaults to None.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
+            ValueError: if both name and feature_name are provided.
+            TypeError: if name or feature_name are not string or None.
+
+        # Return
+            Union[`FeatureMonitoringConfig`, List[`FeatureMonitoringConfig`], None]
+                A list of feature monitoring configs. If name provided,
+                returns either a single config or None if not found.
+        """
+        # TODO: Should this filter out scheduled statistics only configs?
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can fetch feature monitoring configurations."
+            )
+
+        return self._feature_monitoring_config_engine.get_feature_monitoring_configs(
+            name=name,
+            feature_name=feature_name,
+            config_id=config_id,
+        )
+
+    def _get_feature_monitoring_history(
+        self,
+        config_name: Optional[str] = None,
+        config_id: Optional[int] = None,
+        start_time: Optional[Union[int, str, datetime, date]] = None,
+        end_time: Optional[Union[int, str, datetime, date]] = None,
+        with_statistics: Optional[bool] = True,
+    ) -> List["fmr.FeatureMonitoringResult"]:
+        """Fetch feature monitoring history for a given feature monitoring config.
+
+        !!! example
+            ```python3
+            # fetch your feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # fetch feature monitoring history for a given feature monitoring config
+            fm_history = fg._get_feature_monitoring_history(
+                config_name="my_config",
+                start_time="2020-01-01",
+            )
+
+            # fetch feature monitoring history for a given feature monitoring config id
+            fm_history = fg._get_feature_monitoring_history(
+                config_id=1,
+                start_time=datetime.now() - timedelta(weeks=2),
+                end_time=datetime.now() - timedelta(weeks=1),
+                with_statistics=False,
+            )
+            ```
+
+        # Arguments
+            config_name: The name of the feature monitoring config to fetch history for.
+                Defaults to None.
+            config_id: The id of the feature monitoring config to fetch history for.
+                Defaults to None.
+            start_time: The start date of the feature monitoring history to fetch.
+                Defaults to None.
+            end_time: The end date of the feature monitoring history to fetch.
+                Defaults to None.
+            with_statistics: Whether to include statistics in the feature monitoring history.
+                Defaults to True. If False, only metadata about the monitoring will be fetched.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
+            ValueError: if both config_name and config_id are provided.
+            TypeError: if config_name or config_id are not respectively string, int or None.
+
+        # Return
+            List[`FeatureMonitoringResult`]
+                A list of feature monitoring results containing the monitoring metadata
+                as well as the computed statistics for the detection and reference window
+                if requested.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can fetch feature monitoring history."
+            )
+
+        return self._feature_monitoring_result_engine.get_feature_monitoring_results(
+            config_name=config_name,
+            config_id=config_id,
+            start_time=start_time,
+            end_time=end_time,
+            with_statistics=with_statistics,
+        )
+
+    def _enable_statistics_monitoring(
+        self,
+        name: str,
+        job_frequency: str = "DAILY",
+        feature_name: Optional[str] = None,
+        description: Optional[str] = None,
+        start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Run a job to compute statistics on snapshot of feature data on a schedule.
+
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+
+        !!! example
+            ```python3
+            # fetch feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # enable statistics monitoring
+            my_config = fg._enable_statistics_monitoring(
+                name="my_config",
+                job_frequency="DAILY",
+                start_date_time="2021-01-01 00:00:00",
+                description="my description",
+            ).with_detection_window(
+                # Statistics computed on 10% of the last week of data
+                time_offset="1w",
+                row_percentage=0.1,
+            ).save()
+            ```
+
+        # Arguments
+            name: Name of the feature monitoring configuration.
+                name must be unique for all configurations attached to the feature group.
+            feature_name: Name of the feature to monitor. If not specified, statistics
+                will be computed for all features.
+            job_frequency: Frequency at which to compute the statistics for the feature.
+                Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
+            description: Description of the feature monitoring configuration.
+            start_date_time: Start date and time from which to start computing statistics.
+
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+
+        # Return
+            `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
+                Additional information are required before feature monitoring is enabled.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
+            )
+
+        return self._feature_monitoring_config_engine._build_default_scheduled_statistics_config(
+            name=name,
+            feature_name=feature_name,
+            description=description,
+            job_frequency=job_frequency,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
+        )
+
+    def _enable_feature_monitoring(
+        self,
+        name: str,
+        feature_name: str,
+        job_frequency: str = "DAILY",
+        description: Optional[str] = None,
+        start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Enable feature monitoring to compare statistics on snapshots of feature data over time.
+
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+
+        !!! example
+            ```python3
+            # fetch feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # enable feature monitoring
+            my_config = fg._enable_feature_monitoring(
+                name="my_monitoring_config",
+                feature_name="my_feature",
+                job_frequency="DAILY",
+                description="my monitoring config description",
+            ).with_detection_window(
+                # Data inserted in the last day
+                time_offset="1d",
+                window_length="1d",
+            ).with_reference_window(
+                # Data inserted last week on the same day
+                time_offset="1w1d",
+                window_length="1d",
+            ).compare_on(
+                metric="mean",
+                threshold=0.5,
+            ).save()
+            ```
+
+        # Arguments
+            name: Name of the feature monitoring configuration.
+                name must be unique for all configurations attached to the feature group.
+            feature_name: Name of the feature to monitor.
+            job_frequency: Frequency at which to compute the statistics for the feature.
+                Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
+            description: Description of the feature monitoring configuration.
+            start_date_time: Start date and time from which to start computing statistics.
+
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+
+        # Return
+            `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
+                Additional information are required before feature monitoring is enabled.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can enable feature monitoring."
+            )
+
+        return self._feature_monitoring_config_engine._build_default_feature_monitoring_config(
+            name=name,
+            feature_name=feature_name,
+            description=description,
+            job_frequency=job_frequency,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
         )
 
     def __getattr__(self, name):
@@ -1429,6 +1707,26 @@ class FeatureGroup(FeatureGroupBase):
                 self._hudi_precombine_key = None
 
             self.statistics_config = statistics_config
+            self.expectation_suite = expectation_suite
+            if expectation_suite:
+                self._expectation_suite._init_expectation_engine(
+                    feature_store_id=featurestore_id, feature_group_id=self._id
+                )
+            self._expectation_suite_engine = (
+                expectation_suite_engine.ExpectationSuiteEngine(
+                    feature_store_id=self._feature_store_id, feature_group_id=self._id
+                )
+            )
+            self._validation_report_engine = (
+                validation_report_engine.ValidationReportEngine(
+                    self._feature_store_id, self._id
+                )
+            )
+            self._validation_result_engine = (
+                validation_result_engine.ValidationResultEngine(
+                    self._feature_store_id, self._id
+                )
+            )
 
         else:
             # initialized by user

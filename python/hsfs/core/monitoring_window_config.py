@@ -21,31 +21,100 @@ from hsfs.util import FeatureStoreEncoder
 
 
 class WindowConfigType:
-    INSERT = "INSERT"
-    SNAPSHOT = "SNAPSHOT"
-    BATCH = "BATCH"
+    ALL_TIME = "ALL_TIME"
+    ROLLING_TIME = "ROLLING_TIME"
+    ROLLING_COMMITS = "ROLLING_COMMITS"
     TRAINING_DATASET = "TRAINING_DATASET"
     SPECIFIC_VALUE = "SPECIFIC_VALUE"
+    MOST_RECENT = "MOST_RECENT"
+    FIXED_TIME = "FIXED_TIME"
 
 
 class MonitoringWindowConfig:
+    _DEFAULT_ROW_PERCENTAGE = 1.0
+
     def __init__(
         self,
         id: Optional[int] = None,
         window_config_type: Optional[str] = WindowConfigType.SPECIFIC_VALUE,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
-        specific_id: Optional[int] = None,
+        training_dataset_id: Optional[int] = None,
         specific_value: Optional[float] = None,
-        row_percentage: Optional[int] = None,
+        row_percentage: Optional[float] = None,
     ):
+        """Configuration to define the slice of data to compute statistics on.
+
+        !!! example
+            ```python3
+            # Detection or reference window
+            ## Rolling Time Window
+            monitoring_window_config = MonitoringWindowConfig(
+                time_offset="1d", # data inserted up to 1 day ago
+                window_length="1h", # data inserted until an one hour after time_offset
+                row_percentage=0.2, # include only 20% of the rows when computing statistics
+            )
+
+            ## Rolling Commit Window (not supported yet)
+            monitoring_window_config = MonitoringWindowConfig(
+                commit_offset=10, # data inserted up to 10 commits ago
+                commit_num=5, # include 5 commits after commit_offset
+            )
+
+            # Only available for reference window
+            ## Specific value
+            monitoring_window_config = MonitoringWindowConfig(specific_value=0.5)
+
+            ## Training dataset
+            monitoring_window_config = MonitoringWindowConfig(
+                training_dataset_id=my_training_dataset.id
+            )
+
+            ## MOST_RECENT (not supported yet)
+            monitoring_window_config = MonitoringWindowConfig(
+                time_offset="LATEST", # Use the latest available feature statistics
+            )
+
+            ## Fixed Time Window (not supported yet)
+            monitoring_window_config = MonitoringWindowConfig(
+                time_offset="2020-01-01 00:00:00", # data inserted up to 2020-01-01 00:00:00
+                window_length="1y", # data inserted until an one year after time_offset
+            )
+            ```
+
+        # Arguments
+            id: int, optional
+                The id of the monitoring window config.
+            window_config_type: str, optional
+                The type of the monitoring window config. One of ROLLING_TIME,
+                TRAINING_DATASET, SPECIFIC_VALUE.
+            time_offset: str, optional
+                The time offset of the monitoring window config. Only used for
+                INSERT and SNAPSHOT window config types.
+            window_length: str, optional
+                The window length of the monitoring window config. Only used for
+                INSERT and SNAPSHOT window config types.
+            training_dataset_id: int, optional
+                The id of the training dataset to use as reference. Only used for
+                TRAINING_DATASET window config type.
+            specific_value: float, optional
+                The specific value to use as reference. Only used for SPECIFIC_VALUE
+                window config type.
+            row_percentage: float, optional
+                The fraction of rows to use when computing statistics [0, 1.0]. Only used
+                for ROLLING_TIME and ALL_TIME window config types.
+
+        # Raises
+            AttributeError: If window_config_type is not one of INSERT, SNAPSHOT,
+                BATCH, TRAINING_DATASET, SPECIFIC_VALUE.
+        """
         self._id = id
         self._window_config_type = window_config_type
         self._time_offset = time_offset
         self._window_length = window_length
-        self._specific_id = specific_id
+        self._training_dataset_id = training_dataset_id
         self._specific_value = specific_value
-        self._row_percentage = row_percentage
+        self.row_percentage = row_percentage
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -53,15 +122,24 @@ class MonitoringWindowConfig:
         return cls(**json_decamelized)
 
     def to_dict(self):
-        return {
+        the_dict = {
             "id": self._id,
             "windowConfigType": self._window_config_type,
-            "timeOffset": self._time_offset,
-            "windowLength": self._window_length,
-            "specificId": self._specific_id,
-            "specificValue": self._specific_value,
-            "rowPercentage": self._row_percentage,
         }
+
+        if (
+            self._window_config_type == WindowConfigType.ROLLING_TIME
+            or self._window_config_type == WindowConfigType.ALL_TIME
+        ):
+            the_dict["timeOffset"] = self._time_offset
+            the_dict["windowLength"] = self._window_length
+            the_dict["rowPercentage"] = self.row_percentage
+        elif self._window_config_type == WindowConfigType.SPECIFIC_VALUE:
+            the_dict["specificValue"] = self._specific_value
+        elif self._window_config_type == WindowConfigType.TRAINING_DATASET:
+            the_dict["trainingDatasetId"] = self._training_dataset_id
+
+        return the_dict
 
     def json(self) -> str:
         return json.dumps(self, cls=FeatureStoreEncoder)
@@ -77,7 +155,7 @@ class MonitoringWindowConfig:
         return self._id
 
     @property
-    def window_config_type(self) -> Optional[str]:
+    def window_config_type(self) -> WindowConfigType:
         return self._window_config_type
 
     @property
@@ -88,14 +166,69 @@ class MonitoringWindowConfig:
     def window_length(self) -> Optional[str]:
         return self._window_length
 
+    @window_length.setter
+    def window_length(self, window_length: Optional[str]):
+        if (
+            self._window_config_type != WindowConfigType.ROLLING_TIME
+            and window_length is not None
+        ):
+            raise AttributeError(
+                "Window length can only be set for if window_config_type is ROLLING_TIME."
+            )
+        self._window_length = window_length
+
     @property
-    def specific_id(self) -> Optional[int]:
-        return self._specific_id
+    def training_dataset_id(self) -> Optional[int]:
+        return self._training_dataset_id
+
+    @training_dataset_id.setter
+    def training_dataset_id(self, training_dataset_id: Optional[int]):
+        if (
+            self._window_config_type != WindowConfigType.TRAINING_DATASET
+            and training_dataset_id is not None
+        ):
+            raise AttributeError(
+                "Specific id can only be set for if window_config_type is TRAINING_DATASET."
+            )
+        self._training_dataset_id = training_dataset_id
 
     @property
     def specific_value(self) -> Optional[float]:
         return self._specific_value
 
+    @specific_value.setter
+    def specific_value(self, specific_value: Optional[float]):
+        if (
+            self._window_config_type != WindowConfigType.SPECIFIC_VALUE
+            and specific_value is not None
+        ):
+            raise AttributeError(
+                "Specific value can only be set for if window_config_type is SPECIFIC_VALUE."
+            )
+        self._specific_value = specific_value
+
     @property
     def row_percentage(self) -> Optional[int]:
         return self._row_percentage
+
+    @row_percentage.setter
+    def row_percentage(self, row_percentage: Optional[float]):
+        if (
+            self._window_config_type == WindowConfigType.SPECIFIC_VALUE
+            or self._window_config_type == WindowConfigType.TRAINING_DATASET
+        ) and row_percentage is not None:
+
+            raise AttributeError(
+                "Row percentage can only be set for ROLLING_TIME and ALL_TIME"
+                " window config types."
+            )
+
+        if isinstance(row_percentage, int) or isinstance(row_percentage, float):
+            row_percentage = float(row_percentage)
+            if row_percentage <= 0.0 or row_percentage > 1.0:
+                raise ValueError("Row percentage must be a float between 0 and 1.")
+            self._row_percentage = row_percentage
+        elif row_percentage is None:
+            self._row_percentage = self._DEFAULT_ROW_PERCENTAGE
+        else:
+            raise TypeError("Row percentage must be a float between 0 and 1.")
