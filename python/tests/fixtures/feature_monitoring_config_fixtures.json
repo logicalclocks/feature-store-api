@@ -10,7 +10,7 @@
         "name": "unit_test_config",
         "description": "I am a unit test fixture",
         "enabled": true,
-        "featureMonitoringType": "DESCRIPTIVE_STATISTICS",
+        "featureMonitoringType": "STATISTICS_COMPARISON",
         "detectionWindowConfig": {
           "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
@@ -47,7 +47,7 @@
         "name": "unit_test_config",
         "description": "I am a unit test fixture",
         "enabled": true,
-        "featureMonitoringType": "DESCRIPTIVE_STATISTICS",
+        "featureMonitoringType": "STATISTICS_COMPARISON",
         "detectionWindowConfig": {
           "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
@@ -113,7 +113,7 @@
         "name": "unit_test_config",
         "description": "I am a unit test fixture",
         "enabled": true,
-        "featureMonitoringType": "DESCRIPTIVE_STATISTICS",
+        "featureMonitoringType": "STATISTICS_COMPARISON",
         "detectionWindowConfig": {
           "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
@@ -152,7 +152,7 @@
         "name": "unit_test_config",
         "description": "I am a unit test fixture",
         "enabled": true,
-        "featureMonitoringType": "DESCRIPTIVE_STATISTICS",
+        "featureMonitoringType": "STATISTICS_COMPARISON",
         "detectionWindowConfig": {
           "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
@@ -263,7 +263,7 @@
           "name": "unit_test_config",
           "description": "I am a unit test fixture",
           "enabled": true,
-          "featureMonitoringType": "DESCRIPTIVE_STATISTICS",
+          "featureMonitoringType": "STATISTICS_COMPARISON",
           "detectionWindowConfig": {
             "windowConfigType": "ROLLING_TIME",
             "timeOffset": "1w",

@@ -389,7 +389,7 @@ class FeatureMonitoringConfigEngine:
             name=name,
             description=description,
             feature_name=feature_name,
-            feature_monitoring_type="SCHEDULED_STATISTICS",
+            feature_monitoring_type=fmc.FeatureMonitoringType.SCHEDULED_STATISTICS,
             scheduler_config={
                 "job_frequency": job_frequency,
                 "start_date_time": start_date_time,
@@ -441,9 +441,9 @@ class FeatureMonitoringConfigEngine:
             name=name,
             description=description,
             feature_name=feature_name,
-            # setting feature_monitoring_type to "SCHEDULED_STATISTICS" allows
+            # setting feature_monitoring_type to "STATISTICS_COMPARISON" allows
             # to raise an error if no reference window and comparison config are provided
-            feature_monitoring_type="DESCRIPTIVE_STATISTICS",
+            feature_monitoring_type=fmc.FeatureMonitoringType.STATISTICS_COMPARISON,
             scheduler_config={
                 "job_frequency": job_frequency,
                 "start_date_time": start_date_time,
@@ -658,7 +658,7 @@ class FeatureMonitoringConfigEngine:
             feature_view_name=self._feature_view_name,
             feature_view_version=self._feature_view_version,
             feature_name=feature_name,
-            feature_monitoring_type="DESCRIPTIVE_STATISTICS",
+            feature_monitoring_type=fmc.FeatureMonitoringType.STATISTICS_COMPARISON,
             detection_window_config=detection_window_config,
             scheduler_config=scheduler_config,
             enabled=True,

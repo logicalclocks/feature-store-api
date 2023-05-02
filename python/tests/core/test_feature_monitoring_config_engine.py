@@ -14,8 +14,10 @@
 #   limitations under the License.
 #
 
+from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_config_engine
 from hsfs.core.job_scheduler import JobScheduler
+from hsfs.core.monitoring_window_config import WindowConfigType
 
 DEFAULT_DESCRIPTION = "A feature monitoring configuration for unit test."
 DEFAULT_NAME = "test_monitoring_config"
@@ -45,7 +47,7 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
-            window_config_type="ROLLING_TIME",
+            window_config_type=WindowConfigType.ROLLING_TIME,
             time_offset="1w",
             window_length="1d",
         )
@@ -66,8 +68,14 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
-        assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
-        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
+        assert (
+            config._feature_monitoring_type
+            == fmc.FeatureMonitoringType.STATISTICS_COMPARISON
+        )
+        assert (
+            config._detection_window_config.window_config_type
+            == WindowConfigType.ROLLING_TIME
+        )
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
 
@@ -84,12 +92,12 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
-            window_config_type="ROLLING_TIME",
+            window_config_type=WindowConfigType.ROLLING_TIME,
             time_offset="1w",
             window_length="1d",
         )
         reference_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
-            window_config_type="SPECIFIC_VALUE", specific_value=2
+            window_config_type=WindowConfigType.SPECIFIC_VALUE, specific_value=2
         )
 
         stats_comparison_configuration = {
@@ -117,11 +125,20 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
-        assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
-        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
+        assert (
+            config._feature_monitoring_type
+            == fmc.FeatureMonitoringType.STATISTICS_COMPARISON
+        )
+        assert (
+            config._detection_window_config.window_config_type
+            == WindowConfigType.ROLLING_TIME
+        )
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
-        assert config._reference_window_config.window_config_type == "SPECIFIC_VALUE"
+        assert (
+            config._reference_window_config.window_config_type
+            == WindowConfigType.SPECIFIC_VALUE
+        )
         assert config._reference_window_config.specific_value == 2
         assert (
             config._statistics_comparison_config["threshold"]
@@ -157,12 +174,12 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
-            window_config_type="ROLLING_TIME",
+            window_config_type=WindowConfigType.ROLLING_TIME,
             time_offset="1w",
             window_length="1d",
         )
         reference_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
-            window_config_type="SPECIFIC_VALUE", specific_value=2
+            window_config_type=WindowConfigType.SPECIFIC_VALUE, specific_value=2
         )
 
         stats_comparison_configuration = {
@@ -192,11 +209,20 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
-        assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
-        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
+        assert (
+            config._feature_monitoring_type
+            == fmc.FeatureMonitoringType.STATISTICS_COMPARISON
+        )
+        assert (
+            config._detection_window_config.window_config_type
+            == WindowConfigType.ROLLING_TIME
+        )
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
-        assert config._reference_window_config.window_config_type == "SPECIFIC_VALUE"
+        assert (
+            config._reference_window_config.window_config_type
+            == WindowConfigType.SPECIFIC_VALUE
+        )
         assert config._reference_window_config.specific_value == 2
         assert (
             config._statistics_comparison_config["threshold"]
@@ -231,12 +257,12 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
-            window_config_type="ROLLING_TIME",
+            window_config_type=WindowConfigType.ROLLING_TIME,
             time_offset="1w",
             window_length="1d",
         )
         reference_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
-            window_config_type="TRAINING_DATASET", training_dataset_id=12
+            window_config_type=WindowConfigType.TRAINING_DATASET, training_dataset_id=12
         )
 
         stats_comparison_configuration = {
@@ -266,11 +292,20 @@ class TestFeatureMonitoringConfigEngine:
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
         assert config._enabled is True
-        assert config._feature_monitoring_type == "DESCRIPTIVE_STATISTICS"
-        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
+        assert (
+            config._feature_monitoring_type
+            == fmc.FeatureMonitoringType.STATISTICS_COMPARISON
+        )
+        assert (
+            config._detection_window_config.window_config_type
+            == WindowConfigType.ROLLING_TIME
+        )
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
-        assert config._reference_window_config.window_config_type == "TRAINING_DATASET"
+        assert (
+            config._reference_window_config.window_config_type
+            == WindowConfigType.TRAINING_DATASET
+        )
         assert config._reference_window_config.training_dataset_id == 12
         assert (
             config._statistics_comparison_config["threshold"]
@@ -326,8 +361,14 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._name == DEFAULT_NAME
         assert config._description == DEFAULT_DESCRIPTION
-        assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
-        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
+        assert (
+            config._feature_monitoring_type
+            == fmc.FeatureMonitoringType.SCHEDULED_STATISTICS
+        )
+        assert (
+            config._detection_window_config.window_config_type
+            == WindowConfigType.ROLLING_TIME
+        )
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
 
@@ -348,7 +389,7 @@ class TestFeatureMonitoringConfigEngine:
         )
 
         detection_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
-            window_config_type="ROLLING_TIME",
+            window_config_type=WindowConfigType.ROLLING_TIME,
             time_offset="1w",
             window_length="1d",
         )
@@ -370,8 +411,14 @@ class TestFeatureMonitoringConfigEngine:
         assert config._enabled is True
         assert config._name == DEFAULT_NAME
         assert config._description is None
-        assert config._feature_monitoring_type == "SCHEDULED_STATISTICS"
-        assert config._detection_window_config.window_config_type == "ROLLING_TIME"
+        assert (
+            config._feature_monitoring_type
+            == fmc.FeatureMonitoringType.SCHEDULED_STATISTICS
+        )
+        assert (
+            config._detection_window_config.window_config_type
+            == WindowConfigType.ROLLING_TIME
+        )
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
 

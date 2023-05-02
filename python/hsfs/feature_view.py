@@ -83,6 +83,24 @@ class FeatureView:
         self._batch_vectors_server = None
         self._batch_scoring_server = None
 
+        if id is not None:
+            self._fm_config_engine = (
+                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                    feature_store_id=self._featurestore_id,
+                    feature_view_id=self._id,
+                    feature_view_name=self._name,
+                    feature_view_version=self._version,
+                )
+            )
+            self._fm_result_engine = (
+                feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+                    feature_store_id=self._featurestore_id,
+                    feature_view_id=self._id,
+                    feature_view_name=self._name,
+                    feature_view_version=self._version,
+                )
+            )
+
     def delete(self):
         """Delete current feature view, all associated metadata and training data.
 
@@ -2183,16 +2201,7 @@ class FeatureView:
                 "Only Feature Group registered with Hopsworks can fetch feature monitoring configurations."
             )
 
-        fm_config_engine = (
-            feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-                feature_store_id=self._featurestore_id,
-                feature_view_id=self._id,
-                feature_view_name=self._name,
-                feature_view_version=self._version,
-            )
-        )
-
-        return fm_config_engine.get_feature_monitoring_configs(
+        return self._fm_config_engine.get_feature_monitoring_configs(
             name=name,
             feature_name=feature_name,
             config_id=config_id,
@@ -2257,16 +2266,7 @@ class FeatureView:
                 "Only Feature View registered with Hopsworks can fetch feature monitoring history."
             )
 
-        fm_result_engine = (
-            feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-                feature_store_id=self._featurestore_id,
-                feature_view_id=self._id,
-                feature_view_name=self._name,
-                feature_view_version=self._version,
-            )
-        )
-
-        return fm_result_engine.get_feature_monitoring_results(
+        return self._fm_result_engine.get_feature_monitoring_results(
             config_name=config_name,
             config_id=config_id,
             start_time=start_time,
@@ -2274,7 +2274,7 @@ class FeatureView:
             with_statistics=with_statistics,
         )
 
-    def _enable_scheduled_statistics_monitoring_fluent(
+    def _enable_statistics_monitoring(
         self,
         name: str,
         job_frequency: str = "DAILY",
@@ -2292,8 +2292,8 @@ class FeatureView:
             # fetch feature view
             fv = fs.get_feature_view(name="my_feature_view", version=1)
 
-            # enable scheduled statistics monitoring
-            my_config = fv._enable_scheduled_statistics_monitoring(
+            # enable statistics monitoring
+            my_config = fv._enable_statistics_monitoring(
                 name="my_config",
                 job_frequency="DAILY",
                 start_date_time="2021-01-01 00:00:00",
@@ -2327,16 +2327,7 @@ class FeatureView:
                 "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
             )
 
-        fm_config_engine = (
-            feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-                feature_store_id=self._featurestore_id,
-                feature_view_id=self._id,
-                feature_view_name=self._name,
-                feature_view_version=self._version,
-            )
-        )
-
-        return fm_config_engine._build_default_scheduled_statistics_config(
+        return self._fm_config_engine._build_default_scheduled_statistics_config(
             name=name,
             feature_name=feature_name,
             description=description,
@@ -2345,7 +2336,7 @@ class FeatureView:
             valid_feature_names=[feat.name for feat in self._features],
         )
 
-    def _enable_feature_monitoring_fluent(
+    def _enable_feature_monitoring(
         self,
         name: str,
         feature_name: str,
@@ -2364,7 +2355,7 @@ class FeatureView:
             fg = fs.get_feature_view(name="my_feature_view", version=1)
 
             # enable feature monitoring
-            my_config = fg._enable_feature_monitoring_fluent(
+            my_config = fg._enable_feature_monitoring(
                 name="my_monitoring_config",
                 feature_name="my_feature",
                 job_frequency="DAILY",
@@ -2403,16 +2394,7 @@ class FeatureView:
                 "Only Feature Group registered with Hopsworks can enable feature monitoring."
             )
 
-        fm_config_engine = (
-            feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-                feature_store_id=self._featurestore_id,
-                feature_view_id=self._id,
-                feature_view_name=self._name,
-                feature_view_version=self._version,
-            )
-        )
-
-        return fm_config_engine._build_default_feature_monitoring_config(
+        return self._fm_config_engine._build_default_feature_monitoring_config(
             name=name,
             feature_name=feature_name,
             description=description,

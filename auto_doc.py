@@ -212,7 +212,7 @@ PAGES = {
             "hsfs.core.explicit_provenance.Artifact"
         ),
     },
-    "api/feature_monitoring.md": {
+    "api/feature_monitoring_api.md": {
         "feature_monitoring_config": [
             "hsfs.core.feature_monitoring_config.FeatureMonitoringConfig"
         ],
@@ -239,10 +239,10 @@ PAGES = {
             exclude=["from_response_json", "json", "to_dict"],
         ),
         "feature_monitoring_enable": [
-            "hsfs.feature_group.FeatureGroup._enable_scheduled_statistics_monitoring_fluent",
-            "hsfs.feature_view.FeatureView._enable_scheduled_statistics_monitoring_fluent",
-            "hsfs.feature_group.FeatureGroup._enable_feature_monitoring_fluent",
-            "hsfs.feature_view.FeatureView._enable_feature_monitoring_fluent",
+            "hsfs.feature_group.FeatureGroup._enable_statistics_monitoring",
+            "hsfs.feature_view.FeatureView._enable_statistics_monitoring",
+            "hsfs.feature_group.FeatureGroup._enable_feature_monitoring",
+            "hsfs.feature_view.FeatureView._enable_feature_monitoring",
         ],
         "feature_monitoring_config_fetch": [
             "hsfs.feature_group.FeatureGroup._get_feature_monitoring_configs",

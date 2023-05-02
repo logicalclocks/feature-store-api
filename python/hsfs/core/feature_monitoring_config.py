@@ -30,13 +30,19 @@ from hsfs.core import feature_monitoring_config_engine
 from hsfs.core import feature_monitoring_result_engine
 
 
+class FeatureMonitoringType:
+    STATISTICS_COMPARISON = "STATISTICS_COMPARISON"
+    SCHEDULED_STATISTICS = "SCHEDULED_STATISTICS"
+    PROBABILITY_DENSITY_FUNCTION = "PROBABILITY_DENSITY_FUNCTION"
+
+
 class FeatureMonitoringConfig:
     def __init__(
         self,
         feature_store_id: int,
         name: str,
         feature_name: Optional[str] = None,
-        feature_monitoring_type: str = "DESCRIPTIVE_STATISTICS",
+        feature_monitoring_type: FeatureMonitoringType = FeatureMonitoringType.SCHEDULED_STATISTICS,
         job_name: Optional[str] = None,
         detection_window_config: Optional[
             Union[MonitoringWindowConfig, Dict[str, Any]]
