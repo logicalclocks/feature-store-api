@@ -843,6 +843,7 @@ class Engine:
         dataframe: pd.DataFrame,
         offline_write_options: dict,
     ):
+        reset_offsets = False
         if feature_group._multi_part_insert:
             if feature_group._kafka_producer is None:
                 producer, feature_writers, writer = self._init_kafka_resources(
@@ -867,6 +868,12 @@ class Engine:
                 "Elapsed Time: {elapsed} | Remaining Time: {remaining}",
                 desc="Uploading Dataframe",
                 mininterval=1,
+            )
+
+            reset_offsets = (
+                feature_group._online_topic_name
+                not in producer.list_topics(timeout=1).topics.keys()
+                and len(feature_group.commit_details(limit=1)) == 1
             )
 
         def acked(err, msg):
@@ -923,7 +930,25 @@ class Engine:
             progress_bar.close()
 
         # start backfilling job
+        # if topic didn't exist, always run the backfill job to reset the offsets except if it's a multi insert
         if (
+            not isinstance(feature_group, ExternalFeatureGroup)
+            and reset_offsets
+            and not feature_group._multi_part_insert
+        ):
+            if offline_write_options is not None and not offline_write_options.get(
+                "start_offline_backfill", True
+            ):
+                warnings.warn(
+                    "This is the first ingestion after an upgrade or backup/restore, running backfill job even though `start_offline_backfill` was set to `False`.",
+                    util.FeatureGroupWarning,
+                )
+            feature_group.backfill_job.run(
+                args=feature_group.backfill_job.config.get("defaultArgs", "")
+                + " -kafkaOffsetReset true",
+                await_termination=offline_write_options.get("wait_for_job", True),
+            )
+        elif (
             not isinstance(feature_group, ExternalFeatureGroup)
             and offline_write_options is not None
             and offline_write_options.get("start_offline_backfill", True)

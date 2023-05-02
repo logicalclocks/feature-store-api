@@ -188,15 +188,21 @@ public class FeatureGroupUtils {
     return complexField.schema().toString(false);
   }
 
-  public String getEncodedAvroSchema(Schema schema, List<String> complexFeatures)
+  public Schema getDeserializedEncodedAvroSchema(Schema schema, List<String> complexFeatures)
       throws FeatureStoreException, IOException {
     List<Schema.Field> fields = schema.getFields().stream()
         .map(field -> complexFeatures.contains(field.name())
-            ? new Schema.Field(field.name(), SchemaBuilder.builder().unionOf().nullType().and().bytesType().endUnion(),
-                null, null)
-            : new Schema.Field(field.name(), field.schema(), null, null))
+          ? new Schema.Field(field.name(), SchemaBuilder.builder().unionOf().nullType().and().bytesType().endUnion(),
+          null, null)
+          : new Schema.Field(field.name(), field.schema(), null, null))
         .collect(Collectors.toList());
-    return Schema.createRecord(schema.getName(), null, schema.getNamespace(), schema.isError(), fields).toString(false);
+    return Schema.createRecord(schema.getName(), null, schema.getNamespace(), schema.isError(), fields);
+  }
+
+  public String getEncodedAvroSchema(Schema schema, List<String> complexFeatures)
+      throws FeatureStoreException, IOException {
+    Schema deserializedEncodedAvroSchema = getDeserializedEncodedAvroSchema(schema, complexFeatures);
+    return deserializedEncodedAvroSchema.toString(false);
   }
 
   public Schema getDeserializedAvroSchema(String avroSchema) throws FeatureStoreException, IOException {

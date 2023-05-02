@@ -462,7 +462,14 @@ public abstract class FeatureGroupBase<T> {
   }
 
   @JsonIgnore
+  public Schema getDeserializedEncodedAvroSchema() throws FeatureStoreException, IOException {
+    return utils.getDeserializedEncodedAvroSchema(getDeserializedAvroSchema(), utils.getComplexFeatures(features));
+  }
+
+  @JsonIgnore
   public Schema getDeserializedAvroSchema() throws FeatureStoreException, IOException {
     return utils.getDeserializedAvroSchema(getAvroSchema());
   }
+
+
 }
