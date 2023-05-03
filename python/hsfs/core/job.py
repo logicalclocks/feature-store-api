@@ -110,10 +110,43 @@ class Job:
         """Get the state of the job.
 
         Returns the state of the job, which can be one of the following:
-        ACCEPTED, RUNNING, FINISHED, FAILED, KILLED, NEW, NEW_SAVING, SUBMITTED, GENERATING_SECURITY_MATERIAL
+        INITIALIZING: "Initializing"
+        INITIALIZATION_FAILED: "Initialization failed"
+        FINISHED: "Finished"
+        RUNNING: "Running"
+        ACCEPTED: "Accepted"
+        FAILED: "Failed"
+        KILLED: "Killed"
+        NEW: "New"
+        NEW_SAVING: "New, saving"
+        SUBMITTED: "Submitted"
+        AGGREGATING_LOGS: "Aggregating logs"
+        FRAMEWORK_FAILURE: "Framework failure"
+        STARTING_APP_MASTER: "Starting Application Master"
+        APP_MASTER_START_FAILED: "Failed starting AM"
+        GENERATING_SECURITY_MATERIAL: "Generating security material"
+        CONVERTING_NOTEBOOK: "Converting noteboook to python"
         """
         last_execution = self._job_api.last_execution(self)
         if len(last_execution) != 1:
             raise FeatureStoreException("No executions found for job")
 
         return last_execution[0].state
+
+    def get_final_state(self):
+        """Get the final state of the job.
+
+        Returns the final state of the job, which can be one of the following:
+        UNDEFINED: "No final state reached yet"
+        FINISHED: "Finished"
+        FAILED: "Failed"
+        KILLED: "Killed"
+        FRAMEWORK_FAILURE: "Framework failure"
+        APP_MASTER_START_FAILED: "Failed starting AM"
+        INITIALIZATION_FAILED: "Initialization failed"
+        """
+        last_execution = self._job_api.last_execution(self)
+        if len(last_execution) != 1:
+            raise FeatureStoreException("No executions found for job")
+
+        return last_execution[0].final_status
