@@ -23,7 +23,7 @@
         <slf4j.version>1.7.30</slf4j.version>
         <log4j.version>1.2.17</log4j.version>
         <handy.version>2.1.8</handy.version>
-        <lombok.version>1.18.10</lombok.version>
+        <lombok.version>1.18.20</lombok.version>
         <fasterxml.jackson.databind.version>2.10.0</fasterxml.jackson.databind.version>
         <deequ.version>1.1.0.6-SNAPSHOT</deequ.version>
         <hudi.version>0.10.0.3</hudi.version>
@@ -35,6 +35,7 @@
         <hoverfly.version>0.12.2</hoverfly.version>
         <junit.version>5.9.1</junit.version>
         <surefire-plugin.version>2.22.0</surefire-plugin.version>
+        <shade-plugin.version>3.2.4</shade-plugin.version>
         <mockito.version>4.3.1</mockito.version>
         <avro.version>1.11.1</avro.version>
 
@@ -160,27 +161,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4.1</version>
-                <configuration>
-                    <!-- get all project dependencies -->
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <!-- bind to the packaging phase -->
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>3.1.1</version>
                 <executions>
@@ -262,7 +242,6 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
         <testResources>
             <testResource>
