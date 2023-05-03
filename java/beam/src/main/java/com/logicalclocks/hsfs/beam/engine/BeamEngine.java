@@ -53,15 +53,16 @@ public class BeamEngine {
             new Schema.Parser().parse(streamFeatureGroup.getFeatureAvroSchema(featureName)));
     }
     Schema deserializedEncodedSchema = new Schema.Parser().parse(streamFeatureGroup.getEncodedAvroSchema());
+
     return new BeamProducer(streamFeatureGroup.getOnlineTopicName(), getKafkaProperties(streamFeatureGroup),
-      streamFeatureGroup.getDeserializedAvroSchema(), deserializedEncodedSchema, complexFeatureSchemas);
+      streamFeatureGroup.getDeserializedAvroSchema(), deserializedEncodedSchema, complexFeatureSchemas,
+      streamFeatureGroup.getPrimaryKeys());
   }
 
   private Map<String, Object> getKafkaProperties(StreamFeatureGroup featureGroup) throws FeatureStoreException,
       IOException {
     Map<String, Object> properties = new HashMap<>();
     HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
-
     properties.put("bootstrap.servers",
         kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
         .map(broker -> broker.replaceAll("EXTERNAL://", ""))
