@@ -16,6 +16,7 @@
 
 import humps
 from hsfs import engine
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import job_api
 
 
@@ -104,3 +105,15 @@ class Job:
             )
         )
         engine.get_instance().wait_for_job(self, await_termination=await_termination)
+
+    def get_state(self):
+        """Get the state of the job.
+
+        Returns the state of the job, which can be one of the following:
+        ACCEPTED, RUNNING, FINISHED, FAILED, KILLED, NEW, NEW_SAVING, SUBMITTED, GENERATING_SECURITY_MATERIAL
+        """
+        last_execution = self._job_api.last_execution(self)
+        if len(last_execution) != 1:
+            raise FeatureStoreException("No executions found for job")
+
+        return last_execution[0].state
