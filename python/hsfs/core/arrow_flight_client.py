@@ -53,18 +53,37 @@ class ArrowFlightClient:
             try:
                 self._initialize_connection()
             except Exception as e:
-                self._is_enabled = False
-                warnings.warn(
-                    f"Could not establish connection to FlyingDuck. ({e}) "
-                    f"Will fall back to spark for this session. "
-                    f"If the error persists, you can disable FlyingDuck "
-                    f"by changing the cluster configuration (set 'enable_flyingduck'='false')."
-                )
+                self._disable(str(e))
+
+    def _disable(self, message):
+        self._is_enabled = False
+        warnings.warn(
+            f"Could not establish connection to FlyingDuck. ({message}) "
+            f"Will fall back to hive/spark for this session. "
+            f"If the error persists, you can disable FlyingDuck "
+            f"by changing the cluster configuration (set 'enable_flyingduck'='false')."
+        )
 
     def _initialize_connection(self):
         self._client = client.get_instance()
 
-        host_url = "grpc+tls://flyingduck.service.consul:5005"
+        if isinstance(self._client, client.external.Client):
+            external_domain = self._variable_api.get_loadbalancer_external_domain()
+            if external_domain == "":
+                raise Exception(
+                    "External client could not locate loadbalancer_external_domain "
+                    "in cluster configuration or variable is empty."
+                )
+            host_url = f"grpc+tls://{external_domain}:5005"
+        else:
+            service_discovery_domain = self._variable_api.get_service_discovery_domain()
+            if service_discovery_domain == "":
+                raise Exception(
+                    "Client could not locate service_discovery_domain "
+                    "in cluster configuration or variable is empty."
+                )
+            host_url = f"grpc+tls://flyingduck.service.{service_discovery_domain}:5005"
+
         (tls_root_certs, cert_chain, private_key) = self._extract_certs(self._client)
         self._connection = pyarrow.flight.FlightClient(
             location=host_url,
