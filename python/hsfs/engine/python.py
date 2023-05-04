@@ -870,9 +870,6 @@ class Engine:
                 mininterval=1,
             )
 
-            print(offline_write_options)
-            raise FeatureStoreException(str(offline_write_options))
-
             reset_offsets = (
                 feature_group._online_topic_name
                 not in producer.list_topics(timeout=1).topics.keys()
@@ -1009,7 +1006,6 @@ class Engine:
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
     def _get_kafka_config(self, write_options: dict = {}) -> dict:
-        raise FeatureStoreException(str(write_options))
         return write_options.get("kafka_producer_config", {})
 
     @staticmethod
