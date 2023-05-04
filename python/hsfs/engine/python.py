@@ -870,6 +870,9 @@ class Engine:
                 mininterval=1,
             )
 
+            print(offline_write_options)
+            raise FeatureStoreException(str(offline_write_options))
+
             reset_offsets = (
                 feature_group._online_topic_name
                 not in producer.list_topics(timeout=1).topics.keys()
