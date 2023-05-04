@@ -1089,7 +1089,7 @@ class GcsConnector(StorageConnector):
         # Returns
             `Dataframe`: A Spark dataframe.
         """
-        if not engine.get_instance().is_connector_type_supported(StorageConnector.GCS):
+        if not engine.get_instance().is_connector_type_supported(self.type):
             raise NotImplementedError(
                 "GCS connector not yet supported for engine: " + engine.get_type()
             )
