@@ -109,23 +109,12 @@ class Job:
     def get_state(self):
         """Get the state of the job.
 
-        Returns the state of the job, which can be one of the following:
-        INITIALIZING: "Initializing"
-        INITIALIZATION_FAILED: "Initialization failed"
-        FINISHED: "Finished"
-        RUNNING: "Running"
-        ACCEPTED: "Accepted"
-        FAILED: "Failed"
-        KILLED: "Killed"
-        NEW: "New"
-        NEW_SAVING: "New, saving"
-        SUBMITTED: "Submitted"
-        AGGREGATING_LOGS: "Aggregating logs"
-        FRAMEWORK_FAILURE: "Framework failure"
-        STARTING_APP_MASTER: "Starting Application Master"
-        APP_MASTER_START_FAILED: "Failed starting AM"
-        GENERATING_SECURITY_MATERIAL: "Generating security material"
-        CONVERTING_NOTEBOOK: "Converting noteboook to python"
+        # Returns
+            `state`. Current state of the job, which can be one of the following:
+            `INITIALIZING`, `INITIALIZATION_FAILED`, `FINISHED`, `RUNNING`, `ACCEPTED`,
+            `FAILED`, `KILLED`, `NEW`, `NEW_SAVING`, `SUBMITTED`, `AGGREGATING_LOGS`,
+            `FRAMEWORK_FAILURE`, `STARTING_APP_MASTER`, `APP_MASTER_START_FAILED`,
+            `GENERATING_SECURITY_MATERIAL`, `CONVERTING_NOTEBOOK`
         """
         last_execution = self._job_api.last_execution(self)
         if len(last_execution) != 1:
@@ -136,14 +125,11 @@ class Job:
     def get_final_state(self):
         """Get the final state of the job.
 
-        Returns the final state of the job, which can be one of the following:
-        UNDEFINED: "No final state reached yet"
-        FINISHED: "Finished"
-        FAILED: "Failed"
-        KILLED: "Killed"
-        FRAMEWORK_FAILURE: "Framework failure"
-        APP_MASTER_START_FAILED: "Failed starting AM"
-        INITIALIZATION_FAILED: "Initialization failed"
+        # Returns
+            `final_state`. Final state of the job, which can be one of the following:
+            `UNDEFINED`, `FINISHED`, `FAILED`, `KILLED`, `FRAMEWORK_FAILURE`,
+            `APP_MASTER_START_FAILED`, `INITIALIZATION_FAILED`. `UNDEFINED` indicates
+             that the job is still running.
         """
         last_execution = self._job_api.last_execution(self)
         if len(last_execution) != 1:

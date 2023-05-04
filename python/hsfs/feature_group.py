@@ -1629,6 +1629,10 @@ class FeatureGroup(FeatureGroupBase):
         !!! warning "Deprecated"
             `save` method is deprecated. Use the `insert` method instead.
 
+        !!! warning "Changed in 3.3.0"
+            `insert` and `save` methods are now async by default in non-spark clients.
+            To achieve the old behaviour, set `write_options` argument `wait_for_job=True`.
+
         Calling `save` creates the metadata for the feature group in the feature store
         and writes the specified `features` dataframe as feature group to the
         online/offline feature store as specified.
@@ -1727,6 +1731,10 @@ class FeatureGroup(FeatureGroupBase):
 
         If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
         invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+
+        !!! warning "Changed in 3.3.0"
+            `insert` and `save` methods are now async by default in non-spark clients.
+            To achieve the old behaviour, set `write_options` argument `wait_for_job=True`.
 
         !!! example "Upsert new feature data with time travel format `HUDI`"
             ```python

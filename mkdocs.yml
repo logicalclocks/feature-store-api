@@ -30,7 +30,7 @@ nav:
       - Query: generated/api/query_api.md
       - Transformation Functions: generated/api/transformation_functions_api.md
       - ValidationReport: generated/api/validation_report_api.md
-      - Job configuration: generated/api/job_configuration.md
+      - Job: generated/api/job.md
       - Provenance Links: generated/api/links.md
     - Contributing: CONTRIBUTING.md
   - Community ↗: https://community.hopsworks.ai/
