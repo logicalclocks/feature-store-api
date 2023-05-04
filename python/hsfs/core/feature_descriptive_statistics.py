@@ -16,9 +16,8 @@
 
 import json
 import humps
-from typing import Optional, Mapping, Union
-from hsfs.util import FeatureStoreEncoder, convert_event_time_to_timestamp
-from datetime import datetime, date
+from typing import Optional, Mapping
+from hsfs.util import FeatureStoreEncoder
 
 
 class FeatureDescriptiveStatistics:
@@ -98,10 +97,10 @@ class FeatureDescriptiveStatistics:
         return cls(**json_decamelized)
 
     @classmethod
-    def from_deequ_json(cls, json_dict, feature_name):
+    def from_deequ_json(cls, json_dict):
         # TODO: to be removed after replacing deequ
         stats_dict = {
-            "feature_name": feature_name,
+            "feature_name": json_dict["column"],
             "feature_type": json_dict["dataType"],
             "count": json_dict["numRecordsNull"] + json_dict["numRecordsNonNull"],
             # common for all data types
@@ -130,7 +129,6 @@ class FeatureDescriptiveStatistics:
     def to_dict(self):
         return {
             "id": self._id,
-            "featureName": self._feature_name,
             "featureType": self._feature_type,
             "featureName": self._feature_name,
             "count": self._count,
@@ -162,10 +160,6 @@ class FeatureDescriptiveStatistics:
     @property
     def id(self) -> Optional[int]:
         return self._id
-
-    @property
-    def feature_name(self) -> str:
-        return self._feature_name
 
     @property
     def feature_type(self) -> str:

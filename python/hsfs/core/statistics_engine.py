@@ -16,7 +16,6 @@
 
 import datetime
 import json
-from typing import List, TypeVar
 import warnings
 
 from hsfs import engine, statistics, util, split_statistics
@@ -38,9 +37,6 @@ class StatisticsEngine:
         feature_group_commit_id=None,
         feature_view_obj=None,
     ) -> statistics.Statistics:
-        
-        # TODO: Check changes by Victor and see what to use
-
         """Compute statistics for a dataframe and send the result json to Hopsworks.
 
         Args:
@@ -87,40 +83,47 @@ class StatisticsEngine:
         self,
         metadata_instance,
         feature_dataframe,
-        feature_name,
         start_time,
         end_time,
         row_percentage,
+        feature_name=None,
     ) -> statistics.Statistics:
-        """Compute statistics for a single feature and sends the result to Hopsworks.
+        # TODO: Check changes by Victor and see what to use
+
+        """Compute statistics for one or more features and sends the result to Hopsworks.
 
         Args:
             feature_dataframe: Single-feature Spark or Pandas DataFrame to compute the statistics on.
-            feature_name: str. Name of the feature.
             start_time: int: Window start commit time
             end_time: int: Window end commit time
-            row_percentage: Percentage of rows to include
+            row_percentage: Percentage of rows to include.
+            feature_name: Union[str, List[str]]. Feature name or list of names to compute the statistics on. If not set, statistics are computed on all features.
 
         Returns:
             List[FeatureDescriptiveStatistics]. List of the Descriptive statistics
                 for each feature in the DataFrame.
         """
+        feature_names = []
+        if feature_name is None:
+            feature_names = feature_dataframe.columns
+        elif isinstance(feature_name, str):
+            feature_names = [feature_name]
+        elif isinstance(feature_name, list):
+            feature_names = feature_name
+
         if engine.get_type() == "spark":
-            if feature_dataframe is not None:
-                feature_names = feature_dataframe.columns
-            else:
-                feature_names = []
             statistics_str = self.profile_statistics(
-                feature_dataframe, [feature_name], False, False, False
+                feature_dataframe, feature_names, False, False, False
             )
-            statistics_dict = json.loads(statistics_str)
-            feature_statistics = FeatureDescriptiveStatistics.from_deequ_json(
-                statistics_dict["columns"][0], feature_name
-            )
+            statistics_list = json.loads(statistics_str)["columns"]
+            feature_statistics = [
+                FeatureDescriptiveStatistics.from_deequ_json(stats)
+                for stats in statistics_list
+            ]
             statistics_obj = statistics.Statistics(
                 commit_time=int(float(datetime.datetime.now().timestamp()) * 1000),
                 row_percentage=row_percentage,
-                feature_descriptive_statistics=[feature_statistics],
+                feature_descriptive_statistics=feature_statistics,
                 window_start_commit_id=start_time,
                 window_end_commit_id=end_time,
             )
@@ -278,9 +281,17 @@ class StatisticsEngine:
         Returns:
             Statistics: Feature group statistics
         """
-        return self._statistics_api.get_by_commit_time_window(
-            metadata_instance, start_time, end_time, feature_name, row_percentage
-        )
+        try:
+            return self._statistics_api.get_by_commit_time_window(
+                metadata_instance, start_time, end_time, feature_name, row_percentage
+            )
+        except exceptions.RestAPIError as e:
+            if (
+                e.response.json().get("errorCode", "") == 270228
+                and e.response.status_code == 404
+            ):
+                return None
+            raise e
 
     def _save_statistics(self, stats, metadata_instance, feature_view_obj):
         # metadata_instance can be feature group or training dataset

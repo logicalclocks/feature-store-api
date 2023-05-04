@@ -26,7 +26,7 @@ class Statistics:
     def __init__(
         self,
         commit_time,
-        row_percentage=100,
+        row_percentage=1.0,
         content=None,
         feature_descriptive_statistics=None,
         # feature group

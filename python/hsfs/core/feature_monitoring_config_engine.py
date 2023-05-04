@@ -758,7 +758,10 @@ class FeatureMonitoringConfigEngine:
             return monitoring_window_config.specific_value
 
         # Check if statistics already exists
-        start_time, end_time = self._monitoring_window_config_engine.get_window_start_end_times(
+        (
+            start_time,
+            end_time,
+        ) = self._monitoring_window_config_engine.get_window_start_end_times(
             monitoring_window_config=monitoring_window_config,
         )
         registered_stats = self._statistics_engine.get_by_commit_time_window(
@@ -785,7 +788,12 @@ class FeatureMonitoringConfigEngine:
 
         # Compute statistics on the feature dataframe
         descriptive_stats = self._statistics_engine.compute_monitoring_statistics(
+            entity,
             entity_feature_df,
+            start_time,
+            end_time,
+            monitoring_window_config.row_percentage,
+            feature_name=feature_name,
         )
         # set commit times and row percentage
         # for stats_entity in descriptive_stats:
