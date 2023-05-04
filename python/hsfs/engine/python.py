@@ -1006,38 +1006,7 @@ class Engine:
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
     def _get_kafka_config(self, write_options: dict = {}) -> dict:
-        # producer configuration properties
-        # https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
-        config = {
-            "security.protocol": "SSL",
-            "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
-            "ssl.certificate.location": client.get_instance()._get_client_cert_path(),
-            "ssl.key.location": client.get_instance()._get_client_key_path(),
-            "client.id": socket.gethostname(),
-            **write_options.get("kafka_producer_config", {}),
-        }
-
-        if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
-            "internal_kafka", False
-        ):
-            config["bootstrap.servers"] = ",".join(
-                [
-                    endpoint.replace("INTERNAL://", "")
-                    for endpoint in self._kafka_api.get_broker_endpoints(
-                        externalListeners=False
-                    )
-                ]
-            )
-        else:
-            config["bootstrap.servers"] = ",".join(
-                [
-                    endpoint.replace("EXTERNAL://", "")
-                    for endpoint in self._kafka_api.get_broker_endpoints(
-                        externalListeners=True
-                    )
-                ]
-            )
-        return config
+        return write_options.get("kafka_producer_config", {})
 
     @staticmethod
     def _convert_pandas_dtype_to_offline_type(dtype, arrow_type):
