@@ -1006,7 +1006,7 @@ class Engine:
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
     def _get_kafka_config(self, write_options: dict = {}) -> dict:
-        print(write_options)
+        raise FeatureStoreException(str(write_options))
         return write_options.get("kafka_producer_config", {})
 
     @staticmethod
