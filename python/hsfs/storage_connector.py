@@ -260,7 +260,7 @@ class S3Connector(StorageConnector):
         query: str = None,
         data_format: str = None,
         options: dict = {},
-        path: str = None,
+        path: str = "",
     ):
         """Reads a query or a path into a dataframe using the storage connector.
 
@@ -277,6 +277,14 @@ class S3Connector(StorageConnector):
             `DataFrame`.
         """
         self.refetch()
+        if not path.startswith("s3://"):
+            path = self._get_path(path)
+            print(
+                "Prepending default bucket specified on connector, final path: {}".format(
+                    path
+                )
+            )
+
         return engine.get_instance().read(self, data_format, options, path)
 
     def _get_path(self, sub_path: str):
@@ -1001,6 +1009,7 @@ class KafkaConnector(StorageConnector):
 
 class GcsConnector(StorageConnector):
     type = StorageConnector.GCS
+    GS_FS_PREFIX = "gs://"  # Google Storage Filesystem prefix
 
     def __init__(
         self,
@@ -1046,7 +1055,7 @@ class GcsConnector(StorageConnector):
     @property
     def path(self):
         """the path of the connector along with gs file system prefixed"""
-        return "gs://" + self._bucket
+        return self.GS_FS_PREFIX + self._bucket
 
     @property
     def bucket(self):
@@ -1070,12 +1079,16 @@ class GcsConnector(StorageConnector):
         query: str = None,
         data_format: str = None,
         options: dict = {},
-        path: str = None,
+        path: str = "",
     ):
         """Reads GCS path into a dataframe using the storage connector.
 
         ```python
         conn.read(data_format='spark_formats',path='gs://BUCKET/DATA')
+        ```
+        To read directly from the default bucket, you can omit the path argument:
+        ```python
+        conn.read(data_format='spark_formats')
         ```
 
         # Arguments
@@ -1089,6 +1102,20 @@ class GcsConnector(StorageConnector):
         # Returns
             `Dataframe`: A Spark dataframe.
         """
+        if not engine.get_instance().is_connector_type_supported(self.type):
+            raise NotImplementedError(
+                "GCS connector not yet supported for engine: " + engine.get_type()
+            )
+
+        # validate path begins with gs://
+        if not path.startswith(self.GS_FS_PREFIX):
+            path = self._get_path(path)
+            print(
+                "Prepending default bucket specified on connector, final path: {}".format(
+                    path
+                )
+            )
+        # validate engine supports this connector type
         if not engine.get_instance().is_connector_type_supported(self.type):
             raise NotImplementedError(
                 "GCS connector not yet supported for engine: " + engine.get_type()
