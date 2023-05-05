@@ -1,11 +1,11 @@
-# Job Configuration
-
-{{job_configuration}}
-
-## Job
+# Job
 
 {{job}}
 
 ## Methods
 
 {{job_methods}}
+
+## Job Configuration
+
+{{job_configuration}}
