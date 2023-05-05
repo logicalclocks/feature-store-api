@@ -3417,7 +3417,7 @@ object that implements the same <code>multi_part_insert</code> API.
     <span class="c1"># run inserts in a loop:</span>
     <span class="k">while</span> <span class="n">loop</span><span class="p">:</span>
         <span class="n">small_batch_df</span> <span class="o">=</span> <span class="o">...</span>
-        <span class="n">writer</span><span class="o">.</span><span class="n">multi_part_insert</span><span class="p">(</span><span class="n">small_batch_df</span><span class="p">)</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">small_batch_df</span><span class="p">)</span>
 </code></pre></div>
 The writer batches the small Dataframes and transmits them to Hopsworks
 efficiently.
