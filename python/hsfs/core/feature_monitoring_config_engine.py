@@ -93,35 +93,29 @@ class FeatureMonitoringConfigEngine:
         # Should we promote the variables below to static?
         self._VALID_CATEGORICAL_METRICS = [
             "completeness",
-            "numRecordsNonNull",
-            "numRecordsNull",
+            "num_records_non_null",
+            "num_records_null",
             "distinctness",
             "entropy",
             "uniqueness",
-            "approximateNumDistinctValues",
-            "exactNumDistinctValues",
-        ]
-        self._VALID_CATEGORICAL_METRICS = [
-            metric.lower() for metric in self._VALID_CATEGORICAL_METRICS
+            "approximate_num_distinct_values",
+            "exact_num_distinct_values",
         ]
         self._VALID_FRACTIONAL_METRICS = [
             "completeness",
-            "numRecordsNonNull",
-            "numRecordsNull",
+            "num_records_non_null",
+            "num_records_null",
             "distinctness",
             "entropy",
             "uniqueness",
-            "approximateNumDistinctValues",
-            "exactNumDistinctValues",
+            "approximate_num_distinct_values",
+            "exact_num_distinct_values",
             "mean",
             "maximum",
             "minimum",
             "sum",
-            "stdDev",
+            "std_dev",
             "count",
-        ]
-        self._VALID_FRACTIONAL_METRICS = [
-            metric.lower() for metric in self._VALID_FRACTIONAL_METRICS
         ]
 
     def enable_descriptive_statistics_monitoring(
@@ -344,7 +338,7 @@ class FeatureMonitoringConfigEngine:
                 f"Invalid feature name. Feature name must be one of {valid_feature_names}."
             )
 
-    def _build_default_scheduled_statistics_config(
+    def _build_default_statistics_monitoring_config(
         self,
         name: str,
         feature_name: Optional[str] = None,
@@ -389,7 +383,7 @@ class FeatureMonitoringConfigEngine:
             name=name,
             description=description,
             feature_name=feature_name,
-            feature_monitoring_type=fmc.FeatureMonitoringType.SCHEDULED_STATISTICS,
+            feature_monitoring_type=fmc.FeatureMonitoringType.STATISTICS_MONITORING,
             scheduler_config={
                 "job_frequency": job_frequency,
                 "start_date_time": start_date_time,
@@ -614,7 +608,7 @@ class FeatureMonitoringConfigEngine:
             feature_name=feature_name,
             name=name,
             description=description,
-            feature_monitoring_type="SCHEDULED_STATISTICS",
+            feature_monitoring_type="STATISTICS_MONITORING",
             detection_window_config=detection_window_config,
             scheduler_config=scheduler_config,
             enabled=True,
