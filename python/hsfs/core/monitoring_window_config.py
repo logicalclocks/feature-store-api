@@ -20,6 +20,8 @@ from typing import List, Optional, Union
 from hsfs.util import FeatureStoreEncoder
 from enum import Enum
 
+from hsfs.core import monitoring_window_config_engine
+
 
 class WindowConfigType(Enum):
     ALL_TIME = "ALL_TIME"
@@ -150,6 +152,10 @@ class MonitoringWindowConfig:
         else:
             self.row_percentage = row_percentage
 
+        self._window_config_engine = (
+            monitoring_window_config_engine.MonitoringWindowConfigEngine()
+        )
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -199,6 +205,7 @@ class MonitoringWindowConfig:
 
         if isinstance(window_config_type, WindowConfigType):
             self._window_config_type = window_config_type
+            return
 
         if not isinstance(window_config_type, str):
             raise TypeError(
@@ -224,14 +231,17 @@ class MonitoringWindowConfig:
 
     @window_length.setter
     def window_length(self, window_length: Optional[str]):
-        if (
-            self._window_config_type != WindowConfigType.ROLLING_TIME
-            and window_length is not None
-        ):
+        if window_length is None:
+            self._window_length = None
+        elif self._window_config_type != WindowConfigType.ROLLING_TIME:
             raise AttributeError(
                 "Window length can only be set for if window_config_type is ROLLING_TIME."
             )
-        self._window_length = window_length
+        elif isinstance(window_length, str):
+            self._window_config_engine.time_range_str_to_time_delta(window_length)
+            self._window_length = window_length
+        else:
+            raise TypeError("window_length must be a string.")
 
     @property
     def training_dataset_id(self) -> Optional[int]:

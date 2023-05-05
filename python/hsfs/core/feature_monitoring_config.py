@@ -23,7 +23,7 @@ from hsfs.util import FeatureStoreEncoder
 from hsfs.client.exceptions import FeatureStoreException
 
 
-from hsfs.core.monitoring_window_config import MonitoringWindowConfig
+from hsfs.core import monitoring_window_config as mwc
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.core import monitoring_window_config_engine
 from hsfs.core import feature_monitoring_config_engine
@@ -45,10 +45,10 @@ class FeatureMonitoringConfig:
         feature_monitoring_type: FeatureMonitoringType = FeatureMonitoringType.STATISTICS_MONITORING,
         job_name: Optional[str] = None,
         detection_window_config: Optional[
-            Union[MonitoringWindowConfig, Dict[str, Any]]
+            Union[mwc.MonitoringWindowConfig, Dict[str, Any]]
         ] = None,
         reference_window_config: Optional[
-            Union[MonitoringWindowConfig, Dict[str, Any]]
+            Union[mwc.MonitoringWindowConfig, Dict[str, Any]]
         ] = None,
         statistics_comparison_config: Optional[Dict[str, Any]] = None,
         scheduler_config: Optional[Union[Dict[str, Any], JobScheduler]] = None,
@@ -650,17 +650,17 @@ class FeatureMonitoringConfig:
             )
 
     @property
-    def detection_window_config(self) -> MonitoringWindowConfig:
+    def detection_window_config(self) -> mwc.MonitoringWindowConfig:
         return self._detection_window_config
 
     @detection_window_config.setter
     def detection_window_config(
         self,
         detection_window_config: Optional[
-            Union[MonitoringWindowConfig, Dict[str, Any]]
+            Union[mwc.MonitoringWindowConfig, Dict[str, Any]]
         ],
     ):
-        if isinstance(detection_window_config, MonitoringWindowConfig):
+        if isinstance(detection_window_config, mwc.MonitoringWindowConfig):
             self._detection_window_config = detection_window_config
         elif isinstance(detection_window_config, dict):
             self._detection_window_config = (
@@ -676,14 +676,14 @@ class FeatureMonitoringConfig:
             )
 
     @property
-    def reference_window_config(self) -> MonitoringWindowConfig:
+    def reference_window_config(self) -> mwc.MonitoringWindowConfig:
         return self._reference_window_config
 
     @reference_window_config.setter
     def reference_window_config(
         self,
         reference_window_config: Optional[
-            Union[MonitoringWindowConfig, Dict[str, Any]]
+            Union[mwc.MonitoringWindowConfig, Dict[str, Any]]
         ] = None,
     ):
         """Sets the reference window for monitoring."""
@@ -696,7 +696,7 @@ class FeatureMonitoringConfig:
                 "reference_window_config is only available for feature monitoring"
                 " not for scheduled statistics."
             )
-        if isinstance(reference_window_config, MonitoringWindowConfig):
+        if isinstance(reference_window_config, mwc.MonitoringWindowConfig):
             self._reference_window_config = reference_window_config
         elif isinstance(reference_window_config, dict):
             self._reference_window_config = (
