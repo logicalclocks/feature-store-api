@@ -24,6 +24,8 @@ from hsfs.core import statistics_engine
 
 
 class MonitoringWindowConfigEngine:
+    _MAX_TIME_RANGE_LENGTH = 12
+
     def __init__(self) -> "MonitoringWindowConfigEngine":
         # No need to initialize anything
         pass
@@ -74,7 +76,7 @@ class MonitoringWindowConfigEngine:
     def build_monitoring_window_config(
         self,
         id: Optional[int] = None,
-        window_config_type: Optional["mwc.WindowConfigType"] = None,
+        window_config_type: Optional[Union["mwc.WindowConfigType", str]] = None,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
         training_dataset_id: Optional[int] = None,
@@ -114,7 +116,10 @@ class MonitoringWindowConfigEngine:
         )
 
         if (
-            window_config_type is not None
+            isinstance(window_config_type, str)
+            and window_config_type != detected_window_config_type.value
+        ) or (
+            isinstance(window_config_type, mwc.WindowConfigType)
             and window_config_type != detected_window_config_type
         ):
             raise ValueError(
@@ -174,7 +179,10 @@ class MonitoringWindowConfigEngine:
     ) -> timedelta:
         # sanitize input
         value_error_message = f"Invalid {field_name} format: {time_range}. Use format: 1w2d3h for 1 week, 2 days and 3 hours."
-        if len(time_range) > 6 or re.search(r"([^dwh\d]+)", time_range) is not None:
+        if (
+            len(time_range) > self._MAX_TIME_RANGE_LENGTH
+            or re.search(r"([^dwh\d]+)", time_range) is not None
+        ):
             raise ValueError(value_error_message)
 
         matches = re.search(
@@ -184,7 +192,7 @@ class MonitoringWindowConfigEngine:
         )
         if matches is None:
             raise ValueError(value_error_message)
-        # weeks, days, hours = matches.groups(0)
+
         weeks = (
             int(matches.group("week").replace("w", ""))
             if matches.group("week") is not None
@@ -200,7 +208,6 @@ class MonitoringWindowConfigEngine:
             if matches.group("hour") is not None
             else 0
         )
-        print(f"time_range: {time_range}, weeks: {weeks}, days: {days}, hours: {hours}")
 
         return timedelta(weeks=weeks, days=days, hours=hours)
 
@@ -209,12 +216,10 @@ class MonitoringWindowConfigEngine:
         monitoring_window_config: "mwc.MonitoringWindowConfig",
     ) -> Tuple[Optional[datetime], datetime]:
         end_time = datetime.now()
-        if (
-            monitoring_window_config.window_config_type
-            != mwc.WindowConfigType.ROLLING_TIME
-            or monitoring_window_config.window_config_type
-            != mwc.WindowConfigType.ALL_TIME
-        ):
+        if monitoring_window_config.window_config_type not in [
+            mwc.WindowConfigType.ROLLING_TIME,
+            mwc.WindowConfigType.ALL_TIME,
+        ]:
             return (None, end_time)
 
         if monitoring_window_config.time_offset is not None:
@@ -233,7 +238,7 @@ class MonitoringWindowConfigEngine:
             return (
                 start_time,
                 start_time + window_length
-                if start_time + window_length > end_time
+                if start_time + window_length < end_time
                 else end_time,
             )
         else:

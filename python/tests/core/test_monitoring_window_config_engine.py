@@ -59,8 +59,6 @@ class TestMonitoringWindowConfigEngine:
             monitoring_window_config_engine.time_range_str_to_time_delta(
                 negative_expression, "window_length"
             )
-        # with pytest.raises(ValueError, match=r"window_length"):
-        #     monitoring_window_config_engine.time_range_str_to_time_delta(disordered_expression, "window_length")
         with pytest.raises(ValueError, match=r"window_length"):
             monitoring_window_config_engine.time_range_str_to_time_delta(
                 just_minutes_expression, "window_length"
@@ -145,12 +143,12 @@ class TestMonitoringWindowConfigEngine:
         )
 
         # Act
-        before_time = datetime.now()
+        before_time = datetime.now() - timedelta(seconds=1)
         (
             start_time,
             end_time,
         ) = monitoring_window_config_engine.get_window_start_end_times(config)
-        after_time = datetime.now()
+        after_time = datetime.now() + timedelta(seconds=1)
 
         # Assert
         assert before_time <= start_time + timedelta(weeks=2, days=1) <= after_time
@@ -166,12 +164,12 @@ class TestMonitoringWindowConfigEngine:
         )
 
         # Act
-        before_time = datetime.now()
+        before_time = datetime.now() - timedelta(seconds=1)
         (
             start_time,
             end_time,
         ) = monitoring_window_config_engine.get_window_start_end_times(config)
-        after_time = datetime.now()
+        after_time = datetime.now() + timedelta(seconds=1)
 
         # Assert
         assert before_time <= start_time + timedelta(days=1) <= after_time

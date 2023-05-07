@@ -98,6 +98,7 @@ class TestFeatureMonitoringConfigEngine:
             window_config_type=WindowConfigType.ROLLING_TIME,
             time_offset="1w",
             window_length="1d",
+            row_percentage=1.0,
         )
         reference_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
             window_config_type=WindowConfigType.SPECIFIC_VALUE, specific_value=2
@@ -138,6 +139,7 @@ class TestFeatureMonitoringConfigEngine:
         )
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
+        assert config._detection_window_config.row_percentage == 1.0
         assert (
             config._reference_window_config.window_config_type
             == WindowConfigType.SPECIFIC_VALUE
@@ -433,8 +435,10 @@ class TestFeatureMonitoringConfigEngine:
     # TODO: Add unit test for the run_feature_monitoring methods when more stable
     def test_build_default_statistics_monitoring_config(self, backend_fixtures):
         # Arrange
-        default_config = fmc.FeatureMonitoringConfig(
-            **backend_fixtures["default_statistics_monitoring_config"]
+        default_config = fmc.FeatureMonitoringConfig.from_response_json(
+            backend_fixtures["feature_monitoring_config"][
+                "default_statistics_monitoring_config"
+            ]
         )
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
