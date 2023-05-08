@@ -887,7 +887,7 @@ class KafkaConnector(StorageConnector):
         )
 
     @property
-    def boostrap_servers(self):
+    def bootstrap_servers(self):
         """Bootstrap servers string."""
         return self._bootstrap_servers
 

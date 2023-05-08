@@ -54,6 +54,7 @@ from hsfs.core import (
     kafka_api,
     statistics_api,
     training_dataset_api,
+    storage_connector_api,
     training_dataset_job_conf,
     feature_view_api,
     transformation_function_engine,
@@ -823,7 +824,7 @@ class Engine:
 
     def _init_kafka_resources(self, feature_group, offline_write_options):
         # setup kafka producer
-        producer = Producer(self._get_kafka_config(offline_write_options))
+        producer = Producer(self._get_kafka_config(feature_group.feature_store_id, offline_write_options))
 
         # setup complex feature writers
         feature_writers = {
@@ -1005,8 +1006,18 @@ class Engine:
         writer = avro.io.DatumWriter(parsed_schema)
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
-    def _get_kafka_config(self, write_options: dict = {}) -> dict:
-        return write_options.get("kafka_producer_config", {})
+    def _get_kafka_config(self, feature_store_id: int, write_options: dict = {}) -> dict:
+        # todo temp solution
+        storage_connector = storage_connector_api.StorageConnectorApi(feature_store_id).get("kafka_connector")
+
+        config = storage_connector.options
+        config.update({'bootstrap.servers': storage_connector.bootstrap_servers,
+                       'security.protocol': storage_connector.security_protocol})
+        config.update(write_options.get("kafka_producer_config", {}))
+
+        # remove not needed fields todo find a better way, ignore cant be done
+        config.pop('sasl.jaas.config')
+        return config
 
     @staticmethod
     def _convert_pandas_dtype_to_offline_type(dtype, arrow_type):
