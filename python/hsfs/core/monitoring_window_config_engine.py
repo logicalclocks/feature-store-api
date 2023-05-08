@@ -117,9 +117,6 @@ class MonitoringWindowConfigEngine:
 
         if (
             isinstance(window_config_type, str)
-            and window_config_type != detected_window_config_type.value
-        ) or (
-            isinstance(window_config_type, mwc.WindowConfigType)
             and window_config_type != detected_window_config_type
         ):
             raise ValueError(

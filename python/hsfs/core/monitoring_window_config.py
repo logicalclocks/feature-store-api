@@ -23,7 +23,7 @@ from enum import Enum
 from hsfs.core import monitoring_window_config_engine
 
 
-class WindowConfigType(Enum):
+class WindowConfigType(str, Enum):
     ALL_TIME = "ALL_TIME"
     ROLLING_TIME = "ROLLING_TIME"
     ROLLING_COMMITS = "ROLLING_COMMITS"

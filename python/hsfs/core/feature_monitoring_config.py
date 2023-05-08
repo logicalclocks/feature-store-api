@@ -21,7 +21,7 @@ from datetime import datetime, date
 from typing import Any, Dict, List, Optional, Union
 from hsfs.util import FeatureStoreEncoder
 from hsfs.client.exceptions import FeatureStoreException
-
+from enum import Enum
 
 from hsfs.core import monitoring_window_config as mwc
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
@@ -30,7 +30,7 @@ from hsfs.core import feature_monitoring_config_engine
 from hsfs.core import feature_monitoring_result_engine
 
 
-class FeatureMonitoringType:
+class FeatureMonitoringType(str, Enum):
     STATISTICS_COMPARISON = "STATISTICS_COMPARISON"
     STATISTICS_MONITORING = "STATISTICS_MONITORING"
     PROBABILITY_DENSITY_FUNCTION = "PROBABILITY_DENSITY_FUNCTION"
