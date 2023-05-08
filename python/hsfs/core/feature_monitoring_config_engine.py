@@ -608,7 +608,7 @@ class FeatureMonitoringConfigEngine:
             feature_name=feature_name,
             name=name,
             description=description,
-            feature_monitoring_type="STATISTICS_MONITORING",
+            feature_monitoring_type=fmc.FeatureMonitoringType.STATISTICS_MONITORING,
             detection_window_config=detection_window_config,
             scheduler_config=scheduler_config,
             enabled=True,
