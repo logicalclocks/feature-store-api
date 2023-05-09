@@ -36,7 +36,6 @@ import com.logicalclocks.hsfs.constructor.FeatureGroupAlias;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
-import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
@@ -56,6 +55,7 @@ import lombok.Getter;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
 import org.apache.hadoop.fs.Path;
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.spark.SparkFiles;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.DataFrameReader;
@@ -1003,21 +1003,21 @@ public class SparkEngine {
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     Map<String, String> config = new HashMap<>();
+    StorageConnector.KafkaConnector storageConnector =
+            (StorageConnector.KafkaConnector) featureGroup.getFeatureStore().getKafkaConnector("kafka_connector");
+
+    config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
+            storageConnector.getBootstrapServers());
+    config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG,
+            storageConnector.getSecurityProtocol().name());
+
+    for (Option option : storageConnector.getOptions()) {
+      config.put(option.getName(), option.getValue());
+    }
+
     if (writeOptions != null) {
       config.putAll(writeOptions);
     }
-    HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
-
-    config.put("kafka.bootstrap.servers",
-        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
-            "INTERNAL://", "")).collect(Collectors.joining(",")));
-    config.put("kafka.security.protocol", "SSL");
-    config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
-    config.put("kafka.ssl.truststore.password", client.getCertKey());
-    config.put("kafka.ssl.keystore.location", client.getKeyStorePath());
-    config.put("kafka.ssl.keystore.password", client.getCertKey());
-    config.put("kafka.ssl.key.password", client.getCertKey());
-    config.put("kafka.ssl.endpoint.identification.algorithm", "");
     return config;
   }
 
