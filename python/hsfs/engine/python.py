@@ -1007,6 +1007,8 @@ class Engine:
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
     def _get_kafka_config(self, feature_store_id: int, write_options: dict = {}) -> dict:
+        # producer configuration properties
+        # https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
         # todo temp solution
         storage_connector = storage_connector_api.StorageConnectorApi(feature_store_id).get("kafka_connector")
 
