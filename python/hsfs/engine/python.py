@@ -126,7 +126,7 @@ class Engine:
     ):
         if arrow_flight_client.get_instance().is_flyingduck_query_object(sql_query):
             result_df = util.run_with_loading_animation(
-                "Reading data with FlyingDuck",
+                "Reading data from Hopsworks, using FlyingDuck",
                 arrow_flight_client.get_instance().read_query,
                 sql_query,
             )
@@ -138,7 +138,10 @@ class Engine:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     result_df = util.run_with_loading_animation(
-                        "Reading data with Hive", pd.read_sql, sql_query, hive_conn
+                        "Reading data from Hopsworks, using Hive",
+                        pd.read_sql,
+                        sql_query,
+                        hive_conn,
                     )
 
         if schema:
