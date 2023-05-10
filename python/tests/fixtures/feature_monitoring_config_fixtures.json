@@ -19,7 +19,8 @@
         },
         "referenceWindowConfig": {
           "windowConfigType": "ROLLING_TIME",
-          "timeOffset": "1w"
+          "timeOffset": "1w",
+          "rowPercentage": 0.5
         },
         "statisticsComparisonConfig": {
           "threshold": 1,
@@ -51,7 +52,8 @@
         "detectionWindowConfig": {
           "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
-          "windowLength": "1d"
+          "windowLength": "1d",
+          "rowPercentage": 0.5
         },
         "referenceWindowConfig": {
           "windowConfigType": "SPECIFIC_VALUE",
@@ -83,11 +85,12 @@
         "name": "unit_test_config",
         "description": "I am a unit test fixture",
         "enabled": true,
-        "featureMonitoringType": "SCHEDULED_STATISTICS",
+        "featureMonitoringType": "STATISTICS_MONITORING",
         "detectionWindowConfig": {
           "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
-          "windowLength": "1d"
+          "windowLength": "1d",
+          "rowPercentage": 1.0
         },
         "schedulerConfig": {
           "id": 222,
@@ -191,11 +194,12 @@
         "name": "unit_test_config",
         "description": "I am a unit test fixture",
         "enabled": true,
-        "featureMonitoringType": "SCHEDULED_STATISTICS",
+        "featureMonitoringType": "STATISTICS_MONITORING",
         "detectionWindowConfig": {
           "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
-          "windowLength": "1d"
+          "windowLength": "1d",
+          "rowPercentage": 1.0
         },
         "schedulerConfig": {
           "id": 222,
@@ -218,11 +222,12 @@
       "name": "unit_test_config",
       "description": "I am a unit test fixture",
       "enabled": true,
-      "feature_monitoring_type": "SCHEDULED_STATISTICS",
+      "feature_monitoring_type": "STATISTICS_MONITORING",
       "detection_window_config": {
         "window_config_type": "INSERT",
         "time_offset": "1w",
-        "window_length": "1d"
+        "window_length": "1d",
+        "row_percentage": 1.0
       },
       "scheduler_config": "daily",
       "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
@@ -238,11 +243,12 @@
       "name": "unit_test_config",
       "description": "I am a unit test fixture",
       "enabled": true,
-      "feature_monitoring_type": "SCHEDULED_STATISTICS",
+      "feature_monitoring_type": "STATISTICS_MONITORING",
       "detection_window_config": {
         "window_config_type": "ROLLING_TIME",
         "time_offset": "1w",
-        "window_length": "1d"
+        "window_length": "1d",
+        "row_percentage": 1.0
       },
       "scheduler_config": "daily",
       "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
@@ -296,6 +302,31 @@
     "response": {
       "count": 0,
       "items": []
+    }
+  },
+  "default_statistics_monitoring_config": {
+    "id": null,
+    "featureStoreId": 67,
+    "featureGroupId": 13,
+    "featureName": null,
+    "enabled": true,
+    "name": "test_monitoring_config",
+    "description": null,
+    "jobName": null,
+    "featureMonitoringType": "STATISTICS_MONITORING",
+    "schedulerConfig": {
+      "id": null,
+      "startDateTime": 1,
+      "jobFrequency": "DAILY",
+      "jobName": null,
+      "enabled": true
+    },
+    "detectionWindowConfig": {
+      "id": null,
+      "windowConfigType": "ALL_TIME",
+      "timeOffset": null,
+      "windowLength": null,
+      "rowPercentage": 1.0
     }
   }
 }

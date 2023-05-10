@@ -17,12 +17,15 @@ from typing import Optional, Union, Tuple
 import re
 from datetime import datetime, timedelta
 
-from hsfs.core.monitoring_window_config import MonitoringWindowConfig, WindowConfigType
+from hsfs.core import monitoring_window_config as mwc
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 from hsfs import feature_group, feature_view
+from hsfs.core import statistics_engine
 
 
 class MonitoringWindowConfigEngine:
+    _MAX_TIME_RANGE_LENGTH = 12
+
     def __init__(self) -> "MonitoringWindowConfigEngine":
         # No need to initialize anything
         pass
@@ -34,7 +37,7 @@ class MonitoringWindowConfigEngine:
         training_dataset_id: Optional[int] = None,
         specific_value: Optional[Union[int, float]] = None,
         row_percentage: Optional[float] = None,
-    ) -> WindowConfigType:
+    ) -> "mwc.WindowConfigType":
         if isinstance(specific_value, int) or isinstance(specific_value, float):
             if any(
                 [
@@ -47,7 +50,7 @@ class MonitoringWindowConfigEngine:
                 raise ValueError(
                     "If specific_value is set, no other parameter can be set."
                 )
-            return WindowConfigType.SPECIFIC_VALUE
+            return mwc.WindowConfigType.SPECIFIC_VALUE
 
         if isinstance(training_dataset_id, int):
             if any(
@@ -60,26 +63,26 @@ class MonitoringWindowConfigEngine:
                 raise ValueError(
                     "If training_dataset_id is set, no other parameter can be set."
                 )
-            return WindowConfigType.TRAINING_DATASET
+            return mwc.WindowConfigType.TRAINING_DATASET
 
         if isinstance(time_offset, str):
-            return WindowConfigType.ROLLING_TIME
+            return mwc.WindowConfigType.ROLLING_TIME
 
         if isinstance(window_length, str):
             raise ValueError("window_length can only be set if time_offset is set.")
 
-        return WindowConfigType.ALL_TIME
+        return mwc.WindowConfigType.ALL_TIME
 
     def build_monitoring_window_config(
         self,
         id: Optional[int] = None,
-        window_config_type: Optional[WindowConfigType] = None,
+        window_config_type: Optional[Union["mwc.WindowConfigType", str]] = None,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
         training_dataset_id: Optional[int] = None,
         specific_value: Optional[Union[int, float]] = None,
         row_percentage: Optional[float] = None,
-    ) -> MonitoringWindowConfig:
+    ) -> "mwc.MonitoringWindowConfig":
         """Builds a monitoring window config.
 
         Args:
@@ -113,7 +116,7 @@ class MonitoringWindowConfigEngine:
         )
 
         if (
-            window_config_type is not None
+            isinstance(window_config_type, str)
             and window_config_type != detected_window_config_type
         ):
             raise ValueError(
@@ -122,12 +125,12 @@ class MonitoringWindowConfigEngine:
 
         if (
             window_config_type
-            in [WindowConfigType.ROLLING_TIME, WindowConfigType.ALL_TIME]
+            in [mwc.WindowConfigType.ROLLING_TIME, mwc.WindowConfigType.ALL_TIME]
             and row_percentage is None
         ):
             row_percentage = 1.0
 
-        return MonitoringWindowConfig(
+        return mwc.MonitoringWindowConfig(
             id=id,
             window_config_type=detected_window_config_type,
             time_offset=time_offset,
@@ -141,7 +144,7 @@ class MonitoringWindowConfigEngine:
         self,
         entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"],
         feature_name: str,
-        monitoring_window_config: MonitoringWindowConfig,
+        monitoring_window_config: "mwc.MonitoringWindowConfig",
     ) -> FeatureDescriptiveStatistics:
         """Fetch feature statistics based on a feature monitoring window configuration
 
@@ -156,33 +159,64 @@ class MonitoringWindowConfigEngine:
         start_time, end_time = self.get_window_start_end_times(
             monitoring_window_config=monitoring_window_config,
         )
-        return (
-            self._statistics_engine.get_by_feature_name_time_window_and_row_percentage(
-                entity,
-                feature_name,
-                start_time,
-                end_time,
-                monitoring_window_config.row_percentage,
-            )
+        the_statistics_engine = statistics_engine.StatisticsEngine(
+            feature_store_id=entity.feature_store_id,
+            entity_type=entity.ENTITY_TYPE,
+        )
+        return the_statistics_engine.get_by_feature_name_time_window_and_row_percentage(
+            entity,
+            feature_name,
+            start_time,
+            end_time,
+            monitoring_window_config.row_percentage,
         )
 
-    def time_range_str_to_time_delta(self, time_range: str) -> timedelta:
-        weeks, days, hours = re.search(
-            r"(\d+)w(\d+)d(\d+)h",
+    def time_range_str_to_time_delta(
+        self, time_range: str, field_name: Optional[str] = "time_offset"
+    ) -> timedelta:
+        # sanitize input
+        value_error_message = f"Invalid {field_name} format: {time_range}. Use format: 1w2d3h for 1 week, 2 days and 3 hours."
+        if (
+            len(time_range) > self._MAX_TIME_RANGE_LENGTH
+            or re.search(r"([^dwh\d]+)", time_range) is not None
+        ):
+            raise ValueError(value_error_message)
+
+        matches = re.search(
+            # r"^(?!$)(?:.*(?P<week>\d+)w)?(?:.*(?P<day>\d+)d)?(?:.*(?P<hour>\d+)h)?$",
+            r"(?:(?P<week>\d+w)()|(?P<day>\d+d)()|(?P<hour>\d+h)())+",
             time_range,
-        ).groups(0)
+        )
+        if matches is None:
+            raise ValueError(value_error_message)
+
+        weeks = (
+            int(matches.group("week").replace("w", ""))
+            if matches.group("week") is not None
+            else 0
+        )
+        days = (
+            int(matches.group("day").replace("d", ""))
+            if matches.group("day") is not None
+            else 0
+        )
+        hours = (
+            int(matches.group("hour").replace("h", ""))
+            if matches.group("hour") is not None
+            else 0
+        )
 
         return timedelta(weeks=weeks, days=days, hours=hours)
 
     def get_window_start_end_times(
         self,
-        monitoring_window_config: MonitoringWindowConfig,
-    ) -> Tuple[Optional[datetime], Optional[datetime]]:
+        monitoring_window_config: "mwc.MonitoringWindowConfig",
+    ) -> Tuple[Optional[datetime], datetime]:
         end_time = datetime.now()
-        if (
-            monitoring_window_config.window_config_type != "ROLLING_TIME"
-            or monitoring_window_config.window_config_type != "ALL_TIME"
-        ):
+        if monitoring_window_config.window_config_type not in [
+            mwc.WindowConfigType.ROLLING_TIME,
+            mwc.WindowConfigType.ALL_TIME,
+        ]:
             return (None, end_time)
 
         if monitoring_window_config.time_offset is not None:
@@ -200,7 +234,9 @@ class MonitoringWindowConfigEngine:
             )
             return (
                 start_time,
-                start_time + window_length,
+                start_time + window_length
+                if start_time + window_length < end_time
+                else end_time,
             )
         else:
             return (start_time, end_time)

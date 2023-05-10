@@ -22,17 +22,16 @@ from typing import Any, Dict, List, Optional, Union
 from hsfs.util import FeatureStoreEncoder
 from hsfs.client.exceptions import FeatureStoreException
 
-
-from hsfs.core.monitoring_window_config import MonitoringWindowConfig
+from hsfs.core import monitoring_window_config as mwc
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.core import monitoring_window_config_engine
 from hsfs.core import feature_monitoring_config_engine
 from hsfs.core import feature_monitoring_result_engine
 
 
-class FeatureMonitoringType:
+class FeatureMonitoringType(str):
     STATISTICS_COMPARISON = "STATISTICS_COMPARISON"
-    SCHEDULED_STATISTICS = "SCHEDULED_STATISTICS"
+    STATISTICS_MONITORING = "STATISTICS_MONITORING"
     PROBABILITY_DENSITY_FUNCTION = "PROBABILITY_DENSITY_FUNCTION"
 
 
@@ -42,13 +41,13 @@ class FeatureMonitoringConfig:
         feature_store_id: int,
         name: str,
         feature_name: Optional[str] = None,
-        feature_monitoring_type: FeatureMonitoringType = FeatureMonitoringType.SCHEDULED_STATISTICS,
+        feature_monitoring_type: FeatureMonitoringType = FeatureMonitoringType.STATISTICS_MONITORING,
         job_name: Optional[str] = None,
         detection_window_config: Optional[
-            Union[MonitoringWindowConfig, Dict[str, Any]]
+            Union[mwc.MonitoringWindowConfig, Dict[str, Any]]
         ] = None,
         reference_window_config: Optional[
-            Union[MonitoringWindowConfig, Dict[str, Any]]
+            Union[mwc.MonitoringWindowConfig, Dict[str, Any]]
         ] = None,
         statistics_comparison_config: Optional[Dict[str, Any]] = None,
         scheduler_config: Optional[Union[Dict[str, Any], JobScheduler]] = None,
@@ -156,7 +155,7 @@ class FeatureMonitoringConfig:
         elif self._feature_view_id is not None:
             the_dict["featureViewId"] = self._feature_view_id
 
-        if self._feature_monitoring_type == "SCHEDULED_STATISTICS":
+        if self._feature_monitoring_type == "STATISTICS_MONITORING":
             return the_dict
 
         the_dict["referenceWindowConfig"] = reference_window_config
@@ -187,7 +186,7 @@ class FeatureMonitoringConfig:
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # Compute statistics on a regular basis
-            fg._enable_scheduled_statistics_fluent(
+            fg._enable_statistics_monitoring(
                 name="regular_stats",
                 job_frequency="DAILY",
             ).with_detection_window(
@@ -197,7 +196,7 @@ class FeatureMonitoringConfig:
             ).save()
 
             # Compute and compare statistics
-            fg._enable_feature_monitoring_fluent(
+            fg._enable_feature_monitoring(
                 name="regular_stats",
                 feature_name="my_feature",
                 job_frequency="DAILY",
@@ -244,7 +243,7 @@ class FeatureMonitoringConfig:
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # Setup feature monitoring and a detection window
-            my_monitoring_config = fg._enable_feature_monitoring_fluent(...).with_detection_window(...)
+            my_monitoring_config = fg._enable_feature_monitoring(...).with_detection_window(...)
 
             # Simplest reference window is a specific value
             my_monitoring_config.with_reference_window(
@@ -304,7 +303,7 @@ class FeatureMonitoringConfig:
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # Setup feature monitoring, a detection window and a reference window
-            my_monitoring_config = fg._enable_feature_monitoring_fluent(
+            my_monitoring_config = fg._enable_feature_monitoring(
                 ...
             ).with_detection_window(...).with_reference_window(...)
 
@@ -348,7 +347,7 @@ class FeatureMonitoringConfig:
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # Setup feature monitoring and a detection window
-            my_monitoring_config = fg._enable_scheduled_statistics(
+            my_monitoring_config = fg._enable_statistics_monitoring(
                 name="my_monitoring_config",
             ).save()
             ```
@@ -360,7 +359,7 @@ class FeatureMonitoringConfig:
         self.detection_window_config = registered_config._detection_window_config
         self.scheduler_config = registered_config._scheduler_config
 
-        if self._feature_monitoring_type != "SCHEDULED_STATISTICS":
+        if self._feature_monitoring_type != "STATISTICS_MONITORING":
             self.reference_window_config = registered_config._reference_window_config
             self.statistics_comparison_config = (
                 registered_config._statistics_comparison_config
@@ -650,17 +649,17 @@ class FeatureMonitoringConfig:
             )
 
     @property
-    def detection_window_config(self) -> MonitoringWindowConfig:
+    def detection_window_config(self) -> mwc.MonitoringWindowConfig:
         return self._detection_window_config
 
     @detection_window_config.setter
     def detection_window_config(
         self,
         detection_window_config: Optional[
-            Union[MonitoringWindowConfig, Dict[str, Any]]
+            Union[mwc.MonitoringWindowConfig, Dict[str, Any]]
         ],
     ):
-        if isinstance(detection_window_config, MonitoringWindowConfig):
+        if isinstance(detection_window_config, mwc.MonitoringWindowConfig):
             self._detection_window_config = detection_window_config
         elif isinstance(detection_window_config, dict):
             self._detection_window_config = (
@@ -676,27 +675,27 @@ class FeatureMonitoringConfig:
             )
 
     @property
-    def reference_window_config(self) -> MonitoringWindowConfig:
+    def reference_window_config(self) -> mwc.MonitoringWindowConfig:
         return self._reference_window_config
 
     @reference_window_config.setter
     def reference_window_config(
         self,
         reference_window_config: Optional[
-            Union[MonitoringWindowConfig, Dict[str, Any]]
+            Union[mwc.MonitoringWindowConfig, Dict[str, Any]]
         ] = None,
     ):
         """Sets the reference window for monitoring."""
         # TODO: improve setter documentation
         if (
-            self._feature_monitoring_type == "SCHEDULED_STATISTICS"
+            self._feature_monitoring_type == "STATISTICS_MONITORING"
             and reference_window_config is not None
         ):
             raise AttributeError(
                 "reference_window_config is only available for feature monitoring"
                 " not for scheduled statistics."
             )
-        if isinstance(reference_window_config, MonitoringWindowConfig):
+        if isinstance(reference_window_config, mwc.MonitoringWindowConfig):
             self._reference_window_config = reference_window_config
         elif isinstance(reference_window_config, dict):
             self._reference_window_config = (
@@ -723,7 +722,7 @@ class FeatureMonitoringConfig:
         statistics_comparison_config: Optional[Dict[str, Any]] = None,
     ):
         if (
-            self._feature_monitoring_type == "SCHEDULED_STATISTICS"
+            self._feature_monitoring_type == "STATISTICS_MONITORING"
             and statistics_comparison_config is not None
         ):
             raise AttributeError(
