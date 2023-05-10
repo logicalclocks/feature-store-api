@@ -694,7 +694,7 @@ class FeatureMonitoringConfigEngine:
 
     def run_feature_monitoring(
         self, entity, config_name: str, result_engine: FeatureMonitoringResultEngine
-    ) -> FeatureMonitoringResult:
+    ) -> Union[FeatureMonitoringResult, List[FeatureMonitoringResult]]:
         """Main function used by the job to actually perform the monitoring.
 
         Args:
@@ -708,7 +708,6 @@ class FeatureMonitoringConfigEngine:
             FeatureMonitoringResult: A result object describing the
                 outcome of the monitoring.
         """
-
         config = self._feature_monitoring_config_api.get_by_name(config_name)
 
         # TODO: Future work. Parallelize both single_window_monitoring calls and wait
@@ -738,7 +737,7 @@ class FeatureMonitoringConfigEngine:
         entity,
         monitoring_window_config: MonitoringWindowConfig,
         feature_name: Optional[str] = None,
-    ) -> Union[FeatureDescriptiveStatistics, float]:
+    ) -> Union[FeatureDescriptiveStatistics, List[FeatureDescriptiveStatistics], float]:
         """Fetch the entity data based on monitoring window configuration and compute statistics.
 
         Args:
@@ -749,7 +748,6 @@ class FeatureMonitoringConfigEngine:
         Returns:
             List[FeatureDescriptiveStatitics]: List of Descriptive statistics.
         """
-
         if (
             monitoring_window_config.window_config_type
             == WindowConfigType.SPECIFIC_VALUE
@@ -766,75 +764,39 @@ class FeatureMonitoringConfigEngine:
         )
         registered_stats = self._statistics_engine.get_by_commit_time_window(
             entity,
-            start_time,
-            end_time,
-            feature_name,
-            monitoring_window_config.row_percentage,
+            start_time=start_time,
+            end_time=end_time,
+            feature_name=feature_name,
+            row_percentage=monitoring_window_config.row_percentage,
         )
-        if registered_stats is not None:
-            # return existing statistics
-            return registered_stats.feature_descriptive_statistics[0]
 
-        # Fetch the actual data for which to compute statistics based on row_percentage and time window
-        entity_feature_df = (
-            self.fetch_entity_data_based_on_time_window_and_row_percentage(
-                entity=entity,
-                feature_name=feature_name,
+        if registered_stats is None:  # if statistics don't exist
+            # Fetch the actual data for which to compute statistics based on row_percentage and time window
+            entity_feature_df = (
+                self.fetch_entity_data_based_on_time_window_and_row_percentage(
+                    entity=entity,
+                    feature_name=feature_name,
+                    start_time=start_time,
+                    end_time=end_time,
+                    row_percentage=monitoring_window_config.row_percentage,
+                )
+            )
+
+            # Compute statistics on the feature dataframe
+            registered_stats = self._statistics_engine.compute_monitoring_statistics(
+                entity,
+                feature_dataframe=entity_feature_df,
                 start_time=start_time,
                 end_time=end_time,
                 row_percentage=monitoring_window_config.row_percentage,
+                feature_name=feature_name,
             )
+
+        return (
+            registered_stats.feature_descriptive_statistics[0]
+            if feature_name is not None
+            else registered_stats.feature_descriptive_statistics
         )
-
-        # Compute statistics on the feature dataframe
-        descriptive_stats = self._statistics_engine.compute_monitoring_statistics(
-            entity,
-            entity_feature_df,
-            start_time,
-            end_time,
-            monitoring_window_config.row_percentage,
-            feature_name=feature_name,
-        )
-        # set commit times and row percentage
-        # for stats_entity in descriptive_stats:
-        #     self.set_start_end_time_and_row_percentage(
-        #         descriptive_stats=stats_entity,
-        #         start_time=start_time,
-        #         end_time=end_time,
-        #         row_percentage=monitoring_window_config.row_percentage,
-        #     )
-
-        # # TODO: My changes
-        # sts = self._statistics_engine.compute_single_feature_statistics(
-        #     entity,
-        #     entity_feature_df,
-        #     feature_name,
-        #     start_time,
-        #     end_time,
-        #     monitoring_window_config.row_percentage,
-        # )
-        # return sts.feature_descriptive_statistics[0]
-
-        return descriptive_stats
-
-    # def set_start_end_time_and_row_percentage(
-    #     self,
-    #     row_percentage: float,
-    #     descriptive_stats: FeatureDescriptiveStatistics,
-    #     start_time: Optional[datetime] = None,
-    #     end_time: Optional[datetime] = None,
-    # ):
-    #     """Set the start time, end time and row percentage for all descriptive statistics.
-
-    #     Args:
-    #         descriptive_stats: FeatureDescriptiveStatistics: Descriptive statistics entity.
-    #         start_time: datetime: statistics is computed on data inserted posterior to this time.
-    #         end_time: datetime: statistics is computed on data inserted anterior to this time.
-    #         row_percentage: Percentage of rows included in the statistics computation
-    #     """
-    #     descriptive_stats.start_time = start_time
-    #     descriptive_stats.end_time = end_time
-    #     descriptive_stats.row_percentage = row_percentage
 
     def fetch_entity_data_based_on_time_window_and_row_percentage(
         self,

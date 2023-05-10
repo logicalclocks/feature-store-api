@@ -65,13 +65,14 @@ class StatisticsEngine:
 
             commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
 
-            content_str = self.profile_statistics_with_config(
+            stats_str = self.profile_statistics_with_config(
                 features_dataframe, metadata_instance.statistics_config
             )
-            if content_str:
+            desc_stats = self._parse_deequ_statistics(stats_str)
+            if desc_stats:
                 stats = statistics.Statistics(
                     commit_time=commit_time,
-                    content=content_str,
+                    feature_descriptive_statistics=desc_stats,
                     window_end_commit_id=feature_group_commit_id,
                 )
                 return self._save_statistics(stats, metadata_instance, feature_view_obj)
@@ -88,8 +89,6 @@ class StatisticsEngine:
         row_percentage,
         feature_name=None,
     ) -> statistics.Statistics:
-        # TODO: Check changes by Victor and see what to use
-
         """Compute statistics for one or more features and sends the result to Hopsworks.
 
         Args:
@@ -112,23 +111,19 @@ class StatisticsEngine:
             feature_names = feature_name
 
         if engine.get_type() == "spark":
-            statistics_str = self.profile_statistics(
+            commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
+            stats_str = self.profile_statistics(
                 feature_dataframe, feature_names, False, False, False
             )
-            statistics_list = json.loads(statistics_str)["columns"]
-            feature_statistics = [
-                FeatureDescriptiveStatistics.from_deequ_json(stats)
-                for stats in statistics_list
-            ]
-            statistics_obj = statistics.Statistics(
-                commit_time=int(float(datetime.datetime.now().timestamp()) * 1000),
+            desc_stats = self._parse_deequ_statistics(stats_str)
+            stats = statistics.Statistics(
+                commit_time=commit_time,
                 row_percentage=row_percentage,
-                feature_descriptive_statistics=feature_statistics,
+                feature_descriptive_statistics=desc_stats,
                 window_start_commit_id=start_time,
                 window_end_commit_id=end_time,
             )
-            # TODO: Only works for FG, not support for FV at the moment
-            return self._save_statistics(statistics_obj, metadata_instance, None)
+            return self._save_statistics(stats, metadata_instance, None)
         else:
             # TODO: Only compute statistics with Spark at the moment. This method is expected to be called
             # only through run_feature_monitoring(), which is the entrypoint of the feature monitoring job.
@@ -159,7 +154,9 @@ class StatisticsEngine:
                 "to the online storage of a feature group.",
                 category=util.StatisticsWarning,
             )
-            return "{}"
+            # if empty data, set count to 0 and return
+            col_stats = [{"column": col_name, "count": 0} for col_name in columns]
+            return json.dumps({"columns": col_stats})
         return engine.get_instance().profile(
             features_dataframe, columns, correlations, histograms, exact_uniqueness
         )
@@ -179,22 +176,22 @@ class StatisticsEngine:
                 "statistics for. A possible cause might be that you inserted only data "
                 "to the online storage of a feature group."
             )
-        content_str = engine.get_instance().profile(
+        stats_str = engine.get_instance().profile(
             features_dataframe, columns, False, True, False
         )
 
         # add unique value profile to String type columns
         return self.profile_unique_values(
-            features_dataframe, label_encoder_features, content_str
+            features_dataframe, label_encoder_features, stats_str
         )
 
-    def register_split_statistics(
+    def compute_split_statistics(
         self, td_metadata_instance, feature_view_obj=None, feature_dataframes=None
     ):
         statistics_of_splits = []
         for split in td_metadata_instance.splits:
             split_name = split.name
-            stat_content = self.profile_statistics_with_config(
+            stats_str = self.profile_statistics_with_config(
                 (
                     feature_dataframes.get(split_name)
                     if feature_dataframes
@@ -202,10 +199,11 @@ class StatisticsEngine:
                 ),
                 td_metadata_instance.statistics_config,
             )
+            desc_stats = self._parse_deequ_statistics(stats_str)
             statistics_of_splits.append(
                 split_statistics.SplitStatistics(
-                    split_name,
-                    stat_content if stat_content else "{}",
+                    name=split_name,
+                    feature_descriptive_statistics=desc_stats,
                 )
             )
 
@@ -213,9 +211,7 @@ class StatisticsEngine:
         stats = statistics.Statistics(
             commit_time=commit_time, split_statistics=statistics_of_splits
         )
-
-        self._save_statistics(stats, td_metadata_instance, feature_view_obj)
-        return stats
+        return self._save_statistics(stats, td_metadata_instance, feature_view_obj)
 
     def compute_transformation_fn_statistics(
         self,
@@ -226,16 +222,16 @@ class StatisticsEngine:
         feature_view_obj=None,
     ):
         commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
-        content_str = self.profile_transformation_fn_statistics(
+        stats_str = self.profile_transformation_fn_statistics(
             features_dataframe, columns, label_encoder_features
         )
+        desc_stats = self._parse_deequ_statistics(stats_str)
         stats = statistics.Statistics(
             commit_time=commit_time,
-            content=content_str,
+            feature_descriptive_statistics=desc_stats,
             for_transformation=True,
         )
-        self._save_statistics(stats, td_metadata_instance, feature_view_obj)
-        return stats
+        return self._save_statistics(stats, td_metadata_instance, feature_view_obj)
 
     def get_by_commit_time(
         self,
@@ -281,9 +277,15 @@ class StatisticsEngine:
         Returns:
             Statistics: Feature group statistics
         """
+        start_time = util.convert_event_time_to_timestamp(start_time)
+        end_time = util.convert_event_time_to_timestamp(end_time)
         try:
             return self._statistics_api.get_by_commit_time_window(
-                metadata_instance, start_time, end_time, feature_name, row_percentage
+                metadata_instance,
+                start_time=start_time,
+                end_time=end_time,
+                feature_name=feature_name,
+                row_percentage=row_percentage,
             )
         except exceptions.RestAPIError as e:
             if (
@@ -296,18 +298,29 @@ class StatisticsEngine:
     def _save_statistics(self, stats, metadata_instance, feature_view_obj):
         # metadata_instance can be feature group or training dataset
         if feature_view_obj:
-            return self._statistics_api.post(
-                feature_view_obj, stats, metadata_instance.version
+            stats = self._statistics_api.post(
+                feature_view_obj,
+                stats=stats,
+                training_dataset_version=metadata_instance.version,
             )
         else:
-            return self._statistics_api.post(metadata_instance, stats, None)
+            stats = self._statistics_api.post(metadata_instance, stats, None)
+        return stats
+
+    def _parse_deequ_statistics(self, statistics):
+        if isinstance(statistics, str):
+            statistics = json.loads(statistics)
+        return [
+            FeatureDescriptiveStatistics.from_deequ_json(stats)
+            for stats in statistics["columns"]
+        ]
 
     @staticmethod
-    def profile_unique_values(features_dataframe, label_encoder_features, content_str):
-        # parsing JSON string:
-        content_dict = json.loads(content_str)
-        if not content_dict:
-            content_dict = {"columns": []}
+    def profile_unique_values(features_dataframe, label_encoder_features, stats):
+        if isinstance(stats, str):
+            stats = json.loads(stats)
+        if not stats:
+            stats = {"columns": []}
         for column in label_encoder_features:
             unique_values = {
                 "column": column,
@@ -318,6 +331,6 @@ class StatisticsEngine:
                     )
                 ],
             }
-            content_dict["columns"].append(unique_values)
+            stats["columns"].append(unique_values)
         # the result is a JSON string:
-        return json.dumps(content_dict)
+        return json.dumps(stats)

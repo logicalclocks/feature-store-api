@@ -388,7 +388,7 @@ class TrainingDataset:
         """
         if self.statistics_config.enabled and engine.get_type() == "spark":
             if self.splits:
-                return self._statistics_engine.register_split_statistics(self)
+                return self._statistics_engine.compute_split_statistics(self)
             else:
                 return self._statistics_engine.compute_statistics(self, self.read())
 
@@ -736,7 +736,9 @@ class TrainingDataset:
         if commit_time is None:
             return self.statistics
         else:
-            return self._statistics_engine.get_by_commit_time(self, commit_time)
+            return self._statistics_engine.get_by_commit_time(
+                self, commit_time=commit_time
+            )
 
     @property
     def query(self):

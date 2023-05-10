@@ -41,8 +41,8 @@ class FeatureDescriptiveStatistics:
     def __init__(
         self,
         feature_name: str,
-        feature_type: str,
-        count: int,
+        feature_type: str = None,
+        count: int = None,
         # for any feature type
         completeness: Optional[float] = None,
         num_non_null_values: Optional[int] = None,
@@ -60,6 +60,7 @@ class FeatureDescriptiveStatistics:
         entropy: Optional[float] = None,
         uniqueness: Optional[float] = None,
         exact_num_distinct_values: Optional[int] = None,
+        extended_statistics: Optional[str] = None,
         id: Optional[int] = None,
     ):
         self._id = id
@@ -81,6 +82,11 @@ class FeatureDescriptiveStatistics:
         self._entropy = entropy
         self._uniqueness = uniqueness
         self._exact_num_distinct_values = exact_num_distinct_values
+        self._extended_statistics = (
+            extended_statistics
+            if not isinstance(extended_statistics, str)
+            else json.loads(extended_statistics)
+        )
 
     def get_value(self, name):
         stat_name = name.lower()
@@ -98,9 +104,22 @@ class FeatureDescriptiveStatistics:
 
     @classmethod
     def from_deequ_json(cls, json_dict):
-        # TODO: to be removed after replacing deequ
+        stats_dict = {"feature_name": json_dict["column"]}
+
+        if "count" in json_dict and json_dict["count"] == 0:
+            # if empty data, ignore the rest of statistics
+            stats_dict["count"] = 0
+            return cls(**stats_dict)
+
+        if "unique_values" in json_dict:
+            # if stats for transformation function, save unique values as extended stats
+            stats_dict["extended_statistics"] = {
+                "unique_values": json_dict["unique_values"]
+            }
+            return cls(**stats_dict)
+
         stats_dict = {
-            "feature_name": json_dict["column"],
+            **stats_dict,
             "feature_type": json_dict["dataType"],
             "count": json_dict["numRecordsNull"] + json_dict["numRecordsNonNull"],
             # common for all data types
@@ -109,7 +128,7 @@ class FeatureDescriptiveStatistics:
             "num_null_values": json_dict["numRecordsNull"],
             "approx_num_distinct_values": json_dict["approximateNumDistinctValues"],
         }
-        if "uniqueness" in json_dict.keys():
+        if "uniqueness" in json_dict:
             # commmon for all data types if exact_uniqueness is enabled
             stats_dict["uniqueness"] = json_dict["uniqueness"]
             stats_dict["entropy"] = json_dict["entropy"]
@@ -124,14 +143,25 @@ class FeatureDescriptiveStatistics:
             stats_dict["mean"] = json_dict["mean"]
             stats_dict["stddev"] = json_dict["stdDev"]
 
+        extended_statistics = {}
+        if "correlations" in json_dict:
+            extended_statistics["correlations"] = json_dict["correlations"]
+        if "histogram" in json_dict:
+            extended_statistics["histogram"] = json_dict["histogram"]
+        if "kll" in json_dict:
+            extended_statistics["kll"] = json_dict["kll"]
+        stats_dict["extended_statistics"] = (
+            extended_statistics if extended_statistics else None
+        )
+
         return cls(**stats_dict)
 
     def to_dict(self):
-        return {
+        _dict = {
             "id": self._id,
-            "featureType": self._feature_type,
             "featureName": self._feature_name,
             "count": self._count,
+            "featureType": self._feature_type,
             "min": self._min,
             "max": self._max,
             "sum": self._sum,
@@ -147,6 +177,10 @@ class FeatureDescriptiveStatistics:
             "exactNumDistinctValues": self._exact_num_distinct_values,
             "percentiles": self._percentiles,
         }
+        if self._extended_statistics is not None:
+            _dict["extendedStatistics"] = json.dumps(self._extended_statistics)
+
+        return _dict
 
     def json(self) -> str:
         return json.dumps(self, cls=FeatureStoreEncoder)
@@ -228,3 +262,7 @@ class FeatureDescriptiveStatistics:
     @property
     def exact_num_distinct_values(self) -> Optional[int]:
         return self._exact_num_distinct_values
+
+    @property
+    def extended_statistics(self) -> Optional[dict]:
+        return self._extended_statistics

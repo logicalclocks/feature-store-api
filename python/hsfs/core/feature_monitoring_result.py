@@ -52,17 +52,17 @@ class FeatureMonitoringResult:
         self._feature_name = feature_name
         self._detection_statistics_id = detection_statistics_id
         self._reference_statistics_id = reference_statistics_id
-        self._detection_statistics = self._parse_feature_statistics(
+        self._detection_statistics = self._parse_descriptive_statistics(
             detection_statistics
         )
-        self._reference_statistics = self._parse_feature_statistics(
+        self._reference_statistics = self._parse_descriptive_statistics(
             reference_statistics
         )
         self._monitoring_time = util.convert_event_time_to_timestamp(monitoring_time)
         self._difference = difference
         self._shift_detected = shift_detected
 
-    def _parse_feature_statistics(
+    def _parse_descriptive_statistics(
         self,
         statistics: Optional[Union[FeatureDescriptiveStatistics, dict]],
     ):
@@ -96,9 +96,9 @@ class FeatureMonitoringResult:
             "featureName": self._feature_name,
         }
 
-        if self._detection_stats_id is not None:
+        if self._detection_statistics_id is not None:
             the_dict["detectionStatisticsId"] = self._detection_statistics_id
-        if self._reference_stats_id is not None:
+        if self._reference_statistics_id is not None:
             the_dict["referenceStatisticsId"] = self._reference_statistics_id
         if self._detection_statistics is not None:
             the_dict["detectionStatistics"] = self._detection_statistics.to_dict()

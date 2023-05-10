@@ -1449,7 +1449,7 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        return self._statistics_engine.get_by_commit_time(self, commit_time)
+        return self._statistics_engine.get_by_commit_time(self, commit_time=commit_time)
 
     def compute_statistics(self):
         """Recompute the statistics for the feature group and save them to the
@@ -2577,10 +2577,10 @@ class FeatureGroup(FeatureGroupBase):
         """
         return self._statistics_engine.get_by_commit_time_window(
             self,
-            from_commit_time,
-            commit_time,
-            feature_name,
-            row_percentage,
+            start_time=from_commit_time,
+            end_time=commit_time,
+            feature_name=feature_name,
+            row_percentage=row_percentage,
         )
 
     def compute_statistics(

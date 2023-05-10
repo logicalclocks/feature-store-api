@@ -638,7 +638,7 @@ class TestStatisticsEngine:
             "to the online storage of a feature group."
         )
 
-    def test_register_split_statistics(self, mocker):
+    def test_compute_split_statistics(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -662,7 +662,7 @@ class TestStatisticsEngine:
         )
 
         # Act
-        s_engine.register_split_statistics(
+        s_engine.compute_split_statistics(
             td_metadata_instance=td, feature_view_obj=None, feature_dataframes=None
         )
 
@@ -671,7 +671,7 @@ class TestStatisticsEngine:
         assert mock_td_read.call_count == 1
         assert mock_split_statistics.call_args[0][0] == "split_name"
 
-    def test_register_split_statistics_feature_dataframes(self, mocker):
+    def test_compute_split_statistics_feature_dataframes(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -695,7 +695,7 @@ class TestStatisticsEngine:
         )
 
         # Act
-        s_engine.register_split_statistics(
+        s_engine.compute_split_statistics(
             td_metadata_instance=td,
             feature_view_obj=None,
             feature_dataframes={"split_name": "value"},

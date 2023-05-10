@@ -16,18 +16,19 @@
 
 import json
 import humps
+from typing import Optional
 
 from hsfs import util
 from hsfs.split_statistics import SplitStatistics
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.core.monitoring_window_config import DEFAULT_ROW_PERCENTAGE, WindowConfigType
 
 
 class Statistics:
     def __init__(
         self,
         commit_time,
-        row_percentage=1.0,
-        content=None,
+        row_percentage=DEFAULT_ROW_PERCENTAGE,
         feature_descriptive_statistics=None,
         # feature group
         # feature_group_commit_id=None,
@@ -50,19 +51,10 @@ class Statistics:
         type=None,
     ):
         self._commit_time = commit_time
+        self._feature_descriptive_statistics = self._parse_descriptive_statistics(
+            feature_descriptive_statistics
+        )
         self._row_percentage = row_percentage
-        if split_statistics is None and feature_descriptive_statistics is None:
-            self._content = json.loads(content)
-        else:  # if split_statistics is provided then content will be None
-            self._content = content
-
-        if feature_descriptive_statistics is not None:
-            self._feature_descriptive_statistics = []
-            for fds in feature_descriptive_statistics:
-                self._feature_descriptive_statistics.append(
-                    FeatureDescriptiveStatistics.from_response_json(fds)
-                )
-
         # feature group
         # self._feature_group_commit_id = feature_group_commit_id
         self._feature_group_id = feature_group_id
@@ -75,17 +67,34 @@ class Statistics:
         self._window_end_event_time = window_end_event_time
         # training dataset
         self._training_dataset_id = training_dataset_id
-        self._split_statistics = (
-            [
-                SplitStatistics.from_response_json(split)
-                if isinstance(split, dict)
-                else split
-                for split in split_statistics
-            ]
-            if split_statistics is not None
-            else []
-        )
+        self._split_statistics = self._parse_split_statistics(split_statistics)
         self._for_transformation = for_transformation
+
+    def _parse_descriptive_statistics(
+        self,
+        desc_statistics,
+    ):
+        if desc_statistics is None:
+            return None
+        return [
+            FeatureDescriptiveStatistics.from_response_json(fds)
+            if isinstance(fds, dict)
+            else fds
+            for fds in desc_statistics
+        ]
+
+    def _parse_split_statistics(
+        self,
+        split_statistics,
+    ):
+        if split_statistics is None:
+            return None
+        return [
+            SplitStatistics.from_response_json(split)
+            if isinstance(split, dict)
+            else split
+            for split in split_statistics
+        ]
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -102,35 +111,60 @@ class Statistics:
             return cls(**json_decamelized)
 
     def to_dict(self):
-        return {
+        _dict = {
             "commitTime": self._commit_time,
             "rowPercentage": self._row_percentage,
-            "content": json.dumps(self._content),
-            "featureDescriptiveStatistics": [
-                fds.to_dict() for fds in self._feature_descriptive_statistics
-            ],
             "windowStartCommitId": self._window_start_commit_id,
             "windowEndCommitId": self._window_end_commit_id,
             "windowStartEventTime": self._window_start_event_time,
             "windowEndEventTime": self._window_end_event_time,
-            "splitStatistics": self._split_statistics,
             "forTransformation": self._for_transformation,
         }
+        if self._feature_descriptive_statistics is not None:
+            _dict["featureDescriptiveStatistics"] = [
+                fds.to_dict() for fds in self._feature_descriptive_statistics
+            ]
+        if self._split_statistics is not None:
+            _dict["splitStatistics"] = [sps.to_dict() for sps in self._split_statistics]
+        return _dict
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def __str__(self):
+        return self.json()
+
+    def __repr__(self):
+        return json.dumps(humps.decamelize(self.to_dict()), indent=2)
 
     @property
     def commit_time(self):
         return self._commit_time
 
     @property
-    def rowPercentage(self):
+    def row_percentage(self) -> Optional[float]:
         return self._row_percentage
 
-    @property
-    def content(self):
-        return self._content
+    @row_percentage.setter
+    def row_percentage(self, row_percentage: Optional[float]):
+        if (
+            self._window_config_type == WindowConfigType.SPECIFIC_VALUE
+            or self._window_config_type == WindowConfigType.TRAINING_DATASET
+        ) and row_percentage is not None:
+            raise AttributeError(
+                "Row percentage can only be set for ROLLING_TIME and ALL_TIME"
+                " window config types."
+            )
+
+        if isinstance(row_percentage, int) or isinstance(row_percentage, float):
+            row_percentage = float(row_percentage)
+            if row_percentage <= 0.0 or row_percentage > 1.0:
+                raise ValueError("Row percentage must be a float between 0 and 1.")
+            self._row_percentage = row_percentage
+        elif row_percentage is None:
+            self._row_percentage = DEFAULT_ROW_PERCENTAGE
+        else:
+            raise TypeError("Row percentage must be a float between 0 and 1.")
 
     @property
     def feature_descriptive_statistics(self):
