@@ -65,7 +65,7 @@ class FeatureMonitoringResult:
     def _parse_descriptive_statistics(
         self,
         statistics: Optional[Union[FeatureDescriptiveStatistics, dict]],
-    ):
+    ) -> Optional[FeatureDescriptiveStatistics]:
         if statistics is None:
             return None
         return (

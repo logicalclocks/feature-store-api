@@ -31,7 +31,7 @@ class StatisticsEngine:
             feature_store_id, entity_type
         )
 
-    def compute_statistics(
+    def compute_and_save_statistics(
         self,
         metadata_instance,
         features_dataframe=None,
@@ -53,7 +53,7 @@ class StatisticsEngine:
         if engine.get_type() == "spark" or feature_view_obj is not None:
             # If the feature dataframe is None, then trigger a read on the metadata instance
             # We do it here to avoid making a useless request when using the Python engine
-            # and calling compute_statistics
+            # and calling compute_and_save_statistics
             if features_dataframe is None:
                 if feature_group_commit_id is not None:
                     features_dataframe = (
@@ -85,7 +85,7 @@ class StatisticsEngine:
             # Python engine
             return engine.get_instance().profile_by_spark(metadata_instance)
 
-    def compute_monitoring_statistics(
+    def compute_and_save_monitoring_statistics(
         self,
         metadata_instance,
         feature_dataframe,
@@ -187,7 +187,7 @@ class StatisticsEngine:
             features_dataframe, columns, correlations, histograms, exact_uniqueness
         )
 
-    def compute_split_statistics(
+    def compute_and_save_split_statistics(
         self, td_metadata_instance, feature_view_obj=None, feature_dataframes=None
     ) -> statistics.Statistics:
         """Compute statistics on Training Dataset splits

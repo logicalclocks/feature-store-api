@@ -1478,7 +1478,7 @@ class FeatureGroupBase:
             # Don't read the dataframe here, to avoid triggering a read operation
             # for the Python engine. The Python engine is going to setup a Spark Job
             # to update the statistics.
-            return self._statistics_engine.compute_statistics(self)
+            return self._statistics_engine.compute_and_save_statistics(self)
         else:
             warnings.warn(
                 (
@@ -1982,7 +1982,7 @@ class FeatureGroup(FeatureGroupBase):
         if self.statistics_config.enabled and engine.get_type() == "spark":
             # Only compute statistics if the engine is Spark.
             # For Python engine, the computation happens in the Hopsworks application
-            self._statistics_engine.compute_statistics(self, feature_dataframe)
+            self._statistics_engine.compute_and_save_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(
                 "No version provided for creating feature group `{}`, incremented version to `{}`.".format(
@@ -2621,7 +2621,7 @@ class FeatureGroup(FeatureGroupBase):
                     ).keys()
                 ][0]
 
-            return self._statistics_engine.compute_statistics(
+            return self._statistics_engine.compute_and_save_statistics(
                 self,
                 feature_group_commit_id=fg_commit_id,
             )
@@ -2960,7 +2960,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._code_engine.save_code(self)
 
         if self.statistics_config.enabled:
-            self._statistics_engine.compute_statistics(self)
+            self._statistics_engine.compute_and_save_statistics(self)
 
     def insert(
         self,

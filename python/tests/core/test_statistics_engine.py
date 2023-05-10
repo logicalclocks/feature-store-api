@@ -36,7 +36,7 @@ query = fg.select_all()
 
 
 class TestStatisticsEngine:
-    def test_compute_statistics(self, mocker):
+    def test_compute_and_save_statistics(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -67,7 +67,7 @@ class TestStatisticsEngine:
         )
 
         # Act
-        s_engine.compute_statistics(
+        s_engine.compute_and_save_statistics(
             metadata_instance=fg,
             features_dataframe=None,
             feature_group_commit_id=None,
@@ -79,7 +79,7 @@ class TestStatisticsEngine:
         assert mock_statistics_engine_save_statistics.call_count == 0
         assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 1
 
-    def test_compute_statistics_get_type_spark(self, mocker):
+    def test_compute_and_save_statistics_get_type_spark(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -110,7 +110,7 @@ class TestStatisticsEngine:
         )
 
         # Act
-        s_engine.compute_statistics(
+        s_engine.compute_and_save_statistics(
             metadata_instance=fg,
             features_dataframe=None,
             feature_group_commit_id=None,
@@ -122,7 +122,7 @@ class TestStatisticsEngine:
         assert mock_statistics_engine_save_statistics.call_count == 0
         assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 0
 
-    def test_compute_statistics_feature_view_obj(self, mocker):
+    def test_compute_and_save_statistics_feature_view_obj(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -161,7 +161,7 @@ class TestStatisticsEngine:
         )
 
         # Act
-        s_engine.compute_statistics(
+        s_engine.compute_and_save_statistics(
             metadata_instance=fg,
             features_dataframe=None,
             feature_group_commit_id=None,
@@ -173,7 +173,7 @@ class TestStatisticsEngine:
         assert mock_statistics_engine_save_statistics.call_count == 0
         assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 0
 
-    def test_compute_statistics_get_type_spark_content_str(
+    def test_compute_and_save_statistics_get_type_spark_content_str(
         self, mocker, backend_fixtures
     ):
         # Arrange
@@ -211,7 +211,7 @@ class TestStatisticsEngine:
         )
 
         # Act
-        s_engine.compute_statistics(
+        s_engine.compute_and_save_statistics(
             metadata_instance=fg,
             features_dataframe=None,
             feature_group_commit_id=None,
@@ -223,7 +223,7 @@ class TestStatisticsEngine:
         assert mock_statistics_engine_save_statistics.call_count == 1
         assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 0
 
-    def test_compute_statistics_feature_view_obj_content_str(
+    def test_compute_and_save_statistics_feature_view_obj_content_str(
         self, mocker, backend_fixtures
     ):
         # Arrange
@@ -269,7 +269,7 @@ class TestStatisticsEngine:
         )
 
         # Act
-        s_engine.compute_statistics(
+        s_engine.compute_and_save_statistics(
             metadata_instance=fg,
             features_dataframe=None,
             feature_group_commit_id=None,
@@ -281,7 +281,9 @@ class TestStatisticsEngine:
         assert mock_statistics_engine_save_statistics.call_count == 1
         assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 0
 
-    def test_compute_statistics_get_type_spark_feature_group_commit_id(self, mocker):
+    def test_compute_and_save_statistics_get_type_spark_feature_group_commit_id(
+        self, mocker
+    ):
         # Arrange
         feature_store_id = 99
 
@@ -312,7 +314,7 @@ class TestStatisticsEngine:
         )
 
         # Act
-        s_engine.compute_statistics(
+        s_engine.compute_and_save_statistics(
             metadata_instance=fg,
             features_dataframe=None,
             feature_group_commit_id=1,
@@ -324,7 +326,9 @@ class TestStatisticsEngine:
         assert mock_statistics_engine_save_statistics.call_count == 0
         assert mock_engine_get_instance.return_value.profile_by_spark.call_count == 0
 
-    def test_compute_statistics_feature_view_obj_feature_group_commit_id(self, mocker):
+    def test_compute_and_save_statistics_feature_view_obj_feature_group_commit_id(
+        self, mocker
+    ):
         # Arrange
         feature_store_id = 99
 
@@ -363,7 +367,7 @@ class TestStatisticsEngine:
         )
 
         # Act
-        s_engine.compute_statistics(
+        s_engine.compute_and_save_statistics(
             metadata_instance=fg,
             features_dataframe=None,
             feature_group_commit_id=1,
@@ -404,7 +408,7 @@ class TestStatisticsEngine:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            s_engine.compute_monitoring_statistics(
+            s_engine.compute_and_save_monitoring_statistics(
                 metadata_instance=fg,
                 feature_dataframe=features_dataframe,
                 start_time=None,
@@ -421,7 +425,7 @@ class TestStatisticsEngine:
             == "Descriptive statistics for feature monitoring cannot be computed from the Python engine."
         )
 
-    def test_compute_monitoring_statistics_get_type_spark(self, mocker):
+    def test_compute_and_save_monitoring_statistics_get_type_spark(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -454,7 +458,7 @@ class TestStatisticsEngine:
         features_dataframe.head.return_value = []
 
         # Act
-        s_engine.compute_monitoring_statistics(
+        s_engine.compute_and_save_monitoring_statistics(
             metadata_instance=fg,
             feature_dataframe=features_dataframe,
             start_time=None,
@@ -683,7 +687,7 @@ class TestStatisticsEngine:
             "to the online storage of a feature group."
         )
 
-    def test_compute_split_statistics(self, mocker):
+    def test_compute_and_save_split_statistics(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -707,7 +711,7 @@ class TestStatisticsEngine:
         )
 
         # Act
-        s_engine.compute_split_statistics(
+        s_engine.compute_and_save_split_statistics(
             td_metadata_instance=td, feature_view_obj=None, feature_dataframes=None
         )
 
@@ -716,7 +720,7 @@ class TestStatisticsEngine:
         assert mock_td_read.call_count == 1
         assert mock_split_statistics.call_args[1]["name"] == "split_name"
 
-    def test_compute_split_statistics_feature_dataframes(self, mocker):
+    def test_compute_and_save_split_statistics_feature_dataframes(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -740,7 +744,7 @@ class TestStatisticsEngine:
         )
 
         # Act
-        s_engine.compute_split_statistics(
+        s_engine.compute_and_save_split_statistics(
             td_metadata_instance=td,
             feature_view_obj=None,
             feature_dataframes={"split_name": "value"},

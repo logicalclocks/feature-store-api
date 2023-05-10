@@ -388,9 +388,11 @@ class TrainingDataset:
         """
         if self.statistics_config.enabled and engine.get_type() == "spark":
             if self.splits:
-                return self._statistics_engine.compute_split_statistics(self)
+                return self._statistics_engine.compute_and_save_split_statistics(self)
             else:
-                return self._statistics_engine.compute_statistics(self, self.read())
+                return self._statistics_engine.compute_and_save_statistics(
+                    self, self.read()
+                )
 
     def show(self, n: int, split: str = None):
         """Show the first `n` rows of the training dataset.

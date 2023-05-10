@@ -783,13 +783,15 @@ class FeatureMonitoringConfigEngine:
             )
 
             # Compute statistics on the feature dataframe
-            registered_stats = self._statistics_engine.compute_monitoring_statistics(
-                entity,
-                feature_dataframe=entity_feature_df,
-                start_time=start_time,
-                end_time=end_time,
-                row_percentage=monitoring_window_config.row_percentage,
-                feature_name=feature_name,
+            registered_stats = (
+                self._statistics_engine.compute_and_save_monitoring_statistics(
+                    entity,
+                    feature_dataframe=entity_feature_df,
+                    start_time=start_time,
+                    end_time=end_time,
+                    row_percentage=monitoring_window_config.row_percentage,
+                    feature_name=feature_name,
+                )
             )
 
         return (

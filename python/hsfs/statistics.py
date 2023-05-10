@@ -16,7 +16,7 @@
 
 import json
 import humps
-from typing import Optional
+from typing import Optional, List, Union
 
 from hsfs import util
 from hsfs.split_statistics import SplitStatistics
@@ -69,14 +69,14 @@ class Statistics:
 
     def _parse_descriptive_statistics(
         self,
-        desc_statistics,
-    ):
+        desc_statistics: Union[dict, FeatureDescriptiveStatistics],
+    ) -> Optional[List[FeatureDescriptiveStatistics]]:
         if desc_statistics is None:
             return None
         return [
-            FeatureDescriptiveStatistics.from_response_json(fds)
-            if isinstance(fds, dict)
-            else fds
+            fds
+            if isinstance(fds, FeatureDescriptiveStatistics)
+            else FeatureDescriptiveStatistics.from_response_json(fds)
             for fds in desc_statistics
         ]
 

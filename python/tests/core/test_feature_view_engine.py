@@ -1480,8 +1480,10 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_s_engine.return_value.compute_split_statistics.call_count == 0
-        assert mock_s_engine.return_value.compute_statistics.call_count == 0
+        assert (
+            mock_s_engine.return_value.compute_and_save_split_statistics.call_count == 0
+        )
+        assert mock_s_engine.return_value.compute_and_save_statistics.call_count == 0
 
     def test_compute_training_dataset_statistics_enabled(self, mocker):
         # Arrange
@@ -1510,8 +1512,10 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_s_engine.return_value.compute_split_statistics.call_count == 0
-        assert mock_s_engine.return_value.compute_statistics.call_count == 0
+        assert (
+            mock_s_engine.return_value.compute_and_save_split_statistics.call_count == 0
+        )
+        assert mock_s_engine.return_value.compute_and_save_statistics.call_count == 0
 
     def test_compute_training_dataset_statistics_enabled_calc_stat(self, mocker):
         # Arrange
@@ -1540,8 +1544,10 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_s_engine.return_value.compute_split_statistics.call_count == 0
-        assert mock_s_engine.return_value.compute_statistics.call_count == 1
+        assert (
+            mock_s_engine.return_value.compute_and_save_split_statistics.call_count == 0
+        )
+        assert mock_s_engine.return_value.compute_and_save_statistics.call_count == 1
 
     def test_compute_training_dataset_statistics_enabled_calc_stat_splits(self, mocker):
         # Arrange
@@ -1578,8 +1584,10 @@ class TestFeatureViewEngine:
             str(e_info.value)
             == "Provided dataframes should be in dict format 'split': dataframe"
         )
-        assert mock_s_engine.return_value.compute_split_statistics.call_count == 0
-        assert mock_s_engine.return_value.compute_statistics.call_count == 0
+        assert (
+            mock_s_engine.return_value.compute_and_save_split_statistics.call_count == 0
+        )
+        assert mock_s_engine.return_value.compute_and_save_statistics.call_count == 0
 
     def test_compute_training_dataset_statistics_enabled_calc_stat_splits_td_df(
         self, mocker
@@ -1610,8 +1618,10 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_s_engine.return_value.compute_split_statistics.call_count == 1
-        assert mock_s_engine.return_value.compute_statistics.call_count == 0
+        assert (
+            mock_s_engine.return_value.compute_and_save_split_statistics.call_count == 1
+        )
+        assert mock_s_engine.return_value.compute_and_save_statistics.call_count == 0
 
     def test_get_training_data_metadata(self, mocker):
         # Arrange

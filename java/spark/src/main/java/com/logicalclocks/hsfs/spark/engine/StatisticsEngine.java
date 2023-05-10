@@ -65,8 +65,8 @@ public class StatisticsEngine {
     return statisticsApi.post(trainingDataset, statistics);
   }
 
-  public Statistics computeStatistics(FeatureView featureView, TrainingDataset trainingDataset, Dataset<Row> dataFrame)
-      throws FeatureStoreException, IOException {
+  public Statistics computeStatistics(FeatureView featureView, TrainingDataset trainingDataset,
+      Dataset<Row> dataFrame) throws FeatureStoreException, IOException {
     Statistics statistics = computeStatistics(dataFrame,
         trainingDataset.getStatisticsConfig().getColumns(),
         trainingDataset.getStatisticsConfig().getHistograms(),
@@ -79,7 +79,6 @@ public class StatisticsEngine {
 
   public Statistics computeStatistics(FeatureGroupBase featureGroup, Dataset<Row> dataFrame, Long commitId)
       throws FeatureStoreException, IOException {
-
     Statistics statistics = computeStatistics(dataFrame,
         featureGroup.getStatisticsConfig().getColumns(),
         featureGroup.getStatisticsConfig().getHistograms(),
@@ -90,26 +89,15 @@ public class StatisticsEngine {
     return statisticsApi.post(featureGroup, statistics);
   }
 
-  private Statistics computeStatistics(Dataset<Row> dataFrame, List<String> statisticColumns,
-                                                 Boolean histograms,
-                                                 Boolean correlations, Boolean exactUniqueness, Long commitId) {
+  private Statistics computeStatistics(Dataset<Row> dataFrame, List<String> statisticColumns, Boolean histograms,
+      Boolean correlations, Boolean exactUniqueness, Long commitId) {
     String content;
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
 
     if (dataFrame.isEmpty()) {
       LOGGER.warn("There is no data in the entity that you are trying to compute statistics for. A "
           + "possible cause might be that you inserted only data to the online storage of a feature group.");
-
-      JSONArray columns = new JSONArray();
-      for (String colName : statisticColumns) {
-        JSONObject colStats = new JSONObject();
-        colStats.append("column", colName);
-        colStats.append("count", 0L);
-        columns.put(colStats);
-      }
-      JSONObject emptyStats = new JSONObject();
-      emptyStats.append("columns", columns);
-      content = emptyStats.toString();
+      content = buildEmptyStatistics(statisticColumns);
     } else {
       // if no empty, compute statistics
       content = SparkEngine.getInstance().profile(dataFrame, statisticColumns, histograms, correlations,
@@ -120,20 +108,20 @@ public class StatisticsEngine {
     return new Statistics(commitTime, 1.0, featureDescriptiveStatistics, commitId, null);
   }
 
-  public Statistics registerSplitStatistics(TrainingDataset trainingDataset)
+  public Statistics computeAndSaveSplitStatistics(TrainingDataset trainingDataset)
       throws FeatureStoreException, IOException {
-    Statistics statistics = getSplitStatistics(trainingDataset);
+    Statistics statistics = computeSplitStatistics(trainingDataset);
     return statisticsApi.post(trainingDataset, statistics);
   }
 
-  public Statistics registerSplitStatistics(FeatureView featureView, TrainingDataset trainingDataset,
+  public Statistics computeAndSaveSplitStatistics(FeatureView featureView, TrainingDataset trainingDataset,
       Map<String, Dataset<Row>> splitDatasets)
       throws FeatureStoreException, IOException {
-    Statistics statistics = getSplitStatistics(trainingDataset, splitDatasets);
+    Statistics statistics = computeSplitStatistics(trainingDataset, splitDatasets);
     return statisticsApi.post(featureView, trainingDataset.getVersion(), statistics);
   }
 
-  public Statistics getSplitStatistics(TrainingDataset trainingDataset)
+  public Statistics computeSplitStatistics(TrainingDataset trainingDataset)
       throws FeatureStoreException, IOException {
     List<SplitStatistics> splitStatistics = new ArrayList<>();
     for (Split split : trainingDataset.getSplits()) {
@@ -149,7 +137,7 @@ public class StatisticsEngine {
     return new Statistics(commitTime, 1.0, null, null, splitStatistics);
   }
 
-  public Statistics getSplitStatistics(TrainingDataset trainingDataset, Map<String, Dataset<Row>> splitDatasets) {
+  public Statistics computeSplitStatistics(TrainingDataset trainingDataset, Map<String, Dataset<Row>> splitDatasets) {
     List<SplitStatistics> splitStatistics = new ArrayList<>();
     for (Map.Entry<String, Dataset<Row>> entry : splitDatasets.entrySet()) {
       Statistics statistics = computeStatistics(entry.getValue(),
@@ -188,5 +176,18 @@ public class StatisticsEngine {
       descStats.add(FeatureDescriptiveStatistics.fromDeequStatisticsJson(colStats));
     }
     return descStats;
+  }
+
+  private String buildEmptyStatistics(List<String> featureNames) {
+    JSONArray columns = new JSONArray();
+    for (String name : featureNames) {
+      JSONObject colStats = new JSONObject();
+      colStats.append("column", name);
+      colStats.append("count", 0L);
+      columns.put(colStats);
+    }
+    JSONObject emptyStats = new JSONObject();
+    emptyStats.append("columns", columns);
+    return emptyStats.toString();
   }
 }
