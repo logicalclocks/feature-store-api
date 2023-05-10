@@ -16,11 +16,14 @@
 
 import json
 import humps
-from typing import Optional
+from typing import List, Optional, Union
 from hsfs.util import FeatureStoreEncoder
+from enum import Enum
+
+from hsfs.core import monitoring_window_config_engine
 
 
-class WindowConfigType:
+class WindowConfigType(str, Enum):
     ALL_TIME = "ALL_TIME"
     ROLLING_TIME = "ROLLING_TIME"
     ROLLING_COMMITS = "ROLLING_COMMITS"
@@ -29,6 +32,29 @@ class WindowConfigType:
     MOST_RECENT = "MOST_RECENT"
     FIXED_TIME = "FIXED_TIME"
 
+    @classmethod
+    def list_str(cls) -> List[str]:
+        return list(map(lambda c: c.value, cls))
+
+    @classmethod
+    def list(cls) -> List["WindowConfigType"]:
+        return list(map(lambda c: c, cls))
+
+    @classmethod
+    def from_str(cls, value: str) -> "WindowConfigType":
+        if value in cls.list_str():
+            return cls(value)
+        else:
+            raise ValueError(
+                f"Invalid value {value} for WindowConfigType, allowed values are {cls.list_str()}"
+            )
+
+    def __str__(self) -> str:
+        return self.value
+
+    def __repr__(self) -> str:
+        return self.value
+
 
 class MonitoringWindowConfig:
     _DEFAULT_ROW_PERCENTAGE = 1.0
@@ -36,7 +62,9 @@ class MonitoringWindowConfig:
     def __init__(
         self,
         id: Optional[int] = None,
-        window_config_type: Optional[str] = WindowConfigType.SPECIFIC_VALUE,
+        window_config_type: Optional[
+            Union[str, WindowConfigType]
+        ] = WindowConfigType.SPECIFIC_VALUE,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
         training_dataset_id: Optional[int] = None,
@@ -109,12 +137,24 @@ class MonitoringWindowConfig:
                 BATCH, TRAINING_DATASET, SPECIFIC_VALUE.
         """
         self._id = id
-        self._window_config_type = window_config_type
+        self._window_config_type = None
+        self.window_config_type = window_config_type
         self._time_offset = time_offset
         self._window_length = window_length
         self._training_dataset_id = training_dataset_id
         self._specific_value = specific_value
-        self.row_percentage = row_percentage
+
+        if self.window_config_type in [
+            WindowConfigType.SPECIFIC_VALUE,
+            WindowConfigType.TRAINING_DATASET,
+        ]:
+            self._row_percentage = None
+        else:
+            self.row_percentage = row_percentage
+
+        self._window_config_engine = (
+            monitoring_window_config_engine.MonitoringWindowConfigEngine()
+        )
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -158,6 +198,29 @@ class MonitoringWindowConfig:
     def window_config_type(self) -> WindowConfigType:
         return self._window_config_type
 
+    @window_config_type.setter
+    def window_config_type(self, window_config_type: Union[WindowConfigType, str]):
+        if self._window_config_type is not None:
+            raise AttributeError("window_config_type is a read-only attribute.")
+
+        if isinstance(window_config_type, WindowConfigType):
+            self._window_config_type = window_config_type
+            return
+
+        if not isinstance(window_config_type, str):
+            raise TypeError(
+                "window_config_type must be a string or WindowConfigType. "
+                "Allowed value are" + str(WindowConfigType.list_str())
+            )
+        elif window_config_type not in WindowConfigType.list_str():
+            raise ValueError(
+                "window_config_type must be one of "
+                + str(WindowConfigType.list_str())
+                + "."
+            )
+        else:
+            self._window_config_type = WindowConfigType.from_str(window_config_type)
+
     @property
     def time_offset(self) -> Optional[str]:
         return self._time_offset
@@ -168,14 +231,17 @@ class MonitoringWindowConfig:
 
     @window_length.setter
     def window_length(self, window_length: Optional[str]):
-        if (
-            self._window_config_type != WindowConfigType.ROLLING_TIME
-            and window_length is not None
-        ):
+        if window_length is None:
+            self._window_length = None
+        elif self._window_config_type != WindowConfigType.ROLLING_TIME:
             raise AttributeError(
                 "Window length can only be set for if window_config_type is ROLLING_TIME."
             )
-        self._window_length = window_length
+        elif isinstance(window_length, str):
+            self._window_config_engine.time_range_str_to_time_delta(window_length)
+            self._window_length = window_length
+        else:
+            raise TypeError("window_length must be a string.")
 
     @property
     def training_dataset_id(self) -> Optional[int]:
@@ -213,11 +279,10 @@ class MonitoringWindowConfig:
 
     @row_percentage.setter
     def row_percentage(self, row_percentage: Optional[float]):
-        if (
-            self._window_config_type == WindowConfigType.SPECIFIC_VALUE
-            or self._window_config_type == WindowConfigType.TRAINING_DATASET
-        ) and row_percentage is not None:
-
+        if self.window_config_type in [
+            WindowConfigType.SPECIFIC_VALUE,
+            WindowConfigType.TRAINING_DATASET,
+        ]:
             raise AttributeError(
                 "Row percentage can only be set for ROLLING_TIME and ALL_TIME"
                 " window config types."
