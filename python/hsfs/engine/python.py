@@ -22,7 +22,6 @@ import re
 import ast
 import warnings
 import avro
-import socket
 import pyarrow as pa
 import json
 import random
@@ -62,7 +61,7 @@ from hsfs.core import (
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.client import exceptions, hopsworks
+from hsfs.client import exceptions
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
