@@ -1280,7 +1280,7 @@ class FeatureGroupBase:
                 "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
             )
 
-        return self._feature_monitoring_config_engine._build_default_scheduled_statistics_config(
+        return self._feature_monitoring_config_engine._build_default_statistics_monitoring_config(
             name=name,
             feature_name=feature_name,
             description=description,
