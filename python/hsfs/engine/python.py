@@ -77,6 +77,7 @@ except ImportError:
 
 
 class Engine:
+
     ACCEPTED_CONFLUENT_KAFKA_CONFIGS = [
         "builtin.features",
         "client.id",
