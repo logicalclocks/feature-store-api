@@ -297,7 +297,7 @@ hsfs_dir = pathlib.Path(__file__).resolve().parents[0]
 def generate(dest_dir):
     doc_generator = keras_autodoc.DocumentationGenerator(
         PAGES,
-        project_url="https://github.com/logicalclocks/feature-store-api/blob/master/python",
+        project_url="https://github.com/vatj/feature-store-api/blob/FSTORE-769/python",
         template_dir="./docs/templates",
         titles_size="###",
         extra_aliases={
