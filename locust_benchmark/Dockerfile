@@ -1,4 +1,4 @@
-FROM hopsworks/locust:hsfs-latest
+FROM locustio/locust:2.15.1
 
 USER root
 
