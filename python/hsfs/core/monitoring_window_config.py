@@ -56,10 +56,9 @@ class WindowConfigType(str, Enum):
         return self.value
 
 
-DEFAULT_ROW_PERCENTAGE = 1.0
-
-
 class MonitoringWindowConfig:
+    DEFAULT_ROW_PERCENTAGE = 1.0
+
     def __init__(
         self,
         id: Optional[int] = None,
@@ -295,6 +294,6 @@ class MonitoringWindowConfig:
                 raise ValueError("Row percentage must be a float between 0 and 1.")
             self._row_percentage = row_percentage
         elif row_percentage is None:
-            self._row_percentage = DEFAULT_ROW_PERCENTAGE
+            self._row_percentage = self.DEFAULT_ROW_PERCENTAGE
         else:
             raise TypeError("Row percentage must be a float between 0 and 1.")

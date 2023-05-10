@@ -21,14 +21,13 @@ from typing import Optional
 from hsfs import util
 from hsfs.split_statistics import SplitStatistics
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
-from hsfs.core.monitoring_window_config import DEFAULT_ROW_PERCENTAGE, WindowConfigType
 
 
 class Statistics:
     def __init__(
         self,
         commit_time,
-        row_percentage=DEFAULT_ROW_PERCENTAGE,
+        row_percentage=1.0,
         feature_descriptive_statistics=None,
         # feature group
         feature_group_id=None,
@@ -145,22 +144,13 @@ class Statistics:
 
     @row_percentage.setter
     def row_percentage(self, row_percentage: Optional[float]):
-        if (
-            self._window_config_type == WindowConfigType.SPECIFIC_VALUE
-            or self._window_config_type == WindowConfigType.TRAINING_DATASET
-        ) and row_percentage is not None:
-            raise AttributeError(
-                "Row percentage can only be set for ROLLING_TIME and ALL_TIME"
-                " window config types."
-            )
-
         if isinstance(row_percentage, int) or isinstance(row_percentage, float):
             row_percentage = float(row_percentage)
             if row_percentage <= 0.0 or row_percentage > 1.0:
                 raise ValueError("Row percentage must be a float between 0 and 1.")
             self._row_percentage = row_percentage
         elif row_percentage is None:
-            self._row_percentage = DEFAULT_ROW_PERCENTAGE
+            self._row_percentage = self.DEFAULT_ROW_PERCENTAGE
         else:
             raise TypeError("Row percentage must be a float between 0 and 1.")
 
