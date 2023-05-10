@@ -136,7 +136,7 @@ class Engine:
             ) as hive_conn:
                 # Suppress SQLAlchemy pandas warning
                 with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
+                    warnings.simplefilter("ignore", UserWarning)
                     result_df = util.run_with_loading_animation(
                         "Reading data from Hopsworks, using Hive",
                         pd.read_sql,
