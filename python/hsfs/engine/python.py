@@ -78,6 +78,30 @@ except ImportError:
 
 
 class Engine:
+    ACCEPTED_CONFLUENT_KAFKA_CONFIGS = \
+        ["builtin.features", "client.id", "metadata.broker.list", "bootstrap.servers", "message.max.bytes", "message.copy.max.bytes", "receive.message.max.bytes",
+         "max.in.flight.requests.per.connection", "max.in.flight", "topic.metadata.refresh.interval.ms", "metadata.max.age.ms", "topic.metadata.refresh.fast.interval.ms",
+         "topic.metadata.refresh.fast.cnt", "topic.metadata.refresh.sparse", "topic.metadata.propagation.max.ms", "topic.blacklist", "debug", "socket.timeout.ms",
+         "socket.blocking.max.ms", "socket.send.buffer.bytes", "socket.receive.buffer.bytes", "socket.keepalive.enable", "socket.nagle.disable", "socket.max.fails",
+         "broker.address.ttl", "broker.address.family", "socket.connection.setup.timeout.ms", "connections.max.idle.ms", "reconnect.backoff.jitter.ms", "reconnect.backoff.ms",
+         "reconnect.backoff.max.ms", "statistics.interval.ms", "enabled_events", "error_cb", "throttle_cb", "stats_cb", "log_cb", "log_level", "log.queue", "log.thread.name",
+         "enable.random.seed", "log.connection.close", "background_event_cb", "socket_cb", "connect_cb", "closesocket_cb", "open_cb", "resolve_cb", "opaque", "default_topic_conf",
+         "internal.termination.signal", "api.version.request", "api.version.request.timeout.ms", "api.version.fallback.ms", "broker.version.fallback", "allow.auto.create.topics",
+         "security.protocol", "ssl.cipher.suites", "ssl.curves.list", "ssl.sigalgs.list", "ssl.key.location", "ssl.key.password", "ssl.key.pem", "ssl_key", "ssl.certificate.location",
+         "ssl.certificate.pem", "ssl_certificate", "ssl.ca.location", "ssl.ca.pem", "ssl_ca", "ssl.ca.certificate.stores", "ssl.crl.location", "ssl.keystore.location",
+         "ssl.keystore.password", "ssl.providers", "ssl.engine.location", "ssl.engine.id", "ssl_engine_callback_data", "enable.ssl.certificate.verification",
+         "ssl.endpoint.identification.algorithm", "ssl.certificate.verify_cb", "sasl.mechanisms", "sasl.mechanism", "sasl.kerberos.service.name", "sasl.kerberos.principal",
+         "sasl.kerberos.kinit.cmd", "sasl.kerberos.keytab", "sasl.kerberos.min.time.before.relogin", "sasl.username", "sasl.password", "sasl.oauthbearer.config",
+         "enable.sasl.oauthbearer.unsecure.jwt", "oauthbearer_token_refresh_cb", "sasl.oauthbearer.method", "sasl.oauthbearer.client.id", "sasl.oauthbearer.client.secret",
+         "sasl.oauthbearer.scope", "sasl.oauthbearer.extensions", "sasl.oauthbearer.token.endpoint.url", "plugin.library.paths", "interceptors", "group.id", "group.instance.id",
+         "partition.assignment.strategy", "session.timeout.ms", "heartbeat.interval.ms", "group.protocol.type", "coordinator.query.interval.ms", "max.poll.interval.ms",
+         "enable.auto.commit", "auto.commit.interval.ms", "enable.auto.offset.store", "queued.min.messages", "queued.max.messages.kbytes", "fetch.wait.max.ms",
+         "fetch.message.max.bytes", "max.partition.fetch.bytes", "fetch.max.bytes", "fetch.min.bytes", "fetch.error.backoff.ms", "offset.store.method", "isolation.level",
+         "consume_cb", "rebalance_cb", "offset_commit_cb", "enable.partition.eof", "check.crcs", "client.rack", "transactional.id", "transaction.timeout.ms", "enable.idempotence",
+         "enable.gapless.guarantee", "queue.buffering.max.messages", "queue.buffering.max.kbytes", "queue.buffering.max.ms", "linger.ms", "message.send.max.retries", "retries",
+         "retry.backoff.ms", "queue.buffering.backpressure.threshold", "compression.codec", "compression.type", "batch.num.messages", "batch.size", "delivery.report.only.error",
+         "dr_cb", "dr_msg_cb", "sticky.partitioning.linger.ms"]
+
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
@@ -1017,8 +1041,9 @@ class Engine:
                        'security.protocol': storage_connector.security_protocol})
         config.update(write_options.get("kafka_producer_config", {}))
 
-        # remove not needed fields todo find a better way, ignore cant be done
-        config.pop('sasl.jaas.config')
+        # filter out not accepted fields todo find a better way (if not done _INVALID_ARG KafkaError is raised)
+        config = {k: v for k, v in config.items() if k in Engine.ACCEPTED_CONFLUENT_KAFKA_CONFIGS}
+
         return config
 
     @staticmethod
