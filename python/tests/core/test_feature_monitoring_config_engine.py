@@ -18,6 +18,9 @@ from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_config_engine
 from hsfs.core.job_scheduler import JobScheduler
 from hsfs.core.monitoring_window_config import WindowConfigType
+from hsfs.util import convert_event_time_to_timestamp
+
+from datetime import datetime
 
 DEFAULT_DESCRIPTION = "A feature monitoring configuration for unit test."
 DEFAULT_NAME = "test_monitoring_config"
@@ -70,7 +73,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._description == DEFAULT_DESCRIPTION
         assert (
             config._feature_monitoring_type
-            == fmc.FeatureMonitoringType.SCHEDULED_STATISTICS
+            == fmc.FeatureMonitoringType.STATISTICS_MONITORING
         )
         assert (
             config._detection_window_config.window_config_type
@@ -95,6 +98,7 @@ class TestFeatureMonitoringConfigEngine:
             window_config_type=WindowConfigType.ROLLING_TIME,
             time_offset="1w",
             window_length="1d",
+            row_percentage=1.0,
         )
         reference_window_config = config_engine._monitoring_window_config_engine.build_monitoring_window_config(
             window_config_type=WindowConfigType.SPECIFIC_VALUE, specific_value=2
@@ -135,6 +139,7 @@ class TestFeatureMonitoringConfigEngine:
         )
         assert config._detection_window_config.time_offset == "1w"
         assert config._detection_window_config.window_length == "1d"
+        assert config._detection_window_config.row_percentage == 1.0
         assert (
             config._reference_window_config.window_config_type
             == WindowConfigType.SPECIFIC_VALUE
@@ -363,7 +368,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._description == DEFAULT_DESCRIPTION
         assert (
             config._feature_monitoring_type
-            == fmc.FeatureMonitoringType.SCHEDULED_STATISTICS
+            == fmc.FeatureMonitoringType.STATISTICS_MONITORING
         )
         assert (
             config._detection_window_config.window_config_type
@@ -413,7 +418,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._description is None
         assert (
             config._feature_monitoring_type
-            == fmc.FeatureMonitoringType.SCHEDULED_STATISTICS
+            == fmc.FeatureMonitoringType.STATISTICS_MONITORING
         )
         assert (
             config._detection_window_config.window_config_type
@@ -428,3 +433,65 @@ class TestFeatureMonitoringConfigEngine:
         assert config._scheduler_config.start_date_time == 1676457000000
 
     # TODO: Add unit test for the run_feature_monitoring methods when more stable
+    def test_build_default_statistics_monitoring_config(self, backend_fixtures):
+        # Arrange
+        default_config = fmc.FeatureMonitoringConfig.from_response_json(
+            backend_fixtures["feature_monitoring_config"][
+                "default_statistics_monitoring_config"
+            ]
+        )
+        config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
+        )
+
+        # Act
+        time_before = datetime.now()
+        config = config_engine._build_default_statistics_monitoring_config(
+            name=DEFAULT_NAME,
+        )
+        time_after = datetime.now()
+
+        # Assert
+        assert config._feature_store_id == default_config._feature_store_id
+        assert config._feature_group_id == default_config._feature_group_id
+        assert config._feature_view_id == default_config._feature_view_id
+        assert config.feature_name == default_config._feature_name is None
+        assert config.enabled == default_config._enabled is True
+        assert config.name == DEFAULT_NAME
+        assert config.description == default_config._description is None
+        assert (
+            config._feature_monitoring_type
+            == default_config._feature_monitoring_type
+            == fmc.FeatureMonitoringType.STATISTICS_MONITORING
+        )
+        assert (
+            config.detection_window_config.window_config_type
+            == default_config.detection_window_config.window_config_type
+            == WindowConfigType.ALL_TIME
+        )
+        assert (
+            config.detection_window_config.time_offset
+            == default_config.detection_window_config.time_offset
+            is None
+        )
+        assert (
+            config.detection_window_config.window_length
+            == default_config.detection_window_config.window_length
+            is None
+        )
+        assert (
+            config.detection_window_config.row_percentage
+            == default_config.detection_window_config.row_percentage
+            == 1.0
+        )
+        assert (
+            config.scheduler_config.job_frequency
+            == default_config.scheduler_config.job_frequency
+            == "DAILY"
+        )
+        assert (
+            convert_event_time_to_timestamp(time_before)
+            <= config.scheduler_config.start_date_time
+            <= convert_event_time_to_timestamp(time_after)
+        )
