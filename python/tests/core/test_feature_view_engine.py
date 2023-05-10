@@ -28,6 +28,7 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import fs_query
 from hsfs.core import feature_view_engine
 from hsfs.core.feature_view_engine import FeatureViewEngine
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 engine.init("python")
 fg1 = feature_group.FeatureGroup(
@@ -850,8 +851,14 @@ class TestFeatureViewEngine:
             feature_store_id=feature_store_id
         )
 
-        ss = split_statistics.SplitStatistics(name="ss", content={})
-        ss1 = split_statistics.SplitStatistics(name="ss1", content={})
+        ss = split_statistics.SplitStatistics(
+            name="ss",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
+        ss1 = split_statistics.SplitStatistics(
+            name="ss1",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
         splits = [ss, ss1]
         fv = feature_view.FeatureView(
             name="fv_name",
@@ -900,7 +907,10 @@ class TestFeatureViewEngine:
             feature_store_id=feature_store_id
         )
 
-        ss = split_statistics.SplitStatistics(name="ss", content={})
+        ss = split_statistics.SplitStatistics(
+            name="ss",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
         splits = []
         fv = feature_view.FeatureView(
             name="fv_name",
@@ -954,8 +964,14 @@ class TestFeatureViewEngine:
             feature_store_id=feature_store_id
         )
 
-        ss = split_statistics.SplitStatistics(name="ss", content={})
-        ss1 = split_statistics.SplitStatistics(name="ss1", content={})
+        ss = split_statistics.SplitStatistics(
+            name="ss",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
+        ss1 = split_statistics.SplitStatistics(
+            name="ss1",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
         splits = [ss, ss1]
         fv = feature_view.FeatureView(
             name="fv_name",
@@ -1009,9 +1025,18 @@ class TestFeatureViewEngine:
             feature_store_id=feature_store_id
         )
 
-        ss = split_statistics.SplitStatistics(name="ss", content={})
-        ss1 = split_statistics.SplitStatistics(name="ss1", content={})
-        ss2 = split_statistics.SplitStatistics(name="ss2", content={})
+        ss = split_statistics.SplitStatistics(
+            name="ss",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
+        ss1 = split_statistics.SplitStatistics(
+            name="ss1",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
+        ss2 = split_statistics.SplitStatistics(
+            name="ss2",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
         splits = [ss, ss1, ss2]
         fv = feature_view.FeatureView(
             name="fv_name",
@@ -1119,8 +1144,14 @@ class TestFeatureViewEngine:
             featurestore_id=99,
             splits={},
         )
-        ss = split_statistics.SplitStatistics(name="ss", content={})
-        ss1 = split_statistics.SplitStatistics(name="ss1", content={})
+        ss = split_statistics.SplitStatistics(
+            name="ss",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
+        ss1 = split_statistics.SplitStatistics(
+            name="ss1",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
         splits = [ss, ss1]
 
         # Act

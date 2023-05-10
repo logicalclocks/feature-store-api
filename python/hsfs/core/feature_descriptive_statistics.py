@@ -103,7 +103,7 @@ class FeatureDescriptiveStatistics:
         return cls(**json_decamelized)
 
     @classmethod
-    def from_deequ_json(cls, json_dict):
+    def from_deequ_json(cls, json_dict: dict) -> "FeatureDescriptiveStatistics":
         stats_dict = {"feature_name": json_dict["column"]}
 
         if "count" in json_dict and json_dict["count"] == 0:

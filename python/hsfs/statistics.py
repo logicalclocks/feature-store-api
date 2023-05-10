@@ -31,7 +31,6 @@ class Statistics:
         row_percentage=DEFAULT_ROW_PERCENTAGE,
         feature_descriptive_statistics=None,
         # feature group
-        # feature_group_commit_id=None,
         feature_group_id=None,
         window_start_commit_id=None,
         window_end_commit_id=None,
@@ -56,7 +55,6 @@ class Statistics:
         )
         self._row_percentage = row_percentage
         # feature group
-        # self._feature_group_commit_id = feature_group_commit_id
         self._feature_group_id = feature_group_id
         self._window_start_commit_id = window_start_commit_id
         self._window_end_commit_id = window_end_commit_id

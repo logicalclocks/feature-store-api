@@ -92,7 +92,6 @@ class FeatureMonitoringResultEngine:
             shift_detected: bool. Whether a shift is detected between the detection and reference window.
                 It is used to decide whether to trigger an alert.
             difference: Optional[float]. Difference between detection statistics and reference statistics.
-                Defaults to zero if no reference is provided.
 
         Returns:
             FeatureMonitoringResult. Saved Feature monitoring result.
@@ -265,8 +264,8 @@ class FeatureMonitoringResultEngine:
 
         Args:
             fm_config: FeatureMonitoringConfig. Feature monitoring configuration.
-            detection_statistics: List[FeatureDescriptiveStatistics]. Computed statistics from detection data.
-            reference_statistics: Optional[Union[FeatureDescriptiveStatistics, int, float]].
+            detection_statistics: Union[FeatureDescriptiveStatistics, List[FeatureDescriptiveStatistics]]. Computed statistics from detection data.
+            reference_statistics: Optional[Union[FeatureDescriptiveStatistics, List[FeatureDescriptiveStatistics], int, float]].
                 Computed statistics from reference data, or a specific value to use as reference.
 
         Returns:

@@ -28,10 +28,7 @@
           "distinctness": 0.9,
           "entropy": 0.8,
           "uniqueness": 0.7,
-          "exactNumDistinctValues": 10,
-          "startTime": 123123123,
-          "endTime": 123123124,
-          "rowPercentage": 1.0
+          "exactNumDistinctValues": 10
         },
         "referenceStatistics": {
           "id": 53,
@@ -55,10 +52,7 @@
           "distinctness": 0.9,
           "entropy": 0.8,
           "uniqueness": 0.7,
-          "exactNumDistinctValues": 10,
-          "startTime": 123123123,
-          "endTime": 123123124,
-          "rowPercentage": 1.0
+          "exactNumDistinctValues": 10
         },
         "executionId": 123,
         "shiftDetected": true,
@@ -95,10 +89,7 @@
           "distinctness": 0.9,
           "entropy": 0.8,
           "uniqueness": 0.7,
-          "exactNumDistinctValues": 10,
-          "startTime": 123123123,
-          "endTime": 123123124,
-          "rowPercentage": 1.0
+          "exactNumDistinctValues": 10
         },
         "executionId": 123,
         "shiftDetected": true,
@@ -137,10 +128,7 @@
           "distinctness": 0.9,
           "entropy": 0.8,
           "uniqueness": 0.7,
-          "exactNumDistinctValues": 10,
-          "startTime": 123123123,
-          "endTime": 123123124,
-          "rowPercentage": 1.0
+          "exactNumDistinctValues": 10
         },
         "referenceStatistics": {
           "id": 53,
@@ -164,10 +152,7 @@
           "distinctness": 0.9,
           "entropy": 0.8,
           "uniqueness": 0.7,
-          "exactNumDistinctValues": 10,
-          "startTime": 123123123,
-          "endTime": 123123124,
-          "rowPercentage": 1.0
+          "exactNumDistinctValues": 10
         },
         "executionId": 123,
         "shiftDetected": true,
@@ -204,10 +189,7 @@
           "distinctness": 0.9,
           "entropy": 0.8,
           "uniqueness": 0.7,
-          "exactNumDistinctValues": 10,
-          "startTime": 123123123,
-          "endTime": 123123124,
-          "rowPercentage": 1.0
+          "exactNumDistinctValues": 10
         },
         "executionId": 123,
         "shiftDetected": true,
@@ -290,10 +272,7 @@
               "distinctness": 0.9,
               "entropy": 0.8,
               "uniqueness": 0.7,
-              "exactNumDistinctValues": 10,
-              "startTime": 123123123,
-              "endTime": 123123124,
-              "rowPercentage": 1.0
+              "exactNumDistinctValues": 10
             },
             "referenceStatistics": {
               "id": 53,
@@ -317,10 +296,7 @@
               "distinctness": 0.9,
               "entropy": 0.8,
               "uniqueness": 0.7,
-              "exactNumDistinctValues": 10,
-              "startTime": 123123123,
-              "endTime": 123123124,
-              "rowPercentage": 1.0
+              "exactNumDistinctValues": 10
             },
             "executionId": 123,
             "shiftDetected": true,
@@ -362,10 +338,7 @@
               "distinctness": 0.9,
               "entropy": 0.8,
               "uniqueness": 0.7,
-              "exactNumDistinctValues": 10,
-              "startTime": 123123123,
-              "endTime": 123123124,
-              "rowPercentage": 1.0
+              "exactNumDistinctValues": 10
             },
             "executionId": 123,
             "shiftDetected": true,
