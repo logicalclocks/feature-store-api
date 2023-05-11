@@ -2863,7 +2863,7 @@ class SpineGroup(FeatureGroupBase):
         href=None,
         online_topic_name=None,
         spine=True,
-        dataframe=None,
+        dataframe="spine",
     ):
         super().__init__(
             featurestore_id,

@@ -247,6 +247,8 @@ class Engine:
                 )
 
             return lowercase_dataframe
+        if dataframe == "spine":
+            return None
 
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: spark rdds, spark dataframes, "
