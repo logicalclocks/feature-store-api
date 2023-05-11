@@ -1333,6 +1333,15 @@ class FeatureGroupBase:
             if field["name"] == feature_name:
                 return json.dumps(field["type"])
 
+    @property
+    def features(self):
+        """Schema information."""
+        return self._features
+
+    @features.setter
+    def features(self, new_features):
+        self._features = new_features
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -2391,11 +2400,6 @@ class FeatureGroup(FeatureGroupBase):
         return self._description
 
     @property
-    def features(self):
-        """Schema information."""
-        return self._features
-
-    @property
     def time_travel_format(self):
         """Setting of the feature group time travel format."""
         return self._time_travel_format
@@ -2458,10 +2462,6 @@ class FeatureGroup(FeatureGroupBase):
     @description.setter
     def description(self, new_description):
         self._description = new_description
-
-    @features.setter
-    def features(self, new_features):
-        self._features = new_features
 
     @time_travel_format.setter
     def time_travel_format(self, new_time_travel_format):
@@ -2788,10 +2788,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         return self._description
 
     @property
-    def features(self):
-        return self._features
-
-    @property
     def query(self):
         return self._query
 
@@ -2826,10 +2822,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
     @description.setter
     def description(self, new_description):
         self._description = new_description
-
-    @features.setter
-    def features(self, new_features):
-        self._features = new_features
 
     @property
     def feature_store_name(self):
