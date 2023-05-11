@@ -219,7 +219,7 @@ public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView,
       throws FeatureStoreException, IOException {
     if (trainingDataset.getStatisticsConfig().getEnabled()) {
       if (trainingDataset.getSplits() != null && !trainingDataset.getSplits().isEmpty()) {
-        return statisticsEngine.registerSplitStatistics(
+        return statisticsEngine.computeAndSaveSplitStatistics(
             featureView, trainingDataset, convertSplitDatasetsToMap(trainingDataset.getSplits(), datasets));
       } else {
         return statisticsEngine.computeStatistics(featureView, trainingDataset, datasets[0]);

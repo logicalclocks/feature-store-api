@@ -23,26 +23,19 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Collection;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class Statistics extends RestDto<Statistics> {
-
-  @Getter
-  @Setter
   private Long commitTime;
+  private Double rowPercentage;
+  private Collection<FeatureDescriptiveStatistics> featureDescriptiveStatistics;
 
-  @Getter
-  @Setter
   private Long featureGroupCommitId;
-
-  @Getter
-  @Setter
-  private String content;
-
-  @Getter
-  @Setter
   private List<SplitStatistics> splitStatistics;
 }

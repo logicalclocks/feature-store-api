@@ -28,6 +28,8 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import fs_query
 from hsfs.core import feature_view_engine
 from hsfs.constructor.query import Query
+from hsfs.core.feature_view_engine import FeatureViewEngine
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 engine.init("python")
 fg1 = feature_group.FeatureGroup(
@@ -853,8 +855,14 @@ class TestFeatureViewEngine:
             feature_store_id=feature_store_id
         )
 
-        ss = split_statistics.SplitStatistics(name="ss", content={})
-        ss1 = split_statistics.SplitStatistics(name="ss1", content={})
+        ss = split_statistics.SplitStatistics(
+            name="ss",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
+        ss1 = split_statistics.SplitStatistics(
+            name="ss1",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
         splits = [ss, ss1]
         fv = feature_view.FeatureView(
             name="fv_name",
@@ -903,7 +911,10 @@ class TestFeatureViewEngine:
             feature_store_id=feature_store_id
         )
 
-        ss = split_statistics.SplitStatistics(name="ss", content={})
+        ss = split_statistics.SplitStatistics(
+            name="ss",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
         splits = []
         fv = feature_view.FeatureView(
             name="fv_name",
@@ -957,8 +968,14 @@ class TestFeatureViewEngine:
             feature_store_id=feature_store_id
         )
 
-        ss = split_statistics.SplitStatistics(name="ss", content={})
-        ss1 = split_statistics.SplitStatistics(name="ss1", content={})
+        ss = split_statistics.SplitStatistics(
+            name="ss",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
+        ss1 = split_statistics.SplitStatistics(
+            name="ss1",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
         splits = [ss, ss1]
         fv = feature_view.FeatureView(
             name="fv_name",
@@ -1012,9 +1029,18 @@ class TestFeatureViewEngine:
             feature_store_id=feature_store_id
         )
 
-        ss = split_statistics.SplitStatistics(name="ss", content={})
-        ss1 = split_statistics.SplitStatistics(name="ss1", content={})
-        ss2 = split_statistics.SplitStatistics(name="ss2", content={})
+        ss = split_statistics.SplitStatistics(
+            name="ss",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
+        ss1 = split_statistics.SplitStatistics(
+            name="ss1",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
+        ss2 = split_statistics.SplitStatistics(
+            name="ss2",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
         splits = [ss, ss1, ss2]
         fv = feature_view.FeatureView(
             name="fv_name",
@@ -1122,8 +1148,14 @@ class TestFeatureViewEngine:
             featurestore_id=99,
             splits={},
         )
-        ss = split_statistics.SplitStatistics(name="ss", content={})
-        ss1 = split_statistics.SplitStatistics(name="ss1", content={})
+        ss = split_statistics.SplitStatistics(
+            name="ss",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
+        ss1 = split_statistics.SplitStatistics(
+            name="ss1",
+            feature_descriptive_statistics=[FeatureDescriptiveStatistics("amount")],
+        )
         splits = [ss, ss1]
 
         # Act
@@ -1452,8 +1484,10 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_s_engine.return_value.register_split_statistics.call_count == 0
-        assert mock_s_engine.return_value.compute_statistics.call_count == 0
+        assert (
+            mock_s_engine.return_value.compute_and_save_split_statistics.call_count == 0
+        )
+        assert mock_s_engine.return_value.compute_and_save_statistics.call_count == 0
 
     def test_compute_training_dataset_statistics_enabled(self, mocker):
         # Arrange
@@ -1482,8 +1516,10 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_s_engine.return_value.register_split_statistics.call_count == 0
-        assert mock_s_engine.return_value.compute_statistics.call_count == 0
+        assert (
+            mock_s_engine.return_value.compute_and_save_split_statistics.call_count == 0
+        )
+        assert mock_s_engine.return_value.compute_and_save_statistics.call_count == 0
 
     def test_compute_training_dataset_statistics_enabled_calc_stat(self, mocker):
         # Arrange
@@ -1512,8 +1548,10 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_s_engine.return_value.register_split_statistics.call_count == 0
-        assert mock_s_engine.return_value.compute_statistics.call_count == 1
+        assert (
+            mock_s_engine.return_value.compute_and_save_split_statistics.call_count == 0
+        )
+        assert mock_s_engine.return_value.compute_and_save_statistics.call_count == 1
 
     def test_compute_training_dataset_statistics_enabled_calc_stat_splits(self, mocker):
         # Arrange
@@ -1550,8 +1588,10 @@ class TestFeatureViewEngine:
             str(e_info.value)
             == "Provided dataframes should be in dict format 'split': dataframe"
         )
-        assert mock_s_engine.return_value.register_split_statistics.call_count == 0
-        assert mock_s_engine.return_value.compute_statistics.call_count == 0
+        assert (
+            mock_s_engine.return_value.compute_and_save_split_statistics.call_count == 0
+        )
+        assert mock_s_engine.return_value.compute_and_save_statistics.call_count == 0
 
     def test_compute_training_dataset_statistics_enabled_calc_stat_splits_td_df(
         self, mocker
@@ -1582,8 +1622,10 @@ class TestFeatureViewEngine:
         )
 
         # Assert
-        assert mock_s_engine.return_value.register_split_statistics.call_count == 1
-        assert mock_s_engine.return_value.compute_statistics.call_count == 0
+        assert (
+            mock_s_engine.return_value.compute_and_save_split_statistics.call_count == 1
+        )
+        assert mock_s_engine.return_value.compute_and_save_statistics.call_count == 0
 
     def test_get_training_data_metadata(self, mocker):
         # Arrange
