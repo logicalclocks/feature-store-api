@@ -903,6 +903,22 @@ class FeatureStore:
             online_enabled=online_enabled,
         )
 
+    def create_spine_group(
+        self, name, version, description, primary_key, event_time, features, dataframe
+    ):
+        spine = feature_group.SpineGroup(
+            name=name,
+            version=version,
+            description=description,
+            primary_key=primary_key,
+            event_time=event_time,
+            features=features,
+            dataframe=dataframe,
+            featurestore_id=self._id,
+            featurestore_name=self._name,
+        )
+        return spine._save()
+
     def create_training_dataset(
         self,
         name: str,

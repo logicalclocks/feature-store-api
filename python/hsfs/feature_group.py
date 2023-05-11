@@ -42,6 +42,7 @@ from hsfs.core import (
     validation_report_engine,
     code_engine,
     external_feature_group_engine,
+    spine_group_engine,
     validation_result_engine,
     job_api,
 )
@@ -2511,6 +2512,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         online_enabled=False,
         href=None,
         online_topic_name=None,
+        spine=False,
     ):
         super().__init__(
             featurestore_id,
@@ -2766,6 +2768,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "eventTime": self._event_time,
             "expectationSuite": self._expectation_suite,
             "onlineEnabled": self._online_enabled,
+            "spine": False,
         }
 
     @property
@@ -2837,3 +2840,151 @@ class ExternalFeatureGroup(FeatureGroupBase):
     def feature_store_id(self):
         """Id of the feature store in which the feature group is located."""
         return self._feature_store_id
+
+
+class SpineGroup(FeatureGroupBase):
+    SPINE_GROUP = "ON_DEMAND_FEATURE_GROUP"
+    ENTITY_TYPE = "featuregroups"
+
+    def __init__(
+        self,
+        storage_connector=None,
+        query=None,
+        data_format=None,
+        path=None,
+        options={},
+        name=None,
+        version=None,
+        description=None,
+        primary_key=None,
+        featurestore_id=None,
+        featurestore_name=None,
+        created=None,
+        creator=None,
+        id=None,
+        features=None,
+        location=None,
+        statistics_config=None,
+        event_time=None,
+        expectation_suite=None,
+        online_enabled=False,
+        href=None,
+        online_topic_name=None,
+        spine=True,
+        dataframe=None,
+    ):
+        super().__init__(
+            featurestore_id,
+            location,
+            event_time=event_time,
+            online_enabled=online_enabled,
+            id=id,
+            expectation_suite=expectation_suite,
+            online_topic_name=online_topic_name,
+        )
+
+        self._feature_store_name = featurestore_name
+        self._description = description
+        self._created = created
+        self._creator = user.User.from_response_json(creator)
+        self._version = version
+        self._name = name
+        self._dataframe = dataframe
+
+        self._features = [
+            feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
+            for feat in (features or [])
+        ]
+
+        self._feature_group_engine = spine_group_engine.SpineGroupEngine(
+            featurestore_id
+        )
+
+        if self._id:
+            # Got from Hopsworks, deserialize features and storage connector
+            self._features = (
+                [
+                    feature.Feature.from_response_json(feat)
+                    if isinstance(feat, dict)
+                    else feat
+                    for feat in features
+                ]
+                if features
+                else None
+            )
+            self.primary_key = (
+                [feat.name for feat in self._features if feat.primary is True]
+                if self._features
+                else []
+            )
+            self.statistics_config = statistics_config
+        else:
+            self.primary_key = primary_key
+            self.statistics_config = statistics_config
+            self._features = features
+
+        self._href = href
+
+    def _save(self):
+        """Persist the metadata for this external feature group.
+
+        Without calling this method, your feature group will only exist
+        in your Python Kernel, but not in Hopsworks.
+
+        ```python
+        query = "SELECT * FROM sales"
+
+        fg = feature_store.create_external_feature_group(name="sales",
+            version=1,
+            description="Physical shop sales features",
+            query=query,
+            storage_connector=connector,
+            primary_key=['ss_store_sk'],
+            event_time='sale_date'
+        )
+
+        fg.save()
+        """
+        self._feature_group_engine.save(self)
+
+    @property
+    def dataframe(self):
+        return self._dataframe
+
+    @dataframe.setter
+    def dataframe(self, dataframe):
+        self._dataframe = dataframe
+
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        if isinstance(json_decamelized, dict):
+            _ = json_decamelized.pop("type", None)
+            return cls(**json_decamelized)
+        for fg in json_decamelized:
+            _ = fg.pop("type", None)
+        return [cls(**fg) for fg in json_decamelized]
+
+    def update_from_response_json(self, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        if "type" in json_decamelized:
+            _ = json_decamelized.pop("type")
+        self.__init__(**json_decamelized)
+        return self
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def to_dict(self):
+        return {
+            "id": self._id,
+            "name": self._name,
+            "description": self._description,
+            "version": self._version,
+            "features": self._features,
+            "featurestoreId": self._feature_store_id,
+            "type": "onDemandFeaturegroupDTO",
+            "statisticsConfig": self._statistics_config,
+            "eventTime": self._event_time,
+            "spine": True,
+        }
