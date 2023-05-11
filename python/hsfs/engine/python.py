@@ -341,8 +341,8 @@ class Engine:
                 self.get_job_url(job.href)
             )
         )
-
         self.wait_for_job(job)
+        return job
 
     def profile(
         self,
