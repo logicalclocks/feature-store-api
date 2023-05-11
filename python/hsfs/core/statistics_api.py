@@ -28,18 +28,20 @@ class StatisticsApi:
         :type entity_type: str
         """
         self._feature_store_id = feature_store_id
-        self._entity_type = entity_type
+        self._entity_type = entity_type  # TODO: Support FV
 
-    def post(self, metadata_instance, statistics, training_dataset_version):
+    def post(self, metadata_instance, stats, training_dataset_version):
         _client = client.get_instance()
         path_params = self.get_path(metadata_instance, training_dataset_version)
 
         headers = {"content-type": "application/json"}
-        _client._send_request(
-            "POST", path_params, headers=headers, data=statistics.json()
+        return statistics.Statistics.from_response_json(
+            _client._send_request(
+                "POST", path_params, headers=headers, data=stats.json()
+            )
         )
 
-    def get(
+    def get_by_commit_time(
         self,
         metadata_instance,
         commit_timestamp,
@@ -61,8 +63,10 @@ class StatisticsApi:
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
-    def get_last(self, metadata_instance, for_transformation, training_dataset_version):
-        """Gets the statistics of the last commit for an instance."""
+    def get_last_computed(
+        self, metadata_instance, for_transformation, training_dataset_version
+    ):
+        """Gets the statistics of the last commit time for an instance."""
         _client = client.get_instance()
         path_params = self.get_path(metadata_instance, training_dataset_version)
         headers = {"content-type": "application/json"}
@@ -78,27 +82,31 @@ class StatisticsApi:
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
-    def get_by_feature_name_time_window_and_row_percentage(
-        self, metadata_instance, feature_name, start_time, end_time, row_percentage
+    def get_by_commit_time_window(
+        self,
+        metadata_instance,
+        start_time,
+        end_time,
+        feature_name=None,
+        row_percentage=None,
     ):
-        """Gets statistics based on a commit time window and row percentage"""
-        # TODO: Fetch existing statistics and return them here if they are found
-        # _client = client.get_instance()
-        # path_params = self.get_path(metadata_instance)
-        # headers = {"content-type": "application/json"}
-        # query_params = {
-        #     "feature": feature_name,  # TODO: Or using endpoint .../statistics/feature/{name}
-        #     "start_time": start_time,
-        #     "end_time": end_time,
-        #     "row_percentage": row_percentage,
-        # }
+        """Gets statistics based on a commit time window and optionally feature name and row percentage"""
+        _client = client.get_instance()
+        path_params = self.get_path(metadata_instance)
+        headers = {"content-type": "application/json"}
+        query_params = {
+            "start_time": start_time,
+            "end_time": end_time,
+            "fields": "content",
+        }
+        if feature_name is not None:
+            query_params["feature_name"] = feature_name
+        if row_percentage is not None:
+            query_params["row_percentage"] = row_percentage
 
-        # TODO: Backend implementation
-        # return statistics.Statistics.from_response_json(
-        #     _client._send_request("GET", path_params, query_params, headers=headers)
-        # )
-
-        return None
+        return statistics.Statistics.from_response_json(
+            _client._send_request("GET", path_params, query_params, headers=headers)
+        )
 
     def compute(self, metadata_instance, training_dataset_version=None):
         _client = client.get_instance()
@@ -110,7 +118,7 @@ class StatisticsApi:
     def get_path(self, metadata_instance, training_dataset_version=None):
         _client = client.get_instance()
         if isinstance(metadata_instance, feature_view.FeatureView):
-            return [
+            path = [
                 "project",
                 _client._project_id,
                 "featurestores",
@@ -119,11 +127,14 @@ class StatisticsApi:
                 metadata_instance.name,
                 "version",
                 metadata_instance.version,
-                "trainingdatasets",
-                "version",
-                training_dataset_version,
-                "statistics",
             ]
+            if training_dataset_version is not None:
+                path += [
+                    "trainingdatasets",
+                    "version",
+                    training_dataset_version,
+                ]
+            return path + ["statistics"]
         else:
             return [
                 "project",

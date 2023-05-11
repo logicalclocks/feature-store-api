@@ -478,13 +478,13 @@ class FeatureViewEngine:
                         "Provided dataframes should be in dict format "
                         "'split': dataframe"
                     )
-                return self._statistics_engine.register_split_statistics(
+                return self._statistics_engine.compute_and_save_split_statistics(
                     training_dataset_obj,
                     feature_dataframes=td_df,
                     feature_view_obj=feature_view_obj,
                 )
             else:
-                return self._statistics_engine.compute_statistics(
+                return self._statistics_engine.compute_and_save_statistics(
                     training_dataset_obj,
                     features_dataframe=td_df,
                     feature_view_obj=feature_view_obj,

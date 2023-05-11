@@ -28,7 +28,7 @@ import java.util.List;
 public abstract class RestDto<D> {
 
   protected List<D> items = new ArrayList<>();
-  protected Integer count = null;
+  protected Long count = null;
 
   public RestDto() {
   }
@@ -41,11 +41,11 @@ public abstract class RestDto<D> {
     this.items = items;
   }
 
-  public void setCount(Integer count) {
+  public void setCount(Long count) {
     this.count = count;
   }
 
-  public Integer getCount() {
+  public Long getCount() {
     return count;
   }
 
