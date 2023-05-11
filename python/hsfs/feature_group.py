@@ -2881,7 +2881,9 @@ class SpineGroup(FeatureGroupBase):
         self._creator = user.User.from_response_json(creator)
         self._version = version
         self._name = name
-        self._dataframe = dataframe
+
+        # use setter to convert to default dataframe type for engine
+        self.dataframe = dataframe
 
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
@@ -2945,7 +2947,7 @@ class SpineGroup(FeatureGroupBase):
 
     @dataframe.setter
     def dataframe(self, dataframe):
-        self._dataframe = dataframe
+        self._dataframe = engine.get_instance().convert_to_default_dataframe(dataframe)
 
     @classmethod
     def from_response_json(cls, json_dict):
