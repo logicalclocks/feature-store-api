@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 
 from hsfs.core import monitoring_window_config as mwc
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.util import convert_event_time_to_timestamp
 from hsfs import feature_group, feature_view
 from hsfs.core import statistics_engine
 
@@ -163,12 +164,12 @@ class MonitoringWindowConfigEngine:
             feature_store_id=entity.feature_store_id,
             entity_type=entity.ENTITY_TYPE,
         )
-        return the_statistics_engine.get_by_feature_name_time_window_and_row_percentage(
+        return the_statistics_engine.get_by_commit_time_window(
             entity,
-            feature_name,
-            start_time,
-            end_time,
-            monitoring_window_config.row_percentage,
+            start_time=start_time,
+            end_time=end_time,
+            feature_name=feature_name,
+            row_percentage=monitoring_window_config.row_percentage,
         )
 
     def time_range_str_to_time_delta(
@@ -211,13 +212,13 @@ class MonitoringWindowConfigEngine:
     def get_window_start_end_times(
         self,
         monitoring_window_config: "mwc.MonitoringWindowConfig",
-    ) -> Tuple[Optional[datetime], datetime]:
+    ) -> Tuple[Optional[int], int]:
         end_time = datetime.now()
         if monitoring_window_config.window_config_type not in [
             mwc.WindowConfigType.ROLLING_TIME,
             mwc.WindowConfigType.ALL_TIME,
         ]:
-            return (None, end_time)
+            return (None, convert_event_time_to_timestamp(end_time))
 
         if monitoring_window_config.time_offset is not None:
             time_offset = self.time_range_str_to_time_delta(
@@ -226,17 +227,19 @@ class MonitoringWindowConfigEngine:
             start_time = datetime.now() - time_offset
         else:
             # case where time_offset is None and window_length is None
-            return (None, end_time)
+            return (None, convert_event_time_to_timestamp(end_time))
 
         if monitoring_window_config.window_length is not None:
             window_length = self.time_range_str_to_time_delta(
                 monitoring_window_config.window_length
             )
-            return (
-                start_time,
+            end_time = (
                 start_time + window_length
                 if start_time + window_length < end_time
-                else end_time,
+                else end_time
             )
-        else:
-            return (start_time, end_time)
+
+        return (
+            convert_event_time_to_timestamp(start_time),
+            convert_event_time_to_timestamp(end_time),
+        )

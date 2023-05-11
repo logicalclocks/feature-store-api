@@ -23,15 +23,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Collection;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class SplitStatistics {
-  @Getter
-  @Setter
   private String name;
-
-  @Getter
-  @Setter
-  private String content;
+  private Collection<FeatureDescriptiveStatistics> featureDescriptiveStatistics;
 }
