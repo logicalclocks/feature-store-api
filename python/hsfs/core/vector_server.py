@@ -459,10 +459,12 @@ class VectorServer:
                     "or `feature_view.init_batch_scoring(version)` to pass the training dataset version."
                     "Training data can be created by `feature_view.create_training_data` or `feature_view.get_training_data`."
                 )
-            td_tffn_stats = self._feature_view_engine._statistics_engine.get_last(
-                entity,
-                for_transformation=True,
-                training_dataset_version=self._training_dataset_version,
+            td_tffn_stats = (
+                self._feature_view_engine._statistics_engine.get_last_computed(
+                    entity,
+                    for_transformation=True,
+                    training_dataset_version=self._training_dataset_version,
+                )
             )
 
         if is_stat_required and td_tffn_stats is None:
