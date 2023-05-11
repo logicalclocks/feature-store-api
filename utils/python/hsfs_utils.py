@@ -220,13 +220,21 @@ def run_feature_monitoring(job_conf: Dict[str, str]) -> None:
         )
     )
 
-    monitoring_config_engine.run_feature_monitoring(
-        entity=entity,
-        config_name=job_conf["config_name"],
-        result_engine=monitoring_result_engine,
-    )
-
-    assert isinstance(fs, hsfs.feature_store.FeatureStore)
+    try:
+        monitoring_config_engine.run_feature_monitoring(
+            entity=entity,
+            config_name=job_conf["config_name"],
+            result_engine=monitoring_result_engine,
+        )
+    except Exception as e:
+        config = monitoring_config_engine.get_feature_monitoring_configs(
+            name=job_conf["config_name"]
+        )
+        monitoring_result_engine.save_feature_monitoring_result_with_exception(
+            config_id=config.id,
+            job_name=config.job_name,
+        )
+        raise e
 
 
 if __name__ == "__main__":
