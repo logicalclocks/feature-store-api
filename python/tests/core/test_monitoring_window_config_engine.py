@@ -15,6 +15,7 @@
 #
 from hsfs.core import monitoring_window_config_engine as mwce
 from hsfs.core import monitoring_window_config as mwc
+from hsfs.util import convert_event_time_to_timestamp
 
 import pytest
 from datetime import timedelta, datetime
@@ -98,12 +99,12 @@ class TestMonitoringWindowConfigEngine:
         )
 
         # Act
-        before_time = datetime.now()
+        before_time = convert_event_time_to_timestamp(datetime.now())
         (
             start_time,
             end_time,
         ) = monitoring_window_config_engine.get_window_start_end_times(config)
-        after_time = datetime.now()
+        after_time = convert_event_time_to_timestamp(datetime.now())
 
         # Assert
         assert start_time is None
@@ -118,17 +119,20 @@ class TestMonitoringWindowConfigEngine:
         )
 
         # Act
-        before_time = datetime.now()
+        before_time = convert_event_time_to_timestamp(datetime.now())
         (
             start_time,
             end_time,
         ) = monitoring_window_config_engine.get_window_start_end_times(config)
-        after_time = datetime.now()
+        after_time = convert_event_time_to_timestamp(datetime.now())
 
         # Assert
         assert (
             before_time
-            <= start_time + timedelta(weeks=1, days=1, hours=1)
+            <= (
+                start_time
+                + (timedelta(weeks=1, days=1, hours=1).total_seconds() * 1000)
+            )
             <= after_time
         )
         assert before_time <= end_time <= after_time
@@ -143,16 +147,28 @@ class TestMonitoringWindowConfigEngine:
         )
 
         # Act
-        before_time = datetime.now() - timedelta(seconds=1)
+        before_time = convert_event_time_to_timestamp(
+            datetime.now() - timedelta(seconds=1)
+        )
         (
             start_time,
             end_time,
         ) = monitoring_window_config_engine.get_window_start_end_times(config)
-        after_time = datetime.now() + timedelta(seconds=1)
+        after_time = convert_event_time_to_timestamp(
+            datetime.now() + timedelta(seconds=1)
+        )
 
         # Assert
-        assert before_time <= start_time + timedelta(weeks=2, days=1) <= after_time
-        assert before_time <= end_time + timedelta(weeks=2) <= after_time
+        assert (
+            before_time
+            <= start_time + (timedelta(weeks=2, days=1).total_seconds() * 1000)
+            <= after_time
+        )
+        assert (
+            before_time
+            <= end_time + (timedelta(weeks=2).total_seconds() * 1000)
+            <= after_time
+        )
 
     def test_get_window_start_end_times_rolling_time_long_window_length(self):
         # Arrange
@@ -164,13 +180,21 @@ class TestMonitoringWindowConfigEngine:
         )
 
         # Act
-        before_time = datetime.now() - timedelta(seconds=1)
+        before_time = convert_event_time_to_timestamp(
+            datetime.now() - timedelta(seconds=1)
+        )
         (
             start_time,
             end_time,
         ) = monitoring_window_config_engine.get_window_start_end_times(config)
-        after_time = datetime.now() + timedelta(seconds=1)
+        after_time = convert_event_time_to_timestamp(
+            datetime.now() + timedelta(seconds=1)
+        )
 
         # Assert
-        assert before_time <= start_time + timedelta(days=1) <= after_time
+        assert (
+            before_time
+            <= start_time + (timedelta(days=1).total_seconds() * 1000)
+            <= after_time
+        )
         assert before_time <= end_time <= after_time

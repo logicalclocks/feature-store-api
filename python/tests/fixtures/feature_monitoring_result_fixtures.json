@@ -28,10 +28,7 @@
           "distinctness": 0.9,
           "entropy": 0.8,
           "uniqueness": 0.7,
-          "exactNumDistinctValues": 10,
-          "startTime": 123123123,
-          "endTime": 123123124,
-          "rowPercentage": 1.0
+          "exactNumDistinctValues": 10
         },
         "referenceStatistics": {
           "id": 53,
@@ -55,10 +52,7 @@
           "distinctness": 0.9,
           "entropy": 0.8,
           "uniqueness": 0.7,
-          "exactNumDistinctValues": 10,
-          "startTime": 123123123,
-          "endTime": 123123124,
-          "rowPercentage": 1.0
+          "exactNumDistinctValues": 10
         },
         "executionId": 123,
         "shiftDetected": true,
@@ -95,10 +89,7 @@
           "distinctness": 0.9,
           "entropy": 0.8,
           "uniqueness": 0.7,
-          "exactNumDistinctValues": 10,
-          "startTime": 123123123,
-          "endTime": 123123124,
-          "rowPercentage": 1.0
+          "exactNumDistinctValues": 10
         },
         "executionId": 123,
         "shiftDetected": true,
@@ -137,10 +128,7 @@
           "distinctness": 0.9,
           "entropy": 0.8,
           "uniqueness": 0.7,
-          "exactNumDistinctValues": 10,
-          "startTime": 123123123,
-          "endTime": 123123124,
-          "rowPercentage": 1.0
+          "exactNumDistinctValues": 10
         },
         "referenceStatistics": {
           "id": 53,
@@ -164,10 +152,7 @@
           "distinctness": 0.9,
           "entropy": 0.8,
           "uniqueness": 0.7,
-          "exactNumDistinctValues": 10,
-          "startTime": 123123123,
-          "endTime": 123123124,
-          "rowPercentage": 1.0
+          "exactNumDistinctValues": 10
         },
         "executionId": 123,
         "shiftDetected": true,
@@ -204,10 +189,7 @@
           "distinctness": 0.9,
           "entropy": 0.8,
           "uniqueness": 0.7,
-          "exactNumDistinctValues": 10,
-          "startTime": 123123123,
-          "endTime": 123123124,
-          "rowPercentage": 1.0
+          "exactNumDistinctValues": 10
         },
         "executionId": 123,
         "shiftDetected": true,
@@ -227,8 +209,8 @@
             "featureStoreId": 67,
             "configId": 32,
             "featureName": "amount",
-            "detectionStatsId": 52,
-            "referenceStatsId": 53,
+            "detectionStatisticsId": 52,
+            "referenceStatisticsId": 53,
             "executionId": 123,
             "shiftDetected": true,
             "difference": 0.3,
@@ -247,7 +229,7 @@
             "featureStoreId": 67,
             "configId": 32,
             "featureName": "amount",
-            "detectionStatsId": 52,
+            "detectionStatisticsId": 52,
             "executionId": 123,
             "shiftDetected": true,
             "difference": 0.3,
@@ -290,10 +272,7 @@
               "distinctness": 0.9,
               "entropy": 0.8,
               "uniqueness": 0.7,
-              "exactNumDistinctValues": 10,
-              "startTime": 123123123,
-              "endTime": 123123124,
-              "rowPercentage": 1.0
+              "exactNumDistinctValues": 10
             },
             "referenceStatistics": {
               "id": 53,
@@ -317,10 +296,7 @@
               "distinctness": 0.9,
               "entropy": 0.8,
               "uniqueness": 0.7,
-              "exactNumDistinctValues": 10,
-              "startTime": 123123123,
-              "endTime": 123123124,
-              "rowPercentage": 1.0
+              "exactNumDistinctValues": 10
             },
             "executionId": 123,
             "shiftDetected": true,
@@ -362,10 +338,7 @@
               "distinctness": 0.9,
               "entropy": 0.8,
               "uniqueness": 0.7,
-              "exactNumDistinctValues": 10,
-              "startTime": 123123123,
-              "endTime": 123123124,
-              "rowPercentage": 1.0
+              "exactNumDistinctValues": 10
             },
             "executionId": 123,
             "shiftDetected": true,
