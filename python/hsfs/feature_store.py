@@ -17,11 +17,13 @@
 
 import warnings
 import datetime
-from typing import Optional, Union, List, Dict
+from typing import Optional, Union, List, Dict, TypeVar
 
 import humps
 import numpy
 import great_expectations as ge
+import pandas as pd
+import numpy as np
 
 from hsfs.transformation_function import TransformationFunction
 from hsfs.client import exceptions
@@ -904,7 +906,20 @@ class FeatureStore:
         )
 
     def create_spine_group(
-        self, name, version, description, primary_key, event_time, features, dataframe
+        self,
+        name: str,
+        version: Optional[int] = None,
+        description: Optional[str] = "",
+        primary_key: Optional[List[str]] = [],
+        event_time: Optional[str] = None,
+        features: Optional[List[feature.Feature]] = [],
+        dataframe: Union[
+            pd.DataFrame,
+            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+            TypeVar("pyspark.RDD"),  # noqa: F821
+            np.ndarray,
+            List[list],
+        ] = None,
     ):
         spine = feature_group.SpineGroup(
             name=name,
