@@ -28,6 +28,9 @@ from hsfs.core import monitoring_window_config_engine
 from hsfs.core import feature_monitoring_config_engine
 from hsfs.core import feature_monitoring_result_engine
 
+MAX_LENGTH_NAME = 63
+MAX_LENGTH_DESCRIPTION = 2000
+
 
 class FeatureMonitoringType(str):
     STATISTICS_COMPARISON = "STATISTICS_COMPARISON"
@@ -59,13 +62,13 @@ class FeatureMonitoringConfig:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
         href: Optional[str] = None,
+        transformation_function_dataset_version: Optional[int] = None,
+        use_event_time: Optional[bool] = False,
     ):
         self._id = id
         self._href = href
-        # TODO: Validate name and description string length and character set
-        # in setter to avoid issues with the backend
-        self._name = name
-        self._description = description
+        self.name = name
+        self.description = description
         self._feature_name = feature_name
         self._feature_store_id = feature_store_id
         self._feature_group_id = feature_group_id
@@ -73,6 +76,10 @@ class FeatureMonitoringConfig:
         self._job_name = job_name
         self._feature_monitoring_type = feature_monitoring_type
         self._enabled = enabled
+        self._transformation_function_dataset_version = (
+            transformation_function_dataset_version
+        )
+        self._use_event_time = use_event_time
 
         self._feature_monitoring_config_engine = (
             feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
@@ -154,6 +161,10 @@ class FeatureMonitoringConfig:
             the_dict["featureGroupId"] = self._feature_group_id
         elif self._feature_view_id is not None:
             the_dict["featureViewId"] = self._feature_view_id
+            the_dict["useEventTime"] = self._use_event_time
+            the_dict[
+                "transformationFunctionDatasetVersion"
+            ] = self._transformation_function_dataset_version
 
         if self._feature_monitoring_type == "STATISTICS_MONITORING":
             return the_dict
@@ -577,11 +588,24 @@ class FeatureMonitoringConfig:
         return self._feature_view_id
 
     @property
-    def feature_name(self) -> str:
+    def feature_name(self) -> Optional[str]:
+        """The name of the feature to monitor. If not set, all features of the
+        feature group or feature view are monitored, only available for statistics monitoring.
+
+        !!! note
+            This property is read-only after the feature monitoring config has been saved.
+        """
         return self._feature_name
 
     @property
     def name(self) -> str:
+        """The name of the feature monitoring config.
+
+        A Feature Group or Feature View cannot have multiple feature monitoring configs with the same name.
+
+        !!! note
+            This property is read-only after the feature monitoring config has been saved.
+        """
         return self._name
 
     @name.setter
@@ -590,6 +614,8 @@ class FeatureMonitoringConfig:
             raise AttributeError("The name of a registered config is read-only.")
         elif not isinstance(name, str):
             raise TypeError("name must be of type str")
+        if len(name) > MAX_LENGTH_NAME:
+            raise ValueError("name must be less than {MAX_LENGTH_NAME} characters.")
         self._name = name
 
     @property
@@ -600,8 +626,10 @@ class FeatureMonitoringConfig:
     def description(self, description: Optional[str]):
         if not isinstance(description, str) and description is not None:
             raise TypeError("description must be of type str")
-        elif isinstance(description, str) and len(description) > 2000:
-            raise ValueError("description must be less than 2000 characters")
+        elif isinstance(description, str) and len(description) > MAX_LENGTH_DESCRIPTION:
+            raise ValueError(
+                "description must be less than {MAX_LENGTH_DESCRIPTION} characters"
+            )
         self._description = description
 
     @property
@@ -622,6 +650,14 @@ class FeatureMonitoringConfig:
             )
         self._enabled = enabled
         self._scheduler_config._enabled = enabled
+
+    @property
+    def use_event_time(self) -> bool:
+        return self._use_event_time
+
+    @property
+    def transformation_function_dataset_version(self) -> Optional[int]:
+        return self._transformation_function_dataset_version
 
     @property
     def feature_monitoring_type(self) -> Optional[str]:
