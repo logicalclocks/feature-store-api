@@ -2,7 +2,32 @@
   "get": {
     "response": {
       "name": "test_name",
-      "content": {"key":  "value"},
+      "feature_descriptive_statistics": [
+        {
+          "id": 52,
+          "featureType": "Fractional",
+          "featureName": "amount",
+          "count": 4,
+          "completeness": 1,
+          "numNonNullValues": 7,
+          "numNullValues": 8,
+          "approxNumDistinctValues": 9,
+          "min": 1,
+          "max": 2,
+          "sum": 3,
+          "mean": 5.1,
+          "stddev": 6.1,
+          "percentiles": {
+            "25%": 0.4,
+            "50%": 0.6,
+            "75%": 0.86
+          },
+          "distinctness": 0.9,
+          "entropy": 0.8,
+          "uniqueness": 0.7,
+          "exactNumDistinctValues": 10
+        }
+      ],
       "href": "test_href",
       "expand": "test_expand",
       "items": [],
@@ -13,7 +38,32 @@
   "get_basic_info": {
     "response": {
       "name": "test_name",
-      "content": {"key":  "value"}
+      "feature_descriptive_statistics": [
+        {
+          "id": 52,
+          "featureType": "Fractional",
+          "featureName": "amount",
+          "count": 4,
+          "completeness": 1,
+          "numNonNullValues": 7,
+          "numNullValues": 8,
+          "approxNumDistinctValues": 9,
+          "min": 1,
+          "max": 2,
+          "sum": 3,
+          "mean": 5.1,
+          "stddev": 6.1,
+          "percentiles": {
+            "25%": 0.4,
+            "50%": 0.6,
+            "75%": 0.86
+          },
+          "distinctness": 0.9,
+          "entropy": 0.8,
+          "uniqueness": 0.7,
+          "exactNumDistinctValues": 10
+        }
+      ]
     }
   }
 }
