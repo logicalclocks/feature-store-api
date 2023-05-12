@@ -67,9 +67,7 @@ class Query:
 
         for feat in self._left_features:
             if feat.name in feature_map:
-                raise FeatureStoreException(
-                    f"Feature name {feat.name} already exists in query."
-                )
+                raise FeatureStoreException(f"Feature name {feat.name} is not unique.")
             feature_map[feat.name] = feat
             features_list.append(feat)
         for join_obj in self.joins:
@@ -96,7 +94,7 @@ class Query:
                 else:
                     if feat.name in feature_map:
                         raise FeatureStoreException(
-                            f"Feature name {feat.name} already exists in query."
+                            f"Feature name {feat.name} already exists in query. Consider using a prefix."
                         )
                     feature_map[feat.name] = feat
 
@@ -135,7 +133,7 @@ class Query:
         feat = self._features_map[feature_name]
         if feat is None:
             raise FeatureStoreException(
-                f"Feature name {feature_name} is ambiguous. Consider using the prefix."
+                f"Feature name {feature_name} is ambiguous. Consider using a prefix."
             )
         return feat
 

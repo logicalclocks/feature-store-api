@@ -37,13 +37,6 @@ class FeatureViewEngine:
     _TRAINING_DATA_API_PATH = "trainingdatasets"
     _OVERWRITE = "overwrite"
     _APPEND = "append"
-    AMBIGUOUS_LABEL_ERROR = (
-        "Provided label '{}' is ambiguous and exists in more than one feature groups. "
-        "You can provide the label with the prefix you specify in the join."
-    )
-    LABEL_NOT_EXIST_ERROR = (
-        "Provided label '{}' do not exist in any of the feature groups."
-    )
 
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
