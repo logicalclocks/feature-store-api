@@ -21,8 +21,10 @@ from datetime import datetime, date
 
 from hsfs import util, engine, feature_group
 from hsfs.core import query_constructor_api, storage_connector_api, arrow_flight_client
+from hsfs.feature import Feature
 from hsfs.constructor import join
 from hsfs.constructor.filter import Filter, Logic
+from hsfs.client.exceptions import FeatureStoreException
 
 
 class Query:
@@ -50,6 +52,96 @@ class Query:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
+        (
+            self._features_map,
+            self._feature_list,
+            self._featuregroups_map,
+            self._filters,
+        ) = self._initialize_collections()
+
+    def _initialize_collections(self):
+        feature_map = {}
+        features_list = []
+        featuregroups_map = {self._left_feature_group._id: self._left_feature_group}
+        filters = self._filter
+
+        for feat in self._left_features:
+            features_list.append(feat)
+            feature_map[feat.name] = feat
+        for join_obj in self.joins:
+            featuregroups_map[
+                join_obj.query._left_feature_group._id
+            ] = join_obj.query._left_feature_group
+            if filters is None:
+                filters = join_obj.query._filter
+            elif join_obj.query._filter is not None:
+                filters = filters & join_obj.query._filter
+
+            for feat in join_obj.query._left_features:
+                features_list.append(feat)
+                if join_obj.prefix:
+                    name_with_prefix = join_obj.prefix + feat.name
+                    if name_with_prefix in feature_map:
+                        raise FeatureStoreException(
+                            f"Feature name {name_with_prefix} already exists in query. Consider changing the prefix."
+                        )
+                    feature_map[join_obj.prefix + feat.name] = feat
+                feature_map[feat.name] = (
+                    feat.name if feat.name not in feature_map else None
+                )
+
+        return feature_map, features_list, featuregroups_map, filters
+
+    def _update_collections(self):
+        (
+            self._features_map,
+            self._feature_list,
+            self._featuregroups_map,
+            self._filters,
+        ) = self._initialize_collections()
+
+    @property
+    def featuregroups(self):
+        return list(self._featuregroups_map.values())
+
+    @property
+    def features(self) -> List[Feature]:
+        return self.features_list
+
+    @property
+    def filters(self) -> Optional[Filter]:
+        return self._filters
+
+    def get_featuregroup(self, id: int):
+        if id not in self._featuregroups_map:
+            raise FeatureStoreException(f"Feature group id {id} not found in query.")
+        return self._featuregroups_map[id]
+
+    def get_feature(self, feature_name: str) -> Feature:
+        if feature_name not in self._features_map:
+            raise FeatureStoreException(
+                f"Feature name {feature_name} not found in query."
+            )
+        feat = self._features_map[feature_name]
+        if feat is None:
+            raise FeatureStoreException(
+                f"Feature name {feature_name} is ambiguous. Consider using the prefix."
+            )
+        return feat
+
+    def __getattr__(self, name):
+        try:
+            return self.__getitem__(name)
+        except KeyError:
+            raise AttributeError(f"'Query' object has no attribute '{name}'. ")
+
+    def __getitem__(self, name):
+        if not isinstance(name, str):
+            raise TypeError(
+                f"Expected type `str`, got `{type(name)}`. "
+                "Features are accessible by name."
+            )
+        return self.get_feature(name)
 
     def _prep_read(self, online, read_options):
         fs_query = self._query_constructor_api.construct_query(self)
@@ -61,7 +153,7 @@ class Query:
             online_conn = None
 
             if engine.get_instance().is_flyingduck_query_supported(self, read_options):
-                sql_query = arrow_flight_client.get_instance()._construct_query_object(
+                sql_query = arrow_flight_client.get_instance().create_query_object(
                     self, sql_query
                 )
             else:
@@ -132,19 +224,6 @@ class Query:
             read_options,
             schema,
         )
-
-    def _collect_features(self, with_prefix=True):
-        feature_map = {}
-        for feat in self._left_features:
-            feature_map[feat.name] = feat
-        for join in self.joins:
-            for feat in join.query._left_features:
-                if join.prefix and with_prefix:
-                    feature_map[join.prefix + feat.name] = feat
-                else:
-                    feature_map[feat.name] = feature_map.get(feat.name, []) + [
-                        feat
-                    ]
 
     def show(self, n: int, online: Optional[bool] = False):
         """Show the first N rows of the Query.
@@ -223,6 +302,9 @@ class Query:
         self._joins.append(
             join.Join(sub_query, on, left_on, right_on, join_type.upper(), prefix)
         )
+
+        self._update_collections()
+
         return self
 
     def as_of(
@@ -398,6 +480,9 @@ class Query:
                 )
         elif self._filter is not None:
             self._filter = self._filter & f
+
+        self._update_collections()
+
         return self
 
     def from_cache_feature_group_only(self):
@@ -510,10 +595,6 @@ class Query:
     def left_feature_group_end_time(self, left_feature_group_end_time):
         self._left_feature_group_end_time = left_feature_group_end_time
 
-    @property
-    def features(self):
-        return self._left_features
-
     def append_feature(self, feature):
         """
         !!! example
@@ -528,6 +609,8 @@ class Query:
         """
         self._left_features.append(feature)
 
+        self._update_collections()
+
     def is_time_travel(self):
         return (
             self.left_feature_group_start_time
@@ -538,25 +621,3 @@ class Query:
     @property
     def joins(self):
         return self._joins
-
-    def __getattr__(self, name):
-        try:
-            return self.__getitem__(name)
-        except KeyError:
-            raise AttributeError(
-                f"'Query' object has no attribute '{name}'. "
-                "If you are trying to access a feature, fall back on "
-                "using the `get_feature` method."
-            )
-
-    def __getitem__(self, name):
-        if not isinstance(name, str):
-            raise TypeError(
-                f"Expected type `str`, got `{type(name)}`. "
-                "Features are accessible by name."
-            )
-        feature = [f for f in self.__getattribute__("_features") if f.name == name]
-        if len(feature) == 1:
-            return feature[0]
-        else:
-            raise KeyError(f"'FeatureGroup' object has no feature called '{name}'.")

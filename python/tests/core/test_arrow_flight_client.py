@@ -266,14 +266,13 @@ class TestArrowFlightClient:
         )
 
         # Act
-        query_object = arrow_flight_client.get_instance()._construct_query_object(
+        query_object = arrow_flight_client.get_instance().create_query_object(
             query, "SELECT * FROM..."
         )
 
         # Assert
         query_object_reference = {
             "query_string": "SELECT * FROM...",
-            "featuregroups": {15: "test.fg_test_1"},
             "features": {"test.fg_test_1": ["intt", "stringt"]},
             "filters": {
                 "type": "logic",
@@ -341,14 +340,13 @@ class TestArrowFlightClient:
         )
 
         # Act
-        query_object = arrow_flight_client.get_instance()._construct_query_object(
+        query_object = arrow_flight_client.get_instance().create_query_object(
             query, "SELECT * FROM..."
         )
 
         # Assert
         query_object_reference = {
             "query_string": "SELECT * FROM...",
-            "featuregroups": {15: "test.fg_test_1"},
             "features": {"test.fg_test_1": ["intt", "stringt"]},
             "filters": {
                 "type": "logic",
@@ -380,14 +378,13 @@ class TestArrowFlightClient:
         query = test_fg1.select_all().filter(Feature("intt") > 500)
 
         # Act
-        query_object = arrow_flight_client.get_instance()._construct_query_object(
+        query_object = arrow_flight_client.get_instance().create_query_object(
             query, "SELECT * FROM..."
         )
 
         # Assert
         query_object_reference = {
             "query_string": "SELECT * FROM...",
-            "featuregroups": {15: "test.fg_test_1"},
             "features": {"test.fg_test_1": ["intt", "stringt"]},
             "filters": {
                 "type": "logic",
