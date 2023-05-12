@@ -259,7 +259,6 @@ class ArrowFlightClient:
             "condition": filter._condition,
             "value": filter_value,
             "feature": self._serialize_feature_name(filter._feature, query),
-            "numeric": False,  # For backwards compatibility
         }
 
     def _serialize_feature_name(self, feature, query):
