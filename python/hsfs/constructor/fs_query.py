@@ -17,7 +17,6 @@
 import humps
 from hsfs import engine
 from hsfs.constructor import hudi_feature_group_alias, external_feature_group_alias
-from hsfs.feature_group import SpineGroup
 
 
 class FsQuery:
@@ -85,7 +84,7 @@ class FsQuery:
             return
 
         for external_fg_alias in self._on_demand_fg_aliases:
-            if isinstance(external_fg_alias.on_demand_feature_group, SpineGroup):
+            if str(type(external_fg_alias.on_demand_feature_group)) == "SpineGroup":
                 external_fg_alias.on_demand_feature_group.dataframe = spine
             engine.get_instance().register_external_temporary_table(
                 external_fg_alias.on_demand_feature_group,
