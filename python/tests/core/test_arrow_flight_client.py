@@ -20,6 +20,7 @@ from hsfs import feature_group, feature_view, training_dataset
 from hsfs.constructor import fs_query
 from hsfs.core import arrow_flight_client
 from hsfs.engine import python
+from hsfs.feature import Feature
 from hsfs.storage_connector import HopsFSConnector
 
 
@@ -306,7 +307,7 @@ class TestArrowFlightClient:
                             "condition": "GREATER_THAN",
                             "value": 500,
                             "feature": "test.fg_test_1.intt",
-                            "numeric": True,
+                            "numeric": False,
                         },
                         "right_filter": {
                             "type": "filter",
@@ -321,7 +322,7 @@ class TestArrowFlightClient:
                         "condition": "LESS_THAN",
                         "value": 700,
                         "feature": "test.fg_test_1.intt",
-                        "numeric": True,
+                        "numeric": False,
                     },
                 },
                 "right_filter": {
@@ -332,7 +333,7 @@ class TestArrowFlightClient:
                         "condition": "GREATER_THAN",
                         "value": 500,
                         "feature": "test.fg_test_1.intt",
-                        "numeric": True,
+                        "numeric": False,
                     },
                     "right_filter": None,
                 },
@@ -359,8 +360,6 @@ class TestArrowFlightClient:
             query, "SELECT * FROM..."
         )
 
-        print(query_object)
-
         # Assert
         query_object_reference = {
             "query_string": "SELECT * FROM...",
@@ -374,7 +373,45 @@ class TestArrowFlightClient:
                     "condition": "GREATER_THAN",
                     "value": "2011-03-01 12:57:02",
                     "feature": "test.fg_test_1.intt",
-                    "numeric": True,
+                    "numeric": False,
+                },
+                "right_filter": None,
+            },
+        }
+
+        diff = self._find_diff(query_object, query_object_reference)
+        assert diff == {}
+
+    def test_construct_query_object_without_fs(self, mocker, backend_fixtures):
+        # Arrange
+        self._arrange_engine_mocks(mocker, backend_fixtures)
+        json1 = backend_fixtures["feature_group"]["get"]["response"]
+        test_fg1 = feature_group.FeatureGroup.from_response_json(json1)
+        mocker.patch("hsfs.constructor.query.Query.to_string", return_value="")
+        mocker.patch("hsfs.constructor.query.Query._to_string", return_value="")
+        query = test_fg1.select_all().filter(Feature("intt") > 500)
+
+        # Act
+        query_object = arrow_flight_client.get_instance()._construct_query_object(
+            query, "SELECT * FROM..."
+        )
+
+        print(query_object)
+
+        # Assert
+        query_object_reference = {
+            "query_string": "SELECT * FROM...",
+            "featuregroups": {15: "test.fg_test_1"},
+            "features": {"test.fg_test_1": ["intt", "stringt"]},
+            "filters": {
+                "type": "logic",
+                "logic_type": "SINGLE",
+                "left_filter": {
+                    "type": "filter",
+                    "condition": "GREATER_THAN",
+                    "value": 500,
+                    "feature": "test.fg_test_1.intt",
+                    "numeric": False,
                 },
                 "right_filter": None,
             },
