@@ -438,7 +438,9 @@ class Query:
                 feature_group_json
             )
         else:
-            feature_group.FeatureGroup.from_response_json(feature_group_json)
+            feature_group_obj = feature_group.FeatureGroup.from_response_json(
+                feature_group_json
+            )
         return cls(
             left_feature_group=feature_group_obj,
             left_features=json_decamelized["left_features"],
