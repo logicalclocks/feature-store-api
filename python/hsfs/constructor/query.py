@@ -66,8 +66,12 @@ class Query:
         filters = self._filter
 
         for feat in self._left_features:
-            features_list.append(feat)
+            if feat.name in feature_map:
+                raise FeatureStoreException(
+                    f"Feature name {feat.name} already exists in query."
+                )
             feature_map[feat.name] = feat
+            features_list.append(feat)
         for join_obj in self.joins:
             featuregroups_map[
                 join_obj.query._left_feature_group._id
@@ -86,9 +90,15 @@ class Query:
                             f"Feature name {name_with_prefix} already exists in query. Consider changing the prefix."
                         )
                     feature_map[join_obj.prefix + feat.name] = feat
-                feature_map[feat.name] = (
-                    feat.name if feat.name not in feature_map else None
-                )
+                    feature_map[feat.name] = (
+                        feat if feat.name not in feature_map else None
+                    )
+                else:
+                    if feat.name in feature_map:
+                        raise FeatureStoreException(
+                            f"Feature name {feat.name} already exists in query."
+                        )
+                    feature_map[feat.name] = feat
 
         return feature_map, features_list, featuregroups_map, filters
 

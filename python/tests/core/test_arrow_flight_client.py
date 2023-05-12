@@ -261,6 +261,7 @@ class TestArrowFlightClient:
                 test_fg2.filter(test_fg2.features[0] > 500),
                 left_on=["intt"],
                 right_on=["intt"],
+                prefix="test_",
             )
             .filter(test_fg1.features[0] < 700)
         )
