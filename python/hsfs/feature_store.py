@@ -922,9 +922,11 @@ class FeatureStore:
         ] = None,
     ):
         try:
-            return self._feature_group_api.get(
-                name, version, feature_group_api.FeatureGroupApi.ONDEMAND
+            spine = self._feature_group_api.get(
+                name, version, feature_group_api.FeatureGroupApi.SPINE
             )
+            spine.dateframe = dataframe
+            return spine
         except exceptions.RestAPIError as e:
             if (
                 e.response.json().get("errorCode", "") == 270089
