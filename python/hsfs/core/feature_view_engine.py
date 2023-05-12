@@ -82,13 +82,13 @@ class FeatureViewEngine:
             # If provided label matches multiple columns without prefix, then raise exception because it is ambiguous.
             prefix_feature_map = {}
             feature_map = {}
-            for feat in feature_view_obj.query.features:
+            for feat in feature_view_obj.query._left_features:
                 prefix_feature_map[feat.name] = (
                     feat.name,
                     feature_view_obj.query._left_feature_group,
                 )
             for join in feature_view_obj.query.joins:
-                for feat in join.query.features:
+                for feat in join.query._left_features:
                     if join.prefix:
                         prefix_feature_map[join.prefix + feat.name] = (
                             feat.name,

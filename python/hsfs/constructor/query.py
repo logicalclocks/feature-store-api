@@ -133,12 +133,18 @@ class Query:
             schema,
         )
 
-    def _collect_features(self):
-        features = []
-        features.extend(self.features)
-        for j in self.joins:
-            features.extend(j.query.features)
-        return features
+    def _collect_features(self, with_prefix=True):
+        feature_map = {}
+        for feat in self._left_features:
+            feature_map[feat.name] = feat
+        for join in self.joins:
+            for feat in join.query._left_features:
+                if join.prefix and with_prefix:
+                    feature_map[join.prefix + feat.name] = feat
+                else:
+                    feature_map[feat.name] = feature_map.get(feat.name, []) + [
+                        feat
+                    ]
 
     def show(self, n: int, online: Optional[bool] = False):
         """Show the first N rows of the Query.
@@ -177,7 +183,7 @@ class Query:
 
         If no join keys are specified, Hopsworks will use the maximal matching subset of
         the primary keys of the feature groups you are joining.
-        Joins of one level are supported, no neted joins.
+        Joins of one level are supported, no nested joins.
 
         !!! example "Join two feature groups"
             ```python
@@ -532,3 +538,25 @@ class Query:
     @property
     def joins(self):
         return self._joins
+
+    def __getattr__(self, name):
+        try:
+            return self.__getitem__(name)
+        except KeyError:
+            raise AttributeError(
+                f"'Query' object has no attribute '{name}'. "
+                "If you are trying to access a feature, fall back on "
+                "using the `get_feature` method."
+            )
+
+    def __getitem__(self, name):
+        if not isinstance(name, str):
+            raise TypeError(
+                f"Expected type `str`, got `{type(name)}`. "
+                "Features are accessible by name."
+            )
+        feature = [f for f in self.__getattribute__("_features") if f.name == name]
+        if len(feature) == 1:
+            return feature[0]
+        else:
+            raise KeyError(f"'FeatureGroup' object has no feature called '{name}'.")

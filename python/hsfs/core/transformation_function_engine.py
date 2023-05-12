@@ -106,21 +106,7 @@ class TransformationFunctionEngine:
         # If provided feature matches multiple columns without prefix, then raise exception because it is ambiguous.
         prefix_feature_map = {}
         feature_map = {}
-        for feat in target_obj.query.features:
-            prefix_feature_map[feat.name] = (
-                feat.name,
-                target_obj.query._left_feature_group,
-            )
-        for join in target_obj.query.joins:
-            for feat in join.query.features:
-                if join.prefix:
-                    prefix_feature_map[join.prefix + feat.name] = (
-                        feat.name,
-                        join.query._left_feature_group,
-                    )
-                feature_map[feat.name] = feature_map.get(feat.name, []) + [
-                    join.query._left_feature_group
-                ]
+
 
         if target_obj._transformation_functions:
             for (
