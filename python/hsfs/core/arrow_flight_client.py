@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import datetime
 import json
 import base64
 import warnings
@@ -305,10 +306,14 @@ class ArrowFlightClient:
             return None
 
     def _resolve_filter(self, filter, featuregroups):
+        if isinstance(filter._value, datetime.datetime):
+            filter_value = filter._value.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            filter_value = filter._value
         return {
             "type": "filter",
             "condition": filter._condition,
-            "value": filter._value,
+            "value": filter_value,
             "feature": f"{featuregroups[filter._feature._feature_group_id]}.{filter._feature._name}",
             "numeric": (
                 filter._feature._type in ArrowFlightClient.FILTER_NUMERIC_TYPES
