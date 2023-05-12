@@ -2260,6 +2260,11 @@ class FeatureView:
         """Feature view schema."""
         return self._features
 
+    @property
+    def features(self):
+        """Feature view schema. (alias)"""
+        return self._features
+
     @schema.setter
     def schema(self, features):
         self._features = features
