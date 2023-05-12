@@ -84,7 +84,7 @@ class FsQuery:
             return
 
         for external_fg_alias in self._on_demand_fg_aliases:
-            if str(type(external_fg_alias.on_demand_feature_group)) == "SpineGroup":
+            if type(external_fg_alias.on_demand_feature_group).__name__ == "SpineGroup":
                 external_fg_alias.on_demand_feature_group.dataframe = spine
             engine.get_instance().register_external_temporary_table(
                 external_fg_alias.on_demand_feature_group,
