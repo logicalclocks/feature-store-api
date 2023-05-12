@@ -417,7 +417,6 @@ class TestArrowFlightClient:
             },
         }
 
-        print(query_object_reference)
 
         diff = self._find_diff(query_object, query_object_reference)
         assert diff == {}
