@@ -347,8 +347,6 @@ class TestArrowFlightClient:
         self._arrange_engine_mocks(mocker, backend_fixtures)
         json1 = backend_fixtures["feature_group"]["get"]["response"]
         test_fg1 = feature_group.FeatureGroup.from_response_json(json1)
-        json2 = backend_fixtures["feature_group"]["get_stream"]["response"]
-        test_fg2 = feature_group.FeatureGroup.from_response_json(json2)
         mocker.patch("hsfs.constructor.query.Query.to_string", return_value="")
         mocker.patch("hsfs.constructor.query.Query._to_string", return_value="")
         query = test_fg1.select_all().filter(
