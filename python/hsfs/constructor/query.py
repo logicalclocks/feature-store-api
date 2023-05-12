@@ -106,7 +106,7 @@ class Query:
 
     @property
     def features(self) -> List[Feature]:
-        return self.features_list
+        return self._feature_list
 
     @property
     def filters(self) -> Optional[Filter]:
