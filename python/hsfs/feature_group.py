@@ -2538,7 +2538,9 @@ class FeatureGroup(FeatureGroupBase):
         # Returns
             `Query`. The query object with the applied time travel condition.
         """
-        return self.select_all().as_of(wallclock_time, exclude_until)
+        return self.select_all().as_of(
+            wallclock_time=wallclock_time, exclude_until=exclude_until
+        )
 
     def get_statistics(
         self,
