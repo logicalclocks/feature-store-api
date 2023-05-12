@@ -245,24 +245,6 @@ class TestArrowFlightClient:
         assert mock_read_file.call_count == 1
         assert mock_read_pandas.call_count == 1
 
-    def _find_diff(self, dict1, dict2, path=""):
-        diff = {}
-        for key in set(dict1.keys()).union(dict2.keys()):
-            subpath = f"{path}.{key}" if path else key
-            if key not in dict1 or key not in dict2:
-                diff[subpath] = {"dict1": dict1.get(key), "dict2": dict2.get(key)}
-            elif isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
-                sub_diff = self._find_diff(dict1[key], dict2[key], subpath)
-                if sub_diff:
-                    diff.update(sub_diff)
-            elif isinstance(dict1[key], list) and isinstance(dict2[key], list):
-                if sorted(dict1[key]) != sorted(dict2[key]):
-                    diff[subpath] = {"dict1": dict1[key], "dict2": dict2[key]}
-            elif dict1[key] != dict2[key]:
-                diff[subpath] = {"dict1": dict1[key], "dict2": dict2[key]}
-
-        return diff
-
     def test_construct_query_object(self, mocker, backend_fixtures):
         # Arrange
         self._arrange_engine_mocks(mocker, backend_fixtures)
@@ -340,8 +322,11 @@ class TestArrowFlightClient:
             },
         }
 
-        diff = self._find_diff(query_object, query_object_reference)
-        assert diff == {}
+        query_object["features"] = {
+            key: sorted(value) for key, value in query_object["features"].items()
+        }
+
+        assert str(query_object_reference) == str(query_object)
 
     def test_construct_query_object_datetime_filter(self, mocker, backend_fixtures):
         # Arrange
@@ -379,8 +364,11 @@ class TestArrowFlightClient:
             },
         }
 
-        diff = self._find_diff(query_object, query_object_reference)
-        assert diff == {}
+        query_object["features"] = {
+            key: sorted(value) for key, value in query_object["features"].items()
+        }
+
+        assert str(query_object_reference) == str(query_object)
 
     def test_construct_query_object_without_fs(self, mocker, backend_fixtures):
         # Arrange
@@ -395,7 +383,6 @@ class TestArrowFlightClient:
         query_object = arrow_flight_client.get_instance()._construct_query_object(
             query, "SELECT * FROM..."
         )
-
 
         # Assert
         query_object_reference = {
@@ -416,6 +403,8 @@ class TestArrowFlightClient:
             },
         }
 
+        query_object["features"] = {
+            key: sorted(value) for key, value in query_object["features"].items()
+        }
 
-        diff = self._find_diff(query_object, query_object_reference)
-        assert diff == {}
+        assert str(query_object_reference) == str(query_object)
