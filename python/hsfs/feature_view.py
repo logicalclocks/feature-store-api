@@ -436,6 +436,7 @@ class FeatureView:
         start_time: Optional[Union[str, int, datetime, date]] = None,
         end_time: Optional[Union[str, int, datetime, date]] = None,
         read_options=None,
+        spine=None,
     ):
         """Get a batch of data from an event time interval from the offline feature store.
 
@@ -482,6 +483,7 @@ class FeatureView:
             self._batch_scoring_server.training_dataset_version,
             self._batch_scoring_server._transformation_functions,
             read_options,
+            spine,
         )
 
     def add_tag(self, name: str, value):

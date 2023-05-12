@@ -169,9 +169,10 @@ class FeatureViewEngine:
         end_time,
         with_label=False,
         training_dataset_version=None,
+        spine=None,
     ):
         try:
-            return self._feature_view_api.get_batch_query(
+            query = self._feature_view_api.get_batch_query(
                 feature_view_obj.name,
                 feature_view_obj.version,
                 util.convert_event_time_to_timestamp(start_time),
@@ -180,6 +181,8 @@ class FeatureViewEngine:
                 is_python_engine=engine.get_type() == "python",
                 with_label=with_label,
             )
+            query._left_feature_group.dataframe = spine
+            return query
         except exceptions.RestAPIError as e:
             if e.response.json().get("errorCode", "") == 270172:
                 raise ValueError(

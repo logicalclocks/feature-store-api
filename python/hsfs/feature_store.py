@@ -922,14 +922,10 @@ class FeatureStore:
         ] = None,
     ):
         try:
-            print(type(dataframe))
             spine = self._feature_group_api.get(
                 name, version, feature_group_api.FeatureGroupApi.SPINE
             )
-            print("spine gotten from backend")
-            print(type(dataframe))
-            print(type(spine.dataframe))
-            spine.dateframe = dataframe
+            spine.dataframe = dataframe
             return spine
         except exceptions.RestAPIError as e:
             if (
