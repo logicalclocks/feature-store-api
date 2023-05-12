@@ -399,3 +399,40 @@ class TestArrowFlightClient:
         }
 
         assert str(query_object_reference) == str(query_object)
+
+    def test_construct_query_object_without_fs_excluded(self, mocker, backend_fixtures):
+        # Arrange
+        self._arrange_engine_mocks(mocker, backend_fixtures)
+        json1 = backend_fixtures["feature_group"]["get"]["response"]
+        test_fg1 = feature_group.FeatureGroup.from_response_json(json1)
+        mocker.patch("hsfs.constructor.query.Query.to_string", return_value="")
+        mocker.patch("hsfs.constructor.query.Query._to_string", return_value="")
+        query = test_fg1.select_except(["intt"]).filter(Feature("intt") > 500)
+
+        # Act
+        query_object = arrow_flight_client.get_instance().create_query_object(
+            query, "SELECT * FROM..."
+        )
+
+        # Assert
+        query_object_reference = {
+            "query_string": "SELECT * FROM...",
+            "features": {"test.fg_test_1": ["intt", "stringt"]},
+            "filters": {
+                "type": "logic",
+                "logic_type": "SINGLE",
+                "left_filter": {
+                    "type": "filter",
+                    "condition": "GREATER_THAN",
+                    "value": 500,
+                    "feature": "test.fg_test_1.intt",
+                },
+                "right_filter": None,
+            },
+        }
+
+        query_object["features"] = {
+            key: sorted(value) for key, value in query_object["features"].items()
+        }
+
+        assert str(query_object_reference) == str(query_object)
