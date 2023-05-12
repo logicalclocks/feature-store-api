@@ -542,6 +542,7 @@ class FeatureViewEngine:
         training_dataset_version,
         transformation_functions,
         read_options=None,
+        spine=None,
     ):
         self._check_feature_group_accessibility(feature_view_obj)
 
@@ -551,6 +552,7 @@ class FeatureViewEngine:
             end_time,
             with_label=False,
             training_dataset_version=training_dataset_version,
+            spine=spine,
         ).read(read_options=read_options)
         if transformation_functions:
             return engine.get_instance()._apply_transformation_function(
