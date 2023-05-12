@@ -37,6 +37,7 @@ class FeatureMonitoringResult:
         reference_statistics_id: Optional[int] = None,
         empty_detection_window: bool = False,
         empty_reference_window: bool = False,
+        specific_value: Optional[float] = None,
         raised_exception: bool = False,
         detection_statistics: Optional[
             Union[FeatureDescriptiveStatistics, dict]
@@ -180,3 +181,7 @@ class FeatureMonitoringResult:
     @property
     def empty_reference_window(self) -> bool:
         return self._empty_reference_window
+
+    @property
+    def specific_value(self) -> Optional[float]:
+        return self._specific_value

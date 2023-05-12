@@ -69,19 +69,20 @@ class FeatureMonitoringResultEngine:
         )
         self._job_api = JobApi()
 
-    def save_feature_monitoring_result(
+    def build_feature_monitoring_result(
         self,
         config_id: int,
-        execution_id: int,
         feature_name: str,
-        detection_statistics: FeatureDescriptiveStatistics,
-        reference_statistics: Optional[
-            Union[FeatureDescriptiveStatistics, int, float]
-        ] = None,
+        detection_statistics: Optional[FeatureDescriptiveStatistics] = None,
+        reference_statistics: Optional[FeatureDescriptiveStatistics] = None,
+        specific_value: Optional[Union[int, float]] = None,
         shift_detected: Optional[bool] = False,
         difference: Optional[float] = None,
+        raised_exception: Optional[bool] = False,
+        execution_id: Optional[int] = None,
+        job_name: Optional[str] = None,
     ) -> FeatureMonitoringResult:
-        """Save feature monitoring result.
+        """Build feature monitoring result.
 
         Args:
             config_id: int. Id of the feature monitoring configuration.
@@ -99,21 +100,58 @@ class FeatureMonitoringResultEngine:
         monitoring_time = round(
             util.convert_event_time_to_timestamp(datetime.now()), -3
         )
+        if execution_id is None:
+            execution_id = self.get_monitoring_job_execution_id(job_name)
+        detection_statistics_id = (
+            detection_statistics.id
+            if isinstance(detection_statistics, FeatureDescriptiveStatistics)
+            else None
+        )
+        reference_statistics_id = (
+            reference_statistics.id
+            if isinstance(reference_statistics, FeatureDescriptiveStatistics)
+            else None
+        )
 
-        result = FeatureMonitoringResult(
+        return FeatureMonitoringResult(
             feature_store_id=self._feature_store_id,
             config_id=config_id,
             execution_id=execution_id,
             feature_name=feature_name,
-            detection_statistics_id=detection_statistics.id,
-            reference_statistics_id=reference_statistics.id
-            if isinstance(reference_statistics, FeatureDescriptiveStatistics)
-            else None,
+            detection_statistics_id=detection_statistics_id,
+            reference_statistics_id=reference_statistics_id,
+            specific_value=specific_value,
             difference=difference,
             shift_detected=shift_detected,
             monitoring_time=monitoring_time,
+            raised_exception=raised_exception,
+            empty_detection_window=self.is_monitoring_window_empty(
+                detection_statistics
+            ),
+            empty_reference_window=self.is_monitoring_window_empty(
+                reference_statistics
+            ),
         )
 
+    def save_feature_monitoring_result(
+        self,
+        result: FeatureMonitoringResult,
+    ) -> FeatureMonitoringResult:
+        """Save feature monitoring result.
+
+        Args:
+            config_id: int. Id of the feature monitoring configuration.
+            execution_id: int. Id of the job execution.
+            detection_statistics: FeatureDescriptiveStatistics. Statistics computed from the detection data.
+            reference_statistics: Optional[Union[FeatureDescriptiveStatistics, int, float]]. Statistics computed from the reference data.
+                Defaults to None if no reference is provided.
+            shift_detected: bool. Whether a shift is detected between the detection and reference window.
+                It is used to decide whether to trigger an alert.
+            difference: Optional[float]. Difference between detection statistics and reference statistics.
+
+        Returns:
+            FeatureMonitoringResult. Saved Feature monitoring result.
+        """
         return self._feature_monitoring_result_api.create(
             result,
         )
@@ -248,14 +286,8 @@ class FeatureMonitoringResultEngine:
         detection_statistics: Union[
             FeatureDescriptiveStatistics, List[FeatureDescriptiveStatistics]
         ],
-        reference_statistics: Optional[
-            Union[
-                FeatureDescriptiveStatistics,
-                List[FeatureDescriptiveStatistics],
-                int,
-                float,
-            ]
-        ] = None,
+        reference_statistics: Optional[FeatureDescriptiveStatistics] = None,
+        specific_value: Optional[Union[int, float]] = None,
     ) -> Union[List[FeatureMonitoringResult], FeatureMonitoringResult]:
         """Run and upload statistics comparison between detection and reference stats.
 
@@ -268,12 +300,24 @@ class FeatureMonitoringResultEngine:
         Returns:
             Union[FeatureMonitoringResult, List[FeatureMonitoringResult]]. Feature monitoring result
         """
-        execution = self._job_api.last_execution(self._job_api.get(fm_config.job_name))
-        execution_id = (
-            execution[0]._id
-            if isinstance(execution, list) and len(execution) > 0
-            else 0
+        execution_id = self.get_monitoring_job_execution_id(job_name=fm_config.job_name)
+        detection_statistics = (
+            detection_statistics
+            if isinstance(detection_statistics, list)
+            else [detection_statistics]
         )
+
+        results = [
+            FeatureMonitoringResult(
+                config_id=fm_config.id,
+                execution_id=execution_id,
+                feature_store_id=self._feature_store_id,
+            )
+        ]
+
+        if reference_statistics or specific_value:
+            # Here we compute the difference and detect shift
+            pass
 
         if reference_statistics is not None:
             # compute difference and detect shift
@@ -339,7 +383,8 @@ class FeatureMonitoringResultEngine:
         self,
         fm_config: "fmc.FeatureMonitoringConfig",
         detection_statistics: FeatureDescriptiveStatistics,
-        reference_statistics: Union[FeatureDescriptiveStatistics, int, float],
+        reference_statistics: Optional[FeatureDescriptiveStatistics] = None,
+        specific_value: Optional[Union[int, float]] = None,
     ) -> Tuple[float, bool]:
         """Compute the difference and detect shift between the reference and detection statistics.
 
@@ -353,12 +398,12 @@ class FeatureMonitoringResultEngine:
             `(float, bool)`. The difference between the reference and detection statistics,
                              and whether shift was detected or not
         """
-
         difference = self._compute_difference_between_stats(
-            detection_statistics,
-            reference_statistics,
+            detection_statistics=detection_statistics,
+            reference_statistics=reference_statistics,
             metric=fm_config.statistics_comparison_config["metric"].lower(),
             relative=fm_config.statistics_comparison_config["relative"],
+            specific_value=specific_value,
         )
 
         if fm_config.statistics_comparison_config["strict"]:
@@ -378,18 +423,20 @@ class FeatureMonitoringResultEngine:
     def _compute_difference_between_stats(
         self,
         detection_statistics: FeatureDescriptiveStatistics,
-        reference_statistics: Union[FeatureDescriptiveStatistics, int, float],
         metric: str,
         relative: bool = False,
+        reference_statistics: Optional[FeatureDescriptiveStatistics] = None,
+        specific_value: Optional[Union[int, float]] = None,
     ) -> float:
         """Compute the difference between the reference and detection statistics.
 
         Args:
-            detection_statistics: FeatureDescriptiveStatistics. Computed statistics from detection data.
-            reference_statistics: Union[FeatureDescriptiveStatistics, int, float].
+            detection_statistics: `FeatureDescriptiveStatistics`. Computed statistics from detection data.
+            reference_statistics: `Optional[FeatureDescriptiveStatistics]`.
                 Computed statistics from reference data, or a specific value to use as reference
             metric: `str`. The metric to compute the difference for.
             relative: `bool`. Whether to compute the relative difference or not.
+            specific_value: `Optional[Union[int, float]]`. A specific value to use as reference.
 
         Returns:
             `float`. The difference between the reference and detection statistics.
@@ -397,8 +444,8 @@ class FeatureMonitoringResultEngine:
 
         detection_value = detection_statistics.get_value(metric)
         reference_value = (
-            reference_statistics
-            if isinstance(reference_statistics, (int, float))
+            specific_value
+            if specific_value is not None
             else reference_statistics.get_value(metric)
         )
         return self._compute_difference_between_specific_values(
@@ -429,3 +476,34 @@ class FeatureMonitoringResultEngine:
                 return (detection_value - reference_value) / reference_value
         else:
             return detection_value - reference_value
+
+    def get_monitoring_job_execution_id(
+        self,
+        job_name: str,
+    ) -> int:
+        """Get the execution id of the last execution of the monitoring job."""
+        execution = self._job_api.last_execution(self._job_api.get(job_name))
+        return (
+            execution[0]._id
+            if isinstance(execution, list) and len(execution) > 0
+            else 0
+        )
+
+    def is_monitoring_window_empty(
+        self,
+        monitoring_window_statistics: Optional[FeatureDescriptiveStatistics] = None,
+    ) -> bool:
+        """Check if the monitoring window is empty.
+
+        Args:
+            monitoring_window_statistics: FeatureDescriptiveStatistics. Statistics computed for the monitoring window.
+
+        Returns:
+            bool. Whether the monitoring window is empty or not.
+        """
+        if monitoring_window_statistics is None:
+            return True
+        elif monitoring_window_statistics.count == 0:
+            return True
+        else:
+            return False

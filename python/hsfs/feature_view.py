@@ -2547,12 +2547,12 @@ class FeatureView:
         self._description = description
 
     @property
-    def query(self):
+    def query(self) -> query.Query:
         """Query of the feature view."""
         return self._query
 
     @query.setter
-    def query(self, query_obj):
+    def query(self, query_obj: query.Query):
         self._query = query_obj
 
     @property
