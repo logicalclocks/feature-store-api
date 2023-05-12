@@ -66,7 +66,10 @@ class Query:
                 )
             else:
                 # Register on demand feature groups as temporary tables
-                fs_query.register_external()
+                if isinstance(self._left_feature_group, feature_group.SpineGroup):
+                    fs_query.register_external(self._left_feature_group.dataframe)
+                else:
+                    fs_query.register_external()
 
                 # Register on hudi feature groups as temporary tables
                 fs_query.register_hudi_tables(
