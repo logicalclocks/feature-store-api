@@ -258,6 +258,7 @@ class FeatureViewEngine:
         splits=[],
         training_dataset_obj=None,
         training_dataset_version=None,
+        spine=None,
     ):
         # check if provided td version has already existed.
         if training_dataset_version:
@@ -297,6 +298,7 @@ class FeatureViewEngine:
                 start_time=td_updated.event_start_time,
                 end_time=td_updated.event_end_time,
                 with_label=True,
+                spine=spine,
             )
             split_df = engine.get_instance().get_training_data(
                 td_updated, feature_view_obj, query, read_options

@@ -1466,6 +1466,7 @@ class FeatureView:
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
+        spine=None,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1580,6 +1581,7 @@ class FeatureView:
             read_options,
             training_dataset_obj=td,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
+            spine=spine,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
