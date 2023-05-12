@@ -14,11 +14,13 @@
 #   limitations under the License.
 #
 import pandas as pd
+import datetime
 
 from hsfs import feature_group, feature_view, training_dataset
 from hsfs.constructor import fs_query
 from hsfs.core import arrow_flight_client
 from hsfs.engine import python
+from hsfs.feature import Feature
 from hsfs.storage_connector import HopsFSConnector
 
 
@@ -243,24 +245,6 @@ class TestArrowFlightClient:
         assert mock_read_file.call_count == 1
         assert mock_read_pandas.call_count == 1
 
-    def _find_diff(self, dict1, dict2, path=""):
-        diff = {}
-        for key in set(dict1.keys()).union(dict2.keys()):
-            subpath = f"{path}.{key}" if path else key
-            if key not in dict1 or key not in dict2:
-                diff[subpath] = {"dict1": dict1.get(key), "dict2": dict2.get(key)}
-            elif isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
-                sub_diff = self._find_diff(dict1[key], dict2[key], subpath)
-                if sub_diff:
-                    diff.update(sub_diff)
-            elif isinstance(dict1[key], list) and isinstance(dict2[key], list):
-                if sorted(dict1[key]) != sorted(dict2[key]):
-                    diff[subpath] = {"dict1": dict1[key], "dict2": dict2[key]}
-            elif dict1[key] != dict2[key]:
-                diff[subpath] = {"dict1": dict1[key], "dict2": dict2[key]}
-
-        return diff
-
     def test_construct_query_object(self, mocker, backend_fixtures):
         # Arrange
         self._arrange_engine_mocks(mocker, backend_fixtures)
@@ -305,7 +289,7 @@ class TestArrowFlightClient:
                             "condition": "GREATER_THAN",
                             "value": 500,
                             "feature": "test.fg_test_1.intt",
-                            "numeric": True,
+                            "numeric": False,
                         },
                         "right_filter": {
                             "type": "filter",
@@ -320,7 +304,7 @@ class TestArrowFlightClient:
                         "condition": "LESS_THAN",
                         "value": 700,
                         "feature": "test.fg_test_1.intt",
-                        "numeric": True,
+                        "numeric": False,
                     },
                 },
                 "right_filter": {
@@ -331,12 +315,96 @@ class TestArrowFlightClient:
                         "condition": "GREATER_THAN",
                         "value": 500,
                         "feature": "test.fg_test_1.intt",
-                        "numeric": True,
+                        "numeric": False,
                     },
                     "right_filter": None,
                 },
             },
         }
 
-        diff = self._find_diff(query_object, query_object_reference)
-        assert diff == {}
+        query_object["features"] = {
+            key: sorted(value) for key, value in query_object["features"].items()
+        }
+
+        assert str(query_object_reference) == str(query_object)
+
+    def test_construct_query_object_datetime_filter(self, mocker, backend_fixtures):
+        # Arrange
+        self._arrange_engine_mocks(mocker, backend_fixtures)
+        json1 = backend_fixtures["feature_group"]["get"]["response"]
+        test_fg1 = feature_group.FeatureGroup.from_response_json(json1)
+        mocker.patch("hsfs.constructor.query.Query.to_string", return_value="")
+        mocker.patch("hsfs.constructor.query.Query._to_string", return_value="")
+        query = test_fg1.select_all().filter(
+            test_fg1.features[0]
+            > datetime.datetime.strptime("2011-03-01 12:57:02", "%Y-%m-%d %H:%M:%S")
+        )
+
+        # Act
+        query_object = arrow_flight_client.get_instance()._construct_query_object(
+            query, "SELECT * FROM..."
+        )
+
+        # Assert
+        query_object_reference = {
+            "query_string": "SELECT * FROM...",
+            "featuregroups": {15: "test.fg_test_1"},
+            "features": {"test.fg_test_1": ["intt", "stringt"]},
+            "filters": {
+                "type": "logic",
+                "logic_type": "SINGLE",
+                "left_filter": {
+                    "type": "filter",
+                    "condition": "GREATER_THAN",
+                    "value": "2011-03-01 12:57:02",
+                    "feature": "test.fg_test_1.intt",
+                    "numeric": False,
+                },
+                "right_filter": None,
+            },
+        }
+
+        query_object["features"] = {
+            key: sorted(value) for key, value in query_object["features"].items()
+        }
+
+        assert str(query_object_reference) == str(query_object)
+
+    def test_construct_query_object_without_fs(self, mocker, backend_fixtures):
+        # Arrange
+        self._arrange_engine_mocks(mocker, backend_fixtures)
+        json1 = backend_fixtures["feature_group"]["get"]["response"]
+        test_fg1 = feature_group.FeatureGroup.from_response_json(json1)
+        mocker.patch("hsfs.constructor.query.Query.to_string", return_value="")
+        mocker.patch("hsfs.constructor.query.Query._to_string", return_value="")
+        query = test_fg1.select_all().filter(Feature("intt") > 500)
+
+        # Act
+        query_object = arrow_flight_client.get_instance()._construct_query_object(
+            query, "SELECT * FROM..."
+        )
+
+        # Assert
+        query_object_reference = {
+            "query_string": "SELECT * FROM...",
+            "featuregroups": {15: "test.fg_test_1"},
+            "features": {"test.fg_test_1": ["intt", "stringt"]},
+            "filters": {
+                "type": "logic",
+                "logic_type": "SINGLE",
+                "left_filter": {
+                    "type": "filter",
+                    "condition": "GREATER_THAN",
+                    "value": 500,
+                    "feature": "test.fg_test_1.intt",
+                    "numeric": False,
+                },
+                "right_filter": None,
+            },
+        }
+
+        query_object["features"] = {
+            key: sorted(value) for key, value in query_object["features"].items()
+        }
+
+        assert str(query_object_reference) == str(query_object)
