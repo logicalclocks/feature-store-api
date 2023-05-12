@@ -2940,6 +2940,7 @@ class SpineGroup(FeatureGroupBase):
         fg.save()
         """
         self._feature_group_engine.save(self)
+        return self
 
     @property
     def dataframe(self):
