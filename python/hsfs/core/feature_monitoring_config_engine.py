@@ -875,6 +875,8 @@ class FeatureMonitoringConfigEngine:
                 feature_name=feature_name,
                 start_time=start_time,
                 end_time=end_time,
+                use_event_time=False,
+                transformation_function_dataset_version=None,
             )
 
         elif entity.ENTITY_TYPE == "featureview":

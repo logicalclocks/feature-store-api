@@ -647,7 +647,6 @@ class TestFeatureMonitoringConfigEngine:
 
         # Assert
         assert read_mock.call_count == 4
-        print(mock_vector_server.call_args_list)
         get_batch_query_mock.assert_has_calls(
             [
                 call(
@@ -689,4 +688,100 @@ class TestFeatureMonitoringConfigEngine:
                 ),
             ],
             any_order=True,
+        )
+
+    def test_fetch_entity_data_in_monitoring_window(self, backend_fixtures, mocker):
+        # Arrange
+        mocker.patch("hsfs.engine.get_type", return_value="spark")
+        mocker.patch("hsfs.client.get_instance")
+
+        fetch_feature_group_data_mocker = mocker.patch(
+            "hsfs.core.feature_monitoring_config_engine.FeatureMonitoringConfigEngine.fetch_feature_group_data",
+        )
+        fetch_feature_view_data_mocker = mocker.patch(
+            "hsfs.core.feature_monitoring_config_engine.FeatureMonitoringConfigEngine.fetch_feature_view_data",
+        )
+        unit_test_fg = feature_group.FeatureGroup.from_response_json(
+            backend_fixtures["feature_group"]["get"]["response"]
+        )
+        unit_test_fv = feature_view.FeatureView.from_response_json(
+            backend_fixtures["feature_view"]["get"]["response"],
+        )
+
+        config_engine_fg = (
+            feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                feature_store_id=DEFAULT_FEATURE_STORE_ID,
+                feature_group_id=unit_test_fg._id,
+            )
+        )
+        config_engine_fv = (
+            feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                feature_store_id=DEFAULT_FEATURE_STORE_ID,
+                feature_view_id=unit_test_fv._id,
+                feature_view_name=unit_test_fv.name,
+                feature_view_version=unit_test_fv.version,
+            )
+        )
+
+        # Act
+        config_engine_fg.fetch_entity_data_in_monitoring_window(
+            entity=unit_test_fg,
+            start_time=None,
+            end_time=None,
+            use_event_time=False,
+            transformation_function_dataset_version=None,
+            row_percentage=0.5,
+        )
+        config_engine_fg.fetch_entity_data_in_monitoring_window(
+            entity=unit_test_fg,
+            feature_name=DEFAULT_FEATURE_NAME,
+            start_time=None,
+            end_time=None,
+            use_event_time=True,
+            transformation_function_dataset_version=1,
+            row_percentage=1.1,
+        )
+        config_engine_fv.fetch_entity_data_in_monitoring_window(
+            entity=unit_test_fv,
+            start_time=None,
+            end_time=None,
+            use_event_time=True,
+            transformation_function_dataset_version=DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION,
+            row_percentage=0.25,
+        )
+
+        # Assert
+        fetch_feature_group_data_mocker.assert_has_calls(
+            [
+                call(
+                    entity=unit_test_fg,
+                    feature_name=None,
+                    start_time=None,
+                    end_time=None,
+                    use_event_time=False,
+                    transformation_function_dataset_version=None,
+                ),
+                call().sample(fraction=0.5),
+                call(
+                    entity=unit_test_fg,
+                    feature_name=DEFAULT_FEATURE_NAME,
+                    start_time=None,
+                    end_time=None,
+                    use_event_time=False,
+                    transformation_function_dataset_version=None,
+                ),
+            ]
+        )
+        fetch_feature_view_data_mocker.assert_has_calls(
+            [
+                call(
+                    entity=unit_test_fv,
+                    feature_name=None,
+                    start_time=None,
+                    end_time=None,
+                    use_event_time=True,
+                    transformation_function_dataset_version=DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION,
+                ),
+                call().sample(fraction=0.25),
+            ]
         )
