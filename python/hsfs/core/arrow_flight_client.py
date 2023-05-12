@@ -209,7 +209,7 @@ class ArrowFlightClient:
         for fg in query.featuregroups:
             fg_name = self._serialize_featuregroup_name(fg)
             features[fg_name] = [feat.name for feat in fg.features]
-        filters = self._serialize_filter_expression(query)
+        filters = self._serialize_filter_expression(query, features)
         for feature in features:
             features[feature] = list(features[feature])
 
@@ -223,32 +223,32 @@ class ArrowFlightClient:
     def _serialize_featuregroup_name(self, fg):
         return f"{fg._get_project_name()}.{fg.name}_{fg.version}"  # featurestore.name_version
 
-    def _serialize_filter_expression(self, query):
+    def _serialize_filter_expression(self, query, all_features):
         if query.filters is None:
             return None
-        return self._serialize_logic(query.filters, query)
+        return self._serialize_logic(query.filters, query, all_features)
 
-    def _serialize_logic(self, logic, query):
+    def _serialize_logic(self, logic, query, all_features):
         return {
             "type": "logic",
             "logic_type": logic._type,
             "left_filter": self._serialize_filter_or_logic(
-                logic._left_f, logic._left_l, query
+                logic._left_f, logic._left_l, query, all_features
             ),
             "right_filter": self._serialize_filter_or_logic(
-                logic._right_f, logic._right_l, query
+                logic._right_f, logic._right_l, query, all_features
             ),
         }
 
-    def _serialize_filter_or_logic(self, filter, logic, query):
+    def _serialize_filter_or_logic(self, filter, logic, query, all_features):
         if filter:
-            return self._serialize_filter(filter, query)
+            return self._serialize_filter(filter, query, all_features)
         elif logic:
-            return self._serialize_logic(logic, query)
+            return self._serialize_logic(logic, query, all_features)
         else:
             return None
 
-    def _serialize_filter(self, filter, query):
+    def _serialize_filter(self, filter, query, all_features):
         if isinstance(filter._value, datetime.datetime):
             filter_value = filter._value.strftime("%Y-%m-%d %H:%M:%S")
         else:
@@ -258,13 +258,28 @@ class ArrowFlightClient:
             "type": "filter",
             "condition": filter._condition,
             "value": filter_value,
-            "feature": self._serialize_feature_name(filter._feature, query),
+            "feature": self._serialize_feature_name(
+                filter._feature, query, all_features
+            ),
         }
 
-    def _serialize_feature_name(self, feature, query):
-        if feature._feature_group_id is None:
+    def _serialize_feature_name(self, feature, query, all_features):
+        fg_id = feature._feature_group_id
+        if fg_id is None:  # featuregroup id not set
+            # 1) search for feature in all featuregroups
+            for fg in all_features:
+                if feature._name in all_features[fg]:
+                    fg_id = feature._feature_group_id
+                    break
+        if fg_id is None:  # featuregroup id still not set
+            # 2) search for feature including query prefixes
             feature = query.get_feature(feature._name)
-        fg = query.get_featuregroup(feature._feature_group_id)
+            fg_id = feature._feature_group_id
+        if fg_id is None:
+            raise FeatureStoreException(
+                f"Could not find feature {feature._name} in any of the featuregroups in the query"
+            )
+        fg = query.get_featuregroup(fg_id)
         fg_name = self._serialize_featuregroup_name(fg)
         return f"{fg_name}.{feature._name}"
 
