@@ -905,7 +905,7 @@ class FeatureStore:
             online_enabled=online_enabled,
         )
 
-    def create_spine_group(
+    def get_or_create_spine_group(
         self,
         name: str,
         version: Optional[int] = None,
@@ -921,18 +921,29 @@ class FeatureStore:
             List[list],
         ] = None,
     ):
-        spine = feature_group.SpineGroup(
-            name=name,
-            version=version,
-            description=description,
-            primary_key=primary_key,
-            event_time=event_time,
-            features=features,
-            dataframe=dataframe,
-            featurestore_id=self._id,
-            featurestore_name=self._name,
-        )
-        return spine._save()
+        try:
+            return self._feature_group_api.get(
+                name, version, feature_group_api.FeatureGroupApi.ONDEMAND
+            )
+        except exceptions.RestAPIError as e:
+            if (
+                e.response.json().get("errorCode", "") == 270089
+                and e.response.status_code == 404
+            ):
+                spine = feature_group.SpineGroup(
+                    name=name,
+                    version=version,
+                    description=description,
+                    primary_key=primary_key,
+                    event_time=event_time,
+                    features=features,
+                    dataframe=dataframe,
+                    featurestore_id=self._id,
+                    featurestore_name=self._name,
+                )
+                return spine._save()
+            else:
+                raise e
 
     def create_training_dataset(
         self,
