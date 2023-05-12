@@ -309,8 +309,8 @@ class ArrowFlightClient:
         featuregroup_name = None
 
         if feature._feature_group_id is None:
-            for fg_name in features:
-                if feature._name in features[fg_name]:
+            for fg_name, fg_features in features.items():
+                if feature._name in fg_features:
                     featuregroup_name = fg_name
                     break
         elif feature._feature_group_id in featuregroups:
