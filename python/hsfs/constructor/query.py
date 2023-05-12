@@ -420,11 +420,22 @@ class Query:
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         feature_group_json = json_decamelized["left_feature_group"]
-        feature_group_obj = (
-            feature_group.ExternalFeatureGroup.from_response_json(feature_group_json)
-            if "storage_connector" in feature_group_json
-            else feature_group.FeatureGroup.from_response_json(feature_group_json)
-        )
+        if (
+            feature_group_json["type"] == "onDemandFeaturegroupDTO"
+            and not feature_group_json["spine"]
+        ):
+            feature_group_obj = feature_group.ExternalFeatureGroup.from_response_json(
+                feature_group_json
+            )
+        elif (
+            feature_group_json["type"] == "onDemandFeaturegroupDTO"
+            and feature_group_json["spine"]
+        ):
+            feature_group_obj = feature_group.SpineGroup.from_response_json(
+                feature_group_json
+            )
+        else:
+            feature_group.FeatureGroup.from_response_json(feature_group_json)
         return cls(
             left_feature_group=feature_group_obj,
             left_features=json_decamelized["left_features"],

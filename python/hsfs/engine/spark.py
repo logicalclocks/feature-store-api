@@ -66,7 +66,7 @@ except ImportError:
     pass
 
 from hsfs import feature, training_dataset_feature, client, util
-from hsfs.feature_group import ExternalFeatureGroup
+from hsfs.feature_group import ExternalFeatureGroup, SpineGroup
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import hudi_engine, transformation_function_engine, kafka_api
@@ -139,12 +139,15 @@ class Engine:
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
     def register_external_temporary_table(self, external_fg, alias):
-        external_dataset = external_fg.storage_connector.read(
-            external_fg.query,
-            external_fg.data_format,
-            external_fg.options,
-            external_fg.storage_connector._get_path(external_fg.path),
-        )
+        if not isinstance(external_fg, SpineGroup):
+            external_dataset = external_fg.storage_connector.read(
+                external_fg.query,
+                external_fg.data_format,
+                external_fg.options,
+                external_fg.storage_connector._get_path(external_fg.path),
+            )
+        else:
+            external_dataset = external_fg.dataframe
         if external_fg.location:
             self._spark_session.sparkContext.textFile(external_fg.location).collect()
 
