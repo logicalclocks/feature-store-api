@@ -238,7 +238,7 @@ class FeatureViewEngine:
         return transformation_functions_dict
 
     def create_training_dataset(
-        self, feature_view_obj, training_dataset_obj, user_write_options
+        self, feature_view_obj, training_dataset_obj, user_write_options, spine=None
     ):
         self._set_event_time(feature_view_obj, training_dataset_obj)
         updated_instance = self._create_training_data_metadata(
@@ -248,6 +248,7 @@ class FeatureViewEngine:
             feature_view_obj,
             user_write_options,
             training_dataset_obj=training_dataset_obj,
+            spine=spine,
         )
         return updated_instance, td_job
 
@@ -358,7 +359,7 @@ class FeatureViewEngine:
         return int(float(datetime.datetime.now().timestamp()) * 1000)
 
     def recreate_training_dataset(
-        self, feature_view_obj, training_dataset_version, user_write_options
+        self, feature_view_obj, training_dataset_version, user_write_options, spine=None
     ):
         training_dataset_obj = self._get_training_data_metadata(
             feature_view_obj, training_dataset_version
@@ -367,6 +368,7 @@ class FeatureViewEngine:
             feature_view_obj,
             user_write_options,
             training_dataset_obj=training_dataset_obj,
+            spine=spine,
         )
         return training_dataset_obj, td_job
 
@@ -420,6 +422,7 @@ class FeatureViewEngine:
         user_write_options,
         training_dataset_obj=None,
         training_dataset_version=None,
+        spine=None,
     ):
         if training_dataset_obj:
             pass
@@ -436,6 +439,7 @@ class FeatureViewEngine:
             training_dataset_obj.event_end_time,
             with_label=True,
             training_dataset_version=training_dataset_obj.version,
+            spine=spine,
         )
         td_job = engine.get_instance().write_training_dataset(
             training_dataset_obj,

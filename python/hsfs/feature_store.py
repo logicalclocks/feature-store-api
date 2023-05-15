@@ -929,7 +929,7 @@ class FeatureStore:
             return spine
         except exceptions.RestAPIError as e:
             if (
-                e.response.json().get("errorCode", "") == 270089
+                e.response.json().get("errorCode", "") == 270009
                 and e.response.status_code == 404
             ):
                 spine = feature_group.SpineGroup(

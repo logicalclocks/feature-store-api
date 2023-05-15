@@ -611,6 +611,7 @@ class FeatureView:
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
+        spine=None,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data can be retrieved by calling `feature_view.get_training_data`.
@@ -786,7 +787,7 @@ class FeatureView:
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
-            self, td, write_options
+            self, td, write_options, spine
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -811,6 +812,7 @@ class FeatureView:
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
+        spine=None,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train and test set at random or according to time ranges.
@@ -1040,7 +1042,7 @@ class FeatureView:
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
-            self, td, write_options
+            self, td, write_options, spine
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1068,6 +1070,7 @@ class FeatureView:
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
+        spine=None,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train, validation, and test set at random or according to time range.
@@ -1291,7 +1294,7 @@ class FeatureView:
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
-            self, td, write_options
+            self, td, write_options, spine
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1304,6 +1307,7 @@ class FeatureView:
         self,
         training_dataset_version: int,
         write_options: Optional[Dict[Any, Any]] = None,
+        spine=None,
     ):
         """
         Recreate a training dataset.
@@ -1343,7 +1347,7 @@ class FeatureView:
                 that was launched to create the training dataset.
         """
         td, td_job = self._feature_view_engine.recreate_training_dataset(
-            self, training_dataset_version, write_options
+            self, training_dataset_version, write_options, spine
         )
         return td_job
 
@@ -1355,6 +1359,7 @@ class FeatureView:
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
+        spine=None,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1447,7 +1452,7 @@ class FeatureView:
             extra_filter=extra_filter,
         )
         td, df = self._feature_view_engine.get_training_data(
-            self, read_options, training_dataset_obj=td
+            self, read_options, training_dataset_obj=td, spine=spine
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1612,6 +1617,7 @@ class FeatureView:
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
+        spine=None,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1752,6 +1758,7 @@ class FeatureView:
                 TrainingDatasetSplit.VALIDATION,
                 TrainingDatasetSplit.TEST,
             ],
+            spine=spine,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
