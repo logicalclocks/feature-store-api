@@ -288,7 +288,7 @@ class FeatureMonitoringResultEngine:
         ],
         reference_statistics: Optional[FeatureDescriptiveStatistics] = None,
         specific_value: Optional[Union[int, float]] = None,
-    ) -> Union[List[FeatureMonitoringResult], FeatureMonitoringResult]:
+    ) -> List[FeatureMonitoringResult]:
         """Run and upload statistics comparison between detection and reference stats.
 
         Args:
@@ -300,84 +300,45 @@ class FeatureMonitoringResultEngine:
         Returns:
             Union[FeatureMonitoringResult, List[FeatureMonitoringResult]]. Feature monitoring result
         """
-        execution_id = self.get_monitoring_job_execution_id(job_name=fm_config.job_name)
-        detection_statistics = (
-            detection_statistics
-            if isinstance(detection_statistics, list)
-            else [detection_statistics]
-        )
-
-        results = [
-            FeatureMonitoringResult(
-                config_id=fm_config.id,
-                execution_id=execution_id,
-                feature_store_id=self._feature_store_id,
-            )
-        ]
-
         if reference_statistics or specific_value:
-            # Here we compute the difference and detect shift
-            pass
-
-        if reference_statistics is not None:
-            # compute difference and detect shift
-            if isinstance(detection_statistics, list):
-                if isinstance(reference_statistics, (int, float)):
-                    # explode reference value into an array of same length as detection statistics
-                    reference_statistics = [reference_statistics] * len(
-                        detection_statistics
-                    )
-                results = []
-                for det_stats, ref_stats in zip(
-                    detection_statistics, reference_statistics
-                ):
-                    diff, shift = self._compute_difference_and_shift(
-                        fm_config, det_stats, ref_stats
-                    )
-                    res = self.save_feature_monitoring_result(
-                        config_id=fm_config.id,
-                        execution_id=execution_id,
-                        feature_name=det_stats.feature_name,
-                        detection_statistics=det_stats,
-                        reference_statistics=ref_stats,
-                        difference=diff,
-                        shift_detected=shift,
-                    )
-                    results.append(res)
-                return results
-            else:
-                diff, shift = self._compute_difference_and_shift(
-                    fm_config,
-                    detection_statistics,  # comparison supports only single feature
-                    reference_statistics,
-                )
-                return self.save_feature_monitoring_result(
-                    config_id=fm_config.id,
-                    execution_id=execution_id,
-                    feature_name=detection_statistics.feature_name,
-                    detection_statistics=detection_statistics,
-                    reference_statistics=reference_statistics,
-                    difference=diff,
-                    shift_detected=shift,
-                )
+            difference, shift_detected = self._compute_difference_and_shift(
+                fm_config=fm_config,
+                detection_statistics=detection_statistics,
+                reference_statistics=reference_statistics,
+                specific_value=specific_value,
+            )
+        else:
+            difference, shift_detected = None, False
 
         if isinstance(detection_statistics, list):
-            return [
-                self.save_feature_monitoring_result(
+            results = [
+                self.build_feature_monitoring_result(
                     config_id=fm_config.id,
-                    execution_id=execution_id,
                     feature_name=det_stats.feature_name,
+                    raised_exception=False,
                     detection_statistics=det_stats,
+                    difference=difference,
+                    shift_detected=shift_detected,
                 )
                 for det_stats in detection_statistics
             ]
         else:
-            return self.save_feature_monitoring_result(
-                config_id=fm_config.id,
-                execution_id=execution_id,
-                feature_name=detection_statistics.feature_name,
-                detection_statistics=detection_statistics,
-            )
+            results = [
+                self.build_feature_monitoring_result(
+                    config_id=fm_config.id,
+                    feature_name=detection_statistics.feature_name,
+                    raised_exception=False,
+                    detection_statistics=detection_statistics,
+                    reference_statistics=reference_statistics,
+                    specific_value=specific_value,
+                    difference=difference,
+                    shift_detected=shift_detected,
+                )
+            ]
+
+        return [
+            self.save_feature_monitoring_result(result=result) for result in results
+        ]
 
     def _compute_difference_and_shift(
         self,
@@ -482,7 +443,7 @@ class FeatureMonitoringResultEngine:
         job_name: str,
     ) -> int:
         """Get the execution id of the last execution of the monitoring job."""
-        execution = self._job_api.last_execution(self._job_api.get(job_name))
+        execution = self._job_api.last_execution(self._job_api.get(name=job_name))
         return (
             execution[0]._id
             if isinstance(execution, list) and len(execution) > 0

@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, Union
 from datetime import date, datetime
 import re
 
@@ -22,20 +22,14 @@ from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core.feature_monitoring_result_engine import FeatureMonitoringResultEngine
 from hsfs.core.statistics_engine import StatisticsEngine
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
-from hsfs.core.monitoring_window_config import (
-    MonitoringWindowConfig,
-    WindowConfigType,
-)
+from hsfs.core import monitoring_window_config as mwc
 from hsfs.core import monitoring_window_config_engine
-from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 from hsfs.core.job import Job
 from hsfs.core.job_api import JobApi
 from hsfs.core.job_scheduler import JobScheduler
 from hsfs.util import convert_event_time_to_timestamp
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs import feature_group, feature_view, engine
-from hsfs.core import feature_view_engine
 
 
 class FeatureMonitoringConfigEngine:
@@ -74,9 +68,6 @@ class FeatureMonitoringConfigEngine:
             assert feature_view_name is not None
             assert feature_view_version is not None
             entity_type = "featureview"
-            self._feature_view_engine = feature_view_engine.FeatureViewEngine(
-                feature_store_id=feature_store_id,
-            )
         else:
             entity_type = "featuregroups"
 
@@ -126,7 +117,7 @@ class FeatureMonitoringConfigEngine:
         self,
         name: str,
         feature_name: str,
-        detection_window_config: MonitoringWindowConfig,
+        detection_window_config: "mwc.MonitoringWindowConfig",
         scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
         description: Optional[str] = None,
     ) -> "fmc.FeatureMonitoringConfig":
@@ -163,8 +154,8 @@ class FeatureMonitoringConfigEngine:
         self,
         feature_name: str,
         name: str,
-        detection_window_config: MonitoringWindowConfig,
-        reference_window_config: MonitoringWindowConfig,
+        detection_window_config: "mwc.MonitoringWindowConfig",
+        reference_window_config: "mwc.MonitoringWindowConfig",
         statistics_comparison_config: Dict[str, Any],
         scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
         description: Optional[str] = None,
@@ -647,8 +638,8 @@ class FeatureMonitoringConfigEngine:
         self,
         feature_name: str,
         name: str,
-        detection_window_config: MonitoringWindowConfig,
-        reference_window_config: MonitoringWindowConfig,
+        detection_window_config: "mwc.MonitoringWindowConfig",
+        reference_window_config: "mwc.MonitoringWindowConfig",
         statistics_comparison_config: Dict[str, Any],
         scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]],
         description: Optional[str] = None,
@@ -731,7 +722,7 @@ class FeatureMonitoringConfigEngine:
 
     def run_feature_monitoring(
         self, entity, config_name: str, result_engine: FeatureMonitoringResultEngine
-    ) -> Union[FeatureMonitoringResult, List[FeatureMonitoringResult]]:
+    ) -> List[FeatureMonitoringResult]:
         """Main function used by the job to actually perform the monitoring.
 
         Args:
@@ -742,30 +733,34 @@ class FeatureMonitoringConfigEngine:
                 upload the outcome of the monitoring to the backend.
 
         Returns:
-            FeatureMonitoringResult: A result object describing the
+            List[FeatureMonitoringResult]: A list of result object describing the
                 outcome of the monitoring.
         """
         config = self._feature_monitoring_config_api.get_by_name(config_name)
 
         # TODO: Future work. Parallelize both single_window_monitoring calls and wait
-        detection_statistics = self.run_single_window_monitoring(
-            entity=entity,
-            monitoring_window_config=config.detection_window_config,
-            feature_name=config.feature_name,
+        detection_statistics = (
+            self._monitoring_window_config_engine.run_single_window_monitoring(
+                entity=entity,
+                monitoring_window_config=config.detection_window_config,
+                feature_name=config.feature_name,
+            )
         )
 
         if config.reference_window_config is not None:
             if (
                 config.reference_window_config.window_config_type
-                == WindowConfigType.SPECIFIC_VALUE
+                == mwc.WindowConfigType.SPECIFIC_VALUE
             ):
                 specific_value = config.reference_window_config.specific_value
                 reference_statistics = None
             else:
-                reference_statistics = self.run_single_window_monitoring(
-                    entity=entity,
-                    monitoring_window_config=config.reference_window_config,
-                    feature_name=config.feature_name,
+                reference_statistics = (
+                    self._monitoring_window_config_engine.run_single_window_monitoring(
+                        entity=entity,
+                        monitoring_window_config=config.reference_window_config,
+                        feature_name=config.feature_name,
+                    )
                 )
                 specific_value = None
         else:
@@ -777,193 +772,3 @@ class FeatureMonitoringConfigEngine:
             reference_statistics=reference_statistics,
             specific_value=specific_value,
         )
-
-    def run_single_window_monitoring(
-        self,
-        entity,
-        monitoring_window_config: MonitoringWindowConfig,
-        feature_name: Optional[str] = None,
-        use_event_time: bool = False,
-        transformation_function_dataset_version=None,
-    ) -> Union[FeatureDescriptiveStatistics, List[FeatureDescriptiveStatistics], float]:
-        """Fetch the entity data based on monitoring window configuration and compute statistics.
-
-        Args:
-            entity: FeatureStore: Feature store to fetch the entity to monitor.
-            monitoring_window_config: MonitoringWindowConfig: Monitoring window config.
-            feature_name: str: Name of the feature to monitor.
-
-        Returns:
-            List[FeatureDescriptiveStatitics]: List of Descriptive statistics.
-        """
-        # Check if statistics already exists
-        (
-            start_time,
-            end_time,
-        ) = self._monitoring_window_config_engine.get_window_start_end_times(
-            monitoring_window_config=monitoring_window_config,
-        )
-        registered_stats = self._statistics_engine.get_by_commit_time_window(
-            entity,
-            start_time=start_time,
-            end_time=end_time,
-            feature_name=feature_name,
-            row_percentage=monitoring_window_config.row_percentage,
-        )
-
-        if registered_stats is None:  # if statistics don't exist
-            # Fetch the actual data for which to compute statistics based on row_percentage and time window
-            entity_feature_df = self.fetch_entity_data_in_monitoring_window(
-                entity=entity,
-                feature_name=feature_name,
-                start_time=start_time,
-                end_time=end_time,
-                row_percentage=monitoring_window_config.row_percentage,
-                use_event_time=use_event_time,
-                transformation_function_dataset_version=transformation_function_dataset_version,
-            )
-
-            # Compute statistics on the feature dataframe
-            registered_stats = (
-                self._statistics_engine.compute_and_save_monitoring_statistics(
-                    entity,
-                    feature_dataframe=entity_feature_df,
-                    start_time=start_time,
-                    end_time=end_time,
-                    row_percentage=monitoring_window_config.row_percentage,
-                    feature_name=feature_name,
-                )
-            )
-
-        return (
-            registered_stats.feature_descriptive_statistics[0]
-            if feature_name is not None
-            else registered_stats.feature_descriptive_statistics
-        )
-
-    def fetch_entity_data_in_monitoring_window(
-        self,
-        entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"],
-        start_time: int,
-        end_time: int,
-        row_percentage: float,
-        feature_name: Optional[str] = None,
-        use_event_time: bool = False,
-        transformation_function_dataset_version: Optional[int] = None,
-    ) -> TypeVar("pyspark.sql.DataFrame"):
-        """Fetch the entity data based on time window and row percentage.
-
-        Args:
-            entity: Union[FeatureGroup, FeatureView]: Entity to monitor.
-            feature_name: str: Name of the feature to monitor.
-            start_time: int: Window start commit or event time
-            end_time: int: Window end commit or event time
-            row_percentage: fraction of rows to include [0, 1.0]
-            use_event_time: bool: Whether to use event time or ingestion time.
-                Feature View only.
-            transformation_function_dataset_version: int: Version of the dataset
-                to fetch statistics from for the transformation function.
-                Feature View only.
-
-        Returns:
-            `pyspark.sql.DataFrame`. A Spark DataFrame with the entity data
-        """
-        if entity.ENTITY_TYPE == "featuregroups":
-            # use_event_time and transformation_function don't apply here
-            entity_df = self.fetch_feature_group_data(
-                entity=entity,
-                feature_name=feature_name,
-                start_time=start_time,
-                end_time=end_time,
-                use_event_time=False,
-                transformation_function_dataset_version=None,
-            )
-
-        elif entity.ENTITY_TYPE == "featureview":
-            entity_df = self.fetch_feature_view_data(
-                entity=entity,
-                feature_name=feature_name,
-                start_time=start_time,
-                end_time=end_time,
-                use_event_time=use_event_time,
-                transformation_function_dataset_version=transformation_function_dataset_version,
-            )
-
-        if row_percentage < 1.0:
-            entity_df = entity_df.sample(fraction=row_percentage)
-
-        return entity_df
-
-    def fetch_feature_view_data(
-        self,
-        entity: "feature_view.FeatureView",
-        feature_name: Optional[str] = None,
-        start_time: Optional[int] = None,
-        end_time: Optional[int] = None,
-        use_event_time: bool = False,
-        transformation_function_dataset_version: Optional[int] = None,
-    ) -> TypeVar("pyspark.sql.DataFrame"):
-        """Fetch the feature view data based on time window and row percentage.
-
-        Args:
-            feature_view: FeatureView: Feature view to monitor.
-            feature_name: str: Name of the feature to monitor.
-            start_time: int: Window start commit or event time.
-            end_time: int: Window end commit or event time.
-            use_event_time: bool: Whether to use event time or not
-            transformation_function_dataset_version: int: Dataset version of the transformation function
-
-        Returns:
-            `pyspark.sql.DataFrame`. A Spark DataFrame with the entity data
-        """
-        if use_event_time:
-            entity_df = self._feature_view_engine.get_batch_query(
-                feature_view_obj=entity,
-                start_time=start_time,
-                end_time=end_time,
-                with_label=True if feature_name is None else False,
-                training_dataset_version=transformation_function_dataset_version,
-            ).read()
-        else:
-            entity_df = entity.query.as_of(
-                exclude_until=start_time, wallclock_time=end_time
-            ).read()
-
-        if feature_name:
-            entity_df = entity_df.select(feature_name)
-
-        if transformation_function_dataset_version:
-            entity.init_batch_scoring(
-                training_dataset_version=transformation_function_dataset_version
-            )
-
-            return engine.get_instance()._apply_transformation_function(
-                entity._batch_scoring_server._get_transformation_fns(),
-                dataset=entity_df,
-            )
-        else:
-            return entity_df
-
-    def fetch_feature_group_data(
-        self,
-        entity: "feature_group.FeatureGroup",
-        feature_name: Optional[str] = None,
-        start_time: Optional[int] = None,
-        end_time: Optional[int] = None,
-    ) -> TypeVar("pyspark.sql.Dataframe"):
-        """Fetch the feature group data based on time window.
-
-        Args:
-            feature_group: FeatureGroup: Feature group to monitor.
-            feature_name: str: Name of the feature to monitor.
-            start_time: int: Window start commit time.
-            end_time: int: Window end commit time.
-        """
-        if feature_name:
-            pre_df = entity.select(features=[feature_name])
-        else:
-            pre_df = entity
-
-        full_df = pre_df.as_of(exclude_until=start_time, wallclock_time=end_time).read()
-
-        return full_df

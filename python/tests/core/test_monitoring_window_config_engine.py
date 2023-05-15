@@ -16,9 +16,18 @@
 from hsfs.core import monitoring_window_config_engine as mwce
 from hsfs.core import monitoring_window_config as mwc
 from hsfs.util import convert_event_time_to_timestamp
+from mock import call
+from hsfs import feature_group, feature_view
+from hsfs.constructor import query
 
 import pytest
 from datetime import timedelta, datetime
+
+DEFAULT_FEATURE_NAME = "amount"
+DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION = 2
+
+ENGINE_GET_TYPE = "hsfs.engine.get_type"
+CLIENT_GET_INSTANCE = "hsfs.client.get_instance"
 
 
 class TestMonitoringWindowConfigEngine:
@@ -198,3 +207,261 @@ class TestMonitoringWindowConfigEngine:
             <= after_time
         )
         assert before_time <= end_time <= after_time
+
+    def test_fetch_feature_group_data(self, mocker, backend_fixtures):
+        # Arrange
+        unit_test_fg = feature_group.FeatureGroup.from_response_json(
+            backend_fixtures["feature_group"]["get"]["response"]
+        )
+        mocker.patch(ENGINE_GET_TYPE, return_value="spark")
+        select_mock = mocker.patch(
+            "hsfs.feature_group.FeatureGroup.select",
+            return_value=query.Query.from_response_json(
+                backend_fixtures["query"]["get"]["response"]
+            ),
+        )
+        as_of_mock = mocker.patch(
+            "hsfs.constructor.query.Query.as_of",
+            return_value=query.Query.from_response_json(
+                backend_fixtures["query"]["get"]["response"]
+            ),
+        )
+        read_mock = mocker.patch("hsfs.constructor.query.Query.read")
+        config_engine = mwce.MonitoringWindowConfigEngine()
+        start_time = (datetime.now() - timedelta(days=1)).timestamp()
+        end_time = datetime.now().timestamp()
+
+        # Act
+        _ = config_engine.fetch_feature_group_data(
+            entity=unit_test_fg,
+            feature_name=None,
+            start_time=None,
+            end_time=None,
+        )
+        _ = config_engine.fetch_feature_group_data(
+            entity=unit_test_fg,
+            feature_name=DEFAULT_FEATURE_NAME,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        _ = config_engine.fetch_feature_group_data(
+            entity=unit_test_fg,
+            feature_name=None,
+            start_time=start_time,
+            end_time=None,
+        )
+        _ = config_engine.fetch_feature_group_data(
+            entity=unit_test_fg,
+            feature_name=DEFAULT_FEATURE_NAME,
+            start_time=None,
+            end_time=end_time,
+        )
+
+        # Assert
+        assert select_mock.call_count == 2
+        as_of_mock.assert_has_calls(
+            [
+                call(exclude_until=None, wallclock_time=None),
+                call(exclude_until=start_time, wallclock_time=end_time),
+                call(exclude_until=start_time, wallclock_time=None),
+                call(exclude_until=None, wallclock_time=end_time),
+            ],
+            any_order=False,
+        )
+        assert read_mock.call_count == 4
+
+    def test_fetch_feature_view_data(self, mocker, backend_fixtures):
+        # Arrange
+        mocker.patch(ENGINE_GET_TYPE, return_value="spark")
+        mocker.patch("hsfs.engine.get_instance")
+        mocker.patch(CLIENT_GET_INSTANCE)
+        unit_test_fv = feature_view.FeatureView.from_response_json(
+            backend_fixtures["feature_view"]["get"]["response"]
+        )
+        mock_vector_server = mocker.patch(
+            "hsfs.core.vector_server.VectorServer",
+        )
+        # if use use_event_time is true, use get_batch_query for event time
+        get_batch_query_mock = mocker.patch(
+            "hsfs.core.feature_view_engine.FeatureViewEngine.get_batch_query",
+            return_value=query.Query.from_response_json(
+                backend_fixtures["query"]["get"]["response"]
+            ),
+        )
+        # if use_event_time is false, use as of for commit time
+        as_of_mock = mocker.patch(
+            "hsfs.constructor.query.Query.as_of",
+            return_value=query.Query.from_response_json(
+                backend_fixtures["query"]["get"]["response"]
+            ),
+        )
+        read_mock = mocker.patch("hsfs.constructor.query.Query.read")
+
+        config_engine = mwce.MonitoringWindowConfigEngine()
+        start_time = datetime.now() - timedelta(days=1)
+        end_time = datetime.now()
+
+        # Act
+        # 4 possibilities : with or without use_event_time, with or without transformation_function_dataset_version
+        # use as_of
+        _ = config_engine.fetch_feature_view_data(
+            entity=unit_test_fv,
+            feature_name=None,
+            start_time=None,
+            end_time=None,
+            use_event_time=False,
+            transformation_function_dataset_version=None,
+        )
+        # use get_batch_query
+        _ = config_engine.fetch_feature_view_data(
+            entity=unit_test_fv,
+            feature_name=DEFAULT_FEATURE_NAME,
+            start_time=start_time,
+            end_time=None,
+            use_event_time=True,
+            transformation_function_dataset_version=None,
+        )
+        # use as_of
+        _ = config_engine.fetch_feature_view_data(
+            entity=unit_test_fv,
+            feature_name=None,
+            start_time=start_time,
+            end_time=end_time,
+            use_event_time=False,
+            transformation_function_dataset_version=DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION,
+        )
+        # use get_batch_query
+        _ = config_engine.fetch_feature_view_data(
+            entity=unit_test_fv,
+            feature_name=DEFAULT_FEATURE_NAME,
+            start_time=None,
+            end_time=end_time,
+            use_event_time=True,
+            transformation_function_dataset_version=DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION
+            + 1,
+        )
+
+        # Assert
+        assert read_mock.call_count == 4
+        get_batch_query_mock.assert_has_calls(
+            [
+                call(
+                    feature_view_obj=unit_test_fv,
+                    start_time=start_time,
+                    end_time=None,
+                    with_label=False,
+                    training_dataset_version=None,
+                ),
+                call(
+                    feature_view_obj=unit_test_fv,
+                    start_time=None,
+                    end_time=end_time,
+                    with_label=False,
+                    training_dataset_version=DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION
+                    + 1,
+                ),
+            ],
+            any_order=False,
+        )
+        as_of_mock.assert_has_calls(
+            [
+                call(exclude_until=None, wallclock_time=None),
+                call(exclude_until=start_time, wallclock_time=end_time),
+            ],
+            any_order=False,
+        )
+        mock_vector_server.assert_has_calls(
+            [
+                call(
+                    5,
+                    [mocker.ANY, mocker.ANY],
+                    DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION,
+                ),
+                call(
+                    5,
+                    [mocker.ANY, mocker.ANY],
+                    DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION + 1,
+                ),
+            ],
+            any_order=True,
+        )
+
+    def test_fetch_entity_data_in_monitoring_window(self, backend_fixtures, mocker):
+        # Arrange
+        mocker.patch("hsfs.engine.get_type", return_value="spark")
+        mocker.patch("hsfs.client.get_instance")
+
+        fetch_feature_group_data_mocker = mocker.patch(
+            "hsfs.core.monitoring_window_config_engine.MonitoringWindowConfigEngine.fetch_feature_group_data",
+        )
+        fetch_feature_view_data_mocker = mocker.patch(
+            "hsfs.core.monitoring_window_config_engine.MonitoringWindowConfigEngine.fetch_feature_view_data",
+        )
+        unit_test_fg = feature_group.FeatureGroup.from_response_json(
+            backend_fixtures["feature_group"]["get"]["response"]
+        )
+        unit_test_fv = feature_view.FeatureView.from_response_json(
+            backend_fixtures["feature_view"]["get"]["response"],
+        )
+
+        config_engine_fg = mwce.MonitoringWindowConfigEngine()
+        config_engine_fv = mwce.MonitoringWindowConfigEngine()
+
+        # Act
+        config_engine_fg.fetch_entity_data_in_monitoring_window(
+            entity=unit_test_fg,
+            start_time=None,
+            end_time=None,
+            use_event_time=False,
+            transformation_function_dataset_version=None,
+            row_percentage=0.5,
+        )
+        config_engine_fg.fetch_entity_data_in_monitoring_window(
+            entity=unit_test_fg,
+            feature_name=DEFAULT_FEATURE_NAME,
+            start_time=None,
+            end_time=None,
+            use_event_time=True,
+            transformation_function_dataset_version=1,
+            row_percentage=1.1,
+        )
+        config_engine_fv.fetch_entity_data_in_monitoring_window(
+            entity=unit_test_fv,
+            start_time=None,
+            end_time=None,
+            use_event_time=True,
+            transformation_function_dataset_version=DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION,
+            row_percentage=0.25,
+        )
+
+        # Assert
+        fetch_feature_group_data_mocker.assert_has_calls(
+            [
+                call(
+                    entity=unit_test_fg,
+                    feature_name=None,
+                    start_time=None,
+                    end_time=None,
+                ),
+                call().sample(fraction=0.5),
+                call(
+                    entity=unit_test_fg,
+                    feature_name=DEFAULT_FEATURE_NAME,
+                    start_time=None,
+                    end_time=None,
+                ),
+            ]
+        )
+        fetch_feature_view_data_mocker.assert_has_calls(
+            [
+                call(
+                    entity=unit_test_fv,
+                    feature_name=None,
+                    start_time=None,
+                    end_time=None,
+                    use_event_time=True,
+                    transformation_function_dataset_version=DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION,
+                ),
+                call().sample(fraction=0.25),
+            ]
+        )

@@ -64,10 +64,10 @@ class FeatureMonitoringConfig:
         href: Optional[str] = None,
         transformation_function_dataset_version: Optional[int] = None,
         use_event_time: Optional[bool] = False,
-    ):
+    ) -> "FeatureMonitoringConfig":
+        self.name = name
         self._id = id
         self._href = href
-        self.name = name
         self.description = description
         self._feature_name = feature_name
         self._feature_store_id = feature_store_id
@@ -601,7 +601,8 @@ class FeatureMonitoringConfig:
     def name(self) -> str:
         """The name of the feature monitoring config.
 
-        A Feature Group or Feature View cannot have multiple feature monitoring configs with the same name.
+        A Feature Group or Feature View cannot have multiple feature monitoring configs with the same name. The name of
+        a feature monitoring config is limited to 63 characters.
 
         !!! note
             This property is read-only after the feature monitoring config has been saved.
@@ -610,7 +611,7 @@ class FeatureMonitoringConfig:
 
     @name.setter
     def name(self, name: str):
-        if self._id:
+        if hasattr(self, "_id"):
             raise AttributeError("The name of a registered config is read-only.")
         elif not isinstance(name, str):
             raise TypeError("name must be of type str")
