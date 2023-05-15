@@ -1286,10 +1286,7 @@ class BigQueryConnector(StorageConnector):
             else self.spark_options()
         )
         if query:
-            if (
-                self.BIGQ_MATERIAL_DATASET not in options
-                or self.BIGQ_VIEWS_ENABLED not in options
-            ):
+            if not {self.BIGQ_MATERIAL_DATASET, self.BIGQ_VIEWS_ENABLED}.issubset(options.keys()):
                 raise ValueError(
                     "BigQuery materialization views should be enabled for SQL query. "
                     "Set spark options viewsEnabled=True and "
