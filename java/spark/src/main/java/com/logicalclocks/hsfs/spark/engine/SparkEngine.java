@@ -23,6 +23,7 @@ import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.DataFormat;
@@ -1008,9 +1009,20 @@ public class SparkEngine {
     }
     HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
-    config.put("kafka.bootstrap.servers",
-        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
-            "INTERNAL://", "")).collect(Collectors.joining(",")));
+    if (!config.containsKey("kafka.bootstrap.servers")) {
+      if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
+        config.put("kafka.bootstrap.servers",
+            kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
+                "INTERNAL://", ""))
+              .collect(Collectors.joining(",")));
+      } else {
+        config.put("kafka.bootstrap.servers",
+            kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
+              .map(broker -> broker.replaceAll("EXTERNAL://", ""))
+              .collect(Collectors.joining(","))
+        );
+      }
+    }
     config.put("kafka.security.protocol", "SSL");
     config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
     config.put("kafka.ssl.truststore.password", client.getCertKey());
