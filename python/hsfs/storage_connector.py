@@ -1083,14 +1083,19 @@ class GcsConnector(StorageConnector):
     ):
         """Reads GCS path into a dataframe using the storage connector.
 
-        ```python
-        conn.read(data_format='spark_formats',path='gs://BUCKET/DATA')
-        ```
         To read directly from the default bucket, you can omit the path argument:
         ```python
         conn.read(data_format='spark_formats')
         ```
-
+        Or to read objects from default bucket provide the object path without gsUtil URI schema. For example,
+        following will read from a path gs://bucket_on_connector/Path/object :
+        ```python
+        conn.read(data_format='spark_formats', paths='Path/object')
+        ```
+        Or to read with full gsUtil URI path,
+        ```python
+        conn.read(data_format='spark_formats',path='gs://BUCKET/DATA')
+        ```
         # Arguments
             query: Not relevant for GCS connectors.
             data_format: Spark data format. Defaults to `None`.
@@ -1102,6 +1107,7 @@ class GcsConnector(StorageConnector):
         # Returns
             `Dataframe`: A Spark dataframe.
         """
+        # validate engine supports connector type
         if not engine.get_instance().is_connector_type_supported(self.type):
             raise NotImplementedError(
                 "GCS connector not yet supported for engine: " + engine.get_type()
@@ -1114,11 +1120,6 @@ class GcsConnector(StorageConnector):
                 "Prepending default bucket specified on connector, final path: {}".format(
                     path
                 )
-            )
-        # validate engine supports this connector type
-        if not engine.get_instance().is_connector_type_supported(self.type):
-            raise NotImplementedError(
-                "GCS connector not yet supported for engine: " + engine.get_type()
             )
 
         return engine.get_instance().read(self, data_format, options, path)
@@ -1275,6 +1276,7 @@ class BigQueryConnector(StorageConnector):
         # Returns
             `Dataframe`: A Spark dataframe.
         """
+        # validate engine supports connector type
         if not engine.get_instance().is_connector_type_supported(self.type):
             raise NotImplementedError(
                 "BigQuery connector not yet supported for engine: " + engine.get_type()
@@ -1286,7 +1288,9 @@ class BigQueryConnector(StorageConnector):
             else self.spark_options()
         )
         if query:
-            if not {self.BIGQ_MATERIAL_DATASET, self.BIGQ_VIEWS_ENABLED}.issubset(options.keys()):
+            if not {self.BIGQ_MATERIAL_DATASET, self.BIGQ_VIEWS_ENABLED}.issubset(
+                options.keys()
+            ):
                 raise ValueError(
                     "BigQuery materialization views should be enabled for SQL query. "
                     "Set spark options viewsEnabled=True and "
