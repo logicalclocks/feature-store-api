@@ -1262,4 +1262,12 @@ class Engine:
 
     @staticmethod
     def is_connector_type_supported(connector_type):
-        return connector_type in [StorageConnector.HOPSFS, StorageConnector.S3, StorageConnector.JDBC, StorageConnector.REDSHIFT, StorageConnector.ADLS, StorageConnector.SNOWFLAKE, StorageConnector.KAFKA]
+        return connector_type in [
+            StorageConnector.HOPSFS,
+            StorageConnector.S3,
+            StorageConnector.JDBC,
+            StorageConnector.REDSHIFT,
+            StorageConnector.ADLS,
+            StorageConnector.SNOWFLAKE,
+            StorageConnector.KAFKA,
+        ]
