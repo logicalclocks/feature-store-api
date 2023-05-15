@@ -1262,10 +1262,4 @@ class Engine:
 
     @staticmethod
     def is_connector_type_supported(connector_type):
-        if (
-            connector_type == StorageConnector.BIGQUERY
-            or connector_type == StorageConnector.GCS
-        ):
-            return False
-        else:
-            return True
+        return connector_type in [StorageConnector.HOPSFS, StorageConnector.S3, StorageConnector.JDBC, StorageConnector.REDSHIFT, StorageConnector.ADLS, StorageConnector.SNOWFLAKE, StorageConnector.KAFKA]
