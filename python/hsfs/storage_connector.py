@@ -835,17 +835,6 @@ class KafkaConnector(StorageConnector):
     type = StorageConnector.KAFKA
     SPARK_FORMAT = "kafka"
 
-    CONFIG_MAPPING = {
-        "_bootstrap_servers": "kafka.bootstrap.servers",
-        "_security_protocol": "kafka.security.protocol",
-        "_ssl_truststore_location": "kafka.ssl.truststore.location",
-        "_ssl_truststore_password": "kafka.ssl.truststore.password",
-        "_ssl_keystore_location": "kafka.ssl.keystore.location",
-        "_ssl_keystore_password": "kafka.ssl.keystore.password",
-        "_ssl_key_password": "kafka.ssl.key.password",
-        "_ssl_endpoint_identification_algorithm": "kafka.ssl.endpoint.identification.algorithm",
-    }
-
     def __init__(
         self,
         id,
@@ -855,12 +844,6 @@ class KafkaConnector(StorageConnector):
         # members specific to type of connector
         bootstrap_servers=None,
         security_protocol=None,
-        ssl_truststore_location=None,
-        ssl_truststore_password=None,
-        ssl_keystore_location=None,
-        ssl_keystore_password=None,
-        ssl_key_password=None,
-        ssl_endpoint_identification_algorithm=None,
         options=None,
     ):
         super().__init__(id, name, description, featurestore_id)
@@ -868,18 +851,6 @@ class KafkaConnector(StorageConnector):
         # KAFKA
         self._bootstrap_servers = bootstrap_servers
         self._security_protocol = security_protocol
-        self._ssl_truststore_location = engine.get_instance().add_file(
-            ssl_truststore_location
-        )
-        self._ssl_truststore_password = ssl_truststore_password
-        self._ssl_keystore_location = engine.get_instance().add_file(
-            ssl_keystore_location
-        )
-        self._ssl_keystore_password = ssl_keystore_password
-        self._ssl_key_password = ssl_key_password
-        self._ssl_endpoint_identification_algorithm = (
-            ssl_endpoint_identification_algorithm
-        )
         self._options = (
             {option["name"]: option["value"] for option in options}
             if options is not None
@@ -897,36 +868,36 @@ class KafkaConnector(StorageConnector):
         return self._security_protocol
 
     @property
-    def ssl_truststore_location(self):
-        """Bootstrap servers string."""
-        return self._ssl_truststore_location
-
-    @property
-    def ssl_keystore_location(self):
-        """Bootstrap servers string."""
-        return self._ssl_keystore_location
-
-    @property
-    def ssl_endpoint_identification_algorithm(self):
-        """Bootstrap servers string."""
-        return self._ssl_endpoint_identification_algorithm
-
-    @property
     def options(self):
         """Bootstrap servers string."""
         return self._options
 
+    def kafka_options(self):
+        """Return prepared options to be passed to kafka, based on the additional
+        arguments.
+        """
+        config = self.options if self.options else {}
+        config.update(
+            {
+                "bootstrap.servers": self.bootstrap_servers,
+                "security.protocol": self.security_protocol,
+            }
+        )
+
+        return config
+
     def spark_options(self):
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
-        """
-        config = {
-            v: getattr(self, k)
-            for k, v in self.CONFIG_MAPPING.items()
-            if getattr(self, k) is not None
-        }
 
-        return {**self._options, **config}
+        This is done by just adding 'kafka.' prefix to kafka_options.
+        https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html#kafka-specific-configurations
+        """
+        config = {}
+        for key, value in self.kafka_options().items():
+            config[f"{KafkaConnector.SPARK_FORMAT}.{key}"] = value
+
+        return config
 
     def read(
         self,
@@ -969,7 +940,7 @@ class KafkaConnector(StorageConnector):
             options: Additional options as key/value string pairs to be passed to Spark.
                 Defaults to `{}`.
             include_metadata: Indicate whether to return additional metadata fields from
-                messages in the stream. Otherwise only the decoded value fields are
+                messages in the stream. Otherwise, only the decoded value fields are
                 returned. Defaults to `False`.
 
         # Raises

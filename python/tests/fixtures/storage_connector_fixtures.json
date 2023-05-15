@@ -334,13 +334,7 @@
             "storageConnectorType": "KAFKA",
             "bootstrap_servers": "test_bootstrap_servers",
             "security_protocol": "test_security_protocol",
-            "ssl_truststore_location": "test_ssl_truststore_location",
-            "ssl_truststore_password": "test_ssl_truststore_password",
-            "ssl_keystore_location": "test_ssl_keystore_location",
-            "ssl_keystore_password": "test_ssl_keystore_password",
-            "ssl_key_password": "test_ssl_key_password",
-            "ssl_endpoint_identification_algorithm": "test_ssl_endpoint_identification_algorithm",
-            "options": [{"name":  "test_name", "value":  "test_value"}]
+            "options": [{"name":  "client.id", "value":  1}]
         },
         "method": "GET",
         "path_params": [

@@ -55,7 +55,6 @@ import lombok.Getter;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
 import org.apache.hadoop.fs.Path;
-import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.spark.SparkFiles;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.DataFrameReader;
@@ -1002,18 +1001,9 @@ public class SparkEngine {
 
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    Map<String, String> config = new HashMap<>();
     StorageConnector.KafkaConnector storageConnector =
             (StorageConnector.KafkaConnector) featureGroup.getFeatureStore().getKafkaConnector("kafka_connector");
-
-    config.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG,
-            storageConnector.getBootstrapServers());
-    config.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG,
-            storageConnector.getSecurityProtocol().name());
-
-    for (Option option : storageConnector.getOptions()) {
-      config.put(option.getName(), option.getValue());
-    }
+    Map<String, String> config = storageConnector.kafkaOptions();
 
     if (writeOptions != null) {
       config.putAll(writeOptions);

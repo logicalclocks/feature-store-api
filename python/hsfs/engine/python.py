@@ -1171,13 +1171,7 @@ class Engine:
             feature_store_id
         ).get("kafka_connector")
 
-        config = storage_connector.options
-        config.update(
-            {
-                "bootstrap.servers": storage_connector.bootstrap_servers,
-                "security.protocol": storage_connector.security_protocol,
-            }
-        )
+        config = storage_connector.kafka_options
         config.update(write_options.get("kafka_producer_config", {}))
 
         # filter out not accepted fields todo find a better way (if not done _INVALID_ARG KafkaError is raised)

@@ -422,18 +422,9 @@ class TestKafkaConnector:
         assert sc.name == "test_kafka"
         assert sc._featurestore_id == 67
         assert sc.description == "Kafka connector description"
-        assert sc._bootstrap_servers == "test_bootstrap_servers"
+        assert sc.bootstrap_servers == "test_bootstrap_servers"
         assert sc.security_protocol == "test_security_protocol"
-        assert sc.ssl_truststore_location == "result_from_add_file"
-        assert sc._ssl_truststore_password == "test_ssl_truststore_password"
-        assert sc.ssl_keystore_location == "result_from_add_file"
-        assert sc._ssl_keystore_password == "test_ssl_keystore_password"
-        assert sc._ssl_key_password == "test_ssl_key_password"
-        assert (
-            sc.ssl_endpoint_identification_algorithm
-            == "test_ssl_endpoint_identification_algorithm"
-        )
-        assert sc.options == {"test_name": "test_value"}
+        assert sc.options == {"client.id": 1}
 
     def test_from_response_json_basic_info(self, mocker, backend_fixtures):
         # Arrange
@@ -452,14 +443,8 @@ class TestKafkaConnector:
         assert sc.name == "test_kafka"
         assert sc._featurestore_id == 67
         assert sc.description is None
-        assert sc._bootstrap_servers is None
+        assert sc.bootstrap_servers is None
         assert sc.security_protocol is None
-        assert sc.ssl_truststore_location == "result_from_add_file"
-        assert sc._ssl_truststore_password is None
-        assert sc.ssl_keystore_location == "result_from_add_file"
-        assert sc._ssl_keystore_password is None
-        assert sc._ssl_key_password is None
-        assert sc.ssl_endpoint_identification_algorithm is None
         assert sc.options == {}
 
 
