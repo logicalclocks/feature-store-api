@@ -17,6 +17,9 @@
 import re
 import json
 import pandas as pd
+import time
+import threading
+import itertools
 
 from datetime import datetime, date, timezone
 from urllib.parse import urljoin, urlparse
@@ -298,6 +301,38 @@ def translate_legacy_spark_type(output_type):
         return "BOOLEAN"
     else:
         return "STRING"  # handle gracefully, and return STRING type, the default for spark udfs
+
+
+def _loading_animation(message, stop_event):
+    for char in itertools.cycle([".", "..", "...", ""]):
+        if stop_event.is_set():
+            break
+        print(f"{message}{char}   ", end="\r")
+        time.sleep(0.5)
+
+
+def run_with_loading_animation(message, func, *args, **kwargs):
+    stop_event = threading.Event()
+    t = threading.Thread(
+        target=_loading_animation,
+        args=(
+            message,
+            stop_event,
+        ),
+    )
+    t.daemon = True
+    t.start()
+    start = time.time()
+
+    result = func(*args, **kwargs)
+
+    end = time.time()
+    # Stop the animation and print the "Finished Querying" message
+    stop_event.set()
+    t.join()
+    print(f"\rFinished: {message} ({(end-start):.2f}s) ", end="\n")
+
+    return result
 
 
 class VersionWarning(Warning):
