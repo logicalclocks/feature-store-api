@@ -313,6 +313,13 @@ class Query:
                 )
                 raise FeatureStoreException(message.format(name))
 
+            new_filter = None
+            if self._filters is None:
+                new_filter = join_obj.query._filter
+            elif join_obj.query._filter is not None:
+                new_filter = self._filters & join_obj.query._filter
+            self._check_filter(new_filter)
+
     def as_of(
         self,
         wallclock_time: Optional[Union[str, int, datetime, date]] = None,
@@ -631,10 +638,13 @@ class Query:
             query.append_feature('feature_name')
             ```
         """
+        feature = util.validate_feature(feature)
+
         if self._feature_exists_in_query(feature.name):
             raise FeatureStoreException(
                 Query.ERROR_MESSAGE_ALREADY_EXISTS.format(feature.name)
             )
+        self._check_filter(self._filters)
 
         self._left_features.append(feature)
 
