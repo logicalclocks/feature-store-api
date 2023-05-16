@@ -38,6 +38,7 @@ class Query:
     ERROR_MESSAGE_FEATURE_AMBIGUOUS = (
         "Feature name {} is ambiguous. Consider using a prefix."
     )
+    ERROR_MESSAGE_FEATURE_AMBIGUOUS_FG = "Feature name {} is ambiguous. Consider accessing the feature through the FeatureGroup object."
     ERROR_MESSAGE_FEATURE_NOT_FOUND = "Feature name {} not found in query."
     ERROR_MESSAGE_FEATURE_NOT_FOUND_FG = (
         "Feature name {} not found in any of the featuregroups in this query."
@@ -666,12 +667,10 @@ class Query:
         fg_id = feature._feature_group_id
 
         if fg_id is None:
-            # find featuregroup by feature name
             return self.get_feature_obj(
                 feature.name, include_unselected=True, resolve_ambiguity=False
             )[2]
         else:
-            # find featuregroup by featuregroup id
             for fg in self.featuregroups:
                 if fg.id == fg_id:
                     return fg
@@ -697,19 +696,20 @@ class Query:
             )
         feats = feature_lookup[feature_name]
 
-        # if only one feature with this name, return it
         if len(feats) == 1:
             return feats[0]
 
-        # if there are multiple features with this name, return the one without prefix
         if resolve_ambiguity:
             for feat in feats:
                 if feat[1] is None:
                     return feat
 
-        # there are multiple features with this name and all have prefix, raise exception
+            raise FeatureStoreException(
+                Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(feature_name)
+            )
+
         raise FeatureStoreException(
-            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(feature_name)
+            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS_FG.format(feature_name)
         )
 
     def get_feature(self, feature_name):

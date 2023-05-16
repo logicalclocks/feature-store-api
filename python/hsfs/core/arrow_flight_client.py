@@ -221,7 +221,7 @@ class ArrowFlightClient:
         return query
 
     def _serialize_featuregroup_name(self, fg):
-        return f"{fg._get_project_name()}.{fg.name}_{fg.version}"  # featurestore.name_version
+        return f"{fg._get_project_name()}.{fg.name}_{fg.version}"
 
     def _serialize_filter_expression(self, query):
         if query.filters is None:

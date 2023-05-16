@@ -111,7 +111,7 @@ class TransformationFunctionEngine:
                     )
 
                 feature, prefix, featuregroup = target_obj.query.get_feature_obj(
-                    feature_name, add_featuregroup=True
+                    feature_name
                 )
                 target_obj._features.append(
                     training_dataset_feature.TrainingDatasetFeature(
