@@ -182,7 +182,6 @@ def run_feature_monitoring(job_conf: Dict[str, str]) -> None:
     Run feature monitoring for a given entity (feature_group or feature_view)
     based on a feature monitoring configuration.
     """
-    # Dummy job for now.
     feature_store = job_conf.pop("feature_store")
     fs = get_feature_store_handle(feature_store)
 

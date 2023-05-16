@@ -30,12 +30,16 @@ DEFAULT_FEATURE_VIEW_NAME = "test_feature_view"
 DEFAULT_FEATURE_VIEW_VERSION = 2
 DEFAULT_CONFIG_ID = 32
 DEFAULT_FEATURE_NAME = "amount"
+DEFAULT_JOB_NAME = "test_job"
+DEFAULT_SPECIFIC_VALUE = 2.01
+DEFAULT_DIFFERENCE = 6.5
 
-FEATURE_MONITORING_CONFIG_CREATE_API = (
+FEATURE_MONITORING_RESULT_CREATE_API = (
     "hsfs.core.feature_monitoring_result_api.FeatureMonitoringResultApi.create"
 )
 GET_JOB_API = "hsfs.core.job_api.JobApi.get"
 LAST_EXECUTION_API = "hsfs.core.job_api.JobApi.last_execution"
+HSFS_CLIENT_GET_INSTANCE = "hsfs.client.get_instance"
 
 
 class TestFeatureMonitoringResultEngine:
@@ -119,235 +123,255 @@ class TestFeatureMonitoringResultEngine:
 
     # Save results
 
-    def test_save_feature_monitoring_result_via_fg(self, mocker, backend_fixtures):
+    def test_save_feature_monitoring_result_via_fg(self, mocker):
         # Arrange
-        execution_id = 123
-        shift_detected = False
-        difference = 0.3
-
-        detection_statistics = FeatureDescriptiveStatistics.from_response_json(
-            backend_fixtures["feature_descriptive_statistics"][
-                "get_fractional_feature_statistics"
-            ]["response"]
+        result_create_api_mock = mocker.patch(
+            FEATURE_MONITORING_RESULT_CREATE_API,
         )
-        reference_statistics = FeatureDescriptiveStatistics.from_response_json(
-            backend_fixtures["feature_descriptive_statistics"][
-                "get_fractional_feature_statistics"
-            ]["response"]
+        mocker.patch(
+            "hsfs.core.feature_monitoring_result_engine.FeatureMonitoringResultEngine.get_monitoring_job_execution_id",
         )
-
-        mock_result_api = mocker.patch(
-            FEATURE_MONITORING_CONFIG_CREATE_API,
-        )
-
-        result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+        result_engine = (
+            result_engine
+        ) = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
-        before_time = datetime.now() - timedelta(seconds=1)
+        result = result_engine.build_feature_monitoring_result(
+            config_id=DEFAULT_CONFIG_ID,
+            feature_name=DEFAULT_FEATURE_NAME,
+        )
 
         # Act
-        result_engine.save_feature_monitoring_result(
-            config_id=DEFAULT_CONFIG_ID,
-            execution_id=execution_id,
-            feature_name=DEFAULT_FEATURE_NAME,
-            detection_statistics=detection_statistics,
-            reference_statistics=reference_statistics,
-            difference=difference,
-            shift_detected=shift_detected,
-        )
-        after_time = datetime.now() + timedelta(seconds=1)
+        result_engine.save_feature_monitoring_result(result)
 
         # Assert
-        result = mock_result_api.call_args[0][0]
-        assert result._config_id == DEFAULT_CONFIG_ID
-        assert result._execution_id == execution_id
-        assert result._feature_name == DEFAULT_FEATURE_NAME
-        assert result._detection_statistics_id == 52
-        assert result._reference_statistics_id == 52
-        assert result._detection_statistics is None
-        assert result._reference_statistics is None
-        assert result._difference == difference
-        assert result._shift_detected == shift_detected
-        assert isinstance(result._monitoring_time, int)
-        assert (
-            util.convert_event_time_to_timestamp(before_time) <= result._monitoring_time
-        )
-        assert (
-            util.convert_event_time_to_timestamp(after_time) >= result._monitoring_time
-        )
-
-    def test_save_feature_monitoring_result_detection_stats_only_via_fg(
-        self, mocker, backend_fixtures
-    ):
-        # Arrange
-        execution_id = 123
-        shift_detected = False
-        difference = 0.3
-
-        detection_statistics = FeatureDescriptiveStatistics.from_response_json(
-            backend_fixtures["feature_descriptive_statistics"][
-                "get_fractional_feature_statistics"
-            ]["response"]
-        )
-
-        mock_result_api = mocker.patch(
-            FEATURE_MONITORING_CONFIG_CREATE_API,
-        )
-
-        result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID,
-            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
-        )
-        before_time = datetime.now() - timedelta(seconds=1)
-
-        # Act
-        result_engine.save_feature_monitoring_result(
-            config_id=DEFAULT_CONFIG_ID,
-            execution_id=execution_id,
-            feature_name=DEFAULT_FEATURE_NAME,
-            detection_statistics=detection_statistics,
-            reference_statistics=None,
-            difference=difference,
-            shift_detected=shift_detected,
-        )
-        after_time = datetime.now() + timedelta(seconds=1)
-
-        # Assert
-        result = mock_result_api.call_args[0][0]
-        assert result._config_id == DEFAULT_CONFIG_ID
-        assert result._execution_id == execution_id
-        assert result._feature_name == DEFAULT_FEATURE_NAME
-        assert result._detection_statistics_id == 52
-        assert result._reference_statistics_id is None
-        assert result._detection_statistics is None
-        assert result._reference_statistics is None
-        assert result._difference == difference
-        assert result._shift_detected == shift_detected
-        assert isinstance(result._monitoring_time, int)
-        assert (
-            util.convert_event_time_to_timestamp(before_time) <= result._monitoring_time
-        )
-        assert (
-            util.convert_event_time_to_timestamp(after_time) >= result._monitoring_time
-        )
+        assert result_create_api_mock.call_args[0][0] == result
 
     def test_save_feature_monitoring_result_via_fv(self, mocker, backend_fixtures):
         # Arrange
-        execution_id = 123
-        shift_detected = False
-        difference = 0.3
-
-        detection_statistics = FeatureDescriptiveStatistics.from_response_json(
-            backend_fixtures["feature_descriptive_statistics"][
-                "get_fractional_feature_statistics"
-            ]["response"]
+        result_create_api_mock = mocker.patch(
+            FEATURE_MONITORING_RESULT_CREATE_API,
         )
-        reference_statistics = FeatureDescriptiveStatistics.from_response_json(
-            backend_fixtures["feature_descriptive_statistics"][
-                "get_fractional_feature_statistics"
-            ]["response"]
+        mocker.patch(
+            "hsfs.core.feature_monitoring_result_engine.FeatureMonitoringResultEngine.get_monitoring_job_execution_id",
         )
-
-        mock_result_api = mocker.patch(
-            FEATURE_MONITORING_CONFIG_CREATE_API,
-        )
-
-        result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+        result_engine = (
+            result_engine
+        ) = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
             feature_view_id=DEFAULT_FEATURE_VIEW_ID,
             feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
             feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
         )
-        before_time = datetime.now() - timedelta(seconds=1)
+        result = result_engine.build_feature_monitoring_result(
+            config_id=DEFAULT_CONFIG_ID,
+            feature_name=DEFAULT_FEATURE_NAME,
+        )
 
         # Act
-        result_engine.save_feature_monitoring_result(
-            config_id=DEFAULT_CONFIG_ID,
-            execution_id=execution_id,
-            feature_name=DEFAULT_FEATURE_NAME,
-            detection_statistics=detection_statistics,
-            reference_statistics=reference_statistics,
-            difference=difference,
-            shift_detected=shift_detected,
-        )
-        after_time = datetime.now() + timedelta(seconds=1)
+        result_engine.save_feature_monitoring_result(result)
 
         # Assert
-        result = mock_result_api.call_args[0][0]
-        assert result._config_id == DEFAULT_CONFIG_ID
-        assert result._execution_id == execution_id
-        assert result._feature_name == DEFAULT_FEATURE_NAME
-        assert result._detection_statistics_id == 52
-        assert result._reference_statistics_id == 52
-        assert result._detection_statistics is None
-        assert result._reference_statistics is None
-        assert result._difference == difference
-        assert result._shift_detected == shift_detected
-        assert isinstance(result._monitoring_time, int)
-        assert (
-            util.convert_event_time_to_timestamp(before_time) <= result._monitoring_time
-        )
-        assert (
-            util.convert_event_time_to_timestamp(after_time) >= result._monitoring_time
-        )
+        assert result_create_api_mock.call_args[0][0] == result
 
-    def test_save_feature_monitoring_result_detection_stats_only_via_fv(
-        self, mocker, backend_fixtures
-    ):
+    # Build result
+    def test_build_statistics_monitoring(self, mocker, backend_fixtures):
         # Arrange
-        execution_id = 123
-        shift_detected = False
-        difference = 0.3
-
-        detection_statistics = FeatureDescriptiveStatistics.from_response_json(
-            backend_fixtures["feature_descriptive_statistics"][
-                "get_fractional_feature_statistics"
-            ]["response"]
+        mocker.patch(HSFS_CLIENT_GET_INSTANCE)
+        job_api_last_execution_mock = mocker.patch(
+            LAST_EXECUTION_API,
         )
-
-        mock_result_api = mocker.patch(
-            FEATURE_MONITORING_CONFIG_CREATE_API,
-        )
-
+        job_api_get_mock = mocker.patch(GET_JOB_API)
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
-            feature_view_id=DEFAULT_FEATURE_VIEW_ID,
-            feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
-            feature_view_version=DEFAULT_FEATURE_VIEW_VERSION,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
-        before_time = datetime.now() - timedelta(seconds=1)
 
         # Act
-        result_engine.save_feature_monitoring_result(
-            config_id=DEFAULT_CONFIG_ID,
-            execution_id=execution_id,
-            feature_name=DEFAULT_FEATURE_NAME,
-            detection_statistics=detection_statistics,
-            reference_statistics=None,
-            difference=difference,
-            shift_detected=shift_detected,
+        before_time = util.convert_event_time_to_timestamp(
+            datetime.now() - timedelta(seconds=1)
         )
-        after_time = datetime.now() + timedelta(seconds=1)
+        result = result_engine.build_feature_monitoring_result(
+            config_id=DEFAULT_CONFIG_ID,
+            feature_name=DEFAULT_FEATURE_NAME,
+            detection_statistics=FeatureDescriptiveStatistics.from_response_json(
+                backend_fixtures["feature_descriptive_statistics"][
+                    "get_fractional_feature_statistics"
+                ]["response"]
+            ),
+            job_name=DEFAULT_JOB_NAME,
+        )
+        after_time = util.convert_event_time_to_timestamp(
+            datetime.now() + timedelta(seconds=1)
+        )
 
         # Assert
-        result = mock_result_api.call_args[0][0]
         assert result._config_id == DEFAULT_CONFIG_ID
-        assert result._execution_id == execution_id
         assert result._feature_name == DEFAULT_FEATURE_NAME
         assert result._detection_statistics_id == 52
         assert result._reference_statistics_id is None
         assert result._detection_statistics is None
         assert result._reference_statistics is None
-        assert result._difference == difference
-        assert result._shift_detected == shift_detected
-        assert isinstance(result._monitoring_time, int)
-        assert (
-            util.convert_event_time_to_timestamp(before_time) <= result._monitoring_time
+        assert result._difference is None
+        assert result._shift_detected is False
+        assert after_time >= result._monitoring_time >= before_time
+        job_api_get_mock.assert_called_once_with(name=DEFAULT_JOB_NAME)
+        job_api_last_execution_mock.assert_called_once()
+
+    def test_build_feature_monitoring_result_with_referece_statistics(
+        self, mocker, backend_fixtures
+    ):
+        # Arrange
+        mocker.patch(HSFS_CLIENT_GET_INSTANCE)
+        job_api_last_execution_mock = mocker.patch(
+            LAST_EXECUTION_API,
         )
-        assert (
-            util.convert_event_time_to_timestamp(after_time) >= result._monitoring_time
+        job_api_get_mock = mocker.patch(GET_JOB_API)
+        result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
         )
+
+        # Act
+        before_time = util.convert_event_time_to_timestamp(
+            datetime.now() - timedelta(seconds=1)
+        )
+        result = result_engine.build_feature_monitoring_result(
+            config_id=DEFAULT_CONFIG_ID,
+            feature_name=DEFAULT_FEATURE_NAME,
+            detection_statistics=FeatureDescriptiveStatistics.from_response_json(
+                backend_fixtures["feature_descriptive_statistics"][
+                    "get_fractional_feature_statistics"
+                ]["response"]
+            ),
+            reference_statistics=FeatureDescriptiveStatistics.from_response_json(
+                backend_fixtures["feature_descriptive_statistics"][
+                    "get_fractional_feature_statistics"
+                ]["response"]
+            ),
+            job_name=DEFAULT_JOB_NAME,
+            difference=DEFAULT_DIFFERENCE,
+        )
+        after_time = util.convert_event_time_to_timestamp(
+            datetime.now() + timedelta(seconds=1)
+        )
+
+        # Assert
+        assert result._config_id == DEFAULT_CONFIG_ID
+        assert result._feature_name == DEFAULT_FEATURE_NAME
+        assert result._detection_statistics_id == 52
+        assert result._reference_statistics_id == 52
+        assert result._detection_statistics is None
+        assert result._reference_statistics is None
+        assert result._difference == DEFAULT_DIFFERENCE
+        assert result._shift_detected is False
+        assert result._specific_value is None
+        assert result._empty_detection_window is False
+        assert result._empty_reference_window is False
+        assert result._raised_exception is False
+        assert after_time >= result._monitoring_time >= before_time
+        job_api_get_mock.assert_called_once_with(name=DEFAULT_JOB_NAME)
+        job_api_last_execution_mock.assert_called_once()
+
+    def test_build_feature_monitoring_result_with_specific_value(
+        self, mocker, backend_fixtures
+    ):
+        # Arrange
+        mocker.patch(HSFS_CLIENT_GET_INSTANCE)
+        job_api_last_execution_mock = mocker.patch(
+            LAST_EXECUTION_API,
+        )
+        job_api_get_mock = mocker.patch(GET_JOB_API)
+        result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
+        )
+
+        # Act
+        before_time = util.convert_event_time_to_timestamp(
+            datetime.now() - timedelta(seconds=1)
+        )
+        result = result_engine.build_feature_monitoring_result(
+            config_id=DEFAULT_CONFIG_ID,
+            feature_name=DEFAULT_FEATURE_NAME,
+            detection_statistics=FeatureDescriptiveStatistics.from_response_json(
+                backend_fixtures["feature_descriptive_statistics"][
+                    "get_fractional_feature_statistics"
+                ]["response"]
+            ),
+            specific_value=DEFAULT_SPECIFIC_VALUE,
+            job_name=DEFAULT_JOB_NAME,
+            difference=DEFAULT_DIFFERENCE,
+            shift_detected=True,
+        )
+        after_time = util.convert_event_time_to_timestamp(
+            datetime.now() + timedelta(seconds=1)
+        )
+
+        # Assert
+        assert result._config_id == DEFAULT_CONFIG_ID
+        assert result._feature_name == DEFAULT_FEATURE_NAME
+        assert result._detection_statistics_id == 52
+        assert result._reference_statistics_id is None
+        assert result._detection_statistics is None
+        assert result._reference_statistics is None
+        assert result._difference == DEFAULT_DIFFERENCE
+        assert result._shift_detected is True
+        assert result._specific_value == DEFAULT_SPECIFIC_VALUE
+        assert result._empty_detection_window is False
+        assert result._empty_reference_window is True
+        assert result._raised_exception is False
+        assert after_time >= result._monitoring_time >= before_time
+        job_api_get_mock.assert_called_once_with(name=DEFAULT_JOB_NAME)
+        job_api_last_execution_mock.assert_called_once()
+
+    def test_save_feature_monitoring_result_with_exception(
+        self, mocker, backend_fixtures
+    ):
+        # Arrange
+        mocker.patch(HSFS_CLIENT_GET_INSTANCE)
+        job_api_last_execution_mock = mocker.patch(
+            LAST_EXECUTION_API,
+        )
+        job_api_get_mock = mocker.patch(GET_JOB_API)
+        result_engine_save_mock = mocker.patch(
+            "hsfs.core.feature_monitoring_result_engine.FeatureMonitoringResultEngine.save_feature_monitoring_result",
+        )
+        result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
+        )
+
+        # Act
+        before_time = util.convert_event_time_to_timestamp(
+            datetime.now() - timedelta(seconds=1)
+        )
+        result_engine.save_feature_monitoring_result_with_exception(
+            config_id=DEFAULT_CONFIG_ID,
+            job_name=DEFAULT_JOB_NAME,
+        )
+        after_time = util.convert_event_time_to_timestamp(
+            datetime.now() + timedelta(seconds=1)
+        )
+
+        # Assert
+        result = result_engine_save_mock.call_args[1]["result"]
+        assert result._config_id == DEFAULT_CONFIG_ID
+        assert result._feature_name == ""
+        assert result._detection_statistics_id is None
+        assert result._reference_statistics_id is None
+        assert result._detection_statistics is None
+        assert result._reference_statistics is None
+        assert result._difference is None
+        assert result._shift_detected is False
+        assert result._specific_value is None
+        assert result._empty_detection_window is True
+        assert result._empty_reference_window is True
+        assert result._raised_exception is True
+        assert after_time >= result._monitoring_time >= before_time
+        job_api_get_mock.assert_called_once_with(name=DEFAULT_JOB_NAME)
+        job_api_last_execution_mock.assert_called_once()
 
     # Run and save statistics comparison
 
@@ -356,7 +380,7 @@ class TestFeatureMonitoringResultEngine:
     ):
         # Arrange
         mock_result_api = mocker.patch(
-            FEATURE_MONITORING_CONFIG_CREATE_API,
+            FEATURE_MONITORING_RESULT_CREATE_API,
         )
         mock_get_job_api = mocker.patch(
             GET_JOB_API, return_value=backend_fixtures["job"]["get"]["response"]
@@ -426,7 +450,7 @@ class TestFeatureMonitoringResultEngine:
     ):
         # Arrange
         mock_result_api = mocker.patch(
-            FEATURE_MONITORING_CONFIG_CREATE_API,
+            FEATURE_MONITORING_RESULT_CREATE_API,
         )
         mock_get_job_api = mocker.patch(
             GET_JOB_API, return_value=backend_fixtures["job"]["get"]["response"]
@@ -522,7 +546,7 @@ class TestFeatureMonitoringResultEngine:
         )
 
         mock_result_api = mocker.patch(
-            FEATURE_MONITORING_CONFIG_CREATE_API,
+            FEATURE_MONITORING_RESULT_CREATE_API,
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
@@ -589,7 +613,7 @@ class TestFeatureMonitoringResultEngine:
         )
 
         mock_result_api = mocker.patch(
-            FEATURE_MONITORING_CONFIG_CREATE_API,
+            FEATURE_MONITORING_RESULT_CREATE_API,
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
@@ -655,7 +679,7 @@ class TestFeatureMonitoringResultEngine:
         ]
 
         mock_result_api = mocker.patch(
-            FEATURE_MONITORING_CONFIG_CREATE_API,
+            FEATURE_MONITORING_RESULT_CREATE_API,
         )
 
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(

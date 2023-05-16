@@ -68,6 +68,7 @@ class FeatureMonitoringResult:
         self._empty_detection_window = empty_detection_window
         self._empty_reference_window = empty_reference_window
         self._raised_exception = raised_exception
+        self._specific_value = specific_value
 
     def _parse_descriptive_statistics(
         self,

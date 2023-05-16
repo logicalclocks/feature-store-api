@@ -100,8 +100,10 @@ class FeatureMonitoringResultEngine:
         monitoring_time = round(
             util.convert_event_time_to_timestamp(datetime.now()), -3
         )
-        if execution_id is None:
+        if execution_id is None and job_name is not None:
             execution_id = self.get_monitoring_job_execution_id(job_name)
+        else:
+            execution_id = 0
         detection_statistics_id = (
             detection_statistics.id
             if isinstance(detection_statistics, FeatureDescriptiveStatistics)
@@ -442,7 +444,18 @@ class FeatureMonitoringResultEngine:
         self,
         job_name: str,
     ) -> int:
-        """Get the execution id of the last execution of the monitoring job."""
+        """Get the execution id of the last execution of the monitoring job.
+
+        The last execution is assumed to be the current execution.
+        The id defaults to 0 if no execution is found.
+
+        Args:
+            job_name: str. Name of the monitoring job.
+
+        Returns:
+            int. Id of the last execution of the monitoring job.
+                It is assumed to be the current execution.
+        """
         execution = self._job_api.last_execution(self._job_api.get(name=job_name))
         return (
             execution[0]._id
@@ -468,3 +481,26 @@ class FeatureMonitoringResultEngine:
             return True
         else:
             return False
+
+    def save_feature_monitoring_result_with_exception(
+        self,
+        config_id: int,
+        job_name: str,
+    ) -> "FeatureMonitoringResult":
+        """Save feature monitoring result with raised_exception flag.
+
+        Args:
+            config_id: int. Id of the feature monitoring configuration.
+            job_name: str. Name of the monitoring job.
+
+        Returns:
+            FeatureMonitoringResult. Saved Feature monitoring result.
+        """
+        return self.save_feature_monitoring_result(
+            result=self.build_feature_monitoring_result(
+                config_id=config_id,
+                feature_name="",
+                job_name=job_name,
+                raised_exception=True,
+            ),
+        )
