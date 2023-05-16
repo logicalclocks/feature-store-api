@@ -21,10 +21,10 @@ from hsfs import feature_group_commit
 class TestFeatureGroupCommit:
     def test_from_response_json(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["feature_group_commit"]["get"]["response"]
+        json = backend_fixtures["feature_group_commit"]["get_list"]["response"]
 
         # Act
-        fg_commit = feature_group_commit.FeatureGroupCommit.from_response_json(json)
+        fg_commit = feature_group_commit.FeatureGroupCommit.from_response_json(json)[0]
 
         # Assert
         assert fg_commit.commitid == 11
@@ -63,10 +63,4 @@ class TestFeatureGroupCommit:
         fg_commit = feature_group_commit.FeatureGroupCommit.from_response_json(json)
 
         # Assert
-        assert fg_commit.commitid is None
-        assert fg_commit.commit_date_string is None
-        assert fg_commit.commit_time is None
-        assert fg_commit.rows_inserted is None
-        assert fg_commit.rows_updated is None
-        assert fg_commit.rows_deleted is None
-        assert fg_commit.validation_id is None
+        assert len(fg_commit) == 0
