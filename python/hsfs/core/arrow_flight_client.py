@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import datetime
 import json
 import base64
 import warnings
@@ -235,7 +236,7 @@ class ArrowFlightClient:
             features,
             filters,
         ) = self._collect_featuregroups_features_and_filters_rec(query)
-        filters = self._filter_to_expression(filters, featuregroups)
+        filters = self._filter_to_expression(filters, featuregroups, features)
         for feature in features:
             features[feature] = list(features[feature])
         return featuregroups, features, filters
@@ -279,40 +280,61 @@ class ArrowFlightClient:
 
         return featuregroups, features, filters
 
-    def _filter_to_expression(self, filters, featuregroups):
+    def _filter_to_expression(self, filters, featuregroups, features):
         if not filters:
             return None
-        return self._resolve_logic(filters, featuregroups)
+        return self._resolve_logic(filters, featuregroups, features)
 
-    def _resolve_logic(self, logic, featuregroups):
+    def _resolve_logic(self, logic, featuregroups, features):
         return {
             "type": "logic",
             "logic_type": logic._type,
             "left_filter": self._resolve_filter_or_logic(
-                logic._left_f, logic._left_l, featuregroups
+                logic._left_f, logic._left_l, featuregroups, features
             ),
             "right_filter": self._resolve_filter_or_logic(
-                logic._right_f, logic._right_l, featuregroups
+                logic._right_f, logic._right_l, featuregroups, features
             ),
         }
 
-    def _resolve_filter_or_logic(self, filter, logic, featuregroups):
+    def _resolve_filter_or_logic(self, filter, logic, featuregroups, features):
         if filter:
-            return self._resolve_filter(filter, featuregroups)
+            return self._resolve_filter(filter, featuregroups, features)
         elif logic:
-            return self._resolve_logic(logic, featuregroups)
+            return self._resolve_logic(logic, featuregroups, features)
         else:
             return None
 
-    def _resolve_filter(self, filter, featuregroups):
+    def _get_full_feature_name(self, feature, featuregroups, features):
+        featuregroup_name = None
+
+        if feature._feature_group_id is None:
+            for fg_name, fg_features in features.items():
+                if feature._name in fg_features:
+                    featuregroup_name = fg_name
+                    break
+        elif feature._feature_group_id in featuregroups:
+            featuregroup_name = featuregroups[feature._feature_group_id]
+
+        if featuregroup_name is None:
+            raise FeatureStoreException(f"Feature {feature._name} not found in query")
+
+        return f"{featuregroup_name}.{feature._name}"
+
+    def _resolve_filter(self, filter, featuregroups, features):
+        if isinstance(filter._value, datetime.datetime):
+            filter_value = filter._value.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            filter_value = filter._value
+
         return {
             "type": "filter",
             "condition": filter._condition,
-            "value": filter._value,
-            "feature": f"{featuregroups[filter._feature._feature_group_id]}.{filter._feature._name}",
-            "numeric": (
-                filter._feature._type in ArrowFlightClient.FILTER_NUMERIC_TYPES
+            "value": filter_value,
+            "feature": self._get_full_feature_name(
+                filter._feature, featuregroups, features
             ),
+            "numeric": False,  # For backwards compatibility
         }
 
     def _info_to_ticket(self, info):
