@@ -1004,25 +1004,26 @@ public class SparkEngine {
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     Map<String, String> config = new HashMap<>();
+    boolean internalKafka = true;
     if (writeOptions != null) {
+      internalKafka = Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "true"));
       config.putAll(writeOptions);
     }
     HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
-    if (!config.containsKey("kafka.bootstrap.servers")) {
-      if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
-        config.put("kafka.bootstrap.servers",
-            kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
-                "INTERNAL://", ""))
-              .collect(Collectors.joining(",")));
-      } else {
-        config.put("kafka.bootstrap.servers",
-            kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
-              .map(broker -> broker.replaceAll("EXTERNAL://", ""))
-              .collect(Collectors.joining(","))
-        );
-      }
+    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) && !internalKafka) {
+      config.put("kafka.bootstrap.servers",
+          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
+              "INTERNAL://", ""))
+            .collect(Collectors.joining(",")));
+    } else {
+      config.put("kafka.bootstrap.servers",
+          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
+            .map(broker -> broker.replaceAll("EXTERNAL://", ""))
+            .collect(Collectors.joining(","))
+      );
     }
+
     config.put("kafka.security.protocol", "SSL");
     config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
     config.put("kafka.ssl.truststore.password", client.getCertKey());
