@@ -65,17 +65,6 @@ class Query:
         if self._left_feature_group is not None and self._left_features is not None:
             self._populate_collections()
 
-    def _feature_exists_in_query(self, feature_name, prefix=None):
-        existing_features = self._query_features.get(feature_name, [])
-        if any([feature[1] == prefix for feature in existing_features]):
-            return True
-        if prefix:
-            name_with_prefix = f"{prefix}{feature_name}"
-            existing_features = self._query_features.get(name_with_prefix, [])
-            return any([feature[1] is None for feature in existing_features])
-
-        return False
-
     def _add_to_collection(self, feat, prefix, featuregroup, query_feature=True):
         collection = (
             self._query_features if query_feature else self._featuregroup_features
@@ -618,7 +607,7 @@ class Query:
     def features(self):
         return [feat[0] for feat in self._query_feature_list]
 
-    def find_feature_in_featuregroups(self, feature: Feature):
+    def get_featuregroup_by_feature(self, feature: Feature):
         fg_id = feature._feature_group_id
         for fg in self.featuregroups:
             if fg.id == fg_id:
@@ -637,7 +626,7 @@ class Query:
             Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS_FG.format(feature.name)
         )
 
-    def find_feature_in_query(
+    def get_feature_by_name(
         self,
         feature_name: str,
     ):
@@ -659,7 +648,7 @@ class Query:
         )
 
     def get_feature(self, feature_name):
-        return self.find_feature_in_query(feature_name)[0]
+        return self.get_feature_by_name(feature_name)[0]
 
     def __getattr__(self, name):
         try:

@@ -74,7 +74,7 @@ class FeatureViewEngine:
                     feature,
                     prefix,
                     featuregroup,
-                ) = feature_view_obj.query.find_feature_in_query(label_name)
+                ) = feature_view_obj.query.get_feature_by_name(label_name)
                 feature_view_obj._features.append(
                     training_dataset_feature.TrainingDatasetFeature(
                         name=feature.name,

@@ -262,7 +262,7 @@ class ArrowFlightClient:
         }
 
     def _serialize_feature_name(self, feature, query):
-        fg = query.find_feature_in_featuregroups(feature)
+        fg = query.get_featuregroup_by_feature(feature)
         fg_name = self._serialize_featuregroup_name(fg)
         return f"{fg_name}.{feature.name}"
 
