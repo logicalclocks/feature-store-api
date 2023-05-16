@@ -392,7 +392,7 @@ public abstract class StorageConnector {
     @Override
     public Map<String, String> sparkOptions() {
       Map<String, String> config = new HashMap<>();
-      for(Map.Entry<String, String> entry: kafkaOptions().entrySet()) {
+      for (Map.Entry<String, String> entry: kafkaOptions().entrySet()) {
         config.put(String.format("%s.%s", sparkFormat, entry.getKey()), entry.getValue());
       }
       return config;
