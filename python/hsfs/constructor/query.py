@@ -268,11 +268,9 @@ class Query:
         # Returns
             `Query`: A new Query object representing the join.
         """
-        new_join = join.Join(
-            sub_query, on, left_on, right_on, join_type.upper(), prefix
+        self._joins.append(
+            join.Join(sub_query, on, left_on, right_on, join_type.upper(), prefix)
         )
-
-        self._joins.append(new_join)
 
         self._populate_collections()
 
@@ -607,7 +605,7 @@ class Query:
     def features(self):
         return [feat[0] for feat in self._query_feature_list]
 
-    def get_featuregroup_by_feature(self, feature: Feature):
+    def _get_featuregroup_by_feature(self, feature: Feature):
         fg_id = feature._feature_group_id
         for fg in self.featuregroups:
             if fg.id == fg_id:
@@ -626,7 +624,7 @@ class Query:
             Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS_FG.format(feature.name)
         )
 
-    def get_feature_by_name(
+    def _get_feature_by_name(
         self,
         feature_name: str,
     ):
@@ -648,7 +646,7 @@ class Query:
         )
 
     def get_feature(self, feature_name):
-        return self.get_feature_by_name(feature_name)[0]
+        return self._get_feature_by_name(feature_name)[0]
 
     def __getattr__(self, name):
         try:
