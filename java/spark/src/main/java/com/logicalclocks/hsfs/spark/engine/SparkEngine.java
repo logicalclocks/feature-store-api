@@ -1011,7 +1011,7 @@ public class SparkEngine {
     }
     HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
-    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) && !internalKafka) {
+    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) && internalKafka) {
       config.put("kafka.bootstrap.servers",
           kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
               "INTERNAL://", ""))
