@@ -658,31 +658,18 @@ class Query:
     def filters(self):
         return self._filters
 
-    def _filter_properties(self, feat, with_prefix=False, with_featuregroup=False):
-        if with_prefix and with_featuregroup:
-            return feat
-        elif with_prefix:
-            return (feat[0], feat[1])
-        elif with_featuregroup:
-            return (feat[0], feat[2])
-        else:
-            return feat[0]
-
     @property
-    def features(self, with_prefix=False, with_featuregroup=False):
-        return [
-            self._filter_properties(feat, with_prefix, with_featuregroup)
-            for feat in self._feature_list
-        ]
+    def features(self):
+        return [feat[0] for feat in self._feature_list]
 
     def get_featuregroup_by_feature(self, feature):
         fg_id = feature._feature_group_id
 
         if fg_id is None:
             # find featuregroup by feature name
-            return self.get_feature(
-                feature.name, with_featuregroup=True, include_unselected=True
-            )[1]
+            return self.get_feature_obj(
+                feature.name, include_unselected=True, resolve_ambiguity=False
+            )[2]
         else:
             # find featuregroup by featuregroup id
             for fg in self.featuregroups:
@@ -693,12 +680,11 @@ class Query:
             Query.ERROR_MESSAGE_FEATURE_NOT_FOUND_FG.format(feature.name)
         )
 
-    def get_feature(
+    def get_feature_obj(
         self,
         feature_name: str,
-        with_prefix=False,
-        with_featuregroup=False,
         include_unselected=False,
+        resolve_ambiguity=True,
     ):
         feature_lookup = (
             self._query_features
@@ -713,17 +699,21 @@ class Query:
 
         # if only one feature with this name, return it
         if len(feats) == 1:
-            return self._filter_properties(feats[0], with_prefix, with_featuregroup)
+            return feats[0]
 
         # if there are multiple features with this name, return the one without prefix
-        for feat in feats:
-            if feat[1] is None:
-                return self._filter_properties(feat, with_prefix, with_featuregroup)
+        if resolve_ambiguity:
+            for feat in feats:
+                if feat[1] is None:
+                    return feat
 
         # there are multiple features with this name and all have prefix, raise exception
         raise FeatureStoreException(
             Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(feature_name)
         )
+
+    def get_feature(self, feature_name):
+        return self.get_feature_obj(feature_name)[0]
 
     def __getattr__(self, name):
         try:

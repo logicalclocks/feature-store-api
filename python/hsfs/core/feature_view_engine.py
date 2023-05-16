@@ -70,8 +70,8 @@ class FeatureViewEngine:
             )
         if feature_view_obj.labels:
             for label_name in feature_view_obj.labels:
-                feature, featuregroup = feature_view_obj.query.get_feature(
-                    label_name, with_featuregroup=True
+                feature, prefix, featuregroup = feature_view_obj.query.get_feature_obj(
+                    label_name, add_featuregroup=True
                 )
                 feature_view_obj._features.append(
                     training_dataset_feature.TrainingDatasetFeature(
