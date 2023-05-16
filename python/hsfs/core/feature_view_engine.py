@@ -16,7 +16,7 @@
 
 import datetime
 import warnings
-from hsfs import engine, training_dataset_feature, client, util
+from hsfs import engine, training_dataset_feature, client, util, feature_group
 from hsfs.client import exceptions
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -181,7 +181,11 @@ class FeatureViewEngine:
                 is_python_engine=engine.get_type() == "python",
                 with_label=with_label,
             )
-            query._left_feature_group.dataframe = spine
+            # allow passing new spine group or dataframe
+            if isinstance(spine, feature_group.SpineGroup):
+                query._left_feature_group = spine
+            elif isinstance(query._left_feature_group, feature_group.SpineGroup):
+                query._left_feature_group.dataframe = spine
             return query
         except exceptions.RestAPIError as e:
             if e.response.json().get("errorCode", "") == 270172:
@@ -612,8 +616,10 @@ class FeatureViewEngine:
             engine.get_type() == "python" or engine.get_type() == "hive"
         ) and not feature_view_obj.query.from_cache_feature_group_only():
             raise NotImplementedError(
-                "Python kernel can only read from cached feature group."
-                " Please use `feature_view.create_training_data` instead."
+                "Python kernel can only read from cached feature groups."
+                " When using external feature groups please use "
+                "`feature_view.create_training_data` instead. "
+                "If you are using spines, use a Spark Kernel."
             )
 
     def _get_feature_view_url(self, feature_view):
