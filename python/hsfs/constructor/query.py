@@ -21,7 +21,6 @@ from datetime import datetime, date
 
 from hsfs import util, engine, feature_group
 from hsfs.core import query_constructor_api, storage_connector_api, arrow_flight_client
-from hsfs.feature import Feature
 from hsfs.constructor import join
 from hsfs.constructor.filter import Filter, Logic
 from hsfs.client.exceptions import FeatureStoreException
@@ -40,6 +39,9 @@ class Query:
         "Feature name {} is ambiguous. Consider using a prefix."
     )
     ERROR_MESSAGE_FEATURE_NOT_FOUND = "Feature name {} not found in query."
+    ERROR_MESSAGE_FEATURE_NOT_FOUND_FG = (
+        "Feature name {} not found in any of the featuregroups in this query."
+    )
 
     def __init__(
         self,
@@ -65,19 +67,8 @@ class Query:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
-        self._populate_collections()
-
-    def _check_join(self, join_obj):
-        for feat in join_obj.query._left_features:
-            prefix = join_obj.prefix
-            if self._feature_exists_in_query(feat.name, prefix):
-                name = f"{prefix}{feat.name}" if prefix else feat.name
-                message = (
-                    Query.ERROR_MESSAGE_CHANGE_PREFIX
-                    if prefix
-                    else Query.ERROR_MESSAGE_USE_PREFIX
-                )
-                raise FeatureStoreException(message.format(name))
+        if self._left_feature_group is not None and self._left_features is not None:
+            self._populate_collections()
 
     def _feature_exists_in_query(self, feature_name, prefix=None):
         existing_features = self._query_features.get(feature_name, [])
@@ -309,6 +300,18 @@ class Query:
 
         return self
 
+    def _check_join(self, join_obj):
+        for feat in join_obj.query._left_features:
+            prefix = join_obj.prefix
+            if self._feature_exists_in_query(feat.name, prefix):
+                name = f"{prefix}{feat.name}" if prefix else feat.name
+                message = (
+                    Query.ERROR_MESSAGE_CHANGE_PREFIX
+                    if prefix
+                    else Query.ERROR_MESSAGE_USE_PREFIX
+                )
+                raise FeatureStoreException(message.format(name))
+
     def as_of(
         self,
         wallclock_time: Optional[Union[str, int, datetime, date]] = None,
@@ -471,6 +474,8 @@ class Query:
         # Returns
             `Query`. The query object with the applied filter.
         """
+        self._check_filter(f)
+
         if self._filter is None:
             if isinstance(f, Filter):
                 self._filter = Logic.Single(left_f=f)
@@ -486,6 +491,22 @@ class Query:
         self._populate_collections()
 
         return self
+
+    def _check_filter(self, f):
+        if f is None:
+            return
+
+        if isinstance(f, Filter):
+            self.get_featuregroup_by_feature(f._feature)
+        elif isinstance(f, Logic):
+            self._check_filter(f._left_f)
+            self._check_filter(f._right_f)
+            self._check_filter(f._left_l)
+            self._check_filter(f._right_l)
+        else:
+            raise TypeError(
+                "Expected type `Filter` or `Logic`, got `{}`".format(type(f))
+            )
 
     def from_cache_feature_group_only(self):
         for _query in [join.query for join in self._joins] + [self]:
@@ -654,13 +675,31 @@ class Query:
             for feat in self._feature_list
         ]
 
+    def get_featuregroup_by_feature(self, feature):
+        fg_id = feature._feature_group_id
+
+        if fg_id is None:
+            # find featuregroup by feature name
+            return self.get_feature(
+                feature.name, with_featuregroup=True, include_unselected=True
+            )[1]
+        else:
+            # find featuregroup by featuregroup id
+            for fg in self.featuregroups:
+                if fg.id == fg_id:
+                    return fg
+
+        raise FeatureStoreException(
+            Query.ERROR_MESSAGE_FEATURE_NOT_FOUND_FG.format(feature.name)
+        )
+
     def get_feature(
         self,
         feature_name: str,
         with_prefix=False,
         with_featuregroup=False,
         include_unselected=False,
-    ) -> Feature:
+    ):
         feature_lookup = (
             self._query_features
             if not include_unselected
