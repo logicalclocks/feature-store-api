@@ -28,14 +28,7 @@ from hsfs.feature import Feature
 
 
 class Query:
-    ERROR_MESSAGE_ALREADY_EXISTS = "Feature name {} already exists in query."
-    ERROR_MESSAGE_CHANGE_PREFIX = (
-        "Feature name {} already exists in query. Consider changing the prefix."
-    )
-    ERROR_MESSAGE_USE_PREFIX = (
-        "Feature name {} already exists in query. Consider using a prefix."
-    )
-    ERROR_MESSAGE_FEATURE_NOT_UNIQUE = "Feature name {} is not unique."
+
     ERROR_MESSAGE_FEATURE_AMBIGUOUS = (
         "Feature name {} is ambiguous. Consider using a prefix."
     )
@@ -105,10 +98,6 @@ class Query:
         self._filters = self._filter
 
         for feat in self._left_features:
-            if self._feature_exists_in_query(feat.name):
-                raise FeatureStoreException(
-                    Query.ERROR_MESSAGE_FEATURE_NOT_UNIQUE.format(feat.name)
-                )
             self._add_to_collection(feat, None, self._left_feature_group)
         for feat in self._left_feature_group.features:
             self._add_to_collection(
@@ -294,50 +283,11 @@ class Query:
             sub_query, on, left_on, right_on, join_type.upper(), prefix
         )
 
-        self._check_join(new_join)
-
         self._joins.append(new_join)
 
         self._populate_collections()
 
         return self
-
-    def _merge_lookups(self, lookup1, lookup2):
-        merged_lookup = {}
-        for lookup1_key in lookup1:
-            merged_lookup[lookup1_key] = lookup1[lookup1_key]
-        for lookup2_key in lookup2:
-            merged_lookup[lookup2_key] = merged_lookup.get(lookup2_key, []) + lookup2[lookup2_key]
-        return merged_lookup
-
-    def _check_join(self, join_obj):
-        additional_featuregroup_features = {}
-        for fg in join_obj.query.featuregroups:
-
-            prefix = join_obj.prefix
-            if self._feature_exists_in_query(feat.name, prefix):
-                name = f"{prefix}{feat.name}" if prefix else feat.name
-                message = (
-                    Query.ERROR_MESSAGE_CHANGE_PREFIX
-                    if prefix
-                    else Query.ERROR_MESSAGE_USE_PREFIX
-                )
-                raise FeatureStoreException(message.format(name))
-
-            new_filter = None
-            if self._filters is None:
-                new_filter = join_obj.query._filter
-            elif join_obj.query._filter is not None:
-                new_filter = self._filters & join_obj.query._filter
-
-            featuregroup_lookup = self._featuregroup_features
-            if additional_featuregroup_features is not None:
-                featuregroup_lookup = self._merge_lookups(featuregroup_lookup,
-                                                          additional_featuregroup_features)
-
-            featuregroups_to_check = self.featuregroups + (additional_featuregroups or [])
-
-            self._check_filter(new_filter)
 
     def as_of(
         self,
@@ -501,8 +451,6 @@ class Query:
         # Returns
             `Query`. The query object with the applied filter.
         """
-        self._check_filter(f)
-
         if self._filter is None:
             if isinstance(f, Filter):
                 self._filter = Logic.Single(left_f=f)
@@ -518,22 +466,6 @@ class Query:
         self._populate_collections()
 
         return self
-
-    def _check_filter(self, f):
-        if f is None:
-            return
-
-        if isinstance(f, Filter):
-            self.find_feature_in_featuregroups(f._feature)
-        elif isinstance(f, Logic):
-            self._check_filter(f._left_f)
-            self._check_filter(f._right_f)
-            self._check_filter(f._left_l)
-            self._check_filter(f._right_l)
-        else:
-            raise TypeError(
-                "Expected type `Filter` or `Logic`, got `{}`".format(type(f))
-            )
 
     def from_cache_feature_group_only(self):
         for _query in [join.query for join in self._joins] + [self]:
@@ -659,12 +591,6 @@ class Query:
         """
         feature = util.validate_feature(feature)
 
-        if self._feature_exists_in_query(feature.name):
-            raise FeatureStoreException(
-                Query.ERROR_MESSAGE_ALREADY_EXISTS.format(feature.name)
-            )
-        self._check_filter(self._filters)
-
         self._left_features.append(feature)
 
         self._populate_collections()
@@ -692,22 +618,16 @@ class Query:
     def features(self):
         return [feat[0] for feat in self._query_feature_list]
 
-    def find_feature_in_featuregroups(self, feature: Feature, featuregroup_features=None, featuregroups=None):
-        if featuregroup_features is None:
-            featuregroup_features = self._featuregroup_features
-
-        if featuregroups is None:
-            featuregroups = self.featuregroups
-
+    def find_feature_in_featuregroups(self, feature: Feature):
         fg_id = feature._feature_group_id
-        for fg in featuregroups:
+        for fg in self.featuregroups:
             if fg.id == fg_id:
                 return fg
 
-        featuregroups_found = featuregroup_features.get(feature.name, [])
+        featuregroups_found = self._featuregroup_features.get(feature.name, [])
 
         if len(featuregroups_found) == 1:
-            return featuregroups_found[0]
+            return featuregroups_found[0][2]
         elif len(featuregroups_found) == 0:
             raise FeatureStoreException(
                 Query.ERROR_MESSAGE_FEATURE_NOT_FOUND_FG.format(feature.name)
