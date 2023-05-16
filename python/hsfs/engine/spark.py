@@ -69,6 +69,7 @@ from hsfs import feature, training_dataset_feature, client, util
 from hsfs.feature_group import ExternalFeatureGroup
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.client import hopsworks
 from hsfs.core import hudi_engine, transformation_function_engine, kafka_api
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -1107,13 +1108,8 @@ class Engine:
 
     def _get_kafka_config(self, write_options: dict = {}) -> dict:
         if self._kafka_config is None:
+
             self._kafka_config = {
-                "kafka.bootstrap.servers": ",".join(
-                    [
-                        endpoint.replace("INTERNAL://", "")
-                        for endpoint in self._kafka_api.get_broker_endpoints()
-                    ]
-                ),
                 "kafka.security.protocol": "SSL",
                 "kafka.ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),
                 "kafka.ssl.truststore.password": client.get_instance()._cert_key,
@@ -1122,6 +1118,27 @@ class Engine:
                 "kafka.ssl.key.password": client.get_instance()._cert_key,
                 "kafka.ssl.endpoint.identification.algorithm": "",
             }
+            if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
+                "internal_kafka", False
+            ):
+                self._kafka_config["kafka.bootstrap.servers"] = ",".join(
+                    [
+                        endpoint.replace("INTERNAL://", "")
+                        for endpoint in self._kafka_api.get_broker_endpoints(
+                            externalListeners=False
+                        )
+                    ]
+                )
+            else:
+                self._kafka_config["kafka.bootstrap.servers"] = ",".join(
+                    [
+                        endpoint.replace("EXTERNAL://", "")
+                        for endpoint in self._kafka_api.get_broker_endpoints(
+                            externalListeners=True
+                        )
+                    ]
+                )
+
         return {**write_options, **self._kafka_config}
 
 
