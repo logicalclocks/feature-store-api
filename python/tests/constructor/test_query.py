@@ -157,7 +157,7 @@ class TestQuery:
         mocker.patch("hsfs.engine.get_type", return_value="python")
         q = query.Query.from_response_json(backend_fixtures["query"]["get"]["response"])
 
-        features = q._collect_features()
+        features = q.features
         feature_names = [feature.name for feature in features]
 
         expected_feature_names = ["test_left_features", "test_left_features2"]

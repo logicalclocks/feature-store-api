@@ -263,23 +263,25 @@ class ArrowFlightClient:
 
     def _serialize_feature_name(self, feature, query):
         fg_id = feature._feature_group_id
-        if fg_id is None:  # featuregroup id not set
-            # 1) search for feature in all featuregroups
-            for fg in query.featuregroups:
-                for feat in fg.features:
-                    if feature.name == feat.name:
-                        fg_id = feat._feature_group_id
-                        break
-        if fg_id is None:  # featuregroup id still not set
-            # 2) search for feature including query prefixes
-            feature = query.get_feature(feature.name)
-            fg_id = feature._feature_group_id
+        featuregroup = None
+
         if fg_id is None:
+            # find featuregroup by feature name
+            feat, featuregroup = query.get_feature(
+                feature.name, with_featuregroup=True, include_unselected=True
+            )
+        else:
+            # find featuregroup by featuregroup id
+            for fg in query.featuregroups:
+                if fg.id == fg_id:
+                    featuregroup = fg
+
+        if featuregroup is None:
             raise FeatureStoreException(
                 f"Could not find feature {feature.name} in any of the featuregroups in the query"
             )
-        fg = query.get_featuregroup(fg_id)
-        fg_name = self._serialize_featuregroup_name(fg)
+
+        fg_name = self._serialize_featuregroup_name(featuregroup)
         return f"{fg_name}.{feature.name}"
 
     def _translate_to_duckdb(self, query, query_str):

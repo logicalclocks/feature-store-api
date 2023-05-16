@@ -70,14 +70,14 @@ class FeatureViewEngine:
             )
         if feature_view_obj.labels:
             for label_name in feature_view_obj.labels:
-                feature = feature_view_obj.query.get_feature(label_name)
+                feature, featuregroup = feature_view_obj.query.get_feature(
+                    label_name, with_featuregroup=True
+                )
                 feature_view_obj._features.append(
                     training_dataset_feature.TrainingDatasetFeature(
                         name=feature.name,
                         label=True,
-                        featuregroup=feature_view_obj.query.get_featuregroup(
-                            feature.feature_group_id
-                        ),
+                        featuregroup=featuregroup,
                     )
                 )
         self._transformation_function_engine.attach_transformation_fn(feature_view_obj)

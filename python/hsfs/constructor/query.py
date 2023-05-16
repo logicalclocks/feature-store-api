@@ -28,6 +28,19 @@ from hsfs.client.exceptions import FeatureStoreException
 
 
 class Query:
+    ERROR_MESSAGE_ALREADY_EXISTS = "Feature name {} already exists in query."
+    ERROR_MESSAGE_CHANGE_PREFIX = (
+        "Feature name {} already exists in query. Consider changing the prefix."
+    )
+    ERROR_MESSAGE_USE_PREFIX = (
+        "Feature name {} already exists in query. Consider using a prefix."
+    )
+    ERROR_MESSAGE_FEATURE_NOT_UNIQUE = "Feature name {} is not unique."
+    ERROR_MESSAGE_FEATURE_AMBIGUOUS = (
+        "Feature name {} is ambiguous. Consider using a prefix."
+    )
+    ERROR_MESSAGE_FEATURE_NOT_FOUND = "Feature name {} not found in query."
+
     def __init__(
         self,
         left_feature_group,
@@ -52,104 +65,81 @@ class Query:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
-        (
-            self._features_map,
-            self._feature_list,
-            self._featuregroups_map,
-            self._filters,
-        ) = self._initialize_collections()
+        self._populate_collections()
 
-    def _initialize_collections(self):
-        feature_map = {}
-        features_list = []
-        featuregroups_map = {self._left_feature_group._id: self._left_feature_group}
-        filters = self._filter
+    def _check_join(self, join_obj):
+        for feat in join_obj.query._left_features:
+            prefix = join_obj.prefix
+            if self._feature_exists_in_query(feat.name, prefix):
+                name = f"{prefix}{feat.name}" if prefix else feat.name
+                message = (
+                    Query.ERROR_MESSAGE_CHANGE_PREFIX
+                    if prefix
+                    else Query.ERROR_MESSAGE_USE_PREFIX
+                )
+                raise FeatureStoreException(message.format(name))
+
+    def _feature_exists_in_query(self, feature_name, prefix=None):
+        existing_features = self._query_features.get(feature_name, [])
+        if any([feature[1] == prefix for feature in existing_features]):
+            return True
+        if prefix:
+            name_with_prefix = f"{prefix}{feature_name}"
+            existing_features = self._query_features.get(name_with_prefix, [])
+            return any([feature[1] is None for feature in existing_features])
+
+        return False
+
+    def _add_to_collection(self, feat, prefix, featuregroup, query_feature=True):
+        collection = (
+            self._query_features if query_feature else self._featuregroup_features
+        )
+        feature_entry = (feat, prefix, featuregroup)
+        collection[feat.name] = collection.get(feat.name, []) + [feature_entry]
+        if prefix:
+            name_with_prefix = f"{prefix}{feat.name}"
+            collection[name_with_prefix] = collection.get(name_with_prefix, []) + [
+                feature_entry
+            ]
+        if query_feature:
+            self._feature_list.append(feature_entry)
+
+    def _populate_collections(self):
+        self._featuregroups = {self._left_feature_group}
+        self._query_features = {}
+        self._featuregroup_features = {}
+        self._feature_list = []
+        self._filters = self._filter
 
         for feat in self._left_features:
-            if feat.name in feature_map:
-                raise FeatureStoreException(f"Feature name {feat.name} is not unique.")
-            feature_map[feat.name] = feat
-            features_list.append(feat)
+            if self._feature_exists_in_query(feat.name):
+                raise FeatureStoreException(
+                    Query.ERROR_MESSAGE_FEATURE_NOT_UNIQUE.format(feat.name)
+                )
+            self._add_to_collection(feat, None, self._left_feature_group)
+        for feat in self._left_feature_group.features:
+            self._add_to_collection(
+                feat, None, self._left_feature_group, query_feature=False
+            )
         for join_obj in self.joins:
-            featuregroups_map[
-                join_obj.query._left_feature_group._id
-            ] = join_obj.query._left_feature_group
-            if filters is None:
-                filters = join_obj.query._filter
+            self._featuregroups.add(join_obj.query._left_feature_group)
+
+            if self._filters is None:
+                self._filters = join_obj.query._filter
             elif join_obj.query._filter is not None:
-                filters = filters & join_obj.query._filter
+                self._filters = self._filters & join_obj.query._filter
 
             for feat in join_obj.query._left_features:
-                features_list.append(feat)
-                if join_obj.prefix:
-                    name_with_prefix = join_obj.prefix + feat.name
-                    if name_with_prefix in feature_map:
-                        raise FeatureStoreException(
-                            f"Feature name {name_with_prefix} already exists in query. Consider changing the prefix."
-                        )
-                    feature_map[join_obj.prefix + feat.name] = feat
-                    feature_map[feat.name] = (
-                        feat if feat.name not in feature_map else None
-                    )
-                else:
-                    if feat.name in feature_map:
-                        raise FeatureStoreException(
-                            f"Feature name {feat.name} already exists in query. Consider using a prefix."
-                        )
-                    feature_map[feat.name] = feat
-
-        return feature_map, features_list, featuregroups_map, filters
-
-    def _update_collections(self):
-        (
-            self._features_map,
-            self._feature_list,
-            self._featuregroups_map,
-            self._filters,
-        ) = self._initialize_collections()
-
-    @property
-    def featuregroups(self):
-        return list(self._featuregroups_map.values())
-
-    @property
-    def features(self) -> List[Feature]:
-        return self._feature_list
-
-    @property
-    def filters(self) -> Optional[Filter]:
-        return self._filters
-
-    def get_featuregroup(self, id: int):
-        if id not in self._featuregroups_map:
-            raise FeatureStoreException(f"Feature group id {id} not found in query.")
-        return self._featuregroups_map[id]
-
-    def get_feature(self, feature_name: str) -> Feature:
-        if feature_name not in self._features_map:
-            raise FeatureStoreException(
-                f"Feature name {feature_name} not found in query."
-            )
-        feat = self._features_map[feature_name]
-        if feat is None:
-            raise FeatureStoreException(
-                f"Feature name {feature_name} is ambiguous. Consider using a prefix."
-            )
-        return feat
-
-    def __getattr__(self, name):
-        try:
-            return self.__getitem__(name)
-        except KeyError:
-            raise AttributeError(f"'Query' object has no attribute '{name}'. ")
-
-    def __getitem__(self, name):
-        if not isinstance(name, str):
-            raise TypeError(
-                f"Expected type `str`, got `{type(name)}`. "
-                "Features are accessible by name."
-            )
-        return self.get_feature(name)
+                self._add_to_collection(
+                    feat, join_obj.prefix, join_obj.query._left_feature_group
+                )
+            for feat in join_obj.query._left_feature_group.features:
+                self._add_to_collection(
+                    feat,
+                    join_obj.prefix,
+                    join_obj.query._left_feature_group,
+                    query_feature=False,
+                )
 
     def _prep_read(self, online, read_options):
         fs_query = self._query_constructor_api.construct_query(self)
@@ -307,11 +297,15 @@ class Query:
         # Returns
             `Query`: A new Query object representing the join.
         """
-        self._joins.append(
-            join.Join(sub_query, on, left_on, right_on, join_type.upper(), prefix)
+        new_join = join.Join(
+            sub_query, on, left_on, right_on, join_type.upper(), prefix
         )
 
-        self._update_collections()
+        self._check_join(new_join)
+
+        self._joins.append(new_join)
+
+        self._populate_collections()
 
         return self
 
@@ -489,7 +483,7 @@ class Query:
         elif self._filter is not None:
             self._filter = self._filter & f
 
-        self._update_collections()
+        self._populate_collections()
 
         return self
 
@@ -615,9 +609,14 @@ class Query:
             query.append_feature('feature_name')
             ```
         """
+        if self._feature_exists_in_query(feature.name):
+            raise FeatureStoreException(
+                Query.ERROR_MESSAGE_ALREADY_EXISTS.format(feature.name)
+            )
+
         self._left_features.append(feature)
 
-        self._update_collections()
+        self._populate_collections()
 
     def is_time_travel(self):
         return (
@@ -629,3 +628,74 @@ class Query:
     @property
     def joins(self):
         return self._joins
+
+    @property
+    def featuregroups(self):
+        return list(self._featuregroups)
+
+    @property
+    def filters(self):
+        return self._filters
+
+    def _filter_properties(self, feat, with_prefix=False, with_featuregroup=False):
+        if with_prefix and with_featuregroup:
+            return feat
+        elif with_prefix:
+            return (feat[0], feat[1])
+        elif with_featuregroup:
+            return (feat[0], feat[2])
+        else:
+            return feat[0]
+
+    @property
+    def features(self, with_prefix=False, with_featuregroup=False):
+        return [
+            self._filter_properties(feat, with_prefix, with_featuregroup)
+            for feat in self._feature_list
+        ]
+
+    def get_feature(
+        self,
+        feature_name: str,
+        with_prefix=False,
+        with_featuregroup=False,
+        include_unselected=False,
+    ) -> Feature:
+        feature_lookup = (
+            self._query_features
+            if not include_unselected
+            else self._featuregroup_features
+        )
+        if feature_name not in feature_lookup:
+            raise FeatureStoreException(
+                Query.ERROR_MESSAGE_FEATURE_NOT_FOUND.format(feature_name)
+            )
+        feats = feature_lookup[feature_name]
+
+        # if only one feature with this name, return it
+        if len(feats) == 1:
+            return self._filter_properties(feats[0], with_prefix, with_featuregroup)
+
+        # if there are multiple features with this name, return the one without prefix
+        for feat in feats:
+            if feat[1] is None:
+                return self._filter_properties(feat, with_prefix, with_featuregroup)
+
+        # there are multiple features with this name and all have prefix, raise exception
+        raise FeatureStoreException(
+            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(feature_name)
+        )
+
+    def __getattr__(self, name):
+        try:
+            return self.__getitem__(name)
+        except FeatureStoreException:
+            raise AttributeError(f"'Query' object has no attribute '{name}'. ")
+
+    def __getitem__(self, name):
+        if not isinstance(name, str):
+            raise TypeError(
+                f"Expected type `str`, got `{type(name)}`. "
+                "Features are accessible by name."
+            )
+        return self.get_feature(name)
