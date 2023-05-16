@@ -1004,9 +1004,9 @@ public class SparkEngine {
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     Map<String, String> config = new HashMap<>();
-    boolean internalKafka = true;
+    boolean internalKafka = false;
     if (writeOptions != null) {
-      internalKafka = Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "true"));
+      internalKafka = Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"));
       config.putAll(writeOptions);
     }
     HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
