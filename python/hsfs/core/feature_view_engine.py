@@ -70,7 +70,7 @@ class FeatureViewEngine:
             )
         if feature_view_obj.labels:
             for label_name in feature_view_obj.labels:
-                feature, prefix, featuregroup = feature_view_obj.query.get_feature_obj(
+                feature, prefix, featuregroup = feature_view_obj.query.find_feature_in_query(
                     label_name
                 )
                 feature_view_obj._features.append(

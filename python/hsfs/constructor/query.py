@@ -24,6 +24,7 @@ from hsfs.core import query_constructor_api, storage_connector_api, arrow_flight
 from hsfs.constructor import join
 from hsfs.constructor.filter import Filter, Logic
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.feature import Feature
 
 
 class Query:
@@ -88,19 +89,19 @@ class Query:
         )
         feature_entry = (feat, prefix, featuregroup)
         collection[feat.name] = collection.get(feat.name, []) + [feature_entry]
-        if prefix:
-            name_with_prefix = f"{prefix}{feat.name}"
-            collection[name_with_prefix] = collection.get(name_with_prefix, []) + [
-                feature_entry
-            ]
         if query_feature:
-            self._feature_list.append(feature_entry)
+            if prefix:
+                name_with_prefix = f"{prefix}{feat.name}"
+                collection[name_with_prefix] = collection.get(name_with_prefix, []) + [
+                    feature_entry
+                ]
+            self._query_feature_list.append(feature_entry)
 
     def _populate_collections(self):
         self._featuregroups = {self._left_feature_group}
         self._query_features = {}
+        self._query_feature_list = []
         self._featuregroup_features = {}
-        self._feature_list = []
         self._filters = self._filter
 
         for feat in self._left_features:
@@ -200,7 +201,7 @@ class Query:
             and "pandas_types" in read_options
             and read_options["pandas_types"]
         ):
-            schema = self._collect_features()
+            schema = self.features
             if len(self.joins) > 0 or None in [f.type for f in schema]:
                 raise ValueError(
                     "Pandas types casting only supported for feature_group.read()/query.select_all()"
@@ -301,8 +302,18 @@ class Query:
 
         return self
 
+    def _merge_lookups(self, lookup1, lookup2):
+        merged_lookup = {}
+        for lookup1_key in lookup1:
+            merged_lookup[lookup1_key] = lookup1[lookup1_key]
+        for lookup2_key in lookup2:
+            merged_lookup[lookup2_key] = merged_lookup.get(lookup2_key, []) + lookup2[lookup2_key]
+        return merged_lookup
+
     def _check_join(self, join_obj):
-        for feat in join_obj.query._left_features:
+        additional_featuregroup_features = {}
+        for fg in join_obj.query.featuregroups:
+
             prefix = join_obj.prefix
             if self._feature_exists_in_query(feat.name, prefix):
                 name = f"{prefix}{feat.name}" if prefix else feat.name
@@ -318,6 +329,14 @@ class Query:
                 new_filter = join_obj.query._filter
             elif join_obj.query._filter is not None:
                 new_filter = self._filters & join_obj.query._filter
+
+            featuregroup_lookup = self._featuregroup_features
+            if additional_featuregroup_features is not None:
+                featuregroup_lookup = self._merge_lookups(featuregroup_lookup,
+                                                          additional_featuregroup_features)
+
+            featuregroups_to_check = self.featuregroups + (additional_featuregroups or [])
+
             self._check_filter(new_filter)
 
     def as_of(
@@ -505,7 +524,7 @@ class Query:
             return
 
         if isinstance(f, Filter):
-            self.get_featuregroup_by_feature(f._feature)
+            self.find_feature_in_featuregroups(f._feature)
         elif isinstance(f, Logic):
             self._check_filter(f._left_f)
             self._check_filter(f._right_f)
@@ -671,59 +690,56 @@ class Query:
 
     @property
     def features(self):
-        return [feat[0] for feat in self._feature_list]
+        return [feat[0] for feat in self._query_feature_list]
 
-    def get_featuregroup_by_feature(self, feature):
+    def find_feature_in_featuregroups(self, feature: Feature, featuregroup_features=None, featuregroups=None):
+        if featuregroup_features is None:
+            featuregroup_features = self._featuregroup_features
+
+        if featuregroups is None:
+            featuregroups = self.featuregroups
+
         fg_id = feature._feature_group_id
+        for fg in featuregroups:
+            if fg.id == fg_id:
+                return fg
 
-        if fg_id is None:
-            return self.get_feature_obj(
-                feature.name, include_unselected=True, resolve_ambiguity=False
-            )[2]
-        else:
-            for fg in self.featuregroups:
-                if fg.id == fg_id:
-                    return fg
+        featuregroups_found = featuregroup_features.get(feature.name, [])
+
+        if len(featuregroups_found) == 1:
+            return featuregroups_found[0]
+        elif len(featuregroups_found) == 0:
+            raise FeatureStoreException(
+                Query.ERROR_MESSAGE_FEATURE_NOT_FOUND_FG.format(feature.name)
+            )
 
         raise FeatureStoreException(
-            Query.ERROR_MESSAGE_FEATURE_NOT_FOUND_FG.format(feature.name)
+            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS_FG.format(feature.name)
         )
 
-    def get_feature_obj(
+    def find_feature_in_query(
         self,
         feature_name: str,
-        include_unselected=False,
-        resolve_ambiguity=True,
     ):
-        feature_lookup = (
-            self._query_features
-            if not include_unselected
-            else self._featuregroup_features
-        )
-        if feature_name not in feature_lookup:
+        if feature_name not in self._query_features:
             raise FeatureStoreException(
                 Query.ERROR_MESSAGE_FEATURE_NOT_FOUND.format(feature_name)
             )
-        feats = feature_lookup[feature_name]
+        feats = self._query_features[feature_name]
 
         if len(feats) == 1:
             return feats[0]
 
-        if resolve_ambiguity:
-            for feat in feats:
-                if feat[1] is None:
-                    return feat
-
-            raise FeatureStoreException(
-                Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(feature_name)
-            )
+        for feat in feats:
+            if feat[1] is None:
+                return feat
 
         raise FeatureStoreException(
-            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS_FG.format(feature_name)
+            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(feature_name)
         )
 
     def get_feature(self, feature_name):
-        return self.get_feature_obj(feature_name)[0]
+        return self.find_feature_in_query(feature_name)[0]
 
     def __getattr__(self, name):
         try:

@@ -258,7 +258,7 @@ class TestArrowFlightClient:
             test_fg1.select_all()
             .filter((test_fg1.features[0] > 500) & (test_fg1.features[1] < 0.1))
             .join(
-                test_fg2.filter(test_fg2.features[0] > 500),
+                test_fg2.filter(Feature("intt") > 500),
                 left_on=["intt"],
                 right_on=["intt"],
                 prefix="test_",

@@ -110,7 +110,7 @@ class TransformationFunctionEngine:
                         "Online transformations for training dataset labels are not supported."
                     )
 
-                feature, prefix, featuregroup = target_obj.query.get_feature_obj(
+                feature, prefix, featuregroup = target_obj.query.find_feature_in_query(
                     feature_name
                 )
                 target_obj._features.append(
