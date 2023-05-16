@@ -303,7 +303,7 @@ class FeatureMonitoringResultEngine:
             Union[FeatureMonitoringResult, List[FeatureMonitoringResult]]. Feature monitoring result
         """
         if reference_statistics or specific_value:
-            difference, shift_detected = self._compute_difference_and_shift(
+            difference, shift_detected = self.compute_difference_and_shift(
                 fm_config=fm_config,
                 detection_statistics=detection_statistics,
                 reference_statistics=reference_statistics,
@@ -342,7 +342,7 @@ class FeatureMonitoringResultEngine:
             self.save_feature_monitoring_result(result=result) for result in results
         ]
 
-    def _compute_difference_and_shift(
+    def compute_difference_and_shift(
         self,
         fm_config: "fmc.FeatureMonitoringConfig",
         detection_statistics: FeatureDescriptiveStatistics,
@@ -361,7 +361,7 @@ class FeatureMonitoringResultEngine:
             `(float, bool)`. The difference between the reference and detection statistics,
                              and whether shift was detected or not
         """
-        difference = self._compute_difference_between_stats(
+        difference = self.compute_difference_between_stats(
             detection_statistics=detection_statistics,
             reference_statistics=reference_statistics,
             metric=fm_config.statistics_comparison_config["metric"].lower(),
@@ -383,7 +383,7 @@ class FeatureMonitoringResultEngine:
             )
         return difference, shift_detected
 
-    def _compute_difference_between_stats(
+    def compute_difference_between_stats(
         self,
         detection_statistics: FeatureDescriptiveStatistics,
         metric: str,
@@ -411,11 +411,11 @@ class FeatureMonitoringResultEngine:
             if specific_value is not None
             else reference_statistics.get_value(metric)
         )
-        return self._compute_difference_between_specific_values(
+        return self.compute_difference_between_specific_values(
             detection_value, reference_value, relative
         )
 
-    def _compute_difference_between_specific_values(
+    def compute_difference_between_specific_values(
         self,
         detection_value: Union[int, float],
         reference_value: Union[int, float],

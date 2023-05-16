@@ -21,6 +21,7 @@ from datetime import datetime, date, timedelta
 import dateutil
 from hsfs import util
 from hsfs.core import execution
+from unittest.mock import call
 
 DEFAULT_MONITORING_TIME_SORT_BY = "monitoring_time:desc"
 DEFAULT_FEATURE_STORE_ID = 67
@@ -156,9 +157,7 @@ class TestFeatureMonitoringResultEngine:
         mocker.patch(
             "hsfs.core.feature_monitoring_result_engine.FeatureMonitoringResultEngine.get_monitoring_job_execution_id",
         )
-        result_engine = (
-            result_engine
-        ) = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+        result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
             feature_view_id=DEFAULT_FEATURE_VIEW_ID,
             feature_view_name=DEFAULT_FEATURE_VIEW_NAME,
@@ -176,7 +175,9 @@ class TestFeatureMonitoringResultEngine:
         assert result_create_api_mock.call_args[0][0] == result
 
     # Build result
-    def test_build_statistics_monitoring(self, mocker, backend_fixtures):
+    def test_build_statistics_monitoring_result_no_reference_stats(
+        self, mocker, backend_fixtures
+    ):
         # Arrange
         mocker.patch(HSFS_CLIENT_GET_INSTANCE)
         job_api_last_execution_mock = mocker.patch(
@@ -859,7 +860,148 @@ class TestFeatureMonitoringResultEngine:
         assert query_params["sort_by"] == DEFAULT_MONITORING_TIME_SORT_BY
         assert query_params["expand"] == "statistics"
 
-    # TODO: Add tests for computing_difference functions:
-    # - compute_difference_and_shift
-    # - compute_difference_between_stats
-    # - compute_difference_between_specific_values
+    def test_compute_difference_between_specific_values(self):
+        # Arrange
+        detection_specific_value = 25
+        reference_specific_value = 50
+        expected_difference = -25
+        expected_relative_difference = -0.5
+        result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
+        )
+
+        # Act
+        absolute_difference = result_engine.compute_difference_between_specific_values(
+            detection_value=detection_specific_value,
+            reference_value=reference_specific_value,
+            relative=False,
+        )
+        relative_difference = result_engine.compute_difference_between_specific_values(
+            detection_value=detection_specific_value,
+            reference_value=reference_specific_value,
+            relative=True,
+        )
+
+        # Assert
+        assert absolute_difference == expected_difference
+        assert relative_difference == expected_relative_difference
+
+    def test_compute_difference_between_stats(self, backend_fixtures):
+        # Arrange
+        result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
+        )
+        detection_statistics = FeatureDescriptiveStatistics.from_response_json(
+            backend_fixtures["feature_descriptive_statistics"][
+                "get_fractional_feature_statistics"
+            ]["response"]
+        )
+        reference_statistics = FeatureDescriptiveStatistics.from_response_json(
+            backend_fixtures["feature_descriptive_statistics"][
+                "get_fractional_feature_statistics"
+            ]["response"]
+        )
+        reference_statistics._count += 6
+
+        # Act
+        mean_difference = result_engine.compute_difference_between_stats(
+            detection_statistics=detection_statistics,
+            reference_statistics=reference_statistics,
+            metric="mean",
+            relative=False,
+            specific_value=None,
+        )
+        count_relative_difference = result_engine.compute_difference_between_stats(
+            detection_statistics=detection_statistics,
+            reference_statistics=reference_statistics,
+            metric="count",
+            relative=True,
+            specific_value=None,
+        )
+        count_specific_difference = result_engine.compute_difference_between_stats(
+            detection_statistics=detection_statistics,
+            reference_statistics=None,
+            metric="count",
+            relative=False,
+            specific_value=2,
+        )
+
+        # Assert
+        assert mean_difference == 0
+        assert count_relative_difference == -0.6
+        assert count_specific_difference == 2
+
+    def test_compute_difference_and_shift(self, mocker, backend_fixtures):
+        # Arrange
+        compute_stats_difference_mock = mocker.patch(
+            "hsfs.core.feature_monitoring_result_engine.FeatureMonitoringResultEngine.compute_difference_between_stats",
+            return_value=DEFAULT_DIFFERENCE,
+        )
+        result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+            feature_store_id=DEFAULT_FEATURE_STORE_ID,
+            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
+        )
+        fm_config = fmc.FeatureMonitoringConfig.from_response_json(
+            backend_fixtures["feature_monitoring_config"]["get_via_feature_group"][
+                "detection_insert_reference_snapshot"
+            ]["response"]
+        )
+        detection_statistics = FeatureDescriptiveStatistics.from_response_json(
+            backend_fixtures["feature_descriptive_statistics"][
+                "get_fractional_feature_statistics"
+            ]["response"]
+        )
+        reference_statistics = FeatureDescriptiveStatistics.from_response_json(
+            backend_fixtures["feature_descriptive_statistics"][
+                "get_fractional_feature_statistics"
+            ]["response"]
+        )
+
+        # Act
+        fm_config._statistics_comparison_config["threshold"] = DEFAULT_DIFFERENCE + 1
+        (
+            difference_no_shift,
+            no_shift_detected,
+        ) = result_engine.compute_difference_and_shift(
+            fm_config=fm_config,
+            detection_statistics=detection_statistics,
+            reference_statistics=reference_statistics,
+            specific_value=None,
+        )
+        fm_config._statistics_comparison_config["threshold"] = DEFAULT_DIFFERENCE - 1
+        (
+            difference_with_shift,
+            with_shift_detected,
+        ) = result_engine.compute_difference_and_shift(
+            fm_config=fm_config,
+            detection_statistics=detection_statistics,
+            reference_statistics=None,
+            specific_value=10,
+        )
+
+        # Assert
+        assert difference_no_shift == DEFAULT_DIFFERENCE
+        assert no_shift_detected is False
+        assert difference_with_shift == DEFAULT_DIFFERENCE
+        assert with_shift_detected is True
+        compute_stats_difference_mock.assert_has_calls(
+            [
+                call(
+                    detection_statistics=detection_statistics,
+                    reference_statistics=reference_statistics,
+                    metric=fm_config.statistics_comparison_config.get("metric").lower(),
+                    relative=fm_config.statistics_comparison_config.get("relative"),
+                    specific_value=None,
+                ),
+                call(
+                    detection_statistics=detection_statistics,
+                    reference_statistics=None,
+                    metric=fm_config.statistics_comparison_config.get("metric").lower(),
+                    relative=fm_config.statistics_comparison_config.get("relative"),
+                    specific_value=10,
+                ),
+            ],
+            any_order=False,
+        )
