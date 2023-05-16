@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 public class FlinkEngine {
   private static FlinkEngine INSTANCE = null;
 
-  public static synchronized FlinkEngine getInstance() {
+  public static synchronized FlinkEngine getInstance() throws FeatureStoreException {
     if (INSTANCE == null) {
       INSTANCE = new FlinkEngine();
     }
@@ -54,19 +54,20 @@ public class FlinkEngine {
   @Getter
   private StreamExecutionEnvironment streamExecutionEnvironment;
 
-  private KafkaApi kafkaApi = new KafkaApi();
+  private final KafkaApi kafkaApi = new KafkaApi();
+  private final HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
-  private FlinkEngine() {
+  private FlinkEngine() throws FeatureStoreException {
     streamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment();
     // Configure the streamExecutionEnvironment
     streamExecutionEnvironment.getConfig().enableObjectReuse();
   }
 
-  public DataStreamSink<?> writeDataStream(StreamFeatureGroup streamFeatureGroup, DataStream<?> dataStream)
-      throws FeatureStoreException, IOException {
+  public DataStreamSink<?> writeDataStream(StreamFeatureGroup streamFeatureGroup, DataStream<?> dataStream,
+      Map<String, String> writeOptions) throws FeatureStoreException, IOException {
 
     DataStream<Object> genericDataStream = (DataStream<Object>) dataStream;
-    Properties properties = getKafkaProperties(streamFeatureGroup);
+    Properties properties = getKafkaProperties(streamFeatureGroup, writeOptions);
 
     KafkaSink<GenericRecord> sink = KafkaSink.<GenericRecord>builder()
         .setBootstrapServers(properties.getProperty("bootstrap.servers"))
@@ -95,10 +96,17 @@ public class FlinkEngine {
     return avroRecordDataStream.sinkTo(sink);
   }
 
-  private Properties getKafkaProperties(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
+  private Properties getKafkaProperties(StreamFeatureGroup featureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+
     Properties properties = new Properties();
-    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
+    boolean internalKafka = false;
+    if (writeOptions != null) {
+      internalKafka = Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"));
+      properties.putAll(writeOptions);
+    }
+
+    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) || internalKafka) {
       properties.put("bootstrap.servers",
           kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
           "INTERNAL://", ""))
