@@ -475,7 +475,7 @@ class Query:
         # Returns
             `Query`. The query object with the applied filter.
         """
-        self._check_filter(f)
+        self._check_filter(self._filter & f)
 
         if self._filter is None:
             if isinstance(f, Filter):
