@@ -15,17 +15,17 @@ def read(fname):
 setup(
     name="hsfs",
     version=__version__,
-    python_requires=">=3.7,<3.10",
+    python_requires=">=3.7,<3.11",
     install_requires=[
         "pyhumps==1.6.1",
         "requests",
         "furl",
         "boto3",
-        "pandas>=1.2.0",
+        "pandas>=1.2.0,<2.0.0",
         "numpy",
         "pyjks",
         "mock",
-        "avro==1.10.2",
+        "avro==1.11.0",
         "sqlalchemy",
         "PyMySQL[rsa]",
         "great_expectations==0.14.12",
@@ -55,19 +55,15 @@ setup(
         ],
         "hive": [
             "pyhopshive[thrift]",
-            # Pin gcsfs version since there is a bug in fsspec which gcsfs depends on in newer version: https://github.com/fsspec/filesystem_spec/pull/1103
-            "gcsfs==2022.7.1",
             "pyarrow",
-            "confluent-kafka==1.8.2",
-            "fastavro==1.4.11",
+            "confluent-kafka<=1.9.0",
+            "fastavro>=1.4.11,<=1.7.3",
         ],
         "python": [
             "pyhopshive[thrift]",
-            # Pin gcsfs version since there is a bug in fsspec which gcsfs depends on in newer version: https://github.com/fsspec/filesystem_spec/pull/1103
-            "gcsfs==2022.7.1",
             "pyarrow",
-            "confluent-kafka==1.8.2",
-            "fastavro==1.4.11",
+            "confluent-kafka<=1.9.0",
+            "fastavro>=1.4.11,<=1.7.3",
             "tqdm",
         ],
     },
@@ -88,6 +84,7 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Intended Audience :: Developers",
     ],
 )

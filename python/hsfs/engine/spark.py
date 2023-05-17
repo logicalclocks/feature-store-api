@@ -66,8 +66,10 @@ except ImportError:
     pass
 
 from hsfs import feature, training_dataset_feature, client, util
+from hsfs.feature_group import ExternalFeatureGroup
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.client import hopsworks
 from hsfs.core import hudi_engine, transformation_function_engine, kafka_api
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -121,13 +123,18 @@ class Engine:
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
 
+    def is_flyingduck_query_supported(self, query, read_options):
+        return False  # we do not support flyingduck on pyspark clients
+
     def _sql_offline(self, sql_query, feature_store):
         # set feature store
         self._spark_session.sql("USE {}".format(feature_store))
         return self._spark_session.sql(sql_query)
 
-    def show(self, sql_query, feature_store, n, online_conn):
-        return self.sql(sql_query, feature_store, online_conn, "default", {}).show(n)
+    def show(self, sql_query, feature_store, n, online_conn, read_options={}):
+        return self.sql(
+            sql_query, feature_store, online_conn, "default", read_options
+        ).show(n)
 
     def set_job_group(self, group_id, description):
         self._spark_session.sparkContext.setJobGroup(group_id, description)
@@ -261,7 +268,10 @@ class Engine:
         validation_id=None,
     ):
         try:
-            if feature_group.stream:
+            if (
+                isinstance(feature_group, ExternalFeatureGroup)
+                and feature_group.online_enabled
+            ) or feature_group.stream:
                 self._save_online_dataframe(
                     feature_group, dataframe, online_write_options
                 )
@@ -706,14 +716,12 @@ class Engine:
         exact_uniqueness=True,
     ):
         """Profile a dataframe with Deequ."""
-        return (
-            self._jvm.com.logicalclocks.hsfs.engine.SparkEngine.getInstance().profile(
-                dataframe._jdf,
-                relevant_columns,
-                correlations,
-                histograms,
-                exact_uniqueness,
-            )
+        return self._jvm.com.logicalclocks.hsfs.spark.engine.SparkEngine.getInstance().profile(
+            dataframe._jdf,
+            relevant_columns,
+            correlations,
+            histograms,
+            exact_uniqueness,
         )
 
     def validate_with_great_expectations(
@@ -914,7 +922,7 @@ class Engine:
                 if transformation_fn.output_type != "TIMESTAMP":
                     return func
 
-                current_timezone = datetime.now().astimezone().tzinfo
+                current_timezone = tzlocal.get_localzone()
 
                 def decorated_func(x):
                     result = func(x)
@@ -1105,13 +1113,8 @@ class Engine:
 
     def _get_kafka_config(self, write_options: dict = {}) -> dict:
         if self._kafka_config is None:
+
             self._kafka_config = {
-                "kafka.bootstrap.servers": ",".join(
-                    [
-                        endpoint.replace("INTERNAL://", "")
-                        for endpoint in self._kafka_api.get_broker_endpoints()
-                    ]
-                ),
                 "kafka.security.protocol": "SSL",
                 "kafka.ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),
                 "kafka.ssl.truststore.password": client.get_instance()._cert_key,
@@ -1120,6 +1123,27 @@ class Engine:
                 "kafka.ssl.key.password": client.get_instance()._cert_key,
                 "kafka.ssl.endpoint.identification.algorithm": "",
             }
+            if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
+                "internal_kafka", False
+            ):
+                self._kafka_config["kafka.bootstrap.servers"] = ",".join(
+                    [
+                        endpoint.replace("INTERNAL://", "")
+                        for endpoint in self._kafka_api.get_broker_endpoints(
+                            externalListeners=False
+                        )
+                    ]
+                )
+            else:
+                self._kafka_config["kafka.bootstrap.servers"] = ",".join(
+                    [
+                        endpoint.replace("EXTERNAL://", "")
+                        for endpoint in self._kafka_api.get_broker_endpoints(
+                            externalListeners=True
+                        )
+                    ]
+                )
+
         return {**write_options, **self._kafka_config}
 
 

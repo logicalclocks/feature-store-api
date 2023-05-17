@@ -57,9 +57,25 @@ from hsfs.core import great_expectation_engine
 
 
 class FeatureGroupBase:
-    def __init__(self, featurestore_id, location, event_time=None):
+    def __init__(
+        self,
+        featurestore_id,
+        location,
+        event_time=None,
+        online_enabled=False,
+        id=None,
+        expectation_suite=None,
+        online_topic_name=None,
+    ):
         self.event_time = event_time
+        self._online_enabled = online_enabled
         self._location = location
+        self._id = id
+        self._subject = None
+        self._online_topic_name = online_topic_name
+        self._feature_store_id = featurestore_id
+        # use setter for correct conversion
+        self.expectation_suite = expectation_suite
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
@@ -67,8 +83,31 @@ class FeatureGroupBase:
         self._great_expectation_engine = (
             great_expectation_engine.GreatExpectationEngine(featurestore_id)
         )
+        if self._id is not None:
+            if expectation_suite:
+                self._expectation_suite._init_expectation_engine(
+                    feature_store_id=featurestore_id, feature_group_id=self._id
+                )
+            self._expectation_suite_engine = (
+                expectation_suite_engine.ExpectationSuiteEngine(
+                    feature_store_id=featurestore_id, feature_group_id=self._id
+                )
+            )
+            self._validation_report_engine = (
+                validation_report_engine.ValidationReportEngine(
+                    featurestore_id, self._id
+                )
+            )
+            self._validation_result_engine = (
+                validation_result_engine.ValidationResultEngine(
+                    featurestore_id, self._id
+                )
+            )
+
         self._feature_store_id = featurestore_id
         self._variable_api = VariableApi()
+        self._feature_group_engine = None
+        self._multi_part_insert = False
 
     def delete(self):
         """Drop the entire feature group along with its feature data.
@@ -973,6 +1012,71 @@ class FeatureGroupBase:
                 "Only Feature Group registered with Hopsworks can fetch validation history."
             )
 
+    def validate(
+        self,
+        dataframe: Optional[
+            Union[pd.DataFrame, TypeVar("pyspark.sql.DataFrame")]  # noqa: F821
+        ] = None,
+        expectation_suite: Optional[ExpectationSuite] = None,
+        save_report: Optional[bool] = False,
+        validation_options: Optional[Dict[Any, Any]] = {},
+        ingestion_result: str = "UNKNOWN",
+        ge_type: bool = True,
+    ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
+        """Run validation based on the attached expectations.
+
+        Runs any expectation attached with Deequ. But also runs attached Great Expectation
+        Suites.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get feature group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            ge_report = fg.validate(df, save_report=False)
+            ```
+
+        # Arguments
+            dataframe: The dataframe to run the data validation expectations against.
+            expectation_suite: Optionally provide an Expectation Suite to override the
+                one that is possibly attached to the feature group. This is useful for
+                testing new Expectation suites. When an extra suite is provided, the results
+                will never be persisted. Defaults to `None`.
+            validation_options: Additional validation options as key-value pairs, defaults to `{}`.
+                * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
+                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+            ingestion_result: Specify the fate of the associated data, defaults
+                to "UNKNOWN". Supported options are  "UNKNOWN", "INGESTED", "REJECTED",
+                "EXPERIMENT", "FG_DATA". Use "INGESTED" or "REJECTED" for validation
+                of DataFrames to be inserted in the Feature Group. Use "EXPERIMENT"
+                for testing and development and "FG_DATA" when validating data
+                already in the Feature Group.
+            save_report: Whether to save the report to the backend. This is only possible if the Expectation suite
+                is initialised and attached to the Feature Group. Defaults to False.
+            ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.
+
+        # Returns
+            A Validation Report produced by Great Expectations.
+        """
+        # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
+        if dataframe is None:
+            dataframe = self.read()
+            if ingestion_result == "UNKNOWN":
+                ingestion_result = "FG_DATA"
+
+        return self._great_expectation_engine.validate(
+            self,
+            dataframe=engine.get_instance().convert_to_default_dataframe(dataframe),
+            expectation_suite=expectation_suite,
+            save_report=save_report,
+            validation_options=validation_options,
+            ingestion_result=ingestion_result,
+            ge_type=ge_type,
+        )
+
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
@@ -1175,6 +1279,59 @@ class FeatureGroupBase:
                 )
             )
 
+    @property
+    def online_enabled(self):
+        """Setting if the feature group is available in online storage."""
+        return self._online_enabled
+
+    @online_enabled.setter
+    def online_enabled(self, online_enabled):
+        self._online_enabled = online_enabled
+
+    @property
+    def subject(self):
+        """Subject of the feature group."""
+        if self._subject is None:
+            # cache the schema
+            self._subject = self._feature_group_engine.get_subject(self)
+        return self._subject
+
+    @property
+    def avro_schema(self):
+        """Avro schema representation of the feature group."""
+        return self.subject["schema"]
+
+    def get_complex_features(self):
+        """Returns the names of all features with a complex data type in this
+        feature group.
+
+        !!! example
+            ```python
+            complex_dtype_features = fg.get_complex_features()
+            ```
+        """
+        return [f.name for f in self.features if f.is_complex()]
+
+    def _get_encoded_avro_schema(self):
+        complex_features = self.get_complex_features()
+        schema = json.loads(self.avro_schema)
+
+        for field in schema["fields"]:
+            if field["name"] in complex_features:
+                field["type"] = ["null", "bytes"]
+
+        schema_s = json.dumps(schema)
+        try:
+            avro.schema.parse(schema_s)
+        except avro.schema.SchemaParseException as e:
+            raise FeatureStoreException("Failed to construct Avro Schema: {}".format(e))
+        return schema_s
+
+    def _get_feature_avro_schema(self, feature_name):
+        for field in json.loads(self.avro_schema)["fields"]:
+            if field["name"] == feature_name:
+                return json.dumps(field["type"])
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -1205,8 +1362,17 @@ class FeatureGroup(FeatureGroupBase):
         expectation_suite=None,
         parents=None,
         href=None,
+        delta_streamer_job_conf=None,
     ):
-        super().__init__(featurestore_id, location, event_time=event_time)
+        super().__init__(
+            featurestore_id,
+            location,
+            event_time=event_time,
+            online_enabled=online_enabled,
+            id=id,
+            expectation_suite=expectation_suite,
+            online_topic_name=online_topic_name,
+        )
 
         self._feature_store_name = featurestore_name
         self._description = description
@@ -1214,22 +1380,18 @@ class FeatureGroup(FeatureGroupBase):
         self._creator = user.User.from_response_json(creator)
         self._version = version
         self._name = name
-        self._id = id
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in (features or [])
         ]
 
-        self._online_enabled = online_enabled
         self._time_travel_format = (
             time_travel_format.upper() if time_travel_format is not None else None
         )
 
-        self._subject = None
-        self._online_topic_name = online_topic_name
         self._stream = stream
         self._parents = parents
-        self._deltastreamer_jobconf = None
+        self._deltastreamer_jobconf = delta_streamer_job_conf
 
         self._backfill_job = None
 
@@ -1256,26 +1418,6 @@ class FeatureGroup(FeatureGroupBase):
                 self._hudi_precombine_key = None
 
             self.statistics_config = statistics_config
-            self.expectation_suite = expectation_suite
-            if expectation_suite:
-                self._expectation_suite._init_expectation_engine(
-                    feature_store_id=featurestore_id, feature_group_id=self._id
-                )
-            self._expectation_suite_engine = (
-                expectation_suite_engine.ExpectationSuiteEngine(
-                    feature_store_id=self._feature_store_id, feature_group_id=self._id
-                )
-            )
-            self._validation_report_engine = (
-                validation_report_engine.ValidationReportEngine(
-                    self._feature_store_id, self._id
-                )
-            )
-            self._validation_result_engine = (
-                validation_result_engine.ValidationResultEngine(
-                    self._feature_store_id, self._id
-                )
-            )
 
         else:
             # initialized by user
@@ -1305,7 +1447,6 @@ class FeatureGroup(FeatureGroupBase):
                 else None
             )
             self.statistics_config = statistics_config
-            self.expectation_suite = expectation_suite
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
@@ -1313,7 +1454,6 @@ class FeatureGroup(FeatureGroupBase):
         self._href = href
 
         # cache for optimized writes
-        self._multi_part_insert = False
         self._kafka_producer = None
         self._feature_writers = None
         self._writer = None
@@ -1574,9 +1714,9 @@ class FeatureGroup(FeatureGroupBase):
         or insert data from a dataframe into the existing feature group.
 
         Incrementally insert data to a feature group or overwrite all  data contained in the feature group. By
-        default, the data is inserted into the offline storag as well as the online storage if the feature group is
-        `online_enabled=True`. To insert only into the online storage, set `storage="online"`, or oppositely
-        `storage="offline"`.
+        default, the data is inserted into the offline storage as well as the online storage if the feature group is
+        `online_enabled=True`. To insert only into the online or offline storage set `storage="online"` or
+        `storage="offline"` respectively.
 
         The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
@@ -1738,7 +1878,7 @@ class FeatureGroup(FeatureGroupBase):
                 # run inserts in a loop:
                 while loop:
                     small_batch_df = ...
-                    writer.multi_part_insert(small_batch_df)
+                    writer.insert(small_batch_df)
             ```
             The writer batches the small Dataframes and transmits them to Hopsworks
             efficiently.
@@ -1992,7 +2132,7 @@ class FeatureGroup(FeatureGroupBase):
         write_options: Optional[Dict[Any, Any]] = {},
     ):
         """Drops records present in the provided DataFrame and commits it as update to this
-        Feature group. This method can only be used on time travel enabled feature groups
+        Feature group. This method can only be used on time travel enabled feature groups.
 
         # Arguments
             delete_df: dataFrame containing records to be deleted.
@@ -2094,71 +2234,6 @@ class FeatureGroup(FeatureGroupBase):
             `Query`. The query object with the applied time travel condition.
         """
         return self.select_all().as_of(wallclock_time, exclude_until)
-
-    def validate(
-        self,
-        dataframe: Optional[
-            Union[pd.DataFrame, TypeVar("pyspark.sql.DataFrame")]  # noqa: F821
-        ] = None,
-        expectation_suite: Optional[ExpectationSuite] = None,
-        save_report: Optional[bool] = False,
-        validation_options: Optional[Dict[Any, Any]] = {},
-        ingestion_result: str = "UNKNOWN",
-        ge_type: bool = True,
-    ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
-        """Run validation based on the attached expectations.
-
-        Runs any expectation attached with Deequ. But also runs attached Great Expectation
-        Suites.
-
-        !!! example
-            ```python
-            # connect to the Feature Store
-            fs = ...
-
-            # get feature group instance
-            fg = fs.get_or_create_feature_group(...)
-
-            ge_report = fg.validate(df, save_report=False)
-            ```
-
-        # Arguments
-            dataframe: The dataframe to run the data validation expectations against.
-            expectation_suite: Optionally provide an Expectation Suite to override the
-                one that is possibly attached to the feature group. This is useful for
-                testing new Expectation suites. When an extra suite is provided, the results
-                will never be persisted. Defaults to `None`.
-            validation_options: Additional validation options as key-value pairs, defaults to `{}`.
-                * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
-                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
-            ingestion_result: Specify the fate of the associated data, defaults
-                to "UNKNOWN". Supported options are  "UNKNOWN", "INGESTED", "REJECTED",
-                "EXPERIMENT", "FG_DATA". Use "INGESTED" or "REJECTED" for validation
-                of DataFrames to be inserted in the Feature Group. Use "EXPERIMENT"
-                for testing and development and "FG_DATA" when validating data
-                already in the Feature Group.
-            save_report: Whether to save the report to the backend. This is only possible if the Expectation suite
-                is initialised and attached to the Feature Group. Defaults to False.
-            ge_type: Whether to return a Great Expectations object or Hopsworks own abstraction. Defaults to True.
-
-        # Returns
-            A Validation Report produced by Great Expectations.
-        """
-        # Activity is logged only if a the validation concerns the feature group and not a specific dataframe
-        if dataframe is None:
-            dataframe = self.read()
-            if ingestion_result == "UNKNOWN":
-                ingestion_result = "FG_DATA"
-
-        return self._great_expectation_engine.validate(
-            self,
-            dataframe=engine.get_instance().convert_to_default_dataframe(dataframe),
-            expectation_suite=expectation_suite,
-            save_report=save_report,
-            validation_options=validation_options,
-            ingestion_result=ingestion_result,
-            ge_type=ge_type,
-        )
 
     def compute_statistics(
         self, wallclock_time: Optional[Union[str, int, datetime, date]] = None
@@ -2289,36 +2364,10 @@ class FeatureGroup(FeatureGroupBase):
     def _get_online_table_name(self):
         return self.name + "_" + str(self.version)
 
-    def get_complex_features(self):
-        """Returns the names of all features with a complex data type in this
-        feature group.
-
-        !!! example
-            ```python
-            complex_dtype_features = fg.get_complex_features()
-            ```
-        """
-        return [f.name for f in self.features if f.is_complex()]
-
-    def _get_encoded_avro_schema(self):
-        complex_features = self.get_complex_features()
-        schema = json.loads(self.avro_schema)
-
-        for field in schema["fields"]:
-            if field["name"] in complex_features:
-                field["type"] = ["null", "bytes"]
-
-        schema_s = json.dumps(schema)
-        try:
-            avro.schema.parse(schema_s)
-        except avro.schema.SchemaParseException as e:
-            raise FeatureStoreException("Failed to construct Avro Schema: {}".format(e))
-        return schema_s
-
-    def _get_feature_avro_schema(self, feature_name):
-        for field in json.loads(self.avro_schema)["fields"]:
-            if field["name"] == feature_name:
-                return json.dumps(field["type"])
+    def _get_project_name(self):
+        if self.feature_store_name.endswith("_featurestore"):
+            return self.feature_store_name[:-13]
+        return self.feature_store_name
 
     @property
     def id(self):
@@ -2344,11 +2393,6 @@ class FeatureGroup(FeatureGroupBase):
     def features(self):
         """Schema information."""
         return self._features
-
-    @property
-    def online_enabled(self):
-        """Setting if the feature group is available in online storage."""
-        return self._online_enabled
 
     @property
     def time_travel_format(self):
@@ -2383,19 +2427,6 @@ class FeatureGroup(FeatureGroupBase):
     def created(self):
         """Timestamp when the feature group was created."""
         return self._created
-
-    @property
-    def subject(self):
-        """Subject of the feature group."""
-        if self._subject is None:
-            # cache the schema
-            self._subject = self._feature_group_engine.get_subject(self)
-        return self._subject
-
-    @property
-    def avro_schema(self):
-        """Avro schema representation of the feature group."""
-        return self.subject["schema"]
 
     @property
     def stream(self):
@@ -2443,10 +2474,6 @@ class FeatureGroup(FeatureGroupBase):
     def hudi_precombine_key(self, hudi_precombine_key):
         self._hudi_precombine_key = hudi_precombine_key.lower()
 
-    @online_enabled.setter
-    def online_enabled(self, new_online_enabled):
-        self._online_enabled = new_online_enabled
-
     @stream.setter
     def stream(self, stream):
         self._stream = stream
@@ -2481,9 +2508,20 @@ class ExternalFeatureGroup(FeatureGroupBase):
         statistics_config=None,
         event_time=None,
         expectation_suite=None,
+        online_enabled=False,
         href=None,
+        online_topic_name=None,
     ):
-        super().__init__(featurestore_id, location, event_time=event_time)
+        super().__init__(
+            featurestore_id,
+            location,
+            event_time=event_time,
+            online_enabled=online_enabled,
+            id=id,
+            expectation_suite=expectation_suite,
+            online_topic_name=online_topic_name,
+        )
+
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
@@ -2493,8 +2531,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._query = query
         self._data_format = data_format.upper() if data_format else None
         self._path = path
-        self._id = id
-        self._expectation_suite = expectation_suite
 
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
@@ -2523,7 +2559,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 else []
             )
             self.statistics_config = statistics_config
-            self.expectation_suite = expectation_suite
 
             self._options = (
                 {option["name"]: option["value"] for option in options}
@@ -2533,7 +2568,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         else:
             self.primary_key = primary_key
             self.statistics_config = statistics_config
-            self.expectation_suite = expectation_suite
             self._features = features
             self._options = options
 
@@ -2544,7 +2578,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         else:
             self._storage_connector = storage_connector
 
-        self.expectation_suite = expectation_suite
         self._href = href
 
     def save(self):
@@ -2573,7 +2606,50 @@ class ExternalFeatureGroup(FeatureGroupBase):
         if self.statistics_config.enabled:
             self._statistics_engine.compute_statistics(self)
 
-    def read(self, dataframe_type="default"):
+    def insert(
+        self,
+        features: Union[
+            pd.DataFrame,
+            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+            TypeVar("pyspark.RDD"),  # noqa: F821
+            np.ndarray,
+            List[list],
+        ],
+        write_options: Optional[Dict[str, Any]] = {},
+        validation_options: Optional[Dict[str, Any]] = {},
+        save_code: Optional[bool] = True,
+    ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
+        feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+
+        job, ge_report = self._feature_group_engine.insert(
+            self,
+            feature_dataframe=feature_dataframe,
+            write_options=write_options,
+            validation_options={"save_report": True, **validation_options},
+        )
+
+        if save_code and (
+            ge_report is None or ge_report.ingestion_result == "INGESTED"
+        ):
+            self._code_engine.save_code(self)
+
+        if self.statistics_config.enabled:
+            warnings.warn(
+                (
+                    "Statistics are not computed for insertion to online enabled external feature group `{}`, with version"
+                    " `{}`. Call `compute_statistics` explicitly to compute statistics over the data in the external storage system."
+                ).format(self._name, self._version),
+                util.StorageWarning,
+            )
+
+        return (
+            job,
+            ge_report.to_ge_type() if ge_report is not None else None,
+        )
+
+    def read(
+        self, dataframe_type: Optional[str] = "default", online: Optional[bool] = False
+    ):
         """Get the feature group as a DataFrame.
 
         !!! example
@@ -2598,6 +2674,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
         # Arguments
             dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
                 `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            online: bool, optional. If `True` read from online feature store, defaults
+                to `False`.
 
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
@@ -2609,13 +2687,22 @@ class ExternalFeatureGroup(FeatureGroupBase):
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
+        if engine.get_type() == "python" and not online:
+            raise FeatureStoreException(
+                "Reading an External Feature Group directly into a Pandas Dataframe using "
+                + "Python/Pandas as Engine from the external storage system "
+                + "is not supported, however, if the feature group is online enabled, you can read "
+                + "from online storage or you can use the "
+                + "Query API to create Feature Views/Training Data containing External "
+                + "Feature Groups."
+            )
         engine.get_instance().set_job_group(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().read(dataframe_type=dataframe_type)
+        return self.select_all().read(dataframe_type=dataframe_type, online=online)
 
     def show(self, n):
         """Show the first n rows of the feature group.
@@ -2643,11 +2730,9 @@ class ExternalFeatureGroup(FeatureGroupBase):
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         if isinstance(json_decamelized, dict):
-            _ = json_decamelized.pop("online_topic_name", None)
             _ = json_decamelized.pop("type", None)
             return cls(**json_decamelized)
         for fg in json_decamelized:
-            _ = fg.pop("online_topic_name", None)
             _ = fg.pop("type", None)
         return [cls(**fg) for fg in json_decamelized]
 
@@ -2680,6 +2765,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
             "eventTime": self._event_time,
             "expectationSuite": self._expectation_suite,
+            "onlineEnabled": self._online_enabled,
         }
 
     @property
