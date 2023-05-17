@@ -1001,8 +1001,7 @@ public class SparkEngine {
 
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    StorageConnector.KafkaConnector storageConnector =
-            (StorageConnector.KafkaConnector) featureGroup.getFeatureStore().getKafkaConnector("kafka_connector");
+    StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector();
     Map<String, String> config = storageConnector.kafkaOptions();
 
     if (writeOptions != null) {

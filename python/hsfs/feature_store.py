@@ -433,6 +433,24 @@ class FeatureStore:
         """
         return self._storage_connector_api.get_online_connector()
 
+    def get_kafka_storage_connector(self):
+        """Get the Kafka storage connector for the Feature Store.
+
+        The returned storage connector depends on the project that you are connected to.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            online_storage_connector = fs.get_kafka_storage_connector()
+            ```
+
+        # Returns
+            `StorageConnector`. Kafka storage connector of the Feature Store.
+        """
+        return self._storage_connector_api.get_kafka_connector()
+
     def create_feature_group(
         self,
         name: str,

@@ -69,7 +69,7 @@ from hsfs import feature, training_dataset_feature, client, util
 from hsfs.feature_group import ExternalFeatureGroup
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core import hudi_engine, transformation_function_engine, kafka_api
+from hsfs.core import hudi_engine, transformation_function_engine, kafka_api, storage_connector_api
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
@@ -103,7 +103,6 @@ class Engine:
             util.setup_pydoop()
 
         self._kafka_api = kafka_api.KafkaApi()
-        self._kafka_config = None
 
     def sql(
         self,
@@ -311,7 +310,7 @@ class Engine:
         checkpoint_dir,
         write_options,
     ):
-        write_options = self._get_kafka_config(write_options)
+        write_options = self._get_kafka_config(feature_group.feature_store_id, write_options)
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
@@ -380,7 +379,7 @@ class Engine:
 
     def _save_online_dataframe(self, feature_group, dataframe, write_options):
 
-        write_options = self._get_kafka_config(write_options)
+        write_options = self._get_kafka_config(feature_group.feature_store_id, write_options)
 
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
@@ -1110,24 +1109,14 @@ class Engine:
             df = df.withColumn(_feat, col(_feat).cast(pyspark_schema[_feat]))
         return df
 
-    def _get_kafka_config(self, write_options: dict = {}) -> dict:
-        if self._kafka_config is None:
-            self._kafka_config = {
-                "kafka.bootstrap.servers": ",".join(
-                    [
-                        endpoint.replace("INTERNAL://", "")
-                        for endpoint in self._kafka_api.get_broker_endpoints()
-                    ]
-                ),
-                "kafka.security.protocol": "SSL",
-                "kafka.ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),
-                "kafka.ssl.truststore.password": client.get_instance()._cert_key,
-                "kafka.ssl.keystore.location": client.get_instance()._get_jks_key_store_path(),
-                "kafka.ssl.keystore.password": client.get_instance()._cert_key,
-                "kafka.ssl.key.password": client.get_instance()._cert_key,
-                "kafka.ssl.endpoint.identification.algorithm": "",
-            }
-        return {**write_options, **self._kafka_config}
+    def _get_kafka_config(self, feature_store_id: int, write_options: dict = {}) -> dict:
+        storage_connector = storage_connector_api.StorageConnectorApi(
+            feature_store_id
+        ).get_kafka_connector()
+
+        config = storage_connector.spark_options()
+        config.update(write_options)
+        return config
 
 
 class SchemaError(Exception):

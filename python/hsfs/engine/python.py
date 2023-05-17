@@ -1169,9 +1169,9 @@ class Engine:
         # todo temp solution
         storage_connector = storage_connector_api.StorageConnectorApi(
             feature_store_id
-        ).get("kafka_connector")
+        ).get_kafka_connector()
 
-        config = storage_connector.kafka_options
+        config = storage_connector.kafka_options()
         config.update(write_options.get("kafka_producer_config", {}))
 
         # filter out not accepted fields todo find a better way (if not done _INVALID_ARG KafkaError is raised)
