@@ -558,7 +558,7 @@ class FeatureViewEngine:
     def _check_feature_group_accessibility(self, feature_view_obj):
         if (
             engine.get_type() == "python" or engine.get_type() == "hive"
-        ) and not feature_view_obj.query.from_cache_feature_group_only():
+        ) and not feature_view_obj.query.is_cache_feature_group_only():
             raise NotImplementedError(
                 "Python kernel can only read from cached feature group."
                 " Please use `feature_view.create_training_data` instead."

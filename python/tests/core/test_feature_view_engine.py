@@ -1914,7 +1914,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_constructor_query.from_cache_feature_group_only.return_value = False
+        mock_constructor_query.is_cache_feature_group_only.return_value = False
 
         # Act
         fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
@@ -1942,7 +1942,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_constructor_query.from_cache_feature_group_only.return_value = True
+        mock_constructor_query.is_cache_feature_group_only.return_value = True
 
         # Act
         fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
@@ -1970,7 +1970,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_constructor_query.from_cache_feature_group_only.return_value = False
+        mock_constructor_query.is_cache_feature_group_only.return_value = False
         mock_engine_get_type.return_value = "python"
 
         # Act
@@ -2004,7 +2004,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_constructor_query.from_cache_feature_group_only.return_value = False
+        mock_constructor_query.is_cache_feature_group_only.return_value = False
         mock_engine_get_type.return_value = "hive"
 
         # Act
@@ -2040,7 +2040,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_constructor_query.from_cache_feature_group_only.return_value = True
+        mock_constructor_query.is_cache_feature_group_only.return_value = True
         mock_engine_get_type.return_value = "python"
 
         # Act
@@ -2071,7 +2071,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_constructor_query.from_cache_feature_group_only.return_value = True
+        mock_constructor_query.is_cache_feature_group_only.return_value = True
         mock_engine_get_type.return_value = "hive"
 
         # Act

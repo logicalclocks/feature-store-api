@@ -112,6 +112,46 @@ class Query:
                     query_feature=False,
                 )
 
+    def _get_featuregroup_by_feature(self, feature: Feature):
+        fg_id = feature._feature_group_id
+        for fg in self.featuregroups:
+            if fg.id == fg_id:
+                return fg
+
+        featuregroups_found = self._featuregroup_features.get(feature.name, [])
+
+        if len(featuregroups_found) == 1:
+            return featuregroups_found[0][2]
+        elif len(featuregroups_found) == 0:
+            raise FeatureStoreException(
+                Query.ERROR_MESSAGE_FEATURE_NOT_FOUND_FG.format(feature.name)
+            )
+
+        raise FeatureStoreException(
+            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS_FG.format(feature.name)
+        )
+
+    def _get_feature_by_name(
+        self,
+        feature_name: str,
+    ):
+        if feature_name not in self._query_features:
+            raise FeatureStoreException(
+                Query.ERROR_MESSAGE_FEATURE_NOT_FOUND.format(feature_name)
+            )
+        feats = self._query_features[feature_name]
+
+        if len(feats) == 1:
+            return feats[0]
+
+        for feat in feats:
+            if feat[1] is None:
+                return feat
+
+        raise FeatureStoreException(
+            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(feature_name)
+        )
+
     def _prep_read(self, online, read_options):
         fs_query = self._query_constructor_api.construct_query(self)
         sql_query = self._to_string(fs_query, online)
@@ -454,12 +494,6 @@ class Query:
 
         return self
 
-    def from_cache_feature_group_only(self):
-        for _query in [join.query for join in self._joins] + [self]:
-            if not isinstance(_query._left_feature_group, feature_group.FeatureGroup):
-                return False
-        return True
-
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
@@ -510,7 +544,7 @@ class Query:
         It does not fully deserialize the message as the usecase is to
         send it straight back to Hopsworks to read the content of the query
 
-        Args:
+        Arguments:
             json_dict (str): a json string containing a query object
 
         Returns:
@@ -550,10 +584,12 @@ class Query:
 
     @property
     def left_feature_group_start_time(self):
+        """Start time of time travel for the left feature group."""
         return self._left_feature_group_start_time
 
     @property
     def left_feature_group_end_time(self):
+        """End time of time travel for the left feature group."""
         return self._left_feature_group_end_time
 
     @left_feature_group_start_time.setter
@@ -566,15 +602,10 @@ class Query:
 
     def append_feature(self, feature):
         """
-        !!! example
-            ```python
-            fg1 = fs.get_feature_group("...")
-            fg2 = fs.get_feature_group("...")
+        Append a feature to the query.
 
-            query = fg1.select_all().join(fg2.select_all())
-
-            query.append_feature('feature_name')
-            ```
+        # Arguments
+            feature: `[str, Feature]`. Name of the feature to append to the query.
         """
         feature = util.validate_feature(feature)
 
@@ -583,69 +614,52 @@ class Query:
         self._populate_collections()
 
     def is_time_travel(self):
+        """Query contains time travel"""
         return (
             self.left_feature_group_start_time
             or self.left_feature_group_end_time
             or any([_join.query.is_time_travel() for _join in self._joins])
         )
 
+    def is_cache_feature_group_only(self):
+        """Query contains only cached feature groups"""
+        return any(
+            [
+                not isinstance(fg, feature_group.FeatureGroup)
+                for fg in self.featuregroups
+            ]
+        )
+
     @property
     def joins(self):
+        """List of joins in the query"""
         return self._joins
 
     @property
     def featuregroups(self):
+        """List of feature groups used in the query"""
         return list(self._featuregroups)
 
     @property
     def filters(self):
+        """All filters used in the query"""
         return self._filters
 
     @property
     def features(self):
+        """List of all features in the query"""
         return [feat[0] for feat in self._query_feature_list]
 
-    def _get_featuregroup_by_feature(self, feature: Feature):
-        fg_id = feature._feature_group_id
-        for fg in self.featuregroups:
-            if fg.id == fg_id:
-                return fg
-
-        featuregroups_found = self._featuregroup_features.get(feature.name, [])
-
-        if len(featuregroups_found) == 1:
-            return featuregroups_found[0][2]
-        elif len(featuregroups_found) == 0:
-            raise FeatureStoreException(
-                Query.ERROR_MESSAGE_FEATURE_NOT_FOUND_FG.format(feature.name)
-            )
-
-        raise FeatureStoreException(
-            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS_FG.format(feature.name)
-        )
-
-    def _get_feature_by_name(
-        self,
-        feature_name: str,
-    ):
-        if feature_name not in self._query_features:
-            raise FeatureStoreException(
-                Query.ERROR_MESSAGE_FEATURE_NOT_FOUND.format(feature_name)
-            )
-        feats = self._query_features[feature_name]
-
-        if len(feats) == 1:
-            return feats[0]
-
-        for feat in feats:
-            if feat[1] is None:
-                return feat
-
-        raise FeatureStoreException(
-            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(feature_name)
-        )
-
     def get_feature(self, feature_name):
+        """
+        Get a feature by name.
+
+        # Arguments
+            feature_name: `str`. Name of the feature to get.
+
+        # Returns
+            `Feature`. Feature object.
+        """
         return self._get_feature_by_name(feature_name)[0]
 
     def __getattr__(self, name):
