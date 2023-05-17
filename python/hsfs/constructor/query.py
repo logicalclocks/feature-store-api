@@ -623,11 +623,8 @@ class Query:
 
     def is_cache_feature_group_only(self):
         """Query contains only cached feature groups"""
-        return any(
-            [
-                not isinstance(fg, feature_group.FeatureGroup)
-                for fg in self.featuregroups
-            ]
+        return all(
+            [isinstance(fg, feature_group.FeatureGroup) for fg in self.featuregroups]
         )
 
     @property
