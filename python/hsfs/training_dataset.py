@@ -21,8 +21,6 @@ import humps
 import pandas as pd
 import numpy as np
 
-from datetime import datetime, date
-
 from hsfs import util, engine, training_dataset_feature
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.statistics_config import StatisticsConfig
@@ -36,6 +34,7 @@ from hsfs.core import (
     vector_server,
 )
 from hsfs.constructor import query, filter
+from hsfs.client.exceptions import RestAPIError
 
 
 class TrainingDataset:
@@ -383,10 +382,21 @@ class TrainingDataset:
         return self._training_dataset_engine.read(self, split, read_options)
 
     def compute_statistics(self):
-        """Recompute the statistics for the training dataset and save them to the
+        """Compute the statistics for the training dataset and save them to the
         feature store.
         """
         if self.statistics_config.enabled and engine.get_type() == "spark":
+            try:
+                registered_stats = self._statistics_engine.get_last_computed(self)
+            except RestAPIError as e:
+                if (
+                    e.response.json().get("errorCode", "") == 270228
+                    and e.response.status_code == 404
+                ):
+                    registered_stats = None
+                raise e
+            if registered_stats is not None:
+                return registered_stats
             if self.splits:
                 return self._statistics_engine.compute_and_save_split_statistics(self)
             else:
@@ -719,28 +729,6 @@ class TrainingDataset:
     def statistics(self):
         """Get the latest computed statistics for the training dataset."""
         return self._statistics_engine.get_last_computed(self)
-
-    def get_statistics(self, commit_time: Union[str, int, datetime, date] = None):
-        """Returns the statistics for this training dataset at a specific time.
-
-        If `commit_time` is `None`, the most recent statistics are returned.
-
-        # Arguments
-            commit_time: If specified will recompute statistics on
-                feature group as of specific point in time. If not specified then will compute statistics
-                as of most recent time of this feature group. Defaults to `None`. Strings should
-                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
-
-        # Returns
-            `Statistics`. Object with statistics information.
-        """
-        if commit_time is None:
-            return self.statistics
-        else:
-            return self._statistics_engine.get_by_commit_time(
-                self, commit_time=commit_time
-            )
 
     @property
     def query(self):
