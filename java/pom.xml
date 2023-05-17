@@ -5,8 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.logicalclocks</groupId>
-    <artifactId>hsfs</artifactId>
-    <version>3.2.0-SNAPSHOT</version>
+    <artifactId>hsfs-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>3.3.0-SNAPSHOT</version>
+    <modules>
+        <module>hsfs</module>
+        <module>spark</module>
+        <module>flink</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -19,18 +25,18 @@
         <handy.version>2.1.8</handy.version>
         <lombok.version>1.18.10</lombok.version>
         <fasterxml.jackson.databind.version>2.10.0</fasterxml.jackson.databind.version>
-        <spark.version>3.1.1.3</spark.version>
         <deequ.version>1.1.0.6-SNAPSHOT</deequ.version>
         <hudi.version>0.10.0.3</hudi.version>
         <awssdk.version>2.10.40</awssdk.version>
         <scala.version>2.12.10</scala.version>
         <scala-short.version>2.12</scala-short.version>
         <dbutils.version>0.0.5</dbutils.version>
-        <json.version>20190722</json.version>
+        <json.version>20230227</json.version>
         <hoverfly.version>0.12.2</hoverfly.version>
         <junit.version>5.9.1</junit.version>
         <surefire-plugin.version>2.22.0</surefire-plugin.version>
         <mockito.version>4.3.1</mockito.version>
+        <avro.version>1.8.2</avro.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <delombok.output>${project.basedir}/delombok</delombok.output>
@@ -41,80 +47,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.logicalclocks</groupId>
-            <artifactId>deequ_${scala-short.version}</artifactId>
-            <version>${deequ.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.spark</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_${scala-short.version}</artifactId>
-            <version>${spark.version}</version>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_${scala-short.version}</artifactId>
-            <version>${spark.version}</version>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-core</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-avro_${scala-short.version}</artifactId>
-            <version>${spark.version}</version>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${fasterxml.jackson.databind.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -166,84 +98,6 @@
         </dependency>
 
         <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>ssm</artifactId>
-            <version>${awssdk.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>sts</artifactId>
-            <version>${awssdk.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>secretsmanager</artifactId>
-            <version>${awssdk.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>com.databricks</groupId>
-            <artifactId>dbutils-api_${scala-short.version}</artifactId>
-            <version>${dbutils.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.apache.hudi/hudi-spark-bundle -->
-        <dependency>
-            <groupId>io.hops.hudi</groupId>
-            <artifactId>hudi-spark3-bundle_${scala-short.version}</artifactId>
-            <version>${hudi.version}</version>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>io.hops.hudi</groupId>
-            <artifactId>hudi-utilities-bundle_${scala-short.version}</artifactId>
-            <version>${hudi.version}</version>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
             <version>${json.version}</version>
@@ -267,13 +121,6 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-hive_${scala-short.version}</artifactId>
-            <version>${spark.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -389,23 +236,29 @@
                 </executions>
             </plugin>
 
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.1.1</version>
+                <version>3.5.0</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                    <sourcepath>${delombok.output}</sourcepath>
+                    <!-- Default configuration for all reports -->
+                    <sourceFileExcludes>
+                        <exclude>**/MainClass.java</exclude>
+                        <!-- Currently this is not supported -->
+                        <exclude>**/beam/constructor/*</exclude>
+                        <exclude>**/flink/constructor/*</exclude>
+                    </sourceFileExcludes>
                 </configuration>
-
                 <executions>
                     <execution>
-                        <id>attach-javadocs</id>
+                        <id>aggregate</id>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>aggregate</goal>
                         </goals>
+                        <phase>site</phase>
+                        <configuration>
+                            <!-- Specific configuration for the aggregate report -->
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
