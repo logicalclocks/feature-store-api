@@ -41,7 +41,7 @@ This section illustrates how to quickly run locust in a single process, see the 
       After this you need to create a new SSH session.
 
       ```bash
-      conda create -n locust-benchmark python=3.9
+      conda create -n locust-benchmark python=3.10
       conda activate locust-benchmark
       ```
 
