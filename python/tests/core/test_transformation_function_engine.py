@@ -484,8 +484,8 @@ class TestTransformationFunctionEngine:
 
         query_no_prefix = (
             fg1.select_all()
-            .join(fg2.select(["tf1_name"]), on=["id"], prefix="fg2")
-            .join(fg3.select(["tf_name", "tf1_name"]), on=["id"], prefix="fg3")
+            .join(fg2.select(["tf1_name"]), on=["id"])
+            .join(fg3.select(["tf_name", "tf1_name"]), on=["id"])
         )
 
         tf = transformation_function.TransformationFunction(
@@ -515,7 +515,7 @@ class TestTransformationFunctionEngine:
 
         # Assert
         assert str(e_info.value) == Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(
-            "tf1_name"
+            "tf_name"
         )
 
     def test_attach_transformation_fn_fv_labels(self, mocker):

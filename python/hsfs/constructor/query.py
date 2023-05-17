@@ -30,12 +30,19 @@ from hsfs.feature import Feature
 class Query:
 
     ERROR_MESSAGE_FEATURE_AMBIGUOUS = (
-        "Feature name {} is ambiguous. Consider using a prefix."
+        "Provided feature name '{}' is ambiguous and exists in more than one feature group. "
+        "Consider prepending the prefix specified in the join."
     )
-    ERROR_MESSAGE_FEATURE_AMBIGUOUS_FG = "Feature name {} is ambiguous. Consider accessing the feature through the FeatureGroup object."
-    ERROR_MESSAGE_FEATURE_NOT_FOUND = "Feature name {} not found in query."
+    ERROR_MESSAGE_FEATURE_AMBIGUOUS_FG = (
+        "Feature name '{}' is ambiguous and exists in more than one feature group. "
+        "Consider accessing the feature through the feature group object when specifying the query."
+    )
+    ERROR_MESSAGE_FEATURE_NOT_FOUND = (
+        "Feature name '{}' could not found be found in query."
+    )
     ERROR_MESSAGE_FEATURE_NOT_FOUND_FG = (
-        "Feature name {} not found in any of the featuregroups in this query."
+        "Feature name '{}' could not be found in "
+        "any of the featuregroups in this query."
     )
 
     def __init__(
@@ -144,9 +151,9 @@ class Query:
         if len(feats) == 1:
             return feats[0]
 
-        for feat in feats:
-            if feat[1] is None:
-                return feat
+        feats_without_prefix = [feat for feat in feats if feat[1] is None]
+        if len(feats_without_prefix) == 1:
+            return feats_without_prefix[0]
 
         raise FeatureStoreException(
             Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(feature_name)
