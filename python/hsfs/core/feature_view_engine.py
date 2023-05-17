@@ -185,6 +185,10 @@ class FeatureViewEngine:
             if isinstance(spine, feature_group.SpineGroup):
                 query._left_feature_group = spine
             elif isinstance(query._left_feature_group, feature_group.SpineGroup):
+                if spine is None:
+                    raise FeatureStoreException(
+                        "Feature View was created with a spine group, setting the `spine` argument is mandatory."
+                    )
                 query._left_feature_group.dataframe = spine
             return query
         except exceptions.RestAPIError as e:
