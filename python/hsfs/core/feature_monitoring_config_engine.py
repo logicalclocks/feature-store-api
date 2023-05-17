@@ -84,6 +84,13 @@ class FeatureMonitoringConfigEngine:
         self._monitoring_window_config_engine = (
             monitoring_window_config_engine.MonitoringWindowConfigEngine()
         )
+        self._result_engine = FeatureMonitoringResultEngine(
+            feature_store_id=feature_store_id,
+            feature_group_id=feature_group_id,
+            feature_view_id=feature_view_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+        )
 
         # Should we promote the variables below to static?
         self._VALID_CATEGORICAL_METRICS = [
@@ -721,7 +728,7 @@ class FeatureMonitoringConfigEngine:
         return self._job_api.get(name=job_name)
 
     def run_feature_monitoring(
-        self, entity, config_name: str, result_engine: FeatureMonitoringResultEngine
+        self, entity, config_name: str
     ) -> List[FeatureMonitoringResult]:
         """Main function used by the job to actually perform the monitoring.
 
@@ -766,7 +773,7 @@ class FeatureMonitoringConfigEngine:
         else:
             specific_value, reference_statistics = None, None
 
-        return result_engine.run_and_save_statistics_comparison(
+        return self._result_engine.run_and_save_statistics_comparison(
             fm_config=config,
             detection_statistics=detection_statistics,
             reference_statistics=reference_statistics,

@@ -209,27 +209,17 @@ def run_feature_monitoring(job_conf: Dict[str, str]) -> None:
             feature_view_version=feature_view_version,
         )
     )
-    monitoring_result_engine = (
-        hsfs.core.feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=fs._id,
-            feature_group_id=feature_group_id,
-            feature_view_id=feature_view_id,
-            feature_view_name=feature_view_name,
-            feature_view_version=feature_view_version,
-        )
-    )
 
     try:
         monitoring_config_engine.run_feature_monitoring(
             entity=entity,
             config_name=job_conf["config_name"],
-            result_engine=monitoring_result_engine,
         )
     except Exception as e:
         config = monitoring_config_engine.get_feature_monitoring_configs(
             name=job_conf["config_name"]
         )
-        monitoring_result_engine.save_feature_monitoring_result_with_exception(
+        monitoring_config_engine._result_engine.save_feature_monitoring_result_with_exception(
             config_id=config.id,
             job_name=config.job_name,
         )
