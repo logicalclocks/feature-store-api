@@ -620,6 +620,8 @@ class Query:
 
         self._populate_collections()
 
+        return self
+
     def is_time_travel(self):
         """Query contains time travel"""
         return (
