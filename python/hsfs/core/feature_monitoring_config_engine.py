@@ -31,6 +31,8 @@ from hsfs.core.job_scheduler import JobScheduler
 from hsfs.util import convert_event_time_to_timestamp
 from hsfs.client.exceptions import FeatureStoreException
 
+from hsfs import feature_group, feature_view
+
 
 class FeatureMonitoringConfigEngine:
     def __init__(
@@ -728,16 +730,16 @@ class FeatureMonitoringConfigEngine:
         return self._job_api.get(name=job_name)
 
     def run_feature_monitoring(
-        self, entity, config_name: str
+        self,
+        entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"],
+        config_name: str,
     ) -> List[FeatureMonitoringResult]:
         """Main function used by the job to actually perform the monitoring.
 
         Args:
-            entity (Union[Featuregroup, FeatureView]): Featuregroup or Featureview
-                object containing the feature to monitor.
-            config_str: name of the monitoring config.
-            result_engine: result engine to
-                upload the outcome of the monitoring to the backend.
+            entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"]
+                Featuregroup or Featureview object containing the feature to monitor.
+            config_name: str: name of the monitoring config.
 
         Returns:
             List[FeatureMonitoringResult]: A list of result object describing the

@@ -114,6 +114,9 @@ class FeatureMonitoringResultEngine:
             if isinstance(reference_statistics, FeatureDescriptiveStatistics)
             else None
         )
+        if raised_exception and feature_name is None:
+            # if feature name is null it is a whole entity monitoring job
+            feature_name = ""
 
         return FeatureMonitoringResult(
             feature_store_id=self._feature_store_id,
@@ -486,6 +489,7 @@ class FeatureMonitoringResultEngine:
         self,
         config_id: int,
         job_name: str,
+        feature_name: Optional[str] = None,
     ) -> "FeatureMonitoringResult":
         """Save feature monitoring result with raised_exception flag.
 
@@ -499,8 +503,8 @@ class FeatureMonitoringResultEngine:
         return self.save_feature_monitoring_result(
             result=self.build_feature_monitoring_result(
                 config_id=config_id,
-                feature_name="",
                 job_name=job_name,
                 raised_exception=True,
+                feature_name=feature_name,
             ),
         )
