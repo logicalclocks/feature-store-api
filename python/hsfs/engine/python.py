@@ -21,6 +21,7 @@ import time
 import re
 import ast
 import warnings
+import logging
 import avro
 import socket
 import pyarrow as pa
@@ -65,6 +66,9 @@ from hsfs.client import exceptions, hopsworks
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
+
+# Disable pyhive INFO logging
+logging.getLogger("pyhive").setLevel(logging.WARNING)
 
 HAS_FAST = False
 try:
@@ -121,12 +125,24 @@ class Engine:
         hive_config=None,
     ):
         if arrow_flight_client.get_instance().is_flyingduck_query_object(sql_query):
-            result_df = arrow_flight_client.get_instance().read_query(sql_query)
+            result_df = util.run_with_loading_animation(
+                "Reading data from Hopsworks, using FlyingDuck",
+                arrow_flight_client.get_instance().read_query,
+                sql_query,
+            )
         else:
             with self._create_hive_connection(
                 feature_store, hive_config=hive_config
             ) as hive_conn:
-                result_df = pd.read_sql(sql_query, hive_conn)
+                # Suppress SQLAlchemy pandas warning
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", UserWarning)
+                    result_df = util.run_with_loading_animation(
+                        "Reading data from Hopsworks, using Hive",
+                        pd.read_sql,
+                        sql_query,
+                        hive_conn,
+                    )
 
         if schema:
             result_df = Engine.cast_columns(result_df, schema)
@@ -872,7 +888,9 @@ class Engine:
 
             reset_offsets = (
                 feature_group._online_topic_name
-                not in producer.list_topics(timeout=1).topics.keys()
+                not in producer.list_topics(
+                    timeout=offline_write_options.get("kafka_timeout", 6)
+                ).topics.keys()
                 and len(feature_group.commit_details(limit=1)) == 1
             )
 
