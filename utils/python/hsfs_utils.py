@@ -3,11 +3,12 @@ import json
 import hsfs
 
 from hsfs.constructor import query
+from hsfs import feature_store
 from typing import Dict, Any
 from pydoop import hdfs
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, _parse_datatype_string, StructField
-from hsfs.core import feature_view_engine
+from hsfs.core import feature_view_engine, feature_monitoring_config_engine
 from hsfs.statistics_config import StatisticsConfig
 
 
@@ -24,7 +25,7 @@ def setup_spark() -> SparkSession:
     return SparkSession.builder.enableHiveSupport().getOrCreate()
 
 
-def get_feature_store_handle(feature_store: str = "") -> hsfs.feature_store:
+def get_feature_store_handle(feature_store: str = "") -> "feature_store.FeatureStore":
     connection = hsfs.connection()
     return connection.get_feature_store(feature_store)
 
@@ -182,7 +183,6 @@ def run_feature_monitoring(job_conf: Dict[str, str]) -> None:
     Run feature monitoring for a given entity (feature_group or feature_view)
     based on a feature monitoring configuration.
     """
-    # Dummy job for now.
     feature_store = job_conf.pop("feature_store")
     fs = get_feature_store_handle(feature_store)
 
@@ -202,16 +202,7 @@ def run_feature_monitoring(job_conf: Dict[str, str]) -> None:
         )
 
     monitoring_config_engine = (
-        hsfs.core.feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-            feature_store_id=fs._id,
-            feature_group_id=feature_group_id,
-            feature_view_id=feature_view_id,
-            feature_view_name=feature_view_name,
-            feature_view_version=feature_view_version,
-        )
-    )
-    monitoring_result_engine = (
-        hsfs.core.feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+        feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=fs._id,
             feature_group_id=feature_group_id,
             feature_view_id=feature_view_id,
@@ -220,13 +211,21 @@ def run_feature_monitoring(job_conf: Dict[str, str]) -> None:
         )
     )
 
-    monitoring_config_engine.run_feature_monitoring(
-        entity=entity,
-        config_name=job_conf["config_name"],
-        result_engine=monitoring_result_engine,
-    )
-
-    assert isinstance(fs, hsfs.feature_store.FeatureStore)
+    try:
+        monitoring_config_engine.run_feature_monitoring(
+            entity=entity,
+            config_name=job_conf["config_name"],
+        )
+    except Exception as e:
+        config = monitoring_config_engine.get_feature_monitoring_configs(
+            name=job_conf["config_name"]
+        )
+        monitoring_config_engine._result_engine.save_feature_monitoring_result_with_exception(
+            config_id=config.id,
+            job_name=config.job_name,
+            feature_name=config.feature_name,
+        )
+        raise e
 
 
 if __name__ == "__main__":
