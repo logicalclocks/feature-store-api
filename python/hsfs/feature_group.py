@@ -1287,6 +1287,8 @@ class FeatureGroupBase:
             description=description,
             job_frequency=job_frequency,
             start_date_time=start_date_time,
+            use_event_time=False,
+            training_dataset_version=None,
             valid_feature_names=[feat.name for feat in self._features],
         )
 
@@ -1355,6 +1357,8 @@ class FeatureGroupBase:
             description=description,
             job_frequency=job_frequency,
             start_date_time=start_date_time,
+            use_event_time=False,
+            training_dataset_version=None,
             valid_feature_names=[feat.name for feat in self._features],
         )
 
@@ -2655,7 +2659,9 @@ class FeatureGroup(FeatureGroupBase):
         # Returns
             `Query`. The query object with the applied time travel condition.
         """
-        return self.select_all().as_of(wallclock_time, exclude_until)
+        return self.select_all().as_of(
+            wallclock_time=wallclock_time, exclude_until=exclude_until
+        )
 
     def get_statistics(
         self,
