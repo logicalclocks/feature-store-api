@@ -29,7 +29,6 @@ from hsfs import (
     training_dataset_feature,
     storage_connector,
     training_dataset,
-    feature_group,
 )
 from hsfs.constructor import query, filter
 from hsfs.core import (
@@ -451,7 +450,7 @@ class FeatureView:
                 TypeVar("pyspark.RDD"),  # noqa: F821
                 np.ndarray,
                 List[list],
-                feature_group.SpineGroup,
+                TypeVar("SpineGroup"),
             ]
         ] = None,
     ):
@@ -645,7 +644,7 @@ class FeatureView:
                 TypeVar("pyspark.RDD"),  # noqa: F821
                 np.ndarray,
                 List[list],
-                feature_group.SpineGroup,
+                TypeVar("SpineGroup"),
             ]
         ] = None,
     ):
@@ -865,7 +864,7 @@ class FeatureView:
                 TypeVar("pyspark.RDD"),  # noqa: F821
                 np.ndarray,
                 List[list],
-                feature_group.SpineGroup,
+                TypeVar("SpineGroup"),
             ]
         ] = None,
     ):
@@ -1142,7 +1141,7 @@ class FeatureView:
                 TypeVar("pyspark.RDD"),  # noqa: F821
                 np.ndarray,
                 List[list],
-                feature_group.SpineGroup,
+                TypeVar("SpineGroup"),
             ]
         ] = None,
     ):
@@ -1398,7 +1397,7 @@ class FeatureView:
                 TypeVar("pyspark.RDD"),  # noqa: F821
                 np.ndarray,
                 List[list],
-                feature_group.SpineGroup,
+                TypeVar("SpineGroup"),
             ]
         ] = None,
     ):
@@ -1469,7 +1468,7 @@ class FeatureView:
                 TypeVar("pyspark.RDD"),  # noqa: F821
                 np.ndarray,
                 List[list],
-                feature_group.SpineGroup,
+                TypeVar("SpineGroup"),
             ]
         ] = None,
     ):
@@ -1600,7 +1599,7 @@ class FeatureView:
                 TypeVar("pyspark.RDD"),  # noqa: F821
                 np.ndarray,
                 List[list],
-                feature_group.SpineGroup,
+                TypeVar("SpineGroup"),
             ]
         ] = None,
     ):
@@ -1765,7 +1764,7 @@ class FeatureView:
                 TypeVar("pyspark.RDD"),  # noqa: F821
                 np.ndarray,
                 List[list],
-                feature_group.SpineGroup,
+                TypeVar("SpineGroup"),
             ]
         ] = None,
     ):
