@@ -62,7 +62,7 @@ class FeatureMonitoringConfig:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
         href: Optional[str] = None,
-        transformation_function_dataset_version: Optional[int] = None,
+        training_dataset_version: Optional[int] = None,
         use_event_time: Optional[bool] = False,
     ) -> "FeatureMonitoringConfig":
         self.name = name
@@ -76,9 +76,7 @@ class FeatureMonitoringConfig:
         self._job_name = job_name
         self._feature_monitoring_type = feature_monitoring_type
         self._enabled = enabled
-        self._transformation_function_dataset_version = (
-            transformation_function_dataset_version
-        )
+        self._training_dataset_version = training_dataset_version
         self._use_event_time = use_event_time
 
         self._feature_monitoring_config_engine = (
@@ -164,7 +162,7 @@ class FeatureMonitoringConfig:
             the_dict["useEventTime"] = self._use_event_time
             the_dict[
                 "transformationFunctionDatasetVersion"
-            ] = self._transformation_function_dataset_version
+            ] = self._training_dataset_version
 
         if self._feature_monitoring_type == "STATISTICS_MONITORING":
             return the_dict
@@ -657,8 +655,8 @@ class FeatureMonitoringConfig:
         return self._use_event_time
 
     @property
-    def transformation_function_dataset_version(self) -> Optional[int]:
-        return self._transformation_function_dataset_version
+    def training_dataset_version(self) -> Optional[int]:
+        return self._training_dataset_version
 
     @property
     def feature_monitoring_type(self) -> Optional[str]:

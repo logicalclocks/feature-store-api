@@ -40,7 +40,7 @@ DEFAULT_SCHEDULER_CONFIG = {
     "start_date_time": 1676457000,
     "enabled": True,
 }
-DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION = 2
+DEFAULT_TRAINING_DATASET_VERSION = 2
 
 
 class TestFeatureMonitoringConfigEngine:

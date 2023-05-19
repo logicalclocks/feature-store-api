@@ -351,7 +351,7 @@ class FeatureMonitoringConfigEngine:
         description: Optional[str] = None,
         valid_feature_names: Optional[List[str]] = None,
         use_event_time: Optional[bool] = False,
-        transformation_function_dataset_version: Optional[int] = None,
+        training_dataset_version: Optional[int] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Builds the default scheduled statistics config, default detection window is full snapshot.
 
@@ -373,7 +373,7 @@ class FeatureMonitoringConfigEngine:
             use_event_time: bool, optional
                 If true, use event time to compute statistics. Feature View only.
                 Defaults to False.
-            transformation_function_dataset_version: int, optional
+            training_dataset_version: int, optional
                 The version of the dataset to use to fetch statistics for the
                 transformation function. Feature View only. If provided, the
                 statistics are computed after applying the transformation function.
@@ -404,7 +404,7 @@ class FeatureMonitoringConfigEngine:
                 "enabled": True,
             },
             use_event_time=use_event_time,
-            transformation_function_dataset_version=transformation_function_dataset_version,
+            training_dataset_version=training_dataset_version,
         ).with_detection_window()
 
     def _build_default_feature_monitoring_config(
@@ -416,7 +416,7 @@ class FeatureMonitoringConfigEngine:
         description: Optional[str] = None,
         valid_feature_names: Optional[List[str]] = None,
         use_event_time: Optional[bool] = False,
-        transformation_function_dataset_version: Optional[int] = None,
+        training_dataset_version: Optional[int] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Builds the default scheduled statistics config, default detection window is full snapshot.
 
@@ -438,7 +438,7 @@ class FeatureMonitoringConfigEngine:
             use_event_time: bool, optional
                 If true, use event time to compute statistics. Feature View only.
                 Defaults to False.
-            transformation_function_dataset_version: int, optional
+            training_dataset_version: int, optional
                 The version of the dataset to use to fetch statistics for the
                 transformation function. Feature View only. If provided, the
                 statistics are computed after applyin the transformation function.
@@ -469,7 +469,7 @@ class FeatureMonitoringConfigEngine:
                 "enabled": True,
             },
             use_event_time=use_event_time,
-            transformation_function_dataset_version=transformation_function_dataset_version,
+            training_dataset_version=training_dataset_version,
         ).with_detection_window()  # TODO: Do we want to have a default reference window + stat comparison?
 
     def save(
@@ -653,7 +653,7 @@ class FeatureMonitoringConfigEngine:
         scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]],
         description: Optional[str] = None,
         use_event_time: bool = False,
-        transformation_function_dataset_version=None,
+        training_dataset_version=None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Builds a feature monitoring config.
 
@@ -674,7 +674,7 @@ class FeatureMonitoringConfigEngine:
                 Description of the monitoring configuration.
             use_event_time: bool, optional
                 Whether to use event time or ingestion time. Defaults to False.
-            transformation_function_dataset_version: str, optional
+            training_dataset_version: str, optional
                 The version of the dataset to use to fetch statistics for the
                 transformation function. If None, no transformation functions are
                 applied to the statistics. Defaults to None.
@@ -696,7 +696,7 @@ class FeatureMonitoringConfigEngine:
             reference_window_config=reference_window_config,
             statistics_comparison_config=statistics_comparison_config,
             use_event_time=use_event_time,
-            transformation_function_dataset_version=transformation_function_dataset_version,
+            training_dataset_version=training_dataset_version,
         )
 
     def trigger_monitoring_job(

@@ -256,7 +256,7 @@ class MonitoringWindowConfigEngine:
         monitoring_window_config: "mwc.MonitoringWindowConfig",
         feature_name: Optional[str] = None,
         use_event_time: bool = False,
-        transformation_function_dataset_version=None,
+        training_dataset_version=None,
     ) -> Union[FeatureDescriptiveStatistics, List[FeatureDescriptiveStatistics]]:
         """Fetch the entity data based on monitoring window configuration and compute statistics.
 
@@ -266,7 +266,7 @@ class MonitoringWindowConfigEngine:
             feature_name: str: Name of the feature to monitor.
             use_event_time: bool: Whether to use event time or ingestion time.
                 Feature View only. Defaults to False.
-            transformation_function_dataset_version: int: Version of the dataset to use for transformation function.
+            training_dataset_version: int: Version of the dataset to use for transformation function.
                 Feature View only. Defaults to None, meaning no transformation function are applied.
 
         Returns:
@@ -294,7 +294,7 @@ class MonitoringWindowConfigEngine:
                 end_time=end_time,
                 row_percentage=monitoring_window_config.row_percentage,
                 use_event_time=use_event_time,
-                transformation_function_dataset_version=transformation_function_dataset_version,
+                training_dataset_version=training_dataset_version,
             )
 
             # Compute statistics on the feature dataframe
@@ -323,7 +323,7 @@ class MonitoringWindowConfigEngine:
         row_percentage: float,
         feature_name: Optional[str] = None,
         use_event_time: bool = False,
-        transformation_function_dataset_version: Optional[int] = None,
+        training_dataset_version: Optional[int] = None,
     ) -> TypeVar("pyspark.sql.DataFrame"):
         """Fetch the entity data based on time window and row percentage.
 
@@ -335,7 +335,7 @@ class MonitoringWindowConfigEngine:
             row_percentage: fraction of rows to include [0, 1.0]
             use_event_time: bool: Whether to use event time or ingestion time.
                 Feature View only.
-            transformation_function_dataset_version: int: Version of the dataset
+            training_dataset_version: int: Version of the dataset
                 to fetch statistics from for the transformation function.
                 Feature View only.
 
@@ -358,7 +358,7 @@ class MonitoringWindowConfigEngine:
                 start_time=start_time,
                 end_time=end_time,
                 use_event_time=use_event_time,
-                transformation_function_dataset_version=transformation_function_dataset_version,
+                training_dataset_version=training_dataset_version,
             )
 
         if row_percentage < 1.0:
@@ -373,7 +373,7 @@ class MonitoringWindowConfigEngine:
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
         use_event_time: bool = False,
-        transformation_function_dataset_version: Optional[int] = None,
+        training_dataset_version: Optional[int] = None,
     ) -> TypeVar("pyspark.sql.DataFrame"):
         """Fetch the feature view data based on time window and row percentage.
 
@@ -383,7 +383,7 @@ class MonitoringWindowConfigEngine:
             start_time: int: Window start commit or event time.
             end_time: int: Window end commit or event time.
             use_event_time: bool: Whether to use event time or ingestion time.
-            transformation_function_dataset_version: int: Dataset version of the transformation function
+            training_dataset_version: int: Dataset version of the transformation function
 
         Returns:
             `pyspark.sql.DataFrame`. A Spark DataFrame with the entity data
@@ -393,8 +393,10 @@ class MonitoringWindowConfigEngine:
                 feature_view_obj=entity,
                 start_time=start_time,
                 end_time=end_time,
-                with_label=True if feature_name is None else False,
-                training_dataset_version=transformation_function_dataset_version,
+                with_label=True
+                if (feature_name is None or feature_name in entity.labels)
+                else False,
+                training_dataset_version=training_dataset_version,
             ).read()
         else:
             entity_df = entity.query.as_of(
@@ -404,10 +406,8 @@ class MonitoringWindowConfigEngine:
         if feature_name:
             entity_df = entity_df.select(feature_name)
 
-        if transformation_function_dataset_version:
-            entity.init_batch_scoring(
-                training_dataset_version=transformation_function_dataset_version
-            )
+        if training_dataset_version:
+            entity.init_batch_scoring(training_dataset_version=training_dataset_version)
 
             return engine.get_instance()._apply_transformation_function(
                 entity._batch_scoring_server._get_transformation_fns(),

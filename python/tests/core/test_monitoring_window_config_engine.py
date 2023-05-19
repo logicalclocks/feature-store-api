@@ -24,7 +24,7 @@ import pytest
 from datetime import timedelta, datetime
 
 DEFAULT_FEATURE_NAME = "amount"
-DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION = 2
+DEFAULT_TRAINING_DATASET_VERSION = 2
 
 ENGINE_GET_TYPE = "hsfs.engine.get_type"
 CLIENT_GET_INSTANCE = "hsfs.client.get_instance"
@@ -302,7 +302,7 @@ class TestMonitoringWindowConfigEngine:
         end_time = datetime.now()
 
         # Act
-        # 4 possibilities : with or without use_event_time, with or without transformation_function_dataset_version
+        # 4 possibilities : with or without use_event_time, with or without training_dataset_version
         # use as_of
         _ = config_engine.fetch_feature_view_data(
             entity=unit_test_fv,
@@ -310,25 +310,25 @@ class TestMonitoringWindowConfigEngine:
             start_time=None,
             end_time=None,
             use_event_time=False,
-            transformation_function_dataset_version=None,
+            training_dataset_version=None,
         )
         # use get_batch_query
         _ = config_engine.fetch_feature_view_data(
             entity=unit_test_fv,
-            feature_name=DEFAULT_FEATURE_NAME,
+            feature_name=None,
             start_time=start_time,
             end_time=None,
             use_event_time=True,
-            transformation_function_dataset_version=None,
+            training_dataset_version=None,
         )
         # use as_of
         _ = config_engine.fetch_feature_view_data(
             entity=unit_test_fv,
-            feature_name=None,
+            feature_name=DEFAULT_FEATURE_NAME,
             start_time=start_time,
             end_time=end_time,
             use_event_time=False,
-            transformation_function_dataset_version=DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION,
+            training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION,
         )
         # use get_batch_query
         _ = config_engine.fetch_feature_view_data(
@@ -337,8 +337,7 @@ class TestMonitoringWindowConfigEngine:
             start_time=None,
             end_time=end_time,
             use_event_time=True,
-            transformation_function_dataset_version=DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION
-            + 1,
+            training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION + 1,
         )
 
         # Assert
@@ -349,7 +348,7 @@ class TestMonitoringWindowConfigEngine:
                     feature_view_obj=unit_test_fv,
                     start_time=start_time,
                     end_time=None,
-                    with_label=False,
+                    with_label=True,
                     training_dataset_version=None,
                 ),
                 call(
@@ -357,8 +356,7 @@ class TestMonitoringWindowConfigEngine:
                     start_time=None,
                     end_time=end_time,
                     with_label=False,
-                    training_dataset_version=DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION
-                    + 1,
+                    training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION + 1,
                 ),
             ],
             any_order=False,
@@ -375,12 +373,12 @@ class TestMonitoringWindowConfigEngine:
                 call(
                     5,
                     [mocker.ANY, mocker.ANY],
-                    DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION,
+                    DEFAULT_TRAINING_DATASET_VERSION,
                 ),
                 call(
                     5,
                     [mocker.ANY, mocker.ANY],
-                    DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION + 1,
+                    DEFAULT_TRAINING_DATASET_VERSION + 1,
                 ),
             ],
             any_order=True,
@@ -413,7 +411,7 @@ class TestMonitoringWindowConfigEngine:
             start_time=None,
             end_time=None,
             use_event_time=False,
-            transformation_function_dataset_version=None,
+            training_dataset_version=None,
             row_percentage=0.5,
         )
         config_engine_fg.fetch_entity_data_in_monitoring_window(
@@ -422,7 +420,7 @@ class TestMonitoringWindowConfigEngine:
             start_time=None,
             end_time=None,
             use_event_time=True,
-            transformation_function_dataset_version=1,
+            training_dataset_version=1,
             row_percentage=1.1,
         )
         config_engine_fv.fetch_entity_data_in_monitoring_window(
@@ -430,7 +428,7 @@ class TestMonitoringWindowConfigEngine:
             start_time=None,
             end_time=None,
             use_event_time=True,
-            transformation_function_dataset_version=DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION,
+            training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION,
             row_percentage=0.25,
         )
 
@@ -460,7 +458,7 @@ class TestMonitoringWindowConfigEngine:
                     start_time=None,
                     end_time=None,
                     use_event_time=True,
-                    transformation_function_dataset_version=DEFAULT_TRANSFORMATION_FUNCTION_DATASET_VERSION,
+                    training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION,
                 ),
                 call().sample(fraction=0.25),
             ]

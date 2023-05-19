@@ -1286,7 +1286,7 @@ class FeatureGroupBase:
             job_frequency=job_frequency,
             start_date_time=start_date_time,
             use_event_time=False,
-            transformation_function_dataset_version=None,
+            training_dataset_version=None,
             valid_feature_names=[feat.name for feat in self._features],
         )
 
@@ -1356,7 +1356,7 @@ class FeatureGroupBase:
             job_frequency=job_frequency,
             start_date_time=start_date_time,
             use_event_time=False,
-            transformation_function_dataset_version=None,
+            training_dataset_version=None,
             valid_feature_names=[feat.name for feat in self._features],
         )
 
