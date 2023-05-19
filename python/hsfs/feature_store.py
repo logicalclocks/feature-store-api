@@ -72,7 +72,7 @@ class FeatureStore:
         online_featurestore_name=None,
         mysql_server_endpoint=None,
         online_featurestore_size=None,
-    ):
+    ) -> "FeatureStore":
         self._id = featurestore_id
         self._name = featurestore_name
         self._created = created
@@ -110,7 +110,9 @@ class FeatureStore:
         json_decamelized = humps.decamelize(json_dict)
         return cls(**json_decamelized)
 
-    def get_feature_group(self, name: str, version: int = None):
+    def get_feature_group(
+        self, name: str, version: int = None
+    ) -> "feature_group.FeatureGroup":
         """Get a feature group entity from the feature store.
 
         Getting a feature group from the Feature Store means getting its metadata handle
@@ -151,7 +153,7 @@ class FeatureStore:
             name, version, feature_group_api.FeatureGroupApi.CACHED
         )
 
-    def get_feature_groups(self, name: str):
+    def get_feature_groups(self, name: str) -> List["feature_group.FeatureGroup"]:
         """Get a list of all versions of a feature group entity from the feature store.
 
         Getting a feature group from the Feature Store means getting its metadata handle
@@ -181,7 +183,9 @@ class FeatureStore:
             name, None, feature_group_api.FeatureGroupApi.CACHED
         )
 
-    def get_on_demand_feature_group(self, name: str, version: int = None):
+    def get_on_demand_feature_group(
+        self, name: str, version: int = None
+    ) -> "feature_group.ExternalFeatureGroup":
         """Get a external feature group entity from the feature store.
 
         !!! warning "Deprecated"
@@ -204,7 +208,9 @@ class FeatureStore:
         """
         return self.get_external_feature_group(name, version)
 
-    def get_external_feature_group(self, name: str, version: int = None):
+    def get_external_feature_group(
+        self, name: str, version: int = None
+    ) -> "feature_group.ExternalFeatureGroup":
         """Get a external feature group entity from the feature store.
 
         Getting a external feature group from the Feature Store means getting its
@@ -242,7 +248,9 @@ class FeatureStore:
             name, version, feature_group_api.FeatureGroupApi.ONDEMAND
         )
 
-    def get_on_demand_feature_groups(self, name: str):
+    def get_on_demand_feature_groups(
+        self, name: str
+    ) -> List["feature_group.ExternalFeatureGroup"]:
         """Get a list of all versions of an external feature group entity from the feature store.
 
         !!! warning "Deprecated"
@@ -263,7 +271,9 @@ class FeatureStore:
         """
         return self.get_external_feature_groups(name)
 
-    def get_external_feature_groups(self, name: str):
+    def get_external_feature_groups(
+        self, name: str
+    ) -> List["feature_group.ExternalFeatureGroup"]:
         """Get a list of all versions of an external feature group entity from the feature store.
 
         Getting a external feature group from the Feature Store means getting its
@@ -291,7 +301,9 @@ class FeatureStore:
             name, None, feature_group_api.FeatureGroupApi.ONDEMAND
         )
 
-    def get_training_dataset(self, name: str, version: int = None):
+    def get_training_dataset(
+        self, name: str, version: int = None
+    ) -> "training_dataset.TrainingDataset":
         """Get a training dataset entity from the feature store.
 
         !!! warning "Deprecated"
@@ -327,7 +339,9 @@ class FeatureStore:
             version = self.DEFAULT_VERSION
         return self._training_dataset_api.get(name, version)
 
-    def get_training_datasets(self, name: str):
+    def get_training_datasets(
+        self, name: str
+    ) -> List["training_dataset.TrainingDataset"]:
         """Get a list of all versions of a training dataset entity from the feature store.
 
         !!! warning "Deprecated"
@@ -347,7 +361,7 @@ class FeatureStore:
         """
         return self._training_dataset_api.get(name, None)
 
-    def get_storage_connector(self, name: str):
+    def get_storage_connector(self, name: str) -> "storage_connector.StorageConnector":
         """Get a previously created storage connector from the feature store.
 
         Storage connectors encapsulate all information needed for the execution engine
@@ -416,7 +430,7 @@ class FeatureStore:
             query, self._name, dataframe_type, online, read_options
         )
 
-    def get_online_storage_connector(self):
+    def get_online_storage_connector(self) -> "storage_connector.StorageConnector":
         """Get the storage connector for the Online Feature Store of the respective
         project's feature store.
 
@@ -453,7 +467,7 @@ class FeatureStore:
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
         parents: Optional[List[feature_group.FeatureGroup]] = [],
-    ):
+    ) -> "feature_group.FeatureGroup":
         """Create a feature group metadata object.
 
         !!! example
@@ -567,7 +581,7 @@ class FeatureStore:
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
         parents: Optional[List[feature_group.FeatureGroup]] = [],
-    ):
+    ) -> "feature_group.FeatureGroup":
         """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
 
         !!! example
@@ -690,7 +704,7 @@ class FeatureStore:
         expectation_suite: Optional[
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
-    ):
+    ) -> "feature_group.ExternalFeatureGroup":
         """Create a external feature group metadata object.
 
         !!! warning "Deprecated"
@@ -787,7 +801,7 @@ class FeatureStore:
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
         online_enabled: Optional[bool] = False,
-    ):
+    ) -> "feature_group.ExternalFeatureGroup":
         """Create a external feature group metadata object.
 
         !!! example
@@ -1058,7 +1072,7 @@ class FeatureStore:
         label: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
         train_split: str = None,
-    ):
+    ) -> "training_dataset.TrainingDataset":
         """Create a training dataset metadata object.
 
         !!! warning "Deprecated"
@@ -1170,7 +1184,7 @@ class FeatureStore:
             bool,
         ],
         version: Optional[int] = None,
-    ):
+    ) -> "TransformationFunction":
         """Create a transformation function metadata object.
 
         !!! example
@@ -1213,7 +1227,7 @@ class FeatureStore:
         self,
         name: str,
         version: Optional[int] = None,
-    ):
+    ) -> "TransformationFunction":
         """Get  transformation function metadata object.
 
         !!! example "Get transformation function by name. This will default to version 1"
@@ -1310,7 +1324,7 @@ class FeatureStore:
         """
         return self._transformation_function_engine.get_transformation_fn(name, version)
 
-    def get_transformation_functions(self):
+    def get_transformation_functions(self) -> List["TransformationFunction"]:
         """Get  all transformation functions metadata objects.
 
         !!! example "Get all transformation functions"
@@ -1335,7 +1349,7 @@ class FeatureStore:
         description: Optional[str] = "",
         labels: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
-    ):
+    ) -> "feature_view.FeatureView":
         """Create a feature view metadata object and saved it to hopsworks.
 
         !!! example
@@ -1428,7 +1442,7 @@ class FeatureStore:
         description: Optional[str] = "",
         labels: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
-    ):
+    ) -> "feature_view.FeatureView":
         """Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
         existing feature view metadata object.
 
@@ -1483,7 +1497,9 @@ class FeatureStore:
             else:
                 raise e
 
-    def get_feature_view(self, name: str, version: int = None):
+    def get_feature_view(
+        self, name: str, version: int = None
+    ) -> "feature_view.FeatureView":
         """Get a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
@@ -1521,7 +1537,7 @@ class FeatureStore:
             version = self.DEFAULT_VERSION
         return self._feature_view_engine.get(name, version)
 
-    def get_feature_views(self, name):
+    def get_feature_views(self, name) -> List["feature_view.FeatureView"]:
         """Get a list of all versions of a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
@@ -1549,51 +1565,51 @@ class FeatureStore:
         return self._feature_view_engine.get(name)
 
     @property
-    def id(self):
+    def id(self) -> int:
         """Id of the feature store."""
         return self._id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the feature store."""
         return self._name
 
     @property
-    def project_name(self):
+    def project_name(self) -> str:
         """Name of the project in which the feature store is located."""
         return self._project_name
 
     @property
-    def project_id(self):
+    def project_id(self) -> int:
         """Id of the project in which the feature store is located."""
         return self._project_id
 
     @property
-    def description(self):
+    def description(self) -> str:
         """Description of the feature store."""
         return self._description
 
     @property
-    def online_featurestore_name(self):
+    def online_featurestore_name(self) -> str:
         """Name of the online feature store database."""
         return self._online_feature_store_name
 
     @property
-    def mysql_server_endpoint(self):
+    def mysql_server_endpoint(self) -> str:
         """MySQL server endpoint for the online feature store."""
         return self._mysql_server_endpoint
 
     @property
-    def online_enabled(self):
+    def online_enabled(self) -> bool:
         """Indicator whether online feature store is enabled."""
         return self._online_enabled
 
     @property
-    def hive_endpoint(self):
+    def hive_endpoint(self) -> str:
         """Hive endpoint for the offline feature store."""
         return self._hive_endpoint
 
     @property
-    def offline_featurestore_name(self):
+    def offline_featurestore_name(self) -> str:
         """Name of the offline feature store database."""
         return self._offline_feature_store_name

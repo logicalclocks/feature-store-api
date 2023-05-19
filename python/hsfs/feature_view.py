@@ -2438,6 +2438,8 @@ class FeatureView:
         feature_name: Optional[str] = None,
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        use_event_time: Optional[bool] = True,
+        training_dataset_version: Optional[int] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Run a job to compute statistics on snapshot of feature data on a schedule.
 
@@ -2471,6 +2473,12 @@ class FeatureView:
                 Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
             description: Description of the feature monitoring configuration.
             start_date_time: Start date and time from which to start computing statistics.
+            use_event_time: If true, use event time to compute statistics.
+                Defaults to False.
+            training_dataset_version: The version of the dataset to use
+                to fetch statistics for the transformation function. If provided, the
+                statistics are computed after applying the transformation function.
+                Otherwise, the statistics are computed on the raw data. Defaults to None.
 
         # Raises
             `hsfs.client.exceptions.FeatureStoreException`.
@@ -2490,6 +2498,8 @@ class FeatureView:
             description=description,
             job_frequency=job_frequency,
             start_date_time=start_date_time,
+            use_event_time=use_event_time,
+            training_dataset_version=training_dataset_version,
             valid_feature_names=[feat.name for feat in self._features],
         )
 
@@ -2500,6 +2510,8 @@ class FeatureView:
         job_frequency: str = "DAILY",
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        use_event_time: Optional[bool] = True,
+        training_dataset_version: Optional[int] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Enable feature monitoring to compare statistics on snapshots of feature data over time.
 
@@ -2538,6 +2550,12 @@ class FeatureView:
                 Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
             description: Description of the feature monitoring configuration.
             start_date_time: Start date and time from which to start computing statistics.
+            use_event_time: If true, use event time to compute statistics.
+                Defaults to False.
+            training_dataset_version: The version of the dataset to use
+                to fetch statistics for the transformation function. If provided, the
+                statistics are computed after applying the transformation function.
+                Otherwise, the statistics are computed on the raw data. Defaults to None
 
         # Raises
             `hsfs.client.exceptions.FeatureStoreException`.
@@ -2557,6 +2575,8 @@ class FeatureView:
             description=description,
             job_frequency=job_frequency,
             start_date_time=start_date_time,
+            use_event_time=use_event_time,
+            training_dataset_version=training_dataset_version,
             valid_feature_names=[feat.name for feat in self._features],
         )
 
@@ -2699,12 +2719,12 @@ class FeatureView:
         self._description = description
 
     @property
-    def query(self):
+    def query(self) -> "query.Query":
         """Query of the feature view."""
         return self._query
 
     @query.setter
-    def query(self, query_obj):
+    def query(self, query_obj: "query.Query"):
         self._query = query_obj
 
     @property

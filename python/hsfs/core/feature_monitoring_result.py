@@ -35,6 +35,10 @@ class FeatureMonitoringResult:
         shift_detected: bool = False,
         detection_statistics_id: Optional[int] = None,
         reference_statistics_id: Optional[int] = None,
+        empty_detection_window: bool = False,
+        empty_reference_window: bool = False,
+        specific_value: Optional[float] = None,
+        raised_exception: bool = False,
         detection_statistics: Optional[
             Union[FeatureDescriptiveStatistics, dict]
         ] = None,
@@ -61,6 +65,10 @@ class FeatureMonitoringResult:
         self._monitoring_time = util.convert_event_time_to_timestamp(monitoring_time)
         self._difference = difference
         self._shift_detected = shift_detected
+        self._empty_detection_window = empty_detection_window
+        self._empty_reference_window = empty_reference_window
+        self._raised_exception = raised_exception
+        self._specific_value = specific_value
 
     def _parse_descriptive_statistics(
         self,
@@ -94,6 +102,9 @@ class FeatureMonitoringResult:
             "difference": self._difference,
             "shiftDetected": self._shift_detected,
             "featureName": self._feature_name,
+            "emptyDetectionWindow": self._empty_detection_window,
+            "emptyReferenceWindow": self._empty_reference_window,
+            "raisedException": self._raised_exception,
         }
 
         if self._detection_statistics_id is not None:
@@ -153,7 +164,7 @@ class FeatureMonitoringResult:
         return self._monitoring_time
 
     @property
-    def difference(self) -> float:
+    def difference(self) -> Optional[float]:
         return self._difference
 
     @property
@@ -163,3 +174,15 @@ class FeatureMonitoringResult:
     @property
     def feature_name(self) -> str:
         return self._feature_name
+
+    @property
+    def empty_detection_window(self) -> bool:
+        return self._empty_detection_window
+
+    @property
+    def empty_reference_window(self) -> bool:
+        return self._empty_reference_window
+
+    @property
+    def specific_value(self) -> Optional[float]:
+        return self._specific_value

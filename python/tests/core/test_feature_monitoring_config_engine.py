@@ -22,6 +22,7 @@ from hsfs.util import convert_event_time_to_timestamp
 
 from datetime import datetime
 
+
 DEFAULT_DESCRIPTION = "A feature monitoring configuration for unit test."
 DEFAULT_NAME = "test_monitoring_config"
 DEFAULT_FEATURE_NAME = "monitored_feature"
@@ -39,6 +40,7 @@ DEFAULT_SCHEDULER_CONFIG = {
     "start_date_time": 1676457000,
     "enabled": True,
 }
+DEFAULT_TRAINING_DATASET_VERSION = 2
 
 
 class TestFeatureMonitoringConfigEngine:
@@ -253,6 +255,7 @@ class TestFeatureMonitoringConfigEngine:
     def test_enable_feature_monitoring_config_fv(self, mocker):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
+        mocker.patch("hsfs.client.get_instance")
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
@@ -385,6 +388,7 @@ class TestFeatureMonitoringConfigEngine:
     def test_enable_descriptive_statistics_monitoring_fv(self, mocker):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
+        mocker.patch("hsfs.client.get_instance")
 
         config_engine = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
