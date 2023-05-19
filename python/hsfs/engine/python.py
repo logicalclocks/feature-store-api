@@ -371,12 +371,14 @@ class Engine:
         # For now transformation only need 25th, 50th, 75th percentiles
         # TODO: calculate properly all percentiles
         content_dict = {}
-        percentiles = []
         if "25%" in stat:
             percentiles = [0] * 100
             percentiles[24] = stat["25%"]
             percentiles[49] = stat["50%"]
             percentiles[74] = stat["75%"]
+            content_dict["approxPercentiles"] = percentiles
+        if "count" in stat:
+            content_dict["count"] = stat["count"]
         if "mean" in stat:
             content_dict["mean"] = stat["mean"]
         if "mean" in stat and "count" in stat:
@@ -388,8 +390,7 @@ class Engine:
             content_dict["stdDev"] = stat["std"]
         if "min" in stat:
             content_dict["minimum"] = stat["min"]
-        if percentiles:
-            content_dict["approxPercentiles"] = percentiles
+
         return content_dict
 
     def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):
