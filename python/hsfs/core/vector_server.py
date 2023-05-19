@@ -414,7 +414,9 @@ class VectorServer:
         transformation_fns = (
             self._transformation_function_engine.populate_builtin_attached_fns(
                 transformation_functions,
-                td_tffn_stats.content if td_tffn_stats is not None else None,
+                td_tffn_stats.feature_descriptive_statistics
+                if td_tffn_stats is not None
+                else None,
             )
         )
         return transformation_fns

@@ -106,44 +106,61 @@ class FeatureDescriptiveStatistics:
     def from_deequ_json(cls, json_dict: dict) -> "FeatureDescriptiveStatistics":
         stats_dict = {"feature_name": json_dict["column"]}
 
+        if "dataType" in json_dict:
+            stats_dict["feature_type"] = json_dict["dataType"]
+
         if "count" in json_dict and json_dict["count"] == 0:
             # if empty data, ignore the rest of statistics
             stats_dict["count"] = 0
             return cls(**stats_dict)
 
-        if "unique_values" in json_dict:
-            # if stats for transformation function, save unique values as extended stats
-            stats_dict["extended_statistics"] = {
-                "unique_values": json_dict["unique_values"]
-            }
-            return cls(**stats_dict)
+        # common for all data types
+        if "numRecordsNull" in json_dict:
+            stats_dict["num_null_values"] = json_dict["numRecordsNull"]
+        if "numRecordsNonNull" in json_dict:
+            stats_dict["num_non_null_values"] = json_dict["numRecordsNonNull"]
+        if "numRecordsNull" in json_dict and "numRecordsNonNull" in json_dict:
+            stats_dict["count"] = (
+                json_dict["numRecordsNull"] + json_dict["numRecordsNonNull"]
+            )
+        if "count" in json_dict:
+            stats_dict["count"] = json_dict["count"]
+        if "completeness" in json_dict:
+            stats_dict["completeness"] = json_dict["completeness"]
+        if "approximateNumDistinctValues" in json_dict:
+            stats_dict["approx_num_distinct_values"] = json_dict[
+                "approximateNumDistinctValues"
+            ]
 
-        stats_dict = {
-            **stats_dict,
-            "feature_type": json_dict["dataType"],
-            "count": json_dict["numRecordsNull"] + json_dict["numRecordsNonNull"],
-            # common for all data types
-            "completeness": json_dict["completeness"],
-            "num_non_null_values": json_dict["numRecordsNonNull"],
-            "num_null_values": json_dict["numRecordsNull"],
-            "approx_num_distinct_values": json_dict["approximateNumDistinctValues"],
-        }
+        # commmon for all data types if exact_uniqueness is enabled
         if "uniqueness" in json_dict:
-            # commmon for all data types if exact_uniqueness is enabled
             stats_dict["uniqueness"] = json_dict["uniqueness"]
+        if "entropy" in json_dict:
             stats_dict["entropy"] = json_dict["entropy"]
+        if "distinctness" in json_dict:
             stats_dict["distinctness"] = json_dict["distinctness"]
+        if "exactNumDistinctValues" in json_dict:
             stats_dict["exact_num_distinct_values"] = json_dict[
                 "exactNumDistinctValues"
             ]
-        if json_dict["dataType"] == "Fractional" or json_dict["dataType"] == "Integral":
+
+        # fractional / integral features
+        if "minimum" in json_dict:
             stats_dict["min"] = json_dict["minimum"]
+        if "maximum" in json_dict:
             stats_dict["max"] = json_dict["maximum"]
+        if "sum" in json_dict:
             stats_dict["sum"] = json_dict["sum"]
+        if "mean" in json_dict:
             stats_dict["mean"] = json_dict["mean"]
+        if "stdDev" in json_dict:
             stats_dict["stddev"] = json_dict["stdDev"]
+        if "approxPercentiles" in json_dict:
+            stats_dict["percentiles"] = json_dict["approxPercentiles"]
 
         extended_statistics = {}
+        if "unique_values" in json_dict:
+            extended_statistics["unique_values"] = json_dict["unique_values"]
         if "correlations" in json_dict:
             extended_statistics["correlations"] = json_dict["correlations"]
         if "histogram" in json_dict:
