@@ -14,13 +14,13 @@
 #   limitations under the License.
 #
 import pytest
-from hsfs.core.monitoring_window_config import MonitoringWindowConfig, WindowConfigType
+from hsfs.core import monitoring_window_config as mwc
 
 
 class TestMonitoringWindowConfig:
     def test_window_based_on_training_dataset_id(self):
         # Arrange
-        window_config = MonitoringWindowConfig(
+        window_config = mwc.MonitoringWindowConfig(
             window_config_type="TRAINING_DATASET",
             training_dataset_id=1,
         )
@@ -37,7 +37,7 @@ class TestMonitoringWindowConfig:
             window_config.row_percentage = 0.2
 
         # Assert
-        assert window_config.window_config_type == WindowConfigType.TRAINING_DATASET
+        assert window_config.window_config_type == mwc.WindowConfigType.TRAINING_DATASET
         assert window_config.training_dataset_id == 1
         assert window_config.time_offset is None
         assert window_config.window_length is None
@@ -46,7 +46,7 @@ class TestMonitoringWindowConfig:
 
     def test_window_based_on_rolling_time(self):
         # Arrange
-        window_config = MonitoringWindowConfig(
+        window_config = mwc.MonitoringWindowConfig(
             window_config_type="ROLLING_TIME",
             time_offset="1d",
             window_length="1h",
@@ -61,7 +61,7 @@ class TestMonitoringWindowConfig:
             window_config.specific_value = 0.2
 
         # Assert
-        assert window_config.window_config_type == WindowConfigType.ROLLING_TIME
+        assert window_config.window_config_type == mwc.WindowConfigType.ROLLING_TIME
         assert window_config.training_dataset_id is None
         assert window_config.time_offset == "1d"
         assert window_config.window_length == "1h"
@@ -70,7 +70,7 @@ class TestMonitoringWindowConfig:
 
     def test_window_based_on_all_time(self):
         # Arrange
-        window_config = MonitoringWindowConfig(
+        window_config = mwc.MonitoringWindowConfig(
             window_config_type="ALL_TIME",
             row_percentage=0.2,
         )
@@ -87,7 +87,7 @@ class TestMonitoringWindowConfig:
             window_config.specific_value = 0.2
 
         # Assert
-        assert window_config.window_config_type == WindowConfigType.ALL_TIME
+        assert window_config.window_config_type == mwc.WindowConfigType.ALL_TIME
         assert window_config.training_dataset_id is None
         assert window_config.time_offset is None
         assert window_config.window_length is None
@@ -96,7 +96,7 @@ class TestMonitoringWindowConfig:
 
     def test_window_based_on_specific_value(self):
         # Arrange
-        window_config = MonitoringWindowConfig(
+        window_config = mwc.MonitoringWindowConfig(
             window_config_type="SPECIFIC_VALUE",
             specific_value=0.2,
         )
@@ -113,7 +113,7 @@ class TestMonitoringWindowConfig:
             window_config.row_percentage = 0.2
 
         # Assert
-        assert window_config.window_config_type == WindowConfigType.SPECIFIC_VALUE
+        assert window_config.window_config_type == mwc.WindowConfigType.SPECIFIC_VALUE
         assert window_config.training_dataset_id is None
         assert window_config.time_offset is None
         assert window_config.window_length is None
@@ -122,7 +122,7 @@ class TestMonitoringWindowConfig:
 
     def test_window_config_type_list_str(self):
         # Arrange
-        window_config_type_list = WindowConfigType.list_str()
+        window_config_type_list = mwc.WindowConfigType.list_str()
 
         # Assert
         assert set(window_config_type_list) == set(
