@@ -14,7 +14,10 @@
 #   limitations under the License.
 #
 
+from typing import List
+
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 
 class BuiltInTransformationFunction:
@@ -22,17 +25,17 @@ class BuiltInTransformationFunction:
         self._method = method.lower()
 
     @staticmethod
-    def min_max_scaler_stats(content, feature_name):
+    def min_max_scaler_stats(
+        feature_descriptive_stats: List[FeatureDescriptiveStatistics], feature_name: str
+    ):
         min_value = None
         max_value = None
-        for col in content["columns"]:
-            if col["column"] == feature_name:
-                if col["dataType"] not in ["Integral", "Fractional", "Decimal"]:
+        for stats in feature_descriptive_stats:
+            if stats.feature_name == feature_name:
+                if stats.feature_type not in ["Integral", "Fractional", "Decimal"]:
                     raise ValueError("Can't compute min_max_scaler for this type")
-                if "minimum" in col:
-                    min_value = col["minimum"]
-                if "maximum" in col:
-                    max_value = col["maximum"]
+                min_value = stats.min
+                max_value = stats.max
 
         if min_value is None or max_value is None:
             raise FeatureStoreException(
@@ -42,17 +45,17 @@ class BuiltInTransformationFunction:
         return min_value, max_value
 
     @staticmethod
-    def standard_scaler_stats(content, feature_name):
+    def standard_scaler_stats(
+        feature_descriptive_stats: List[FeatureDescriptiveStatistics], feature_name: str
+    ):
         mean = None
         std_dev = None
-        for col in content["columns"]:
-            if col["column"] == feature_name:
-                if col["dataType"] not in ["Integral", "Fractional", "Decimal"]:
+        for stats in feature_descriptive_stats:
+            if stats.feature_name == feature_name:
+                if stats.feature_type not in ["Integral", "Fractional", "Decimal"]:
                     raise ValueError("Can't compute standard_scaler for this type")
-                if "mean" in col:
-                    mean = col["mean"]
-                if "stdDev" in col:
-                    std_dev = col["stdDev"]
+                mean = stats.mean
+                std_dev = stats.stddev
 
         if mean is None or std_dev is None:
             raise FeatureStoreException(
@@ -62,14 +65,16 @@ class BuiltInTransformationFunction:
         return mean, std_dev
 
     @staticmethod
-    def robust_scaler_stats(content, feature_name):
+    def robust_scaler_stats(
+        feature_descriptive_stats: List[FeatureDescriptiveStatistics], feature_name: str
+    ):
         percentiles = None
-        for col in content["columns"]:
-            if col["column"] == feature_name:
-                if col["dataType"] not in ["Integral", "Fractional", "Decimal"]:
+        for stats in feature_descriptive_stats:
+            if stats.feature_name == feature_name:
+                if stats.feature_type not in ["Integral", "Fractional", "Decimal"]:
                     raise ValueError("Can't compute robust_scaler for this type")
-                if "approxPercentiles" in col and len(col["approxPercentiles"]) > 0:
-                    percentiles = col["approxPercentiles"]
+                if stats.percentiles is not None and len(stats.percentiles) > 0:
+                    percentiles = stats.percentiles
 
         if percentiles is None:
             raise FeatureStoreException(
@@ -79,10 +84,18 @@ class BuiltInTransformationFunction:
         return percentiles
 
     @staticmethod
-    def encoder_stats(content, feature_name):
-        for col in content["columns"]:
-            if col["column"] == feature_name and "unique_values" in col:
-                unique_data = [value for value in col["unique_values"]]
+    def encoder_stats(
+        feature_descriptive_stats: List[FeatureDescriptiveStatistics], feature_name: str
+    ):
+        for stats in feature_descriptive_stats:
+            if (
+                stats.feature_name == feature_name
+                and stats.extended_statistics is not None
+                and "unique_values" in stats.extended_statistics
+            ):
+                unique_data = [
+                    value for value in stats.extended_statistics["unique_values"]
+                ]
                 value_to_index = dict(
                     (value, index) for index, value in enumerate(unique_data)
                 )
