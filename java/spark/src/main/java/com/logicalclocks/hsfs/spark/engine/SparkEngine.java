@@ -23,6 +23,7 @@ import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.DataFormat;
@@ -1003,7 +1004,7 @@ public class SparkEngine {
       throws FeatureStoreException, IOException {
     StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector();
     Map<String, String> config = storageConnector.kafkaOptions();
-
+    
     if (writeOptions != null) {
       config.putAll(writeOptions);
     }
