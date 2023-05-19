@@ -34,7 +34,7 @@ class StatisticsEngine:
     def compute_and_save_statistics(
         self,
         metadata_instance,
-        features_dataframe=None,
+        feature_dataframe=None,
         feature_group_commit_id=None,
         feature_view_obj=None,
     ) -> Union[statistics.Statistics, job.Job]:
@@ -42,7 +42,7 @@ class StatisticsEngine:
 
         Args:
             metadata_instance: Union[FeatureGroup, TrainingDataset]. Metadata of the entity containing the data.
-            features_dataframe: Spark or Pandas DataFrame to compute the statistics on.
+            feature_dataframe: Spark or Pandas DataFrame to compute the statistics on.
             feature_group_commit_id: int. Feature group commit id.
             feature_view_obj: FeatureView. Metadata of the feature view, used when computing statistics for a Training Dataset.
 
@@ -54,9 +54,9 @@ class StatisticsEngine:
             # If the feature dataframe is None, then trigger a read on the metadata instance
             # We do it here to avoid making a useless request when using the Python engine
             # and calling compute_and_save_statistics
-            if features_dataframe is None:
+            if feature_dataframe is None:
                 if feature_group_commit_id is not None:
-                    features_dataframe = (
+                    feature_dataframe = (
                         metadata_instance.select_all()
                         .as_of(
                             util.get_hudi_datestr_from_timestamp(
@@ -66,12 +66,12 @@ class StatisticsEngine:
                         .read(online=False, dataframe_type="default", read_options={})
                     )
                 else:
-                    features_dataframe = metadata_instance.read()
+                    feature_dataframe = metadata_instance.read()
 
             commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
 
             stats_str = self.profile_statistics_with_config(
-                features_dataframe, metadata_instance.statistics_config
+                feature_dataframe, metadata_instance.statistics_config
             )
             desc_stats = self._parse_deequ_statistics(stats_str)
             if desc_stats:
@@ -139,18 +139,18 @@ class StatisticsEngine:
             )
 
     @staticmethod
-    def profile_statistics_with_config(features_dataframe, statistics_config) -> str:
+    def profile_statistics_with_config(feature_dataframe, statistics_config) -> str:
         """Compute statistics on a feature DataFrame based on a given configuration.
 
         Args:
-            features_dataframe: Spark or Pandas DataFrame to compute the statistics on.
+            feature_dataframe: Spark or Pandas DataFrame to compute the statistics on.
             statistics_config: StatisticsConfig. Configuration for the statistics to be computed.
 
         Returns:
             str. Serialized features statistics.
         """
         return StatisticsEngine.profile_statistics(
-            features_dataframe,
+            feature_dataframe,
             statistics_config.columns,
             statistics_config.correlations,
             statistics_config.histograms,
@@ -159,12 +159,12 @@ class StatisticsEngine:
 
     @staticmethod
     def profile_statistics(
-        features_dataframe, columns, correlations, histograms, exact_uniqueness
+        feature_dataframe, columns, correlations, histograms, exact_uniqueness
     ) -> str:
         """Compute statistics on a feature DataFrame.
 
         Args:
-            features_dataframe: Spark or Pandas DataFrame to compute the statistics on.
+            feature_dataframe: Spark or Pandas DataFrame to compute the statistics on.
             columns: List[str]. List of feature names to compute the statistics on.
             correlations: bool. Whether to compute correlations or not.
             histograms: bool. Whether to compute histograms or not.
@@ -173,7 +173,7 @@ class StatisticsEngine:
         Returns:
             str. Serialized features statistics.
         """
-        if len(features_dataframe.head(1)) == 0:
+        if len(feature_dataframe.head(1)) == 0:
             warnings.warn(
                 "There is no data in the entity that you are trying to compute "
                 "statistics for. A possible cause might be that you inserted only data "
@@ -184,7 +184,7 @@ class StatisticsEngine:
             col_stats = [{"column": col_name, "count": 0} for col_name in columns]
             return json.dumps({"columns": col_stats})
         return engine.get_instance().profile(
-            features_dataframe, columns, correlations, histograms, exact_uniqueness
+            feature_dataframe, columns, correlations, histograms, exact_uniqueness
         )
 
     def compute_and_save_split_statistics(
@@ -230,7 +230,7 @@ class StatisticsEngine:
         td_metadata_instance,
         columns,
         label_encoder_features,
-        features_dataframe=None,
+        feature_dataframe=None,
         feature_view_obj=None,
     ) -> statistics.Statistics:
         """Compute statistics for transformation functions.
@@ -239,7 +239,7 @@ class StatisticsEngine:
             td_metadata_instance: TrainingDataset. Training Dataset containing the splits.
             columns: List[str]. List of feature names where transformation functions are applied.
             label_encoder_features: List[str]. List of label encoded feature names.
-            features_dataframe: Spark or Pandas DataFrame to compute the statistics on. This parameter is optional.
+            feature_dataframe: Spark or Pandas DataFrame to compute the statistics on. This parameter is optional.
             feature_view_obj: FeatureView. Metadata of the feature view used to create the Training Dataset. This parameter is optional.
 
         Returns:
@@ -247,7 +247,7 @@ class StatisticsEngine:
         """
         commit_time = int(float(datetime.datetime.now().timestamp()) * 1000)
         stats_str = self._profile_transformation_fn_statistics(
-            features_dataframe, columns, label_encoder_features
+            feature_dataframe, columns, label_encoder_features
         )
         desc_stats = self._parse_deequ_statistics(stats_str)
         stats = statistics.Statistics(
@@ -341,14 +341,14 @@ class StatisticsEngine:
             raise e
 
     def _profile_transformation_fn_statistics(
-        self, features_dataframe, columns, label_encoder_features
+        self, feature_dataframe, columns, label_encoder_features
     ) -> str:
         if (
             engine.get_type() == "spark"
-            and len(features_dataframe.select(*columns).head(1)) == 0
+            and len(feature_dataframe.select(*columns).head(1)) == 0
         ) or (
             (engine.get_type() == "hive" or engine.get_type() == "python")
-            and len(features_dataframe.head()) == 0
+            and len(feature_dataframe.head()) == 0
         ):
             raise exceptions.FeatureStoreException(
                 "There is no data in the entity that you are trying to compute "
@@ -356,34 +356,40 @@ class StatisticsEngine:
                 "to the online storage of a feature group."
             )
         stats_str = engine.get_instance().profile(
-            features_dataframe, columns, False, True, False
+            feature_dataframe, columns, False, True, False
         )
 
         # add unique values profile to column stats
         return self._profile_unique_values(
-            features_dataframe, label_encoder_features, stats_str
+            feature_dataframe, label_encoder_features, stats_str
         )
 
     def _profile_unique_values(
-        self, features_dataframe, label_encoder_features, stats
+        self, feature_dataframe, label_encoder_features, stats
     ) -> str:
         if isinstance(stats, str):
             stats = json.loads(stats)
         if not stats:
             stats = {"columns": []}
+
+        stats_dict = {col_stats["column"]: col_stats for col_stats in stats["columns"]}
         for column in label_encoder_features:
-            unique_values = {
+            col_stats_unique_values = {
                 "column": column,
                 "unique_values": [
                     value
                     for value in engine.get_instance().get_unique_values(
-                        features_dataframe, column
+                        feature_dataframe, column
                     )
                 ],
             }
-            stats["columns"].append(unique_values)
-        # the result is a JSON string:
-        return json.dumps(stats)
+            if column in stats_dict:
+                stats_dict[column].update(col_stats_unique_values)
+            else:
+                stats_dict[column] = col_stats_unique_values
+
+        stats["columns"] = list(stats_dict.values())
+        return json.dumps(stats)  # the result is a JSON string
 
     def _save_statistics(
         self, stats, metadata_instance, feature_view_obj
