@@ -71,6 +71,12 @@ public class Constants {
 
   public static final String KAFKA_BOOTSTRAP_SERVERS = "bootstrap.servers";
   public static final String KAFKA_SECURITY_PROTOCOL = "security.protocol";
+  public static final String KAFKA_SSL_TRUSTSTORE_LOCATION = "ssl.truststore.location";
+  public static final String KAFKA_SSL_TRUSTSTORE_PASSWORD = "ssl.truststore.password";
+  public static final String KAFKA_SSL_KEYSTORE_LOCATION = "ssl.keystore.location";
+  public static final String KAFKA_SSL_KEYSTORE_PASSWORD = "ssl.keystore.password";
+  public static final String KAFKA_SSL_KEY_PASSWORD = "ssl.key.password";
+  public static final String KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM = "ssl.endpoint.identification.algorithm";
   //GCS
   public static final String PROPERTY_KEY_FILE = "fs.gs.auth.service.account.json.keyfile";
   public static final String PROPERTY_ENCRYPTION_KEY = "fs.gs.encryption.key";

@@ -14,13 +14,14 @@
 #   limitations under the License.
 #
 import os
+import socket
 from abc import ABC, abstractmethod
 from typing import Optional
 
 import humps
 import base64
 
-from hsfs import engine
+from hsfs import engine, client
 from hsfs.core import storage_connector_api
 
 
@@ -876,7 +877,19 @@ class KafkaConnector(StorageConnector):
         """Return prepared options to be passed to kafka, based on the additional
         arguments.
         """
-        config = self.options if self.options else {}
+        config = {}
+
+        if self.security_protocol.lower() in ["ssl", "sasl_ssl"]:
+            config.update(
+                {
+                    "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
+                    "ssl.certificate.location": client.get_instance()._get_client_cert_path(),
+                    "ssl.key.location": client.get_instance()._get_client_key_path(),
+                    "client.id": socket.gethostname()
+                }
+            )
+
+        config.update(self.options)
         config.update(
             {
                 "bootstrap.servers": self.bootstrap_servers,

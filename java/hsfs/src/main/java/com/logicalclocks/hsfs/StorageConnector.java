@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.base.Strings;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.util.Constants;
@@ -379,6 +381,27 @@ public abstract class StorageConnector {
 
     public Map<String, String> kafkaOptions() {
       Map<String, String> config = new HashMap<>();
+
+      // set ssl details if necessary
+      try {
+        switch (securityProtocol) {
+          case SSL:
+          case SASL_SSL:
+            HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
+            config.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, client.getTrustStorePath());
+            config.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, client.getCertKey());
+            config.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, client.getKeyStorePath());
+            config.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, client.getCertKey());
+            config.put(Constants.KAFKA_SSL_KEY_PASSWORD, client.getCertKey());
+            config.put(Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, "");
+            break;
+          default:
+            break;
+        }
+      } catch (FeatureStoreException e) {
+        e.printStackTrace();
+      }
+
       if (this.options != null && !this.options.isEmpty()) {
         Map<String, String> argOptions = this.options.stream()
             .collect(Collectors.toMap(Option::getName, Option::getValue));
