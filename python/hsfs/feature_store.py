@@ -873,10 +873,8 @@ class FeatureStore:
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
-
-                !!!note "Event time data type restriction"
-                    The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
-
+            !!! note "Event time data type restriction"
+                The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
@@ -921,6 +919,104 @@ class FeatureStore:
             List[list],
         ] = None,
     ):
+        """Create a spine group metadata object.
+
+        Instead of using a feature group to save a label/prediction target, you can use a spine together with a dataframe containing the labels.
+        A Spine is essentially a metadata object similar to a feature group, however, the data is not materialized in the feature store.
+        It only containes the needed metadat such as the relevant event time column and primary key columns to perform point-in-time correct joins.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            spine_df = pd.Dataframe()
+
+            spine_group = fs.get_or_create_spine_group(
+                                name="sales",
+                                version=1,
+                                description="Physical shop sales features",
+                                primary_key=['ss_store_sk'],
+                                event_time='sale_date',
+                                dataframe=spine_df
+                                )
+            ```
+
+        Note that you can inspect the dataframe in the spine group, or replace the dataframe:
+
+        ```python
+        spine_group.dataframe.show()
+
+        spine_group.dataframe = new_df
+        ```
+
+        The spine can then be used to construct queries, with only one speciality:
+
+        !!! note
+            Spines can only be used on the left side of a feature join, as this is the base
+            set of entities for which features are to be fetched and the left side of the join
+            determines the event timestamps to compare against.
+
+        **If you want to use the query for a feature view to be used for online serving,
+        you can only select the label or target feature from the spine.**
+        For the online lookup, the label is not required, therefore it is important to only
+        select label from the left feature group, so that we don't need to provide a spine
+        for online serving.
+
+        These queries can then be used to create feature views. Since the dataframe contained in the
+        spine is not being materialized, every time you use a feature view created with spine to read data
+        you will have to provide a dataframe with the same structure again.
+
+        For example, to generate training data:
+
+        ```python
+        X_train, X_test, y_train, y_test = feature_view_spine.train_test_split(0.2, spine=training_data_entities)
+        ```
+
+        Or to get batches of fresh data for batch scoring:
+        ```python
+        feature_view_spine.get_batch_data(spine=scoring_entities_df).show()
+        ```
+
+        Here you have the chance to pass a different set of entities to generate the training dataset.
+
+        Sometimes it might be handy to create a feature view with a regular feature group containing
+        the label, but then at serving time to use a spine in order to fetch features for example only
+        for a small set of primary key values. To do this, you can pass the spine group
+        instead of a dataframe. Just make sure it contains the needed primary key, event time and
+        label column.
+
+        ```python
+        feature_view.get_batch_data(spine=spine_group)
+        ```
+
+        # Arguments
+            name: Name of the external feature group to create.
+            version: Version of the external feature group to retrieve, defaults to `None` and
+                will create the feature group with incremented version from the last
+                version in the feature store.
+            description: A string describing the contents of the external feature group to
+                improve discoverability for Data Scientists, defaults to empty string
+                `""`.
+            primary_key: A list of feature names to be used as primary key for the
+                feature group. This primary key can be a composite key of multiple
+                features and will be used as joining key, if not specified otherwise.
+                Defaults to empty list `[]`, and the feature group won't have any primary key.
+            event_time: Optionally, provide the name of the feature containing the event
+                time for the features in this feature group. If event_time is set
+                the feature group can be used for point-in-time joins. Defaults to `None`.
+            features: Optionally, define the schema of the external feature group manually as a
+                list of `Feature` objects. Defaults to empty list `[]` and will use the
+                schema information of the DataFrame resulting by executing the provided query
+                against the data source.
+            !!!note "Event time data type restriction"
+                The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+            dataframe: DataFrame, RDD, Ndarray, list. Spine dataframe with primary key, event time and
+                label column to use for point in time join when fetching features.
+
+        # Returns
+            `SpineGroup`. The spine group metadata object.
+        """
         try:
             spine = self._feature_group_api.get(
                 name, version, feature_group_api.FeatureGroupApi.SPINE

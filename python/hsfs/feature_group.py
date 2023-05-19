@@ -2944,10 +2944,14 @@ class SpineGroup(FeatureGroupBase):
 
     @property
     def dataframe(self):
+        """Spine dataframe with primary key, event time and
+        label column to use for point in time join when fetching features.
+        """
         return self._dataframe
 
     @dataframe.setter
     def dataframe(self, dataframe):
+        """Update the spine dataframe contained in the spine group."""
         self._dataframe = engine.get_instance().convert_to_default_dataframe(dataframe)
 
     @classmethod
