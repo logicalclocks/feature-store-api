@@ -50,12 +50,13 @@ from hsfs.core import (
 )
 
 from hsfs.statistics_config import StatisticsConfig
+from hsfs.statistics import Statistics
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.validation_report import ValidationReport
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
 from hsfs.constructor import query, filter
-from hsfs.client.exceptions import FeatureStoreException
+from hsfs.client.exceptions import FeatureStoreException, RestAPIError
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core import great_expectation_engine
@@ -1419,7 +1420,7 @@ class FeatureGroupBase:
     def get_statistics(
         self,
         commit_time: Optional[Union[str, int, datetime, date]] = None,
-    ):
+    ) -> Statistics:
         """Returns the statistics for this feature group at a specific time.
 
         If `commit_time` is `None`, the most recent statistics are returned.
@@ -1476,10 +1477,25 @@ class FeatureGroupBase:
             `hsfs.client.exceptions.RestAPIError`. Unable to persist the statistics.
         """
         if self.statistics_config.enabled:
+            try:
+                registered_stats = self.get_statistics(commit_time=datetime.now())
+                if self._are_statistics_missing(registered_stats):
+                    registered_stats = None
+            except RestAPIError as e:
+                if (
+                    e.response.json().get("errorCode", "") == 270228
+                    and e.response.status_code == 404
+                ):
+                    registered_stats = None
+                raise e
+
             # Don't read the dataframe here, to avoid triggering a read operation
             # for the Python engine. The Python engine is going to setup a Spark Job
             # to update the statistics.
-            return self._statistics_engine.compute_and_save_statistics(self)
+            return (
+                registered_stats
+                or self._statistics_engine.compute_and_save_statistics(self)
+            )
         else:
             warnings.warn(
                 (
@@ -1622,6 +1638,33 @@ class FeatureGroupBase:
     @features.setter
     def features(self, new_features):
         self._features = new_features
+        
+    def _are_statistics_missing(self, statistics: Statistics):
+        if (
+            self.statistics_config.histograms
+            or self.statistics_config.correlations
+            or self.statistics_config.exact_uniqueness
+        ):
+            # if statistics are missing, recompute and update statistics.
+            # We need to check for missing statistics because the statistics config can have been modified
+            for fds in statistics.feature_descriptive_statistics:
+                if fds.feature_type in ["Integral", "Fractional"]:
+                    if self.statistics_config.histograms and (
+                        fds.extended_statistics is None
+                        or "histogram" not in fds.extended_statistics
+                    ):
+                        return True
+
+                    if self.statistics_config.correlations and (
+                        fds.extended_statistics is None
+                        or "correlations" not in fds.extended_statistics
+                    ):
+                        return True
+
+                if self.statistics_config.exact_uniqueness and fds.uniqueness is None:
+                    return True
+
+        return False
 
 
 class FeatureGroup(FeatureGroupBase):
@@ -2163,9 +2206,11 @@ class FeatureGroup(FeatureGroupBase):
         ):
             self._code_engine.save_code(self)
 
-        if engine.get_type() == "spark":
+        if engine.get_type() == "spark" and not self.stream:
             # Only compute statistics if the engine is Spark,
             # if Python, the statistics are computed by the application doing the insert
+            # Also, only compute statistics if stream is False.
+            # if True, the backfill job has not been triggered and the data has not been inserted (it's in Kafka)
             self.compute_statistics()
 
         return (
@@ -2655,9 +2700,26 @@ class FeatureGroup(FeatureGroupBase):
                     ).keys()
                 ][0]
 
-            return self._statistics_engine.compute_and_save_statistics(
-                self,
-                feature_group_commit_id=fg_commit_id,
+            try:
+                registered_stats = self.get_statistics(
+                    commit_time=fg_commit_id or datetime.now()
+                )
+                if self._are_statistics_missing(registered_stats):
+                    registered_stats = None
+            except RestAPIError as e:
+                if (
+                    e.response.json().get("errorCode", "") == 270228
+                    and e.response.status_code == 404
+                ):
+                    registered_stats = None
+                raise e
+
+            return (
+                registered_stats
+                or self._statistics_engine.compute_and_save_statistics(
+                    self,
+                    feature_group_commit_id=fg_commit_id,
+                )
             )
         else:
             warnings.warn(
