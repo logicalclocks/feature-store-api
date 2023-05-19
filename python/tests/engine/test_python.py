@@ -929,6 +929,7 @@ class TestPython:
             "minimum": 1,
             "stdDev": 33,
             "sum": 5000,
+            "count": 100,
         }
 
     def test_validate(self):

@@ -69,7 +69,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_and_save_statistics(
             metadata_instance=fg,
-            features_dataframe=None,
+            feature_dataframe=None,
             feature_group_commit_id=None,
             feature_view_obj=None,
         )
@@ -112,7 +112,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_and_save_statistics(
             metadata_instance=fg,
-            features_dataframe=None,
+            feature_dataframe=None,
             feature_group_commit_id=None,
             feature_view_obj=None,
         )
@@ -163,7 +163,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_and_save_statistics(
             metadata_instance=fg,
-            features_dataframe=None,
+            feature_dataframe=None,
             feature_group_commit_id=None,
             feature_view_obj=fv,
         )
@@ -213,7 +213,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_and_save_statistics(
             metadata_instance=fg,
-            features_dataframe=None,
+            feature_dataframe=None,
             feature_group_commit_id=None,
             feature_view_obj=None,
         )
@@ -271,7 +271,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_and_save_statistics(
             metadata_instance=fg,
-            features_dataframe=None,
+            feature_dataframe=None,
             feature_group_commit_id=None,
             feature_view_obj=fv,
         )
@@ -316,7 +316,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_and_save_statistics(
             metadata_instance=fg,
-            features_dataframe=None,
+            feature_dataframe=None,
             feature_group_commit_id=1,
             feature_view_obj=None,
         )
@@ -369,7 +369,7 @@ class TestStatisticsEngine:
         # Act
         s_engine.compute_and_save_statistics(
             metadata_instance=fg,
-            features_dataframe=None,
+            feature_dataframe=None,
             feature_group_commit_id=1,
             feature_view_obj=fv,
         )
@@ -403,14 +403,14 @@ class TestStatisticsEngine:
             partition_key=[],
             id=10,
         )
-        features_dataframe = mocker.Mock()
-        features_dataframe.head.return_value = []
+        feature_dataframe = mocker.Mock()
+        feature_dataframe.head.return_value = []
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
             s_engine.compute_and_save_monitoring_statistics(
                 metadata_instance=fg,
-                feature_dataframe=features_dataframe,
+                feature_dataframe=feature_dataframe,
                 start_time=None,
                 end_time=None,
                 row_percentage=None,
@@ -454,13 +454,13 @@ class TestStatisticsEngine:
             partition_key=[],
             id=10,
         )
-        features_dataframe = mocker.Mock()
-        features_dataframe.head.return_value = []
+        feature_dataframe = mocker.Mock()
+        feature_dataframe.head.return_value = []
 
         # Act
         s_engine.compute_and_save_monitoring_statistics(
             metadata_instance=fg,
-            feature_dataframe=features_dataframe,
+            feature_dataframe=feature_dataframe,
             start_time=None,
             end_time=None,
             row_percentage=None,
@@ -490,12 +490,12 @@ class TestStatisticsEngine:
             id=10,
         )
 
-        features_dataframe = mocker.Mock()
-        features_dataframe.head.return_value = []
+        feature_dataframe = mocker.Mock()
+        feature_dataframe.head.return_value = []
 
         # Act
         s_engine.profile_statistics_with_config(
-            features_dataframe=features_dataframe,
+            feature_dataframe=feature_dataframe,
             statistics_config=fg.statistics_config,
         )
 
@@ -532,12 +532,12 @@ class TestStatisticsEngine:
             statistics_config=sc,
         )
 
-        features_dataframe = mocker.Mock()
-        features_dataframe.head.return_value = [1]
+        feature_dataframe = mocker.Mock()
+        feature_dataframe.head.return_value = [1]
 
         # Act
         s_engine.profile_statistics_with_config(
-            features_dataframe=features_dataframe,
+            feature_dataframe=feature_dataframe,
             statistics_config=fg.statistics_config,
         )
 
@@ -571,12 +571,12 @@ class TestStatisticsEngine:
 
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
 
-        features_dataframe = mocker.Mock()
-        features_dataframe.head.return_value = []
+        feature_dataframe = mocker.Mock()
+        feature_dataframe.head.return_value = []
 
         # Act
         s_engine._profile_transformation_fn_statistics(
-            features_dataframe=features_dataframe,
+            feature_dataframe=feature_dataframe,
             columns=[],
             label_encoder_features=None,
         )
@@ -597,14 +597,14 @@ class TestStatisticsEngine:
 
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
 
-        features_dataframe = mocker.Mock()
-        features_dataframe.head.return_value = []
+        feature_dataframe = mocker.Mock()
+        feature_dataframe.head.return_value = []
         mock_engine_get_type.return_value = "python"
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
             s_engine._profile_transformation_fn_statistics(
-                features_dataframe=features_dataframe,
+                feature_dataframe=feature_dataframe,
                 columns=[],
                 label_encoder_features=None,
             )
@@ -631,14 +631,14 @@ class TestStatisticsEngine:
 
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
 
-        features_dataframe = mocker.Mock()
-        features_dataframe.head.return_value = []
+        feature_dataframe = mocker.Mock()
+        feature_dataframe.head.return_value = []
         mock_engine_get_type.return_value = "hive"
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
             s_engine._profile_transformation_fn_statistics(
-                features_dataframe=features_dataframe,
+                feature_dataframe=feature_dataframe,
                 columns=[],
                 label_encoder_features=None,
             )
@@ -665,14 +665,14 @@ class TestStatisticsEngine:
 
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
 
-        features_dataframe = mocker.Mock()
-        features_dataframe.select.return_value.head.return_value = []
+        feature_dataframe = mocker.Mock()
+        feature_dataframe.select.return_value.head.return_value = []
         mock_engine_get_type.return_value = "spark"
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException) as e_info:
             s_engine._profile_transformation_fn_statistics(
-                features_dataframe=features_dataframe,
+                feature_dataframe=feature_dataframe,
                 columns=[],
                 label_encoder_features=None,
             )
@@ -774,7 +774,7 @@ class TestStatisticsEngine:
             td_metadata_instance=None,
             columns=None,
             label_encoder_features=None,
-            features_dataframe=None,
+            feature_dataframe=None,
             feature_view_obj=None,
         )
 
@@ -922,7 +922,7 @@ class TestStatisticsEngine:
 
         # Act
         result = s_engine._profile_unique_values(
-            features_dataframe=None,
+            feature_dataframe=None,
             label_encoder_features=["column_1", "column_2"],
             stats="{}",
         )
@@ -951,7 +951,7 @@ class TestStatisticsEngine:
 
         # Act
         result = s_engine._profile_unique_values(
-            features_dataframe=None,
+            feature_dataframe=None,
             label_encoder_features=["column_1", "column_2"],
             stats='{"columns": [], "test_name": "test_value"}',
         )
