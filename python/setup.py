@@ -40,7 +40,11 @@ setup(
             "black",
             "pyspark==3.1.1",
             "moto[s3]",
+            "pandas<=1.5.3",
         ],
+        "pandas1sqlalchemy1": ["pandas<=1.5.3", "sqlalchemy<=1.4.48"],
+        "pandas1sqlalchemy2": ["pandas<=1.5.3"],
+        "pandas2sqlalchemy1": ["sqlalchemy<=1.4.48"],
         "docs": [
             "mkdocs==1.3.0",
             "mkdocs-material==8.2.8",
