@@ -41,9 +41,6 @@ setup(
             "pyspark==3.1.1",
             "moto[s3]",
         ],
-        "pandas1sqlalchemy1": ["pandas<=1.5.3", "sqlalchemy<=1.4.48"],
-        "pandas1sqlalchemy2": ["pandas<=1.5.3"],
-        "pandas2sqlalchemy1": ["sqlalchemy<=1.4.48"],
         "docs": [
             "mkdocs==1.3.0",
             "mkdocs-material==8.2.8",
@@ -69,6 +66,7 @@ setup(
             "fastavro>=1.4.11,<=1.7.3",
             "tqdm",
         ],
+        "pandas1": ["pandas<=1.5.3", "sqlalchemy<=1.4.48"],
     },
     author="Hopsworks AB",
     author_email="moritz@logicalclocks.com",

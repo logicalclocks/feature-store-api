@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package-versions: [ pandas1sqlalchemy1, pandas1sqlalchemy2, pandas2sqlalchemy1 ]
+        package-versions: [ pandas1 ]
 
     steps:
       - name: Set Timezone

@@ -63,6 +63,13 @@ try:
         BooleanType,
         StructField,
     )
+
+    if pd.__version__ >= "2.0.0" and pyspark.__version__ < "3.2.3":
+
+        def iteritems(self):
+            return self.items()
+
+        setattr(pd.DataFrame, "iteritems", iteritems)
 except ImportError:
     pass
 
@@ -81,13 +88,6 @@ from great_expectations.data_context.types.base import (
     DataContextConfig,
     InMemoryStoreBackendDefaults,
 )
-
-if pd.__version__ >= "2.0.0" and pyspark.__version__ < "3.2.3":
-
-    def iteritems(self):
-        return self.items()
-
-    setattr(pd.DataFrame, "iteritems", iteritems)
 
 
 class Engine:
