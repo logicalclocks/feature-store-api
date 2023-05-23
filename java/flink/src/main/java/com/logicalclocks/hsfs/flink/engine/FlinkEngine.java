@@ -21,6 +21,7 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
+import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
 
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
 public class FlinkEngine {
   private static FlinkEngine INSTANCE = null;
 
-  public static synchronized FlinkEngine getInstance() {
+  public static synchronized FlinkEngine getInstance() throws FeatureStoreException {
     if (INSTANCE == null) {
       INSTANCE = new FlinkEngine();
     }
@@ -54,16 +55,17 @@ public class FlinkEngine {
   @Getter
   private StreamExecutionEnvironment streamExecutionEnvironment;
 
-  private KafkaApi kafkaApi = new KafkaApi();
+  private final KafkaApi kafkaApi = new KafkaApi();
+  private final HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
-  private FlinkEngine() {
+  private FlinkEngine() throws FeatureStoreException {
     streamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment();
     // Configure the streamExecutionEnvironment
     streamExecutionEnvironment.getConfig().enableObjectReuse();
   }
 
-  public DataStreamSink<?> writeDataStream(StreamFeatureGroup streamFeatureGroup, DataStream<?> dataStream)
-      throws FeatureStoreException, IOException {
+  public DataStreamSink<?> writeDataStream(StreamFeatureGroup streamFeatureGroup, DataStream<?> dataStream,
+      Map<String, String> writeOptions) throws FeatureStoreException, IOException {
 
     DataStream<Object> genericDataStream = (DataStream<Object>) dataStream;
     Properties properties = new Properties();
@@ -97,4 +99,5 @@ public class FlinkEngine {
 
     return avroRecordDataStream.sinkTo(sink);
   }
+
 }
