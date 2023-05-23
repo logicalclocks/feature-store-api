@@ -287,16 +287,16 @@ public class StreamFeatureGroup extends FeatureGroupBase<DataStream<?>> {
    */
   @Override
   public DataStreamSink<?> insertStream(DataStream<?> featureData) throws Exception {
-    return featureGroupEngine.insertStream(this, featureData);
+    return featureGroupEngine.insertStream(this, featureData, null);
+  }
+
+  @Override
+  public DataStreamSink<?>  insertStream(DataStream<?> featureData, Map<String, String> writeOptions) throws Exception {
+    return featureGroupEngine.insertStream(this, featureData, writeOptions);
   }
 
   @Override
   public Object insertStream(DataStream<?> featureData, String queryName) throws Exception {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object insertStream(DataStream<?> featureData, Map<String, String> writeOptions) throws Exception {
     throw new UnsupportedOperationException("Not supported for Flink");
   }
 
