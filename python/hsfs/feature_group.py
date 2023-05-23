@@ -2954,9 +2954,17 @@ class SpineGroup(FeatureGroupBase):
         """Update the spine dataframe contained in the spine group."""
         self._dataframe = engine.get_instance().convert_to_default_dataframe(dataframe)
 
-        if self._id is not None:
+        # in fs query the features are not sent, so then don't do validation
+        if (
+            self._id is not None
+            and self._dataframe is not None
+            and self._features is not None
+        ):
+            dataframe_features = engine.get_instance().parse_schema_feature_group(
+                self._dataframe
+            )
             self._feature_group_engine._verify_schema_compatibility(
-                self._features, dataframe
+                self._features, dataframe_features
             )
 
     @classmethod

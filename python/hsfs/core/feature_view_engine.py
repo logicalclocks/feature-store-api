@@ -188,8 +188,11 @@ class FeatureViewEngine:
             if isinstance(spine, feature_group.SpineGroup):
                 # schema of original fg on left side needs to be consistent with schema contained in the
                 # spine group to overwrite the feature group
+                dataframe_features = engine.get_instance().parse_schema_feature_group(
+                    spine.dataframe
+                )
                 spine._feature_group_engine._verify_schema_compatibility(
-                    query._left_feature_group.features, spine.dataframe
+                    query._left_feature_group.features, dataframe_features
                 )
                 query._left_feature_group = spine
             elif isinstance(query._left_feature_group, feature_group.SpineGroup):
