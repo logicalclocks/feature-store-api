@@ -390,7 +390,7 @@ class TrainingDataset:
                 registered_stats = self._statistics_engine.get_last_computed(self)
             except RestAPIError as e:
                 if (
-                    e.response.json().get("errorCode", "") == 270228
+                    e.response.json().get("errorCode", "") == 270229
                     and e.response.status_code == 404
                 ):
                     registered_stats = None
