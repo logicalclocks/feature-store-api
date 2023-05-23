@@ -923,7 +923,7 @@ class FeatureStore:
 
         Instead of using a feature group to save a label/prediction target, you can use a spine together with a dataframe containing the labels.
         A Spine is essentially a metadata object similar to a feature group, however, the data is not materialized in the feature store.
-        It only containes the needed metadat such as the relevant event time column and primary key columns to perform point-in-time correct joins.
+        It only containes the needed metadata such as the relevant event time column and primary key columns to perform point-in-time correct joins.
 
         !!! example
             ```python
@@ -991,21 +991,21 @@ class FeatureStore:
         ```
 
         # Arguments
-            name: Name of the external feature group to create.
-            version: Version of the external feature group to retrieve, defaults to `None` and
-                will create the feature group with incremented version from the last
+            name: Name of the spine group to create.
+            version: Version of the spine group to retrieve, defaults to `None` and
+                will create the spine group with incremented version from the last
                 version in the feature store.
-            description: A string describing the contents of the external feature group to
+            description: A string describing the contents of the spine group to
                 improve discoverability for Data Scientists, defaults to empty string
                 `""`.
             primary_key: A list of feature names to be used as primary key for the
-                feature group. This primary key can be a composite key of multiple
+                spine group. This primary key can be a composite key of multiple
                 features and will be used as joining key, if not specified otherwise.
-                Defaults to empty list `[]`, and the feature group won't have any primary key.
+                Defaults to empty list `[]`, and the spine group won't have any primary key.
             event_time: Optionally, provide the name of the feature containing the event
-                time for the features in this feature group. If event_time is set
-                the feature group can be used for point-in-time joins. Defaults to `None`.
-            features: Optionally, define the schema of the external feature group manually as a
+                time for the features in this spine group. If event_time is set
+                the spine group can be used for point-in-time joins. Defaults to `None`.
+            features: Optionally, define the schema of the spine group manually as a
                 list of `Feature` objects. Defaults to empty list `[]` and will use the
                 schema information of the DataFrame resulting by executing the provided query
                 against the data source.

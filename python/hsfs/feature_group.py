@@ -2920,7 +2920,7 @@ class SpineGroup(FeatureGroupBase):
         self._href = href
 
     def _save(self):
-        """Persist the metadata for this external feature group.
+        """Persist the metadata for this spine group.
 
         Without calling this method, your feature group will only exist
         in your Python Kernel, but not in Hopsworks.
@@ -2928,16 +2928,15 @@ class SpineGroup(FeatureGroupBase):
         ```python
         query = "SELECT * FROM sales"
 
-        fg = feature_store.create_external_feature_group(name="sales",
+        fg = feature_store.create_spine_group(name="sales",
             version=1,
             description="Physical shop sales features",
-            query=query,
-            storage_connector=connector,
             primary_key=['ss_store_sk'],
-            event_time='sale_date'
+            event_time='sale_date',
+            dataframe=df,
         )
 
-        fg.save()
+        fg._save()
         """
         self._feature_group_engine.save(self)
         return self
