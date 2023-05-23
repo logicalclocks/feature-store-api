@@ -879,17 +879,19 @@ class KafkaConnector(StorageConnector):
         """
         config = {}
 
-        if self.security_protocol.lower() in ["ssl", "sasl_ssl"]:
-            config.update(
-                {
-                    "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
-                    "ssl.certificate.location": client.get_instance()._get_client_cert_path(),
-                    "ssl.key.location": client.get_instance()._get_client_key_path(),
-                    "client.id": socket.gethostname()
-                }
-            )
-
+        # set kafka storage connector options
         config.update(self.options)
+
+        # set ssl details if expected
+        if self.security_protocol.lower() in ["ssl", "sasl_ssl"]:
+            if "ssl.ca.location" in config:
+                config.update({"ssl.ca.location": client.get_instance()._get_ca_chain_path()})
+            if "ssl.certificate.location" in config:
+                config.update({"ssl.certificate.location": client.get_instance()._get_client_cert_path()})
+            if "ssl.key.location" in config:
+                config.update({"ssl.ca.location": client.get_instance()._get_client_key_path()})
+
+        # set connection properties
         config.update(
             {
                 "bootstrap.servers": self.bootstrap_servers,

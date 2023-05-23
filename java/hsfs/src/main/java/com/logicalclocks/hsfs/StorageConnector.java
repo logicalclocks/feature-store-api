@@ -382,18 +382,34 @@ public abstract class StorageConnector {
     public Map<String, String> kafkaOptions() {
       Map<String, String> config = new HashMap<>();
 
-      // set ssl details if necessary
+      // set kafka storage connector options
+      if (this.options != null && !this.options.isEmpty()) {
+        Map<String, String> argOptions = this.options.stream()
+            .collect(Collectors.toMap(Option::getName, Option::getValue));
+        config.putAll(argOptions);
+      }
+
+      // set ssl details if expected
       try {
         switch (securityProtocol) {
           case SSL:
           case SASL_SSL:
             HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
-            config.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, client.getTrustStorePath());
-            config.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, client.getCertKey());
-            config.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, client.getKeyStorePath());
-            config.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, client.getCertKey());
-            config.put(Constants.KAFKA_SSL_KEY_PASSWORD, client.getCertKey());
-            config.put(Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, "");
+            if (config.containsKey(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION)) {
+              config.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, client.getTrustStorePath());
+            }
+            if (config.containsKey(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD)) {
+              config.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, client.getCertKey());
+            }
+            if (config.containsKey(Constants.KAFKA_SSL_KEYSTORE_LOCATION)) {
+              config.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, client.getKeyStorePath());
+            }
+            if (config.containsKey(Constants.KAFKA_SSL_KEYSTORE_PASSWORD)) {
+              config.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, client.getCertKey());
+            }
+            if (config.containsKey(Constants.KAFKA_SSL_KEY_PASSWORD)) {
+              config.put(Constants.KAFKA_SSL_KEY_PASSWORD, client.getCertKey());
+            }
             break;
           default:
             break;
@@ -402,11 +418,7 @@ public abstract class StorageConnector {
         e.printStackTrace();
       }
 
-      if (this.options != null && !this.options.isEmpty()) {
-        Map<String, String> argOptions = this.options.stream()
-            .collect(Collectors.toMap(Option::getName, Option::getValue));
-        config.putAll(argOptions);
-      }
+      // set connection properties
       config.put(Constants.KAFKA_BOOTSTRAP_SERVERS, bootstrapServers);
       config.put(Constants.KAFKA_SECURITY_PROTOCOL, securityProtocol.toString());
       return config;

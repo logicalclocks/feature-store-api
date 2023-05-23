@@ -18,6 +18,7 @@
 package com.logicalclocks.hsfs.flink.engine;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
@@ -65,7 +66,10 @@ public class FlinkEngine {
       throws FeatureStoreException, IOException {
 
     DataStream<Object> genericDataStream = (DataStream<Object>) dataStream;
-    Properties properties = getKafkaProperties(streamFeatureGroup);
+    Properties properties = new Properties();
+    StorageConnector.KafkaConnector storageConnector = streamFeatureGroup.getFeatureStore().getKafkaConnector();
+    Map<String, String> config = storageConnector.kafkaOptions();
+    properties.putAll(config);
 
     KafkaSink<GenericRecord> sink = KafkaSink.<GenericRecord>builder()
         .setBootstrapServers(properties.getProperty("bootstrap.servers"))
@@ -92,21 +96,5 @@ public class FlinkEngine {
           );
 
     return avroRecordDataStream.sinkTo(sink);
-  }
-
-  private Properties getKafkaProperties(StreamFeatureGroup featureGroup) throws FeatureStoreException, IOException {
-    HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
-    Properties properties = new Properties();
-    properties.put("bootstrap.servers",
-        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
-        "INTERNAL://", "")).collect(Collectors.joining(",")));
-    properties.put("security.protocol", "SSL");
-    properties.put("ssl.truststore.location", client.getTrustStorePath());
-    properties.put("ssl.truststore.password", client.getCertKey());
-    properties.put("ssl.keystore.location", client.getKeyStorePath());
-    properties.put("ssl.keystore.password", client.getCertKey());
-    properties.put("ssl.key.password", client.getCertKey());
-    properties.put("ssl.endpoint.identification.algorithm", "");
-    return properties;
   }
 }
