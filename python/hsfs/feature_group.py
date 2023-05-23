@@ -1487,7 +1487,7 @@ class FeatureGroupBase:
                     registered_stats = None
             except RestAPIError as e:
                 if (
-                    e.response.json().get("errorCode", "") == 270229
+                    e.response.json().get("errorCode", "") == 270228
                     and e.response.status_code == 404
                 ):
                     registered_stats = None
@@ -2752,7 +2752,7 @@ class FeatureGroup(FeatureGroupBase):
                     registered_stats = None
             except RestAPIError as e:
                 if (
-                    e.response.json().get("errorCode", "") == 270229
+                    e.response.json().get("errorCode", "") == 270228
                     and e.response.status_code == 404
                 ):
                     registered_stats = None
