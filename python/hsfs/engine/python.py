@@ -67,6 +67,8 @@ from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
 
+from hsfs.storage_connector import StorageConnector
+
 # Disable pyhive INFO logging
 logging.getLogger("pyhive").setLevel(logging.WARNING)
 
@@ -1257,3 +1259,15 @@ class Engine:
                     df[_feat.name], _feat.online_type
                 )
         return df
+
+    @staticmethod
+    def is_connector_type_supported(connector_type):
+        return connector_type in [
+            StorageConnector.HOPSFS,
+            StorageConnector.S3,
+            StorageConnector.JDBC,
+            StorageConnector.REDSHIFT,
+            StorageConnector.ADLS,
+            StorageConnector.SNOWFLAKE,
+            StorageConnector.KAFKA,
+        ]

@@ -380,7 +380,6 @@ class Engine:
             )
 
     def _save_online_dataframe(self, feature_group, dataframe, write_options):
-
         write_options = self._get_kafka_config(write_options)
 
         serialized_df = self._online_fg_to_avro(
@@ -965,7 +964,6 @@ class Engine:
         return transformed_dataset.select(*dataset.columns)
 
     def _setup_gcp_hadoop_conf(self, storage_connector, path):
-
         PROPERTY_ENCRYPTION_KEY = "fs.gs.encryption.key"
         PROPERTY_ENCRYPTION_HASH = "fs.gs.encryption.key.hash"
         PROPERTY_ALGORITHM = "fs.gs.encryption.algorithm"
@@ -1145,6 +1143,10 @@ class Engine:
                 )
 
         return {**write_options, **self._kafka_config}
+
+    @staticmethod
+    def is_connector_type_supported(type):
+        return True
 
 
 class SchemaError(Exception):
