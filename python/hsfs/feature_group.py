@@ -2882,9 +2882,6 @@ class SpineGroup(FeatureGroupBase):
         self._version = version
         self._name = name
 
-        # use setter to convert to default dataframe type for engine
-        self.dataframe = dataframe
-
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in (features or [])
@@ -2919,6 +2916,10 @@ class SpineGroup(FeatureGroupBase):
 
         self._href = href
 
+        # has to happen last -> features and id are needed for schema verification
+        # use setter to convert to default dataframe type for engine
+        self.dataframe = dataframe
+
     def _save(self):
         """Persist the metadata for this spine group.
 
@@ -2952,6 +2953,11 @@ class SpineGroup(FeatureGroupBase):
     def dataframe(self, dataframe):
         """Update the spine dataframe contained in the spine group."""
         self._dataframe = engine.get_instance().convert_to_default_dataframe(dataframe)
+
+        if self._id is not None:
+            self._feature_group_engine._verify_schema_compatibility(
+                self._features, dataframe
+            )
 
     @classmethod
     def from_response_json(cls, json_dict):

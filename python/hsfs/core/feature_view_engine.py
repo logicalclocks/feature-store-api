@@ -181,14 +181,23 @@ class FeatureViewEngine:
                 is_python_engine=engine.get_type() == "python",
                 with_label=with_label,
             )
+            # verify whatever is passed 1. spine group with dataframe contained, or 2. dataframe
+            # the schema has to be consistent
+
             # allow passing new spine group or dataframe
             if isinstance(spine, feature_group.SpineGroup):
+                # schema of original fg on left side needs to be consistent with schema contained in the
+                # spine group to overwrite the feature group
+                spine._feature_group_engine._verify_schema_compatibility(
+                    query._left_feature_group.features, spine.dataframe
+                )
                 query._left_feature_group = spine
             elif isinstance(query._left_feature_group, feature_group.SpineGroup):
                 if spine is None:
                     raise FeatureStoreException(
                         "Feature View was created with a spine group, setting the `spine` argument is mandatory."
                     )
+                # the dataframe setter will verify the schema of the dataframe
                 query._left_feature_group.dataframe = spine
             return query
         except exceptions.RestAPIError as e:
