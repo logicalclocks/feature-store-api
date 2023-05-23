@@ -334,7 +334,7 @@ class StatisticsEngine:
             )
         except exceptions.RestAPIError as e:
             if (
-                e.response.json().get("errorCode", "") == 270228
+                e.response.json().get("errorCode", "") == 270229
                 and e.response.status_code == 404
             ):
                 return None
