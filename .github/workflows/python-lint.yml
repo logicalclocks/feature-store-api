@@ -58,12 +58,9 @@ jobs:
         run: pytest python/tests
 
   unit_tests_ubuntu_pandas:
-    name: Unit Testing (Ubuntu)
+    name: Unit Testing (Ubuntu) (Pandas 1.x)
     needs: lint_stylecheck
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        package-versions: [ pandas1 ]
 
     steps:
       - name: Set Timezone
