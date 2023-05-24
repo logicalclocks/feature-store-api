@@ -167,7 +167,7 @@ class MonitoringWindowConfigEngine:
             monitoring_window_config=monitoring_window_config,
         )
         the_statistics_engine = statistics_engine.StatisticsEngine(
-            feature_store_id=entity.feature_store_id,
+            feature_store_id=entity._feature_store_id,
             entity_type=entity.ENTITY_TYPE,
         )
         return the_statistics_engine.get_by_commit_time_window(
@@ -272,7 +272,7 @@ class MonitoringWindowConfigEngine:
         Returns:
             [FeatureDescriptiveStatistics, List[FeatureDescriptiveStatitics]]: List of Descriptive statistics.
         """
-        self._init_statistics_engine(entity.feature_store_id, entity.ENTITY_TYPE)
+        self._init_statistics_engine(entity._feature_store_id, entity.ENTITY_TYPE)
         # Check if statistics already exists
         (start_time, end_time,) = self.get_window_start_end_times(
             monitoring_window_config=monitoring_window_config,

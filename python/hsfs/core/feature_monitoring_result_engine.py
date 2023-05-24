@@ -351,7 +351,7 @@ class FeatureMonitoringResultEngine:
         detection_statistics: FeatureDescriptiveStatistics,
         reference_statistics: Optional[FeatureDescriptiveStatistics] = None,
         specific_value: Optional[Union[int, float]] = None,
-    ) -> Tuple[float, bool]:
+    ) -> Tuple[Optional[float], bool]:
         """Compute the difference and detect shift between the reference and detection statistics.
 
         Args:
