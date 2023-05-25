@@ -277,13 +277,14 @@ class MonitoringWindowConfigEngine:
         (start_time, end_time,) = self.get_window_start_end_times(
             monitoring_window_config=monitoring_window_config,
         )
-        registered_stats = self._statistics_engine.get_by_commit_time_window(
-            entity,
-            start_time=start_time,
-            end_time=end_time,
-            feature_name=feature_name,
-            row_percentage=monitoring_window_config.row_percentage,
-        )
+        # registered_stats = self._statistics_engine.get_by_commit_time_window(
+        #     entity,
+        #     start_time=start_time,
+        #     end_time=end_time,
+        #     feature_name=feature_name,
+        #     row_percentage=monitoring_window_config.row_percentage,
+        # )
+        registered_stats = None
 
         if registered_stats is None:  # if statistics don't exist
             # Fetch the actual data for which to compute statistics based on row_percentage and time window
