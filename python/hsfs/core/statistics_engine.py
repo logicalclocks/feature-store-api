@@ -17,7 +17,7 @@
 import datetime
 import json
 import warnings
-from typing import List, Union
+from typing import List, Union, Optional
 
 from hsfs import engine, statistics, util, split_statistics
 from hsfs.client import exceptions
@@ -93,6 +93,7 @@ class StatisticsEngine:
         end_time,
         row_percentage,
         feature_name=None,
+        use_event_time=False,
     ) -> statistics.Statistics:
         """Compute statistics for one or more features and send the result to Hopsworks.
 
@@ -125,8 +126,10 @@ class StatisticsEngine:
                 commit_time=commit_time,
                 row_percentage=row_percentage,
                 feature_descriptive_statistics=desc_stats,
-                window_start_commit_id=start_time,
-                window_end_commit_id=end_time,
+                window_start_commit_id=start_time if not use_event_time else None,
+                window_end_commit_id=end_time if not use_event_time else None,
+                window_end_event_time=end_time if use_event_time else None,
+                window_start_event_time=start_time if use_event_time else None,
             )
             return self._save_statistics(stats, metadata_instance, None)
         else:
@@ -305,11 +308,11 @@ class StatisticsEngine:
     def get_by_commit_time_window(
         self,
         metadata_instance,
-        start_time: int,
         end_time: int,
-        feature_name: str = None,
-        row_percentage: int = None,
-    ) -> statistics.Statistics:
+        start_time: Optional[int] = None,
+        feature_name: Optional[str] = None,
+        row_percentage: Optional[int] = None,
+    ) -> Union[statistics.Statistics, List[statistics.Statistics], None]:
         """Get feature statistics based on commit time window and (optionally) feature name and row percentage
 
         Args:

@@ -15,9 +15,10 @@
 #
 from hsfs.core import monitoring_window_config_engine as mwce
 from hsfs.core import monitoring_window_config as mwc
+from hsfs.core import statistics_engine
 from hsfs.util import convert_event_time_to_timestamp
-from mock import call
-from hsfs import feature_group, feature_view
+from mock import call, ANY
+from hsfs import feature_group, feature_view, statistics
 from hsfs.constructor import query
 
 import pytest
@@ -461,5 +462,76 @@ class TestMonitoringWindowConfigEngine:
                     training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION,
                 ),
                 call().sample(fraction=0.25),
+            ]
+        )
+
+    def test_run_single_window_monitoring_when_stats_found(
+        self, mocker, backend_fixtures
+    ):
+        # Arrange
+        mocker.patch("hsfs.engine.get_type", return_value="spark")
+        mocker.patch("hsfs.client.get_instance")
+        fetch_entity_data_mock = mocker.patch(
+            "hsfs.core.monitoring_window_config_engine.MonitoringWindowConfigEngine.fetch_entity_data_in_monitoring_window",
+        )
+        get_by_commit_time_window_mock = mocker.patch(
+            "hsfs.core.statistics_engine.StatisticsEngine.get_by_commit_time_window",
+            return_value=statistics.Statistics.from_response_json(
+                backend_fixtures["statistics"]["get"]["response"]
+            ),
+        )
+
+        unit_test_fg = feature_group.FeatureGroup.from_response_json(
+            backend_fixtures["feature_group"]["get"]["response"]
+        )
+        unit_test_fv = feature_view.FeatureView.from_response_json(
+            backend_fixtures["feature_view"]["get"]["response"],
+        )
+        window_config = mwc.MonitoringWindowConfig(
+            window_config_type=mwc.WindowConfigType.ROLLING_TIME,
+            time_offset="1d",
+            window_length="48h",
+            row_percentage=0.3,
+        )
+        config_engine_fg = mwce.MonitoringWindowConfigEngine()
+
+        # Act
+        config_engine_fg.run_single_window_monitoring(
+            entity=unit_test_fg,
+            monitoring_window_config=window_config,
+            feature_name=None,
+            use_event_time=False,
+            training_dataset_version=None,
+        )
+        config_engine_fg.run_single_window_monitoring(
+            entity=unit_test_fv,
+            monitoring_window_config=window_config,
+            feature_name=None,
+            use_event_time=True,
+            training_dataset_version=None,
+        )
+
+        # Assert
+        assert isinstance(
+            config_engine_fg._statistics_engine, statistics_engine.StatisticsEngine
+        )
+        # Make sure we don't need to fetch data to fullfill this request
+        assert fetch_entity_data_mock.call_count == 0
+        get_by_commit_time_window_mock.assert_has_calls(
+            [
+                call(
+                    metadata_instance=unit_test_fg,
+                    start_time=ANY,
+                    end_time=ANY,
+                    row_percentage=0.3,
+                    feature_name=None,
+                ),
+                call(
+                    metadata_instance=unit_test_fv,
+                    start_time=ANY,
+                    end_time=ANY,
+                    row_percentage=0.3,
+                    feature_name=None,
+                ),
             ]
         )
