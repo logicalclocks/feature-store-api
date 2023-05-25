@@ -76,9 +76,9 @@ class FeatureMonitoringResultEngine:
         detection_statistics: Optional[FeatureDescriptiveStatistics] = None,
         reference_statistics: Optional[FeatureDescriptiveStatistics] = None,
         specific_value: Optional[Union[int, float]] = None,
-        shift_detected: Optional[bool] = False,
+        shift_detected: bool = False,
         difference: Optional[float] = None,
-        raised_exception: Optional[bool] = False,
+        raised_exception: bool = False,
         execution_id: Optional[int] = None,
         job_name: Optional[str] = None,
     ) -> FeatureMonitoringResult:
@@ -253,7 +253,7 @@ class FeatureMonitoringResultEngine:
         start_time: Union[str, int, datetime, date, None],
         end_time: Union[str, int, datetime, date, None],
         with_statistics: bool,
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Union[str, List[str]]]:
         """Build query parameters for feature monitoring result API calls.
 
         Args:
@@ -265,7 +265,7 @@ class FeatureMonitoringResultEngine:
                 Whether to include the statistics attached to the results or not
 
         Returns:
-            Dict[str, str]. Query parameters.
+            Dict[str, Union[str, List[str]]]. Query parameters.
         """
 
         query_params = {"sort_by": "monitoring_time:desc"}
@@ -281,7 +281,7 @@ class FeatureMonitoringResultEngine:
             query_params["filter_by"] = filter_by
 
         if with_statistics:
-            query_params["expand"] = "statistics"
+            query_params["expand"] = ["statistics"]
 
         return query_params
 
@@ -306,6 +306,11 @@ class FeatureMonitoringResultEngine:
             Union[FeatureMonitoringResult, List[FeatureMonitoringResult]]. Feature monitoring result
         """
         if reference_statistics or specific_value:
+            assert isinstance(detection_statistics, FeatureDescriptiveStatistics), (
+                "detection_statistics must a be a single FeatureDescriptiveStatistics object "
+                "if reference_statistics or specific_value is provided."
+            )
+
             difference, shift_detected = self.compute_difference_and_shift(
                 fm_config=fm_config,
                 detection_statistics=detection_statistics,

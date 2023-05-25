@@ -319,7 +319,7 @@ class MonitoringWindowConfigEngine:
     def fetch_entity_data_in_monitoring_window(
         self,
         entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"],
-        start_time: int,
+        start_time: Optional[int],
         end_time: int,
         row_percentage: float,
         feature_name: Optional[str] = None,

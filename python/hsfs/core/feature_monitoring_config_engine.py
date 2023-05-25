@@ -24,6 +24,7 @@ from hsfs.core.statistics_engine import StatisticsEngine
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.core import monitoring_window_config as mwc
 from hsfs.core import monitoring_window_config_engine
+from hsfs.core import feature_descriptive_statistics as fds
 
 from hsfs.core.job import Job
 from hsfs.core.job_api import JobApi
@@ -267,10 +268,10 @@ class FeatureMonitoringConfigEngine:
 
     def build_job_scheduler(
         self,
-        job_frequency: Optional[str] = "DAILY",
+        job_frequency: str = "DAILY",
         start_date_time: Optional[Union[str, int, date, datetime]] = None,
         job_name: Optional[str] = None,
-        enabled: Optional[bool] = True,
+        enabled: bool = True,
         id: Optional[int] = None,
     ) -> JobScheduler:
         """Builds a job scheduler.
@@ -333,7 +334,7 @@ class FeatureMonitoringConfigEngine:
             )
 
     def validate_feature_name(
-        self, feature_name: Optional[str], valid_feature_names: Optional[List[str]]
+        self, feature_name: Optional[str], valid_feature_names: List[str]
     ):
         if feature_name is not None and not isinstance(feature_name, str):
             raise TypeError("Invalid feature name. Feature name must be a string.")
@@ -346,11 +347,11 @@ class FeatureMonitoringConfigEngine:
         self,
         name: str,
         feature_name: Optional[str] = None,
-        job_frequency: Optional[str] = "DAILY",
+        job_frequency: str = "DAILY",
         start_date_time: Optional[Union[str, int, date, datetime]] = None,
         description: Optional[str] = None,
         valid_feature_names: Optional[List[str]] = None,
-        use_event_time: Optional[bool] = False,
+        use_event_time: bool = False,
         training_dataset_version: Optional[int] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Builds the default scheduled statistics config, default detection window is full snapshot.
@@ -385,7 +386,7 @@ class FeatureMonitoringConfigEngine:
         """
         self.validate_config_name(name)
         self.validate_description(description)
-        if feature_name is not None:
+        if feature_name is not None and valid_feature_names is not None:
             self.validate_feature_name(feature_name, valid_feature_names)
 
         return fmc.FeatureMonitoringConfig(
@@ -605,7 +606,7 @@ class FeatureMonitoringConfigEngine:
         self,
         name: str,
         feature_name: str,
-        detection_window_config: Dict[str, Any],
+        detection_window_config: "mwc.MonitoringWindowConfig",
         scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
         description: Optional[str] = None,
     ) -> "fmc.FeatureMonitoringConfig":
@@ -747,6 +748,8 @@ class FeatureMonitoringConfigEngine:
         """
         config = self._feature_monitoring_config_api.get_by_name(config_name)
 
+        assert config is not None, "Feature monitoring config not found."
+
         # TODO: Future work. Parallelize both single_window_monitoring calls and wait
         detection_statistics = (
             self._monitoring_window_config_engine.run_single_window_monitoring(
@@ -774,6 +777,10 @@ class FeatureMonitoringConfigEngine:
                 specific_value = None
         else:
             specific_value, reference_statistics = None, None
+
+        assert reference_statistics is None or isinstance(
+            reference_statistics, fds.FeatureDescriptiveStatistics
+        ), "Reference statistics must be None or of type FeatureDescriptiveStatistics."
 
         return self._result_engine.run_and_save_statistics_comparison(
             fm_config=config,
