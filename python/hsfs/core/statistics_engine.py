@@ -343,6 +343,9 @@ class StatisticsEngine:
                 return None
             raise e
 
+    def get_by_event_time_window(self) -> None:
+        pass
+
     def _profile_transformation_fn_statistics(
         self, feature_dataframe, columns, label_encoder_features
     ) -> str:

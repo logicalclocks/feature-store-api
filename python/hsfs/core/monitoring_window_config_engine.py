@@ -287,7 +287,7 @@ class MonitoringWindowConfigEngine:
                 row_percentage=monitoring_window_config.row_percentage,
             )
         else:
-            registered_stats = None
+            registered_stats = self._statistics_engine.get_by_event_time_window()
 
         if registered_stats is None:  # if statistics don't exist
             # Fetch the actual data for which to compute statistics based on row_percentage and time window
