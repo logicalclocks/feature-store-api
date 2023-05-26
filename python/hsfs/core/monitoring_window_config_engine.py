@@ -105,7 +105,7 @@ class MonitoringWindowConfigEngine:
                 Specific id of an entity that has fixed statistics.
             specific_value: float, optional
                 Specific value instead of a statistics computed on data.
-            row_percentage: int, optional
+            row_percentage: float, optional
                 Percentage of rows to be used for statistics computation.
             id: int, optional
                 Id of the monitoring window config in hopsworks.
