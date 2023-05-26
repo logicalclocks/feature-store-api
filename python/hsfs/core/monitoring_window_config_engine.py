@@ -22,7 +22,6 @@ from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistic
 from hsfs.util import convert_event_time_to_timestamp
 from hsfs import feature_group, feature_view, engine
 from hsfs.core import statistics_engine
-from hsfs import statistics
 
 
 class MonitoringWindowConfigEngine:
@@ -148,37 +147,6 @@ class MonitoringWindowConfigEngine:
             row_percentage=row_percentage,
         )
 
-    def fetch_statistics_based_on_monitoring_window_config(
-        self,
-        entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"],
-        feature_name: str,
-        monitoring_window_config: "mwc.MonitoringWindowConfig",
-    ) -> "statistics.Statistics":
-        """Fetch feature statistics based on a feature monitoring window configuration
-
-        Args:
-            entity: Union[FeatureGroup, FeatureView]: Entity on which statistics where computed.
-            feature_name: str: Name of the feature from which statistics where computed.
-            monitoring_window_config: MonitoringWindowConfig: Monitoring window config.
-
-        Returns:
-            FeatureDescriptiveStatistics: Descriptive statistics
-        """
-        start_time, end_time = self.get_window_start_end_times(
-            monitoring_window_config=monitoring_window_config,
-        )
-        the_statistics_engine = statistics_engine.StatisticsEngine(
-            feature_store_id=entity._feature_store_id,
-            entity_type=entity.ENTITY_TYPE,
-        )
-        return the_statistics_engine.get_by_commit_time_window(
-            entity,
-            start_time=start_time,
-            end_time=end_time,
-            feature_name=feature_name,
-            row_percentage=monitoring_window_config.row_percentage,
-        )
-
     def time_range_str_to_time_delta(
         self, time_range: str, field_name: Optional[str] = "time_offset"
     ) -> timedelta:
@@ -219,13 +187,19 @@ class MonitoringWindowConfigEngine:
     def get_window_start_end_times(
         self,
         monitoring_window_config: "mwc.MonitoringWindowConfig",
+        use_event_time: bool,
     ) -> Tuple[Optional[int], int]:
         end_time = datetime.now()
         if monitoring_window_config.window_config_type not in [
             mwc.WindowConfigType.ROLLING_TIME,
             mwc.WindowConfigType.ALL_TIME,
         ]:
-            return (None, convert_event_time_to_timestamp(end_time))
+            return (
+                None,
+                self.round_and_convert_event_time(
+                    event_time=end_time, use_event_time=use_event_time
+                ),
+            )
 
         if monitoring_window_config.time_offset is not None:
             time_offset = self.time_range_str_to_time_delta(
@@ -234,7 +208,12 @@ class MonitoringWindowConfigEngine:
             start_time = datetime.now() - time_offset
         else:
             # case where time_offset is None and window_length is None
-            return (None, convert_event_time_to_timestamp(end_time))
+            return (
+                None,
+                self.round_and_convert_event_time(
+                    event_time=end_time, use_event_time=use_event_time
+                ),
+            )
 
         if monitoring_window_config.window_length is not None:
             window_length = self.time_range_str_to_time_delta(
@@ -247,8 +226,12 @@ class MonitoringWindowConfigEngine:
             )
 
         return (
-            convert_event_time_to_timestamp(start_time),
-            convert_event_time_to_timestamp(end_time),
+            self.round_and_convert_event_time(
+                event_time=start_time, use_event_time=use_event_time
+            ),
+            self.round_and_convert_event_time(
+                event_time=end_time, use_event_time=use_event_time
+            ),
         )
 
     def run_single_window_monitoring(
@@ -277,6 +260,7 @@ class MonitoringWindowConfigEngine:
         # Check if statistics already exists
         (start_time, end_time,) = self.get_window_start_end_times(
             monitoring_window_config=monitoring_window_config,
+            use_event_time=use_event_time,
         )
         if use_event_time is False:
             registered_stats = self._statistics_engine.get_by_commit_time_window(
@@ -443,3 +427,19 @@ class MonitoringWindowConfigEngine:
         full_df = pre_df.as_of(exclude_until=start_time, wallclock_time=end_time).read()
 
         return full_df
+
+    def round_and_convert_event_time(
+        self, event_time: datetime, use_event_time: bool = False
+    ) -> Optional[int]:
+        """Round event time to the latest hour and convert to timestamp.
+
+        Args:
+            event_time: datetime: Event time to round and convert.
+
+        Returns:
+            datetime: Rounded and converted event time.
+        """
+        if use_event_time:
+            event_time = event_time.replace(minute=0, second=0, microsecond=0)
+
+        return convert_event_time_to_timestamp(event_time)
