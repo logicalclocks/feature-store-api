@@ -24,6 +24,8 @@ from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistic
 
 
 class Statistics:
+    DEFAULT_ROW_PERCENTAGE = 1.0
+
     def __init__(
         self,
         commit_time,
