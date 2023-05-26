@@ -42,6 +42,7 @@ from hsfs.core import (
     validation_report_engine,
     code_engine,
     external_feature_group_engine,
+    spine_group_engine,
     validation_result_engine,
     job_api,
 )
@@ -1332,6 +1333,15 @@ class FeatureGroupBase:
             if field["name"] == feature_name:
                 return json.dumps(field["type"])
 
+    @property
+    def features(self):
+        """Schema information."""
+        return self._features
+
+    @features.setter
+    def features(self, new_features):
+        self._features = new_features
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -2390,11 +2400,6 @@ class FeatureGroup(FeatureGroupBase):
         return self._description
 
     @property
-    def features(self):
-        """Schema information."""
-        return self._features
-
-    @property
     def time_travel_format(self):
         """Setting of the feature group time travel format."""
         return self._time_travel_format
@@ -2458,10 +2463,6 @@ class FeatureGroup(FeatureGroupBase):
     def description(self, new_description):
         self._description = new_description
 
-    @features.setter
-    def features(self, new_features):
-        self._features = new_features
-
     @time_travel_format.setter
     def time_travel_format(self, new_time_travel_format):
         self._time_travel_format = new_time_travel_format
@@ -2511,6 +2512,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         online_enabled=False,
         href=None,
         online_topic_name=None,
+        spine=False,
     ):
         super().__init__(
             featurestore_id,
@@ -2766,6 +2768,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "eventTime": self._event_time,
             "expectationSuite": self._expectation_suite,
             "onlineEnabled": self._online_enabled,
+            "spine": False,
         }
 
     @property
@@ -2783,10 +2786,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
     @property
     def description(self):
         return self._description
-
-    @property
-    def features(self):
-        return self._features
 
     @property
     def query(self):
@@ -2824,10 +2823,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
     def description(self, new_description):
         self._description = new_description
 
-    @features.setter
-    def features(self, new_features):
-        self._features = new_features
-
     @property
     def feature_store_name(self):
         """Name of the feature store in which the feature group is located."""
@@ -2837,3 +2832,171 @@ class ExternalFeatureGroup(FeatureGroupBase):
     def feature_store_id(self):
         """Id of the feature store in which the feature group is located."""
         return self._feature_store_id
+
+
+class SpineGroup(FeatureGroupBase):
+    SPINE_GROUP = "ON_DEMAND_FEATURE_GROUP"
+    ENTITY_TYPE = "featuregroups"
+
+    def __init__(
+        self,
+        storage_connector=None,
+        query=None,
+        data_format=None,
+        path=None,
+        options={},
+        name=None,
+        version=None,
+        description=None,
+        primary_key=None,
+        featurestore_id=None,
+        featurestore_name=None,
+        created=None,
+        creator=None,
+        id=None,
+        features=None,
+        location=None,
+        statistics_config=None,
+        event_time=None,
+        expectation_suite=None,
+        online_enabled=False,
+        href=None,
+        online_topic_name=None,
+        spine=True,
+        dataframe="spine",
+    ):
+        super().__init__(
+            featurestore_id,
+            location,
+            event_time=event_time,
+            online_enabled=online_enabled,
+            id=id,
+            expectation_suite=expectation_suite,
+            online_topic_name=online_topic_name,
+        )
+
+        self._feature_store_name = featurestore_name
+        self._description = description
+        self._created = created
+        self._creator = user.User.from_response_json(creator)
+        self._version = version
+        self._name = name
+
+        self._features = [
+            feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
+            for feat in (features or [])
+        ]
+
+        self._feature_group_engine = spine_group_engine.SpineGroupEngine(
+            featurestore_id
+        )
+
+        if self._id:
+            # Got from Hopsworks, deserialize features and storage connector
+            self._features = (
+                [
+                    feature.Feature.from_response_json(feat)
+                    if isinstance(feat, dict)
+                    else feat
+                    for feat in features
+                ]
+                if features
+                else None
+            )
+            self.primary_key = (
+                [feat.name for feat in self._features if feat.primary is True]
+                if self._features
+                else []
+            )
+            self.statistics_config = statistics_config
+        else:
+            self.primary_key = primary_key
+            self.statistics_config = statistics_config
+            self._features = features
+
+        self._href = href
+
+        # has to happen last -> features and id are needed for schema verification
+        # use setter to convert to default dataframe type for engine
+        self.dataframe = dataframe
+
+    def _save(self):
+        """Persist the metadata for this spine group.
+
+        Without calling this method, your feature group will only exist
+        in your Python Kernel, but not in Hopsworks.
+
+        ```python
+        query = "SELECT * FROM sales"
+
+        fg = feature_store.create_spine_group(name="sales",
+            version=1,
+            description="Physical shop sales features",
+            primary_key=['ss_store_sk'],
+            event_time='sale_date',
+            dataframe=df,
+        )
+
+        fg._save()
+        """
+        self._feature_group_engine.save(self)
+        return self
+
+    @property
+    def dataframe(self):
+        """Spine dataframe with primary key, event time and
+        label column to use for point in time join when fetching features.
+        """
+        return self._dataframe
+
+    @dataframe.setter
+    def dataframe(self, dataframe):
+        """Update the spine dataframe contained in the spine group."""
+        self._dataframe = engine.get_instance().convert_to_default_dataframe(dataframe)
+
+        # in fs query the features are not sent, so then don't do validation
+        if (
+            self._id is not None
+            and self._dataframe is not None
+            and self._features is not None
+        ):
+            dataframe_features = engine.get_instance().parse_schema_feature_group(
+                self._dataframe
+            )
+            self._feature_group_engine._verify_schema_compatibility(
+                self._features, dataframe_features
+            )
+
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        if isinstance(json_decamelized, dict):
+            _ = json_decamelized.pop("type", None)
+            return cls(**json_decamelized)
+        for fg in json_decamelized:
+            _ = fg.pop("type", None)
+        return [cls(**fg) for fg in json_decamelized]
+
+    def update_from_response_json(self, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        if "type" in json_decamelized:
+            _ = json_decamelized.pop("type")
+        self.__init__(**json_decamelized)
+        return self
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def to_dict(self):
+        return {
+            "id": self._id,
+            "name": self._name,
+            "description": self._description,
+            "version": self._version,
+            "features": self._features,
+            "featurestoreId": self._feature_store_id,
+            "type": "onDemandFeaturegroupDTO",
+            "statisticsConfig": self._statistics_config,
+            "eventTime": self._event_time,
+            "spine": True,
+        }

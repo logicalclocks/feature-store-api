@@ -441,6 +441,8 @@ class Engine:
                 ):
                     dataframe_copy[col] = dataframe_copy[col].dt.tz_convert(None)
             return dataframe_copy
+        elif dataframe == "spine":
+            return None
 
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: pandas dataframe. "
