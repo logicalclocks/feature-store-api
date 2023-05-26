@@ -43,7 +43,7 @@ class FeatureMonitoringConfigEngine:
         feature_view_id: Optional[int] = None,
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
-    ) -> "FeatureMonitoringConfigEngine":
+    ):
         """Business logic for feature monitoring configuration.
 
         This class encapsulates the business logic for feature monitoring configuration.

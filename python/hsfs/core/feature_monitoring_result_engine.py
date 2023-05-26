@@ -43,7 +43,7 @@ class FeatureMonitoringResultEngine:
         feature_view_id: Optional[int] = None,
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
-    ) -> "FeatureMonitoringResultEngine":
+    ):
         if feature_group_id is None:
             assert feature_view_id is not None
             assert feature_view_name is not None
@@ -281,7 +281,7 @@ class FeatureMonitoringResultEngine:
             query_params["filter_by"] = filter_by
 
         if with_statistics:
-            query_params["expand"] = ["statistics"]
+            query_params["expand"] = "statistics"
 
         return query_params
 
