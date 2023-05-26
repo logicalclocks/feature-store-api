@@ -162,9 +162,7 @@ class FeatureMonitoringConfig:
         elif self._feature_view_id is not None:
             the_dict["featureViewId"] = self._feature_view_id
             the_dict["useEventTime"] = self._use_event_time
-            the_dict[
-                "transformationFunctionDatasetVersion"
-            ] = self._training_dataset_version
+            the_dict["trainingDatasetVersion"] = self._training_dataset_version
 
         if self._feature_monitoring_type == "STATISTICS_MONITORING":
             return the_dict
