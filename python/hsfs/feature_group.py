@@ -465,14 +465,14 @@ class FeatureGroupBase:
         returned.
 
         # Returns
-            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+            `Links`: Object containing the section of provenance graph requested.
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_group_engine.get_parent_feature_groups(self)
 
-    def get_generated_feature_views(self) -> "explicit_provenance.ProvenanceLinks":
+    def get_generated_feature_views(self) -> "explicit_provenance.Links":
         """Get the generated feature view using this feature group, based on explicit
         provenance. These feature views can be accessible or inaccessible. Explicit
         provenance does not track deleted generated feature view links, so deleted
@@ -480,7 +480,7 @@ class FeatureGroupBase:
         For inaccessible feature views, only a minimal information is returned.
 
         # Returns
-            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+            `Links`: Object containing the section of provenance graph requested.
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
@@ -495,7 +495,7 @@ class FeatureGroupBase:
         For inaccessible feature groups, only a minimal information is returned.
 
         # Returns
-            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+            `Links`: Object containing the section of provenance graph requested.
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`.

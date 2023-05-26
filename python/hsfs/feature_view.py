@@ -579,7 +579,7 @@ class FeatureView:
         returned.
 
         # Returns
-            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+            `Links`: Object containing the section of provenance graph requested.
         """
         return self._feature_view_engine.get_parent_feature_groups(self)
 
