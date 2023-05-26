@@ -105,6 +105,7 @@ class FeatureMonitoringResult:
             "emptyDetectionWindow": self._empty_detection_window,
             "emptyReferenceWindow": self._empty_reference_window,
             "raisedException": self._raised_exception,
+            "specificValue": self._specific_value,
         }
 
         if self._detection_statistics_id is not None:

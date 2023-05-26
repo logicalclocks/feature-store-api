@@ -16,6 +16,7 @@
 
 import re
 import json
+from typing import Optional
 import pandas as pd
 import time
 import threading
@@ -173,7 +174,7 @@ def get_hudi_datestr_from_timestamp(timestamp):
     return datetime.utcfromtimestamp(timestamp / 1000).strftime("%Y%m%d%H%M%S%f")[:-3]
 
 
-def convert_event_time_to_timestamp(event_time):
+def convert_event_time_to_timestamp(event_time) -> Optional[int]:
     if not event_time:
         return None
     if isinstance(event_time, str):
