@@ -580,7 +580,7 @@ class FeatureViewEngine:
             feature_view_obj: Metadata object of feature view.
 
         # Returns
-            `ProvenanceLinks`:  the feature groups used to generated this feature view
+            `Links`:  the feature groups used to generated this feature view
         """
         return self._feature_view_api.get_parent_feature_groups(
             feature_view_obj.name, feature_view_obj.version

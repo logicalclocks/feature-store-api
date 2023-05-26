@@ -47,6 +47,7 @@ from hsfs.core import (
     job_api,
     feature_monitoring_config_engine,
     feature_monitoring_result_engine,
+    explicit_provenance,
 )
 
 from hsfs.statistics_config import StatisticsConfig
@@ -72,7 +73,7 @@ class FeatureGroupBase:
         id=None,
         expectation_suite=None,
         online_topic_name=None,
-    ):
+    ) -> "FeatureGroupBase":
         self.event_time = event_time
         self._online_enabled = online_enabled
         self._location = location
@@ -165,7 +166,7 @@ class FeatureGroupBase:
         self,
         include_primary_key: Optional[bool] = True,
         include_event_time: Optional[bool] = True,
-    ):
+    ) -> "query.Query":
         """Select all features in the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
@@ -231,7 +232,9 @@ class FeatureGroupBase:
         else:
             return self.select_except(self.primary_key + [self.event_time])
 
-    def select(self, features: Optional[List[Union[str, feature.Feature]]] = []):
+    def select(
+        self, features: Optional[List[Union[str, feature.Feature]]] = []
+    ) -> "query.Query":
         """Select a subset of features of the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
@@ -275,7 +278,9 @@ class FeatureGroupBase:
             feature_store_id=self._feature_store_id,
         )
 
-    def select_except(self, features: Optional[List[Union[str, feature.Feature]]] = []):
+    def select_except(
+        self, features: Optional[List[Union[str, feature.Feature]]] = []
+    ) -> "query.Query":
         """Select all features including primary key and event time feature
         of the feature group except provided `features` and return a query object.
 
@@ -329,7 +334,7 @@ class FeatureGroupBase:
         else:
             return self.select_all()
 
-    def filter(self, f: Union[filter.Filter, filter.Logic]):
+    def filter(self, f: Union[filter.Filter, filter.Logic]) -> "query.Query":
         """Apply filter to the feature group.
 
         Selects all features and returns the resulting `Query` with the applied filter.
@@ -461,14 +466,14 @@ class FeatureGroupBase:
         returned.
 
         # Returns
-            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+            `Links`: Object containing the section of provenance graph requested.
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_group_engine.get_parent_feature_groups(self)
 
-    def get_generated_feature_views(self):
+    def get_generated_feature_views(self) -> "explicit_provenance.Links":
         """Get the generated feature view using this feature group, based on explicit
         provenance. These feature views can be accessible or inaccessible. Explicit
         provenance does not track deleted generated feature view links, so deleted
@@ -476,7 +481,7 @@ class FeatureGroupBase:
         For inaccessible feature views, only a minimal information is returned.
 
         # Returns
-            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+            `Links`: Object containing the section of provenance graph requested.
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
@@ -491,14 +496,14 @@ class FeatureGroupBase:
         For inaccessible feature groups, only a minimal information is returned.
 
         # Returns
-            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+            `Links`: Object containing the section of provenance graph requested.
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
         return self._feature_group_engine.get_generated_feature_groups(self)
 
-    def get_feature(self, name: str):
+    def get_feature(self, name: str) -> "feature.Feature":
         """Retrieve a `Feature` object from the schema of the feature group.
 
         There are several ways to access features of a feature group:
@@ -539,7 +544,7 @@ class FeatureGroupBase:
                 f"'FeatureGroup' object has no feature called '{name}'."
             )
 
-    def update_statistics_config(self):
+    def update_statistics_config(self) -> "FeatureGroup":
         """Update the statistics configuration of the feature group.
 
         Change the `statistics_config` object and persist the changes by calling
