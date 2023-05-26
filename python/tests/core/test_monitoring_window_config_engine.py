@@ -22,6 +22,7 @@ from hsfs.constructor import query
 
 import pytest
 from datetime import timedelta, datetime
+import time
 
 DEFAULT_FEATURE_NAME = "amount"
 DEFAULT_TRAINING_DATASET_VERSION = 2
@@ -112,7 +113,9 @@ class TestMonitoringWindowConfigEngine:
         (
             start_time,
             end_time,
-        ) = monitoring_window_config_engine.get_window_start_end_times(config)
+        ) = monitoring_window_config_engine.get_window_start_end_times(
+            config, use_event_time=False
+        )
         after_time = convert_event_time_to_timestamp(datetime.now())
 
         # Assert
@@ -132,7 +135,9 @@ class TestMonitoringWindowConfigEngine:
         (
             start_time,
             end_time,
-        ) = monitoring_window_config_engine.get_window_start_end_times(config)
+        ) = monitoring_window_config_engine.get_window_start_end_times(
+            config, use_event_time=False
+        )
         after_time = convert_event_time_to_timestamp(datetime.now())
 
         # Assert
@@ -162,7 +167,9 @@ class TestMonitoringWindowConfigEngine:
         (
             start_time,
             end_time,
-        ) = monitoring_window_config_engine.get_window_start_end_times(config)
+        ) = monitoring_window_config_engine.get_window_start_end_times(
+            config, use_event_time=False
+        )
         after_time = convert_event_time_to_timestamp(
             datetime.now() + timedelta(seconds=1)
         )
@@ -195,7 +202,9 @@ class TestMonitoringWindowConfigEngine:
         (
             start_time,
             end_time,
-        ) = monitoring_window_config_engine.get_window_start_end_times(config)
+        ) = monitoring_window_config_engine.get_window_start_end_times(
+            config, use_event_time=False
+        )
         after_time = convert_event_time_to_timestamp(
             datetime.now() + timedelta(seconds=1)
         )
@@ -207,6 +216,40 @@ class TestMonitoringWindowConfigEngine:
             <= after_time
         )
         assert before_time <= end_time <= after_time
+
+    def test_get_window_start_end_times_rolling_time_as_event_time(self):
+        # Arrange
+        monitoring_window_config_engine = mwce.MonitoringWindowConfigEngine()
+        config = mwc.MonitoringWindowConfig(
+            window_config_type=mwc.WindowConfigType.ROLLING_TIME,
+            time_offset="2w1d",
+            window_length="1d",
+        )
+
+        # Act
+
+        before_time = datetime.now()
+        # avoid random test failures due to time rounding
+        if before_time.second == 59 and before_time.minute == 59:
+            time.sleep(1)
+            before_time = datetime.now()
+        before_time = convert_event_time_to_timestamp(
+            before_time.replace(minute=0, second=0, microsecond=0)
+        )
+        (
+            start_time,
+            end_time,
+        ) = monitoring_window_config_engine.get_window_start_end_times(
+            config, use_event_time=True
+        )
+
+        # Assert
+        assert start_time is not None
+        assert before_time is not None
+        assert before_time == start_time + (
+            timedelta(weeks=2, days=1).total_seconds() * 1000
+        )
+        assert before_time == end_time + (timedelta(weeks=2).total_seconds() * 1000)
 
     def test_fetch_feature_group_data(self, mocker, backend_fixtures):
         # Arrange
