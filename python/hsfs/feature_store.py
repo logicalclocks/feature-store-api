@@ -106,7 +106,7 @@ class FeatureStore:
         self._feature_view_engine = feature_view_engine.FeatureViewEngine(self._id)
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(cls, json_dict) -> "FeatureStore":
         json_decamelized = humps.decamelize(json_dict)
         return cls(**json_decamelized)
 

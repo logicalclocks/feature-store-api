@@ -69,6 +69,7 @@ class FeatureView:
         self._id = id
         self._query = query
         self._featurestore_id = featurestore_id
+        self._feature_store_id = featurestore_id  # for consistency with feature group
         self._feature_store_name = featurestore_name
         self._version = version
         self._description = description
@@ -653,7 +654,7 @@ class FeatureView:
         returned.
 
         # Returns
-            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+            `Links`: Object containing the section of provenance graph requested.
         """
         return self._feature_view_engine.get_parent_feature_groups(self)
 
