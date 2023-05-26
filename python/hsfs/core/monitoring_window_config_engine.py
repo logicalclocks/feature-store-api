@@ -22,12 +22,13 @@ from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistic
 from hsfs.util import convert_event_time_to_timestamp
 from hsfs import feature_group, feature_view, engine
 from hsfs.core import statistics_engine
+from hsfs import statistics
 
 
 class MonitoringWindowConfigEngine:
     _MAX_TIME_RANGE_LENGTH = 12
 
-    def __init__(self) -> "MonitoringWindowConfigEngine":
+    def __init__(self):
         # No need to initialize anything
         pass
 
@@ -152,7 +153,7 @@ class MonitoringWindowConfigEngine:
         entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"],
         feature_name: str,
         monitoring_window_config: "mwc.MonitoringWindowConfig",
-    ) -> FeatureDescriptiveStatistics:
+    ) -> "statistics.Statistics":
         """Fetch feature statistics based on a feature monitoring window configuration
 
         Args:
@@ -167,7 +168,7 @@ class MonitoringWindowConfigEngine:
             monitoring_window_config=monitoring_window_config,
         )
         the_statistics_engine = statistics_engine.StatisticsEngine(
-            feature_store_id=entity.feature_store_id,
+            feature_store_id=entity._feature_store_id,
             entity_type=entity.ENTITY_TYPE,
         )
         return the_statistics_engine.get_by_commit_time_window(
@@ -272,18 +273,21 @@ class MonitoringWindowConfigEngine:
         Returns:
             [FeatureDescriptiveStatistics, List[FeatureDescriptiveStatitics]]: List of Descriptive statistics.
         """
-        self._init_statistics_engine(entity.feature_store_id, entity.ENTITY_TYPE)
+        self._init_statistics_engine(entity._feature_store_id, entity.ENTITY_TYPE)
         # Check if statistics already exists
         (start_time, end_time,) = self.get_window_start_end_times(
             monitoring_window_config=monitoring_window_config,
         )
-        registered_stats = self._statistics_engine.get_by_commit_time_window(
-            entity,
-            start_time=start_time,
-            end_time=end_time,
-            feature_name=feature_name,
-            row_percentage=monitoring_window_config.row_percentage,
-        )
+        if use_event_time is False:
+            registered_stats = self._statistics_engine.get_by_commit_time_window(
+                metadata_instance=entity,
+                start_time=start_time,
+                end_time=end_time,
+                feature_name=feature_name,
+                row_percentage=monitoring_window_config.row_percentage,
+            )
+        else:
+            registered_stats = self._statistics_engine.get_by_event_time_window()
 
         if registered_stats is None:  # if statistics don't exist
             # Fetch the actual data for which to compute statistics based on row_percentage and time window
@@ -306,6 +310,7 @@ class MonitoringWindowConfigEngine:
                     end_time=end_time,
                     row_percentage=monitoring_window_config.row_percentage,
                     feature_name=feature_name,
+                    use_event_time=use_event_time,
                 )
             )
 
@@ -318,8 +323,8 @@ class MonitoringWindowConfigEngine:
     def fetch_entity_data_in_monitoring_window(
         self,
         entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"],
-        start_time: int,
-        end_time: int,
+        start_time: Optional[int],
+        end_time: Optional[int],
         row_percentage: float,
         feature_name: Optional[str] = None,
         use_event_time: bool = False,
@@ -342,7 +347,7 @@ class MonitoringWindowConfigEngine:
         Returns:
             `pyspark.sql.DataFrame`. A Spark DataFrame with the entity data
         """
-        if entity.ENTITY_TYPE == "featuregroups":
+        if isinstance(entity, feature_group.FeatureGroup):
             # use_event_time and transformation_function don't apply here
             entity_df = self.fetch_feature_group_data(
                 entity=entity,
@@ -350,8 +355,7 @@ class MonitoringWindowConfigEngine:
                 start_time=start_time,
                 end_time=end_time,
             )
-
-        elif entity.ENTITY_TYPE == "featureview":
+        else:
             entity_df = self.fetch_feature_view_data(
                 entity=entity,
                 feature_name=feature_name,

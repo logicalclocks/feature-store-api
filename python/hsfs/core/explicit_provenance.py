@@ -223,7 +223,7 @@ class Links:
             type: subset of links to parse - FEATURE_GROUP/FEATURE_VIEW
 
         # Returns
-            A ProvenanceLink object for the selected parse type.
+            A Link object for the selected parse type.
         """
 
         links_json = humps.decamelize(json_dict)
