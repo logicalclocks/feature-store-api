@@ -102,7 +102,7 @@ class StatisticsEngine:
             feature_dataframe: Spark or Pandas DataFrame to compute the statistics on.
             start_time: int. Window start commit time
             end_time: int. Window end commit time
-            row_percentage: int. Percentage of rows to include.
+            row_percentage: float. Percentage of rows to include.
             feature_name: Optional[Union[str, List[str]]]. Feature name or list of names to compute the statistics on. If not set, statistics are computed on all features.
 
         Returns:
@@ -311,7 +311,7 @@ class StatisticsEngine:
         end_time: int,
         start_time: Optional[int] = None,
         feature_name: Optional[str] = None,
-        row_percentage: Optional[int] = None,
+        row_percentage: Optional[float] = None,
     ) -> Union[statistics.Statistics, List[statistics.Statistics], None]:
         """Get feature statistics based on commit time window and (optionally) feature name and row percentage
 
