@@ -187,7 +187,7 @@ class FeatureMonitoringConfig:
         self,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
-        row_percentage: Optional[int] = None,
+        row_percentage: Optional[float] = None,
     ) -> "FeatureMonitoringConfig":
         """Sets the detection window for the feature monitoring job.
 

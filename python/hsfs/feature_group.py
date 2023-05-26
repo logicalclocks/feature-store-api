@@ -2669,7 +2669,7 @@ class FeatureGroup(FeatureGroupBase):
         commit_time: Optional[Union[str, int, datetime, date]] = None,
         from_commit_time: Optional[Union[str, int, datetime, date]] = None,
         feature_name: Optional[str] = None,
-        row_percentage: Optional[int] = None,
+        row_percentage: Optional[float] = None,
     ):
         """Returns the statistics for this feature group at a specific window time.
 
