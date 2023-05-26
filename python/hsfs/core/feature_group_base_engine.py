@@ -59,7 +59,7 @@ class FeatureGroupBaseEngine:
             feature_group_instance: Metadata object of feature group.
 
         # Returns
-            `ProvenanceLinks`:  the feature groups used to generated this feature group
+            `Links`:  the feature groups used to generated this feature group
         """
         return self._feature_group_api.get_parent_feature_groups(feature_group)
 
@@ -74,7 +74,7 @@ class FeatureGroupBaseEngine:
             feature_group_instance: Metadata object of feature group.
 
         # Returns
-            `ProvenanceLinks`:  the feature views generated using this feature group
+            `Links`:  the feature views generated using this feature group
         """
         return self._feature_group_api.get_generated_feature_views(feature_group)
 
@@ -89,7 +89,7 @@ class FeatureGroupBaseEngine:
             feature_group_instance: Metadata object of feature group.
 
         # Returns
-            `ProvenanceLinks`:  the feature groups generated using this feature group
+            `Links`:  the feature groups generated using this feature group
         """
         return self._feature_group_api.get_generated_feature_groups(feature_group)
 
