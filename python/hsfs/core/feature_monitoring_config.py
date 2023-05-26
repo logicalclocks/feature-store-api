@@ -44,7 +44,9 @@ class FeatureMonitoringConfig:
         feature_store_id: int,
         name: str,
         feature_name: Optional[str] = None,
-        feature_monitoring_type: FeatureMonitoringType = FeatureMonitoringType.STATISTICS_MONITORING,
+        feature_monitoring_type: Union[
+            FeatureMonitoringType, str
+        ] = FeatureMonitoringType.STATISTICS_MONITORING,
         job_name: Optional[str] = None,
         detection_window_config: Optional[
             Union[mwc.MonitoringWindowConfig, Dict[str, Any]]
@@ -63,7 +65,7 @@ class FeatureMonitoringConfig:
         feature_view_version: Optional[int] = None,
         href: Optional[str] = None,
         training_dataset_version: Optional[int] = None,
-        use_event_time: Optional[bool] = False,
+        use_event_time: bool = False,
     ) -> "FeatureMonitoringConfig":
         self.name = name
         self._id = id
@@ -74,7 +76,7 @@ class FeatureMonitoringConfig:
         self._feature_group_id = feature_group_id
         self._feature_view_id = feature_view_id
         self._job_name = job_name
-        self._feature_monitoring_type = feature_monitoring_type
+        self._feature_monitoring_type = FeatureMonitoringType(feature_monitoring_type)
         self._enabled = enabled
         self._training_dataset_version = training_dataset_version
         self._use_event_time = use_event_time
@@ -527,8 +529,8 @@ class FeatureMonitoringConfig:
 
     def get_history(
         self,
-        start_time: Union[datetime, date, str, int] = None,
-        end_time: Union[datetime, date, str, int] = None,
+        start_time: Union[datetime, date, str, int, None] = None,
+        end_time: Union[datetime, date, str, int, None] = None,
         with_statistics: bool = True,
     ) -> List["FeatureMonitoringResult"]:
         """
