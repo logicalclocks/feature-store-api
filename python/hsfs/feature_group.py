@@ -1901,7 +1901,7 @@ class FeatureGroup(FeatureGroupBase):
                 # run inserts in a loop:
                 while loop:
                     small_batch_df = ...
-                    writer.multi_part_insert(small_batch_df)
+                    writer.insert(small_batch_df)
             ```
             The writer batches the small Dataframes and transmits them to Hopsworks
             efficiently.
