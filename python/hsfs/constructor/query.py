@@ -86,6 +86,12 @@ class Query:
                 ]
             self._query_feature_list.append(feature_entry)
 
+    def _add_features_to_collection(self, features, prefix, featuregroup):
+        for feat in features:
+            self._add_to_collection(feat, prefix, featuregroup)
+        for feat in featuregroup.features:
+            self._add_to_collection(feat, prefix, featuregroup, query_feature=False)
+
     def _populate_collections(self):
         self._featuregroups = {self._left_feature_group}
         self._query_features = {}
@@ -93,12 +99,9 @@ class Query:
         self._featuregroup_features = {}
         self._filters = self._filter
 
-        for feat in self._left_features:
-            self._add_to_collection(feat, None, self._left_feature_group)
-        for feat in self._left_feature_group.features:
-            self._add_to_collection(
-                feat, None, self._left_feature_group, query_feature=False
-            )
+        self._add_features_to_collection(
+            self._left_features, None, self._left_feature_group
+        )
         for join_obj in self.joins:
             self._featuregroups.add(join_obj.query._left_feature_group)
 
@@ -107,17 +110,11 @@ class Query:
             elif join_obj.query._filter is not None:
                 self._filters = self._filters & join_obj.query._filter
 
-            for feat in join_obj.query._left_features:
-                self._add_to_collection(
-                    feat, join_obj.prefix, join_obj.query._left_feature_group
-                )
-            for feat in join_obj.query._left_feature_group.features:
-                self._add_to_collection(
-                    feat,
-                    join_obj.prefix,
-                    join_obj.query._left_feature_group,
-                    query_feature=False,
-                )
+            self._add_features_to_collection(
+                join_obj.query._left_features,
+                join_obj.prefix,
+                join_obj.query._left_feature_group,
+            )
 
     def _get_featuregroup_by_feature(self, feature: Feature):
         fg_id = feature._feature_group_id
