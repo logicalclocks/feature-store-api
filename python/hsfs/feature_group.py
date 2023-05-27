@@ -1834,7 +1834,8 @@ class FeatureGroup(FeatureGroupBase):
 
         if write_options is None:
             write_options = {}
-        write_options["wait_for_job"] = wait
+        if "wait_for_job" not in write_options:
+            write_options["wait_for_job"] = wait
 
         job, ge_report = self._feature_group_engine.insert(
             self,
@@ -2646,7 +2647,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
 
         if write_options is None:
             write_options = {}
-        write_options["wait_for_job"] = wait
+        if "wait_for_job" not in write_options:
+            write_options["wait_for_job"] = wait
 
         job, ge_report = self._feature_group_engine.insert(
             self,
