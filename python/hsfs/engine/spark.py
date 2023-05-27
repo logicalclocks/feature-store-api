@@ -66,7 +66,7 @@ except ImportError:
     pass
 
 from hsfs import feature, training_dataset_feature, client, util
-from hsfs.feature_group import ExternalFeatureGroup
+from hsfs.feature_group import ExternalFeatureGroup, SpineGroup
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.client import hopsworks
@@ -140,12 +140,15 @@ class Engine:
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
     def register_external_temporary_table(self, external_fg, alias):
-        external_dataset = external_fg.storage_connector.read(
-            external_fg.query,
-            external_fg.data_format,
-            external_fg.options,
-            external_fg.storage_connector._get_path(external_fg.path),
-        )
+        if not isinstance(external_fg, SpineGroup):
+            external_dataset = external_fg.storage_connector.read(
+                external_fg.query,
+                external_fg.data_format,
+                external_fg.options,
+                external_fg.storage_connector._get_path(external_fg.path),
+            )
+        else:
+            external_dataset = external_fg.dataframe
         if external_fg.location:
             self._spark_session.sparkContext.textFile(external_fg.location).collect()
 
@@ -248,6 +251,8 @@ class Engine:
                 )
 
             return lowercase_dataframe
+        if dataframe == "spine":
+            return None
 
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: spark rdds, spark dataframes, "
@@ -380,7 +385,6 @@ class Engine:
             )
 
     def _save_online_dataframe(self, feature_group, dataframe, write_options):
-
         write_options = self._get_kafka_config(write_options)
 
         serialized_df = self._online_fg_to_avro(
@@ -965,7 +969,6 @@ class Engine:
         return transformed_dataset.select(*dataset.columns)
 
     def _setup_gcp_hadoop_conf(self, storage_connector, path):
-
         PROPERTY_ENCRYPTION_KEY = "fs.gs.encryption.key"
         PROPERTY_ENCRYPTION_HASH = "fs.gs.encryption.key.hash"
         PROPERTY_ALGORITHM = "fs.gs.encryption.algorithm"
@@ -1145,6 +1148,10 @@ class Engine:
                 )
 
         return {**write_options, **self._kafka_config}
+
+    @staticmethod
+    def is_connector_type_supported(type):
+        return True
 
 
 class SchemaError(Exception):

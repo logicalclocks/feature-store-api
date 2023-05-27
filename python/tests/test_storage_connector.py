@@ -18,8 +18,9 @@ import base64
 
 from hsfs import engine, storage_connector
 from hsfs.storage_connector import BigQueryConnector
-from hsfs.engine import spark
+from hsfs.engine import spark, python
 from pathlib import WindowsPath
+import pytest
 
 
 class TestHopsfsConnector:
@@ -500,6 +501,13 @@ class TestGcsConnector:
         assert sc.encryption_key is None
         assert sc.encryption_key_hash is None
 
+    def test_python_support_validation(self, backend_fixtures):
+        engine.set_instance("python", python.Engine())
+        json = backend_fixtures["storage_connector"]["get_gcs_basic_info"]["response"]
+        sc = storage_connector.StorageConnector.from_response_json(json)
+        with pytest.raises(NotImplementedError):
+            sc.read()
+
 
 class TestBigQueryConnector:
     def test_from_response_json(self, backend_fixtures):
@@ -573,3 +581,33 @@ class TestBigQueryConnector:
             )
             == credentials
         )
+
+    def test_python_support_validation(self, backend_fixtures):
+
+        engine.set_instance("python", python.Engine())
+        json = backend_fixtures["storage_connector"]["get_big_query_basic_info"][
+            "response"
+        ]
+        sc = storage_connector.StorageConnector.from_response_json(json)
+        with pytest.raises(NotImplementedError):
+            sc.read()
+
+    def test_query_validation(self, backend_fixtures, tmp_path):
+
+        engine.set_instance("spark", spark.Engine())
+        credentials = '{"type": "service_account", "project_id": "test"}'
+        credentialsFile = tmp_path / "bigquery.json"
+        credentialsFile.write_text(credentials)
+        json = backend_fixtures["storage_connector"]["get_big_query"]["response"]
+        # remove property for query
+        json.pop("materialization_dataset")
+        if isinstance(tmp_path, WindowsPath):
+            json["key_path"] = "file:///" + str(credentialsFile.resolve()).replace(
+                "\\", "/"
+            )
+        else:
+            json["key_path"] = "file://" + str(credentialsFile.resolve())
+
+        sc = storage_connector.StorageConnector.from_response_json(json)
+        with pytest.raises(ValueError):
+            sc.read(query="select * from")

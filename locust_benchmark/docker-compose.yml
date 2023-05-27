@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  master:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    image: locust-hsfs:master
+    ports:
+     - "8089:8089"
+    volumes:
+      - ./:/home/locust
+    command: -f /home/locust/locustfile.py --master --headless --expect-workers 4 -u 16 -r 1 -t 30 -s 1 --html=/home/locust/result.html
+
+  worker:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    image: locust-hsfs:master
+    volumes:
+      - ./:/home/locust
+    command: -f /home/locust/locustfile.py --worker --master-host master
+    scale: 4
