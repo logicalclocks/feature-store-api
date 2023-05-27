@@ -1633,11 +1633,16 @@ class FeatureGroup(FeatureGroupBase):
         ],
         write_options: Optional[Dict[Any, Any]] = {},
         validation_options: Optional[Dict[Any, Any]] = {},
+        wait: bool = False,
     ):
         """Persist the metadata and materialize the feature group to the feature store.
 
         !!! warning "Deprecated"
             `save` method is deprecated. Use the `insert` method instead.
+
+        !!! warning "Changed in 3.3.0"
+            `insert` and `save` methods are now async by default in non-spark clients.
+            To achieve the old behaviour, set `wait` argument to `True`.
 
         Calling `save` creates the metadata for the feature group in the feature store
         and writes the specified `features` dataframe as feature group to the
@@ -1657,7 +1662,7 @@ class FeatureGroup(FeatureGroupBase):
                   feature group.
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
-                  after the Hopsworks Job has finished. By default it waits.
+                  after the Hopsworks Job has finished. By default it does not wait.
                 * key `start_offline_backfill` and value `True` or `False` to configure
                   whether or not to start the backfill job to write data to the offline
                   storage. By default the backfill job gets started immediately.
@@ -1669,6 +1674,8 @@ class FeatureGroup(FeatureGroupBase):
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+            wait: Wait for job to finish before returning, defaults to `False`.
+                Shortcut for read_options `{"wait_for_job": False}`.
 
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
@@ -1680,6 +1687,11 @@ class FeatureGroup(FeatureGroupBase):
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         user_version = self._version
+
+        if write_options is None:
+            write_options = {}
+        if "wait_for_job" not in write_options:
+            write_options["wait_for_job"] = wait
 
         # fg_job is used only if the python engine is used
         fg_job, ge_report = self._feature_group_engine.save(
@@ -1719,6 +1731,7 @@ class FeatureGroup(FeatureGroupBase):
         write_options: Optional[Dict[str, Any]] = {},
         validation_options: Optional[Dict[str, Any]] = {},
         save_code: Optional[bool] = True,
+        wait: bool = False,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         """Persist the metadata and materialize the feature group to the feature store
         or insert data from a dataframe into the existing feature group.
@@ -1737,6 +1750,10 @@ class FeatureGroup(FeatureGroupBase):
 
         If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
         invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+
+        !!! warning "Changed in 3.3.0"
+            `insert` and `save` methods are now async by default in non-spark clients.
+            To achieve the old behaviour, set `wait` argument to `True`.
 
         !!! example "Upsert new feature data with time travel format `HUDI`"
             ```python
@@ -1818,11 +1835,18 @@ class FeatureGroup(FeatureGroupBase):
                 the feature group or used to insert data to it. When calling the `insert` method repeatedly
                 with small batches of data, this can slow down the writes. Use this option to turn off saving
                 code. Defaults to `True`.
+            wait: Wait for job to finish before returning, defaults to `False`.
+                Shortcut for read_options `{"wait_for_job": False}`.
 
         # Returns
             (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
         """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+
+        if write_options is None:
+            write_options = {}
+        if "wait_for_job" not in write_options:
+            write_options["wait_for_job"] = wait
 
         job, ge_report = self._feature_group_engine.insert(
             self,
@@ -2620,8 +2644,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
         write_options: Optional[Dict[str, Any]] = {},
         validation_options: Optional[Dict[str, Any]] = {},
         save_code: Optional[bool] = True,
+        wait: bool = False,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+
+        if write_options is None:
+            write_options = {}
+        if "wait_for_job" not in write_options:
+            write_options["wait_for_job"] = wait
 
         job, ge_report = self._feature_group_engine.insert(
             self,

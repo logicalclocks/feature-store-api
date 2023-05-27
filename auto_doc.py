@@ -192,8 +192,13 @@ PAGES = {
             "hsfs.validation_report.ValidationReport"
         ),
     },
-    "api/job_configuration.md": {
-        "job_configuration": ["hsfs.core.job_configuration.JobConfiguration"]
+    "api/job.md": {
+        "job_configuration": ["hsfs.core.job_configuration.JobConfiguration"],
+        "job": ["hsfs.core.job.Job"],
+        "job_methods": [
+            "hsfs.core.job.Job.get_state",
+            "hsfs.core.job.Job.get_final_state",
+        ],
     },
     "api/query_api.md": {
         "query_methods": keras_autodoc.get_methods(
