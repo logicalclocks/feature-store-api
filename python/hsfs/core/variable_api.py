@@ -17,6 +17,8 @@
 from hsfs import client
 import re
 
+from hsfs.client.exceptions import RestAPIError
+
 
 class VariableApi:
     def __init__(self):
@@ -42,3 +44,39 @@ class VariableApi:
         matches = re.match(version_pattern, backend_version)
 
         return matches.group(1), matches.group(2)
+
+    def get_flyingduck_enabled(self):
+        _client = client.get_instance()
+        path_params = [
+            "variables",
+            "enable_flyingduck",
+        ]
+
+        resp = _client._send_request("GET", path_params)
+        return resp["successMessage"] == "true"
+
+    def get_loadbalancer_external_domain(self):
+        _client = client.get_instance()
+        path_params = [
+            "variables",
+            "loadbalancer_external_domain",
+        ]
+
+        try:
+            resp = _client._send_request("GET", path_params)
+            return resp["successMessage"]
+        except RestAPIError:
+            return ""
+
+    def get_service_discovery_domain(self):
+        _client = client.get_instance()
+        path_params = [
+            "variables",
+            "service_discovery_domain",
+        ]
+
+        try:
+            resp = _client._send_request("GET", path_params)
+            return resp["successMessage"]
+        except RestAPIError:
+            return ""

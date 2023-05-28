@@ -48,7 +48,7 @@ class StorageConnector(ABC):
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
+        _ = json_decamelized.pop("type", None)
         for subcls in cls.__subclasses__():
             if subcls.type == json_decamelized["storage_connector_type"]:
                 _ = json_decamelized.pop("storage_connector_type")
@@ -57,7 +57,7 @@ class StorageConnector(ABC):
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        _ = json_decamelized.pop("type")
+        _ = json_decamelized.pop("type", None)
         if self.type == json_decamelized["storage_connector_type"]:
             _ = json_decamelized.pop("storage_connector_type")
             self.__init__(**json_decamelized)
@@ -66,9 +66,12 @@ class StorageConnector(ABC):
         return self
 
     def to_dict(self):
-        # Currently we use this method only when creating on demand feature groups.
-        # The backend needs only the id.
-        return {"id": self._id}
+        return {
+            "id": self._id,
+            "name": self._name,
+            "featurestoreId": self._featurestore_id,
+            "storageConnectorType": self.type,
+        }
 
     @property
     def type(self):
@@ -257,7 +260,7 @@ class S3Connector(StorageConnector):
         query: str = None,
         data_format: str = None,
         options: dict = {},
-        path: str = None,
+        path: str = "",
     ):
         """Reads a query or a path into a dataframe using the storage connector.
 
@@ -274,6 +277,14 @@ class S3Connector(StorageConnector):
             `DataFrame`.
         """
         self.refetch()
+        if not path.startswith("s3://"):
+            path = self._get_path(path)
+            print(
+                "Prepending default bucket specified on connector, final path: {}".format(
+                    path
+                )
+            )
+
         return engine.get_instance().read(self, data_format, options, path)
 
     def _get_path(self, sub_path: str):
@@ -998,6 +1009,7 @@ class KafkaConnector(StorageConnector):
 
 class GcsConnector(StorageConnector):
     type = StorageConnector.GCS
+    GS_FS_PREFIX = "gs://"  # Google Storage Filesystem prefix
 
     def __init__(
         self,
@@ -1043,7 +1055,7 @@ class GcsConnector(StorageConnector):
     @property
     def path(self):
         """the path of the connector along with gs file system prefixed"""
-        return "gs://" + self._bucket
+        return self.GS_FS_PREFIX + self._bucket
 
     @property
     def bucket(self):
@@ -1067,14 +1079,23 @@ class GcsConnector(StorageConnector):
         query: str = None,
         data_format: str = None,
         options: dict = {},
-        path: str = None,
+        path: str = "",
     ):
         """Reads GCS path into a dataframe using the storage connector.
 
+        To read directly from the default bucket, you can omit the path argument:
+        ```python
+        conn.read(data_format='spark_formats')
+        ```
+        Or to read objects from default bucket provide the object path without gsUtil URI schema. For example,
+        following will read from a path gs://bucket_on_connector/Path/object :
+        ```python
+        conn.read(data_format='spark_formats', paths='Path/object')
+        ```
+        Or to read with full gsUtil URI path,
         ```python
         conn.read(data_format='spark_formats',path='gs://BUCKET/DATA')
         ```
-
         # Arguments
             query: Not relevant for GCS connectors.
             data_format: Spark data format. Defaults to `None`.
@@ -1086,6 +1107,20 @@ class GcsConnector(StorageConnector):
         # Returns
             `Dataframe`: A Spark dataframe.
         """
+        # validate engine supports connector type
+        if not engine.get_instance().is_connector_type_supported(self.type):
+            raise NotImplementedError(
+                "GCS connector not yet supported for engine: " + engine.get_type()
+            )
+
+        # validate path begins with gs://
+        if not path.startswith(self.GS_FS_PREFIX):
+            path = self._get_path(path)
+            print(
+                "Prepending default bucket specified on connector, final path: {}".format(
+                    path
+                )
+            )
 
         return engine.get_instance().read(self, data_format, options, path)
 
@@ -1241,7 +1276,11 @@ class BigQueryConnector(StorageConnector):
         # Returns
             `Dataframe`: A Spark dataframe.
         """
-
+        # validate engine supports connector type
+        if not engine.get_instance().is_connector_type_supported(self.type):
+            raise NotImplementedError(
+                "BigQuery connector not yet supported for engine: " + engine.get_type()
+            )
         # merge user spark options on top of default spark options
         options = (
             {**self.spark_options(), **options}
@@ -1249,6 +1288,15 @@ class BigQueryConnector(StorageConnector):
             else self.spark_options()
         )
         if query:
+            if not {self.BIGQ_MATERIAL_DATASET, self.BIGQ_VIEWS_ENABLED}.issubset(
+                options.keys()
+            ):
+                raise ValueError(
+                    "BigQuery materialization views should be enabled for SQL query. "
+                    "Set spark options viewsEnabled=True and "
+                    + self.BIGQ_MATERIAL_DATASET
+                    + "=<temporaryDatasetName> to options argument or instead use BigQuery Query type connector from UI."
+                )
             path = query
         elif self._query_table:
             path = self._query_table

@@ -189,15 +189,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def _update_features_metadata(self, feature_group, features):
         # perform changes on copy in case the update fails, so we don't leave
         # the user object in corrupted state
-        copy_feature_group = fg.FeatureGroup(
-            name=None,
-            version=None,
-            featurestore_id=None,
-            description=None,
-            id=feature_group.id,
-            stream=feature_group.stream,
-            features=features,
-        )
+        copy_feature_group = fg.FeatureGroup.from_response_json(feature_group.to_dict())
+        copy_feature_group.features = features
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
         )
@@ -220,15 +213,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
-        copy_feature_group = fg.FeatureGroup(
-            name=None,
-            version=None,
-            featurestore_id=None,
-            description=description,
-            id=feature_group.id,
-            stream=feature_group.stream,
-            features=feature_group.features,
-        )
+        copy_feature_group = fg.FeatureGroup.from_response_json(feature_group.to_dict())
+        copy_feature_group.description = description
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
         )
@@ -333,9 +319,14 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if feature_group.stream:
             # when creating a stream feature group, users have the possibility of passing
             # a spark_job_configuration object as part of the write_options with the key "spark"
+            # filter out consumer config, not needed for delta streamer
             _spark_options = write_options.pop("spark", None)
             _write_options = (
-                [{"name": k, "value": v} for k, v in write_options.items()]
+                [
+                    {"name": k, "value": v}
+                    for k, v in write_options.items()
+                    if k != "kafka_producer_config"
+                ]
                 if write_options
                 else None
             )

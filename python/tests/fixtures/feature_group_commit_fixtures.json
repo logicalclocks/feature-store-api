@@ -1,18 +1,4 @@
 {
-  "get": {
-    "response": {
-      "commitid": 11,
-      "commit_date_string": "test_commit_date_string",
-      "rows_inserted": 1,
-      "rows_updated": 2,
-      "rows_deleted": 3,
-      "validation_id": 77,
-      "commit_time": "test_commit_time",
-      "items": [],
-      "count": 0,
-      "href": "test_href"
-    }
-  },
   "get_list": {
     "response": {
       "count": 1,
@@ -34,7 +20,8 @@
   },
   "get_basic_info": {
     "response": {
-      "count": 0
+      "count": 0,
+      "items": []
     }
   }
 }

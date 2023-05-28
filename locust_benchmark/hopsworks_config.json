@@ -1,0 +1,10 @@
+{
+    "host": "localhost",
+    "port": 443,
+    "project": "test",
+    "external": true,
+    "rows": 100000,
+    "schema_repetitions": 1,
+    "recreate_feature_group": true,
+    "batch_size": 100
+}

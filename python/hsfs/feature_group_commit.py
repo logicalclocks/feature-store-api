@@ -49,9 +49,7 @@ class FeatureGroupCommit:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        if json_decamelized["count"] >= 1:
-            return [cls(**commit_dto) for commit_dto in json_decamelized["items"]]
-        return cls(**json_decamelized)
+        return [cls(**commit_dto) for commit_dto in json_decamelized["items"]]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)

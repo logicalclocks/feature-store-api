@@ -15,7 +15,7 @@
 #
 
 import pandas as pd
-from hsfs.core import inode
+from hsfs.core import inode, arrow_flight_client
 
 from hsfs.engine import python
 
@@ -125,7 +125,7 @@ class TestPythonReader:
         # Assert
         assert dataframe_fixture_basic.equals(df)
 
-    def test_read_hopsfs_rest_parquet(self, mocker, dataframe_fixture_basic):
+    def test_read_hopsfs_remote_parquet(self, mocker, dataframe_fixture_basic):
         # Arrange
         mock_dataset_api = mocker.patch("hsfs.core.dataset_api.DatasetApi")
         i = inode.Inode(attributes={"path": "test_path"})
@@ -136,9 +136,10 @@ class TestPythonReader:
             mock_dataset_api.return_value.read_content.return_value.content = (
                 file.read()
             )
+        arrow_flight_client.get_instance()._is_enabled = False
 
         # Act
-        df_list = python.Engine()._read_hopsfs_rest(
+        df_list = python.Engine()._read_hopsfs_remote(
             location=None, data_format="parquet"
         )
 
@@ -146,7 +147,7 @@ class TestPythonReader:
         assert len(df_list) == 1
         assert dataframe_fixture_basic.equals(df_list[0])
 
-    def test_read_hopsfs_rest_csv(self, mocker, dataframe_fixture_basic):
+    def test_read_hopsfs_remote_csv(self, mocker, dataframe_fixture_basic):
         # Arrange
         mock_dataset_api = mocker.patch("hsfs.core.dataset_api.DatasetApi")
         i = inode.Inode(attributes={"path": "test_path"})
@@ -159,7 +160,7 @@ class TestPythonReader:
             )
 
         # Act
-        df_list = python.Engine()._read_hopsfs_rest(location=None, data_format="csv")
+        df_list = python.Engine()._read_hopsfs_remote(location=None, data_format="csv")
         df_list[0]["event_date"] = pd.to_datetime(
             df_list[0]["event_date"], format="%Y-%m-%d"
         ).dt.date

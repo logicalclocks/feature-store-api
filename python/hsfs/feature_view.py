@@ -17,13 +17,19 @@
 import json
 import warnings
 from datetime import datetime, date
-from typing import Optional, Union, List, Dict, Any
-from hsfs.training_dataset_split import TrainingDatasetSplit
+from typing import Optional, Union, List, Dict, Any, TypeVar
 
 import humps
 import copy
+import pandas as pd
+import numpy as np
 
-from hsfs import util, training_dataset_feature, storage_connector, training_dataset
+from hsfs import (
+    util,
+    training_dataset_feature,
+    storage_connector,
+    training_dataset,
+)
 from hsfs.constructor import query, filter
 from hsfs.core import (
     feature_view_engine,
@@ -33,6 +39,7 @@ from hsfs.core import (
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.core.feature_view_api import FeatureViewApi
+from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
 class FeatureView:
@@ -436,6 +443,16 @@ class FeatureView:
         start_time: Optional[Union[str, int, datetime, date]] = None,
         end_time: Optional[Union[str, int, datetime, date]] = None,
         read_options=None,
+        spine: Optional[
+            Union[
+                pd.DataFrame,
+                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+                TypeVar("pyspark.RDD"),  # noqa: F821
+                np.ndarray,
+                List[list],
+                TypeVar("SpineGroup"),
+            ]
+        ] = None,
     ):
         """Get a batch of data from an event time interval from the offline feature store.
 
@@ -459,6 +476,10 @@ class FeatureView:
                 )
             ```
 
+        !!! warning "Spine Groups/Dataframes"
+            Spine groups and dataframes are currently only supported with the Spark engine and
+            Spark dataframes.
+
         # Arguments
             start_time: Start event time for the batch query, inclusive. Optional. Strings should be
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
@@ -467,6 +488,12 @@ class FeatureView:
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
             read_options: User provided read options. Defaults to `{}`.
+            spine: Spine dataframe with primary key, event time and
+                label column to use for point in time join when fetching features. Defaults to `None` and is only required
+                when feature view was created with spine group in the feature query.
+                It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
+                feature join, however, the same features as in the original feature group that is being replaced need to
+                be available in the spine group.
 
         # Returns
             `DataFrame`: A dataframe
@@ -482,6 +509,7 @@ class FeatureView:
             self._batch_scoring_server.training_dataset_version,
             self._batch_scoring_server._transformation_functions,
             read_options,
+            spine,
         )
 
     def add_tag(self, name: str, value):
@@ -609,6 +637,16 @@ class FeatureView:
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
+        spine: Optional[
+            Union[
+                pd.DataFrame,
+                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+                TypeVar("pyspark.RDD"),  # noqa: F821
+                np.ndarray,
+                List[list],
+                TypeVar("SpineGroup"),
+            ]
+        ] = None,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data can be retrieved by calling `feature_view.get_training_data`.
@@ -715,6 +753,10 @@ class FeatureView:
 
             Currently not supported petastorm, hdf5 and npy file formats.
 
+        !!! warning "Spine Groups/Dataframes"
+            Spine groups and dataframes are currently only supported with the Spark engine and
+            Spark dataframes.
+
         # Arguments
             start_time: Start event time for the training dataset query, inclusive. Optional. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
@@ -760,6 +802,12 @@ class FeatureView:
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
                 Defaults to `{}`.
+            spine: Spine dataframe with primary key, event time and
+                label column to use for point in time join when fetching features. Defaults to `None` and is only required
+                when feature view was created with spine group in the feature query.
+                It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
+                feature join, however, the same features as in the original feature group that is being replaced need to
+                be available in the spine group.
 
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
@@ -784,7 +832,7 @@ class FeatureView:
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
-            self, td, write_options
+            self, td, write_options, spine
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -809,6 +857,16 @@ class FeatureView:
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
+        spine: Optional[
+            Union[
+                pd.DataFrame,
+                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+                TypeVar("pyspark.RDD"),  # noqa: F821
+                np.ndarray,
+                List[list],
+                TypeVar("SpineGroup"),
+            ]
+        ] = None,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train and test set at random or according to time ranges.
@@ -954,6 +1012,10 @@ class FeatureView:
             # Output: KeyError: 'category_c'
             ```
 
+        !!! warning "Spine Groups/Dataframes"
+            Spine groups and dataframes are currently only supported with the Spark engine and
+            Spark dataframes.
+
         # Arguments
             test_size: size of test set.
             train_start: Start event time for the train split query, inclusive. Strings should
@@ -1006,6 +1068,12 @@ class FeatureView:
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
                 Defaults to `{}`.
+            spine: Spine dataframe with primary key, event time and
+                label column to use for point in time join when fetching features. Defaults to `None` and is only required
+                when feature view was created with spine group in the feature query.
+                It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
+                feature join, however, the same features as in the original feature group that is being replaced need to
+                be available in the spine group.
 
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
@@ -1038,7 +1106,7 @@ class FeatureView:
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
-            self, td, write_options
+            self, td, write_options, spine
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1066,6 +1134,16 @@ class FeatureView:
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = {},
+        spine: Optional[
+            Union[
+                pd.DataFrame,
+                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+                TypeVar("pyspark.RDD"),  # noqa: F821
+                np.ndarray,
+                List[list],
+                TypeVar("SpineGroup"),
+            ]
+        ] = None,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train, validation, and test set at random or according to time range.
@@ -1190,6 +1268,10 @@ class FeatureView:
 
             Currently not supported petastorm, hdf5 and npy file formats.
 
+        !!! warning "Spine Groups/Dataframes"
+            Spine groups and dataframes are currently only supported with the Spark engine and
+            Spark dataframes.
+
         # Arguments
             validation_size: size of validation set.
             test_size: size of test set.
@@ -1249,6 +1331,12 @@ class FeatureView:
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
                 Defaults to `{}`.
+            spine: Spine dataframe with primary key, event time and
+                label column to use for point in time join when fetching features. Defaults to `None` and is only required
+                when feature view was created with spine group in the feature query.
+                It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
+                feature join, however, the same features as in the original feature group that is being replaced need to
+                be available in the spine group.
 
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
@@ -1289,7 +1377,7 @@ class FeatureView:
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
-            self, td, write_options
+            self, td, write_options, spine
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1302,6 +1390,16 @@ class FeatureView:
         self,
         training_dataset_version: int,
         write_options: Optional[Dict[Any, Any]] = None,
+        spine: Optional[
+            Union[
+                pd.DataFrame,
+                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+                TypeVar("pyspark.RDD"),  # noqa: F821
+                np.ndarray,
+                List[list],
+                TypeVar("SpineGroup"),
+            ]
+        ] = None,
     ):
         """
         Recreate a training dataset.
@@ -1322,6 +1420,10 @@ class FeatureView:
             If a materialised training data has deleted. Use `recreate_training_dataset()` to
             recreate the training data.
 
+        !!! warning "Spine Groups/Dataframes"
+            Spine groups and dataframes are currently only supported with the Spark engine and
+            Spark dataframes.
+
         # Arguments
             training_dataset_version: training dataset version
             read_options: Additional options as key/value pairs to pass to the execution engine.
@@ -1335,13 +1437,19 @@ class FeatureView:
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it waits.
                 Defaults to `{}`.
+            spine: Spine dataframe with primary key, event time and
+                label column to use for point in time join when fetching features. Defaults to `None` and is only required
+                when feature view was created with spine group in the feature query.
+                It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
+                feature join, however, the same features as in the original feature group that is being replaced need to
+                be available in the spine group.
 
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
         """
         td, td_job = self._feature_view_engine.recreate_training_dataset(
-            self, training_dataset_version, write_options
+            self, training_dataset_version, write_options, spine
         )
         return td_job
 
@@ -1353,6 +1461,16 @@ class FeatureView:
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
+        spine: Optional[
+            Union[
+                pd.DataFrame,
+                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+                TypeVar("pyspark.RDD"),  # noqa: F821
+                np.ndarray,
+                List[list],
+                TypeVar("SpineGroup"),
+            ]
+        ] = None,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1394,6 +1512,10 @@ class FeatureView:
             )
             ```
 
+        !!! warning "Spine Groups/Dataframes"
+            Spine groups and dataframes are currently only supported with the Spark engine and
+            Spark dataframes.
+
         # Arguments
             start_time: Start event time for the training dataset query, inclusive. Strings should
             be formatted in one of the following
@@ -1425,6 +1547,12 @@ class FeatureView:
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
                 Defaults to `{}`.
+            spine: Spine dataframe with primary key, event time and
+                label column to use for point in time join when fetching features. Defaults to `None` and is only required
+                when feature view was created with spine group in the feature query.
+                It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
+                feature join, however, the same features as in the original feature group that is being replaced need to
+                be available in the spine group.
 
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
@@ -1445,7 +1573,7 @@ class FeatureView:
             extra_filter=extra_filter,
         )
         td, df = self._feature_view_engine.get_training_data(
-            self, read_options, training_dataset_obj=td
+            self, read_options, training_dataset_obj=td, spine=spine
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1464,6 +1592,16 @@ class FeatureView:
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
+        spine: Optional[
+            Union[
+                pd.DataFrame,
+                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+                TypeVar("pyspark.RDD"),  # noqa: F821
+                np.ndarray,
+                List[list],
+                TypeVar("SpineGroup"),
+            ]
+        ] = None,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1510,6 +1648,10 @@ class FeatureView:
             )
             ```
 
+        !!! warning "Spine Groups/Dataframes"
+            Spine groups and dataframes are currently only supported with the Spark engine and
+            Spark dataframes.
+
         # Arguments
             test_size: size of test set. Should be between 0 and 1.
             train_start: Start event time for the train split query, inclusive. Strings should
@@ -1546,6 +1688,12 @@ class FeatureView:
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
                 Defaults to `{}`.
+            spine: Spine dataframe with primary key, event time and
+                label column to use for point in time join when fetching features. Defaults to `None` and is only required
+                when feature view was created with spine group in the feature query.
+                It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
+                feature join, however, the same features as in the original feature group that is being replaced need to
+                be available in the spine group.
 
         # Returns
             (X_train, X_test, y_train, y_test):
@@ -1578,6 +1726,7 @@ class FeatureView:
             read_options,
             training_dataset_obj=td,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
+            spine=spine,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1608,6 +1757,16 @@ class FeatureView:
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
+        spine: Optional[
+            Union[
+                pd.DataFrame,
+                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+                TypeVar("pyspark.RDD"),  # noqa: F821
+                np.ndarray,
+                List[list],
+                TypeVar("SpineGroup"),
+            ]
+        ] = None,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1660,6 +1819,10 @@ class FeatureView:
             )
             ```
 
+        !!! warning "Spine Groups/Dataframes"
+            Spine groups and dataframes are currently only supported with the Spark engine and
+            Spark dataframes.
+
         # Arguments
             validation_size: size of validation set. Should be between 0 and 1.
             test_size: size of test set. Should be between 0 and 1.
@@ -1703,6 +1866,12 @@ class FeatureView:
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
                 Defaults to `{}`.
+            spine: Spine dataframe with primary key, event time and
+                label column to use for point in time join when fetching features. Defaults to `None` and is only required
+                when feature view was created with spine group in the feature query.
+                It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
+                feature join, however, the same features as in the original feature group that is being replaced need to
+                be available in the spine group.
 
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
@@ -1748,6 +1917,7 @@ class FeatureView:
                 TrainingDatasetSplit.VALIDATION,
                 TrainingDatasetSplit.TEST,
             ],
+            spine=spine,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),

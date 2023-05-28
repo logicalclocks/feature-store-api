@@ -30,11 +30,11 @@ class JobApi:
             )
         )
 
-    def launch(self, name):
+    def launch(self, name, args: str = None):
         _client = client.get_instance()
         path_params = ["project", _client._project_id, "jobs", name, "executions"]
 
-        _client._send_request("POST", path_params)
+        _client._send_request("POST", path_params, data=args)
 
     def get(self, name: str):
         _client = client.get_instance()

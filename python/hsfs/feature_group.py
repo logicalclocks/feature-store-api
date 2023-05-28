@@ -42,6 +42,7 @@ from hsfs.core import (
     validation_report_engine,
     code_engine,
     external_feature_group_engine,
+    spine_group_engine,
     validation_result_engine,
     job_api,
 )
@@ -1332,6 +1333,15 @@ class FeatureGroupBase:
             if field["name"] == feature_name:
                 return json.dumps(field["type"])
 
+    @property
+    def features(self):
+        """Schema information."""
+        return self._features
+
+    @features.setter
+    def features(self, new_features):
+        self._features = new_features
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -1362,6 +1372,7 @@ class FeatureGroup(FeatureGroupBase):
         expectation_suite=None,
         parents=None,
         href=None,
+        delta_streamer_job_conf=None,
     ):
         super().__init__(
             featurestore_id,
@@ -1390,7 +1401,7 @@ class FeatureGroup(FeatureGroupBase):
 
         self._stream = stream
         self._parents = parents
-        self._deltastreamer_jobconf = None
+        self._deltastreamer_jobconf = delta_streamer_job_conf
 
         self._backfill_job = None
 
@@ -1622,11 +1633,16 @@ class FeatureGroup(FeatureGroupBase):
         ],
         write_options: Optional[Dict[Any, Any]] = {},
         validation_options: Optional[Dict[Any, Any]] = {},
+        wait: bool = False,
     ):
         """Persist the metadata and materialize the feature group to the feature store.
 
         !!! warning "Deprecated"
             `save` method is deprecated. Use the `insert` method instead.
+
+        !!! warning "Changed in 3.3.0"
+            `insert` and `save` methods are now async by default in non-spark clients.
+            To achieve the old behaviour, set `wait` argument to `True`.
 
         Calling `save` creates the metadata for the feature group in the feature store
         and writes the specified `features` dataframe as feature group to the
@@ -1646,7 +1662,7 @@ class FeatureGroup(FeatureGroupBase):
                   feature group.
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
-                  after the Hopsworks Job has finished. By default it waits.
+                  after the Hopsworks Job has finished. By default it does not wait.
                 * key `start_offline_backfill` and value `True` or `False` to configure
                   whether or not to start the backfill job to write data to the offline
                   storage. By default the backfill job gets started immediately.
@@ -1658,6 +1674,8 @@ class FeatureGroup(FeatureGroupBase):
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
                 * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+            wait: Wait for job to finish before returning, defaults to `False`.
+                Shortcut for read_options `{"wait_for_job": False}`.
 
         # Returns
             `Job`: When using the `python` engine, it returns the Hopsworks Job
@@ -1669,6 +1687,11 @@ class FeatureGroup(FeatureGroupBase):
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         user_version = self._version
+
+        if write_options is None:
+            write_options = {}
+        if "wait_for_job" not in write_options:
+            write_options["wait_for_job"] = wait
 
         # fg_job is used only if the python engine is used
         fg_job, ge_report = self._feature_group_engine.save(
@@ -1708,6 +1731,7 @@ class FeatureGroup(FeatureGroupBase):
         write_options: Optional[Dict[str, Any]] = {},
         validation_options: Optional[Dict[str, Any]] = {},
         save_code: Optional[bool] = True,
+        wait: bool = False,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         """Persist the metadata and materialize the feature group to the feature store
         or insert data from a dataframe into the existing feature group.
@@ -1726,6 +1750,10 @@ class FeatureGroup(FeatureGroupBase):
 
         If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
         invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
+
+        !!! warning "Changed in 3.3.0"
+            `insert` and `save` methods are now async by default in non-spark clients.
+            To achieve the old behaviour, set `wait` argument to `True`.
 
         !!! example "Upsert new feature data with time travel format `HUDI`"
             ```python
@@ -1807,11 +1835,18 @@ class FeatureGroup(FeatureGroupBase):
                 the feature group or used to insert data to it. When calling the `insert` method repeatedly
                 with small batches of data, this can slow down the writes. Use this option to turn off saving
                 code. Defaults to `True`.
+            wait: Wait for job to finish before returning, defaults to `False`.
+                Shortcut for read_options `{"wait_for_job": False}`.
 
         # Returns
             (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
         """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+
+        if write_options is None:
+            write_options = {}
+        if "wait_for_job" not in write_options:
+            write_options["wait_for_job"] = wait
 
         job, ge_report = self._feature_group_engine.insert(
             self,
@@ -1877,7 +1912,7 @@ class FeatureGroup(FeatureGroupBase):
                 # run inserts in a loop:
                 while loop:
                     small_batch_df = ...
-                    writer.multi_part_insert(small_batch_df)
+                    writer.insert(small_batch_df)
             ```
             The writer batches the small Dataframes and transmits them to Hopsworks
             efficiently.
@@ -2363,6 +2398,11 @@ class FeatureGroup(FeatureGroupBase):
     def _get_online_table_name(self):
         return self.name + "_" + str(self.version)
 
+    def _get_project_name(self):
+        if self.feature_store_name.endswith("_featurestore"):
+            return self.feature_store_name[:-13]
+        return self.feature_store_name
+
     @property
     def id(self):
         """Feature group id."""
@@ -2382,11 +2422,6 @@ class FeatureGroup(FeatureGroupBase):
     def description(self):
         """Description of the feature group contents."""
         return self._description
-
-    @property
-    def features(self):
-        """Schema information."""
-        return self._features
 
     @property
     def time_travel_format(self):
@@ -2452,10 +2487,6 @@ class FeatureGroup(FeatureGroupBase):
     def description(self, new_description):
         self._description = new_description
 
-    @features.setter
-    def features(self, new_features):
-        self._features = new_features
-
     @time_travel_format.setter
     def time_travel_format(self, new_time_travel_format):
         self._time_travel_format = new_time_travel_format
@@ -2505,6 +2536,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         online_enabled=False,
         href=None,
         online_topic_name=None,
+        spine=False,
     ):
         super().__init__(
             featurestore_id,
@@ -2612,8 +2644,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
         write_options: Optional[Dict[str, Any]] = {},
         validation_options: Optional[Dict[str, Any]] = {},
         save_code: Optional[bool] = True,
+        wait: bool = False,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
+
+        if write_options is None:
+            write_options = {}
+        if "wait_for_job" not in write_options:
+            write_options["wait_for_job"] = wait
 
         job, ge_report = self._feature_group_engine.insert(
             self,
@@ -2760,6 +2798,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "eventTime": self._event_time,
             "expectationSuite": self._expectation_suite,
             "onlineEnabled": self._online_enabled,
+            "spine": False,
         }
 
     @property
@@ -2777,10 +2816,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
     @property
     def description(self):
         return self._description
-
-    @property
-    def features(self):
-        return self._features
 
     @property
     def query(self):
@@ -2818,10 +2853,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
     def description(self, new_description):
         self._description = new_description
 
-    @features.setter
-    def features(self, new_features):
-        self._features = new_features
-
     @property
     def feature_store_name(self):
         """Name of the feature store in which the feature group is located."""
@@ -2831,3 +2862,171 @@ class ExternalFeatureGroup(FeatureGroupBase):
     def feature_store_id(self):
         """Id of the feature store in which the feature group is located."""
         return self._feature_store_id
+
+
+class SpineGroup(FeatureGroupBase):
+    SPINE_GROUP = "ON_DEMAND_FEATURE_GROUP"
+    ENTITY_TYPE = "featuregroups"
+
+    def __init__(
+        self,
+        storage_connector=None,
+        query=None,
+        data_format=None,
+        path=None,
+        options={},
+        name=None,
+        version=None,
+        description=None,
+        primary_key=None,
+        featurestore_id=None,
+        featurestore_name=None,
+        created=None,
+        creator=None,
+        id=None,
+        features=None,
+        location=None,
+        statistics_config=None,
+        event_time=None,
+        expectation_suite=None,
+        online_enabled=False,
+        href=None,
+        online_topic_name=None,
+        spine=True,
+        dataframe="spine",
+    ):
+        super().__init__(
+            featurestore_id,
+            location,
+            event_time=event_time,
+            online_enabled=online_enabled,
+            id=id,
+            expectation_suite=expectation_suite,
+            online_topic_name=online_topic_name,
+        )
+
+        self._feature_store_name = featurestore_name
+        self._description = description
+        self._created = created
+        self._creator = user.User.from_response_json(creator)
+        self._version = version
+        self._name = name
+
+        self._features = [
+            feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
+            for feat in (features or [])
+        ]
+
+        self._feature_group_engine = spine_group_engine.SpineGroupEngine(
+            featurestore_id
+        )
+
+        if self._id:
+            # Got from Hopsworks, deserialize features and storage connector
+            self._features = (
+                [
+                    feature.Feature.from_response_json(feat)
+                    if isinstance(feat, dict)
+                    else feat
+                    for feat in features
+                ]
+                if features
+                else None
+            )
+            self.primary_key = (
+                [feat.name for feat in self._features if feat.primary is True]
+                if self._features
+                else []
+            )
+            self.statistics_config = statistics_config
+        else:
+            self.primary_key = primary_key
+            self.statistics_config = statistics_config
+            self._features = features
+
+        self._href = href
+
+        # has to happen last -> features and id are needed for schema verification
+        # use setter to convert to default dataframe type for engine
+        self.dataframe = dataframe
+
+    def _save(self):
+        """Persist the metadata for this spine group.
+
+        Without calling this method, your feature group will only exist
+        in your Python Kernel, but not in Hopsworks.
+
+        ```python
+        query = "SELECT * FROM sales"
+
+        fg = feature_store.create_spine_group(name="sales",
+            version=1,
+            description="Physical shop sales features",
+            primary_key=['ss_store_sk'],
+            event_time='sale_date',
+            dataframe=df,
+        )
+
+        fg._save()
+        """
+        self._feature_group_engine.save(self)
+        return self
+
+    @property
+    def dataframe(self):
+        """Spine dataframe with primary key, event time and
+        label column to use for point in time join when fetching features.
+        """
+        return self._dataframe
+
+    @dataframe.setter
+    def dataframe(self, dataframe):
+        """Update the spine dataframe contained in the spine group."""
+        self._dataframe = engine.get_instance().convert_to_default_dataframe(dataframe)
+
+        # in fs query the features are not sent, so then don't do validation
+        if (
+            self._id is not None
+            and self._dataframe is not None
+            and self._features is not None
+        ):
+            dataframe_features = engine.get_instance().parse_schema_feature_group(
+                self._dataframe
+            )
+            self._feature_group_engine._verify_schema_compatibility(
+                self._features, dataframe_features
+            )
+
+    @classmethod
+    def from_response_json(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        if isinstance(json_decamelized, dict):
+            _ = json_decamelized.pop("type", None)
+            return cls(**json_decamelized)
+        for fg in json_decamelized:
+            _ = fg.pop("type", None)
+        return [cls(**fg) for fg in json_decamelized]
+
+    def update_from_response_json(self, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        if "type" in json_decamelized:
+            _ = json_decamelized.pop("type")
+        self.__init__(**json_decamelized)
+        return self
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def to_dict(self):
+        return {
+            "id": self._id,
+            "name": self._name,
+            "description": self._description,
+            "version": self._version,
+            "features": self._features,
+            "featurestoreId": self._feature_store_id,
+            "type": "onDemandFeaturegroupDTO",
+            "statisticsConfig": self._statistics_config,
+            "eventTime": self._event_time,
+            "spine": True,
+        }
