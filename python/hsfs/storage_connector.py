@@ -14,7 +14,6 @@
 #   limitations under the License.
 #
 import os
-import socket
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -889,7 +888,7 @@ class KafkaConnector(StorageConnector):
             if "ssl.certificate.location" in config:
                 config.update({"ssl.certificate.location": client.get_instance()._get_client_cert_path()})
             if "ssl.key.location" in config:
-                config.update({"ssl.ca.location": client.get_instance()._get_client_key_path()})
+                config.update({"ssl.key.location": client.get_instance()._get_client_key_path()})
 
         # set connection properties
         config.update(
