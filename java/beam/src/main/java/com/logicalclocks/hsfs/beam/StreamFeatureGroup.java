@@ -279,7 +279,11 @@ public class StreamFeatureGroup extends FeatureGroupBase<PCollection<Object>> {
    * @return BeamProducer object, that can be wrapped inside Beam Pipeline `apply` method.
    */
   public BeamProducer insertStream() throws Exception {
-    return featureGroupEngine.insertStream(this);
+    return featureGroupEngine.insertStream(this, null);
+  }
+
+  public BeamProducer insertStream(Map<String, String> writeOptions) throws Exception {
+    return featureGroupEngine.insertStream(this, writeOptions);
   }
 
   @Override
@@ -289,11 +293,6 @@ public class StreamFeatureGroup extends FeatureGroupBase<PCollection<Object>> {
 
   @Override
   public Object insertStream(PCollection<Object> featureData, String queryName) throws Exception {
-    throw new UnsupportedOperationException("Not supported for Beam");
-  }
-
-  @Override
-  public Object insertStream(PCollection<Object> featureData, Map<String, String> writeOptions) throws Exception {
     throw new UnsupportedOperationException("Not supported for Beam");
   }
 

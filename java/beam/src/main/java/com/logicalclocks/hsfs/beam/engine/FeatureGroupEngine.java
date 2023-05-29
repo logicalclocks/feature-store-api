@@ -26,12 +26,13 @@ import lombok.SneakyThrows;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class FeatureGroupEngine extends FeatureGroupEngineBase {
 
   @SneakyThrows
-  public BeamProducer insertStream(StreamFeatureGroup streamFeatureGroup) {
-    return BeamEngine.getInstance().insertStream(streamFeatureGroup);
+  public BeamProducer insertStream(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions) {
+    return BeamEngine.getInstance().insertStream(streamFeatureGroup, writeOptions);
   }
 
   public StreamFeatureGroup getStreamFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)

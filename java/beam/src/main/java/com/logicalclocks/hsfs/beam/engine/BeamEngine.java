@@ -20,6 +20,7 @@ package com.logicalclocks.hsfs.beam.engine;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
+import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
 import org.apache.avro.Schema;
@@ -34,19 +35,21 @@ import java.util.stream.Collectors;
 public class BeamEngine {
   private static BeamEngine INSTANCE = null;
 
-  public static synchronized BeamEngine getInstance() {
+  public static synchronized BeamEngine getInstance() throws FeatureStoreException {
     if (INSTANCE == null) {
       INSTANCE = new BeamEngine();
     }
     return INSTANCE;
   }
 
-  private KafkaApi kafkaApi = new KafkaApi();
+  private final KafkaApi kafkaApi = new KafkaApi();
+  private final HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
-  private BeamEngine() {
+  private BeamEngine() throws FeatureStoreException {
   }
 
-  public BeamProducer insertStream(StreamFeatureGroup streamFeatureGroup) throws FeatureStoreException, IOException {
+  public BeamProducer insertStream(StreamFeatureGroup streamFeatureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
     Map<String, Schema> complexFeatureSchemas = new HashMap<>();
     for (String featureName: streamFeatureGroup.getComplexFeatures()) {
       complexFeatureSchemas.put(featureName,
@@ -54,20 +57,34 @@ public class BeamEngine {
     }
     Schema deserializedEncodedSchema = new Schema.Parser().parse(streamFeatureGroup.getEncodedAvroSchema());
 
-    return new BeamProducer(streamFeatureGroup.getOnlineTopicName(), getKafkaProperties(streamFeatureGroup),
+    return new BeamProducer(streamFeatureGroup.getOnlineTopicName(),
+      getKafkaProperties(streamFeatureGroup, writeOptions),
       streamFeatureGroup.getDeserializedAvroSchema(), deserializedEncodedSchema, complexFeatureSchemas,
       streamFeatureGroup.getPrimaryKeys());
   }
 
-  private Map<String, Object> getKafkaProperties(StreamFeatureGroup featureGroup) throws FeatureStoreException,
-      IOException {
+  private Map<String, Object> getKafkaProperties(StreamFeatureGroup featureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
     Map<String, Object> properties = new HashMap<>();
-    HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
-    properties.put("bootstrap.servers",
-        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
-        .map(broker -> broker.replaceAll("EXTERNAL://", ""))
-        .collect(Collectors.joining(","))
-    );
+    boolean internalKafka = false;
+    if (writeOptions != null) {
+      internalKafka = Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"));
+      properties.putAll(writeOptions);
+    }
+
+    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) || internalKafka) {
+      properties.put("bootstrap.servers",
+            kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
+                "INTERNAL://", ""))
+              .collect(Collectors.joining(",")));
+    } else {
+      properties.put("bootstrap.servers",
+            kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
+              .map(broker -> broker.replaceAll("EXTERNAL://", ""))
+              .collect(Collectors.joining(","))
+      );
+    }
+
     properties.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
     properties.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,  client.getTrustStorePath());
     properties.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, client.getCertKey());
