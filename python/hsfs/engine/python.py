@@ -441,6 +441,8 @@ class Engine:
                 ):
                     dataframe_copy[col] = dataframe_copy[col].dt.tz_convert(None)
             return dataframe_copy
+        elif dataframe == "spine":
+            return None
 
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: pandas dataframe. "
@@ -966,7 +968,7 @@ class Engine:
             feature_group.backfill_job.run(
                 args=feature_group.backfill_job.config.get("defaultArgs", "")
                 + " -kafkaOffsetReset true",
-                await_termination=offline_write_options.get("wait_for_job", True),
+                await_termination=offline_write_options.get("wait_for_job", False),
             )
         elif (
             not isinstance(feature_group, ExternalFeatureGroup)
@@ -974,7 +976,7 @@ class Engine:
             and offline_write_options.get("start_offline_backfill", True)
         ):
             feature_group.backfill_job.run(
-                await_termination=offline_write_options.get("wait_for_job", True)
+                await_termination=offline_write_options.get("wait_for_job", False)
             )
         if isinstance(feature_group, ExternalFeatureGroup):
             return None
