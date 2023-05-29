@@ -47,12 +47,12 @@ import java.util.List;
 import java.util.Map;
 
 public class BeamProducer extends PTransform<@NonNull PCollection<Row>, @NonNull PDone> {
-  String topic;
-  Map<String, Object> properties;
-  Schema schema;
-  Schema encodedSchema;
-  Map<String, Schema> deserializedComplexFeatureSchemas;
-  List<String> primaryKeys;
+  private String topic;
+  private Map<String, Object> properties;
+  private transient Schema schema;
+  private transient Schema encodedSchema;
+  private Map<String, Schema> deserializedComplexFeatureSchemas;
+  private List<String> primaryKeys;
 
   public BeamProducer(String topic, Map<String, Object> properties, Schema schema, Schema encodedSchema,
       Map<String, Schema> deserializedComplexFeatureSchemas, List<String>  primaryKeys) {

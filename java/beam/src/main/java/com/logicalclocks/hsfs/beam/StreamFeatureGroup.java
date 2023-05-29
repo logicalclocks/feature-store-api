@@ -297,6 +297,11 @@ public class StreamFeatureGroup extends FeatureGroupBase<PCollection<Object>> {
   }
 
   @Override
+  public Object insertStream(PCollection<Object> featureData, Map<String, String> writeOptions) throws Exception {
+    return null;
+  }
+
+  @Override
   public Object insertStream(PCollection<Object> featureData, String queryName, Map<String, String> writeOptions)
       throws Exception {
     throw new UnsupportedOperationException("Not supported for Beam");
