@@ -205,7 +205,12 @@ public class HudiEngine {
     Option<HoodieInstant> lastInstant = commitTimeline.lastInstant();
     if (lastInstant.isPresent()) {
       fgCommitMetadata.setCommitDateString(lastInstant.get().getTimestamp());
-      fgCommitMetadata.setCommitTime(utils.getTimeStampFromDateString(lastInstant.get().getTimestamp()));
+      fgCommitMetadata.setCommitTime(
+          FeatureGroupUtils.getTimeStampFromDateString(lastInstant.get().getTimestamp()));
+      fgCommitMetadata.setLastActiveCommitTime(
+          FeatureGroupUtils.getTimeStampFromDateString(commitTimeline.firstInstant().get().getTimestamp())
+      );
+
       byte[] commitsToReturn = commitTimeline.getInstantDetails(lastInstant.get()).get();
       HoodieCommitMetadata commitMetadata = HoodieCommitMetadata.fromBytes(commitsToReturn, HoodieCommitMetadata.class);
       fgCommitMetadata.setRowsUpdated(commitMetadata.fetchTotalUpdateRecordsWritten());
