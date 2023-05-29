@@ -23,6 +23,7 @@ nav:
       - FeatureStore: generated/api/feature_store_api.md
       - FeatureGroup: generated/api/feature_group_api.md
       - ExternalFeatureGroup: generated/api/external_feature_group_api.md
+      - SpineGroup: generated/api/spine_group_api.md
       - FeatureView: generated/api/feature_view_api.md
       - TrainingDataset: generated/api/training_dataset_api.md
       - Storage Connector: generated/api/storage_connector_api.md
