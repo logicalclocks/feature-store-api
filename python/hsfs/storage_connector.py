@@ -926,9 +926,9 @@ class KafkaConnector(StorageConnector):
                 "bootstrap.servers": self.bootstrap_servers,
                 "security.protocol": self.security_protocol,
                 "ssl.endpoint.identification.algorithm": self._ssl_endpoint_identification_algorithm,
-                "ssl.truststore.location": self._ssl_truststore_location,
-                "ssl.truststore.password": self._ssl_keystore_password,
-                "ssl.keystore.location": self._ssl_keystore_location,
+                "ssl.truststore.location": self.ssl_truststore_location,
+                "ssl.truststore.password": self._ssl_truststore_password,
+                "ssl.keystore.location": self.ssl_keystore_location,
                 "ssl.keystore.password": self._ssl_keystore_password,
                 "ssl.key.password": self._ssl_key_password,
             }
