@@ -822,7 +822,9 @@ class Engine:
         # todo temp solution
         if not os.path.exists(file):
             from pydoop import hdfs
-            hdfs.get("hdfs://" + file, file)
+            hdfs_file = "hdfs://" + file
+            file = os.path.join("/tmp", file)
+            hdfs.get(hdfs_file, file)
         return file
 
     def _apply_transformation_function(self, transformation_functions, dataset):
