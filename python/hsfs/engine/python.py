@@ -820,12 +820,11 @@ class Engine:
         # if streaming connectors are implemented in the future, this method
         # can be used to materialize certificates locally
         # todo temp solution
-        if not os.path.exists(file):
+        local_file = os.path.join("/tmp", os.path.basename(file))
+        if not os.path.exists(local_file):
             from pydoop import hdfs
-            hdfs_file = "hdfs://" + file
-            file = os.path.join("/tmp", os.path.basename(file))
-            hdfs.get(hdfs_file, file)
-        return file
+            hdfs.get("hdfs://" + file, local_file)
+        return local_file
 
     def _apply_transformation_function(self, transformation_functions, dataset):
         for (

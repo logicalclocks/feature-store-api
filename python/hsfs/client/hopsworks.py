@@ -98,6 +98,21 @@ class Client(base.Client):
     def _get_client_key_path(self) -> str:
         return os.path.join("/tmp", "client_key.pem")
 
+    def _write_pem(self, keystore_path, keystore_pw, truststore_path, truststore_pw, prefix):
+        ca_chain_path = os.path.join("/tmp", f"{prefix}_ca_chain.pem")
+        if not os.path.exists(ca_chain_path):
+            self._write_ca_chain(keystore_path, keystore_pw, truststore_path, truststore_pw, ca_chain_path)
+
+        client_cert_path = os.path.join("/tmp", f"{prefix}_client_cert.pem")
+        if not os.path.exists(client_cert_path):
+            self._write_client_cert(keystore_path, keystore_pw, client_cert_path)
+
+        client_key_path = os.path.join("/tmp", f"{prefix}_client_key.pem")
+        if not os.path.exists(client_key_path):
+            self._write_client_key(keystore_path, keystore_pw, client_key_path)
+
+        return ca_chain_path, client_cert_path, client_key_path
+
     def _write_ca_chain(self, keystore_path, keystore_pw, truststore_path, truststore_pw, ca_chain_path):
         """
         Converts JKS keystore and truststore file into ca chain PEM to be compatible with Python libraries
