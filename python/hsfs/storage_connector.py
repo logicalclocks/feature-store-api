@@ -944,21 +944,29 @@ class KafkaConnector(StorageConnector):
         kafka_options = self.kafka_options()
         for key, value in kafka_options.items():
             if key == "ssl.keystore.location":
-                ca_chain, client_cert, client_key = client.get_instance().temp(
-                    value, kafka_options["ssl.keystore.password"],
-                    kafka_options["ssl.truststore.location"], kafka_options["ssl.truststore.password"]
+                directory = os.path.dirname(kafka_options["ssl.keystore.location"])
+
+                ca_chain_path = os.path.join(directory, "kafka_ca_chain.pem")
+                client.get_instance()._write_ca_chain(
+                    kafka_options["ssl.keystore.location"], kafka_options["ssl.keystore.password"],
+                    kafka_options["ssl.truststore.location"], kafka_options["ssl.truststore.password"],
+                    ca_chain_path
                 )
 
-                ca_chain_path = os.path.join("/tmp", "ca_chain_tt.pem")
-                client.get_instance()._write_pem_file(ca_chain, ca_chain_path)
+                client_cert_path = os.path.join(directory, "kafka_client_cert.pem")
+                client.get_instance()._write_client_cert(
+                    kafka_options["ssl.keystore.location"], kafka_options["ssl.keystore.password"],
+                    client_cert_path
+                )
+
+                client_key_path = os.path.join(directory, "kafka_client_key.pem")
+                client.get_instance()._write_client_key(
+                    kafka_options["ssl.keystore.location"], kafka_options["ssl.keystore.password"],
+                    client_key_path
+                )
+
                 config["ssl.ca.location"] = ca_chain_path
-
-                client_cert_path = os.path.join("/tmp", "client_cert_tt.pem")
-                client.get_instance()._write_pem_file(client_cert, client_cert_path)
                 config["ssl.certificate.location"] = client_cert_path
-
-                client_key_path = os.path.join("/tmp", "client_key_tt.pem")
-                client.get_instance()._write_pem_file(client_key, client_key_path)
                 config["ssl.key.location"] = client_key_path
             elif key in [
                 "ssl.endpoint.identification.algorithm",
