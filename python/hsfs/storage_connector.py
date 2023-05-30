@@ -950,15 +950,21 @@ class KafkaConnector(StorageConnector):
 
                 ca_chain_path = os.path.join("/tmp", "ca_chain_tt.pem")
                 client.get_instance()._write_pem_file(ca_chain, ca_chain_path)
-                config["ssl.ca.location"] = ca_chain_path
+                config["ssl.ca.location"] = engine.get_instance().add_file(
+                    ca_chain_path
+                )
 
                 client_cert_path = os.path.join("/tmp", "client_cert_tt.pem")
                 client.get_instance()._write_pem_file(client_cert, client_cert_path)
-                config["ssl.certificate.location"] = client_cert_path
+                config["ssl.certificate.location"] = engine.get_instance().add_file(
+                    client_cert_path
+                )
 
                 client_key_path = os.path.join("/tmp", "client_key_tt.pem")
                 client.get_instance()._write_pem_file(client_key, client_key_path)
-                config["ssl.key.location"] = client_key_path
+                config["ssl.key.location"] = engine.get_instance().add_file(
+                    client_key_path
+                )
             elif key in [
                 "ssl.endpoint.identification.algorithm",
                 "ssl.truststore.location",
@@ -1026,7 +1032,7 @@ class KafkaConnector(StorageConnector):
             options: Additional options as key/value string pairs to be passed to Spark.
                 Defaults to `{}`.
             include_metadata: Indicate whether to return additional metadata fields from
-                messages in the stream. Otherwise only the decoded value fields are
+                messages in the stream. Otherwise, only the decoded value fields are
                 returned. Defaults to `False`.
 
         # Raises
