@@ -112,6 +112,25 @@ class Client(base.Client):
         with ca_chain_path.open("w") as f:
             f.write(keystore_ca_cert + truststore_ca_cert)
 
+    def temp(self, jks_path, keystore_pw):
+        ks = jks.KeyStore.load(jks_path, keystore_pw)
+
+        client_key = ""
+        client_cert = ""
+        for alias, pk in ks.private_keys.items():
+            client_key = client_key + self._bytes_to_pem_str(
+                pk.pkey_pkcs8, "PRIVATE KEY"
+            )
+
+            for c in pk.cert_chain:
+                client_cert = client_cert + self._bytes_to_pem_str(c[1], "CERTIFICATE")
+
+        ca_chain = ""
+        for alias, c in ks.certs.items():
+            ca_chain = ca_chain + self._bytes_to_pem_str(c.cert, "CERTIFICATE")
+
+        return ca_chain, client_cert, client_key
+
     def _convert_jks_to_pem(self, jks_path, keystore_pw):
         """
         Converts a keystore JKS that contains client private key,

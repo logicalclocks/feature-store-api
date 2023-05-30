@@ -23,7 +23,6 @@ import ast
 import warnings
 import logging
 import avro
-import socket
 import pyarrow as pa
 import json
 import random
@@ -59,10 +58,11 @@ from hsfs.core import (
     feature_view_api,
     transformation_function_engine,
     arrow_flight_client,
+    storage_connector_api,
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.client import exceptions, hopsworks
+from hsfs.client import exceptions
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
@@ -843,7 +843,11 @@ class Engine:
 
     def _init_kafka_resources(self, feature_group, offline_write_options):
         # setup kafka producer
-        producer = Producer(self._get_kafka_config(offline_write_options))
+        producer = Producer(
+            self._get_kafka_config(
+                feature_group.feature_store_id, offline_write_options
+            )
+        )
 
         # setup complex feature writers
         feature_writers = {
@@ -1027,38 +1031,15 @@ class Engine:
         writer = avro.io.DatumWriter(parsed_schema)
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
-    def _get_kafka_config(self, write_options: dict = {}) -> dict:
-        # producer configuration properties
-        # https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
-        config = {
-            "security.protocol": "SSL",
-            "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
-            "ssl.certificate.location": client.get_instance()._get_client_cert_path(),
-            "ssl.key.location": client.get_instance()._get_client_key_path(),
-            "client.id": socket.gethostname(),
-            **write_options.get("kafka_producer_config", {}),
-        }
+    def _get_kafka_config(
+        self, feature_store_id: int, write_options: dict = {}
+    ) -> dict:
+        storage_connector = storage_connector_api.StorageConnectorApi(
+            feature_store_id
+        ).get_kafka_connector()
 
-        if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
-            "internal_kafka", False
-        ):
-            config["bootstrap.servers"] = ",".join(
-                [
-                    endpoint.replace("INTERNAL://", "")
-                    for endpoint in self._kafka_api.get_broker_endpoints(
-                        externalListeners=False
-                    )
-                ]
-            )
-        else:
-            config["bootstrap.servers"] = ",".join(
-                [
-                    endpoint.replace("EXTERNAL://", "")
-                    for endpoint in self._kafka_api.get_broker_endpoints(
-                        externalListeners=True
-                    )
-                ]
-            )
+        config = storage_connector.confluent_options()
+        config.update(write_options)
         return config
 
     @staticmethod

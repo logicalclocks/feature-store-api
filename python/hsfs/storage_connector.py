@@ -20,7 +20,7 @@ from typing import Optional
 import humps
 import base64
 
-from hsfs import engine
+from hsfs import engine, client
 from hsfs.core import storage_connector_api
 
 
@@ -843,17 +843,6 @@ class KafkaConnector(StorageConnector):
     type = StorageConnector.KAFKA
     SPARK_FORMAT = "kafka"
 
-    CONFIG_MAPPING = {
-        "_bootstrap_servers": "kafka.bootstrap.servers",
-        "_security_protocol": "kafka.security.protocol",
-        "_ssl_truststore_location": "kafka.ssl.truststore.location",
-        "_ssl_truststore_password": "kafka.ssl.truststore.password",
-        "_ssl_keystore_location": "kafka.ssl.keystore.location",
-        "_ssl_keystore_password": "kafka.ssl.keystore.password",
-        "_ssl_key_password": "kafka.ssl.key.password",
-        "_ssl_endpoint_identification_algorithm": "kafka.ssl.endpoint.identification.algorithm",
-    }
-
     def __init__(
         self,
         id,
@@ -895,7 +884,7 @@ class KafkaConnector(StorageConnector):
         )
 
     @property
-    def boostrap_servers(self):
+    def bootstrap_servers(self):
         """Bootstrap servers string."""
         return self._bootstrap_servers
 
@@ -924,17 +913,77 @@ class KafkaConnector(StorageConnector):
         """Bootstrap servers string."""
         return self._options
 
+    def kafka_options(self):
+        """Return prepared options to be passed to kafka, based on the additional arguments."""
+        config = {}
+
+        # set kafka storage connector options
+        config.update(self.options)
+
+        # set connection properties
+        config.update(
+            {
+                "bootstrap.servers": self.bootstrap_servers,
+                "security.protocol": self.security_protocol,
+                "ssl.endpoint.identification.algorithm": self._ssl_endpoint_identification_algorithm,
+                "ssl.truststore.location": self._ssl_truststore_location,
+                "ssl.truststore.password": self._ssl_keystore_password,
+                "ssl.keystore.location": self._ssl_keystore_location,
+                "ssl.keystore.password": self._ssl_keystore_password,
+                "ssl.key.password": self._ssl_key_password,
+            }
+        )
+
+        return config
+
+    def confluent_options(self):
+        """Return prepared options to be passed to confluent_kafka, based on the provided apache spark configuration.
+        https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
+        """
+        config = {}
+        kafka_options = self.kafka_options()
+        for key, value in kafka_options.items():
+            if key == "ssl.keystore.location":
+                ca_chain, client_cert, client_key = client.get_instance().temp(
+                    value, kafka_options["ssl.keystore.password"]
+                )
+
+                ca_chain_path = os.path.join("/tmp", "ca_chain_tt.pem")
+                client.get_instance()._write_pem_file(ca_chain, ca_chain_path)
+                config["ssl.ca.location"] = ca_chain_path
+
+                client_cert_path = os.path.join("/tmp", "client_cert_tt.pem")
+                client.get_instance()._write_pem_file(client_cert, client_cert_path)
+                config["ssl.certificate.location"] = client_cert_path
+
+                client_key_path = os.path.join("/tmp", "client_key_tt.pem")
+                client.get_instance()._write_pem_file(client_key, client_key_path)
+                config["ssl.key.location"] = client_key_path
+            elif key in [
+                "ssl.endpoint.identification.algorithm",
+                "ssl.truststore.location",
+                "ssl.truststore.password",
+                "ssl.keystore.location",
+                "ssl.keystore.password",
+                "ssl.key.password",
+            ]:
+                continue
+            else:
+                config[key] = value
+
+        return config
+
     def spark_options(self):
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
+        This is done by just adding 'kafka.' prefix to kafka_options.
+        https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html#kafka-specific-configurations
         """
-        config = {
-            v: getattr(self, k)
-            for k, v in self.CONFIG_MAPPING.items()
-            if getattr(self, k) is not None
-        }
+        config = {}
+        for key, value in self.kafka_options().items():
+            config[f"{KafkaConnector.SPARK_FORMAT}.{key}"] = value
 
-        return {**self._options, **config}
+        return config
 
     def read(
         self,
