@@ -20,6 +20,7 @@ package com.logicalclocks.hsfs.metadata;
 import com.damnhandy.uri.template.UriTemplate;
 import com.logicalclocks.hsfs.FeatureStoreBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.StorageConnector;
 import org.apache.http.client.methods.HttpGet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ public class StorageConnectorApi {
   private static final String CONNECTOR_TYPE_PATH =
       CONNECTOR_PATH + "{/connType}{/name}{?temporaryCredentials}";
   private static final String ONLINE_CONNECTOR_PATH = CONNECTOR_PATH + "/onlinefeaturestore";
+  private static final String KAFKA_CONNECTOR_PATH = CONNECTOR_PATH + "/kafka_connector";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageConnectorApi.class);
 
@@ -72,5 +74,21 @@ public class StorageConnectorApi {
 
     LOGGER.info("Sending metadata request: " + uri);
     return hopsworksClient.handleRequest(new HttpGet(uri), storageConnectorType);
+  }
+
+  public StorageConnector.KafkaConnector getKafkaStorageConnector(FeatureStoreBase featureStoreBase)
+          throws IOException, FeatureStoreException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
+    String pathTemplate = HopsworksClient.PROJECT_PATH
+            + FeatureStoreApi.FEATURE_STORE_PATH
+            + KAFKA_CONNECTOR_PATH;
+
+    String uri = UriTemplate.fromTemplate(pathTemplate)
+            .set("projectId", featureStoreBase.getProjectId())
+            .set("fsId", featureStoreBase.getId())
+            .expand();
+
+    LOGGER.info("Sending metadata request: " + uri);
+    return hopsworksClient.handleRequest(new HttpGet(uri), StorageConnector.KafkaConnector.class);
   }
 }

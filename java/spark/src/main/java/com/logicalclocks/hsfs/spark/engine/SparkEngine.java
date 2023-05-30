@@ -23,7 +23,6 @@ import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.DataFormat;
@@ -37,7 +36,6 @@ import com.logicalclocks.hsfs.constructor.FeatureGroupAlias;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
-import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
@@ -1003,34 +1001,12 @@ public class SparkEngine {
 
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    Map<String, String> config = new HashMap<>();
-    boolean internalKafka = false;
+    StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector();
+    Map<String, String> config = storageConnector.sparkOptions();
+
     if (writeOptions != null) {
-      internalKafka = Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"));
       config.putAll(writeOptions);
     }
-    HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
-
-    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) || internalKafka) {
-      config.put("kafka.bootstrap.servers",
-          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
-              "INTERNAL://", ""))
-            .collect(Collectors.joining(",")));
-    } else {
-      config.put("kafka.bootstrap.servers",
-          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
-            .map(broker -> broker.replaceAll("EXTERNAL://", ""))
-            .collect(Collectors.joining(","))
-      );
-    }
-
-    config.put("kafka.security.protocol", "SSL");
-    config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
-    config.put("kafka.ssl.truststore.password", client.getCertKey());
-    config.put("kafka.ssl.keystore.location", client.getKeyStorePath());
-    config.put("kafka.ssl.keystore.password", client.getCertKey());
-    config.put("kafka.ssl.key.password", client.getCertKey());
-    config.put("kafka.ssl.endpoint.identification.algorithm", "");
     return config;
   }
 

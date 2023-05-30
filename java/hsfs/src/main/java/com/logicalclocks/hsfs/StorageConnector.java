@@ -395,37 +395,35 @@ public abstract class StorageConnector {
     @Getter @Setter
     protected List<Option> options;
 
-    @Override
-    public Map<String, String> sparkOptions() {
-      Map<String, String> options = new HashMap<>();
-      options.put(Constants.KAFKA_BOOTSTRAP_SERVERS, bootstrapServers);
-      options.put(Constants.KAFKA_SECURITY_PROTOCOL, securityProtocol.toString());
-      if (!Strings.isNullOrEmpty(sslTruststoreLocation)) {
-        options.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
-      }
-      if (!Strings.isNullOrEmpty(sslTruststorePassword)) {
-        options.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
-      }
-      if (!Strings.isNullOrEmpty(sslKeystoreLocation)) {
-        options.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
-      }
-      if (!Strings.isNullOrEmpty(sslKeystorePassword)) {
-        options.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
-      }
-      if (!Strings.isNullOrEmpty(sslKeyPassword)) {
-        options.put(Constants.KAFKA_SSL_KEY_PASSWORD, sslKeyPassword);
-      }
-      // can be empty string
-      if (sslEndpointIdentificationAlgorithm != null) {
-        options.put(
-            Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm.getValue());
-      }
+    public Map<String, String> kafkaOptions() {
+      Map<String, String> config = new HashMap<>();
+
+      // set kafka storage connector options
       if (this.options != null && !this.options.isEmpty()) {
         Map<String, String> argOptions = this.options.stream()
-            .collect(Collectors.toMap(Option::getName, Option::getValue));
-        options.putAll(argOptions);
+                .collect(Collectors.toMap(Option::getName, Option::getValue));
+        config.putAll(argOptions);
       }
-      return options;
+
+      // set connection properties
+      config.put(Constants.KAFKA_BOOTSTRAP_SERVERS, bootstrapServers);
+      config.put(Constants.KAFKA_SECURITY_PROTOCOL, securityProtocol.toString());
+      config.put(Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm.getValue());
+      config.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
+      config.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
+      config.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
+      config.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
+      config.put(Constants.KAFKA_SSL_KEY_PASSWORD, sslKeyPassword);
+      return config;
+    }
+
+    @Override
+    public Map<String, String> sparkOptions() {
+      Map<String, String> config = new HashMap<>();
+      for (Map.Entry<String, String> entry: kafkaOptions().entrySet()) {
+        config.put(String.format("%s.%s", sparkFormat, entry.getKey()), entry.getValue());
+      }
+      return config;
     }
 
     @JsonIgnore
