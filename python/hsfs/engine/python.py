@@ -30,6 +30,7 @@ import uuid
 import decimal
 import numbers
 import math
+import os
 from datetime import datetime, timezone
 
 import great_expectations as ge
@@ -818,7 +819,15 @@ class Engine:
     def add_file(self, file):
         # if streaming connectors are implemented in the future, this method
         # can be used to materialize certificates locally
-        return file
+        # todo temp solution
+        from pydoop import hdfs
+
+        if not file.startswith("file://"):
+            file = "hdfs://" + file
+
+        local_location = os.path.join("/tmp", os.path.basename(file))
+        hdfs.get(file, local_location)
+        return local_location
 
     def _apply_transformation_function(self, transformation_functions, dataset):
         for (
