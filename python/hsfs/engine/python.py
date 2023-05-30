@@ -357,7 +357,8 @@ class Engine:
             stats = df[target_cols].describe()
         final_stats = []
         for col in stats.columns:
-            stat = self._convert_pandas_statistics(stats[col].to_dict())
+            stats_dict = json.loads(stats[col].to_json())
+            stat = self._convert_pandas_statistics(stats_dict)
             stat["dataType"] = (
                 "Fractional"
                 if isinstance(stats[col].dtype, type(np.dtype(np.float64)))
