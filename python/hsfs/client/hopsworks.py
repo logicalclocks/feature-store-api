@@ -111,7 +111,7 @@ class Client(base.Client):
         for alias, c in ts.certs.items():
             ca_chain = ca_chain + self._bytes_to_pem_str(c.cert, "CERTIFICATE")
 
-        with ca_chain_path.open("w") as f:
+        with Path(ca_chain_path).open("w") as f:
             f.write(ca_chain)
 
     def _write_client_cert(self, keystore_path, keystore_pw, client_cert_path):
@@ -125,7 +125,7 @@ class Client(base.Client):
             for c in pk.cert_chain:
                 client_cert = client_cert + self._bytes_to_pem_str(c[1], "CERTIFICATE")
 
-        with client_cert_path.open("w") as f:
+        with Path(client_cert_path).open("w") as f:
             f.write(client_cert)
 
     def _write_client_key(self, keystore_path, keystore_pw, client_key_path):
@@ -140,7 +140,7 @@ class Client(base.Client):
                 pk.pkey_pkcs8, "PRIVATE KEY"
             )
 
-        with client_key_path.open("w") as f:
+        with Path(client_key_path).open("w") as f:
             f.write(client_key)
 
     def _bytes_to_pem_str(self, der_bytes, pem_type):
