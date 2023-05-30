@@ -823,7 +823,7 @@ class Engine:
         if not os.path.exists(file):
             from pydoop import hdfs
             hdfs_file = "hdfs://" + file
-            file = os.path.join("/tmp", file)
+            file = os.path.join("/tmp", os.path.basename(file))
             hdfs.get(hdfs_file, file)
         return file
 
