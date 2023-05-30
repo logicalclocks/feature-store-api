@@ -945,7 +945,8 @@ class KafkaConnector(StorageConnector):
         for key, value in kafka_options.items():
             if key == "ssl.keystore.location":
                 ca_chain, client_cert, client_key = client.get_instance().temp(
-                    value, kafka_options["ssl.keystore.password"]
+                    value, kafka_options["ssl.keystore.password"],
+                    kafka_options["ssl.truststore.location"], kafka_options["ssl.truststore.password"]
                 )
 
                 ca_chain_path = os.path.join("/tmp", "ca_chain_tt.pem")

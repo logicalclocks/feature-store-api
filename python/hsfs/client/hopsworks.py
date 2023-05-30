@@ -112,8 +112,9 @@ class Client(base.Client):
         with ca_chain_path.open("w") as f:
             f.write(keystore_ca_cert + truststore_ca_cert)
 
-    def temp(self, jks_path, keystore_pw):
-        ks = jks.KeyStore.load(jks_path, keystore_pw)
+    def temp(self, keystore_path, keystore_pw, truststore_path, truststore_pw):
+        ks = jks.KeyStore.load(keystore_path, keystore_pw)
+        ts = jks.KeyStore.load(truststore_path, truststore_pw)
 
         client_key = ""
         client_cert = ""
@@ -127,6 +128,9 @@ class Client(base.Client):
 
         ca_chain = ""
         for alias, c in ks.certs.items():
+            ca_chain = ca_chain + self._bytes_to_pem_str(c.cert, "CERTIFICATE")
+
+        for alias, c in ts.certs.items():
             ca_chain = ca_chain + self._bytes_to_pem_str(c.cert, "CERTIFICATE")
 
         return ca_chain, client_cert, client_key
