@@ -817,6 +817,7 @@ class Engine:
             time.sleep(3)
 
     def add_file(self, file):
+        print(1)
         if not file:
             return file
 
