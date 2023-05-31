@@ -14,6 +14,8 @@
 #   limitations under the License.
 #
 import os
+import re
+import socket
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -865,13 +867,15 @@ class KafkaConnector(StorageConnector):
         # KAFKA
         self._bootstrap_servers = bootstrap_servers
         self._security_protocol = security_protocol
-        self._ssl_truststore_location = engine.get_instance().add_file(
-            ssl_truststore_location
-        )
+        if ssl_truststore_location:
+            self._ssl_truststore_location = engine.get_instance().add_file(
+                ssl_truststore_location
+            )
         self._ssl_truststore_password = ssl_truststore_password
-        self._ssl_keystore_location = engine.get_instance().add_file(
-            ssl_keystore_location
-        )
+        if ssl_keystore_location:
+            self._ssl_keystore_location = engine.get_instance().add_file(
+                ssl_keystore_location
+            )
         self._ssl_keystore_password = ssl_keystore_password
         self._ssl_key_password = ssl_key_password
         self._ssl_endpoint_identification_algorithm = (
@@ -914,7 +918,9 @@ class KafkaConnector(StorageConnector):
         return self._options
 
     def kafka_options(self):
-        """Return prepared options to be passed to kafka, based on the additional arguments."""
+        """Return prepared options to be passed to kafka, based on the additional arguments.
+        https://kafka.apache.org/documentation/
+        """
         config = {}
 
         # set kafka storage connector options
@@ -926,13 +932,25 @@ class KafkaConnector(StorageConnector):
                 "bootstrap.servers": self.bootstrap_servers,
                 "security.protocol": self.security_protocol,
                 "ssl.endpoint.identification.algorithm": self._ssl_endpoint_identification_algorithm,
-                "ssl.truststore.location": self.ssl_truststore_location,
-                "ssl.truststore.password": self._ssl_truststore_password,
-                "ssl.keystore.location": self.ssl_keystore_location,
-                "ssl.keystore.password": self._ssl_keystore_password,
                 "ssl.key.password": self._ssl_key_password,
             }
         )
+
+        # set ssl
+        if self.ssl_truststore_location:
+            config.update(
+                {
+                    "ssl.truststore.location": self.ssl_truststore_location,
+                    "ssl.truststore.password": self._ssl_truststore_password,
+                }
+            )
+        if self.ssl_keystore_location:
+            config.update(
+                {
+                    "ssl.keystore.location": self.ssl_keystore_location,
+                    "ssl.keystore.password": self._ssl_keystore_password,
+                }
+            )
 
         return config
 
@@ -953,6 +971,17 @@ class KafkaConnector(StorageConnector):
                 config["ssl.ca.location"] = ca_chain_path
                 config["ssl.certificate.location"] = client_cert_path
                 config["ssl.key.location"] = client_key_path
+            elif key == "sasl.jaas.config":
+                groups = re.search("(.+?) .*username='(.+?)' password='(.+?)'", value)
+                mechanism = groups.group(1)
+                if mechanism == "org.apache.kafka.common.security.plain.PlainLoginModule":
+                    config["sasl.mechanisms"] = "PLAIN"
+                elif mechanism == "org.apache.kafka.common.security.scram.ScramLoginModule":
+                    config["sasl.mechanisms"] = "SCRAM-SHA-256"  # could also be SCRAM-SHA-512
+                elif mechanism == "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule":
+                    config["sasl.mechanisms"] = "OAUTHBEARER"
+                config["sasl.username"] = groups.group(2)
+                config["sasl.password"] = groups.group(3)
             elif key in [
                 "ssl.endpoint.identification.algorithm",
                 "ssl.truststore.location",
@@ -965,11 +994,13 @@ class KafkaConnector(StorageConnector):
             else:
                 config[key] = value
 
+        if "client.id" not in config:
+            config["group.id"] = socket.gethostname()
+
         return config
 
     def spark_options(self):
-        """Return prepared options to be passed to Spark, based on the additional
-        arguments.
+        """Return prepared options to be passed to Spark, based on the additional arguments.
         This is done by just adding 'kafka.' prefix to kafka_options.
         https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html#kafka-specific-configurations
         """
