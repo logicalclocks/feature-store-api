@@ -1000,7 +1000,7 @@ class KafkaConnector(StorageConnector):
                 config["sasl.username"] = groups.group(2)
                 config["sasl.password"] = groups.group(3)
             elif key == "ssl.endpoint.identification.algorithm":
-                config[key] = None if value == "" else value
+                config[key] = "none" if value == "" else value
             elif key == "queued.max.requests":
                 config["queue.buffering.max.messages"] = value
             elif key == "queued.max.request.bytes":
