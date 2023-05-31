@@ -975,8 +975,8 @@ class KafkaConnector(StorageConnector):
                 "ssl.keystore.location",
                 "ssl.keystore.password",
             ]:
-                if config["ssl.ca.location"]:
-                    # if value was set then skip
+                if "ssl.ca.location" in config:
+                    # value was set, skip
                     continue
 
                 ca_chain_path, client_cert_path, client_key_path = client.get_instance()._write_pem(
@@ -984,13 +984,12 @@ class KafkaConnector(StorageConnector):
                     kafka_options["ssl.truststore.location"], kafka_options["ssl.truststore.password"],
                     f"kafka_sc_{self.id}"
                 )
-
                 config["ssl.ca.location"] = ca_chain_path
                 config["ssl.certificate.location"] = client_cert_path
                 config["ssl.key.location"] = client_key_path
             elif key == "sasl.jaas.config":
                 groups = re.search("(.+?) .*username='(.+?)' password='(.+?)'", value)
-                if not config["sasl.mechanisms"]:
+                if "sasl.mechanisms" not in config:
                     mechanism = groups.group(1)
                     if mechanism == "org.apache.kafka.common.security.plain.PlainLoginModule":
                         config["sasl.mechanisms"] = "PLAIN"
