@@ -929,12 +929,15 @@ class KafkaConnector(StorageConnector):
             {
                 "bootstrap.servers": self.bootstrap_servers,
                 "security.protocol": self.security_protocol,
-                "ssl.endpoint.identification.algorithm": self._ssl_endpoint_identification_algorithm,
-                "ssl.key.password": self._ssl_key_password,
             }
         )
 
         # set ssl
+        config.update(
+            {
+                "ssl.endpoint.identification.algorithm": self._ssl_endpoint_identification_algorithm,
+            }
+        )
         if self.ssl_truststore_location:
             config.update(
                 {
@@ -949,17 +952,33 @@ class KafkaConnector(StorageConnector):
                     "ssl.keystore.password": self._ssl_keystore_password,
                 }
             )
+        if self._ssl_key_password:
+            config.update(
+                {
+                    "ssl.key.password": self._ssl_key_password,
+                }
+            )
 
         return config
 
     def confluent_options(self):
         """Return prepared options to be passed to confluent_kafka, based on the provided apache spark configuration.
+        Right now only producer values with Importance >= medium are implemented.
         https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
         """
         config = {}
         kafka_options = self.kafka_options()
         for key, value in kafka_options.items():
-            if key == "ssl.keystore.location":
+            if key in [
+                "ssl.truststore.location",
+                "ssl.truststore.password",
+                "ssl.keystore.location",
+                "ssl.keystore.password",
+            ]:
+                if config["ssl.ca.location"]:
+                    # if value was set then skip
+                    continue
+
                 ca_chain_path, client_cert_path, client_key_path = client.get_instance()._write_pem(
                     kafka_options["ssl.keystore.location"], kafka_options["ssl.keystore.password"],
                     kafka_options["ssl.truststore.location"], kafka_options["ssl.truststore.password"],
@@ -971,29 +990,48 @@ class KafkaConnector(StorageConnector):
                 config["ssl.key.location"] = client_key_path
             elif key == "sasl.jaas.config":
                 groups = re.search("(.+?) .*username='(.+?)' password='(.+?)'", value)
-                mechanism = groups.group(1)
-                if mechanism == "org.apache.kafka.common.security.plain.PlainLoginModule":
-                    config["sasl.mechanisms"] = "PLAIN"
-                elif mechanism == "org.apache.kafka.common.security.scram.ScramLoginModule":
-                    config["sasl.mechanisms"] = "SCRAM-SHA-256"  # could also be SCRAM-SHA-512
-                elif mechanism == "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule":
-                    config["sasl.mechanisms"] = "OAUTHBEARER"
+                if not config["sasl.mechanisms"]:
+                    mechanism = groups.group(1)
+                    if mechanism == "org.apache.kafka.common.security.plain.PlainLoginModule":
+                        config["sasl.mechanisms"] = "PLAIN"
+                    elif mechanism == "org.apache.kafka.common.security.scram.ScramLoginModule":
+                        config["sasl.mechanisms"] = "SCRAM-SHA-256"  # could also be SCRAM-SHA-512
+                    elif mechanism == "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule":
+                        config["sasl.mechanisms"] = "OAUTHBEARER"
                 config["sasl.username"] = groups.group(2)
                 config["sasl.password"] = groups.group(3)
+            elif key == "ssl.endpoint.identification.algorithm":
+                config[key] = None if value == "" else value
+            elif key == "queued.max.requests":
+                config["queue.buffering.max.messages"] = value
+            elif key == "queued.max.request.bytes":
+                config["queue.buffering.max.kbytes"] = value
             elif key in [
-                "ssl.endpoint.identification.algorithm",
-                "ssl.truststore.location",
-                "ssl.truststore.password",
-                "ssl.keystore.location",
-                "ssl.keystore.password",
-                "ssl.key.password",
+                "bootstrap.servers",
+                "security.protocol",
+                "compression.type",
+                "sasl.mechanism",
+                "request.timeout.ms",
+                "group.id",
+                "transactional.id",
+                "transaction.timeout.ms",
+                "enable.idempotence",
+                "message.max.bytes",
+                "linger.ms",
+                "retries",
+                "retry.backoff.ms",
+                "acks",
+                "socket.connection.setup.timeout.ms",
+                "connections.max.idle.ms",
+                "reconnect.backoff.ms",
+                "reconnect.backoff.max.ms",
+                "delivery.timeout.ms",
             ]:
-                continue
-            else:
+                # same between config
                 config[key] = value
-
-        if "client.id" not in config:
-            config["group.id"] = socket.gethostname()
+            else:
+                # ignored values (if not specified then configuration is ignored)
+                continue
 
         return config
 
