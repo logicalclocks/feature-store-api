@@ -712,6 +712,9 @@ class Engine:
         return stream.load().select("key", "value")
 
     def add_file(self, file):
+        if not file:
+            return file
+
         # This is used for unit testing
         if not file.startswith("file://"):
             file = "hdfs://" + file

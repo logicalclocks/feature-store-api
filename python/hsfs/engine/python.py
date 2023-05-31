@@ -817,8 +817,9 @@ class Engine:
             time.sleep(3)
 
     def add_file(self, file):
-        # if streaming connectors are implemented in the future, this method
-        # can be used to materialize certificates locally
+        if not file:
+            return file
+
         # todo temp solution
         local_file = os.path.join("/tmp", os.path.basename(file))
         if not os.path.exists(local_file):

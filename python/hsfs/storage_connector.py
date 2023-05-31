@@ -867,15 +867,13 @@ class KafkaConnector(StorageConnector):
         # KAFKA
         self._bootstrap_servers = bootstrap_servers
         self._security_protocol = security_protocol
-        if ssl_truststore_location:
-            self._ssl_truststore_location = engine.get_instance().add_file(
-                ssl_truststore_location
-            )
+        self._ssl_truststore_location = engine.get_instance().add_file(
+            ssl_truststore_location
+        )
         self._ssl_truststore_password = ssl_truststore_password
-        if ssl_keystore_location:
-            self._ssl_keystore_location = engine.get_instance().add_file(
-                ssl_keystore_location
-            )
+        self._ssl_keystore_location = engine.get_instance().add_file(
+            ssl_keystore_location
+        )
         self._ssl_keystore_password = ssl_keystore_password
         self._ssl_key_password = ssl_key_password
         self._ssl_endpoint_identification_algorithm = (
