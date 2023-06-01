@@ -21,6 +21,7 @@ import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -31,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
 public class StorageConnectorUtils {
@@ -66,6 +68,10 @@ public class StorageConnectorUtils {
   public Dataset<Row> read(StorageConnector.S3Connector connector, String dataFormat,
                            Map<String, String> options, String path) throws FeatureStoreException, IOException {
     connector.update();
+    // merge user spark options on top of default spark options
+    if (options != null && !options.isEmpty()) {
+      options.putAll(connector.sparkOptions());
+    }
     return SparkEngine.getInstance().read(connector, dataFormat, options, path);
   }
 
