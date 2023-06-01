@@ -409,11 +409,18 @@ public abstract class StorageConnector {
       config.put(Constants.KAFKA_BOOTSTRAP_SERVERS, bootstrapServers);
       config.put(Constants.KAFKA_SECURITY_PROTOCOL, securityProtocol.toString());
       config.put(Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm.getValue());
-      config.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
-      config.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
-      config.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
-      config.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
-      config.put(Constants.KAFKA_SSL_KEY_PASSWORD, sslKeyPassword);
+
+      if (!Strings.isNullOrEmpty(sslTruststoreLocation)) {
+        config.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
+        config.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
+      }
+      if (!Strings.isNullOrEmpty(sslKeystoreLocation)) {
+        config.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
+        config.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
+      }
+      if (!Strings.isNullOrEmpty(sslKeyPassword)) {
+        config.put(Constants.KAFKA_SSL_KEY_PASSWORD, sslKeyPassword);
+      }
       return config;
     }
 
