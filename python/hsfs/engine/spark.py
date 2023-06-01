@@ -281,11 +281,13 @@ class Engine:
                 isinstance(feature_group, ExternalFeatureGroup)
                 and feature_group.online_enabled
             ) or feature_group.stream:
+                print(1)
                 self._save_online_dataframe(
                     feature_group, dataframe, online_write_options
                 )
             else:
                 if storage == "offline" or not online_enabled:
+                    print(2)
                     self._save_offline_dataframe(
                         feature_group,
                         dataframe,
@@ -294,10 +296,12 @@ class Engine:
                         validation_id,
                     )
                 elif storage == "online":
+                    print(3)
                     self._save_online_dataframe(
                         feature_group, dataframe, online_write_options
                     )
                 elif online_enabled and storage is None:
+                    print(4)
                     self._save_offline_dataframe(
                         feature_group,
                         dataframe,
