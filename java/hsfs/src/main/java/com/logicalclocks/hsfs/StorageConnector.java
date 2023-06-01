@@ -123,6 +123,9 @@ public abstract class StorageConnector {
     @Getter @Setter
     protected String iamRole;
 
+    @Getter @Setter
+    protected List<Option> arguments;
+
     @JsonIgnore
     public String getPath(String subPath) {
       return "s3://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
@@ -130,7 +133,7 @@ public abstract class StorageConnector {
 
     @Override
     public Map<String, String> sparkOptions() {
-      return new HashMap<>();
+      return arguments.stream().collect(Collectors.toMap(Option::getName, Option::getValue));
     }
 
     public void update() throws FeatureStoreException, IOException {
