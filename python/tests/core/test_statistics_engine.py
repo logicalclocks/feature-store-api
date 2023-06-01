@@ -821,7 +821,7 @@ class TestStatisticsEngine:
         # Assert
         assert mock_statistics_api.return_value.get_by_commit_time.call_count == 1
 
-    def test_get_by_commit_time_window(self, mocker):
+    def test_get_by_time_window(self, mocker):
         # Arrange
         feature_store_id = 99
 
@@ -831,18 +831,17 @@ class TestStatisticsEngine:
         s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
 
         # Act
-        s_engine.get_by_commit_time_window(
+        s_engine.get_by_time_window(
             metadata_instance=None,
             start_time=None,
             end_time=None,
+            is_event_time=None,
             feature_name=None,
             row_percentage=None,
         )
 
         # Assert
-        assert (
-            mock_statistics_api.return_value.get_by_commit_time_window.call_count == 1
-        )
+        assert mock_statistics_api.return_value.get_by_time_window.call_count == 1
 
     def test_save_statistics(self, mocker):
         # Arrange

@@ -155,13 +155,13 @@ class FeatureMonitoringConfig:
             "featureMonitoringType": self._feature_monitoring_type,
             "schedulerConfig": scheduler_config,
             "detectionWindowConfig": detection_window_config,
+            "useEventTime": self._use_event_time,
         }
 
         if self._feature_group_id is not None:
             the_dict["featureGroupId"] = self._feature_group_id
         elif self._feature_view_id is not None:
             the_dict["featureViewId"] = self._feature_view_id
-            the_dict["useEventTime"] = self._use_event_time
             the_dict["trainingDatasetVersion"] = self._training_dataset_version
 
         if self._feature_monitoring_type == "STATISTICS_MONITORING":

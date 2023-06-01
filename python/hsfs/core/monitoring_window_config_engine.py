@@ -194,6 +194,9 @@ class MonitoringWindowConfigEngine:
             mwc.WindowConfigType.ROLLING_TIME,
             mwc.WindowConfigType.ALL_TIME,
         ]:
+            print(
+                "[monitoring_window_config_engine] get_window_start_end_times: when config_type not Rolling and not All_time"
+            )
             return (
                 None,
                 self.round_and_convert_event_time(
@@ -207,6 +210,9 @@ class MonitoringWindowConfigEngine:
             )
             start_time = datetime.now() - time_offset
         else:
+            print(
+                "[monitoring_window_config_engine] get_window_start_end_times: where time_offset is None and window_length is None"
+            )
             # case where time_offset is None and window_length is None
             return (
                 None,
@@ -262,16 +268,30 @@ class MonitoringWindowConfigEngine:
             monitoring_window_config=monitoring_window_config,
             use_event_time=use_event_time,
         )
-        if use_event_time is False:
-            registered_stats = self._statistics_engine.get_by_commit_time_window(
-                metadata_instance=entity,
-                start_time=start_time,
-                end_time=end_time,
-                feature_name=feature_name,
-                row_percentage=monitoring_window_config.row_percentage,
+        print(
+            "[monitoring_window_config_engine] run_single_window_monitoring: start - "
+            + (str(start_time) if start_time is not None else "None")
+            + " , end - "
+            + (str(end_time) if end_time is not None else "None")
+            + ", row_percentage: "
+            + (
+                str(monitoring_window_config.row_percentage)
+                if monitoring_window_config.row_percentage is not None
+                else "None"
             )
-        else:
-            registered_stats = self._statistics_engine.get_by_event_time_window()
+            + " , is_event_time: "
+            + (str(use_event_time) if use_event_time is not None else "None")
+            + " , feature_name: "
+            + (str(feature_name) if feature_name is not None else "None")
+        )
+        registered_stats = self._statistics_engine.get_by_time_window(
+            metadata_instance=entity,
+            start_time=start_time,
+            end_time=end_time,
+            is_event_time=use_event_time,
+            feature_name=feature_name,
+            row_percentage=monitoring_window_config.row_percentage,
+        )
 
         if registered_stats is None:  # if statistics don't exist
             # Fetch the actual data for which to compute statistics based on row_percentage and time window

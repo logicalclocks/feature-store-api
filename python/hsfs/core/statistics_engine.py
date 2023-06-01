@@ -78,7 +78,7 @@ class StatisticsEngine:
                 stats = statistics.Statistics(
                     commit_time=commit_time,
                     feature_descriptive_statistics=desc_stats,
-                    window_end_commit_id=feature_group_commit_id,
+                    window_end_time=feature_group_commit_id,
                 )
                 return self._save_statistics(stats, metadata_instance, feature_view_obj)
         else:
@@ -122,14 +122,14 @@ class StatisticsEngine:
                 feature_dataframe, feature_names, False, False, False
             )
             desc_stats = self._parse_deequ_statistics(stats_str)
+
             stats = statistics.Statistics(
                 commit_time=commit_time,
                 row_percentage=row_percentage,
                 feature_descriptive_statistics=desc_stats,
-                window_start_commit_id=start_time if not use_event_time else None,
-                window_end_commit_id=end_time if not use_event_time else None,
-                window_end_event_time=end_time if use_event_time else None,
-                window_start_event_time=start_time if use_event_time else None,
+                window_end_time=end_time,
+                window_start_time=start_time,
+                is_event_time=use_event_time,
             )
             return self._save_statistics(stats, metadata_instance, None)
         else:
@@ -305,20 +305,22 @@ class StatisticsEngine:
             metadata_instance, for_transformation, training_dataset_version
         )
 
-    def get_by_commit_time_window(
+    def get_by_time_window(
         self,
         metadata_instance,
-        end_time: int,
+        end_time: Optional[int] = None,
         start_time: Optional[int] = None,
+        is_event_time: Optional[bool] = False,
         feature_name: Optional[str] = None,
         row_percentage: Optional[float] = None,
     ) -> Union[statistics.Statistics, List[statistics.Statistics], None]:
-        """Get feature statistics based on commit time window and (optionally) feature name and row percentage
+        """Get feature statistics based on a time window and (optionally) feature name and row percentage
 
         Args:
             metadata_instance: Union[FeatureGroup, FeatureView]: Entity on which statistics where computed.
-            start_time: int: Window start commit time
-            end_time: int: Window end commit time
+            end_time: int: Window end time. This parameter is optional for time-travel-enabled Feature Groups.
+            start_time: int: Window start time. This parameter is optional for time-travel-enabled Feature Groups.
+            is_event_time: bool: Whether start and end times are event times or commit times. This parameter is optional.
             feature_name: str: Name of the feature from which statistics where computed. This parameter is optional.
             row_percentage: int: Percentage of rows used in the computation of statitics. This parameter is optional.
 
@@ -328,10 +330,11 @@ class StatisticsEngine:
         start_time = util.convert_event_time_to_timestamp(start_time)
         end_time = util.convert_event_time_to_timestamp(end_time)
         try:
-            return self._statistics_api.get_by_commit_time_window(
+            return self._statistics_api.get_by_time_window(
                 metadata_instance,
                 start_time=start_time,
                 end_time=end_time,
+                is_event_time=is_event_time,
                 feature_name=feature_name,
                 row_percentage=row_percentage,
             )
@@ -342,9 +345,6 @@ class StatisticsEngine:
             ):
                 return None
             raise e
-
-    def get_by_event_time_window(self) -> None:
-        pass
 
     def _profile_transformation_fn_statistics(
         self, feature_dataframe, columns, label_encoder_features

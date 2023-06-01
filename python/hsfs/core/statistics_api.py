@@ -82,21 +82,23 @@ class StatisticsApi:
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
-    def get_by_commit_time_window(
+    def get_by_time_window(
         self,
         metadata_instance,
         start_time,
         end_time,
+        is_event_time=False,
         feature_name=None,
         row_percentage=None,
     ):
-        """Gets statistics based on a commit time window and optionally feature name and row percentage"""
+        """Gets statistics based on a time window and optionally feature name and row percentage"""
         _client = client.get_instance()
         path_params = self.get_path(metadata_instance)
         headers = {"content-type": "application/json"}
         query_params = {
             "start_time": start_time,
             "end_time": end_time,
+            "is_event_time": is_event_time,
             "fields": "content",
         }
         if feature_name is not None:
