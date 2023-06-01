@@ -2784,7 +2784,7 @@ class TestPython:
         # Assert
         assert mock_python_engine_kafka_produce.call_count == 4
         job_mock.run.assert_called_once_with(
-            args="defaults -kafkaOffsetReset true", await_termination=True
+            args="defaults -kafkaOffsetReset true", await_termination=False
         )
 
     def test_test(self, mocker):

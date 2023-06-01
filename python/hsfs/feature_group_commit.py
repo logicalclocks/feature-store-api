@@ -30,6 +30,8 @@ class FeatureGroupCommit:
         rows_deleted=None,
         validation_id=None,
         commit_time=None,
+        archived=None,
+        last_active_commit_time=None,
         items=None,
         count=None,
         href=None,
@@ -41,6 +43,8 @@ class FeatureGroupCommit:
         self._rows_updated = rows_updated
         self._rows_deleted = rows_deleted
         self._validation_id = validation_id
+        self._archived = archived
+        self._last_active_commit_time = last_active_commit_time
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -65,6 +69,8 @@ class FeatureGroupCommit:
             "rowsUpdated": self._rows_updated,
             "rowsDeleted": self._rows_deleted,
             "validationId": self._validation_id,
+            "archived": self._archived,
+            "lastActiveCommitTime": self._last_active_commit_time,
         }
 
     @property
@@ -95,6 +101,14 @@ class FeatureGroupCommit:
     def validation_id(self):
         return self._validation_id
 
+    @property
+    def archived(self):
+        return self._archived
+
+    @property
+    def last_active_commit_time(self):
+        return self._last_active_commit_time
+
     @commitid.setter
     def commitid(self, commitid):
         self._commitid = commitid
@@ -118,3 +132,7 @@ class FeatureGroupCommit:
     @validation_id.setter
     def validation_id(self, validation_id):
         self._validation_id = validation_id
+
+    @last_active_commit_time.setter
+    def last_active_commit_time(self, last_active_commit_time):
+        self._last_active_commit_time = last_active_commit_time

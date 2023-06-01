@@ -451,7 +451,7 @@ class TestFeatureGroup:
             overwrite=False,
             operation="upsert",
             storage=None,
-            write_options={},
+            write_options={"wait_for_job": False},
             validation_options={"save_report": True},
         )
 
@@ -485,7 +485,7 @@ class TestFeatureGroup:
             overwrite=False,
             operation="upsert",
             storage=None,
-            write_options={},
+            write_options={"wait_for_job": False},
             validation_options={"save_report": False},
         )
 

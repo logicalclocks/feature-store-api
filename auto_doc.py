@@ -59,6 +59,41 @@ PAGES = {
             "hsfs.feature_group.ExternalFeatureGroup"
         ),
     },
+    "api/spine_group_api.md": {
+        "fg": ["hsfs.feature_group.SpineGroup"],
+        "fg_create": ["hsfs.feature_store.FeatureStore.get_or_create_spine_group"],
+        "fg_get": ["hsfs.feature_store.FeatureStore.get_or_create_spine_group"],
+        "fg_properties": keras_autodoc.get_properties(
+            "hsfs.feature_group.SpineGroup",
+            exclude=[
+                "expectation_suite",
+                "location",
+                "online_enabled",
+                "statistics",
+                "statistics_config",
+                "subject",
+            ],
+        ),
+        "fg_methods": keras_autodoc.get_methods(
+            "hsfs.feature_group.SpineGroup",
+            exclude=[
+                "append_features",
+                "compute_statistics",
+                "delete_expectation_suite",
+                "from_response_json",
+                "get_all_validation_reports",
+                "get_expectation_suite",
+                "get_latest_validation_report",
+                "get_statistics",
+                "get_validation_history",
+                "save_expectation_suite",
+                "save_validation_report",
+                "update_from_response_json",
+                "update_statistics_config",
+                "validate",
+            ],
+        ),
+    },
     "api/training_dataset_api.md": {
         "td": ["hsfs.training_dataset.TrainingDataset"],
         "td_create": ["hsfs.feature_store.FeatureStore.create_training_dataset"],
@@ -192,8 +227,13 @@ PAGES = {
             "hsfs.validation_report.ValidationReport"
         ),
     },
-    "api/job_configuration.md": {
-        "job_configuration": ["hsfs.core.job_configuration.JobConfiguration"]
+    "api/job.md": {
+        "job_configuration": ["hsfs.core.job_configuration.JobConfiguration"],
+        "job": ["hsfs.core.job.Job"],
+        "job_methods": [
+            "hsfs.core.job.Job.get_state",
+            "hsfs.core.job.Job.get_final_state",
+        ],
     },
     "api/query_api.md": {
         "query_methods": keras_autodoc.get_methods(
