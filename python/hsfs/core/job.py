@@ -16,6 +16,7 @@
 
 import humps
 from hsfs import engine
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import job_api
 
 
@@ -104,3 +105,34 @@ class Job:
             )
         )
         engine.get_instance().wait_for_job(self, await_termination=await_termination)
+
+    def get_state(self):
+        """Get the state of the job.
+
+        # Returns
+            `state`. Current state of the job, which can be one of the following:
+            `INITIALIZING`, `INITIALIZATION_FAILED`, `FINISHED`, `RUNNING`, `ACCEPTED`,
+            `FAILED`, `KILLED`, `NEW`, `NEW_SAVING`, `SUBMITTED`, `AGGREGATING_LOGS`,
+            `FRAMEWORK_FAILURE`, `STARTING_APP_MASTER`, `APP_MASTER_START_FAILED`,
+            `GENERATING_SECURITY_MATERIAL`, `CONVERTING_NOTEBOOK`
+        """
+        last_execution = self._job_api.last_execution(self)
+        if len(last_execution) != 1:
+            raise FeatureStoreException("No executions found for job")
+
+        return last_execution[0].state
+
+    def get_final_state(self):
+        """Get the final state of the job.
+
+        # Returns
+            `final_state`. Final state of the job, which can be one of the following:
+            `UNDEFINED`, `FINISHED`, `FAILED`, `KILLED`, `FRAMEWORK_FAILURE`,
+            `APP_MASTER_START_FAILED`, `INITIALIZATION_FAILED`. `UNDEFINED` indicates
+             that the job is still running.
+        """
+        last_execution = self._job_api.last_execution(self)
+        if len(last_execution) != 1:
+            raise FeatureStoreException("No executions found for job")
+
+        return last_execution[0].final_status

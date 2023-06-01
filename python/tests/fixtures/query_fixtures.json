@@ -189,6 +189,7 @@
           "exactUniqueness": false,
           "histograms": false
         },
+        "spine": false,
         "version": 1,
         "features": [
           {
