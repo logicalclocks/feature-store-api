@@ -263,7 +263,7 @@ public class StorageConnectorUtils {
     }
 
     connector.setSslTruststoreLocation(SparkEngine.getInstance().addFile(connector.getSslTruststoreLocation()));
-    connector.setSslKeystoreLocation(SparkEngine.getInstance().addFile(connector.getSslTruststoreLocation()));
+    connector.setSslKeystoreLocation(SparkEngine.getInstance().addFile(connector.getSslKeystoreLocation()));
 
     if (topicPattern) {
       options.put("subscribePattern", topic);

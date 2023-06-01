@@ -1001,8 +1001,10 @@ public class SparkEngine {
 
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector();
-    Map<String, String> config = storageConnector.sparkOptions();
+    StorageConnector.KafkaConnector connector = featureGroup.getFeatureStore().getKafkaConnector();
+    connector.setSslTruststoreLocation(SparkEngine.getInstance().addFile(connector.getSslTruststoreLocation()));
+    connector.setSslKeystoreLocation(SparkEngine.getInstance().addFile(connector.getSslKeystoreLocation()));
+    Map<String, String> config = connector.sparkOptions();
 
     if (writeOptions != null) {
       config.putAll(writeOptions);
