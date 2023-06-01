@@ -180,6 +180,7 @@ class S3Connector(StorageConnector):
         bucket=None,
         session_token=None,
         iam_role=None,
+        arguments=None,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -191,6 +192,9 @@ class S3Connector(StorageConnector):
         self._bucket = bucket
         self._session_token = session_token
         self._iam_role = iam_role
+        self._arguments = (
+            {opt["name"]: opt["value"] for opt in arguments} if arguments else {}
+        )
 
     @property
     def access_key(self):
@@ -232,11 +236,15 @@ class S3Connector(StorageConnector):
         """If the connector refers to a path (e.g. S3) - return the path of the connector"""
         return "s3://" + self._bucket
 
+    @property
+    def arguments(self):
+        return self._arguments
+
     def spark_options(self):
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
         """
-        return {}
+        return self._arguments
 
     def prepare_spark(self, path: Optional[str] = None):
         """Prepare Spark to use this Storage Connector.
@@ -277,6 +285,11 @@ class S3Connector(StorageConnector):
             `DataFrame`.
         """
         self.refetch()
+        options = (
+            {**self.spark_options(), **options}
+            if options is not None
+            else self.spark_options()
+        )
         if not path.startswith("s3://"):
             path = self._get_path(path)
             print(

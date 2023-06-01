@@ -77,6 +77,7 @@ class TestS3Connector:
         assert sc.bucket == "test_bucket"
         assert sc.session_token == "test_session_token"
         assert sc.iam_role == "test_iam_role"
+        assert sc.arguments == {"test_name": "test_value"}
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -97,6 +98,7 @@ class TestS3Connector:
         assert sc.bucket is None
         assert sc.session_token is None
         assert sc.iam_role is None
+        assert sc.arguments == {}
 
 
 class TestRedshiftConnector:
