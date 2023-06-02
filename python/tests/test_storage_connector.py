@@ -479,15 +479,15 @@ class TestKafkaConnector:
 
         # Assert
         assert config == {
-            'test_option_name': 'test_option_value',
-            'bootstrap.servers': 'test_bootstrap_servers',
-            'security.protocol': 'test_security_protocol',
-            'ssl.endpoint.identification.algorithm': 'test_ssl_endpoint_identification_algorithm',
-            'ssl.truststore.location': 'result_from_add_file',
-            'ssl.truststore.password': 'test_ssl_truststore_password',
-            'ssl.keystore.location': 'result_from_add_file',
-            'ssl.keystore.password': 'test_ssl_keystore_password',
-            'ssl.key.password': 'test_ssl_key_password'
+            "test_option_name": "test_option_value",
+            "bootstrap.servers": "test_bootstrap_servers",
+            "security.protocol": "test_security_protocol",
+            "ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+            "ssl.truststore.location": "result_from_add_file",
+            "ssl.truststore.password": "test_ssl_truststore_password",
+            "ssl.keystore.location": "result_from_add_file",
+            "ssl.keystore.password": "test_ssl_keystore_password",
+            "ssl.key.password": "test_ssl_key_password",
         }
 
     def test_spark_options(self, mocker, backend_fixtures):
@@ -506,15 +506,15 @@ class TestKafkaConnector:
 
         # Assert
         assert config == {
-            'kafka.test_option_name': 'test_option_value',
-            'kafka.bootstrap.servers': 'test_bootstrap_servers',
-            'kafka.security.protocol': 'test_security_protocol',
-            'kafka.ssl.endpoint.identification.algorithm': 'test_ssl_endpoint_identification_algorithm',
-            'kafka.ssl.truststore.location': 'result_from_add_file',
-            'kafka.ssl.truststore.password': 'test_ssl_truststore_password',
-            'kafka.ssl.keystore.location': 'result_from_add_file',
-            'kafka.ssl.keystore.password': 'test_ssl_keystore_password',
-            'kafka.ssl.key.password': 'test_ssl_key_password'
+            "kafka.test_option_name": "test_option_value",
+            "kafka.bootstrap.servers": "test_bootstrap_servers",
+            "kafka.security.protocol": "test_security_protocol",
+            "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+            "kafka.ssl.truststore.location": "result_from_add_file",
+            "kafka.ssl.truststore.password": "test_ssl_truststore_password",
+            "kafka.ssl.keystore.location": "result_from_add_file",
+            "kafka.ssl.keystore.password": "test_ssl_keystore_password",
+            "kafka.ssl.key.password": "test_ssl_key_password",
         }
 
     def test_confluent_options(self, mocker, backend_fixtures):
@@ -529,20 +529,23 @@ class TestKafkaConnector:
         sc = storage_connector.StorageConnector.from_response_json(json)
 
         mock_client = mocker.patch("hsfs.client.get_instance")
-        mock_client.return_value._write_pem.return_value = \
-            "test_ssl_ca_location", "test_ssl_certificate_location", "test_ssl_key_location"
+        mock_client.return_value._write_pem.return_value = (
+            "test_ssl_ca_location",
+            "test_ssl_certificate_location",
+            "test_ssl_key_location",
+        )
 
         # Act
         config = sc.confluent_options()
 
         # Assert
         assert config == {
-            'bootstrap.servers': 'test_bootstrap_servers',
-            'security.protocol': 'test_security_protocol',
-            'ssl.endpoint.identification.algorithm': 'test_ssl_endpoint_identification_algorithm',
-            'ssl.ca.location': 'test_ssl_ca_location',
-            'ssl.certificate.location': 'test_ssl_certificate_location',
-            'ssl.key.location': 'test_ssl_key_location'
+            "bootstrap.servers": "test_bootstrap_servers",
+            "security.protocol": "test_security_protocol",
+            "ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+            "ssl.ca.location": "test_ssl_ca_location",
+            "ssl.certificate.location": "test_ssl_certificate_location",
+            "ssl.key.location": "test_ssl_key_location",
         }
 
 

@@ -838,7 +838,9 @@ class TestSpark:
             "result_from_add_file"
         )
 
-        mock_storage_connector_api = mocker.patch("hsfs.core.storage_connector_api.StorageConnectorApi")
+        mock_storage_connector_api = mocker.patch(
+            "hsfs.core.storage_connector_api.StorageConnectorApi"
+        )
         json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
         sc = storage_connector.StorageConnector.from_response_json(json)
         mock_storage_connector_api.return_value.get_kafka_connector.return_value = sc
@@ -962,7 +964,9 @@ class TestSpark:
             "result_from_add_file"
         )
 
-        mock_storage_connector_api = mocker.patch("hsfs.core.storage_connector_api.StorageConnectorApi")
+        mock_storage_connector_api = mocker.patch(
+            "hsfs.core.storage_connector_api.StorageConnectorApi"
+        )
         json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
         sc = storage_connector.StorageConnector.from_response_json(json)
         mock_storage_connector_api.return_value.get_kafka_connector.return_value = sc
@@ -1086,7 +1090,9 @@ class TestSpark:
             "result_from_add_file"
         )
 
-        mock_storage_connector_api = mocker.patch("hsfs.core.storage_connector_api.StorageConnectorApi")
+        mock_storage_connector_api = mocker.patch(
+            "hsfs.core.storage_connector_api.StorageConnectorApi"
+        )
         json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
         sc = storage_connector.StorageConnector.from_response_json(json)
         mock_storage_connector_api.return_value.get_kafka_connector.return_value = sc
@@ -1210,7 +1216,9 @@ class TestSpark:
             "result_from_add_file"
         )
 
-        mock_storage_connector_api = mocker.patch("hsfs.core.storage_connector_api.StorageConnectorApi")
+        mock_storage_connector_api = mocker.patch(
+            "hsfs.core.storage_connector_api.StorageConnectorApi"
+        )
         json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
         sc = storage_connector.StorageConnector.from_response_json(json)
         mock_storage_connector_api.return_value.get_kafka_connector.return_value = sc
@@ -1481,7 +1489,9 @@ class TestSpark:
             "result_from_add_file"
         )
 
-        mock_storage_connector_api = mocker.patch("hsfs.core.storage_connector_api.StorageConnectorApi")
+        mock_storage_connector_api = mocker.patch(
+            "hsfs.core.storage_connector_api.StorageConnectorApi"
+        )
         json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
         sc = storage_connector.StorageConnector.from_response_json(json)
         mock_storage_connector_api.return_value.get_kafka_connector.return_value = sc
@@ -4499,7 +4509,9 @@ class TestSpark:
             "result_from_add_file"
         )
 
-        mock_storage_connector_api = mocker.patch("hsfs.core.storage_connector_api.StorageConnectorApi")
+        mock_storage_connector_api = mocker.patch(
+            "hsfs.core.storage_connector_api.StorageConnectorApi"
+        )
         json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
         sc = storage_connector.StorageConnector.from_response_json(json)
         mock_storage_connector_api.return_value.get_kafka_connector.return_value = sc
@@ -4522,4 +4534,6 @@ class TestSpark:
             "kafka.test_option_name": "test_option_value",
             "user_opt": "ABC",
         }
-        assert mock_storage_connector_api.return_value.get_kafka_connector.call_count == 1
+        assert (
+            mock_storage_connector_api.return_value.get_kafka_connector.call_count == 1
+        )
