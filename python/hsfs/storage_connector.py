@@ -15,7 +15,6 @@
 #
 import os
 import re
-import socket
 from abc import ABC, abstractmethod
 from typing import Optional
 
