@@ -1478,7 +1478,7 @@ class TestSpark:
 
     def test_save_online_dataframe(self, mocker, backend_fixtures):
         # Arrange
-        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.spark.Engine._encode_complex_features")
         mock_spark_engine_online_fg_to_avro = mocker.patch(
             "hsfs.engine.spark.Engine._online_fg_to_avro"
