@@ -21,7 +21,6 @@ import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -32,7 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.List;
 import java.util.Map;
 
 public class StorageConnectorUtils {
