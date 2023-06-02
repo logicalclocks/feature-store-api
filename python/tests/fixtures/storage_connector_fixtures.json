@@ -340,7 +340,7 @@
             "ssl_keystore_password": "test_ssl_keystore_password",
             "ssl_key_password": "test_ssl_key_password",
             "ssl_endpoint_identification_algorithm": "test_ssl_endpoint_identification_algorithm",
-            "options": [{"name":  "test_name", "value":  "test_value"}]
+            "options": [{"name":  "test_option_name", "value":  "test_option_value"}]
         },
         "method": "GET",
         "path_params": [

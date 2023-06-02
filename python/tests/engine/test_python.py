@@ -2652,30 +2652,24 @@ class TestPython:
         assert mock_json_loads.call_count == 1
         assert mock_avro_schema_parse.call_count == 0
 
-    def test_get_kafka_config(self, mocker):
+    def test_get_kafka_config(self, mocker, backend_fixtures):
         # Arrange
-        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mock_client_get_instance.return_value._get_ca_chain_path.return_value = (
-            "_get_ca_chain_path"
-        )
-        mock_client_get_instance.return_value._get_client_cert_path.return_value = (
-            "_get_client_cert_path"
-        )
-        mock_client_get_instance.return_value._get_client_key_path.return_value = (
-            "_get_client_key_path"
-        )
-        mocker.patch("socket.gethostname", return_value="gethostname")
-        mock_kafka_api = mocker.patch("hsfs.core.kafka_api.KafkaApi")
+        mocker.patch("hsfs.engine.get_instance")
+        mock_storage_connector_api = mocker.patch("hsfs.core.storage_connector_api.StorageConnectorApi")
+
+        json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
+        sc = storage_connector.StorageConnector.from_response_json(json)
+        mock_storage_connector_api.return_value.get_kafka_connector.return_value = sc
+
+        mock_client = mocker.patch("hsfs.client.get_instance")
+        mock_client.return_value._write_pem.return_value = \
+            "test_ssl_ca_location", "test_ssl_certificate_location", "test_ssl_key_location"
 
         python_engine = python.Engine()
 
-        mock_kafka_api.return_value.get_broker_endpoints.return_value = [
-            "INTERNAL://1",
-            "2",
-        ]
-
         # Act
         result = python_engine._get_kafka_config(
+            1,
             write_options={
                 "kafka_producer_config": {"test_name_1": "test_value_1"},
                 "internal_kafka": True,
@@ -2684,51 +2678,13 @@ class TestPython:
 
         # Assert
         assert result == {
-            "bootstrap.servers": "1,2",
-            "client.id": "gethostname",
-            "security.protocol": "SSL",
-            "ssl.ca.location": "_get_ca_chain_path",
-            "ssl.certificate.location": "_get_client_cert_path",
-            "ssl.key.location": "_get_client_key_path",
-            "test_name_1": "test_value_1",
-        }
-
-    def test_get_kafka_config_external(self, mocker):
-        # Arrange
-        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mock_client_get_instance.return_value._get_ca_chain_path.return_value = (
-            "_get_ca_chain_path"
-        )
-        mock_client_get_instance.return_value._get_client_cert_path.return_value = (
-            "_get_client_cert_path"
-        )
-        mock_client_get_instance.return_value._get_client_key_path.return_value = (
-            "_get_client_key_path"
-        )
-        mocker.patch("socket.gethostname", return_value="gethostname")
-        mock_kafka_api = mocker.patch("hsfs.core.kafka_api.KafkaApi")
-
-        python_engine = python.Engine()
-
-        mock_kafka_api.return_value.get_broker_endpoints.return_value = [
-            "EXTERNAL://1",
-            "2",
-        ]
-
-        # Act
-        result = python_engine._get_kafka_config(
-            write_options={"kafka_producer_config": {"test_name_1": "test_value_1"}}
-        )
-
-        # Assert
-        assert result == {
-            "bootstrap.servers": "1,2",
-            "client.id": "gethostname",
-            "security.protocol": "SSL",
-            "ssl.ca.location": "_get_ca_chain_path",
-            "ssl.certificate.location": "_get_client_cert_path",
-            "ssl.key.location": "_get_client_key_path",
-            "test_name_1": "test_value_1",
+            'bootstrap.servers': 'test_bootstrap_servers',
+            'security.protocol': 'test_security_protocol',
+            'ssl.endpoint.identification.algorithm': 'test_ssl_endpoint_identification_algorithm',
+            'ssl.ca.location': 'test_ssl_ca_location',
+            'ssl.certificate.location': 'test_ssl_certificate_location',
+            'ssl.key.location': 'test_ssl_key_location',
+            'test_name_1': 'test_value_1'
         }
 
     def test_backfill_kafka_offset_reset(self, mocker):

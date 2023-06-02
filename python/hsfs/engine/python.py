@@ -52,7 +52,6 @@ from hsfs.core import (
     dataset_api,
     job_api,
     ingestion_job_conf,
-    kafka_api,
     statistics_api,
     training_dataset_api,
     training_dataset_job_conf,
@@ -87,7 +86,6 @@ class Engine:
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
-        self._kafka_api = kafka_api.KafkaApi()
 
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None

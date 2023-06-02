@@ -72,7 +72,6 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import (
     hudi_engine,
     transformation_function_engine,
-    kafka_api,
     storage_connector_api,
 )
 from hsfs.constructor import query
@@ -106,9 +105,6 @@ class Engine:
         if importlib.util.find_spec("pydoop"):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             util.setup_pydoop()
-
-        self._kafka_api = kafka_api.KafkaApi()
-        self._kafka_config = None
 
     def sql(
         self,
