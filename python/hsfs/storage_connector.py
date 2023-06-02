@@ -979,10 +979,16 @@ class KafkaConnector(StorageConnector):
                     # value was set, skip
                     continue
 
-                ca_chain_path, client_cert_path, client_key_path = client.get_instance()._write_pem(
-                    kafka_options["ssl.keystore.location"], kafka_options["ssl.keystore.password"],
-                    kafka_options["ssl.truststore.location"], kafka_options["ssl.truststore.password"],
-                    f"kafka_sc_{self.id}"
+                (
+                    ca_chain_path,
+                    client_cert_path,
+                    client_key_path,
+                ) = client.get_instance()._write_pem(
+                    kafka_options["ssl.keystore.location"],
+                    kafka_options["ssl.keystore.password"],
+                    kafka_options["ssl.truststore.location"],
+                    kafka_options["ssl.truststore.password"],
+                    f"kafka_sc_{self.id}",
                 )
                 config["ssl.ca.location"] = ca_chain_path
                 config["ssl.certificate.location"] = client_cert_path
@@ -991,11 +997,22 @@ class KafkaConnector(StorageConnector):
                 groups = re.search("(.+?) .*username='(.+?)' password='(.+?)'", value)
                 if "sasl.mechanisms" not in config:
                     mechanism = groups.group(1)
-                    if mechanism == "org.apache.kafka.common.security.plain.PlainLoginModule":
+                    if (
+                        mechanism
+                        == "org.apache.kafka.common.security.plain.PlainLoginModule"
+                    ):
                         config["sasl.mechanisms"] = "PLAIN"
-                    elif mechanism == "org.apache.kafka.common.security.scram.ScramLoginModule":
-                        config["sasl.mechanisms"] = "SCRAM-SHA-256"  # could also be SCRAM-SHA-512
-                    elif mechanism == "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule":
+                    elif (
+                        mechanism
+                        == "org.apache.kafka.common.security.scram.ScramLoginModule"
+                    ):
+                        config[
+                            "sasl.mechanisms"
+                        ] = "SCRAM-SHA-256"  # could also be SCRAM-SHA-512
+                    elif (
+                        mechanism
+                        == "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule"
+                    ):
                         config["sasl.mechanisms"] = "OAUTHBEARER"
                 config["sasl.username"] = groups.group(2)
                 config["sasl.password"] = groups.group(3)

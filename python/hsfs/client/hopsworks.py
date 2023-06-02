@@ -85,8 +85,13 @@ class Client(base.Client):
         """Convert truststore from jks to pem and return the location"""
         ca_chain_path = Path(self.PEM_CA_CHAIN)
         if not ca_chain_path.exists():
-            self._write_ca_chain(self._get_jks_key_store_path(), self._cert_key,
-                                 self._get_jks_trust_store_path(), self._cert_key, ca_chain_path)
+            self._write_ca_chain(
+                self._get_jks_key_store_path(),
+                self._cert_key,
+                self._get_jks_trust_store_path(),
+                self._cert_key,
+                ca_chain_path,
+            )
         return str(ca_chain_path)
 
     def _get_ca_chain_path(self) -> str:
@@ -98,10 +103,18 @@ class Client(base.Client):
     def _get_client_key_path(self) -> str:
         return os.path.join("/tmp", "client_key.pem")
 
-    def _write_pem(self, keystore_path, keystore_pw, truststore_path, truststore_pw, prefix):
+    def _write_pem(
+        self, keystore_path, keystore_pw, truststore_path, truststore_pw, prefix
+    ):
         ca_chain_path = os.path.join("/tmp", f"{prefix}_ca_chain.pem")
         if not os.path.exists(ca_chain_path):
-            self._write_ca_chain(keystore_path, keystore_pw, truststore_path, truststore_pw, ca_chain_path)
+            self._write_ca_chain(
+                keystore_path,
+                keystore_pw,
+                truststore_path,
+                truststore_pw,
+                ca_chain_path,
+            )
 
         client_cert_path = os.path.join("/tmp", f"{prefix}_client_cert.pem")
         if not os.path.exists(client_cert_path):
@@ -113,7 +126,9 @@ class Client(base.Client):
 
         return ca_chain_path, client_cert_path, client_key_path
 
-    def _write_ca_chain(self, keystore_path, keystore_pw, truststore_path, truststore_pw, ca_chain_path):
+    def _write_ca_chain(
+        self, keystore_path, keystore_pw, truststore_path, truststore_pw, ca_chain_path
+    ):
         """
         Converts JKS keystore and truststore file into ca chain PEM to be compatible with Python libraries
         """
@@ -122,7 +137,9 @@ class Client(base.Client):
         for alias, c in ks.certs.items():
             ca_chain = ca_chain + self._bytes_to_pem_str(c.cert, "CERTIFICATE")
 
-        ts = jks.KeyStore.load(Path(truststore_path), truststore_pw, try_decrypt_keys=True)
+        ts = jks.KeyStore.load(
+            Path(truststore_path), truststore_pw, try_decrypt_keys=True
+        )
         for alias, c in ts.certs.items():
             ca_chain = ca_chain + self._bytes_to_pem_str(c.cert, "CERTIFICATE")
 

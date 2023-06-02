@@ -824,6 +824,7 @@ class Engine:
         local_file = os.path.join("/tmp", os.path.basename(file))
         if not os.path.exists(local_file):
             from pydoop import hdfs
+
             hdfs.get("hdfs://" + file, local_file)
         return local_file
 
