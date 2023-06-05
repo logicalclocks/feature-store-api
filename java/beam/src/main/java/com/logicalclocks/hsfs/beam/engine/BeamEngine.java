@@ -28,6 +28,7 @@ import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -63,14 +64,22 @@ public class BeamEngine {
       streamFeatureGroup.getPrimaryKeys());
   }
 
-  private Map<String, Object> getKafkaProperties(StreamFeatureGroup featureGroup, Map<String, String> writeOptions)
+  private Map<String, String> getKafkaProperties(StreamFeatureGroup featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    Map<String, Object> properties = new HashMap<>();
+    Map<String, String> properties = new HashMap<>();
     boolean internalKafka = false;
     if (writeOptions != null) {
       internalKafka = Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"));
-      properties.putAll(writeOptions);
     }
+    properties.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/tmp/"
+        + Paths.get(client.getTrustStorePath()).getFileName());
+    properties.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/tmp/"
+        + Paths.get(client.getKeyStorePath()).getFileName());
+    properties.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, client.getCertKey());
+    properties.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, client.getCertKey());
+    properties.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, client.getCertKey());
+    properties.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+    properties.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
 
     if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) || internalKafka) {
       properties.put("bootstrap.servers",
@@ -85,13 +94,6 @@ public class BeamEngine {
       );
     }
 
-    properties.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-    properties.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,  client.getTrustStorePath());
-    properties.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, client.getCertKey());
-    properties.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, client.getKeyStorePath());
-    properties.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, client.getCertKey());
-    properties.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, client.getCertKey());
-    properties.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
     return properties;
   }
 }

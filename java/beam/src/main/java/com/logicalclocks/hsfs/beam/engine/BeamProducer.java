@@ -37,24 +37,32 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
 import org.apache.beam.sdk.values.Row;
 
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class BeamProducer extends PTransform<@NonNull PCollection<Row>, @NonNull PDone> {
   private String topic;
-  private Map<String, Object> properties;
+  private Map<String, String> properties;
   private transient Schema schema;
   private transient Schema encodedSchema;
   private Map<String, Schema> deserializedComplexFeatureSchemas;
   private List<String> primaryKeys;
 
-  public BeamProducer(String topic, Map<String, Object> properties, Schema schema, Schema encodedSchema,
+  public BeamProducer(String topic, Map<String, String> properties, Schema schema, Schema encodedSchema,
       Map<String, Schema> deserializedComplexFeatureSchemas, List<String>  primaryKeys) {
     this.schema = schema;
     this.encodedSchema = encodedSchema;
@@ -115,10 +123,31 @@ public class BeamProducer extends PTransform<@NonNull PCollection<Row>, @NonNull
       .apply("Sync to online feature group kafka topic", KafkaIO.<String, GenericRecord>write()
         .withBootstrapServers(properties.get("bootstrap.servers").toString())
         .withTopic(topic)
-        .withProducerConfigUpdates(properties)
+        //.withProducerConfigUpdates(properties)
         .withKeySerializer(StringSerializer.class)
         .withValueSerializer(GenericAvroSerializer.class)
         .withInputTimestamp()
+        .withProducerFactoryFn(props -> {
+          // copy jks files from resources to dataflow workers
+          try {
+            Path keyStorePath = Paths.get(properties.get(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG));
+            InputStream keyStoreStream = Objects.requireNonNull(BeamProducer.class.getClassLoader()
+                .getResourceAsStream(keyStorePath.getFileName().toString()));
+            if (!Files.exists(keyStorePath)) {
+              Files.copy(keyStoreStream, keyStorePath, StandardCopyOption.REPLACE_EXISTING);
+            }
+            Path trustStorePath = Paths.get(properties.get(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG));
+            InputStream trustStoreStream = Objects.requireNonNull(BeamProducer.class.getClassLoader()
+                .getResourceAsStream(trustStorePath.getFileName().toString()));
+            if (!Files.exists(trustStorePath)) {
+              Files.copy(trustStoreStream, trustStorePath, StandardCopyOption.REPLACE_EXISTING);
+            }
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+          props.putAll(properties);
+          return new KafkaProducer<>(props);
+        })
       );
   }
 }

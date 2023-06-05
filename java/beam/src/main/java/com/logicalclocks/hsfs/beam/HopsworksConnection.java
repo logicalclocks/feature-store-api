@@ -37,15 +37,16 @@ public class HopsworksConnection extends HopsworksConnectionBase {
 
   @Builder
   public HopsworksConnection(String host, int port, String project, Region region, SecretStore secretStore,
-      boolean hostnameVerification, String trustStorePath,
-      String certPath, String apiKeyFilePath, String apiKeyValue)
-      throws IOException, FeatureStoreException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
+      boolean hostnameVerification, String keyStorePath, String trustStorePath, String certPath, String apiKeyFilePath,
+      String apiKeyValue) throws IOException, FeatureStoreException, CertificateException, KeyStoreException,
+      NoSuchAlgorithmException {
     this.host = host;
     this.port = port;
     this.project = getProjectName(project);
     this.region = region;
     this.secretStore = secretStore;
     this.hostnameVerification = hostnameVerification;
+    this.keyStorePath = keyStorePath;
     this.trustStorePath = trustStorePath;
     this.certPath = certPath;
     this.apiKeyFilePath = apiKeyFilePath;
@@ -56,7 +57,6 @@ public class HopsworksConnection extends HopsworksConnectionBase {
     this.projectObj = getProject();
     HopsworksClient.getInstance().setProject(this.projectObj);
     Credentials credentials = HopsworksClient.getInstance().getCredentials(this.projectObj);
-
     HopsworksHttpClient hopsworksHttpClient =  HopsworksClient.getInstance().getHopsworksHttpClient();
     hopsworksHttpClient.setTrustStorePath(credentials.gettStore());
     hopsworksHttpClient.setKeyStorePath(credentials.getkStore());
