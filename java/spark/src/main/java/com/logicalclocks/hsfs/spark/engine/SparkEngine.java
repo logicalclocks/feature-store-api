@@ -873,6 +873,9 @@ public class SparkEngine {
   }
 
   public String addFile(String filePath) {
+    if (Strings.isNullOrEmpty(filePath)) {
+      return filePath;
+    }
     // this is used for unit testing
     if (!filePath.startsWith("file://")) {
       filePath = "hdfs://" + filePath;
