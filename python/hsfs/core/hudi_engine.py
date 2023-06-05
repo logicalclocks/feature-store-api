@@ -268,5 +268,7 @@ class HudiEngine:
             rows_inserted=commit_metadata.fetchTotalInsertRecordsWritten(),
             rows_updated=commit_metadata.fetchTotalUpdateRecordsWritten(),
             rows_deleted=commit_metadata.getTotalRecordsDeleted(),
-            last_active_commit_time=commit_timeline.firstInstant().get().getTimestamp(),
+            last_active_commit_time=util.get_timestamp_from_date_string(
+                commit_timeline.firstInstant().get().getTimestamp()
+            ),
         )
