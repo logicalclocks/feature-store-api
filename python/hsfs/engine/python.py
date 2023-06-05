@@ -1087,6 +1087,8 @@ class Engine:
             return "boolean"
         elif dtype == "category":
             return "string"
+        elif str(dtype) == "string":
+            return "string"
         elif not isinstance(dtype, np.dtype):
             if dtype == pd.Int8Dtype():
                 return "int"
