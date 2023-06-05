@@ -187,7 +187,7 @@ class MonitoringWindowConfigEngine:
     def get_window_start_end_times(
         self,
         monitoring_window_config: "mwc.MonitoringWindowConfig",
-        use_event_time: bool,
+        is_event_time: bool,
     ) -> Tuple[Optional[int], int]:
         end_time = datetime.now()
         if monitoring_window_config.window_config_type not in [
@@ -200,7 +200,7 @@ class MonitoringWindowConfigEngine:
             return (
                 None,
                 self.round_and_convert_event_time(
-                    event_time=end_time, use_event_time=use_event_time
+                    event_time=end_time, is_event_time=is_event_time
                 ),
             )
 
@@ -217,7 +217,7 @@ class MonitoringWindowConfigEngine:
             return (
                 None,
                 self.round_and_convert_event_time(
-                    event_time=end_time, use_event_time=use_event_time
+                    event_time=end_time, is_event_time=is_event_time
                 ),
             )
 
@@ -233,10 +233,10 @@ class MonitoringWindowConfigEngine:
 
         return (
             self.round_and_convert_event_time(
-                event_time=start_time, use_event_time=use_event_time
+                event_time=start_time, is_event_time=is_event_time
             ),
             self.round_and_convert_event_time(
-                event_time=end_time, use_event_time=use_event_time
+                event_time=end_time, is_event_time=is_event_time
             ),
         )
 
@@ -245,7 +245,7 @@ class MonitoringWindowConfigEngine:
         entity: Union["feature_group.FeatureGroup", "feature_view.FeatureView"],
         monitoring_window_config: "mwc.MonitoringWindowConfig",
         feature_name: Optional[str] = None,
-        use_event_time: bool = False,
+        is_event_time: bool = False,
         training_dataset_version=None,
     ) -> Union[FeatureDescriptiveStatistics, List[FeatureDescriptiveStatistics]]:
         """Fetch the entity data based on monitoring window configuration and compute statistics.
@@ -254,7 +254,7 @@ class MonitoringWindowConfigEngine:
             entity: FeatureStore: Feature store to fetch the entity to monitor.
             monitoring_window_config: MonitoringWindowConfig: Monitoring window config.
             feature_name: str: Name of the feature to monitor.
-            use_event_time: bool: Whether to use event time or ingestion time.
+            is_event_time: bool: Whether to use event time or ingestion time.
                 Feature View only. Defaults to False.
             training_dataset_version: int: Version of the dataset to use for transformation function.
                 Feature View only. Defaults to None, meaning no transformation function are applied.
@@ -266,7 +266,7 @@ class MonitoringWindowConfigEngine:
         # Check if statistics already exists
         (start_time, end_time,) = self.get_window_start_end_times(
             monitoring_window_config=monitoring_window_config,
-            use_event_time=use_event_time,
+            is_event_time=is_event_time,
         )
         print(
             "[monitoring_window_config_engine] run_single_window_monitoring: start - "
@@ -280,7 +280,7 @@ class MonitoringWindowConfigEngine:
                 else "None"
             )
             + " , is_event_time: "
-            + (str(use_event_time) if use_event_time is not None else "None")
+            + (str(is_event_time) if is_event_time is not None else "None")
             + " , feature_name: "
             + (str(feature_name) if feature_name is not None else "None")
         )
@@ -288,9 +288,10 @@ class MonitoringWindowConfigEngine:
             metadata_instance=entity,
             start_time=start_time,
             end_time=end_time,
-            is_event_time=use_event_time,
+            is_event_time=is_event_time,
             feature_name=feature_name,
             row_percentage=monitoring_window_config.row_percentage,
+            computed_at=end_time,  # TODO: Should we use a different computed_at time for event time windows?
         )
 
         if registered_stats is None:  # if statistics don't exist
@@ -301,7 +302,7 @@ class MonitoringWindowConfigEngine:
                 start_time=start_time,
                 end_time=end_time,
                 row_percentage=monitoring_window_config.row_percentage,
-                use_event_time=use_event_time,
+                is_event_time=is_event_time,
                 training_dataset_version=training_dataset_version,
             )
 
@@ -314,7 +315,7 @@ class MonitoringWindowConfigEngine:
                     end_time=end_time,
                     row_percentage=monitoring_window_config.row_percentage,
                     feature_name=feature_name,
-                    use_event_time=use_event_time,
+                    is_event_time=is_event_time,
                 )
             )
 
@@ -331,7 +332,7 @@ class MonitoringWindowConfigEngine:
         end_time: Optional[int],
         row_percentage: float,
         feature_name: Optional[str] = None,
-        use_event_time: bool = False,
+        is_event_time: bool = False,
         training_dataset_version: Optional[int] = None,
     ) -> TypeVar("pyspark.sql.DataFrame"):
         """Fetch the entity data based on time window and row percentage.
@@ -342,7 +343,7 @@ class MonitoringWindowConfigEngine:
             start_time: int: Window start commit or event time
             end_time: int: Window end commit or event time
             row_percentage: fraction of rows to include [0, 1.0]
-            use_event_time: bool: Whether to use event time or ingestion time.
+            is_event_time: bool: Whether to use event time or ingestion time.
                 Feature View only.
             training_dataset_version: int: Version of the dataset
                 to fetch statistics from for the transformation function.
@@ -352,7 +353,7 @@ class MonitoringWindowConfigEngine:
             `pyspark.sql.DataFrame`. A Spark DataFrame with the entity data
         """
         if isinstance(entity, feature_group.FeatureGroup):
-            # use_event_time and transformation_function don't apply here
+            # is_event_time and transformation_function don't apply here
             entity_df = self.fetch_feature_group_data(
                 entity=entity,
                 feature_name=feature_name,
@@ -365,7 +366,7 @@ class MonitoringWindowConfigEngine:
                 feature_name=feature_name,
                 start_time=start_time,
                 end_time=end_time,
-                use_event_time=use_event_time,
+                is_event_time=is_event_time,
                 training_dataset_version=training_dataset_version,
             )
 
@@ -380,7 +381,7 @@ class MonitoringWindowConfigEngine:
         feature_name: Optional[str] = None,
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
-        use_event_time: bool = False,
+        is_event_time: bool = False,
         training_dataset_version: Optional[int] = None,
     ) -> TypeVar("pyspark.sql.DataFrame"):
         """Fetch the feature view data based on time window and row percentage.
@@ -390,13 +391,13 @@ class MonitoringWindowConfigEngine:
             feature_name: str: Name of the feature to monitor.
             start_time: int: Window start commit or event time.
             end_time: int: Window end commit or event time.
-            use_event_time: bool: Whether to use event time or ingestion time.
+            is_event_time: bool: Whether to use event time or ingestion time.
             training_dataset_version: int: Dataset version of the transformation function
 
         Returns:
             `pyspark.sql.DataFrame`. A Spark DataFrame with the entity data
         """
-        if use_event_time:
+        if is_event_time:
             entity_df = entity._feature_view_engine.get_batch_query(
                 feature_view_obj=entity,
                 start_time=start_time,
@@ -449,7 +450,7 @@ class MonitoringWindowConfigEngine:
         return full_df
 
     def round_and_convert_event_time(
-        self, event_time: datetime, use_event_time: bool = False
+        self, event_time: datetime, is_event_time: bool = False
     ) -> Optional[int]:
         """Round event time to the latest hour and convert to timestamp.
 
@@ -459,7 +460,7 @@ class MonitoringWindowConfigEngine:
         Returns:
             datetime: Rounded and converted event time.
         """
-        if use_event_time:
+        if is_event_time:
             event_time = event_time.replace(minute=0, second=0, microsecond=0)
 
         return convert_event_time_to_timestamp(event_time)

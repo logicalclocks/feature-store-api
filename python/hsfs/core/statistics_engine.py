@@ -93,7 +93,7 @@ class StatisticsEngine:
         end_time,
         row_percentage,
         feature_name=None,
-        use_event_time=False,
+        is_event_time=False,
     ) -> statistics.Statistics:
         """Compute statistics for one or more features and send the result to Hopsworks.
 
@@ -129,7 +129,7 @@ class StatisticsEngine:
                 feature_descriptive_statistics=desc_stats,
                 window_end_time=end_time,
                 window_start_time=start_time,
-                is_event_time=use_event_time,
+                is_event_time=is_event_time,
             )
             return self._save_statistics(stats, metadata_instance, None)
         else:
@@ -260,37 +260,15 @@ class StatisticsEngine:
         )
         return self._save_statistics(stats, td_metadata_instance, feature_view_obj)
 
-    def get_by_commit_time(
-        self,
-        metadata_instance,
-        commit_time=None,
-        for_transformation=False,
-        training_dataset_version=None,
-    ) -> statistics.Statistics:
-        """Get statistics with the specified commit time of an entity.
-
-        Args:
-            metadata_instance: Union[FeatureGroup, TrainingDataset]. Metadata of the entity containing the data.
-            commit_time: int. Commit time when statistics where computed.
-            for_transformation: bool. Whether the statistics are used in transformation functions.
-            training_dataset_version: int. If the statistics where computed for a Training Dataset, version of the Training Dataset. This parameter is optional.
-
-        Returns:
-            Statistics. Statistics metadata containing a list of single feature descriptive statistics.
-        """
-
-        commit_timestamp = util.convert_event_time_to_timestamp(commit_time)
-        return self._statistics_api.get_by_commit_time(
-            metadata_instance,
-            commit_timestamp,
-            for_transformation,
-            training_dataset_version,
-        )
-
     def get_last_computed(
         self, metadata_instance, for_transformation=False, training_dataset_version=None
     ) -> statistics.Statistics:
-        """Get the most recent Statistics of an entity.
+        """Get the last computed statistics.
+
+        These statistics are not necessarily computed on the last feature values. For instance, they could be statistics
+        computed on a specific commit time window of a time-travel-enabled feature group.
+
+        This method is used for feature groups statistics without time-travel enabled or training dataset statistics.
 
         Args:
             metadata_instance: Union[FeatureGroup, TrainingDataset]. Metadata of the entity containing the data.
@@ -305,6 +283,34 @@ class StatisticsEngine:
             metadata_instance, for_transformation, training_dataset_version
         )
 
+    def get_computed_at(
+        self,
+        metadata_instance,
+        computed_at: Optional[float] = None,
+        for_transformation: Optional[bool] = False,
+        training_dataset_version: Optional[int] = None,
+    ) -> statistics.Statistics:
+        """Get statistics of an entity by commit time. The commit time refers to when the statistics were computed.
+           If the commit time is not provided, the most recent statistics are retrieved.
+
+        Args:
+            metadata_instance: Union[FeatureGroup, TrainingDataset]. Metadata of the entity containing the data.
+            computed_at: float. Timestamp or commit time when statistics where computed.
+            for_transformation: bool. Whether the statistics are used in transformation functions.
+            training_dataset_version: int. If the statistics where computed for a Training Dataset, version of the Training Dataset. This parameter is optional.
+
+        Returns:
+            Statistics. Statistics metadata containing a list of single feature descriptive statistics.
+        """
+
+        computed_at_timestamp = util.convert_event_time_to_timestamp(computed_at)
+        return self._statistics_api.get_computed_at(
+            metadata_instance,
+            computed_at=computed_at_timestamp,
+            for_transformation=for_transformation,
+            training_dataset_version=training_dataset_version,
+        )
+
     def get_by_time_window(
         self,
         metadata_instance,
@@ -313,8 +319,14 @@ class StatisticsEngine:
         is_event_time: Optional[bool] = False,
         feature_name: Optional[str] = None,
         row_percentage: Optional[float] = None,
+        computed_at: Optional[float] = None,
     ) -> Union[statistics.Statistics, List[statistics.Statistics], None]:
         """Get feature statistics based on a time window and (optionally) feature name and row percentage
+
+        If the instance type is Feature Group, the window is based on commit times. Otherwise, if the instance type
+        is Feature View, the window can be based either on commit times or event times.
+
+        To fetch Feature View statistics based on event times, the statistics computation time (i.e., computed_at) is required.
 
         Args:
             metadata_instance: Union[FeatureGroup, FeatureView]: Entity on which statistics where computed.
@@ -322,7 +334,8 @@ class StatisticsEngine:
             start_time: int: Window start time. This parameter is optional for time-travel-enabled Feature Groups.
             is_event_time: bool: Whether start and end times are event times or commit times. This parameter is optional.
             feature_name: str: Name of the feature from which statistics where computed. This parameter is optional.
-            row_percentage: int: Percentage of rows used in the computation of statitics. This parameter is optional.
+            row_percentage: float: Percentage of rows used in the computation of statitics. This parameter is optional.
+            computed_at: float. Timestamp or commit time when statistics where computed.
 
         Returns:
             Statistics:  Statistics metadata containing a list of single feature descriptive statistics.
@@ -337,6 +350,7 @@ class StatisticsEngine:
                 is_event_time=is_event_time,
                 feature_name=feature_name,
                 row_percentage=row_percentage,
+                computed_at=computed_at,
             )
         except exceptions.RestAPIError as e:
             if (
