@@ -18,11 +18,9 @@ import json
 import warnings
 from datetime import datetime, date
 from typing import Optional, Union, List, Dict, Any, TypeVar
-import pandas as pd
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
-from hsfs.training_dataset_split import TrainingDatasetSplit
 
 import humps
 import copy
@@ -40,6 +38,7 @@ from hsfs.core import (
     feature_view_engine,
     transformation_function_engine,
     vector_server,
+    statistics_engine,
     feature_monitoring_config_engine,
     feature_monitoring_result_engine,
 )
@@ -47,7 +46,6 @@ from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.core import feature_monitoring_config_engine
 
 
 class FeatureView:
@@ -92,6 +90,10 @@ class FeatureView:
         self._single_vector_server = None
         self._batch_vectors_server = None
         self._batch_scoring_server = None
+
+        self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
+        )
 
         if self._id:
             self._init_feature_monitoring_engine()
@@ -2484,7 +2486,7 @@ class FeatureView:
         feature_name: Optional[str] = None,
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
-        use_event_time: Optional[bool] = True,
+        is_event_time: Optional[bool] = True,
         training_dataset_version: Optional[int] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Run a job to compute statistics on snapshot of feature data on a schedule.
@@ -2519,7 +2521,7 @@ class FeatureView:
                 Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
             description: Description of the feature monitoring configuration.
             start_date_time: Start date and time from which to start computing statistics.
-            use_event_time: If true, use event time to compute statistics.
+            is_event_time: If true, use event time to compute statistics.
                 Defaults to False.
             training_dataset_version: The version of the dataset to use
                 to fetch statistics for the transformation function. If provided, the
@@ -2544,7 +2546,7 @@ class FeatureView:
             description=description,
             job_frequency=job_frequency,
             start_date_time=start_date_time,
-            use_event_time=use_event_time,
+            is_event_time=is_event_time,
             training_dataset_version=training_dataset_version,
             valid_feature_names=[feat.name for feat in self._features],
         )
@@ -2556,7 +2558,7 @@ class FeatureView:
         job_frequency: str = "DAILY",
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
-        use_event_time: Optional[bool] = True,
+        is_event_time: Optional[bool] = True,
         training_dataset_version: Optional[int] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Enable feature monitoring to compare statistics on snapshots of feature data over time.
@@ -2596,7 +2598,7 @@ class FeatureView:
                 Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
             description: Description of the feature monitoring configuration.
             start_date_time: Start date and time from which to start computing statistics.
-            use_event_time: If true, use event time to compute statistics.
+            is_event_time: If true, use event time to compute statistics.
                 Defaults to False.
             training_dataset_version: The version of the dataset to use
                 to fetch statistics for the transformation function. If provided, the
@@ -2621,7 +2623,7 @@ class FeatureView:
             description=description,
             job_frequency=job_frequency,
             start_date_time=start_date_time,
-            use_event_time=use_event_time,
+            is_event_time=is_event_time,
             training_dataset_version=training_dataset_version,
             valid_feature_names=[feat.name for feat in self._features],
         )
@@ -2808,3 +2810,42 @@ class FeatureView:
             )
             _vector_server.init_prepared_statement(self, False, False)
             return _vector_server.serving_keys
+
+    @property
+    def statistics(
+        self,
+        start_time,
+        end_time,
+        is_event_time: Optional[bool] = False,
+        feature_name: Optional[str] = None,
+        row_percentage: Optional[float] = None,
+        computed_at: Optional[float] = None,
+    ):
+        """Get the computed statistics for the feature view by time window.
+        If the window is based on event times, the statistics computation time (i.e., computed_at parameter) is required.
+
+        # Arguments
+            start_time: int: Window start time.
+            end_time: int: Window end time.
+            is_event_time: bool: Whether start and end times are event times or commit times. This parameter is optional. Default value is False.
+            feature_name: str: Name of the feature from which statistics where computed. This parameter is optional.
+            row_percentage: float: The fraction of rows to use when computing the statistics [0, 1.0]. This parameter is optional.
+            computed_at: float. Timestamp or commit time when statistics where computed.
+
+        # Returns
+            Statistics: Feature view statistics
+        """
+        if is_event_time and computed_at is None:
+            raise ValueError(
+                "Computation time is required for fetching statistics based on event times"
+            )
+
+        return self._statistics_engine.get_by_time_window(
+            self,
+            start_time=start_time,
+            end_time=end_time,
+            is_event_time=is_event_time,
+            feature_name=feature_name,
+            row_percentage=row_percentage,
+            computed_at=computed_at,
+        )

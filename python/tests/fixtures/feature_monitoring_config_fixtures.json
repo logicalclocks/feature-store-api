@@ -11,7 +11,7 @@
         "description": "I am a unit test fixture",
         "enabled": true,
         "featureMonitoringType": "STATISTICS_COMPARISON",
-        "useEventTime": false,
+        "isEventTime": false,
         "trainingDatasetVersion": null,
         "detectionWindowConfig": {
           "windowConfigType": "ROLLING_TIME",
@@ -119,7 +119,7 @@
         "description": "I am a unit test fixture",
         "enabled": true,
         "featureMonitoringType": "STATISTICS_COMPARISON",
-        "useEventTime": true,
+        "isEventTime": true,
         "trainingDatasetVersion": 1,
         "detectionWindowConfig": {
           "windowConfigType": "ROLLING_TIME",
@@ -159,7 +159,7 @@
         "name": "unit_test_config",
         "description": "I am a unit test fixture",
         "enabled": true,
-        "useEventTime": true,
+        "isEventTime": true,
         "featureMonitoringType": "STATISTICS_COMPARISON",
         "detectionWindowConfig": {
           "windowConfigType": "ROLLING_TIME",

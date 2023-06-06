@@ -1292,7 +1292,7 @@ class FeatureGroupBase:
             description=description,
             job_frequency=job_frequency,
             start_date_time=start_date_time,
-            use_event_time=False,
+            is_event_time=False,
             training_dataset_version=None,
             valid_feature_names=[feat.name for feat in self._features],
         )
@@ -1362,7 +1362,7 @@ class FeatureGroupBase:
             description=description,
             job_frequency=job_frequency,
             start_date_time=start_date_time,
-            use_event_time=False,
+            is_event_time=False,
             training_dataset_version=None,
             valid_feature_names=[feat.name for feat in self._features],
         )
@@ -1431,9 +1431,7 @@ class FeatureGroupBase:
         commit_time: Optional[Union[str, int, datetime, date]] = None,
     ) -> Statistics:
         """Returns the statistics for this feature group at a specific time.
-
-        If `commit_time` is `None`, the most recent statistics are returned.
-        If `from_commit_time` is `None`, statistics of feature values from the first commit until commit time are returned.
+           If `commit_time` is `None`, the most recent statistics are returned.
 
         !!! example
             ```python
@@ -1443,14 +1441,11 @@ class FeatureGroupBase:
             # get the Feature Group instance
             fg = fs.get_or_create_feature_group(...)
 
-            fg_statistics = fg.get_statistics(commit_time=None, from_commit_time=None)
+            fg_statistics = fg.get_statistics(commit_time=None)
             ```
 
         # Arguments
             commit_time: Date and time of the commit. Defaults to `None`. Strings should
-                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
-            from_commit_time: Date and time of the commit. Defaults to `None`. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
 
@@ -1460,7 +1455,7 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        return self._statistics_engine.get_by_commit_time(self, commit_time=commit_time)
+        return self._statistics_engine.get_computed_at(self, computed_at=commit_time)
 
     def compute_statistics(self):
         """Recompute the statistics for the feature group and save them to the
@@ -1647,8 +1642,12 @@ class FeatureGroupBase:
     @features.setter
     def features(self, new_features):
         self._features = new_features
-        
+
     def _are_statistics_missing(self, statistics: Statistics):
+        if self.statistics_config.enabled is False:
+            return False
+        if statistics is None:
+            return True
         if (
             self.statistics_config.histograms
             or self.statistics_config.correlations
@@ -2657,7 +2656,7 @@ class FeatureGroup(FeatureGroupBase):
         feature_name: Optional[str] = None,
         row_percentage: Optional[float] = None,
     ):
-        """Returns the statistics for this feature group at a specific window time.
+        """Returns the statistics for this feature group based on a commit time window.
 
         If `commit_time` is `None`, the most recent statistics are returned.
         If `from_commit_time` is `None`, statistics of feature values from the first commit are returned.
@@ -2689,12 +2688,14 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        return self._statistics_engine.get_by_commit_time_window(
+        return self._statistics_engine.get_by_time_window(
             self,
             start_time=from_commit_time,
             end_time=commit_time,
             feature_name=feature_name,
             row_percentage=row_percentage,
+            is_event_time=False,
+            computed_at=None,
         )
 
     def compute_statistics(
@@ -2929,7 +2930,7 @@ class FeatureGroup(FeatureGroupBase):
             self._time_travel_format is not None
             and self._time_travel_format.upper() == "HUDI"
         ):
-            return self._statistics_engine.get_by_commit_time_window(self)
+            return self._statistics_engine.get_by_time_window(self)
         return super().statistics
 
     @version.setter

@@ -114,7 +114,7 @@ class TestMonitoringWindowConfigEngine:
             start_time,
             end_time,
         ) = monitoring_window_config_engine.get_window_start_end_times(
-            config, use_event_time=False
+            config, is_event_time=False
         )
         after_time = convert_event_time_to_timestamp(datetime.now())
 
@@ -136,7 +136,7 @@ class TestMonitoringWindowConfigEngine:
             start_time,
             end_time,
         ) = monitoring_window_config_engine.get_window_start_end_times(
-            config, use_event_time=False
+            config, is_event_time=False
         )
         after_time = convert_event_time_to_timestamp(datetime.now())
 
@@ -168,7 +168,7 @@ class TestMonitoringWindowConfigEngine:
             start_time,
             end_time,
         ) = monitoring_window_config_engine.get_window_start_end_times(
-            config, use_event_time=False
+            config, is_event_time=False
         )
         after_time = convert_event_time_to_timestamp(
             datetime.now() + timedelta(seconds=1)
@@ -203,7 +203,7 @@ class TestMonitoringWindowConfigEngine:
             start_time,
             end_time,
         ) = monitoring_window_config_engine.get_window_start_end_times(
-            config, use_event_time=False
+            config, is_event_time=False
         )
         after_time = convert_event_time_to_timestamp(
             datetime.now() + timedelta(seconds=1)
@@ -240,7 +240,7 @@ class TestMonitoringWindowConfigEngine:
             start_time,
             end_time,
         ) = monitoring_window_config_engine.get_window_start_end_times(
-            config, use_event_time=True
+            config, is_event_time=True
         )
 
         # Assert
@@ -324,14 +324,14 @@ class TestMonitoringWindowConfigEngine:
         mock_vector_server = mocker.patch(
             "hsfs.core.vector_server.VectorServer",
         )
-        # if use use_event_time is true, use get_batch_query for event time
+        # if use is_event_time is true, use get_batch_query for event time
         get_batch_query_mock = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.get_batch_query",
             return_value=query.Query.from_response_json(
                 backend_fixtures["query"]["get"]["response"]
             ),
         )
-        # if use_event_time is false, use as of for commit time
+        # if is_event_time is false, use as of for commit time
         as_of_mock = mocker.patch(
             "hsfs.constructor.query.Query.as_of",
             return_value=query.Query.from_response_json(
@@ -345,14 +345,14 @@ class TestMonitoringWindowConfigEngine:
         end_time = datetime.now()
 
         # Act
-        # 4 possibilities : with or without use_event_time, with or without training_dataset_version
+        # 4 possibilities : with or without is_event_time, with or without training_dataset_version
         # use as_of
         _ = config_engine.fetch_feature_view_data(
             entity=unit_test_fv,
             feature_name=None,
             start_time=None,
             end_time=None,
-            use_event_time=False,
+            is_event_time=False,
             training_dataset_version=None,
         )
         # use get_batch_query
@@ -361,7 +361,7 @@ class TestMonitoringWindowConfigEngine:
             feature_name=None,
             start_time=start_time,
             end_time=None,
-            use_event_time=True,
+            is_event_time=True,
             training_dataset_version=None,
         )
         # use as_of
@@ -370,7 +370,7 @@ class TestMonitoringWindowConfigEngine:
             feature_name=DEFAULT_FEATURE_NAME,
             start_time=start_time,
             end_time=end_time,
-            use_event_time=False,
+            is_event_time=False,
             training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION,
         )
         # use get_batch_query
@@ -379,7 +379,7 @@ class TestMonitoringWindowConfigEngine:
             feature_name=DEFAULT_FEATURE_NAME,
             start_time=None,
             end_time=end_time,
-            use_event_time=True,
+            is_event_time=True,
             training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION + 1,
         )
 
@@ -453,7 +453,7 @@ class TestMonitoringWindowConfigEngine:
             entity=unit_test_fg,
             start_time=None,
             end_time=None,
-            use_event_time=False,
+            is_event_time=False,
             training_dataset_version=None,
             row_percentage=0.5,
         )
@@ -462,7 +462,7 @@ class TestMonitoringWindowConfigEngine:
             feature_name=DEFAULT_FEATURE_NAME,
             start_time=None,
             end_time=None,
-            use_event_time=True,
+            is_event_time=True,
             training_dataset_version=1,
             row_percentage=1.1,
         )
@@ -470,7 +470,7 @@ class TestMonitoringWindowConfigEngine:
             entity=unit_test_fv,
             start_time=None,
             end_time=None,
-            use_event_time=True,
+            is_event_time=True,
             training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION,
             row_percentage=0.25,
         )
@@ -500,7 +500,7 @@ class TestMonitoringWindowConfigEngine:
                     feature_name=None,
                     start_time=None,
                     end_time=None,
-                    use_event_time=True,
+                    is_event_time=True,
                     training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION,
                 ),
                 call().sample(fraction=0.25),

@@ -35,7 +35,7 @@ class TestStatistics:
 
         # Assert
         assert s.commit_time == "test_commit_time"
-        assert s.window_end_commit_id == 11
+        assert s.window_end_time == 11
         assert len(s.feature_descriptive_statistics) == 1
         assert isinstance(
             s.feature_descriptive_statistics[0], FeatureDescriptiveStatistics
@@ -59,7 +59,7 @@ class TestStatistics:
 
         # Assert
         assert s.commit_time == "test_commit_time"
-        assert s.window_end_commit_id == 11
+        assert s.window_end_time == 11
         assert s.feature_descriptive_statistics is None
         assert len(s.split_statistics) == 1
         assert isinstance(s.split_statistics[0], split_statistics.SplitStatistics)
@@ -86,7 +86,7 @@ class TestStatistics:
 
         # Assert
         assert s.commit_time == "test_commit_time"
-        assert s.window_end_commit_id is None
+        assert s.window_end_time is None
         assert len(s.feature_descriptive_statistics) == 1
         assert isinstance(
             s.feature_descriptive_statistics[0], FeatureDescriptiveStatistics
@@ -113,7 +113,7 @@ class TestStatistics:
 
         # Assert
         assert s.commit_time == "test_commit_time"
-        assert s.window_end_commit_id is None
+        assert s.window_end_time is None
         assert len(s.feature_descriptive_statistics) == 1
         assert isinstance(
             s.feature_descriptive_statistics[0], FeatureDescriptiveStatistics
@@ -142,7 +142,7 @@ class TestStatistics:
 
         # Assert
         assert s.commit_time == "test_commit_time"
-        assert s.window_end_commit_id is None
+        assert s.window_end_time is None
         assert len(s.feature_descriptive_statistics) == 1
         assert isinstance(
             s.feature_descriptive_statistics[0], FeatureDescriptiveStatistics
