@@ -631,7 +631,7 @@ class Query:
         if len(feats_without_prefix) == 1:
             return feats_without_prefix[0]
 
-        # there were multiple matches and
+        # there were multiple ambiguous matches
         raise FeatureStoreException(
             Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(feature_name)
         )
