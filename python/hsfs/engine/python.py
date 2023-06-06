@@ -21,6 +21,7 @@ import time
 import re
 import ast
 import warnings
+import logging
 import avro
 import socket
 import pyarrow as pa
@@ -65,6 +66,11 @@ from hsfs.client import exceptions, hopsworks
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
+
+from hsfs.storage_connector import StorageConnector
+
+# Disable pyhive INFO logging
+logging.getLogger("pyhive").setLevel(logging.WARNING)
 
 HAS_FAST = False
 try:
@@ -121,12 +127,24 @@ class Engine:
         hive_config=None,
     ):
         if arrow_flight_client.get_instance().is_flyingduck_query_object(sql_query):
-            result_df = arrow_flight_client.get_instance().read_query(sql_query)
+            result_df = util.run_with_loading_animation(
+                "Reading data from Hopsworks, using FlyingDuck",
+                arrow_flight_client.get_instance().read_query,
+                sql_query,
+            )
         else:
             with self._create_hive_connection(
                 feature_store, hive_config=hive_config
             ) as hive_conn:
-                result_df = pd.read_sql(sql_query, hive_conn)
+                # Suppress SQLAlchemy pandas warning
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", UserWarning)
+                    result_df = util.run_with_loading_animation(
+                        "Reading data from Hopsworks, using Hive",
+                        pd.read_sql,
+                        sql_query,
+                        hive_conn,
+                    )
 
         if schema:
             result_df = Engine.cast_columns(result_df, schema)
@@ -423,6 +441,8 @@ class Engine:
                 ):
                     dataframe_copy[col] = dataframe_copy[col].dt.tz_convert(None)
             return dataframe_copy
+        elif dataframe == "spine":
+            return None
 
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: pandas dataframe. "
@@ -948,7 +968,7 @@ class Engine:
             feature_group.backfill_job.run(
                 args=feature_group.backfill_job.config.get("defaultArgs", "")
                 + " -kafkaOffsetReset true",
-                await_termination=offline_write_options.get("wait_for_job", True),
+                await_termination=offline_write_options.get("wait_for_job", False),
             )
         elif (
             not isinstance(feature_group, ExternalFeatureGroup)
@@ -956,7 +976,7 @@ class Engine:
             and offline_write_options.get("start_offline_backfill", True)
         ):
             feature_group.backfill_job.run(
-                await_termination=offline_write_options.get("wait_for_job", True)
+                await_termination=offline_write_options.get("wait_for_job", False)
             )
         if isinstance(feature_group, ExternalFeatureGroup):
             return None
@@ -1241,3 +1261,15 @@ class Engine:
                     df[_feat.name], _feat.online_type
                 )
         return df
+
+    @staticmethod
+    def is_connector_type_supported(connector_type):
+        return connector_type in [
+            StorageConnector.HOPSFS,
+            StorageConnector.S3,
+            StorageConnector.JDBC,
+            StorageConnector.REDSHIFT,
+            StorageConnector.ADLS,
+            StorageConnector.SNOWFLAKE,
+            StorageConnector.KAFKA,
+        ]

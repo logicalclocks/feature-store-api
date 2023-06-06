@@ -51,4 +51,10 @@ public class FeatureGroupCommit extends RestDto<FeatureGroupCommit> {
   @Getter
   @Setter
   private Integer validationId;
+  @Getter
+  @Setter
+  private Boolean archived;
+  @Getter
+  @Setter
+  private Long lastActiveCommitTime;
 }

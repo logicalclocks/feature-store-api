@@ -1980,7 +1980,7 @@ class TestFeatureViewEngine:
         # Assert
         assert (
             str(e_info.value)
-            == "Python kernel can only read from cached feature group. Please use `feature_view.create_training_data` instead."
+            == "Python kernel can only read from cached feature groups. When using external feature groups please use `feature_view.create_training_data` instead. If you are using spines, use a Spark Kernel."
         )
         assert mock_engine_get_type.call_count == 1
 
@@ -2014,7 +2014,7 @@ class TestFeatureViewEngine:
         # Assert
         assert (
             str(e_info.value)
-            == "Python kernel can only read from cached feature group. Please use `feature_view.create_training_data` instead."
+            == "Python kernel can only read from cached feature groups. When using external feature groups please use `feature_view.create_training_data` instead. If you are using spines, use a Spark Kernel."
         )
         assert mock_engine_get_type.call_count == 2
 

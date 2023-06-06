@@ -10,7 +10,8 @@
           "id": 2,
           "name": "test_project_featurestore",
           "storageConnectorType": "JDBC"
-        }
+        },
+        "spine": false
       },
       "alias": "test_alias"
     }
