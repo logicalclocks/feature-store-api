@@ -52,7 +52,7 @@ class Filter:
         return {
             "feature": self._feature,
             "condition": self._condition,
-            "value": str(self._value),
+            "value": str(self._value) if self._value is not None else None,
         }
 
     def __and__(self, other):
