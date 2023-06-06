@@ -65,7 +65,7 @@ class FeatureMonitoringConfig:
         feature_view_version: Optional[int] = None,
         href: Optional[str] = None,
         training_dataset_version: Optional[int] = None,
-        use_event_time: bool = False,
+        is_event_time: bool = False,
     ) -> "FeatureMonitoringConfig":
         self.name = name
         self._id = id
@@ -79,7 +79,7 @@ class FeatureMonitoringConfig:
         self._feature_monitoring_type = FeatureMonitoringType(feature_monitoring_type)
         self._enabled = enabled
         self._training_dataset_version = training_dataset_version
-        self._use_event_time = use_event_time
+        self._is_event_time = is_event_time
 
         self._feature_monitoring_config_engine = (
             feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
@@ -155,13 +155,13 @@ class FeatureMonitoringConfig:
             "featureMonitoringType": self._feature_monitoring_type,
             "schedulerConfig": scheduler_config,
             "detectionWindowConfig": detection_window_config,
+            "isEventTime": self._is_event_time,
         }
 
         if self._feature_group_id is not None:
             the_dict["featureGroupId"] = self._feature_group_id
         elif self._feature_view_id is not None:
             the_dict["featureViewId"] = self._feature_view_id
-            the_dict["useEventTime"] = self._use_event_time
             the_dict["trainingDatasetVersion"] = self._training_dataset_version
 
         if self._feature_monitoring_type == "STATISTICS_MONITORING":
@@ -651,8 +651,8 @@ class FeatureMonitoringConfig:
         self._scheduler_config._enabled = enabled
 
     @property
-    def use_event_time(self) -> bool:
-        return self._use_event_time
+    def is_event_time(self) -> bool:
+        return self._is_event_time
 
     @property
     def training_dataset_version(self) -> Optional[int]:

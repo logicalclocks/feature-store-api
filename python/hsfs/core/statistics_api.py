@@ -41,32 +41,16 @@ class StatisticsApi:
             )
         )
 
-    def get_by_commit_time(
-        self,
-        metadata_instance,
-        commit_timestamp,
-        for_transformation,
-        training_dataset_version,
-    ):
-        """Gets the statistics for a specific commit time for an instance."""
-        _client = client.get_instance()
-        path_params = self.get_path(metadata_instance, training_dataset_version)
-
-        headers = {"content-type": "application/json"}
-        query_params = {
-            "filter_by": "commit_time_eq:" + str(commit_timestamp),
-            "fields": "content",
-            "for_transformation": for_transformation,
-        }
-
-        return statistics.Statistics.from_response_json(
-            _client._send_request("GET", path_params, query_params, headers=headers)
-        )
-
     def get_last_computed(
         self, metadata_instance, for_transformation, training_dataset_version
     ):
-        """Gets the statistics of the last commit time for an instance."""
+        """Get the last computed statistics.
+
+        These statistics are not necessarily computed on the last feature values. For instance, they could be statistics
+        computed on a specific commit time window of a time-travel-enabled feature group.
+
+        This method is used for feature groups statistics without time-travel enabled or training dataset statistics.
+        """
         _client = client.get_instance()
         path_params = self.get_path(metadata_instance, training_dataset_version)
         headers = {"content-type": "application/json"}
@@ -78,31 +62,93 @@ class StatisticsApi:
             "for_transformation": for_transformation,
         }
 
+        # get statistics by feature group + filter (commit_time:desc)
+
         return statistics.Statistics.from_response_json(
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
-    def get_by_commit_time_window(
+    def get_computed_at(
+        self,
+        metadata_instance,
+        computed_at,
+        for_transformation,
+        training_dataset_version,
+    ):
+        """Gets the statistics computed at a specific time for an instance."""
+        _client = client.get_instance()
+        path_params = self.get_path(metadata_instance, training_dataset_version)
+
+        headers = {"content-type": "application/json"}
+        query_params = {
+            "filter_by": "commit_time_eq:" + str(computed_at),
+            "fields": "content",
+            "for_transformation": for_transformation,
+        }
+
+        # get statistics by feature group + filter (commit_time)
+
+        return statistics.Statistics.from_response_json(
+            _client._send_request("GET", path_params, query_params, headers=headers)
+        )
+
+    # def get_by_commit_time(
+    #     self,
+    #     metadata_instance,
+    #     commit_timestamp,
+    #     for_transformation,
+    #     training_dataset_version,
+    # ):
+    #     """Gets the statistics for a specific commit time for an instance."""
+    #     _client = client.get_instance()
+    #     path_params = self.get_path(metadata_instance, training_dataset_version)
+
+    #     headers = {"content-type": "application/json"}
+    #     query_params = {
+    #         "filter_by": "commit_time_eq:" + str(commit_timestamp),
+    #         "fields": "content",
+    #         "for_transformation": for_transformation,
+    #     }
+
+    #     # get statistics by feature group + filter (commit_time)
+
+    #     return statistics.Statistics.from_response_json(
+    #         _client._send_request("GET", path_params, query_params, headers=headers)
+    #     )
+
+    def get_by_time_window(
         self,
         metadata_instance,
         start_time,
         end_time,
+        is_event_time=False,
         feature_name=None,
         row_percentage=None,
+        computed_at=None,
     ):
-        """Gets statistics based on a commit time window and optionally feature name and row percentage"""
+        """Gets statistics computed on a specific time window and (optionally) feature name and row percentage.
+        If the instance type is Feature Group, the window is based on commit times. Otherwise, if the instance type
+        is Feature View, the window can be based either on commit times or event times.
+
+        To fetch Feature View statistics based on event times, the statistics computation time (i.e., computed_at parameter) is required.
+        """
         _client = client.get_instance()
         path_params = self.get_path(metadata_instance)
         headers = {"content-type": "application/json"}
         query_params = {
             "start_time": start_time,
             "end_time": end_time,
+            "is_event_time": is_event_time,
             "fields": "content",
         }
+        if computed_at is not None:
+            query_params["computed_at"] = computed_at
         if feature_name is not None:
             query_params["feature_name"] = feature_name
         if row_percentage is not None:
             query_params["row_percentage"] = row_percentage
+
+        # get by feature group + window + [commit_time] + [feature_name]
 
         return statistics.Statistics.from_response_json(
             _client._send_request("GET", path_params, query_params, headers=headers)
