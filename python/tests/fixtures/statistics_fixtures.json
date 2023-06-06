@@ -5,7 +5,7 @@
       "items": [
         {
           "commit_time": "test_commit_time",
-          "window_end_commit_id": 11,
+          "window_end_time": 11,
           "feature_descriptive_statistics": [
             {
               "id": 52,
@@ -44,7 +44,7 @@
       "items": [
         {
           "commit_time": "test_commit_time",
-          "window_end_commit_id": 11,
+          "window_end_time": 11,
           "split_statistics": [
             {
               "name": "test_name",
