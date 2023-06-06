@@ -33,13 +33,13 @@ class Statistics:
         feature_descriptive_statistics=None,
         # feature group
         feature_group_id=None,
-        window_start_commit_id=None,
-        window_end_commit_id=None,
         # feature view
         feature_view_name=None,
         feature_view_version=None,
-        window_start_event_time=None,
-        window_end_event_time=None,
+        is_event_time=None,
+        # feature group and feature view
+        window_start_time=None,
+        window_end_time=None,
         # training dataset
         training_dataset_id=None,
         split_statistics=None,
@@ -57,13 +57,13 @@ class Statistics:
         self._row_percentage = row_percentage
         # feature group
         self._feature_group_id = feature_group_id
-        self._window_start_commit_id = window_start_commit_id
-        self._window_end_commit_id = window_end_commit_id
         # feature view
         self._feature_view_name = feature_view_name
         self._feature_view_version = feature_view_version
-        self._window_start_event_time = window_start_event_time
-        self._window_end_event_time = window_end_event_time
+        self._is_event_time = is_event_time
+        # feature group and feature view
+        self._window_start_time = window_start_time
+        self._window_end_time = window_end_time
         # training dataset
         self._training_dataset_id = training_dataset_id
         self._split_statistics = self._parse_split_statistics(split_statistics)
@@ -75,12 +75,26 @@ class Statistics:
     ) -> Optional[List[FeatureDescriptiveStatistics]]:
         if desc_statistics is None:
             return None
-        return [
-            fds
-            if isinstance(fds, FeatureDescriptiveStatistics)
-            else FeatureDescriptiveStatistics.from_response_json(fds)
-            for fds in desc_statistics
-        ]
+        elif isinstance(desc_statistics, FeatureDescriptiveStatistics):
+            return [desc_statistics]
+        elif isinstance(desc_statistics, dict) and "items" not in desc_statistics:
+            return [FeatureDescriptiveStatistics.from_response_json(desc_statistics)]
+        elif isinstance(desc_statistics, dict) and "items" in desc_statistics:
+            return [
+                FeatureDescriptiveStatistics.from_response_json(fds)
+                for fds in desc_statistics["items"]
+            ]
+        elif isinstance(desc_statistics, list):
+            return [
+                fds
+                if isinstance(fds, FeatureDescriptiveStatistics)
+                else FeatureDescriptiveStatistics.from_response_json(fds)
+                for fds in desc_statistics
+            ]
+        else:
+            raise ValueError(
+                "Descriptive statistics must be a FeatureDescriptiveStatistics object or a dictionary"
+            )
 
     def _parse_split_statistics(
         self,
@@ -113,10 +127,9 @@ class Statistics:
         _dict = {
             "commitTime": self._commit_time,
             "rowPercentage": self._row_percentage,
-            "windowStartCommitId": self._window_start_commit_id,
-            "windowEndCommitId": self._window_end_commit_id,
-            "windowStartEventTime": self._window_start_event_time,
-            "windowEndEventTime": self._window_end_event_time,
+            "windowStartTime": self._window_start_time,
+            "windowEndTime": self._window_end_time,
+            "isEventTime": self._is_event_time,
             "forTransformation": self._for_transformation,
         }
         if self._feature_descriptive_statistics is not None:
@@ -165,14 +178,6 @@ class Statistics:
         return self._feature_group_id
 
     @property
-    def window_start_commit_id(self):
-        return self._window_start_commit_id
-
-    @property
-    def window_end_commit_id(self):
-        return self._window_end_commit_id
-
-    @property
     def feature_view_name(self):
         return self._feature_view_name
 
@@ -181,12 +186,16 @@ class Statistics:
         return self._feature_view_version
 
     @property
-    def window_start_event_time(self):
-        return self._window_start_event_time
+    def is_event_time(self):
+        return self._is_event_time
 
     @property
-    def window_end_event_time(self):
-        return self._window_end_event_time
+    def window_start_time(self):
+        return self._window_start_time
+
+    @property
+    def window_end_time(self):
+        return self._window_end_time
 
     @property
     def training_dataset_id(self):
