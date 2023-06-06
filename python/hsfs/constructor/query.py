@@ -69,92 +69,6 @@ class Query:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
-        if self._left_feature_group is not None and self._left_features is not None:
-            self._populate_collections()
-
-    def _add_to_collection(self, feat, prefix, featuregroup, query_feature=True):
-        collection = (
-            self._query_features if query_feature else self._featuregroup_features
-        )
-        feature_entry = (feat, prefix, featuregroup)
-        collection[feat.name] = collection.get(feat.name, []) + [feature_entry]
-        if query_feature:
-            if prefix:
-                name_with_prefix = f"{prefix}{feat.name}"
-                collection[name_with_prefix] = collection.get(name_with_prefix, []) + [
-                    feature_entry
-                ]
-            self._query_feature_list.append(feature_entry)
-
-    def _add_features_to_collection(self, features, prefix, featuregroup):
-        for feat in features:
-            self._add_to_collection(feat, prefix, featuregroup)
-        for feat in featuregroup.features:
-            self._add_to_collection(feat, prefix, featuregroup, query_feature=False)
-
-    def _populate_collections(self):
-        self._featuregroups = {self._left_feature_group}
-        self._query_features = {}
-        self._query_feature_list = []
-        self._featuregroup_features = {}
-        self._filters = self._filter
-
-        self._add_features_to_collection(
-            self._left_features, None, self._left_feature_group
-        )
-        for join_obj in self.joins:
-            self._featuregroups.add(join_obj.query._left_feature_group)
-
-            if self._filters is None:
-                self._filters = join_obj.query._filter
-            elif join_obj.query._filter is not None:
-                self._filters = self._filters & join_obj.query._filter
-
-            self._add_features_to_collection(
-                join_obj.query._left_features,
-                join_obj.prefix,
-                join_obj.query._left_feature_group,
-            )
-
-    def _get_featuregroup_by_feature(self, feature: Feature):
-        fg_id = feature._feature_group_id
-        for fg in self.featuregroups:
-            if fg.id == fg_id:
-                return fg
-
-        featuregroups_found = self._featuregroup_features.get(feature.name, [])
-
-        if len(featuregroups_found) == 1:
-            return featuregroups_found[0][2]
-        elif len(featuregroups_found) == 0:
-            raise FeatureStoreException(
-                Query.ERROR_MESSAGE_FEATURE_NOT_FOUND_FG.format(feature.name)
-            )
-
-        raise FeatureStoreException(
-            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS_FG.format(feature.name)
-        )
-
-    def _get_feature_by_name(
-        self,
-        feature_name: str,
-    ):
-        if feature_name not in self._query_features:
-            raise FeatureStoreException(
-                Query.ERROR_MESSAGE_FEATURE_NOT_FOUND.format(feature_name)
-            )
-        feats = self._query_features[feature_name]
-
-        if len(feats) == 1:
-            return feats[0]
-
-        feats_without_prefix = [feat for feat in feats if feat[1] is None]
-        if len(feats_without_prefix) == 1:
-            return feats_without_prefix[0]
-
-        raise FeatureStoreException(
-            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(feature_name)
-        )
 
     def _prep_read(self, online, read_options):
         fs_query = self._query_constructor_api.construct_query(self)
@@ -315,8 +229,6 @@ class Query:
         self._joins.append(
             join.Join(sub_query, on, left_on, right_on, join_type.upper(), prefix)
         )
-
-        self._populate_collections()
 
         return self
 
@@ -494,8 +406,6 @@ class Query:
         elif self._filter is not None:
             self._filter = self._filter & f
 
-        self._populate_collections()
-
         return self
 
     def json(self):
@@ -615,8 +525,6 @@ class Query:
 
         self._left_features.append(feature)
 
-        self._populate_collections()
-
         return self
 
     def is_time_travel(self):
@@ -633,6 +541,85 @@ class Query:
             [isinstance(fg, feature_group.FeatureGroup) for fg in self.featuregroups]
         )
 
+    def _get_featuregroup_by_feature(self, feature: Feature):
+        # search for feature by id, and return the fg object
+        fg_id = feature._feature_group_id
+        for fg in self.featuregroups:
+            if fg.id == fg_id:
+                return fg
+
+        # search for feature by name and collect fg objects
+        featuregroup_features = {}
+        for feat in self._left_feature_group.features:
+            featuregroup_features[feat.name] = featuregroup_features.get(
+                feat.name, []
+            ) + [self._left_feature_group]
+        for join_obj in self.joins:
+            for feat in join_obj.query._left_feature_group.features:
+                featuregroup_features[feat.name] = featuregroup_features.get(
+                    feat.name, []
+                ) + [join_obj.query._left_feature_group]
+        featuregroups_found = featuregroup_features.get(feature.name, [])
+
+        if len(featuregroups_found) > 1:
+            raise FeatureStoreException(
+                Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS_FG.format(feature.name)
+            )
+        elif len(featuregroups_found) == 1:
+            return featuregroups_found[0]
+
+        raise FeatureStoreException(
+            Query.ERROR_MESSAGE_FEATURE_NOT_FOUND_FG.format(feature.name)
+        )
+
+    def _get_feature_by_name(
+        self,
+        feature_name: str,
+    ):
+        # collect a dict that maps feature names -> (feature, prefix, fg)
+        query_features = {}
+        for feat in self._left_features:
+            feature_entry = (feat, None, self._left_feature_group)
+            query_features[feat.name] = query_features.get(feat.name, []) + [
+                feature_entry
+            ]
+        for join_obj in self.joins:
+            for feat in join_obj.query._left_features:
+                feature_entry = (
+                    feat,
+                    join_obj.prefix,
+                    join_obj.query._left_feature_group,
+                )
+                query_features[feat.name] = query_features.get(feat.name, []) + [
+                    feature_entry
+                ]
+                # if the join has a prefix, add a lookup for "prefix.feature_name"
+                if join_obj.prefix:
+                    name_with_prefix = f"{join_obj.prefix}{feat.name}"
+                    query_features[name_with_prefix] = query_features.get(
+                        name_with_prefix, []
+                    ) + [feature_entry]
+
+        if feature_name not in query_features:
+            raise FeatureStoreException(
+                Query.ERROR_MESSAGE_FEATURE_NOT_FOUND.format(feature_name)
+            )
+
+        # return (feature, prefix, fg) tuple, if only one match was found
+        feats = query_features[feature_name]
+        if len(feats) == 1:
+            return feats[0]
+
+        # if multiple matches were found, return the one without prefix
+        feats_without_prefix = [feat for feat in feats if feat[1] is None]
+        if len(feats_without_prefix) == 1:
+            return feats_without_prefix[0]
+
+        # there were multiple matches and
+        raise FeatureStoreException(
+            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(feature_name)
+        )
+
     @property
     def joins(self):
         """List of joins in the query"""
@@ -641,17 +628,35 @@ class Query:
     @property
     def featuregroups(self):
         """List of feature groups used in the query"""
-        return list(self._featuregroups)
+        featuregroups = {self._left_feature_group}
+        for join_obj in self.joins:
+            featuregroups.add(join_obj.query._left_feature_group)
+        return list(featuregroups)
 
     @property
     def filters(self):
         """All filters used in the query"""
-        return self._filters
+        filters = self._filter
+        for join_obj in self.joins:
+            if filters is None:
+                filters = join_obj.query._filter
+            elif join_obj.query._filter is not None:
+                filters = filters & join_obj.query._filter
+
+        return filters
 
     @property
     def features(self):
         """List of all features in the query"""
-        return [feat[0] for feat in self._query_feature_list]
+        features = []
+        for feat in self._left_features:
+            features.append(feat)
+
+        for join_obj in self.joins:
+            for feat in join_obj.query._left_features:
+                features.append(feat)
+
+        return features
 
     def get_feature(self, feature_name):
         """
