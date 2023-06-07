@@ -66,11 +66,12 @@ public class StorageConnectorUtils {
   public Dataset<Row> read(StorageConnector.S3Connector connector, String dataFormat,
                            Map<String, String> options, String path) throws FeatureStoreException, IOException {
     connector.update();
+    Map<String, String> readOptions = connector.sparkOptions();
     // merge user spark options on top of default spark options
     if (options != null && !options.isEmpty()) {
-      options.putAll(connector.sparkOptions());
+      readOptions.putAll(options);
     }
-    return SparkEngine.getInstance().read(connector, dataFormat, options, path);
+    return SparkEngine.getInstance().read(connector, dataFormat, readOptions, path);
   }
 
   /**
