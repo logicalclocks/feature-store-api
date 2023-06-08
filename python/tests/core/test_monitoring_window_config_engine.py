@@ -25,7 +25,7 @@ from datetime import timedelta, datetime
 import time
 
 DEFAULT_FEATURE_NAME = "amount"
-DEFAULT_TRAINING_DATASET_VERSION = 2
+DEFAULT_TRANSFORMED_WITH_VERSION = 2
 
 ENGINE_GET_TYPE = "hsfs.engine.get_type"
 CLIENT_GET_INSTANCE = "hsfs.client.get_instance"
@@ -345,7 +345,7 @@ class TestMonitoringWindowConfigEngine:
         end_time = datetime.now()
 
         # Act
-        # 4 possibilities : with or without is_event_time, with or without training_dataset_version
+        # 4 possibilities : with or without is_event_time, with or without transformed_with_version
         # use as_of
         _ = config_engine.fetch_feature_view_data(
             entity=unit_test_fv,
@@ -353,7 +353,7 @@ class TestMonitoringWindowConfigEngine:
             start_time=None,
             end_time=None,
             is_event_time=False,
-            training_dataset_version=None,
+            transformed_with_version=None,
         )
         # use get_batch_query
         _ = config_engine.fetch_feature_view_data(
@@ -362,7 +362,7 @@ class TestMonitoringWindowConfigEngine:
             start_time=start_time,
             end_time=None,
             is_event_time=True,
-            training_dataset_version=None,
+            transformed_with_version=None,
         )
         # use as_of
         _ = config_engine.fetch_feature_view_data(
@@ -371,7 +371,7 @@ class TestMonitoringWindowConfigEngine:
             start_time=start_time,
             end_time=end_time,
             is_event_time=False,
-            training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION,
+            transformed_with_version=DEFAULT_TRANSFORMED_WITH_VERSION,
         )
         # use get_batch_query
         _ = config_engine.fetch_feature_view_data(
@@ -380,7 +380,7 @@ class TestMonitoringWindowConfigEngine:
             start_time=None,
             end_time=end_time,
             is_event_time=True,
-            training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION + 1,
+            transformed_with_version=DEFAULT_TRANSFORMED_WITH_VERSION + 1,
         )
 
         # Assert
@@ -392,14 +392,14 @@ class TestMonitoringWindowConfigEngine:
                     start_time=start_time,
                     end_time=None,
                     with_label=True,
-                    training_dataset_version=None,
+                    transformed_with_version=None,
                 ),
                 call(
                     feature_view_obj=unit_test_fv,
                     start_time=None,
                     end_time=end_time,
                     with_label=False,
-                    training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION + 1,
+                    transformed_with_version=DEFAULT_TRANSFORMED_WITH_VERSION + 1,
                 ),
             ],
             any_order=False,
@@ -416,12 +416,12 @@ class TestMonitoringWindowConfigEngine:
                 call(
                     5,
                     [mocker.ANY, mocker.ANY],
-                    DEFAULT_TRAINING_DATASET_VERSION,
+                    DEFAULT_TRANSFORMED_WITH_VERSION,
                 ),
                 call(
                     5,
                     [mocker.ANY, mocker.ANY],
-                    DEFAULT_TRAINING_DATASET_VERSION + 1,
+                    DEFAULT_TRANSFORMED_WITH_VERSION + 1,
                 ),
             ],
             any_order=True,
@@ -454,7 +454,7 @@ class TestMonitoringWindowConfigEngine:
             start_time=None,
             end_time=None,
             is_event_time=False,
-            training_dataset_version=None,
+            transformed_with_version=None,
             row_percentage=0.5,
         )
         config_engine_fg.fetch_entity_data_in_monitoring_window(
@@ -463,7 +463,7 @@ class TestMonitoringWindowConfigEngine:
             start_time=None,
             end_time=None,
             is_event_time=True,
-            training_dataset_version=1,
+            transformed_with_version=1,
             row_percentage=1.1,
         )
         config_engine_fv.fetch_entity_data_in_monitoring_window(
@@ -471,7 +471,7 @@ class TestMonitoringWindowConfigEngine:
             start_time=None,
             end_time=None,
             is_event_time=True,
-            training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION,
+            transformed_with_version=DEFAULT_TRANSFORMED_WITH_VERSION,
             row_percentage=0.25,
         )
 
@@ -501,7 +501,7 @@ class TestMonitoringWindowConfigEngine:
                     start_time=None,
                     end_time=None,
                     is_event_time=True,
-                    training_dataset_version=DEFAULT_TRAINING_DATASET_VERSION,
+                    transformed_with_version=DEFAULT_TRANSFORMED_WITH_VERSION,
                 ),
                 call().sample(fraction=0.25),
             ]

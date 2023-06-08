@@ -64,7 +64,7 @@ class FeatureMonitoringConfig:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
         href: Optional[str] = None,
-        training_dataset_version: Optional[int] = None,
+        transformed_with_version: Optional[int] = None,
         is_event_time: bool = False,
     ) -> "FeatureMonitoringConfig":
         self.name = name
@@ -78,7 +78,7 @@ class FeatureMonitoringConfig:
         self._job_name = job_name
         self._feature_monitoring_type = FeatureMonitoringType(feature_monitoring_type)
         self._enabled = enabled
-        self._training_dataset_version = training_dataset_version
+        self._transformed_with_version = transformed_with_version
         self._is_event_time = is_event_time
 
         self._feature_monitoring_config_engine = (
@@ -156,13 +156,13 @@ class FeatureMonitoringConfig:
             "schedulerConfig": scheduler_config,
             "detectionWindowConfig": detection_window_config,
             "isEventTime": self._is_event_time,
+            "transformedWithVersion": self._transformed_with_version,
         }
 
         if self._feature_group_id is not None:
             the_dict["featureGroupId"] = self._feature_group_id
         elif self._feature_view_id is not None:
             the_dict["featureViewId"] = self._feature_view_id
-            the_dict["trainingDatasetVersion"] = self._training_dataset_version
 
         if self._feature_monitoring_type == "STATISTICS_MONITORING":
             return the_dict
@@ -652,14 +652,33 @@ class FeatureMonitoringConfig:
 
     @property
     def is_event_time(self) -> bool:
+        """Whether fetching data for monitoring is based on event time or ingestion time. Defaults to False.
+
+        !!! note
+            Event time can only be used with feature views.
+        """
         return self._is_event_time
 
     @property
-    def training_dataset_version(self) -> Optional[int]:
-        return self._training_dataset_version
+    def transformed_with_version(self) -> Optional[int]:
+        """The version of the training dataset to fetch statistics from for transformation function. If not set, no transformation functions are applied. Defaults to None.
+
+        !!! note
+            Transformation functions can only be used with feature views.
+        """
+        return self._transformed_with_version
 
     @property
     def feature_monitoring_type(self) -> Optional[str]:
+        """The type of feature monitoring to perform. Used for internal validation.
+
+        Options are:
+            - STATISTICS_MONITORING if no reference window (and therefore comparison config) is provided
+            - FEATURE_MONITORING if a reference window (and therefore comparison config) is provided.
+
+        !!! note
+            This property is read-only.
+        """
         return self._feature_monitoring_type
 
     @property

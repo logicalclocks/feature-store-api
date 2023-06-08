@@ -2361,7 +2361,7 @@ class FeatureView:
                 "Only Feature Group registered with Hopsworks can fetch feature monitoring configurations."
             )
 
-        return self._fm_config_engine.get_feature_monitoring_configs(
+        return self._feature_monitoring_config_engine.get_feature_monitoring_configs(
             name=name,
             feature_name=feature_name,
             config_id=config_id,
@@ -2426,7 +2426,7 @@ class FeatureView:
                 "Only Feature View registered with Hopsworks can fetch feature monitoring history."
             )
 
-        return self._fm_result_engine.get_feature_monitoring_results(
+        return self._feature_monitoring_result_engine.get_feature_monitoring_results(
             config_name=config_name,
             config_id=config_id,
             start_time=start_time,
@@ -2442,7 +2442,7 @@ class FeatureView:
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
         is_event_time: Optional[bool] = True,
-        training_dataset_version: Optional[int] = None,
+        transformed_with_version: Optional[int] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Run a job to compute statistics on snapshot of feature data on a schedule.
 
@@ -2478,7 +2478,7 @@ class FeatureView:
             start_date_time: Start date and time from which to start computing statistics.
             is_event_time: If true, use event time to compute statistics.
                 Defaults to False.
-            training_dataset_version: The version of the dataset to use
+            transformed_with_version: The version of the dataset to use
                 to fetch statistics for the transformation function. If provided, the
                 statistics are computed after applying the transformation function.
                 Otherwise, the statistics are computed on the raw data. Defaults to None.
@@ -2495,14 +2495,14 @@ class FeatureView:
                 "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
             )
 
-        return self._fm_config_engine._build_default_statistics_monitoring_config(
+        return self._feature_monitoring_config_engine._build_default_statistics_monitoring_config(
             name=name,
             feature_name=feature_name,
             description=description,
             job_frequency=job_frequency,
             start_date_time=start_date_time,
             is_event_time=is_event_time,
-            training_dataset_version=training_dataset_version,
+            transformed_with_version=transformed_with_version,
             valid_feature_names=[feat.name for feat in self._features],
         )
 
@@ -2514,7 +2514,7 @@ class FeatureView:
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
         is_event_time: Optional[bool] = True,
-        training_dataset_version: Optional[int] = None,
+        transformed_with_version: Optional[int] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Enable feature monitoring to compare statistics on snapshots of feature data over time.
 
@@ -2555,7 +2555,7 @@ class FeatureView:
             start_date_time: Start date and time from which to start computing statistics.
             is_event_time: If true, use event time to compute statistics.
                 Defaults to False.
-            training_dataset_version: The version of the dataset to use
+            transformed_with_version: The version of the dataset to use
                 to fetch statistics for the transformation function. If provided, the
                 statistics are computed after applying the transformation function.
                 Otherwise, the statistics are computed on the raw data. Defaults to None
@@ -2572,14 +2572,14 @@ class FeatureView:
                 "Only Feature Group registered with Hopsworks can enable feature monitoring."
             )
 
-        return self._fm_config_engine._build_default_feature_monitoring_config(
+        return self._feature_monitoring_config_engine._build_default_feature_monitoring_config(
             name=name,
             feature_name=feature_name,
             description=description,
             job_frequency=job_frequency,
             start_date_time=start_date_time,
             is_event_time=is_event_time,
-            training_dataset_version=training_dataset_version,
+            transformed_with_version=transformed_with_version,
             valid_feature_names=[feat.name for feat in self._features],
         )
 
@@ -2629,7 +2629,7 @@ class FeatureView:
             setattr(this, key, getattr(new, key))
 
     def _init_feature_monitoring_engine(self):
-        self._fm_config_engine = (
+        self._feature_monitoring_config_engine = (
             feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
                 feature_store_id=self._featurestore_id,
                 feature_view_id=self._id,
@@ -2637,7 +2637,7 @@ class FeatureView:
                 feature_view_version=self._version,
             )
         )
-        self._fm_result_engine = (
+        self._feature_monitoring_result_engine = (
             feature_monitoring_result_engine.FeatureMonitoringResultEngine(
                 feature_store_id=self._featurestore_id,
                 feature_view_id=self._id,
