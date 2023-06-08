@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs.spark;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnectorType;
+import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
 
 import com.logicalclocks.hsfs.StorageConnector;
@@ -41,6 +42,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
 public class TestStorageConnector {
@@ -160,6 +162,37 @@ public class TestStorageConnector {
     Assertions.assertEquals("encryptionkey",sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_KEY));
     Assertions.assertEquals("encryptionkeyhash",sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_HASH));
     Assertions.assertEquals("AES256",sc.hadoopConfiguration().get(Constants.PROPERTY_ALGORITHM));
+  }
+
+  @Test
+  public void test_s3_hadoop_conf() throws IOException {
+    StorageConnector.S3Connector connector = new StorageConnector.S3Connector();
+    connector.setBucket("test-bucket");
+    connector.setName("testName");
+    connector.setStorageConnectorType(StorageConnectorType.S3);
+    List<Option> arguments = new java.util.ArrayList<>();
+    arguments.add(new Option("fs.s3a.endpoint", "testEndpoint"));
+    connector.setArguments(arguments);
+    connector.setAccessKey("testAccessKey");
+    connector.setSecretKey("testSecretKey");
+    connector.setServerEncryptionAlgorithm("AES256");
+    connector.setServerEncryptionKey("testEncryptionKey");
+    connector.setSessionToken("testSessionToken");
+
+    // Act
+    SparkEngine.getInstance().setupConnectorHadoopConf(connector);
+    SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
+
+    // Assert
+    Assertions.assertEquals("testEndpoint", sc.hadoopConfiguration().get(Constants.S3_ENDPOINT));
+    Assertions.assertEquals("testAccessKey", sc.hadoopConfiguration().get(Constants.S3_ACCESS_KEY_ENV));
+    Assertions.assertEquals("testSecretKey", sc.hadoopConfiguration().get(Constants.S3_SECRET_KEY_ENV));
+    Assertions.assertEquals("AES256", sc.hadoopConfiguration().get(Constants.S3_ENCRYPTION_ALGO));
+    Assertions.assertEquals("testEncryptionKey", sc.hadoopConfiguration().get(Constants.S3_ENCRYPTION_KEY));
+    Assertions.assertEquals("testSessionToken", sc.hadoopConfiguration().get(Constants.S3_SESSION_KEY_ENV));
+    Assertions.assertEquals(Constants.S3_TEMPORARY_CREDENTIAL_PROVIDER,
+      sc.hadoopConfiguration().get(Constants.S3_CREDENTIAL_PROVIDER_ENV));
+
   }
 
 }

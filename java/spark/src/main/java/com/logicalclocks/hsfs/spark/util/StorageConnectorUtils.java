@@ -162,7 +162,6 @@ public class StorageConnectorUtils {
   public Dataset<Row> read(StorageConnector.GcsConnector connector, String dataFormat,
                            Map<String, String> options, String path)
       throws FeatureStoreException, IOException {
-    SparkEngine.getInstance().setupConnectorHadoopConf(connector);
     return SparkEngine.getInstance().read(connector, dataFormat, options, path);
   }
 
