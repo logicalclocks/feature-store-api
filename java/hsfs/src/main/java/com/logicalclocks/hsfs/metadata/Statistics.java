@@ -42,7 +42,7 @@ public class Statistics extends RestDto<Statistics> {
   private String featureViewName;
   private Integer featureViewVersion;
   private Boolean isEventTime;
-  private Integer transformedWith;
+  private Integer transformedWithVersion;
   // Both feature group and feature view
   private Long windowStartTime;
   @JsonAlias("featureGroupCommitId")

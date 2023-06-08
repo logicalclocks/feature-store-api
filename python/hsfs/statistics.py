@@ -37,7 +37,7 @@ class Statistics:
         feature_view_name=None,
         feature_view_version=None,
         is_event_time=None,
-        transformed_with=None,
+        transformed_with_version=None,
         # feature group and feature view
         window_start_time=None,
         window_end_time=None,
@@ -56,7 +56,7 @@ class Statistics:
             feature_descriptive_statistics
         )
         self._row_percentage = row_percentage
-        self._transformed_with = transformed_with
+        self._transformed_with_version = transformed_with_version
         # feature group
         self._feature_group_id = feature_group_id
         # feature view
@@ -129,7 +129,7 @@ class Statistics:
         _dict = {
             "commitTime": self._commit_time,
             "rowPercentage": self._row_percentage,
-            "transformedWith": self._transformed_with,
+            "transformedWithVersion": self._transformed_with_version,
             "windowStartTime": self._window_start_time,
             "windowEndTime": self._window_end_time,
             "isEventTime": self._is_event_time,
@@ -173,8 +173,8 @@ class Statistics:
             raise TypeError("Row percentage must be a float between 0 and 1.")
 
     @property
-    def transformed_with(self):
-        return self._transformed_with
+    def transformed_with_version(self):
+        return self._transformed_with_version
 
     @property
     def feature_descriptive_statistics(self):
