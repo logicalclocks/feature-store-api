@@ -17,6 +17,7 @@
 
 package com.logicalclocks.hsfs.metadata;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,9 +34,36 @@ import java.util.List;
 @Setter
 public class Statistics extends RestDto<Statistics> {
   private Long commitTime;
-  private Double rowPercentage;
+  private Float rowPercentage;
   private Collection<FeatureDescriptiveStatistics> featureDescriptiveStatistics;
-
-  private Long featureGroupCommitId;
+  // Feature group
+  private Integer featureGroupId;
+  // Feature view
+  private String featureViewName;
+  private Integer featureViewVersion;
+  private Boolean isEventTime;
+  private Integer transformedWith;
+  // Both feature group and feature view
+  private Long windowStartTime;
+  @JsonAlias("featureGroupCommitId")
+  private Long windowEndTime;
+  // Training dataset
+  private Integer trainingDatasetId;
   private List<SplitStatistics> splitStatistics;
+  private Boolean forTransformation;
+
+  public Statistics(Long commitTime, Float rowPercentage,
+      Collection<FeatureDescriptiveStatistics> featureDescriptiveStatistics, Long windowEndTime, Long windowStartTime) {
+    this.commitTime = commitTime;
+    this.rowPercentage = rowPercentage;
+    this.featureDescriptiveStatistics = featureDescriptiveStatistics;
+    this.windowEndTime = windowEndTime;
+    this.windowStartTime = windowStartTime;
+  }
+
+  public Statistics(Long commitTime, Float rowPercentage, List<SplitStatistics> splitStatistics) {
+    this.commitTime = commitTime;
+    this.rowPercentage = rowPercentage;
+    this.splitStatistics = splitStatistics;
+  }
 }

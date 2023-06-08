@@ -94,6 +94,7 @@ class StatisticsEngine:
         row_percentage,
         feature_name=None,
         is_event_time=False,
+        transformed_with=None,
     ) -> statistics.Statistics:
         """Compute statistics for one or more features and send the result to Hopsworks.
 
@@ -104,6 +105,8 @@ class StatisticsEngine:
             end_time: int. Window end commit time
             row_percentage: float. Percentage of rows to include.
             feature_name: Optional[Union[str, List[str]]]. Feature name or list of names to compute the statistics on. If not set, statistics are computed on all features.
+            is_event_time: Optional[bool]. If true, use event time to compute statistics. Defaults to False.
+            transformed_with: Optional[int]. Training dataset id whose transformation functions were applied before computing statistics
 
         Returns:
             Statistics. Statistics metadata containing a list of single feature descriptive statistics.
@@ -130,6 +133,7 @@ class StatisticsEngine:
                 window_end_time=end_time,
                 window_start_time=start_time,
                 is_event_time=is_event_time,
+                transformed_with=transformed_with,
             )
             return self._save_statistics(stats, metadata_instance, None)
         else:
@@ -261,7 +265,10 @@ class StatisticsEngine:
         return self._save_statistics(stats, td_metadata_instance, feature_view_obj)
 
     def get_last_computed(
-        self, metadata_instance, for_transformation=False, training_dataset_version=None
+        self,
+        metadata_instance,
+        for_transformation: Optional[bool] = False,
+        training_dataset_version: Optional[int] = None,
     ) -> statistics.Statistics:
         """Get the last computed statistics.
 
@@ -289,6 +296,7 @@ class StatisticsEngine:
         computed_at: Optional[float] = None,
         for_transformation: Optional[bool] = False,
         training_dataset_version: Optional[int] = None,
+        transformed_with: Optional[int] = None,
     ) -> statistics.Statistics:
         """Get statistics of an entity by commit time. The commit time refers to when the statistics were computed.
            If the commit time is not provided, the most recent statistics are retrieved.
@@ -298,6 +306,7 @@ class StatisticsEngine:
             computed_at: float. Timestamp or commit time when statistics where computed.
             for_transformation: bool. Whether the statistics are used in transformation functions.
             training_dataset_version: int. If the statistics where computed for a Training Dataset, version of the Training Dataset. This parameter is optional.
+            transformed_with: int. Training dataset id whose transformation functions were applied before computing statistics
 
         Returns:
             Statistics. Statistics metadata containing a list of single feature descriptive statistics.
@@ -309,6 +318,7 @@ class StatisticsEngine:
             computed_at=computed_at_timestamp,
             for_transformation=for_transformation,
             training_dataset_version=training_dataset_version,
+            transformed_with=transformed_with,
         )
 
     def get_by_time_window(
@@ -319,6 +329,7 @@ class StatisticsEngine:
         is_event_time: Optional[bool] = False,
         feature_name: Optional[str] = None,
         row_percentage: Optional[float] = None,
+        transformed_with: Optional[int] = None,
         computed_at: Optional[float] = None,
     ) -> Union[statistics.Statistics, List[statistics.Statistics], None]:
         """Get feature statistics based on a time window and (optionally) feature name and row percentage
@@ -335,6 +346,7 @@ class StatisticsEngine:
             is_event_time: bool: Whether start and end times are event times or commit times. This parameter is optional.
             feature_name: str: Name of the feature from which statistics where computed. This parameter is optional.
             row_percentage: float: Percentage of rows used in the computation of statitics. This parameter is optional.
+            transformed_with: int. Training dataset id whose transformation functions were applied before computing statistics
             computed_at: float. Timestamp or commit time when statistics where computed.
 
         Returns:
@@ -350,6 +362,7 @@ class StatisticsEngine:
                 is_event_time=is_event_time,
                 feature_name=feature_name,
                 row_percentage=row_percentage,
+                transformed_with=transformed_with,
                 computed_at=computed_at,
             )
         except exceptions.RestAPIError as e:
