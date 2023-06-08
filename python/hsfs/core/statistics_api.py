@@ -59,8 +59,10 @@ class StatisticsApi:
             "offset": 0,
             "limit": 1,
             "fields": "content",
-            "for_transformation": for_transformation,
         }
+
+        if for_transformation is not None:
+            query_params["for_transformation"] = for_transformation
 
         # get statistics by feature group + filter (commit_time:desc)
 
@@ -74,6 +76,7 @@ class StatisticsApi:
         computed_at,
         for_transformation,
         training_dataset_version,
+        transformed_with_version,
     ):
         """Gets the statistics computed at a specific time for an instance."""
         _client = client.get_instance()
@@ -83,38 +86,18 @@ class StatisticsApi:
         query_params = {
             "filter_by": "commit_time_eq:" + str(computed_at),
             "fields": "content",
-            "for_transformation": for_transformation,
         }
+
+        if for_transformation is not None:
+            query_params["for_transformation"] = for_transformation
+        if transformed_with_version is not None:
+            query_params["transformed_with_version"] = transformed_with_version
 
         # get statistics by feature group + filter (commit_time)
 
         return statistics.Statistics.from_response_json(
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
-
-    # def get_by_commit_time(
-    #     self,
-    #     metadata_instance,
-    #     commit_timestamp,
-    #     for_transformation,
-    #     training_dataset_version,
-    # ):
-    #     """Gets the statistics for a specific commit time for an instance."""
-    #     _client = client.get_instance()
-    #     path_params = self.get_path(metadata_instance, training_dataset_version)
-
-    #     headers = {"content-type": "application/json"}
-    #     query_params = {
-    #         "filter_by": "commit_time_eq:" + str(commit_timestamp),
-    #         "fields": "content",
-    #         "for_transformation": for_transformation,
-    #     }
-
-    #     # get statistics by feature group + filter (commit_time)
-
-    #     return statistics.Statistics.from_response_json(
-    #         _client._send_request("GET", path_params, query_params, headers=headers)
-    #     )
 
     def get_by_time_window(
         self,
@@ -124,6 +107,7 @@ class StatisticsApi:
         is_event_time=False,
         feature_name=None,
         row_percentage=None,
+        transformed_with_version=None,
         computed_at=None,
     ):
         """Gets statistics computed on a specific time window and (optionally) feature name and row percentage.
@@ -147,6 +131,8 @@ class StatisticsApi:
             query_params["feature_name"] = feature_name
         if row_percentage is not None:
             query_params["row_percentage"] = row_percentage
+        if transformed_with_version is not None:
+            query_params["transformed_with_version"] = transformed_with_version
 
         # get by feature group + window + [commit_time] + [feature_name]
 
