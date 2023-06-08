@@ -735,7 +735,7 @@ public class SparkEngine {
     }
     if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionAlgorithm())) {
       sparkSession.sparkContext().hadoopConfiguration().set(
-         Constants.S3_ENCRYPTION_ALGO,
+          Constants.S3_ENCRYPTION_ALGO,
           storageConnector.getServerEncryptionAlgorithm()
       );
     }
