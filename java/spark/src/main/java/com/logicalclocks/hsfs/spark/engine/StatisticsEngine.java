@@ -105,7 +105,7 @@ public class StatisticsEngine {
     }
 
     Collection<FeatureDescriptiveStatistics> featureDescriptiveStatistics = parseDeequStatistics(content);
-    return new Statistics(commitTime, 1.0, featureDescriptiveStatistics, commitId, null);
+    return new Statistics(commitTime, 1.0f, featureDescriptiveStatistics, commitId, null);
   }
 
   public Statistics computeAndSaveSplitStatistics(TrainingDataset trainingDataset)
@@ -134,7 +134,7 @@ public class StatisticsEngine {
       splitStatistics.add(new SplitStatistics(split.getName(), statistics.getFeatureDescriptiveStatistics()));
     }
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
-    return new Statistics(commitTime, 1.0, null, null, splitStatistics);
+    return new Statistics(commitTime, 1.0f, splitStatistics);
   }
 
   public Statistics computeSplitStatistics(TrainingDataset trainingDataset, Map<String, Dataset<Row>> splitDatasets) {
@@ -149,7 +149,7 @@ public class StatisticsEngine {
       splitStatistics.add(new SplitStatistics(entry.getKey(), statistics.getFeatureDescriptiveStatistics()));
     }
     Long commitTime = Timestamp.valueOf(LocalDateTime.now()).getTime();
-    return new Statistics(commitTime, 1.0, null, null, splitStatistics);
+    return new Statistics(commitTime, 1.0f, splitStatistics);
   }
 
   public Statistics get(FeatureGroupBase featureGroup, String commitTime) throws FeatureStoreException, IOException {
