@@ -242,7 +242,7 @@ class FeatureMonitoringConfig:
         window_length: Optional[str] = None,
         row_percentage: Optional[float] = None,
         specific_value: Optional[Union[float, int]] = None,
-        training_dataset_id: Optional[int] = None,
+        training_dataset_version: Optional[int] = None,
     ) -> "FeatureMonitoringConfig":
         """Sets the reference window for the feature monitoring job.
 
@@ -269,7 +269,7 @@ class FeatureMonitoringConfig:
             # Only for feature views: Compare to the statistics computed for one of your training datasets
             # particularly useful if it has been used to train a model currently in production
             my_monitoring_config.with_reference_window(
-                training_dataset_id=123,
+                training_dataset_version=3,
             ).compare_on(...).save()
             ```
 
@@ -280,18 +280,18 @@ class FeatureMonitoringConfig:
             specific_value: A specific value to use as reference.
             time_offset: The time offset from the current time to the start of the time window.
             window_length: The length of the time window.
-            training_dataset_id: The id of the training dataset to use as reference. For feature view monitoring only.
+            training_dataset_version: The version of the training dataset to use as reference. For feature view monitoring only.
             row_percentage: The percentage of rows to use when computing the statistics. Defaults to 20%.
 
         # Returns
             `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
         """
-        # Setter is using the engine class to perform input validation.
+        # Setter is using the engine class to perform input validation and build monitoring window config object.
         self.reference_window_config = {
             "time_offset": time_offset,
             "window_length": window_length,
             "specific_value": specific_value,
-            "training_dataset_id": training_dataset_id,
+            "training_dataset_version": training_dataset_version,
             "row_percentage": row_percentage,
         }
 

@@ -41,7 +41,7 @@ class MonitoringWindowConfigEngine:
         self,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
-        training_dataset_id: Optional[int] = None,
+        training_dataset_version: Optional[int] = None,
         specific_value: Optional[Union[int, float]] = None,
         row_percentage: Optional[float] = None,
     ) -> "mwc.WindowConfigType":
@@ -50,7 +50,7 @@ class MonitoringWindowConfigEngine:
                 [
                     time_offset is not None,
                     window_length is not None,
-                    training_dataset_id is not None,
+                    training_dataset_version is not None,
                     row_percentage is not None,
                 ]
             ):
@@ -59,7 +59,7 @@ class MonitoringWindowConfigEngine:
                 )
             return mwc.WindowConfigType.SPECIFIC_VALUE
 
-        if isinstance(training_dataset_id, int):
+        if isinstance(training_dataset_version, int):
             if any(
                 [
                     time_offset is not None,
@@ -68,7 +68,7 @@ class MonitoringWindowConfigEngine:
                 ]
             ):
                 raise ValueError(
-                    "If training_dataset_id is set, no other parameter can be set."
+                    "If training_dataset_version is set, no other parameter can be set."
                 )
             return mwc.WindowConfigType.TRAINING_DATASET
 
@@ -86,7 +86,7 @@ class MonitoringWindowConfigEngine:
         window_config_type: Optional[Union["mwc.WindowConfigType", str]] = None,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
-        training_dataset_id: Optional[int] = None,
+        training_dataset_version: Optional[int] = None,
         specific_value: Optional[Union[int, float]] = None,
         row_percentage: Optional[float] = None,
     ) -> "mwc.MonitoringWindowConfig":
@@ -101,7 +101,7 @@ class MonitoringWindowConfigEngine:
             window_length: str, optional
                 monitoring window end time is computed as
                     "now - time_offset + window_length".
-            training_dataset_id: int, optional
+            training_dataset_version: int, optional
                 Specific id of an entity that has fixed statistics.
             specific_value: float, optional
                 Specific value instead of a statistics computed on data.
@@ -117,7 +117,7 @@ class MonitoringWindowConfigEngine:
         detected_window_config_type = self.validate_monitoring_window_config(
             time_offset=time_offset,
             window_length=window_length,
-            training_dataset_id=training_dataset_id,
+            training_dataset_version=training_dataset_version,
             specific_value=specific_value,
             row_percentage=row_percentage,
         )
@@ -142,7 +142,7 @@ class MonitoringWindowConfigEngine:
             window_config_type=detected_window_config_type,
             time_offset=time_offset,
             window_length=window_length,
-            training_dataset_id=training_dataset_id,
+            training_dataset_version=training_dataset_version,
             specific_value=specific_value,
             row_percentage=row_percentage,
         )
