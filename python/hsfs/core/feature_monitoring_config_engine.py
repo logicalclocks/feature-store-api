@@ -160,7 +160,7 @@ class FeatureMonitoringConfigEngine:
             fm_config=config,
         )
 
-    def enable_feature_monitoring_config(
+    def create_feature_monitoring_config(
         self,
         feature_name: str,
         name: str,

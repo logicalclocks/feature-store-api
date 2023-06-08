@@ -195,7 +195,7 @@ class FeatureMonitoringConfig:
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # Compute statistics on a regular basis
-            fg._enable_statistics_monitoring(
+            fg._create_statistics_monitoring(
                 name="regular_stats",
                 job_frequency="DAILY",
             ).with_detection_window(
@@ -205,7 +205,7 @@ class FeatureMonitoringConfig:
             ).save()
 
             # Compute and compare statistics
-            fg._enable_feature_monitoring(
+            fg._create_feature_monitoring(
                 name="regular_stats",
                 feature_name="my_feature",
                 job_frequency="DAILY",
@@ -252,7 +252,7 @@ class FeatureMonitoringConfig:
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # Setup feature monitoring and a detection window
-            my_monitoring_config = fg._enable_feature_monitoring(...).with_detection_window(...)
+            my_monitoring_config = fg._create_feature_monitoring(...).with_detection_window(...)
 
             # Simplest reference window is a specific value
             my_monitoring_config.with_reference_window(
@@ -312,7 +312,7 @@ class FeatureMonitoringConfig:
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # Setup feature monitoring, a detection window and a reference window
-            my_monitoring_config = fg._enable_feature_monitoring(
+            my_monitoring_config = fg._create_feature_monitoring(
                 ...
             ).with_detection_window(...).with_reference_window(...)
 
@@ -356,7 +356,7 @@ class FeatureMonitoringConfig:
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # Setup feature monitoring and a detection window
-            my_monitoring_config = fg._enable_statistics_monitoring(
+            my_monitoring_config = fg._create_statistics_monitoring(
                 name="my_monitoring_config",
             ).save()
             ```

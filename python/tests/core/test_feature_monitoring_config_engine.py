@@ -169,7 +169,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._scheduler_config.enabled is True
         assert config._scheduler_config.start_date_time == 1676457000000
 
-    def test_enable_feature_monitoring_config_fg(self, mocker):
+    def test_create_feature_monitoring_config_fg(self, mocker):
         # Arrange
         mock_config_api = mocker.patch(
             "hsfs.core.feature_monitoring_config_api.FeatureMonitoringConfigApi.create"
@@ -197,7 +197,7 @@ class TestFeatureMonitoringConfigEngine:
         }
 
         # Act
-        config_engine.enable_feature_monitoring_config(
+        config_engine.create_feature_monitoring_config(
             name=DEFAULT_NAME,
             feature_name=DEFAULT_FEATURE_NAME,
             detection_window_config=detection_window_config,
@@ -252,7 +252,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._scheduler_config.enabled is True
         assert config._scheduler_config.start_date_time == 1676457000000
 
-    def test_enable_feature_monitoring_config_fv(self, mocker):
+    def test_create_feature_monitoring_config_fv(self, mocker):
         # Arrange
         mock_config_api = mocker.patch(DEFAULT_FEATURE_MONITORING_CONFIG_CREATE_API)
         mocker.patch("hsfs.client.get_instance")
@@ -281,7 +281,7 @@ class TestFeatureMonitoringConfigEngine:
         }
 
         # Act
-        config_engine.enable_feature_monitoring_config(
+        config_engine.create_feature_monitoring_config(
             name=DEFAULT_NAME,
             feature_name=DEFAULT_FEATURE_NAME,
             detection_window_config=detection_window_config,
