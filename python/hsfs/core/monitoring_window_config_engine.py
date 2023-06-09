@@ -22,6 +22,7 @@ from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistic
 from hsfs.util import convert_event_time_to_timestamp
 from hsfs import feature_group, feature_view, engine
 from hsfs.core import statistics_engine
+from hsfs.client.exceptions import RestAPIError
 
 
 class MonitoringWindowConfigEngine:
@@ -364,26 +365,36 @@ class MonitoringWindowConfigEngine:
         Returns:
             `pyspark.sql.DataFrame`. A Spark DataFrame with the entity data
         """
-        if isinstance(entity, feature_group.FeatureGroup):
-            # is_event_time and transformation_function don't apply here
-            entity_df = self.fetch_feature_group_data(
-                entity=entity,
-                feature_name=feature_name,
-                start_time=start_time,
-                end_time=end_time,
-            )
-        else:
-            entity_df = self.fetch_feature_view_data(
-                entity=entity,
-                feature_name=feature_name,
-                start_time=start_time,
-                end_time=end_time,
-                is_event_time=is_event_time,
-                transformed_with_version=transformed_with_version,
-            )
+        try:
+            if isinstance(entity, feature_group.FeatureGroup):
+                # is_event_time and transformation_function don't apply here
+                entity_df = self.fetch_feature_group_data(
+                    entity=entity,
+                    feature_name=feature_name,
+                    start_time=start_time,
+                    end_time=end_time,
+                )
+            else:
+                entity_df = self.fetch_feature_view_data(
+                    entity=entity,
+                    feature_name=feature_name,
+                    start_time=start_time,
+                    end_time=end_time,
+                    is_event_time=is_event_time,
+                    transformed_with_version=transformed_with_version,
+                )
 
-        if row_percentage < 1.0:
-            entity_df = entity_df.sample(fraction=row_percentage)
+            if row_percentage < 1.0:
+                entity_df = entity_df.sample(fraction=row_percentage)
+
+        except RestAPIError as e:
+            if e.error_code == 270118:
+                # This error means no data for those particular commits
+                entity_df = engine.get_instance().create_empty_df_from_schema(
+                    entity.schema
+                )
+            else:
+                raise e
 
         return entity_df
 
