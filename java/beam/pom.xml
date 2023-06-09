@@ -12,7 +12,7 @@
   <artifactId>hsfs-beam</artifactId>
 
   <properties>
-    <beam.version>2.46.0</beam.version>
+    <beam.version>2.47.0</beam.version>
     <kafka.version>3.4.0</kafka.version>
   </properties>
 
