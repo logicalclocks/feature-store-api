@@ -28,7 +28,6 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import fs_query
 from hsfs.core import feature_view_engine
 from hsfs.constructor.query import Query
-from hsfs.core.feature_view_engine import FeatureViewEngine
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 engine.init("python")

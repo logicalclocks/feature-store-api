@@ -18,11 +18,11 @@ from hsfs.core import monitoring_window_config as mwc
 
 
 class TestMonitoringWindowConfig:
-    def test_window_based_on_training_dataset_id(self):
+    def test_window_based_on_training_dataset_version(self):
         # Arrange
         window_config = mwc.MonitoringWindowConfig(
             window_config_type="TRAINING_DATASET",
-            training_dataset_id=1,
+            training_dataset_version=1,
         )
 
         # Act
@@ -38,7 +38,7 @@ class TestMonitoringWindowConfig:
 
         # Assert
         assert window_config.window_config_type == mwc.WindowConfigType.TRAINING_DATASET
-        assert window_config.training_dataset_id == 1
+        assert window_config.training_dataset_version == 1
         assert window_config.time_offset is None
         assert window_config.window_length is None
         assert window_config.specific_value is None
@@ -56,13 +56,13 @@ class TestMonitoringWindowConfig:
         # Act
         # forbidden update for rolling time
         with pytest.raises(AttributeError):
-            window_config.training_dataset_id = 1
+            window_config.training_dataset_version = 1
         with pytest.raises(AttributeError):
             window_config.specific_value = 0.2
 
         # Assert
         assert window_config.window_config_type == mwc.WindowConfigType.ROLLING_TIME
-        assert window_config.training_dataset_id is None
+        assert window_config.training_dataset_version is None
         assert window_config.time_offset == "1d"
         assert window_config.window_length == "1h"
         assert window_config.specific_value is None
@@ -78,7 +78,7 @@ class TestMonitoringWindowConfig:
         # Act
         # forbidden update for all time
         with pytest.raises(AttributeError):
-            window_config.training_dataset_id = 1
+            window_config.training_dataset_version = 1
         with pytest.raises(AttributeError):
             window_config.time_offset = "1d"
         with pytest.raises(AttributeError):
@@ -88,7 +88,7 @@ class TestMonitoringWindowConfig:
 
         # Assert
         assert window_config.window_config_type == mwc.WindowConfigType.ALL_TIME
-        assert window_config.training_dataset_id is None
+        assert window_config.training_dataset_version is None
         assert window_config.time_offset is None
         assert window_config.window_length is None
         assert window_config.specific_value is None
@@ -104,7 +104,7 @@ class TestMonitoringWindowConfig:
         # Act
         # forbidden update for specific value
         with pytest.raises(AttributeError):
-            window_config.training_dataset_id = 1
+            window_config.training_dataset_version = 1
         with pytest.raises(AttributeError):
             window_config.time_offset = "1d"
         with pytest.raises(AttributeError):
@@ -114,7 +114,7 @@ class TestMonitoringWindowConfig:
 
         # Assert
         assert window_config.window_config_type == mwc.WindowConfigType.SPECIFIC_VALUE
-        assert window_config.training_dataset_id is None
+        assert window_config.training_dataset_version is None
         assert window_config.time_offset is None
         assert window_config.window_length is None
         assert window_config.specific_value == 0.2
