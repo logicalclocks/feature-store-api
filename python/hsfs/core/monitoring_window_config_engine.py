@@ -417,7 +417,7 @@ class MonitoringWindowConfigEngine:
             entity_df = entity_df.select(feature_name)
 
         if transformed_with_version:
-            entity.init_batch_scoring(transformed_with_version=transformed_with_version)
+            entity.init_batch_scoring(training_dataset_version=transformed_with_version)
 
             return engine.get_instance()._apply_transformation_function(
                 entity._batch_scoring_server._get_transformation_fns(),
