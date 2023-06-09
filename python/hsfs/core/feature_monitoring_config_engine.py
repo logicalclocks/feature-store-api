@@ -123,88 +123,6 @@ class FeatureMonitoringConfigEngine:
             "count",
         ]
 
-    def enable_descriptive_statistics_monitoring(
-        self,
-        name: str,
-        feature_name: str,
-        detection_window_config: "mwc.MonitoringWindowConfig",
-        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
-        description: Optional[str] = None,
-    ) -> "fmc.FeatureMonitoringConfig":
-        """Enable descriptive statistics monitoring for a feature.
-
-        Args:
-            name: str, required
-                Name of the monitoring configuration.
-            feature_name: str, required
-                Name of the feature to monitor.
-            detection_window_config: MonitoringWindowConfig, required
-                Configuration of the detection window.
-            scheduler_config: Union[JobScheduler, Dict[str, Any]], optional
-                Configuration of the scheduler.
-            description: str, optional
-                Description of the monitoring configuration.
-
-        Returns:
-            FeatureMonitoringConfig
-        """
-        config = self._build_stats_monitoring_only_config(
-            name=name,
-            feature_name=feature_name,
-            detection_window_config=detection_window_config,
-            scheduler_config=scheduler_config,
-            description=description,
-        )
-
-        return self._feature_monitoring_config_api.create(
-            fm_config=config,
-        )
-
-    def enable_feature_monitoring_config(
-        self,
-        feature_name: str,
-        name: str,
-        detection_window_config: "mwc.MonitoringWindowConfig",
-        reference_window_config: "mwc.MonitoringWindowConfig",
-        statistics_comparison_config: Dict[str, Any],
-        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
-        description: Optional[str] = None,
-    ) -> "fmc.FeatureMonitoringConfig":
-        """Enable feature monitoring for a feature.
-
-        Args:
-            feature_name: str, required
-                Name of the feature to monitor.
-            name: str, required
-                Name of the monitoring configuration.
-            detection_window_config: MonitoringWindowConfig, required
-                Configuration of the detection window.
-            reference_window_config: MonitoringWindowConfig, required
-                Configuration of the reference window.
-            statistics_comparison_config: Dict[str, Any], required
-                Configuration of the statistics comparison.
-            scheduler_config: Union[JobScheduler, Dict[str, Any]], optional
-                Configuration of the scheduler.
-            description: str, optional
-                Description of the monitoring configuration.
-
-        Returns:
-            FeatureMonitoringConfig The registered monitoring configuration.
-        """
-        config = self._build_feature_monitoring_config(
-            name=name,
-            feature_name=feature_name,
-            detection_window_config=detection_window_config,
-            reference_window_config=reference_window_config,
-            statistics_comparison_config=statistics_comparison_config,
-            scheduler_config=scheduler_config,
-            description=description,
-        )
-
-        return self._feature_monitoring_config_api.create(
-            fm_config=config,
-        )
-
     def validate_statistics_comparison_config(
         self,
         metric: str,
@@ -352,7 +270,7 @@ class FeatureMonitoringConfigEngine:
         description: Optional[str] = None,
         valid_feature_names: Optional[List[str]] = None,
         is_event_time: bool = False,
-        training_dataset_version: Optional[int] = None,
+        transformed_with_version: Optional[int] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Builds the default scheduled statistics config, default detection window is full snapshot.
 
@@ -374,7 +292,7 @@ class FeatureMonitoringConfigEngine:
             is_event_time: bool, optional
                 If true, use event time to compute statistics. Feature View only.
                 Defaults to False.
-            training_dataset_version: int, optional
+            transformed_with_version: int, optional
                 The version of the dataset to use to fetch statistics for the
                 transformation function. Feature View only. If provided, the
                 statistics are computed after applying the transformation function.
@@ -405,7 +323,7 @@ class FeatureMonitoringConfigEngine:
                 "enabled": True,
             },
             is_event_time=is_event_time,
-            training_dataset_version=training_dataset_version,
+            transformed_with_version=transformed_with_version,
         ).with_detection_window()
 
     def _build_default_feature_monitoring_config(
@@ -417,7 +335,7 @@ class FeatureMonitoringConfigEngine:
         description: Optional[str] = None,
         valid_feature_names: Optional[List[str]] = None,
         is_event_time: Optional[bool] = False,
-        training_dataset_version: Optional[int] = None,
+        transformed_with_version: Optional[int] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Builds the default scheduled statistics config, default detection window is full snapshot.
 
@@ -439,7 +357,7 @@ class FeatureMonitoringConfigEngine:
             is_event_time: bool, optional
                 If true, use event time to compute statistics. Feature View only.
                 Defaults to False.
-            training_dataset_version: int, optional
+            transformed_with_version: int, optional
                 The version of the dataset to use to fetch statistics for the
                 transformation function. Feature View only. If provided, the
                 statistics are computed after applyin the transformation function.
@@ -470,7 +388,7 @@ class FeatureMonitoringConfigEngine:
                 "enabled": True,
             },
             is_event_time=is_event_time,
-            training_dataset_version=training_dataset_version,
+            transformed_with_version=transformed_with_version,
         ).with_detection_window()  # TODO: Do we want to have a default reference window + stat comparison?
 
     def save(
@@ -601,104 +519,6 @@ class FeatureMonitoringConfigEngine:
             return self._feature_monitoring_config_api.get_by_id(config_id=config_id)
 
         return self._feature_monitoring_config_api.get_by_entity()
-
-    def _build_stats_monitoring_only_config(
-        self,
-        name: str,
-        feature_name: str,
-        detection_window_config: "mwc.MonitoringWindowConfig",
-        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]] = None,
-        description: Optional[str] = None,
-    ) -> "fmc.FeatureMonitoringConfig":
-        """Builds a feature monitoring config for descriptive statistics only.
-
-        Args:
-            name: str, required
-                Name of the monitoring configuration.
-            feature_name: str, required
-                Name of the feature to monitor.
-            detection_window_config: Dict[str, Any], required
-                Configuration of the detection window.
-            scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]], optional
-                Configuration of the scheduler.
-            description: str, optional
-                Description of the monitoring configuration.
-
-        Returns:
-            FeatureMonitoringConfig The monitoring configuration.
-        """
-        return fmc.FeatureMonitoringConfig(
-            feature_store_id=self._feature_store_id,
-            feature_group_id=self._feature_group_id,
-            feature_view_id=self._feature_view_id,
-            feature_view_name=self._feature_view_name,
-            feature_view_version=self._feature_view_version,
-            feature_name=feature_name,
-            name=name,
-            description=description,
-            feature_monitoring_type=fmc.FeatureMonitoringType.STATISTICS_MONITORING,
-            detection_window_config=detection_window_config,
-            scheduler_config=scheduler_config,
-            enabled=True,
-            reference_window_config=None,
-            statistics_comparison_config=None,
-        )
-
-    def _build_feature_monitoring_config(
-        self,
-        feature_name: str,
-        name: str,
-        detection_window_config: "mwc.MonitoringWindowConfig",
-        reference_window_config: "mwc.MonitoringWindowConfig",
-        statistics_comparison_config: Dict[str, Any],
-        scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]],
-        description: Optional[str] = None,
-        is_event_time: bool = False,
-        training_dataset_version=None,
-    ) -> "fmc.FeatureMonitoringConfig":
-        """Builds a feature monitoring config.
-
-        Args:
-            feature_name: str, required
-                Name of the feature to monitor.
-            name: str, required
-                Name of the monitoring configuration.
-            detection_window_config: Dict[str, Any], required
-                Configuration of the detection window.
-            reference_window_config: Dict[str, Any], required
-                Configuration of the reference window.
-            statistics_comparison_config: Dict[str, Any], required
-                Configuration of the statistics comparison.
-            scheduler_config: Optional[Union[JobScheduler, Dict[str, Any]]], optional
-                Configuration of the scheduler.
-            description: str, optional
-                Description of the monitoring configuration.
-            is_event_time: bool, optional
-                Whether to use event time or ingestion time. Defaults to False.
-            training_dataset_version: str, optional
-                The version of the dataset to use to fetch statistics for the
-                transformation function. If None, no transformation functions are
-                applied to the statistics. Defaults to None.
-        """
-
-        return fmc.FeatureMonitoringConfig(
-            feature_store_id=self._feature_store_id,
-            feature_group_id=self._feature_group_id,
-            feature_view_id=self._feature_view_id,
-            feature_view_name=self._feature_view_name,
-            feature_view_version=self._feature_view_version,
-            feature_name=feature_name,
-            feature_monitoring_type=fmc.FeatureMonitoringType.STATISTICS_COMPARISON,
-            detection_window_config=detection_window_config,
-            scheduler_config=scheduler_config,
-            enabled=True,
-            name=name,
-            description=description,
-            reference_window_config=reference_window_config,
-            statistics_comparison_config=statistics_comparison_config,
-            is_event_time=is_event_time,
-            training_dataset_version=training_dataset_version,
-        )
 
     def trigger_monitoring_job(
         self,

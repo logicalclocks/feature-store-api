@@ -111,7 +111,7 @@ class TestFeatureMonitoringConfig:
             config._reference_window_config.window_config_type
             == WindowConfigType.TRAINING_DATASET
         )
-        assert config._reference_window_config.training_dataset_id == 33
+        assert config._reference_window_config.training_dataset_version == 33
 
         assert config._statistics_comparison_config["threshold"] == 1
         assert config._statistics_comparison_config["strict"] is True
@@ -238,7 +238,7 @@ class TestFeatureMonitoringConfig:
             config._reference_window_config.window_config_type
             == WindowConfigType.TRAINING_DATASET
         )
-        assert config._reference_window_config.training_dataset_id == 33
+        assert config._reference_window_config.training_dataset_version == 33
 
         assert config._statistics_comparison_config["threshold"] == 1
         assert config._statistics_comparison_config["strict"] is True
