@@ -20,8 +20,11 @@ package com.logicalclocks.hsfs.flink;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.HopsworksConnectionBase;
 import com.logicalclocks.hsfs.SecretStore;
+import com.logicalclocks.hsfs.flink.engine.FlinkEngine;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
 
+import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
+import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import lombok.Builder;
 
 import software.amazon.awssdk.regions.Region;
@@ -32,7 +35,7 @@ public class HopsworksConnection extends HopsworksConnectionBase {
 
   @Builder
   public HopsworksConnection(String host, int port, String project, Region region, SecretStore secretStore,
-                             boolean hostnameVerification, String trustStorePath,
+                             boolean hostnameVerification, String keyStorePath, String trustStorePath,
                              String certPath, String apiKeyFilePath, String apiKeyValue)
       throws IOException, FeatureStoreException {
     this.host = host;
@@ -41,15 +44,23 @@ public class HopsworksConnection extends HopsworksConnectionBase {
     this.region = region;
     this.secretStore = secretStore;
     this.hostnameVerification = hostnameVerification;
+    this.keyStorePath = keyStorePath;
     this.trustStorePath = trustStorePath;
     this.certPath = certPath;
     this.apiKeyFilePath = apiKeyFilePath;
     this.apiKeyValue = apiKeyValue;
 
     HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
-        hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue);
+        hostnameVerification, keyStorePath, trustStorePath, this.apiKeyFilePath, this.apiKeyValue);
     this.projectObj = getProject();
     HopsworksClient.getInstance().setProject(this.projectObj);
+    if (!System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
+      HopsworksHttpClient hopsworksHttpClient = HopsworksClient.getInstance().getHopsworksHttpClient();
+      hopsworksHttpClient.setTrustStorePath(FlinkEngine.getInstance().getTrustStorePath());
+      hopsworksHttpClient.setKeyStorePath(FlinkEngine.getInstance().getKeyStorePath());
+      hopsworksHttpClient.setCertKey(HopsworksHttpClient.readCertKey(FlinkEngine.getInstance().getCertKey()));
+      HopsworksClient.getInstance().setHopsworksHttpClient(hopsworksHttpClient);
+    }
   }
 
   /**

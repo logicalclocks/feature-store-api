@@ -96,21 +96,21 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
                                  boolean hostnameVerification, String trustStorePath)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, null, null, hostnameVerification, trustStorePath, apiKeyFilepath, null);
+    this(host, port, null, null, hostnameVerification, trustStorePath, apiKeyFilepath, null, null);
   }
 
   public HopsworksExternalClient(String host, int port, boolean hostnameVerification,
                                  String trustStorePath, Region region, SecretStore secretStore)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, region, secretStore, hostnameVerification, trustStorePath, null, null);
+    this(host, port, region, secretStore, hostnameVerification, trustStorePath, null, null, null);
   }
 
   public HopsworksExternalClient(String host, int port, boolean hostnameVerification,
                                  String trustStorePath, String apiKeyValue)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, null, null, hostnameVerification, trustStorePath, null, apiKeyValue);
+    this(host, port, null, null, hostnameVerification, trustStorePath, null, null, apiKeyValue);
   }
 
   public HopsworksExternalClient(CloseableHttpClient httpClient, HttpHost httpHost) {
@@ -119,11 +119,12 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
   }
 
   HopsworksExternalClient(String host, int port, Region region,
-                          SecretStore secretStore, boolean hostnameVerification,
+                          SecretStore secretStore, boolean hostnameVerification, String keyStorePath,
                           String trustStorePath, String apiKeyFilepath, String apiKeyValue)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
 
+    this.keyStorePath = keyStorePath;
     httpHost = new HttpHost(host, port, "https");
 
     connectionPool = new PoolingHttpClientConnectionManager(
