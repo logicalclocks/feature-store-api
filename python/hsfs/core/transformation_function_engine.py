@@ -18,7 +18,6 @@ import numpy
 import datetime
 from functools import partial
 
-from hsfs import training_dataset, training_dataset_feature
 from hsfs import training_dataset, training_dataset_feature, statistics
 from hsfs.core import transformation_function_api, statistics_api
 from hsfs.core.builtin_transformation_function import BuiltInTransformationFunction
