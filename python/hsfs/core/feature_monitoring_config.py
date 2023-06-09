@@ -64,7 +64,7 @@ class FeatureMonitoringConfig:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
         href: Optional[str] = None,
-        training_dataset_version: Optional[int] = None,
+        transformed_with_version: Optional[int] = None,
         is_event_time: bool = False,
     ) -> "FeatureMonitoringConfig":
         self.name = name
@@ -78,7 +78,7 @@ class FeatureMonitoringConfig:
         self._job_name = job_name
         self._feature_monitoring_type = FeatureMonitoringType(feature_monitoring_type)
         self._enabled = enabled
-        self._training_dataset_version = training_dataset_version
+        self._transformed_with_version = transformed_with_version
         self._is_event_time = is_event_time
 
         self._feature_monitoring_config_engine = (
@@ -156,13 +156,13 @@ class FeatureMonitoringConfig:
             "schedulerConfig": scheduler_config,
             "detectionWindowConfig": detection_window_config,
             "isEventTime": self._is_event_time,
+            "transformedWithVersion": self._transformed_with_version,
         }
 
         if self._feature_group_id is not None:
             the_dict["featureGroupId"] = self._feature_group_id
         elif self._feature_view_id is not None:
             the_dict["featureViewId"] = self._feature_view_id
-            the_dict["trainingDatasetVersion"] = self._training_dataset_version
 
         if self._feature_monitoring_type == "STATISTICS_MONITORING":
             return the_dict
@@ -195,7 +195,7 @@ class FeatureMonitoringConfig:
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # Compute statistics on a regular basis
-            fg._enable_statistics_monitoring(
+            fg._create_statistics_monitoring(
                 name="regular_stats",
                 job_frequency="DAILY",
             ).with_detection_window(
@@ -205,7 +205,7 @@ class FeatureMonitoringConfig:
             ).save()
 
             # Compute and compare statistics
-            fg._enable_feature_monitoring(
+            fg._create_feature_monitoring(
                 name="regular_stats",
                 feature_name="my_feature",
                 job_frequency="DAILY",
@@ -241,35 +241,23 @@ class FeatureMonitoringConfig:
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
         row_percentage: Optional[float] = None,
-        specific_value: Optional[Union[float, int]] = None,
-        training_dataset_id: Optional[int] = None,
     ) -> "FeatureMonitoringConfig":
         """Sets the reference window for the feature monitoring job.
 
+        See also `with_reference_value(...)` and `with_reference_training_dataset(...)` for other reference options.
+
         !!! example
             ```python
-            # fethc your feature group or feature view
+            # fetch your feature group or feature view
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # Setup feature monitoring and a detection window
-            my_monitoring_config = fg._enable_feature_monitoring(...).with_detection_window(...)
-
-            # Simplest reference window is a specific value
-            my_monitoring_config.with_reference_window(
-                specific_value=0.0,
-                row_percentage=0.1, # optional
-            ).compare_on(...).save()
+            my_monitoring_config = fg._create_feature_monitoring(...).with_detection_window(...)
 
             # Statistics computed on a rolling time window, e.g. same day last week
             my_monitoring_config.with_reference_window(
                 time_offset="1w",
                 window_length="1d",
-            ).compare_on(...).save()
-
-            # Only for feature views: Compare to the statistics computed for one of your training datasets
-            # particularly useful if it has been used to train a model currently in production
-            my_monitoring_config.with_reference_window(
-                training_dataset_id=123,
             ).compare_on(...).save()
             ```
 
@@ -277,22 +265,93 @@ class FeatureMonitoringConfig:
             You must provide a comparison configuration via compare_on(...) before saving the feature monitoring config.
 
         # Arguments
-            specific_value: A specific value to use as reference.
             time_offset: The time offset from the current time to the start of the time window.
             window_length: The length of the time window.
-            training_dataset_id: The id of the training dataset to use as reference. For feature view monitoring only.
             row_percentage: The percentage of rows to use when computing the statistics. Defaults to 20%.
 
         # Returns
             `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
         """
-        # Setter is using the engine class to perform input validation.
+        # Setter is using the engine class to perform input validation and build monitoring window config object.
         self.reference_window_config = {
             "time_offset": time_offset,
             "window_length": window_length,
-            "specific_value": specific_value,
-            "training_dataset_id": training_dataset_id,
             "row_percentage": row_percentage,
+        }
+
+        return self
+
+    def with_reference_value(
+        self,
+        value: Optional[Union[float, int]] = None,
+    ) -> "FeatureMonitoringConfig":
+        """Sets the reference value for the feature monitoring job.
+
+        See also `with_reference_window(...)` and `with_reference_training_dataset(...)` for other reference options.
+
+        !!! example
+            ```python
+            # fetch your feature group or feature view
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # Setup feature monitoring and a detection window
+            my_monitoring_config = fg._create_feature_monitoring(...).with_detection_window(...)
+
+            # Simplest reference window is a specific value
+            my_monitoring_config.with_reference_value(
+                value=0.0,
+            ).compare_on(...).save()
+            ```
+
+        !!! note
+            You must provide a comparison configuration via compare_on(...) before saving the feature monitoring config.
+
+        # Arguments
+            value: A float value to use as reference.
+
+        # Returns
+            `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
+        """
+        self.reference_window_config = {
+            "specific_value": float(value),
+        }
+
+        return self
+
+    def with_reference_training_dataset(
+        self,
+        training_dataset_version: Optional[int] = None,
+    ) -> "FeatureMonitoringConfig":
+        """Sets the reference training dataset for the feature monitoring job.
+
+        See also `with_reference_value(...)` and `with_reference_window(...)` for other reference options.
+
+        !!! example
+            ```python
+            # fetch your feature group or feature view
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+
+            # Setup feature monitoring and a detection window
+            my_monitoring_config = fg._create_feature_monitoring(...).with_detection_window(...)
+
+            # Only for feature views: Compare to the statistics computed for one of your training datasets
+            # particularly useful if it has been used to train a model currently in production
+            my_monitoring_config.with_reference_training_dataset(
+                training_dataset_version=3,
+            ).compare_on(...).save()
+            ```
+
+        !!! note
+            You must provide a comparison configuration via compare_on(...) before saving the feature monitoring config.
+
+        # Arguments
+            training_dataset_version: The version of the training dataset to use as reference.
+
+        # Returns
+            `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
+        """
+        self.reference_window_config = {
+            "training_dataset_version": training_dataset_version,
         }
 
         return self
@@ -312,7 +371,7 @@ class FeatureMonitoringConfig:
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # Setup feature monitoring, a detection window and a reference window
-            my_monitoring_config = fg._enable_feature_monitoring(
+            my_monitoring_config = fg._create_feature_monitoring(
                 ...
             ).with_detection_window(...).with_reference_window(...)
 
@@ -326,7 +385,7 @@ class FeatureMonitoringConfig:
             ```
 
         !!! note
-            Detection and reference window must be set prior to comparison configuration.
+            Detection window and reference window/value/training_dataset must be set prior to comparison configuration.
 
         # Arguments
             metric: The metric to use for comparison. Different metric are available for different feature type.
@@ -356,7 +415,7 @@ class FeatureMonitoringConfig:
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # Setup feature monitoring and a detection window
-            my_monitoring_config = fg._enable_statistics_monitoring(
+            my_monitoring_config = fg._create_statistics_monitoring(
                 name="my_monitoring_config",
             ).save()
             ```
@@ -652,14 +711,33 @@ class FeatureMonitoringConfig:
 
     @property
     def is_event_time(self) -> bool:
+        """Whether fetching data for monitoring is based on event time or ingestion time. Defaults to False.
+
+        !!! note
+            Event time can only be used with feature views.
+        """
         return self._is_event_time
 
     @property
-    def training_dataset_version(self) -> Optional[int]:
-        return self._training_dataset_version
+    def transformed_with_version(self) -> Optional[int]:
+        """The version of the training dataset to fetch statistics from for transformation function. If not set, no transformation functions are applied. Defaults to None.
+
+        !!! note
+            Transformation functions can only be used with feature views.
+        """
+        return self._transformed_with_version
 
     @property
     def feature_monitoring_type(self) -> Optional[str]:
+        """The type of feature monitoring to perform. Used for internal validation.
+
+        Options are:
+            - STATISTICS_MONITORING if no reference window (and therefore comparison config) is provided
+            - FEATURE_MONITORING if a reference window (and therefore comparison config) is provided.
+
+        !!! note
+            This property is read-only.
+        """
         return self._feature_monitoring_type
 
     @property

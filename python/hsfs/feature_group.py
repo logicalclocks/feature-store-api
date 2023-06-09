@@ -1233,7 +1233,7 @@ class FeatureGroupBase:
             with_statistics=with_statistics,
         )
 
-    def _enable_statistics_monitoring(
+    def _create_statistics_monitoring(
         self,
         name: str,
         job_frequency: str = "DAILY",
@@ -1252,7 +1252,7 @@ class FeatureGroupBase:
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # enable statistics monitoring
-            my_config = fg._enable_statistics_monitoring(
+            my_config = fg._create_statistics_monitoring(
                 name="my_config",
                 job_frequency="DAILY",
                 start_date_time="2021-01-01 00:00:00",
@@ -1293,11 +1293,11 @@ class FeatureGroupBase:
             job_frequency=job_frequency,
             start_date_time=start_date_time,
             is_event_time=False,
-            training_dataset_version=None,
+            transformed_with_version=None,
             valid_feature_names=[feat.name for feat in self._features],
         )
 
-    def _enable_feature_monitoring(
+    def _create_feature_monitoring(
         self,
         name: str,
         feature_name: str,
@@ -1316,7 +1316,7 @@ class FeatureGroupBase:
             fg = fs.get_feature_group(name="my_feature_group", version=1)
 
             # enable feature monitoring
-            my_config = fg._enable_feature_monitoring(
+            my_config = fg._create_feature_monitoring(
                 name="my_monitoring_config",
                 feature_name="my_feature",
                 job_frequency="DAILY",
@@ -1363,7 +1363,7 @@ class FeatureGroupBase:
             job_frequency=job_frequency,
             start_date_time=start_date_time,
             is_event_time=False,
-            training_dataset_version=None,
+            transformed_with_version=None,
             valid_feature_names=[feat.name for feat in self._features],
         )
 

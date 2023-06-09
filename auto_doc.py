@@ -279,10 +279,10 @@ PAGES = {
             exclude=["from_response_json", "json", "to_dict"],
         ),
         "feature_monitoring_enable": [
-            "hsfs.feature_group.FeatureGroup._enable_statistics_monitoring",
-            "hsfs.feature_view.FeatureView._enable_statistics_monitoring",
-            "hsfs.feature_group.FeatureGroup._enable_feature_monitoring",
-            "hsfs.feature_view.FeatureView._enable_feature_monitoring",
+            "hsfs.feature_group.FeatureGroup._create_statistics_monitoring",
+            "hsfs.feature_view.FeatureView._create_statistics_monitoring",
+            "hsfs.feature_group.FeatureGroup._create_feature_monitoring",
+            "hsfs.feature_view.FeatureView._create_feature_monitoring",
         ],
         "feature_monitoring_config_fetch": [
             "hsfs.feature_group.FeatureGroup._get_feature_monitoring_configs",

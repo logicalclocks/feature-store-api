@@ -22,6 +22,7 @@ from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistic
 from hsfs.util import convert_event_time_to_timestamp
 from hsfs import feature_group, feature_view, engine
 from hsfs.core import statistics_engine
+from hsfs.client.exceptions import RestAPIError
 
 
 class MonitoringWindowConfigEngine:
@@ -41,7 +42,7 @@ class MonitoringWindowConfigEngine:
         self,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
-        training_dataset_id: Optional[int] = None,
+        training_dataset_version: Optional[int] = None,
         specific_value: Optional[Union[int, float]] = None,
         row_percentage: Optional[float] = None,
     ) -> "mwc.WindowConfigType":
@@ -50,7 +51,7 @@ class MonitoringWindowConfigEngine:
                 [
                     time_offset is not None,
                     window_length is not None,
-                    training_dataset_id is not None,
+                    training_dataset_version is not None,
                     row_percentage is not None,
                 ]
             ):
@@ -59,7 +60,7 @@ class MonitoringWindowConfigEngine:
                 )
             return mwc.WindowConfigType.SPECIFIC_VALUE
 
-        if isinstance(training_dataset_id, int):
+        if isinstance(training_dataset_version, int):
             if any(
                 [
                     time_offset is not None,
@@ -68,7 +69,7 @@ class MonitoringWindowConfigEngine:
                 ]
             ):
                 raise ValueError(
-                    "If training_dataset_id is set, no other parameter can be set."
+                    "If training_dataset_version is set, no other parameter can be set."
                 )
             return mwc.WindowConfigType.TRAINING_DATASET
 
@@ -86,7 +87,7 @@ class MonitoringWindowConfigEngine:
         window_config_type: Optional[Union["mwc.WindowConfigType", str]] = None,
         time_offset: Optional[str] = None,
         window_length: Optional[str] = None,
-        training_dataset_id: Optional[int] = None,
+        training_dataset_version: Optional[int] = None,
         specific_value: Optional[Union[int, float]] = None,
         row_percentage: Optional[float] = None,
     ) -> "mwc.MonitoringWindowConfig":
@@ -101,7 +102,7 @@ class MonitoringWindowConfigEngine:
             window_length: str, optional
                 monitoring window end time is computed as
                     "now - time_offset + window_length".
-            training_dataset_id: int, optional
+            training_dataset_version: int, optional
                 Specific id of an entity that has fixed statistics.
             specific_value: float, optional
                 Specific value instead of a statistics computed on data.
@@ -117,7 +118,7 @@ class MonitoringWindowConfigEngine:
         detected_window_config_type = self.validate_monitoring_window_config(
             time_offset=time_offset,
             window_length=window_length,
-            training_dataset_id=training_dataset_id,
+            training_dataset_version=training_dataset_version,
             specific_value=specific_value,
             row_percentage=row_percentage,
         )
@@ -142,7 +143,7 @@ class MonitoringWindowConfigEngine:
             window_config_type=detected_window_config_type,
             time_offset=time_offset,
             window_length=window_length,
-            training_dataset_id=training_dataset_id,
+            training_dataset_version=training_dataset_version,
             specific_value=specific_value,
             row_percentage=row_percentage,
         )
@@ -246,7 +247,7 @@ class MonitoringWindowConfigEngine:
         monitoring_window_config: "mwc.MonitoringWindowConfig",
         feature_name: Optional[str] = None,
         is_event_time: bool = False,
-        training_dataset_version=None,
+        transformed_with_version: Optional[int] = None,
     ) -> Union[FeatureDescriptiveStatistics, List[FeatureDescriptiveStatistics]]:
         """Fetch the entity data based on monitoring window configuration and compute statistics.
 
@@ -256,43 +257,55 @@ class MonitoringWindowConfigEngine:
             feature_name: str: Name of the feature to monitor.
             is_event_time: bool: Whether to use event time or ingestion time.
                 Feature View only. Defaults to False.
-            training_dataset_version: int: Version of the dataset to use for transformation function.
+            transformed_with_version: int: Version of the dataset to use for transformation function.
                 Feature View only. Defaults to None, meaning no transformation function are applied.
 
         Returns:
             [FeatureDescriptiveStatistics, List[FeatureDescriptiveStatitics]]: List of Descriptive statistics.
         """
         self._init_statistics_engine(entity._feature_store_id, entity.ENTITY_TYPE)
-        # Check if statistics already exists
-        (start_time, end_time,) = self.get_window_start_end_times(
-            monitoring_window_config=monitoring_window_config,
-            is_event_time=is_event_time,
-        )
-        print(
-            "[monitoring_window_config_engine] run_single_window_monitoring: start - "
-            + (str(start_time) if start_time is not None else "None")
-            + " , end - "
-            + (str(end_time) if end_time is not None else "None")
-            + ", row_percentage: "
-            + (
-                str(monitoring_window_config.row_percentage)
-                if monitoring_window_config.row_percentage is not None
-                else "None"
+        if (
+            monitoring_window_config.window_config_type
+            == mwc.WindowConfigType.TRAINING_DATASET
+            and isinstance(entity, feature_view.FeatureView)
+        ):
+            registered_stats = entity._feature_view_engine._get_training_data_metadata(
+                feature_view_obj=entity,
+                training_dataset_version=monitoring_window_config.training_dataset_version,
+            ).statistics
+        else:
+            # Check if statistics already exists
+            (start_time, end_time,) = self.get_window_start_end_times(
+                monitoring_window_config=monitoring_window_config,
+                is_event_time=is_event_time,
             )
-            + " , is_event_time: "
-            + (str(is_event_time) if is_event_time is not None else "None")
-            + " , feature_name: "
-            + (str(feature_name) if feature_name is not None else "None")
-        )
-        registered_stats = self._statistics_engine.get_by_time_window(
-            metadata_instance=entity,
-            start_time=start_time,
-            end_time=end_time,
-            is_event_time=is_event_time,
-            feature_name=feature_name,
-            row_percentage=monitoring_window_config.row_percentage,
-            computed_at=end_time,  # TODO: Should we use a different computed_at time for event time windows?
-        )
+            print(
+                "[monitoring_window_config_engine] run_single_window_monitoring: start - "
+                + (str(start_time) if start_time is not None else "None")
+                + " , end - "
+                + (str(end_time) if end_time is not None else "None")
+                + ", row_percentage: "
+                + (
+                    str(monitoring_window_config.row_percentage)
+                    if monitoring_window_config.row_percentage is not None
+                    else "None"
+                )
+                + " , is_event_time: "
+                + (str(is_event_time) if is_event_time is not None else "None")
+                + " , feature_name: "
+                + (str(feature_name) if feature_name is not None else "None")
+            )
+
+            registered_stats = self._statistics_engine.get_by_time_window(
+                metadata_instance=entity,
+                start_time=start_time,
+                end_time=end_time,
+                is_event_time=is_event_time,
+                feature_name=feature_name,
+                row_percentage=monitoring_window_config.row_percentage,
+                computed_at=end_time,  # TODO: Should we use a different computed_at time for event time windows?
+                transformed_with_version=transformed_with_version,
+            )
 
         if registered_stats is None:  # if statistics don't exist
             # Fetch the actual data for which to compute statistics based on row_percentage and time window
@@ -303,7 +316,7 @@ class MonitoringWindowConfigEngine:
                 end_time=end_time,
                 row_percentage=monitoring_window_config.row_percentage,
                 is_event_time=is_event_time,
-                training_dataset_version=training_dataset_version,
+                transformed_with_version=transformed_with_version,
             )
 
             # Compute statistics on the feature dataframe
@@ -333,7 +346,7 @@ class MonitoringWindowConfigEngine:
         row_percentage: float,
         feature_name: Optional[str] = None,
         is_event_time: bool = False,
-        training_dataset_version: Optional[int] = None,
+        transformed_with_version: Optional[int] = None,
     ) -> TypeVar("pyspark.sql.DataFrame"):
         """Fetch the entity data based on time window and row percentage.
 
@@ -345,33 +358,43 @@ class MonitoringWindowConfigEngine:
             row_percentage: fraction of rows to include [0, 1.0]
             is_event_time: bool: Whether to use event time or ingestion time.
                 Feature View only.
-            training_dataset_version: int: Version of the dataset
+            transformed_with_version: int: Version of the dataset
                 to fetch statistics from for the transformation function.
                 Feature View only.
 
         Returns:
             `pyspark.sql.DataFrame`. A Spark DataFrame with the entity data
         """
-        if isinstance(entity, feature_group.FeatureGroup):
-            # is_event_time and transformation_function don't apply here
-            entity_df = self.fetch_feature_group_data(
-                entity=entity,
-                feature_name=feature_name,
-                start_time=start_time,
-                end_time=end_time,
-            )
-        else:
-            entity_df = self.fetch_feature_view_data(
-                entity=entity,
-                feature_name=feature_name,
-                start_time=start_time,
-                end_time=end_time,
-                is_event_time=is_event_time,
-                training_dataset_version=training_dataset_version,
-            )
+        try:
+            if isinstance(entity, feature_group.FeatureGroup):
+                # is_event_time and transformation_function don't apply here
+                entity_df = self.fetch_feature_group_data(
+                    entity=entity,
+                    feature_name=feature_name,
+                    start_time=start_time,
+                    end_time=end_time,
+                )
+            else:
+                entity_df = self.fetch_feature_view_data(
+                    entity=entity,
+                    feature_name=feature_name,
+                    start_time=start_time,
+                    end_time=end_time,
+                    is_event_time=is_event_time,
+                    transformed_with_version=transformed_with_version,
+                )
 
-        if row_percentage < 1.0:
-            entity_df = entity_df.sample(fraction=row_percentage)
+            if row_percentage < 1.0:
+                entity_df = entity_df.sample(fraction=row_percentage)
+
+        except RestAPIError as e:
+            if e.error_code == 270118:
+                # This error means no data for those particular commits
+                entity_df = engine.get_instance().create_empty_df_from_schema(
+                    entity.schema
+                )
+            else:
+                raise e
 
         return entity_df
 
@@ -382,7 +405,7 @@ class MonitoringWindowConfigEngine:
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
         is_event_time: bool = False,
-        training_dataset_version: Optional[int] = None,
+        transformed_with_version: Optional[int] = None,
     ) -> TypeVar("pyspark.sql.DataFrame"):
         """Fetch the feature view data based on time window and row percentage.
 
@@ -392,7 +415,7 @@ class MonitoringWindowConfigEngine:
             start_time: int: Window start commit or event time.
             end_time: int: Window end commit or event time.
             is_event_time: bool: Whether to use event time or ingestion time.
-            training_dataset_version: int: Dataset version of the transformation function
+            transformed_with_version: int: Dataset version of the transformation function
 
         Returns:
             `pyspark.sql.DataFrame`. A Spark DataFrame with the entity data
@@ -405,7 +428,7 @@ class MonitoringWindowConfigEngine:
                 with_label=True
                 if (feature_name is None or feature_name in entity.labels)
                 else False,
-                training_dataset_version=training_dataset_version,
+                transformed_with_version=transformed_with_version,
             ).read()
         else:
             entity_df = entity.query.as_of(
@@ -415,8 +438,8 @@ class MonitoringWindowConfigEngine:
         if feature_name:
             entity_df = entity_df.select(feature_name)
 
-        if training_dataset_version:
-            entity.init_batch_scoring(training_dataset_version=training_dataset_version)
+        if transformed_with_version:
+            entity.init_batch_scoring(training_dataset_version=transformed_with_version)
 
             return engine.get_instance()._apply_transformation_function(
                 entity._batch_scoring_server._get_transformation_fns(),

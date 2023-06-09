@@ -12,7 +12,7 @@
         "enabled": true,
         "featureMonitoringType": "STATISTICS_COMPARISON",
         "isEventTime": false,
-        "trainingDatasetVersion": null,
+        "transformedWithVersion": null,
         "detectionWindowConfig": {
           "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
@@ -120,7 +120,7 @@
         "enabled": true,
         "featureMonitoringType": "STATISTICS_COMPARISON",
         "isEventTime": true,
-        "trainingDatasetVersion": 1,
+        "transformedWithVersion": 1,
         "detectionWindowConfig": {
           "windowConfigType": "ROLLING_TIME",
           "timeOffset": "1w",
@@ -129,7 +129,7 @@
         },
         "referenceWindowConfig": {
           "windowConfigType": "TRAINING_DATASET",
-          "trainingDatasetId": 33
+          "trainingDatasetVersion": 33
         },
         "statisticsComparisonConfig": {
           "threshold": 1,
@@ -169,7 +169,7 @@
         },
         "referenceWindowConfig": {
           "windowConfigType": "TRAINING_DATASET",
-          "trainingDatasetId": 33
+          "trainingDatasetVersion": 33
         },
         "statisticsComparisonConfig": {
           "threshold": 1,
@@ -283,7 +283,7 @@
           },
           "referenceWindowConfig": {
             "windowConfigType": "TRAINING_DATASET",
-            "trainingDatasetId": 33
+            "trainingDatasetVersion": 33
           },
           "statisticsComparisonConfig": {
             "threshold": 1,
