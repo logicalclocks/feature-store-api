@@ -27,7 +27,7 @@ from hsfs import (
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import fs_query
 from hsfs.core import feature_view_engine
-from hsfs.core.feature_view_engine import FeatureViewEngine
+from hsfs.constructor.query import Query
 
 engine.init("python")
 fg1 = feature_group.FeatureGroup(
@@ -181,7 +181,9 @@ class TestFeatureViewEngine:
 
         fv = feature_view.FeatureView(
             name="fv_name",
-            query=fg1.select_all().join(fg2.select_all().as_of("20221010")),
+            query=fg1.select_all().join(
+                fg2.select_all().as_of("20221010"), prefix="fg2"
+            ),
             featurestore_id=feature_store_id,
         )
 
@@ -296,7 +298,7 @@ class TestFeatureViewEngine:
             mocker,
             _query,
             "label",
-            FeatureViewEngine.AMBIGUOUS_LABEL_ERROR.format("label"),
+            Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format("label"),
         )
 
     def test_save_multiple_label_selected_2(self, mocker):
@@ -313,6 +315,7 @@ class TestFeatureViewEngine:
             .join(fg2.select_all(), prefix="fg2_")
             .join(fg3.select_all(), prefix="fg3_")
         )
+        print(fg2["label"])
         self.template_save_label_success(mocker, _query, "fg3_label", fg3.id)
 
     def test_save_label_selected_in_join_only_1(self, mocker):
@@ -329,7 +332,7 @@ class TestFeatureViewEngine:
             mocker,
             _query,
             "none",
-            FeatureViewEngine.LABEL_NOT_EXIST_ERROR.format("none"),
+            Query.ERROR_MESSAGE_FEATURE_NOT_FOUND.format("none"),
         )
 
     def test_save_label_self_join_1(self, mocker):
@@ -637,7 +640,7 @@ class TestFeatureViewEngine:
             query=query,
             featurestore_id=feature_store_id,
         )
-        fv.schema = query._collect_features()
+        fv.schema = query.features
 
         # Act
         fv_engine.attach_transformation_function(fv)
@@ -1911,7 +1914,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_constructor_query.from_cache_feature_group_only.return_value = False
+        mock_constructor_query.is_cache_feature_group_only.return_value = False
 
         # Act
         fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
@@ -1939,7 +1942,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_constructor_query.from_cache_feature_group_only.return_value = True
+        mock_constructor_query.is_cache_feature_group_only.return_value = True
 
         # Act
         fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
@@ -1967,7 +1970,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_constructor_query.from_cache_feature_group_only.return_value = False
+        mock_constructor_query.is_cache_feature_group_only.return_value = False
         mock_engine_get_type.return_value = "python"
 
         # Act
@@ -2001,7 +2004,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_constructor_query.from_cache_feature_group_only.return_value = False
+        mock_constructor_query.is_cache_feature_group_only.return_value = False
         mock_engine_get_type.return_value = "hive"
 
         # Act
@@ -2037,7 +2040,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_constructor_query.from_cache_feature_group_only.return_value = True
+        mock_constructor_query.is_cache_feature_group_only.return_value = True
         mock_engine_get_type.return_value = "python"
 
         # Act
@@ -2068,7 +2071,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_constructor_query.from_cache_feature_group_only.return_value = True
+        mock_constructor_query.is_cache_feature_group_only.return_value = True
         mock_engine_get_type.return_value = "hive"
 
         # Act
