@@ -29,6 +29,7 @@ from hsfs import (
 )
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import transformation_function_engine
+from hsfs.constructor.query import Query
 
 fg1 = feature_group.FeatureGroup(
     name="test1",
@@ -513,10 +514,8 @@ class TestTransformationFunctionEngine:
             )
 
         # Assert
-        assert (
-            str(e_info.value)
-            == "Provided feature 'tf1_name' in transformation functions is ambiguous and exists in more than one "
-            "feature groups.You can provide the feature with the prefix that was specified in the join."
+        assert str(e_info.value) == Query.ERROR_MESSAGE_FEATURE_AMBIGUOUS.format(
+            "tf_name"
         )
 
     def test_attach_transformation_fn_fv_labels(self, mocker):
