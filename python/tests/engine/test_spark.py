@@ -4098,6 +4098,7 @@ class TestSpark:
             server_encryption_algorithm="3",
             server_encryption_key="4",
             session_token="5",
+            arguments=[{"name": "fs.s3a.endpoint", "value": "testEndpoint"}],
         )
 
         # Act
@@ -4110,7 +4111,7 @@ class TestSpark:
         assert result == "s3a_test_path"
         assert (
             mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.call_count
-            == 6
+            == 7
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
             "fs.s3a.access.key", s3_connector.access_key
@@ -4131,6 +4132,9 @@ class TestSpark:
         )
         mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
             "fs.s3a.session.token", s3_connector.session_token
+        )
+        mock_pyspark_getOrCreate.return_value.sparkContext._jsc.hadoopConfiguration.return_value.set.assert_any_call(
+            "fs.s3a.endpoint", s3_connector.arguments.get("fs.s3a.endpoint")
         )
 
     def test_setup_adls_hadoop_conf(self, mocker):

@@ -56,6 +56,9 @@ public class Constants {
   public static final String S3_CREDENTIAL_PROVIDER_ENV = "fs.s3a.aws.credentials.provider";
   public static final String S3_TEMPORARY_CREDENTIAL_PROVIDER =
       "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider";
+  public static final String S3_ENDPOINT = "fs.s3a.endpoint";
+  public static final String S3_ENCRYPTION_ALGO = "fs.s3a.server-side-encryption-algorithm";
+  public static final String S3_ENCRYPTION_KEY = "fs.s3a.server-side-encryption-key";
 
   public static final String SNOWFLAKE_USER = "sfUser";
   public static final String SNOWFLAKE_PWD = "sfPassword";
