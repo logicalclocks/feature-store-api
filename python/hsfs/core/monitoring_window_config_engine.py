@@ -263,37 +263,48 @@ class MonitoringWindowConfigEngine:
             [FeatureDescriptiveStatistics, List[FeatureDescriptiveStatitics]]: List of Descriptive statistics.
         """
         self._init_statistics_engine(entity._feature_store_id, entity.ENTITY_TYPE)
-        # Check if statistics already exists
-        (start_time, end_time,) = self.get_window_start_end_times(
-            monitoring_window_config=monitoring_window_config,
-            is_event_time=is_event_time,
-        )
-        print(
-            "[monitoring_window_config_engine] run_single_window_monitoring: start - "
-            + (str(start_time) if start_time is not None else "None")
-            + " , end - "
-            + (str(end_time) if end_time is not None else "None")
-            + ", row_percentage: "
-            + (
-                str(monitoring_window_config.row_percentage)
-                if monitoring_window_config.row_percentage is not None
-                else "None"
+        if (
+            monitoring_window_config.window_config_type
+            == mwc.WindowConfigType.TRAINING_DATASET
+            and isinstance(entity, feature_view.FeatureView)
+        ):
+            registered_stats = entity._feature_view_engine._get_training_data_metadata(
+                feature_view_obj=entity,
+                training_dataset_version=monitoring_window_config.training_dataset_version,
+            ).statistics
+        else:
+            # Check if statistics already exists
+            (start_time, end_time,) = self.get_window_start_end_times(
+                monitoring_window_config=monitoring_window_config,
+                is_event_time=is_event_time,
             )
-            + " , is_event_time: "
-            + (str(is_event_time) if is_event_time is not None else "None")
-            + " , feature_name: "
-            + (str(feature_name) if feature_name is not None else "None")
-        )
-        registered_stats = self._statistics_engine.get_by_time_window(
-            metadata_instance=entity,
-            start_time=start_time,
-            end_time=end_time,
-            is_event_time=is_event_time,
-            feature_name=feature_name,
-            row_percentage=monitoring_window_config.row_percentage,
-            computed_at=end_time,  # TODO: Should we use a different computed_at time for event time windows?
-            transformed_with_version=transformed_with_version,
-        )
+            print(
+                "[monitoring_window_config_engine] run_single_window_monitoring: start - "
+                + (str(start_time) if start_time is not None else "None")
+                + " , end - "
+                + (str(end_time) if end_time is not None else "None")
+                + ", row_percentage: "
+                + (
+                    str(monitoring_window_config.row_percentage)
+                    if monitoring_window_config.row_percentage is not None
+                    else "None"
+                )
+                + " , is_event_time: "
+                + (str(is_event_time) if is_event_time is not None else "None")
+                + " , feature_name: "
+                + (str(feature_name) if feature_name is not None else "None")
+            )
+
+            registered_stats = self._statistics_engine.get_by_time_window(
+                metadata_instance=entity,
+                start_time=start_time,
+                end_time=end_time,
+                is_event_time=is_event_time,
+                feature_name=feature_name,
+                row_percentage=monitoring_window_config.row_percentage,
+                computed_at=end_time,  # TODO: Should we use a different computed_at time for event time windows?
+                transformed_with_version=transformed_with_version,
+            )
 
         if registered_stats is None:  # if statistics don't exist
             # Fetch the actual data for which to compute statistics based on row_percentage and time window
