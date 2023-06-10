@@ -63,7 +63,7 @@ setup(
             "markdown==3.3.7",
             "pymdown-extensions",
             "mkdocs-macros-plugin==0.7.0",
-            "mkdocs-minify-plugin==0.6.4",
+            "mkdocs-minify-plugin>=0.2.0,<=0.6.4",
         ],
         "hive": [
             "pyhopshive[thrift]",
