@@ -92,39 +92,17 @@ public class HopsworksExternalClient implements HopsworksHttpClient {
   @Setter
   protected String certKey;
 
-  public HopsworksExternalClient(String host, int port, String apiKeyFilepath,
-                                 boolean hostnameVerification, String trustStorePath)
-      throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
-      NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, null, null, hostnameVerification, trustStorePath, apiKeyFilepath, null, null);
-  }
-
-  public HopsworksExternalClient(String host, int port, boolean hostnameVerification,
-                                 String trustStorePath, Region region, SecretStore secretStore)
-      throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
-      NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, region, secretStore, hostnameVerification, trustStorePath, null, null, null);
-  }
-
-  public HopsworksExternalClient(String host, int port, boolean hostnameVerification,
-                                 String trustStorePath, String apiKeyValue)
-      throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
-      NoSuchAlgorithmException, KeyManagementException {
-    this(host, port, null, null, hostnameVerification, trustStorePath, null, null, apiKeyValue);
-  }
-
   public HopsworksExternalClient(CloseableHttpClient httpClient, HttpHost httpHost) {
     this.httpClient = httpClient;
     this.httpHost = httpHost;
   }
 
   HopsworksExternalClient(String host, int port, Region region,
-                          SecretStore secretStore, boolean hostnameVerification, String keyStorePath,
+                          SecretStore secretStore, boolean hostnameVerification,
                           String trustStorePath, String apiKeyFilepath, String apiKeyValue)
       throws IOException, FeatureStoreException, KeyStoreException, CertificateException,
       NoSuchAlgorithmException, KeyManagementException {
 
-    this.keyStorePath = keyStorePath;
     httpHost = new HttpHost(host, port, "https");
 
     connectionPool = new PoolingHttpClientConnectionManager(

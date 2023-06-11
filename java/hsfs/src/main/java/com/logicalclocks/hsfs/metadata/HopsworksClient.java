@@ -79,8 +79,8 @@ public class HopsworksClient {
 
   public static synchronized HopsworksClient setupHopsworksClient(String host, int port, Region region,
                                                                   SecretStore secretStore, boolean hostnameVerification,
-                                                                  String keyStorePath,  String trustStorePath,
-                                                                  String apiKeyFilePath, String apiKeyValue)
+                                                                  String trustStorePath, String apiKeyFilePath,
+                                                                  String apiKeyValue)
       throws FeatureStoreException {
     if (hopsworksClientInstance != null) {
       return hopsworksClientInstance;
@@ -92,7 +92,7 @@ public class HopsworksClient {
         hopsworksHttpClient = new HopsworksInternalClient();
       } else {
         hopsworksHttpClient = new HopsworksExternalClient(host, port, region,
-            secretStore, hostnameVerification, keyStorePath, trustStorePath, apiKeyFilePath, apiKeyValue);
+            secretStore, hostnameVerification, trustStorePath, apiKeyFilePath, apiKeyValue);
       }
     } catch (Exception e) {
       throw new FeatureStoreException("Could not setup Hopsworks client", e);

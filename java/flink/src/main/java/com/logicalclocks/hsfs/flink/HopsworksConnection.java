@@ -35,7 +35,7 @@ public class HopsworksConnection extends HopsworksConnectionBase {
 
   @Builder
   public HopsworksConnection(String host, int port, String project, Region region, SecretStore secretStore,
-                             boolean hostnameVerification, String keyStorePath, String trustStorePath,
+                             boolean hostnameVerification, String trustStorePath,
                              String certPath, String apiKeyFilePath, String apiKeyValue)
       throws IOException, FeatureStoreException {
     this.host = host;
@@ -44,14 +44,13 @@ public class HopsworksConnection extends HopsworksConnectionBase {
     this.region = region;
     this.secretStore = secretStore;
     this.hostnameVerification = hostnameVerification;
-    this.keyStorePath = keyStorePath;
     this.trustStorePath = trustStorePath;
     this.certPath = certPath;
     this.apiKeyFilePath = apiKeyFilePath;
     this.apiKeyValue = apiKeyValue;
 
     HopsworksClient.setupHopsworksClient(host, port, region, secretStore,
-        hostnameVerification, keyStorePath, trustStorePath, this.apiKeyFilePath, this.apiKeyValue);
+        hostnameVerification, trustStorePath, this.apiKeyFilePath, this.apiKeyValue);
     this.projectObj = getProject();
     HopsworksClient.getInstance().setProject(this.projectObj);
     if (!System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
