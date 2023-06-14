@@ -1152,7 +1152,10 @@ class Engine:
         if pa.types.is_list(arrow_type):
             # figure out sub type
             sub_arrow_type = arrow_type.value_type
-            sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            try:
+                sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            except NotImplementedError:
+                sub_dtype = np.dtype("object")
             subtype = Engine._convert_pandas_dtype_to_offline_type(
                 sub_dtype, sub_arrow_type
             )
@@ -1160,10 +1163,15 @@ class Engine:
         if pa.types.is_struct(arrow_type):
             struct_schema = {}
             for index in range(arrow_type.num_fields):
+                sub_arrow_type = arrow_type.field(index).type
+                try:
+                    sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+                except NotImplementedError:
+                    sub_dtype = np.dtype("object")
                 struct_schema[
                     arrow_type.field(index).name
-                ] = Engine._convert_pandas_object_type_to_offline_type(
-                    arrow_type.field(index).type
+                ] = Engine._convert_pandas_dtype_to_offline_type(
+                    sub_dtype, arrow_type.field(index).type
                 )
             return (
                 "struct<"
