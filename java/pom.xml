@@ -6,7 +6,7 @@
 
     <groupId>com.logicalclocks</groupId>
     <artifactId>hsfs</artifactId>
-    <version>3.0.7</version>
+    <version>3.0.8</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
