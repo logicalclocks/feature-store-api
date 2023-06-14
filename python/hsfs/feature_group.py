@@ -2606,6 +2606,11 @@ class ExternalFeatureGroup(FeatureGroupBase):
 
         self._href = href
 
+    def _get_project_name(self):
+        if self.feature_store_name.endswith("_featurestore"):
+            return self.feature_store_name[:-13]
+        return self.feature_store_name
+
     def save(self):
         """Persist the metadata for this external feature group.
 
@@ -2719,15 +2724,17 @@ class ExternalFeatureGroup(FeatureGroupBase):
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        if engine.get_type() == "python" and not online:
-            raise FeatureStoreException(
-                "Reading an External Feature Group directly into a Pandas Dataframe using "
-                + "Python/Pandas as Engine from the external storage system "
-                + "is not supported, however, if the feature group is online enabled, you can read "
-                + "from online storage or you can use the "
-                + "Query API to create Feature Views/Training Data containing External "
-                + "Feature Groups."
-            )
+
+        #
+        # if engine.get_type() == "python" and not online:
+        #    raise FeatureStoreException(
+        #        "Reading an External Feature Group directly into a Pandas Dataframe using "
+        #        + "Python/Pandas as Engine from the external storage system "
+        #        + "is not supported, however, if the feature group is online enabled, you can read "
+        #        + "from online storage or you can use the "
+        #        + "Query API to create Feature Views/Training Data containing External "
+        #         + "Feature Groups."
+        #    )
         engine.get_instance().set_job_group(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
