@@ -123,7 +123,7 @@ class ArrowFlightClient:
         )
 
     def _is_query_supported_rec(self, query):
-        supported = (
+        hudi_no_time_travel = (
             isinstance(query._left_feature_group, feature_group.FeatureGroup)
             and query._left_feature_group.time_travel_format == "HUDI"
             and (
@@ -132,6 +132,11 @@ class ArrowFlightClient:
             )
             and query._left_feature_group_end_time is None
         )
+        snowflake = (
+            isinstance(query._left_feature_group, feature_group.ExternalFeatureGroup)
+            and query._left_feature_group.storage_connector.type == "SNOWFLAKE"
+        )
+        supported = hudi_no_time_travel or snowflake
         for j in query._joins:
             supported &= self._is_query_supported_rec(j._query)
         return supported
@@ -204,21 +209,44 @@ class ArrowFlightClient:
     def is_flyingduck_query_object(self, query_obj):
         return isinstance(query_obj, dict) and "query_string" in query_obj
 
-    def create_query_object(self, query, query_str):
+    def create_query_object(self, query, query_str, on_demand_fg_aliases):
         features = {}
+        connectors = {}
         for fg in query.featuregroups:
             fg_name = self._serialize_featuregroup_name(fg)
+            fg_connector = self._serialize_featuregroup_connector(
+                fg, on_demand_fg_aliases
+            )
             features[fg_name] = [feat.name for feat in fg.features]
+            connectors[fg_name] = fg_connector
         filters = self._serialize_filter_expression(query)
-        for feature in features:
-            features[feature] = list(features[feature])
+        for fg_name in features:
+            features[fg_name] = list(features[fg_name])
 
         query = {
             "query_string": self._translate_to_duckdb(query, query_str),
             "features": features,
             "filters": filters,
+            "connectors": connectors,
         }
         return query
+
+    def _serialize_featuregroup_connector(self, fg, on_demand_fg_aliases):
+        connector = {}
+        if isinstance(fg, feature_group.ExternalFeatureGroup):
+            connector["type"] = fg.storage_connector.type
+            connector["options"] = fg.storage_connector.snowflake_connector_options()
+            connector["options"]["query"] = fg.query
+            for on_demand_fg_alias in on_demand_fg_aliases:
+                if on_demand_fg_alias.on_demand_feature_group.name == fg.name:
+                    connector["alias"] = on_demand_fg_alias.alias
+                    break
+        else:
+            connector["type"] = "hudi"
+            connector["options"] = None
+            connector["alias"] = None
+
+        return connector
 
     def _serialize_featuregroup_name(self, fg):
         return f"{fg._get_project_name()}.{fg.name}_{fg.version}"
