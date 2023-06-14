@@ -1158,8 +1158,18 @@ class Engine:
             )
             return "array<{}>".format(subtype)
         if pa.types.is_struct(arrow_type):
-            # best effort, based on pyarrow's string representation
-            return str(arrow_type)
+            struct_schema = {}
+            for index in range(arrow_type.num_fields):
+                struct_schema[
+                    arrow_type.field(index).name
+                ] = Engine._convert_pandas_object_type_to_offline_type(
+                    arrow_type.field(index).type
+                )
+            return (
+                "struct<"
+                + ",".join([f"{key}:{value}" for key, value in struct_schema.items()])
+                + ">"
+            )
         # Currently not supported
         # elif pa.types.is_decimal(arrow_type):
         #    return str(arrow_type).replace("decimal128", "decimal")
