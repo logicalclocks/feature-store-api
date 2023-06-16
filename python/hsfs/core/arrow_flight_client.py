@@ -215,7 +215,7 @@ class ArrowFlightClient:
         for fg in query.featuregroups:
             fg_name = self._serialize_featuregroup_name(fg)
             fg_connector = self._serialize_featuregroup_connector(
-                fg, on_demand_fg_aliases
+                fg, on_demand_fg_aliases, query
             )
             features[fg_name] = [feat.name for feat in fg.features]
             connectors[fg_name] = fg_connector
@@ -231,20 +231,24 @@ class ArrowFlightClient:
         }
         return query
 
-    def _serialize_featuregroup_connector(self, fg, on_demand_fg_aliases):
+    def _serialize_featuregroup_connector(self, fg, on_demand_fg_aliases, query):
         connector = {}
         if isinstance(fg, feature_group.ExternalFeatureGroup):
             connector["type"] = fg.storage_connector.type
             connector["options"] = fg.storage_connector.snowflake_connector_options()
-            connector["options"]["query"] = fg.query
+            connector["query"] = fg.query
             for on_demand_fg_alias in on_demand_fg_aliases:
                 if on_demand_fg_alias.on_demand_feature_group.name == fg.name:
                     connector["alias"] = on_demand_fg_alias.alias
                     break
+            if query._left_feature_group == fg:
+                connector["filters"] = self._serialize_filter_expression(query._filter)
+            else:
+                for join_obj in query._joins:
+                    if join_obj._query._left_feature_group == fg:
+                        connector["filters"] = self._serialize_filter_expression(join_obj._query._filter)
         else:
             connector["type"] = "hudi"
-            connector["options"] = None
-            connector["alias"] = None
 
         return connector
 
