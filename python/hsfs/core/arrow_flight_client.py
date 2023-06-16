@@ -246,7 +246,9 @@ class ArrowFlightClient:
             else:
                 for join_obj in query._joins:
                     if join_obj._query._left_feature_group == fg:
-                        connector["filters"] = self._serialize_filter_expression(join_obj._query._filter)
+                        connector["filters"] = self._serialize_filter_expression(
+                            join_obj._query._filter
+                        )
         else:
             connector["type"] = "hudi"
 
