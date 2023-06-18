@@ -71,7 +71,7 @@
       "on": "test_on",
       "left_on": "test_left_on",
       "right_on": "test_right_on",
-      "join_type": "test_join_type",
+      "type": "test_join_type",
       "prefix": "test_prefix"
     }
   },
@@ -144,6 +144,95 @@
         "joins": [],
         "filter": null
       }
+    }
+  },
+  "left_on_right_on" : {
+    "response":{
+      "query": {
+          "featureStoreId": 71,
+          "featureStoreName": "test_fabio_featurestore",
+          "leftFeatureGroup": {
+              "type": "streamFeatureGroupDTO",
+              "featurestoreId": 71,
+              "featurestoreName": "test_fabio_featurestore",
+              "description": "",
+              "created": "2023-06-18T16:42:34.000Z",
+              "creator": {
+                  "email": "admin@hopsworks.ai",
+                  "firstName": "Admin",
+                  "lastName": "Admin",
+                  "status": 0,
+                  "tos": false,
+                  "twoFactor": false,
+                  "toursState": 0,
+                  "maxNumProjects": 0,
+                  "numCreatedProjects": 0,
+                  "testUser": false,
+                  "numActiveProjects": 0,
+                  "numRemainingProjects": 0
+              },
+              "version": 1,
+              "name": "company",
+              "id": 40,
+              "location": "hopsfs://172.16.4.123:8020/apps/hive/warehouse/test_fabio_featurestore.db/company_1",
+              "statisticsConfig": {
+                  "enabled": false,
+                  "histograms": false,
+                  "correlations": false,
+                  "exactUniqueness": false,
+                  "columns": []
+              },
+              "features": [
+                  {
+                      "name": "company_id",
+                      "type": "bigint",
+                      "primary": true,
+                      "partition": false,
+                      "hudiPrecombineKey": true,
+                      "featureGroupId": 40
+                  },
+                  {
+                      "name": "cfeat",
+                      "type": "string",
+                      "primary": false,
+                      "partition": false,
+                      "hudiPrecombineKey": false,
+                      "featureGroupId": 40
+                  }
+              ],
+              "onlineTopicName": "126_40_company_1",
+              "onlineEnabled": false,
+              "timeTravelFormat": "HUDI"
+          },
+          "leftFeatures": [
+              {
+                  "name": "cfeat",
+                  "type": "string",
+                  "primary": false,
+                  "partition": false,
+                  "hudiPrecombineKey": false,
+                  "featureGroupId": 40
+              }
+          ],
+          "hiveEngine": false
+      },
+      "leftOn": [
+          {
+              "name": "job_id",
+              "primary": false,
+              "partition": false,
+              "hudiPrecombineKey": false
+          }
+      ],
+      "rightOn": [
+          {
+              "name": "internal_id",
+              "primary": false,
+              "partition": false,
+              "hudiPrecombineKey": false
+          }
+      ],
+      "type": "LEFT"
     }
   }
 }
