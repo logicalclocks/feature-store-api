@@ -57,3 +57,21 @@ class TestJoin:
         assert len(j._right_on) == 0
         assert j._join_type == "INNER"
         assert j._prefix is None
+
+    def test_from_response_json_left_join(self, mocker, backend_fixtures):
+        # Arrange
+        mocker.patch("hsfs.engine.get_type", return_value="python")
+        json = backend_fixtures["join"]["left_on_right_on"]["response"]
+
+        # Act
+        j = join.Join.from_response_json(json)
+
+        # Assert
+        assert isinstance(j.query, query.Query)
+        assert len(j._on) == 0
+        assert len(j._left_on) == 1
+        assert j._left_on[0] == "job_id"
+        assert len(j._right_on) == 1
+        assert j._right_on[0] == "internal_id"
+        assert j._join_type == "LEFT"
+        assert j._prefix is None
