@@ -511,7 +511,9 @@ class ExpectationSuite:
     def run_validation(self, run_validation: bool):
         self._run_validation = run_validation
         if self.id:
-            self._expectation_suite_engine.update_metadata_from_fields(**self.to_dict())
+            self._expectation_suite_engine.update_metadata_from_fields(
+                **humps.decamelize(self.to_dict())
+            )
 
     @property
     def validation_ingestion_policy(self) -> str:
@@ -526,7 +528,9 @@ class ExpectationSuite:
     def validation_ingestion_policy(self, validation_ingestion_policy: str):
         self._validation_ingestion_policy = validation_ingestion_policy.upper()
         if self.id:
-            self._expectation_suite_engine.update_metadata_from_fields(**self.to_dict())
+            self._expectation_suite_engine.update_metadata_from_fields(
+                **humps.decamelize(self.to_dict())
+            )
 
     @property
     def expectations(self) -> List[GeExpectation]:
@@ -570,4 +574,6 @@ class ExpectationSuite:
 
         if self._id and hasattr(self, "_expectation_suite_engine"):
             # Adding test on suite_engine allows to not run it on init
-            self._expectation_suite_engine.update_metadata_from_fields(**self.to_dict())
+            self._expectation_suite_engine.update_metadata_from_fields(
+                **humps.decamelize(self.to_dict())
+            )
