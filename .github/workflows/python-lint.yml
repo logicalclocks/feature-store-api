@@ -57,6 +57,33 @@ jobs:
       - name: Run Pytest suite
         run: pytest python/tests
 
+  unit_tests_ubuntu_pandas:
+    name: Unit Testing (Ubuntu) (Pandas 1.x)
+    needs: lint_stylecheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set Timezone
+        run: sudo timedatectl set-timezone UTC
+
+      - uses: actions/checkout@v3
+      - name: Copy README
+        run: cp README.md python/
+
+      - uses: actions/setup-python@v4
+        name: Setup Python
+        with:
+          python-version: "3.9"
+          cache: "pip"
+          cache-dependency-path: "python/setup.py"
+      - run: pip install -e python[python,dev-pandas1,docs]
+
+      - name: Display Python version
+        run: python --version
+
+      - name: Run Pytest suite
+        run: pytest python/tests
+
   unit_tests_ubuntu_local:
     name: Unit Testing (Ubuntu) (Local TZ)
     needs: lint_stylecheck

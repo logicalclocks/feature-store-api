@@ -32,6 +32,7 @@ import tzlocal
 # in case importing in %%local
 
 try:
+    import pyspark
     from pyspark import SparkFiles
     from pyspark.sql import SparkSession, DataFrame, SQLContext
     from pyspark.rdd import RDD
@@ -62,6 +63,13 @@ try:
         BooleanType,
         StructField,
     )
+
+    if pd.__version__ >= "2.0.0" and pyspark.__version__ < "3.2.3":
+
+        def iteritems(self):
+            return self.items()
+
+        setattr(pd.DataFrame, "iteritems", iteritems)
 except ImportError:
     pass
 
@@ -852,6 +860,7 @@ class Engine:
             return path
 
     def _setup_s3_hadoop_conf(self, storage_connector, path):
+        FS_S3_ENDPOINT = "fs.s3a.endpoint"
         if storage_connector.access_key:
             self._spark_context._jsc.hadoopConfiguration().set(
                 "fs.s3a.access.key", storage_connector.access_key
@@ -879,6 +888,11 @@ class Engine:
                 "fs.s3a.session.token",
                 storage_connector.session_token,
             )
+        if FS_S3_ENDPOINT in storage_connector.arguments:
+            self._spark_context._jsc.hadoopConfiguration().set(
+                FS_S3_ENDPOINT, storage_connector.spark_options().get(FS_S3_ENDPOINT)
+            )
+
         return path.replace("s3", "s3a", 1) if path is not None else None
 
     def _setup_adls_hadoop_conf(self, storage_connector, path):

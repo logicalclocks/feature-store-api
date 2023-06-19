@@ -96,7 +96,7 @@ class TestPython:
 
         # Act
         python_engine._sql_offline(
-            sql_query=None, feature_store=None, dataframe_type=None
+            sql_query="", feature_store=None, dataframe_type=None
         )
 
         # Assert
