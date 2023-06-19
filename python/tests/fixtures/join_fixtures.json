@@ -150,11 +150,11 @@
     "response":{
       "query": {
           "featureStoreId": 71,
-          "featureStoreName": "test_fabio_featurestore",
+          "featureStoreName": "test_featurestore",
           "leftFeatureGroup": {
               "type": "streamFeatureGroupDTO",
               "featurestoreId": 71,
-              "featurestoreName": "test_fabio_featurestore",
+              "featurestoreName": "test_featurestore",
               "description": "",
               "created": "2023-06-18T16:42:34.000Z",
               "creator": {
@@ -174,7 +174,7 @@
               "version": 1,
               "name": "company",
               "id": 40,
-              "location": "hopsfs://172.16.4.123:8020/apps/hive/warehouse/test_fabio_featurestore.db/company_1",
+              "location": "hopsfs://172.16.4.123:8020/apps/hive/warehouse/test_featurestore.db/company_1",
               "statisticsConfig": {
                   "enabled": false,
                   "histograms": false,
