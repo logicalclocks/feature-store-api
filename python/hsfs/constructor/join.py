@@ -56,7 +56,7 @@ class Join:
             on=json_decamelized.get("on", None),
             left_on=json_decamelized.get("left_on", None),
             right_on=json_decamelized.get("right_on", None),
-            join_type=json_decamelized.get("join_type", None),
+            join_type=json_decamelized.get("type", None),
             prefix=json_decamelized.get("prefix", None),
         )
 
