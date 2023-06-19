@@ -28,11 +28,16 @@
     "aliases": []
   },
   {
-    "version": "3.1.2-RC0",
-    "title": "3.1.2-RC0",
+    "version": "3.1.2-RC1",
+    "title": "3.1.2-RC1",
     "aliases": [
       "3.1"
     ]
+  },
+  {
+    "version": "3.1.2-RC0",
+    "title": "3.1.2-RC0",
+    "aliases": []
   },
   {
     "version": "3.1.1-RC6",
