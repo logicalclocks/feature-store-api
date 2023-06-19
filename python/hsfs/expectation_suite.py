@@ -78,6 +78,12 @@ class ExpectationSuite:
         self.meta = meta
 
         if self.id:
+            assert (
+                self._feature_store_id is not None
+            ), "feature_store_id should not be None if expectation suite id is provided"
+            assert (
+                self._feature_group_id is not None
+            ), "feature_group_id should not be None if expectation suite id is provided"
             self._expectation_engine = ExpectationEngine(
                 feature_store_id=self._feature_store_id,
                 feature_group_id=self._feature_group_id,
@@ -112,13 +118,38 @@ class ExpectationSuite:
     def from_ge_type(
         cls,
         ge_expectation_suite: ge.core.ExpectationSuite,
-        run_validation: Optional[bool] = True,
-        validation_ingestion_policy: Optional[str] = "ALWAYS",
+        run_validation: bool = True,
+        validation_ingestion_policy: str = "ALWAYS",
+        id: Optional[int] = None,
         feature_store_id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
     ):
+        """Used to create a Hopsworks Expectation Suite instance from a great_expectations instance.
+
+        # Arguments
+            ge_expectation_suite: great_expectations.ExpectationSuite
+                The great_expectations ExpectationSuite instance to convert to a Hopsworks ExpectationSuite.
+            run_validation: bool
+                Whether to run validation on inserts when the expectation suite is attached.
+            validation_ingestion_policy: str
+                The validation ingestion policy to use when the expectation suite is attached. Defaults to "ALWAYS".
+                Options are "STRICT" or "ALWAYS".
+            id: int
+                The id of the expectation suite in Hopsworks. If not provided, a new expectation suite will be created.
+            feature_store_id: int
+                The id of the feature store of the feature group to which the expectation suite belongs.
+            feature_group_id: int
+                The id of the feature group to which the expectation suite belongs.
+
+        # Returns
+            Hopsworks Expectation Suite instance.
+        """
+        suite_dict = ge_expectation_suite.to_json_dict()
+        if id is None and "id" in suite_dict:
+            id = suite_dict.pop("id")
         return cls(
-            **ge_expectation_suite.to_json_dict(),
+            **suite_dict,
+            id=id,
             run_validation=run_validation,
             validation_ingestion_policy=validation_ingestion_policy,
             feature_group_id=feature_group_id,
@@ -137,7 +168,7 @@ class ExpectationSuite:
             "validationIngestionPolicy": self._validation_ingestion_policy,
         }
 
-    def to_json_dict(self, decamelize=False) -> dict:
+    def to_json_dict(self, decamelize=False) -> Dict[str, Any]:
         the_dict = {
             "id": self._id,
             "expectationSuiteName": self._expectation_suite_name,
@@ -470,7 +501,7 @@ class ExpectationSuite:
         return self._id
 
     @id.setter
-    def id(self, id: int) -> int:
+    def id(self, id: int):
         self._id = id
 
     @property
@@ -482,10 +513,12 @@ class ExpectationSuite:
     def expectation_suite_name(self, expectation_suite_name: str):
         self._expectation_suite_name = expectation_suite_name
         if self.id:
-            self._expectation_suite_engine.update_metadata_from_fields(**self.to_dict())
+            self._expectation_suite_engine.update_metadata_from_fields(
+                **humps.decamelize(self.to_dict())
+            )
 
     @property
-    def data_asset_type(self) -> str:
+    def data_asset_type(self) -> Optional[str]:
         """Data asset type of the expectation suite, not used by backend."""
         return self._data_asset_type
 
