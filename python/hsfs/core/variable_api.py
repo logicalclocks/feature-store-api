@@ -62,17 +62,9 @@ class VariableApi:
 
         try:
             resp = _client._send_request("GET", path_params)
-            external_domain = resp["successMessage"]
+            return resp["successMessage"]
         except RestAPIError:
-            external_domain = ""
-
-        if external_domain == "":
-            raise Exception(
-                "External client could not locate loadbalancer_external_domain "
-                "in cluster configuration or variable is empty."
-            )
-
-        return external_domain
+            return None
 
     def get_service_discovery_domain(self):
         _client = client.get_instance()

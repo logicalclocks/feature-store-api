@@ -382,9 +382,8 @@ public class VectorServer {
       url = url.replaceAll("/[0-9.]+:",
           "/" + variablesApi.get(VariablesApi.LOADBALANCER_EXTERNAL_DOMAIN).getValue() + ":");
     }
-    Connection jdbcConnection =
+    preparedStatementConnection =
         DriverManager.getConnection(url, jdbcOptions.get(Constants.JDBC_USER), jdbcOptions.get(Constants.JDBC_PWD));
-    preparedStatementConnection = jdbcConnection;
   }
 
   private String zipArraysToTupleString(List<List<Object>> lists) {

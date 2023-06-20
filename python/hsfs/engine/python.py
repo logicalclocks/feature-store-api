@@ -707,9 +707,15 @@ class Engine:
         return td_job
 
     def _create_hive_connection(self, feature_store, hive_config=None):
+        host = variable_api.VariableApi().get_loadbalancer_external_domain()
+        if host is None:
+            # If the load balancer is not configured, then fall back to use
+            # the hive server on the head node
+            host = client.get_instance().host
+
         try:
             return hive.Connection(
-                host=variable_api.VariableApi().get_loadbalancer_external_domain(),
+                host=host,
                 port=9085,
                 # database needs to be set every time, 'default' doesn't work in pyhive
                 database=feature_store,
