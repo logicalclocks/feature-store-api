@@ -40,6 +40,7 @@ from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.training_dataset_split import TrainingDatasetSplit
+from hsfs.serving_key import ServingKey
 
 
 class FeatureView:
@@ -56,6 +57,7 @@ class FeatureView:
         labels: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
         featurestore_name=None,
+        serving_keys: Optional[List[ServingKey]] = None,
     ):
         self._name = name
         self._id = id
@@ -83,6 +85,7 @@ class FeatureView:
         self._single_vector_server = None
         self._batch_vectors_server = None
         self._batch_scoring_server = None
+        self._serving_keys = serving_keys
 
     def delete(self):
         """Delete current feature view, all associated metadata and training data.
@@ -217,13 +220,19 @@ class FeatureView:
 
         # initiate single vector server
         self._single_vector_server = vector_server.VectorServer(
-            self._featurestore_id, self._features, training_dataset_version
+            self._featurestore_id,
+            self._features,
+            training_dataset_version,
+            serving_keys=self._serving_keys,
         )
         self._single_vector_server.init_serving(self, False, external, options=options)
 
         # initiate batch vector server
         self._batch_vectors_server = vector_server.VectorServer(
-            self._featurestore_id, self._features, training_dataset_version
+            self._featurestore_id,
+            self._features,
+            training_dataset_version,
+            serving_keys=self._serving_keys,
         )
         self._batch_vectors_server.init_serving(self, True, external, options=options)
 
@@ -257,7 +266,10 @@ class FeatureView:
         """
 
         self._batch_scoring_server = vector_server.VectorServer(
-            self._featurestore_id, self._features, training_dataset_version
+            self._featurestore_id,
+            self._features,
+            training_dataset_version,
+            serving_keys=self._serving_keys,
         )
         self._batch_scoring_server.init_batch_scoring(self)
 
@@ -2358,6 +2370,9 @@ class FeatureView:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        serving_keys = json_decamelized.get("serving_keys", None)
+        if serving_keys is not None:
+            serving_keys = [ServingKey.from_response_json(sk) for sk in serving_keys]
         fv = cls(
             id=json_decamelized.get("id", None),
             name=json_decamelized["name"],
@@ -2366,6 +2381,7 @@ class FeatureView:
             version=json_decamelized.get("version", None),
             description=json_decamelized.get("description", None),
             featurestore_name=json_decamelized.get("featurestore_name", None),
+            serving_keys=serving_keys,
         )
         features = json_decamelized.get("features", [])
         if features:
@@ -2390,6 +2406,7 @@ class FeatureView:
             "version",
             "labels",
             "schema",
+            "serving_keys",
         ]:
             self._update_attribute_if_present(self, other, key)
         return self
@@ -2514,7 +2531,15 @@ class FeatureView:
             return _vector_server.serving_keys
         else:
             _vector_server = vector_server.VectorServer(
-                self._featurestore_id, self._features
+                self._featurestore_id, self._features, serving_keys=self._serving_keys
             )
             _vector_server.init_prepared_statement(self, False, False)
             return _vector_server.serving_keys
+
+    @property
+    def serving_keys(self):
+        return self._serving_keys
+
+    @serving_keys.setter
+    def serving_keys(self, serving_keys):
+        self._serving_keys = serving_keys
