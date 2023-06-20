@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class VariablesApi {
 
@@ -31,7 +32,7 @@ public class VariablesApi {
   private static final String VARIABLE_PATH = "/variables/{variableName}";
   private static final Logger LOGGER = LoggerFactory.getLogger(Variable.class);
 
-  public Variable get(String variableName) throws IOException, FeatureStoreException {
+  public Optional<Variable> get(String variableName) throws IOException, FeatureStoreException {
     String pathTemplate = HopsworksClient.API_PATH
         + VARIABLE_PATH;
 
@@ -41,6 +42,10 @@ public class VariablesApi {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     LOGGER.info("Sending metadata request: " + uriTemplate.expand());
     HttpGet getRequest = new HttpGet(uriTemplate.expand());
-    return hopsworksClient.handleRequest(getRequest, Variable.class);
+    try {
+      return Optional.of(hopsworksClient.handleRequest(getRequest, Variable.class));
+    } catch (IOException e) {
+      return Optional.empty();
+    }
   }
 }
