@@ -21,16 +21,17 @@ setup(
         "requests",
         "furl",
         "boto3",
-        "pandas>=1.2.0,<2.0.0",
+        "pandas",
         "numpy",
         "pyjks",
         "mock",
         "avro==1.11.0",
         "sqlalchemy",
         "PyMySQL[rsa]",
-        "great_expectations==0.14.12",
+        "great_expectations==0.14.13",
         "markupsafe<2.1.0",  # GE issue 1: jinja2==2.11.3, pulls in markupsafe 2.1.0 which is not compatible with jinja2==2.11.3.
         "tzlocal",
+        "fsspec",
     ],
     extras_require={
         "dev": [
@@ -40,6 +41,16 @@ setup(
             "black",
             "pyspark==3.1.1",
             "moto[s3]",
+        ],
+        "dev-pandas1": [
+            "pytest==7.1.2",
+            "pytest-mock==3.8.2",
+            "flake8",
+            "black",
+            "pyspark==3.1.1",
+            "moto[s3]",
+            "pandas<=1.5.3",
+            "sqlalchemy<=1.4.48",
         ],
         "docs": [
             "mkdocs==1.3.0",
@@ -52,6 +63,7 @@ setup(
             "markdown==3.3.7",
             "pymdown-extensions",
             "mkdocs-macros-plugin==0.7.0",
+            "mkdocs-minify-plugin>=0.2.0",
         ],
         "hive": [
             "pyhopshive[thrift]",

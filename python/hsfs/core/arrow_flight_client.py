@@ -201,127 +201,54 @@ class ArrowFlightClient:
         descriptor = pyarrow.flight.FlightDescriptor.for_path(path)
         return self._get_dataset(descriptor)
 
-    def _construct_query_object(self, query, query_str):
-        (
-            featuregroups,
-            features,
-            filters,
-        ) = self._collect_featuregroups_features_and_filters(query)
+    def is_flyingduck_query_object(self, query_obj):
+        return isinstance(query_obj, dict) and "query_string" in query_obj
+
+    def create_query_object(self, query, query_str):
+        features = {}
+        for fg in query.featuregroups:
+            fg_name = self._serialize_featuregroup_name(fg)
+            features[fg_name] = [feat.name for feat in fg.features]
+        filters = self._serialize_filter_expression(query)
+        for feature in features:
+            features[feature] = list(features[feature])
 
         query = {
             "query_string": self._translate_to_duckdb(query, query_str),
-            "featuregroups": featuregroups,
             "features": features,
             "filters": filters,
         }
         return query
 
-    def is_flyingduck_query_object(self, query_obj):
-        return isinstance(query_obj, dict) and "query_string" in query_obj
+    def _serialize_featuregroup_name(self, fg):
+        return f"{fg._get_project_name()}.{fg.name}_{fg.version}"
 
-    def _translate_to_duckdb(self, query, query_str):
-        return query_str.replace(
-            f"`{query._left_feature_group.feature_store_name}`.`",
-            f"`{query._left_feature_group._get_project_name()}.",
-        ).replace("`", '"')
-
-    def _update_features(self, features, fg_name, new_features):
-        updated_features = features.get(fg_name, set())
-        updated_features.update(new_features)
-        features[fg_name] = updated_features
-
-    def _collect_featuregroups_features_and_filters(self, query):
-        (
-            featuregroups,
-            features,
-            filters,
-        ) = self._collect_featuregroups_features_and_filters_rec(query)
-        filters = self._filter_to_expression(filters, featuregroups, features)
-        for feature in features:
-            features[feature] = list(features[feature])
-        return featuregroups, features, filters
-
-    def _collect_featuregroups_features_and_filters_rec(self, query):
-        featuregroups = {}
-        fg = query._left_feature_group
-        fg_name = f"{fg._get_project_name()}.{fg.name}_{fg.version}"  # featurestore.name_version
-        featuregroups[fg._id] = fg_name
-        filters = query._filter
-
-        features = {fg_name: set([feat._name for feat in query._left_features])}
-
-        if fg.event_time:
-            features[fg_name].update([fg.event_time])
-        if fg.primary_key:
-            features[fg_name].update(fg.primary_key)
-        for join in query._joins:
-            join_fg = join._query._left_feature_group
-            join_fg_name = (
-                f"{join_fg._get_project_name()}.{join_fg.name}_{join_fg.version}"
-            )
-            left_on = join._on if len(join._on) > 0 else join._left_on
-            right_on = join._on if len(join._on) > 0 else join._right_on
-
-            self._update_features(features, fg_name, [feat._name for feat in left_on])
-            self._update_features(
-                features, join_fg_name, [feat._name for feat in right_on]
-            )
-            (
-                join_featuregroups,
-                join_features,
-                join_filters,
-            ) = self._collect_featuregroups_features_and_filters_rec(join._query)
-            featuregroups.update(join_featuregroups)
-            for join_fg_name in join_features:
-                self._update_features(
-                    features, join_fg_name, join_features[join_fg_name]
-                )
-            filters = (filters & join_filters) if join_filters is not None else filters
-
-        return featuregroups, features, filters
-
-    def _filter_to_expression(self, filters, featuregroups, features):
-        if not filters:
+    def _serialize_filter_expression(self, query):
+        if query.filters is None:
             return None
-        return self._resolve_logic(filters, featuregroups, features)
+        return self._serialize_logic(query.filters, query)
 
-    def _resolve_logic(self, logic, featuregroups, features):
+    def _serialize_logic(self, logic, query):
         return {
             "type": "logic",
             "logic_type": logic._type,
-            "left_filter": self._resolve_filter_or_logic(
-                logic._left_f, logic._left_l, featuregroups, features
+            "left_filter": self._serialize_filter_or_logic(
+                logic._left_f, logic._left_l, query
             ),
-            "right_filter": self._resolve_filter_or_logic(
-                logic._right_f, logic._right_l, featuregroups, features
+            "right_filter": self._serialize_filter_or_logic(
+                logic._right_f, logic._right_l, query
             ),
         }
 
-    def _resolve_filter_or_logic(self, filter, logic, featuregroups, features):
+    def _serialize_filter_or_logic(self, filter, logic, query):
         if filter:
-            return self._resolve_filter(filter, featuregroups, features)
+            return self._serialize_filter(filter, query)
         elif logic:
-            return self._resolve_logic(logic, featuregroups, features)
+            return self._serialize_logic(logic, query)
         else:
             return None
 
-    def _get_full_feature_name(self, feature, featuregroups, features):
-        featuregroup_name = None
-
-        if feature._feature_group_id is None:
-            for fg_name, fg_features in features.items():
-                if feature._name in fg_features:
-                    featuregroup_name = fg_name
-                    break
-        elif feature._feature_group_id in featuregroups:
-            featuregroup_name = featuregroups[feature._feature_group_id]
-
-        if featuregroup_name is None:
-            raise FeatureStoreException(f"Feature {feature._name} not found in query")
-
-        return f"{featuregroup_name}.{feature._name}"
-
-    def _resolve_filter(self, filter, featuregroups, features):
+    def _serialize_filter(self, filter, query):
         if isinstance(filter._value, datetime.datetime):
             filter_value = filter._value.strftime("%Y-%m-%d %H:%M:%S")
         else:
@@ -331,11 +258,19 @@ class ArrowFlightClient:
             "type": "filter",
             "condition": filter._condition,
             "value": filter_value,
-            "feature": self._get_full_feature_name(
-                filter._feature, featuregroups, features
-            ),
-            "numeric": False,  # For backwards compatibility
+            "feature": self._serialize_feature_name(filter._feature, query),
         }
+
+    def _serialize_feature_name(self, feature, query):
+        fg = query._get_featuregroup_by_feature(feature)
+        fg_name = self._serialize_featuregroup_name(fg)
+        return f"{fg_name}.{feature.name}"
+
+    def _translate_to_duckdb(self, query, query_str):
+        return query_str.replace(
+            f"`{query._left_feature_group.feature_store_name}`.`",
+            f"`{query._left_feature_group._get_project_name()}.",
+        ).replace("`", '"')
 
     def _info_to_ticket(self, info):
         return info.endpoints[0].ticket
