@@ -323,16 +323,20 @@ def run_with_loading_animation(message, func, *args, **kwargs):
     t.daemon = True
     t.start()
     start = time.time()
+    end = None
 
-    result = func(*args, **kwargs)
-
-    end = time.time()
-    # Stop the animation and print the "Finished Querying" message
-    stop_event.set()
-    t.join()
-    print(f"\rFinished: {message} ({(end-start):.2f}s) ", end="\n")
-
-    return result
+    try:
+        result = func(*args, **kwargs)
+        end = time.time()
+        return result
+    finally:
+        # Stop the animation and print the "Finished Querying" message
+        stop_event.set()
+        t.join()
+        if not end:
+            print(f"\rError: {message}           ", end="\n")
+        else:
+            print(f"\rFinished: {message} ({(end-start):.2f}s) ", end="\n")
 
 
 class VersionWarning(Warning):

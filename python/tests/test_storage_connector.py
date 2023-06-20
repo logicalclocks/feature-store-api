@@ -585,7 +585,6 @@ class TestBigQueryConnector:
         )
 
     def test_python_support_validation(self, backend_fixtures):
-
         engine.set_instance("python", python.Engine())
         json = backend_fixtures["storage_connector"]["get_big_query_basic_info"][
             "response"
@@ -595,7 +594,6 @@ class TestBigQueryConnector:
             sc.read()
 
     def test_query_validation(self, backend_fixtures, tmp_path):
-
         engine.set_instance("spark", spark.Engine())
         credentials = '{"type": "service_account", "project_id": "test"}'
         credentialsFile = tmp_path / "bigquery.json"

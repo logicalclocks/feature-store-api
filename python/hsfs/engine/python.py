@@ -161,7 +161,9 @@ class Engine:
                 ),
             )
         with self._mysql_online_fs_engine.connect() as mysql_conn:
-            result_df = pd.read_sql(sql.text(sql_query), mysql_conn)
+            if "sqlalchemy" in str(type(mysql_conn)):
+                sql_query = sql.text(sql_query)
+            result_df = pd.read_sql(sql_query, mysql_conn)
             if schema:
                 result_df = Engine.cast_columns(result_df, schema, online=True)
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -357,7 +359,8 @@ class Engine:
             stats = df[target_cols].describe()
         final_stats = []
         for col in stats.columns:
-            stat = self._convert_pandas_statistics(stats[col].to_dict())
+            stats_dict = json.loads(stats[col].to_json())
+            stat = self._convert_pandas_statistics(stats_dict)
             stat["dataType"] = (
                 "Fractional"
                 if isinstance(stats[col].dtype, type(np.dtype(np.float64)))
@@ -930,6 +933,8 @@ class Engine:
                     row[k] = row[k].to_pydatetime()
                 if isinstance(row[k], datetime) and row[k].tzinfo is None:
                     row[k] = row[k].replace(tzinfo=timezone.utc)
+                if isinstance(row[k], pd._libs.missing.NAType):
+                    row[k] = None
 
             # encode complex features
             row = self._encode_complex_features(feature_writers, row)

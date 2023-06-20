@@ -32,6 +32,7 @@ import tzlocal
 # in case importing in %%local
 
 try:
+    import pyspark
     from pyspark import SparkFiles
     from pyspark.sql import SparkSession, DataFrame, SQLContext
     from pyspark.rdd import RDD
@@ -62,6 +63,13 @@ try:
         BooleanType,
         StructField,
     )
+
+    if pd.__version__ >= "2.0.0" and pyspark.__version__ < "3.2.3":
+
+        def iteritems(self):
+            return self.items()
+
+        setattr(pd.DataFrame, "iteritems", iteritems)
 except ImportError:
     pass
 
