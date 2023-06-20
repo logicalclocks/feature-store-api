@@ -28,6 +28,7 @@ from sqlalchemy import create_engine
 
 from hsfs import client, feature
 from hsfs.client import exceptions
+from hsfs.core import variable_api
 
 
 class FeatureStoreEncoder(json.JSONEncoder):
@@ -82,7 +83,9 @@ def create_mysql_engine(online_conn, external, options=None):
         # Hopsworks clients should use the storage connector
         online_options["url"] = re.sub(
             "/[0-9.]+:",
-            "/{}:".format(client.get_instance().host),
+            "/{}:".format(
+                variable_api.VariableApi().get_loadbalancer_external_domain()
+            ),
             online_options["url"],
         )
 

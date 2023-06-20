@@ -1130,7 +1130,6 @@ class Engine:
 
     def _get_kafka_config(self, write_options: dict = {}) -> dict:
         if self._kafka_config is None:
-
             self._kafka_config = {
                 "kafka.security.protocol": "SSL",
                 "kafka.ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),

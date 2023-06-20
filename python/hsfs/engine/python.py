@@ -59,6 +59,7 @@ from hsfs.core import (
     feature_view_api,
     transformation_function_engine,
     arrow_flight_client,
+    variable_api,
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -708,7 +709,7 @@ class Engine:
     def _create_hive_connection(self, feature_store, hive_config=None):
         try:
             return hive.Connection(
-                host=client.get_instance()._host,
+                host=variable_api.VariableApi().get_loadbalancer_external_domain(),
                 port=9085,
                 # database needs to be set every time, 'default' doesn't work in pyhive
                 database=feature_store,

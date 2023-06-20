@@ -28,7 +28,6 @@ from hsfs.feature import Feature
 
 
 class Query:
-
     ERROR_MESSAGE_FEATURE_AMBIGUOUS = (
         "Provided feature name '{}' is ambiguous and exists in more than one feature group. "
         "Consider prepending the prefix specified in the join."

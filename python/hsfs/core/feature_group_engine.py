@@ -35,7 +35,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         write_options,
         validation_options: dict = {},
     ):
-
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
         )
@@ -83,7 +82,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         write_options,
         validation_options: dict = {},
     ):
-
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
         )
@@ -230,7 +228,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         checkpoint_dir,
         write_options,
     ):
-
         if not feature_group.online_enabled and not feature_group.stream:
             raise exceptions.FeatureStoreException(
                 "Online storage is not enabled for this feature group. "
@@ -290,7 +287,6 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def _save_feature_group_metadata(
         self, feature_group, dataframe_features, write_options
     ):
-
         # this means FG doesn't exist and should create the new one
         if len(feature_group.features) == 0:
             # User didn't provide a schema; extract it from the dataframe

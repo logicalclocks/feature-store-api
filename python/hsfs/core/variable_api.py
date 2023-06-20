@@ -25,7 +25,6 @@ class VariableApi:
         pass
 
     def get_version(self, software: str):
-
         _client = client.get_instance()
         path_params = [
             "variables",
@@ -39,7 +38,6 @@ class VariableApi:
         return None
 
     def parse_major_and_minor(self, backend_version):
-
         version_pattern = r"(\d+)\.(\d+)"
         matches = re.match(version_pattern, backend_version)
 
@@ -64,9 +62,17 @@ class VariableApi:
 
         try:
             resp = _client._send_request("GET", path_params)
-            return resp["successMessage"]
+            external_domain = resp["successMessage"]
         except RestAPIError:
-            return ""
+            external_domain = ""
+
+        if external_domain == "":
+            raise Exception(
+                "External client could not locate loadbalancer_external_domain "
+                "in cluster configuration or variable is empty."
+            )
+
+        return external_domain
 
     def get_service_discovery_domain(self):
         _client = client.get_instance()

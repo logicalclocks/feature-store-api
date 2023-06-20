@@ -74,7 +74,6 @@ class ExpectationSuiteEngine:
         meta: str,
         expectations: List[GeExpectation],
     ):
-
         self._expectation_suite_api.update_metadata(
             es.ExpectationSuite(
                 id=id,

@@ -45,7 +45,6 @@ class FeatureGroupWriter:
         write_options: Optional[Dict[str, Any]] = {},
         validation_options: Optional[Dict[str, Any]] = {},
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
-
         return self._feature_group.insert(
             features=features,
             overwrite=overwrite,
