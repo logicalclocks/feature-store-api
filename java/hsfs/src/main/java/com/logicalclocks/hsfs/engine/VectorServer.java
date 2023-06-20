@@ -30,6 +30,7 @@ import com.logicalclocks.hsfs.FeatureViewBase;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TrainingDatasetBase;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
+import com.logicalclocks.hsfs.metadata.VariablesApi;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -73,6 +74,7 @@ public class VectorServer {
   @Getter
   private HashSet<String> servingKeys;
   private boolean isBatch = false;
+  private VariablesApi variablesApi = new VariablesApi();
 
   public VectorServer(boolean isBatch) {
     this.isBatch = isBatch;
@@ -377,7 +379,8 @@ public class VectorServer {
     if (external) {
       // if external is true, replace the IP coming from the storage connector with the host
       // used during the connection setup
-      url = url.replaceAll("/[0-9.]+:", "/" + HopsworksClient.getInstance().getHost() + ":");
+      url = url.replaceAll("/[0-9.]+:",
+          "/" + variablesApi.get(VariablesApi.LOADBALANCER_EXTERNAL_DOMAIN).getValue() + ":");
     }
     Connection jdbcConnection =
         DriverManager.getConnection(url, jdbcOptions.get(Constants.JDBC_USER), jdbcOptions.get(Constants.JDBC_PWD));
