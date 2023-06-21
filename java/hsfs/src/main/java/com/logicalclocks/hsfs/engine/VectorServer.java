@@ -17,6 +17,7 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
 import com.logicalclocks.hsfs.metadata.FeatureViewApi;
@@ -383,7 +384,7 @@ public class VectorServer {
       // used during the connection setup
       String host;
       Optional<Variable> loadbalancerVariable = variablesApi.get(VariablesApi.LOADBALANCER_EXTERNAL_DOMAIN);
-      if (loadbalancerVariable.isPresent()) {
+      if (loadbalancerVariable.isPresent() && !Strings.isNullOrEmpty(loadbalancerVariable.get().getValue())) {
         host = loadbalancerVariable.get().getValue();
       } else {
         // Fall back to the mysql server on the head node
