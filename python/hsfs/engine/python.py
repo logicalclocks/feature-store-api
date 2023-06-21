@@ -708,7 +708,7 @@ class Engine:
 
     def _create_hive_connection(self, feature_store, hive_config=None):
         host = variable_api.VariableApi().get_loadbalancer_external_domain()
-        if host is None:
+        if host == "":
             # If the load balancer is not configured, then fall back to use
             # the hive server on the head node
             host = client.get_instance().host

@@ -82,7 +82,7 @@ def create_mysql_engine(online_conn, external, options=None):
         # This only works with external clients.
         # Hopsworks clients should use the storage connector
         host = variable_api.VariableApi().get_loadbalancer_external_domain()
-        if host is None:
+        if host == "":
             # If the load balancer is not configured, then fall back to
             # use the MySQL node on the head node
             host = client.get_instance().host

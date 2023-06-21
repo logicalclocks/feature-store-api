@@ -64,7 +64,7 @@ class VariableApi:
             resp = _client._send_request("GET", path_params)
             return resp["successMessage"]
         except RestAPIError:
-            return None
+            return ""
 
     def get_service_discovery_domain(self):
         _client = client.get_instance()
