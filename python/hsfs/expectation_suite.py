@@ -159,6 +159,8 @@ class ExpectationSuite:
     def to_dict(self) -> dict:
         return {
             "id": self._id,
+            "featureStoreId": self._feature_store_id,
+            "featureGroupId": self._feature_group_id,
             "expectationSuiteName": self._expectation_suite_name,
             "expectations": self._expectations,
             "meta": json.dumps(self._meta),
@@ -171,6 +173,8 @@ class ExpectationSuite:
     def to_json_dict(self, decamelize=False) -> Dict[str, Any]:
         the_dict = {
             "id": self._id,
+            "featureStoreId": self._feature_store_id,
+            "featureGroupId": self._feature_group_id,
             "expectationSuiteName": self._expectation_suite_name,
             "expectations": [
                 expectation.to_json_dict() for expectation in self._expectations
