@@ -75,7 +75,6 @@ class ExpectationSuiteEngine:
         expectations: List[GeExpectation],
         **kwargs,
     ):
-
         self._expectation_suite_api.update_metadata(
             es.ExpectationSuite(
                 id=id,
