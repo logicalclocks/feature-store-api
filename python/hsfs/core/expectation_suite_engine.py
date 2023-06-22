@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from typing import Optional, List
+from typing import Any, Dict, Optional, List, Union
 from hsfs.core import expectation_suite_api
 from hsfs import client, util
 from hsfs import expectation_suite as es
@@ -71,8 +71,9 @@ class ExpectationSuiteEngine:
         expectation_suite_name: str,
         run_validation: bool,
         validation_ingestion_policy: str,
-        meta: str,
+        meta: Union[str, Dict[str, Any]],
         expectations: List[GeExpectation],
+        **kwargs,
     ):
 
         self._expectation_suite_api.update_metadata(
