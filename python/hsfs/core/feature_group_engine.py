@@ -39,7 +39,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_dataframe, feature_group.time_travel_format
         )
 
-        self._save_feature_group_metadata(
+        self.save_feature_group_metadata(
             feature_group, dataframe_features, write_options
         )
 
@@ -88,7 +88,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         if not feature_group._id:
             # only save metadata if feature group does not exist
-            self._save_feature_group_metadata(
+            self.save_feature_group_metadata(
                 feature_group, dataframe_features, write_options
             )
         else:
@@ -239,7 +239,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         if not feature_group._id:
-            self._save_feature_group_metadata(
+            self.save_feature_group_metadata(
                 feature_group, dataframe_features, write_options
             )
 
@@ -284,14 +284,14 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         return streaming_query
 
-    def _save_feature_group_metadata(
+    def save_feature_group_metadata(
         self, feature_group, dataframe_features, write_options
     ):
         # this means FG doesn't exist and should create the new one
         if len(feature_group.features) == 0:
             # User didn't provide a schema; extract it from the dataframe
             feature_group._features = dataframe_features
-        else:
+        elif dataframe_features:
             # User provided a schema; check if it is compatible with dataframe.
             self._verify_schema_compatibility(
                 feature_group.features, dataframe_features
