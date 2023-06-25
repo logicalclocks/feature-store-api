@@ -1629,30 +1629,29 @@ class FeatureGroup(FeatureGroupBase):
             TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
             TypeVar("pyspark.RDD"),  # noqa: F821
             np.ndarray,
-            List[list],
-        ],
+            List[feature.Feature],
+        ] = None,
         write_options: Optional[Dict[Any, Any]] = {},
         validation_options: Optional[Dict[Any, Any]] = {},
         wait: bool = False,
     ):
         """Persist the metadata and materialize the feature group to the feature store.
 
-        !!! warning "Deprecated"
-            `save` method is deprecated. Use the `insert` method instead.
-
         !!! warning "Changed in 3.3.0"
             `insert` and `save` methods are now async by default in non-spark clients.
             To achieve the old behaviour, set `wait` argument to `True`.
 
-        Calling `save` creates the metadata for the feature group in the feature store
-        and writes the specified `features` dataframe as feature group to the
+        Calling `save` creates the metadata for the feature group in the feature store.
+        If a DataFrame, RDD or Ndarray is provided, the data is written to the
         online/offline feature store as specified.
         By default, this writes the feature group to the offline storage, and if
         `online_enabled` for the feature group, also to the online feature store.
         The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
         # Arguments
-            features: Query, DataFrame, RDD, Ndarray, list. Features to be saved.
+            features: DataFrame, RDD, Ndarray or a list of features. Features to be saved.
+                This argument is optional if the feature list is provided in the create_feature_group or
+                in the get_or_create_feature_group method invokation.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, write_options can contain the
                 following entries:
@@ -1684,6 +1683,31 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `hsfs.client.exceptions.RestAPIError`. Unable to create feature group.
         """
+        if (features is None and len(self._features) > 0) or (
+            isinstance(features, List)
+            and len(features) > 0
+            and isinstance(features[0], feature.Feature)
+        ):
+            # This is done for compatibility. Users can specify the feature list in the
+            # (get_or_)create_feature_group. Users can also provide the feature list in the save().
+            # Though it's an optional parameter.
+            # For consistency reasons if the user specify both the feature list in the (get_or_)create_feature_group
+            # and in the `save()` call, then the (get_or_)create_feature_group wins.
+            # This is consistent with the behavior of the insert method where the feature list wins over the
+            # dataframe structure
+            self._features = self._features if len(self._features) > 0 else features
+            self._feature_group_engine.save_feature_group_metadata(
+                self, None, write_options
+            )
+
+            return None, None
+
+        if features is None:
+            raise FeatureStoreException(
+                "Feature list not provided in the create_feature_group or get_or_create_feature_group invokations."
+                + " Please provide a list of features or a Dataframe"
+            )
+
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         user_version = self._version
@@ -1714,52 +1738,6 @@ class FeatureGroup(FeatureGroupBase):
         return (
             fg_job,
             ge_report.to_ge_type() if ge_report is not None else None,
-        )
-
-    def create_metadata(self, write_options: Optional[Dict[str, Any]] = {}):
-        """Persist the feature group metadata in the feature store.
-
-        !!! example "Create the feature group metadata"
-            ```python
-            # connect to the Feature Store
-            fs = ...
-
-            features = [
-                Feature(name="id", type="int"),
-                Feature(name="unix", type="timestamp"),
-                Feature(name="price", type="float")
-            ]
-
-            fg = fs.get_or_create_feature_group(
-                name='bitcoin_price',
-                description='Bitcoin price aggregated for days',
-                version=1,
-                features=features,
-                primary_key=['unix'],
-                online_enabled=True,
-                event_time='unix'
-            )
-
-            fg.create_metadata()
-            ```
-
-        # Arguments
-            write_options: Additional write options as key-value pairs, defaults to `{}`.
-                When using the `python` engine, write_options can contain the
-                following entries:
-                * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
-                  to configure the Hopsworks Job used to write data into the
-                  feature group.
-        """
-
-        if len(self._features) == 0:
-            raise FeatureStoreException(
-                "A list of features is required to create the feature group metadata"
-            )
-
-        self._feature_group_engine.save_feature_group_metadata(
-            self, None, write_options
         )
 
     def insert(
