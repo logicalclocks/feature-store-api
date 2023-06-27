@@ -315,7 +315,7 @@ class FeatureView:
         entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]] = {},
         external: Optional[bool] = None,
-        return_type: Optional[Union[list, pd.DataFrame, np.ndarray]] = list,
+        return_type: Optional[Union[List, pd.DataFrame, np.ndarray]] = list,
     ):
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -401,7 +401,7 @@ class FeatureView:
         entry: List[Dict[str, Any]],
         passed_features: Optional[List[Dict[str, Any]]] = {},
         external: Optional[bool] = None,
-        return_type: Optional[Union[list, pd.DataFrame, np.ndarray]] = list,
+        return_type: Optional[Union[List, pd.DataFrame, np.ndarray]] = list,
     ):
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
