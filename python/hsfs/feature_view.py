@@ -333,18 +333,18 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # get assembled serving vectors as a python list
+            # get assembled serving vector as a python list
             feature_view.get_feature_vector(
                 entry = {"pk1": 1, "pk2": 2}
             )
 
-            # get assembled serving vectors as a pandas dataframe
+            # get assembled serving vector as a pandas dataframe
             feature_view.get_feature_vector(
                 entry = {"pk1": 1, "pk2": 2},
                 return_type = pd.DataFrame
             )
 
-            # get assembled serving vectors as a numpy array
+            # get assembled serving vector as a numpy array
             feature_view.get_feature_vector(
                 entry = {"pk1": 1, "pk2": 2},
                 return_type = np.ndarray
