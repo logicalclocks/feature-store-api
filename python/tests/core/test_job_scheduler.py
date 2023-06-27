@@ -18,7 +18,7 @@
 from hsfs.core import job_scheduler
 import pandas as pd
 
-DEFAULT_TIMESTAMP_DATE_STR = "2021-01-01 00:00:00"
+DEFAULT_TIMESTAMP_DATE_STR = "2023-01-01 00:00:00"
 
 
 class TestJobScheduler:
@@ -31,17 +31,60 @@ class TestJobScheduler:
 
         # Assert
         assert schedule.id == 222
-        assert schedule.start_date_time == 1676457000 * 1000
+        assert schedule.start_date_time == 1672569000000
         assert schedule.job_frequency == "DAILY"
         assert schedule.enabled is True
         assert (
             schedule.job_name
             == "fg_or_fv_name_version_fm_config_name_run_feature_monitoring"
         )
+        assert schedule.cron_expression == "0 0 10 ? * * *"
+        assert schedule.next_execution_date_time == 1898589600000
+        assert schedule.end_date_time == 1893493800000
+
+    def test_from_response_json_no_end_time(self, backend_fixtures):
+        # Arrange
+        json = backend_fixtures["job_scheduler"]["get_no_end_time"]["response"]
+
+        # Act
+        schedule = job_scheduler.JobScheduler.from_response_json(json)
+
+        # Assert
+        assert schedule.id == 222
+        assert schedule.start_date_time == 1672569000000
+        assert schedule.job_frequency == "HOURLY"
+        assert schedule.enabled is True
+        assert (
+            schedule.job_name
+            == "fg_or_fv_name_version_fm_config_name_run_feature_monitoring"
+        )
+        assert schedule.cron_expression == "0 20 * ? * * *"
+        assert schedule.next_execution_date_time == 1898589600000
+        assert schedule.end_date_time is None
+
+    def test_from_response_json_paused(self, backend_fixtures):
+        # Arrange
+        json = backend_fixtures["job_scheduler"]["get_paused_schedule"]["response"]
+
+        # Act
+        schedule = job_scheduler.JobScheduler.from_response_json(json)
+
+        # Assert
+        assert schedule.id == 222
+        assert schedule.start_date_time == 1672569000000
+        assert schedule.job_frequency == "DAILY"
+        assert schedule.enabled is False
+        assert (
+            schedule.job_name
+            == "fg_or_fv_name_version_fm_config_name_run_feature_monitoring"
+        )
+        assert schedule.cron_expression == "0 0 10 ? * * *"
+        assert schedule.next_execution_date_time is None
+        assert schedule.end_date_time == 1893493800000
 
     def test_on_local_init_with_timestamp(self):
         # Arrange
-        timestamp = pd.Timestamp("2021-01-01 00:00:00")
+        timestamp = pd.Timestamp(DEFAULT_TIMESTAMP_DATE_STR)
         kwargs = {
             "start_date_time": timestamp,
             "job_frequency": "HOURLY",
@@ -82,7 +125,7 @@ class TestJobScheduler:
         timestamp = pd.Timestamp(DEFAULT_TIMESTAMP_DATE_STR)
         kwargs = {
             "start_date_time": round(timestamp.value),
-            "job_frequency": "WEEKLY",
+            "cron_expression": "0 10 10 ? * * Mon",
             "enabled": True,
         }
 
@@ -93,6 +136,7 @@ class TestJobScheduler:
         assert schedule.id is None
         assert schedule.start_date_time == round(timestamp.value)
         assert schedule.job_frequency == "WEEKLY"
+        assert schedule.cron_expression == "0 10 10 ? * * Mon"
         assert schedule.enabled is True
         assert schedule.job_name is None
 
@@ -101,7 +145,7 @@ class TestJobScheduler:
         timestamp = pd.Timestamp(DEFAULT_TIMESTAMP_DATE_STR)
         kwargs = {
             "start_date_time": DEFAULT_TIMESTAMP_DATE_STR,
-            "job_frequency": "DAILY",
+            "cron_expression": "0 0 0 ? * * Mon-Fre",
             "enabled": False,
         }
 
@@ -111,6 +155,56 @@ class TestJobScheduler:
         # Assert
         assert schedule.id is None
         assert schedule.start_date_time == round(timestamp.value / 1e6)
-        assert schedule.job_frequency == "DAILY"
+        assert schedule.job_frequency == "CUSTOM"
         assert schedule.enabled is False
         assert schedule.job_name is None
+
+    def test_job_frequency_on_cron_expression(self):
+        # Arrange
+        kwargs = {
+            "start_date_time": DEFAULT_TIMESTAMP_DATE_STR,
+            "cron_expression": "0 0 0 ? * * Mon-Fre",
+            "enabled": False,
+        }
+        cron_expressions = []
+        expected = []
+        cron_expressions.append("0 */10 * ? * * *")  # NEAR REAL-TIME
+        cron_expressions.append("0 10/10 * * ? * * *")  # NEAR REAL-TIME
+        expected.extend(["NEAR REAL-TIME", "NEAR REAL-TIME"])
+        cron_expressions.append("0 10 * ? * * *")  # hourly
+        cron_expressions.append("0 30 * ? * * *")  # hourly
+        expected.extend(["HOURLY", "HOURLY"])
+        cron_expressions.append("0 40 19 ? * * *")  # daily
+        cron_expressions.append("0 10 0 ? * * *")  # daily
+        expected.extend(["DAILY", "DAILY"])
+        cron_expressions.append("0 40 19 ? * * Mon")  # weekly
+        cron_expressions.append("0 10 0 ? * * 5")  # weekly
+        expected.extend(["WEEKLY", "WEEKLY"])
+        # CUSTOM
+        cron_expressions.append("0 10,20 * ? * * *")  # custom
+        cron_expressions.append("0 0 0 1 * * ?")  # monthly
+        cron_expressions.append("0 0 0 1 1 * ?")  # yearly
+        cron_expressions.append("0 30 10 ? * * 1-5")  # weekdays
+        cron_expressions.append("0 20 14 ? * * 6,7")  # weekends
+        cron_expressions.append("0 0 0 1-7 * * ?")  # daily for first 7 days of month
+        cron_expressions.append("0 0 0 1 * 1#2 ?")  # second Monday of the month
+        expected.extend(
+            ["CUSTOM", "CUSTOM", "CUSTOM", "CUSTOM", "CUSTOM", "CUSTOM", "CUSTOM"]
+        )
+
+        # Act
+        schedule = job_scheduler.JobScheduler(**kwargs)
+        job_frequencies = []
+        for cron_expression in cron_expressions:
+            schedule.cron_expression = cron_expression
+            job_frequencies.append(schedule.job_frequency)
+
+        # Assert
+        assert all(
+            [
+                job_frequency == expected_job_frequency
+                for job_frequency, expected_job_frequency in zip(
+                    job_frequencies, expected
+                )
+            ]
+        )
