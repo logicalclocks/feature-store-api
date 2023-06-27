@@ -125,7 +125,6 @@ class GreatExpectationEngine:
     ) -> Union[
         ge.core.ExpectationSuiteValidationResult, validation_report.ValidationReport
     ]:
-
         save_report = validation_options.get("save_report", save_report)
         if save_report:
             return feature_group.save_validation_report(

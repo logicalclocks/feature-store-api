@@ -29,7 +29,6 @@ class Join:
     COMMA = "COMMA"
 
     def __init__(self, query, on, left_on, right_on, join_type, prefix):
-
         self._query = query
         self._on = util.parse_features(on)
         self._left_on = util.parse_features(left_on)

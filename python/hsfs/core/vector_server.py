@@ -160,7 +160,6 @@ class VectorServer:
         # Initialize the set of values
         serving_vector = {}
         with self._prepared_statement_engine.connect() as mysql_conn:
-
             for prepared_statement_index in self._prepared_statements:
                 if any(
                     e not in entry.keys()

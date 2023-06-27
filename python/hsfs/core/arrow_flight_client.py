@@ -37,7 +37,6 @@ def get_instance():
 
 
 class ArrowFlightClient:
-
     SUPPORTED_FORMATS = ["parquet"]
     FILTER_NUMERIC_TYPES = ["bigint", "tinyint", "smallint", "int", "float", "double"]
 
