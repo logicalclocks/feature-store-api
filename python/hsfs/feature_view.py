@@ -333,9 +333,21 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # get a feature vector
+            # get assembled serving vectors as a python list
             feature_view.get_feature_vector(
                 entry = {"pk1": 1, "pk2": 2}
+            )
+
+            # get assembled serving vectors as a pandas dataframe
+            feature_view.get_feature_vector(
+                entry = {"pk1": 1, "pk2": 2},
+                return_type = pd.DataFrame
+            )
+
+            # get assembled serving vectors as a numpy array
+            feature_view.get_feature_vector(
+                entry = {"pk1": 1, "pk2": 2},
+                return_type = np.ndarray
             )
             ```
 
@@ -410,13 +422,33 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # get assembled serving vectors
+            # get assembled serving vectors as a python list of lists
             feature_view.get_feature_vectors(
                 entry = [
                     {"pk1": 1, "pk2": 2},
                     {"pk1": 3, "pk2": 4},
                     {"pk1": 5, "pk2": 6}
                 ]
+            )
+
+            # get assembled serving vectors as a pandas dataframe
+            feature_view.get_feature_vectors(
+                entry = [
+                    {"pk1": 1, "pk2": 2},
+                    {"pk1": 3, "pk2": 4},
+                    {"pk1": 5, "pk2": 6}
+                ],
+                return_type = pd.DataFrame
+            )
+
+            # get assembled serving vectors as a numpy array
+            feature_view.get_feature_vectors(
+                entry = [
+                    {"pk1": 1, "pk2": 2},
+                    {"pk1": 3, "pk2": 4},
+                    {"pk1": 5, "pk2": 6}
+                ],
+                return_type = np.ndarray
             )
             ```
 
