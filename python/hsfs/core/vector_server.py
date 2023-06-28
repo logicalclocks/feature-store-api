@@ -279,17 +279,19 @@ class VectorServer:
             )
         )
 
+        vector, feature_names = self._generate_vector(result_dict)
+
         # get column names for pandas dataframe
         feature_names = list(
             map(
-                lambda result_dict: self._generate_vector(result_dict)[1],
+                lambda result_dict: feature_names,
                 [batch_transformed[0]],
             )
         )[0]
 
         vectors = list(
             map(
-                lambda result_dict: self._generate_vector(result_dict)[0],
+                lambda result_dict: vector,
                 batch_transformed,
             )
         )
