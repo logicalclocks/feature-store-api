@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -123,6 +124,9 @@ public abstract class StorageConnector {
     @Getter @Setter
     protected String iamRole;
 
+    @Getter @Setter
+    protected List<Option> arguments;
+
     @JsonIgnore
     public String getPath(String subPath) {
       return "s3://" + bucket + "/"  + (Strings.isNullOrEmpty(subPath) ? "" : subPath);
@@ -130,6 +134,9 @@ public abstract class StorageConnector {
 
     @Override
     public Map<String, String> sparkOptions() {
+      if (!CollectionUtils.isNullOrEmpty(arguments)) {
+        return arguments.stream().collect(Collectors.toMap(Option::getName, Option::getValue));
+      }
       return new HashMap<>();
     }
 

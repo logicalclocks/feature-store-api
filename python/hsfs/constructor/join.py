@@ -29,7 +29,6 @@ class Join:
     COMMA = "COMMA"
 
     def __init__(self, query, on, left_on, right_on, join_type, prefix):
-
         self._query = query
         self._on = util.parse_features(on)
         self._left_on = util.parse_features(left_on)
@@ -56,7 +55,7 @@ class Join:
             on=json_decamelized.get("on", None),
             left_on=json_decamelized.get("left_on", None),
             right_on=json_decamelized.get("right_on", None),
-            join_type=json_decamelized.get("join_type", None),
+            join_type=json_decamelized.get("type", None),
             prefix=json_decamelized.get("prefix", None),
         )
 

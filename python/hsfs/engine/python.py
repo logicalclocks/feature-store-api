@@ -59,6 +59,7 @@ from hsfs.core import (
     transformation_function_engine,
     arrow_flight_client,
     storage_connector_api,
+    variable_api,
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -160,7 +161,9 @@ class Engine:
                 ),
             )
         with self._mysql_online_fs_engine.connect() as mysql_conn:
-            result_df = pd.read_sql(sql.text(sql_query), mysql_conn)
+            if "sqlalchemy" in str(type(mysql_conn)):
+                sql_query = sql.text(sql_query)
+            result_df = pd.read_sql(sql_query, mysql_conn)
             if schema:
                 result_df = Engine.cast_columns(result_df, schema, online=True)
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -356,7 +359,8 @@ class Engine:
             stats = df[target_cols].describe()
         final_stats = []
         for col in stats.columns:
-            stat = self._convert_pandas_statistics(stats[col].to_dict())
+            stats_dict = json.loads(stats[col].to_json())
+            stat = self._convert_pandas_statistics(stats_dict)
             stat["dataType"] = (
                 "Fractional"
                 if isinstance(stats[col].dtype, type(np.dtype(np.float64)))
@@ -702,9 +706,15 @@ class Engine:
         return td_job
 
     def _create_hive_connection(self, feature_store, hive_config=None):
+        host = variable_api.VariableApi().get_loadbalancer_external_domain()
+        if host == "":
+            # If the load balancer is not configured, then fall back to use
+            # the hive server on the head node
+            host = client.get_instance().host
+
         try:
             return hive.Connection(
-                host=client.get_instance()._host,
+                host=host,
                 port=9085,
                 # database needs to be set every time, 'default' doesn't work in pyhive
                 database=feature_store,
@@ -940,6 +950,8 @@ class Engine:
                     row[k] = row[k].to_pydatetime()
                 if isinstance(row[k], datetime) and row[k].tzinfo is None:
                     row[k] = row[k].replace(tzinfo=timezone.utc)
+                if isinstance(row[k], pd._libs.missing.NAType):
+                    row[k] = None
 
             # encode complex features
             row = self._encode_complex_features(feature_writers, row)
@@ -1136,14 +1148,32 @@ class Engine:
         if pa.types.is_list(arrow_type):
             # figure out sub type
             sub_arrow_type = arrow_type.value_type
-            sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            try:
+                sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            except NotImplementedError:
+                sub_dtype = np.dtype("object")
             subtype = Engine._convert_pandas_dtype_to_offline_type(
                 sub_dtype, sub_arrow_type
             )
             return "array<{}>".format(subtype)
         if pa.types.is_struct(arrow_type):
-            # best effort, based on pyarrow's string representation
-            return str(arrow_type)
+            struct_schema = {}
+            for index in range(arrow_type.num_fields):
+                sub_arrow_type = arrow_type.field(index).type
+                try:
+                    sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+                except NotImplementedError:
+                    sub_dtype = np.dtype("object")
+                struct_schema[
+                    arrow_type.field(index).name
+                ] = Engine._convert_pandas_dtype_to_offline_type(
+                    sub_dtype, arrow_type.field(index).type
+                )
+            return (
+                "struct<"
+                + ",".join([f"{key}:{value}" for key, value in struct_schema.items()])
+                + ">"
+            )
         # Currently not supported
         # elif pa.types.is_decimal(arrow_type):
         #    return str(arrow_type).replace("decimal128", "decimal")

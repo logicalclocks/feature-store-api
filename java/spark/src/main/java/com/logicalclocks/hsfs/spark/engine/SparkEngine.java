@@ -733,19 +733,23 @@ public class SparkEngine {
     }
     if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionAlgorithm())) {
       sparkSession.sparkContext().hadoopConfiguration().set(
-          "fs.s3a.server-side-encryption-algorithm",
+          Constants.S3_ENCRYPTION_ALGO,
           storageConnector.getServerEncryptionAlgorithm()
       );
     }
     if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionKey())) {
       sparkSession.sparkContext().hadoopConfiguration()
-          .set("fs.s3a.server-side-encryption-key", storageConnector.getServerEncryptionKey());
+          .set(Constants.S3_ENCRYPTION_KEY, storageConnector.getServerEncryptionKey());
     }
     if (!Strings.isNullOrEmpty(storageConnector.getSessionToken())) {
       sparkSession.sparkContext().hadoopConfiguration()
           .set(Constants.S3_CREDENTIAL_PROVIDER_ENV, Constants.S3_TEMPORARY_CREDENTIAL_PROVIDER);
       sparkSession.sparkContext().hadoopConfiguration()
           .set(Constants.S3_SESSION_KEY_ENV, storageConnector.getSessionToken());
+    }
+    if (storageConnector.sparkOptions().containsKey(Constants.S3_ENDPOINT)) {
+      sparkSession.sparkContext().hadoopConfiguration()
+      .set(Constants.S3_ENDPOINT, storageConnector.sparkOptions().get(Constants.S3_ENDPOINT));
     }
   }
 

@@ -77,6 +77,7 @@ class TestS3Connector:
         assert sc.bucket == "test_bucket"
         assert sc.session_token == "test_session_token"
         assert sc.iam_role == "test_iam_role"
+        assert sc.arguments == {"test_name": "test_value"}
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -97,6 +98,7 @@ class TestS3Connector:
         assert sc.bucket is None
         assert sc.session_token is None
         assert sc.iam_role is None
+        assert sc.arguments == {}
 
 
 class TestRedshiftConnector:
@@ -668,7 +670,6 @@ class TestBigQueryConnector:
         )
 
     def test_python_support_validation(self, backend_fixtures):
-
         engine.set_instance("python", python.Engine())
         json = backend_fixtures["storage_connector"]["get_big_query_basic_info"][
             "response"
@@ -678,7 +679,6 @@ class TestBigQueryConnector:
             sc.read()
 
     def test_query_validation(self, backend_fixtures, tmp_path):
-
         engine.set_instance("spark", spark.Engine())
         credentials = '{"type": "service_account", "project_id": "test"}'
         credentialsFile = tmp_path / "bigquery.json"

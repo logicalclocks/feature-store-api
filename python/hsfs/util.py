@@ -28,6 +28,7 @@ from sqlalchemy import create_engine
 
 from hsfs import client, feature
 from hsfs.client import exceptions
+from hsfs.core import variable_api
 
 
 class FeatureStoreEncoder(json.JSONEncoder):
@@ -80,9 +81,15 @@ def create_mysql_engine(online_conn, external, options=None):
     if external:
         # This only works with external clients.
         # Hopsworks clients should use the storage connector
+        host = variable_api.VariableApi().get_loadbalancer_external_domain()
+        if host == "":
+            # If the load balancer is not configured, then fall back to
+            # use the MySQL node on the head node
+            host = client.get_instance().host
+
         online_options["url"] = re.sub(
             "/[0-9.]+:",
-            "/{}:".format(client.get_instance().host),
+            "/{}:".format(host),
             online_options["url"],
         )
 
@@ -323,16 +330,20 @@ def run_with_loading_animation(message, func, *args, **kwargs):
     t.daemon = True
     t.start()
     start = time.time()
+    end = None
 
-    result = func(*args, **kwargs)
-
-    end = time.time()
-    # Stop the animation and print the "Finished Querying" message
-    stop_event.set()
-    t.join()
-    print(f"\rFinished: {message} ({(end-start):.2f}s) ", end="\n")
-
-    return result
+    try:
+        result = func(*args, **kwargs)
+        end = time.time()
+        return result
+    finally:
+        # Stop the animation and print the "Finished Querying" message
+        stop_event.set()
+        t.join()
+        if not end:
+            print(f"\rError: {message}           ", end="\n")
+        else:
+            print(f"\rFinished: {message} ({(end-start):.2f}s) ", end="\n")
 
 
 class VersionWarning(Warning):

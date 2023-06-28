@@ -20,7 +20,6 @@ import humps
 
 
 class TrainingDatasetSplit:
-
     TIME_SERIES_SPLIT = "TIME_SERIES_SPLIT"
     RANDOM_SPLIT = "RANDOM_SPLIT"
     TRAIN = "train"

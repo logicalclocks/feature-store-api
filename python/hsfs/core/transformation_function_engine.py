@@ -19,7 +19,6 @@ import datetime
 from functools import partial
 
 from hsfs import training_dataset, training_dataset_feature
-from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import transformation_function_api, statistics_api
 from hsfs.core.builtin_transformation_function import BuiltInTransformationFunction
 from hsfs import util
@@ -100,27 +99,6 @@ class TransformationFunctionEngine:
             target_obj = training_dataset_obj  # todo why provide td and fv just to convert to target_obj?
         else:
             target_obj = feature_view_obj
-        # If provided feature matches column with prefix, then attach transformation function.
-        # If provided feature matches only one column without prefix, then attach transformation function. (For
-        # backward compatibility purpose, as of v3.0, features are matched to columns without prefix.)
-        # If provided feature matches multiple columns without prefix, then raise exception because it is ambiguous.
-        prefix_feature_map = {}
-        feature_map = {}
-        for feat in target_obj.query.features:
-            prefix_feature_map[feat.name] = (
-                feat.name,
-                target_obj.query._left_feature_group,
-            )
-        for join in target_obj.query.joins:
-            for feat in join.query.features:
-                if join.prefix:
-                    prefix_feature_map[join.prefix + feat.name] = (
-                        feat.name,
-                        join.query._left_feature_group,
-                    )
-                feature_map[feat.name] = feature_map.get(feat.name, []) + [
-                    join.query._left_feature_group
-                ]
 
         if target_obj._transformation_functions:
             for (
@@ -131,42 +109,20 @@ class TransformationFunctionEngine:
                     raise ValueError(
                         "Online transformations for training dataset labels are not supported."
                     )
-                if feature_name in prefix_feature_map:
-                    target_obj._features.append(
-                        training_dataset_feature.TrainingDatasetFeature(
-                            name=feature_name,
-                            feature_group_feature_name=prefix_feature_map[feature_name][
-                                0
-                            ],
-                            featuregroup=prefix_feature_map[feature_name][1],
-                            type=transformation_fn.output_type,
-                            label=False,
-                            transformation_function=transformation_fn,
-                        )
+
+                feature, prefix, featuregroup = target_obj.query._get_feature_by_name(
+                    feature_name
+                )
+                target_obj._features.append(
+                    training_dataset_feature.TrainingDatasetFeature(
+                        name=feature_name,
+                        feature_group_feature_name=feature.name,
+                        featuregroup=featuregroup,
+                        type=transformation_fn.output_type,
+                        label=False,
+                        transformation_function=transformation_fn,
                     )
-                elif feature_name in feature_map:
-                    if len(feature_map[feature_name]) > 1:
-                        raise FeatureStoreException(
-                            TransformationFunctionEngine.AMBIGUOUS_FEATURE_ERROR.format(
-                                feature_name
-                            )
-                        )
-                    target_obj._features.append(
-                        training_dataset_feature.TrainingDatasetFeature(
-                            name=feature_name,
-                            feature_group_feature_name=feature_name,
-                            featuregroup=feature_map[feature_name][0],
-                            type=transformation_fn.output_type,
-                            label=False,
-                            transformation_function=transformation_fn,
-                        )
-                    )
-                else:
-                    raise FeatureStoreException(
-                        TransformationFunctionEngine.FEATURE_NOT_EXIST_ERROR.format(
-                            feature_name
-                        )
-                    )
+                )
 
     def is_builtin(self, transformation_fn_instance):
         return (

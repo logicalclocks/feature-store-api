@@ -28,6 +28,9 @@ import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
 import lombok.Getter;
 
 import org.apache.avro.generic.GenericRecord;
+import org.apache.flink.configuration.ConfigOption;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.GlobalConfiguration;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
@@ -40,6 +43,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
+import static org.apache.flink.configuration.ConfigOptions.key;
 
 public class FlinkEngine {
   private static FlinkEngine INSTANCE = null;
@@ -56,6 +61,23 @@ public class FlinkEngine {
 
   private final KafkaApi kafkaApi = new KafkaApi();
   private final HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
+
+  private final Configuration flinkConfig = GlobalConfiguration.loadConfiguration();
+  private final ConfigOption<String> keyStorePath =
+      key("flink.hadoop.hops.ssl.keystore.name")
+        .stringType()
+        .defaultValue("trustStore.jks")
+        .withDescription("path to keyStore.jks");
+  private final ConfigOption<String> trustStorePath =
+      key("flink.hadoop.hops.ssl.truststore.name")
+        .stringType()
+        .defaultValue("trustStore.jks")
+        .withDescription("path to trustStore.jks");
+  private final ConfigOption<String> materialPasswdPath =
+      key("flink.hadoop.hops.ssl.keystores.passwd.name")
+        .stringType()
+        .defaultValue("material_passwd")
+        .withDescription("path to material_passwd");
 
   private FlinkEngine() throws FeatureStoreException {
     streamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -106,5 +128,17 @@ public class FlinkEngine {
       config.putAll(writeOptions);
     }
     return config;
+  }
+
+  public String getTrustStorePath() {
+    return flinkConfig.getString(trustStorePath);
+  }
+
+  public String getKeyStorePath() {
+    return flinkConfig.getString(keyStorePath);
+  }
+
+  public String getCertKey() {
+    return flinkConfig.getString(materialPasswdPath);
   }
 }
