@@ -14,24 +14,25 @@
 #   limitations under the License.
 #
 import pandas as pd
-from datetime import datetime, timedelta
-from typing import Optional, Union
+from datetime import datetime, timedelta, date
+from typing import Any, Dict, Optional, Union
 import humps
 import json
 import re
 
 from hsfs import util
+from hsfs.core import job_scheduler_engine
 
 
 class JobScheduler:
     def __init__(
         self,
-        start_date_time: Union[int, str, datetime, pd.Timestamp],
+        start_date_time: Union[int, str, datetime, date, pd.Timestamp],
         job_frequency: Optional[str] = "CUSTOM",
         cron_expression: Optional[str] = None,
-        end_date_time: Optional[Union[int, str, datetime, pd.Timestamp]] = None,
+        end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
         next_execution_date_time: Optional[
-            Union[int, str, datetime, pd.Timestamp]
+            Union[int, str, datetime, date, pd.Timestamp]
         ] = None,
         enabled: bool = True,
         job_name: Optional[str] = None,
@@ -72,12 +73,55 @@ class JobScheduler:
         self._next_execution_date_time = util.convert_event_time_to_timestamp(
             next_execution_date_time
         )
+        self._strftime_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+        self._job_scheduler_engine = job_scheduler_engine.JobSchedulerEngine()
 
     @classmethod
     def from_response_json(cls, json_dict):
         return cls(**humps.decamelize(json_dict))
 
-    def to_dict(self):
+    def save(self) -> "JobScheduler":
+        """Saves the scheduler configuration to Hopsworks.
+
+        # Returns
+            `JobScheduler` The scheduler configuration.
+        """
+        if self._id:
+            raise ValueError(
+                "Cannot save a scheduler already registered, use `update()` to persist edit to Hopsworks."
+            )
+
+        return self._job_scheduler_engine.create_job_scheduler(the_job_scheduler=self)
+
+    def delete(self) -> None:
+        """Deletes the scheduler configuration from Hopsworks.
+
+        !!! info
+            The job itself is not deleted, only the scheduler configuration.
+        """
+        if not self._id:
+            raise ValueError(
+                "Cannot delete a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
+            )
+        if not self._job_name:
+            raise ValueError("Cannot delete a scheduler without a job name.")
+
+        self._job_scheduler_engine.delete_job_scheduler(job_name=self._job_name)
+
+    def update(self) -> "JobScheduler":
+        """Updates the scheduler configuration in Hopsworks.
+
+        # Returns
+            `JobScheduler` The scheduler configuration.
+        """
+        if not self._id:
+            raise ValueError(
+                "Cannot update a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
+            )
+
+        return self._job_scheduler_engine.update_job_scheduler(the_job_scheduler=self)
+
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self._id,
             "startDateTime": self._start_date_time,
@@ -91,10 +135,12 @@ class JobScheduler:
     def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.json()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        the_dict = self.to_dict()
+        the_dict["jobFrequency"] = self.job_frequency
         return json.dumps(humps.decamelize(self.to_dict()), indent=2)
 
     @property
@@ -102,13 +148,18 @@ class JobScheduler:
         return self._id
 
     @property
-    def start_date_time(self, as_date_str: bool = False) -> int:
+    def start_date_time(self, as_date_str: bool = False) -> Union[int, str]:
         """Start date and time from which to schedule the job. Even if the scheduler is enabled,
         the job will not be executed until the start date is reached.
 
         !!! note
             Setting a start date in the past will not create a backlog of jobs to be executed.
         """
+        assert self._start_date_time is not None, "Start date time is not set."
+        if as_date_str:
+            return datetime.fromtimestamp(self._start_date_time / 1000).strftime(
+                self._strftime_format
+            )
         return self._start_date_time
 
     @start_date_time.setter
@@ -133,7 +184,7 @@ class JobScheduler:
             return None
         if as_str_date:
             return datetime.fromtimestamp(self._end_date_time / 1000).strftime(
-                "%Y-%m-%d %H:%M:%S"
+                self._strftime_format
             )
         return self._end_date_time
 
@@ -162,7 +213,7 @@ class JobScheduler:
         if as_date_str:
             return datetime.fromtimestamp(
                 self._next_execution_date_time / 1000
-            ).strftime("%Y-%m-%d %H:%M:%S")
+            ).strftime(self._strftime_format)
         return self._next_execution_date_time
 
     @property

@@ -28,8 +28,6 @@ from hsfs.core import feature_descriptive_statistics as fds
 
 from hsfs.core.job import Job
 from hsfs.core.job_api import JobApi
-from hsfs.core.job_scheduler import JobScheduler
-from hsfs.util import convert_event_time_to_timestamp
 from hsfs.client.exceptions import FeatureStoreException
 
 from hsfs import feature_group, feature_view
@@ -183,63 +181,6 @@ class FeatureMonitoringConfigEngine:
             "relative": relative,
             "strict": strict,
         }
-
-    def build_job_scheduler(
-        self,
-        job_frequency: str = "DAILY",
-        start_date_time: Optional[Union[str, int, date, datetime]] = None,
-        end_date_time: Optional[Union[str, int, date, datetime]] = None,
-        cron_expression: Optional[str] = None,
-        job_name: Optional[str] = None,
-        enabled: bool = True,
-        id: Optional[int] = None,
-    ) -> JobScheduler:
-        """Builds a job scheduler.
-
-        Args:
-            job_frequency: str, required
-                Frequency of the job. Defaults to daily.
-            start_date_time: Union[str, int, date, datetime], optional
-                Job will start being executed on schedule from that time.
-                Defaults to datetime.now().
-            end_date_time: Union[str, int, date, datetime], optional
-                Job will stop being executed on schedule from that time.
-                Defaults to None.
-            cron_expression: str, optional
-                Cron expression for the job. If provided, cron expression will be used
-                to schedule the job instead of job frequency. Defaults to None.
-            job_name: str, optional
-                Name of the job. Populated when registering the feature monitoring
-                configuration to the backend. Defaults to None.
-            enabled: bool, optional
-                If enabled is false, the scheduled job is not executed.
-                Defaults to True.
-            id: int, optional
-                Id of the job scheduler. Populated when registering the feature monitoring
-                configuration to the backend. Defaults to None.
-
-        Returns:
-            JobScheduler The job scheduler.
-        """
-        if start_date_time is None:
-            start_date_time = convert_event_time_to_timestamp(datetime.now())
-        else:
-            start_date_time = convert_event_time_to_timestamp(start_date_time)
-
-        if job_frequency.upper() not in ["HOURLY", "DAILY", "WEEKLY"]:
-            raise ValueError(
-                "Invalid job frequency. Supported frequencies are HOURLY, DAILY, WEEKLY."
-            )
-
-        return JobScheduler(
-            id=id,
-            job_frequency=job_frequency,
-            start_date_time=start_date_time,
-            end_date_time=end_date_time,
-            cron_expression=cron_expression,
-            job_name=job_name,
-            enabled=enabled,
-        )
 
     def validate_config_name(self, name: str):
         if not isinstance(name, str):
