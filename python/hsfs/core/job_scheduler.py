@@ -166,7 +166,7 @@ class JobScheduler:
         return self._next_execution_date_time
 
     @property
-    def job_frequency(self):
+    def job_frequency(self) -> str:
         """Frequency at which the job should be executed. Available options are:
         "NEAR REAL-TIME", "HOURLY", "DAILY", "WEEKLY", "CUSTOM".
         """
@@ -186,7 +186,7 @@ class JobScheduler:
         return "CUSTOM"
 
     @job_frequency.setter
-    def job_frequency(self, job_frequency: str):
+    def job_frequency(self, job_frequency: Optional[str]):
         """Frequency at which the job should be executed. Available options are:
         "NEAR REAL-TIME", "HOURLY", "DAILY", "WEEKLY".
 

@@ -188,6 +188,8 @@ class FeatureMonitoringConfigEngine:
         self,
         job_frequency: str = "DAILY",
         start_date_time: Optional[Union[str, int, date, datetime]] = None,
+        end_date_time: Optional[Union[str, int, date, datetime]] = None,
+        cron_expression: Optional[str] = None,
         job_name: Optional[str] = None,
         enabled: bool = True,
         id: Optional[int] = None,
@@ -200,6 +202,12 @@ class FeatureMonitoringConfigEngine:
             start_date_time: Union[str, int, date, datetime], optional
                 Job will start being executed on schedule from that time.
                 Defaults to datetime.now().
+            end_date_time: Union[str, int, date, datetime], optional
+                Job will stop being executed on schedule from that time.
+                Defaults to None.
+            cron_expression: str, optional
+                Cron expression for the job. If provided, cron expression will be used
+                to schedule the job instead of job frequency. Defaults to None.
             job_name: str, optional
                 Name of the job. Populated when registering the feature monitoring
                 configuration to the backend. Defaults to None.
@@ -227,6 +235,8 @@ class FeatureMonitoringConfigEngine:
             id=id,
             job_frequency=job_frequency,
             start_date_time=start_date_time,
+            end_date_time=end_date_time,
+            cron_expression=cron_expression,
             job_name=job_name,
             enabled=enabled,
         )
@@ -271,6 +281,8 @@ class FeatureMonitoringConfigEngine:
         valid_feature_names: Optional[List[str]] = None,
         is_event_time: bool = False,
         transformed_with_version: Optional[int] = None,
+        end_date_time: Optional[Union[str, int, date, datetime]] = None,
+        cron_expression: Optional[str] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Builds the default scheduled statistics config, default detection window is full snapshot.
 
@@ -320,6 +332,8 @@ class FeatureMonitoringConfigEngine:
             scheduler_config={
                 "job_frequency": job_frequency,
                 "start_date_time": start_date_time,
+                "end_date_time": end_date_time,
+                "cron_expression": cron_expression,
                 "enabled": True,
             },
             is_event_time=is_event_time,
@@ -334,8 +348,10 @@ class FeatureMonitoringConfigEngine:
         start_date_time: Optional[Union[str, int, date, datetime]] = None,
         description: Optional[str] = None,
         valid_feature_names: Optional[List[str]] = None,
-        is_event_time: Optional[bool] = False,
+        is_event_time: bool = False,
         transformed_with_version: Optional[int] = None,
+        end_date_time: Optional[Union[str, int, date, datetime]] = None,
+        cron_expression: Optional[str] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Builds the default scheduled statistics config, default detection window is full snapshot.
 
@@ -385,11 +401,13 @@ class FeatureMonitoringConfigEngine:
             scheduler_config={
                 "job_frequency": job_frequency,
                 "start_date_time": start_date_time,
+                "end_date_time": end_date_time,
+                "cron_expression": cron_expression,
                 "enabled": True,
             },
             is_event_time=is_event_time,
             transformed_with_version=transformed_with_version,
-        ).with_detection_window()  # TODO: Do we want to have a default reference window + stat comparison?
+        ).with_detection_window()
 
     def save(
         self, config: "fmc.FeatureMonitoringConfig"

@@ -1240,6 +1240,8 @@ class FeatureGroupBase:
         feature_name: Optional[str] = None,
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        cron_expression: Optional[str] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Run a job to compute statistics on snapshot of feature data on a schedule.
 
@@ -1270,9 +1272,14 @@ class FeatureGroupBase:
             feature_name: Name of the feature to monitor. If not specified, statistics
                 will be computed for all features.
             job_frequency: Frequency at which to compute the statistics for the feature.
-                Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
+                Options are "NEAR REAL-TIME", "HOURLY", "DAILY", "WEEKLY", defaults to "DAILY".
             description: Description of the feature monitoring configuration.
             start_date_time: Start date and time from which to start computing statistics.
+            end_date_time: End date and time at which to stop computing statistics.
+            cron_expression: Cron expression to use to schedule the job. If provided,
+                job_frequency is ignored. The cron expression must be in UTC and
+                follow the Quartz specification. Defaults to None.
+                Example: "0 0 12 ? * * *" for a daily job at 12:00 UTC.
 
         # Raises
             `hsfs.client.exceptions.FeatureStoreException`.
@@ -1295,6 +1302,8 @@ class FeatureGroupBase:
             is_event_time=False,
             transformed_with_version=None,
             valid_feature_names=[feat.name for feat in self._features],
+            end_date_time=end_date_time,
+            cron_expression=cron_expression,
         )
 
     def _create_feature_monitoring(
@@ -1304,6 +1313,8 @@ class FeatureGroupBase:
         job_frequency: str = "DAILY",
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        cron_expression: Optional[str] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Enable feature monitoring to compare statistics on snapshots of feature data over time.
 
@@ -1343,6 +1354,11 @@ class FeatureGroupBase:
                 Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
             description: Description of the feature monitoring configuration.
             start_date_time: Start date and time from which to start computing statistics.
+            end_date_time: End date and time at which to stop computing statistics.
+            cron_expression: Cron expression to use to schedule the job. If provided,
+                job_frequency is ignored. The cron expression must be in UTC and
+                follow the Quartz specification. Defaults to None.
+                Example: "0 0 12 ? * * *" for a daily job at 12:00 UTC.
 
         # Raises
             `hsfs.client.exceptions.FeatureStoreException`.
@@ -1365,6 +1381,8 @@ class FeatureGroupBase:
             is_event_time=False,
             transformed_with_version=None,
             valid_feature_names=[feat.name for feat in self._features],
+            end_date_time=end_date_time,
+            cron_expression=cron_expression,
         )
 
     def __getattr__(self, name):
