@@ -145,7 +145,7 @@ class VectorServer:
         # get schemas for complex features once
         self._complex_features = self.get_complex_feature_schemas()
 
-    def get_feature_vector(self, entry, passed_features={}, return_type=list):
+    def get_feature_vector(self, entry, return_type, passed_features={}):
         """Assembles serving vector from online feature store."""
 
         if all([isinstance(val, list) for val in entry.values()]):
@@ -195,7 +195,7 @@ class VectorServer:
 
         vector, feature_names = self._generate_vector(result_dict)
 
-        if return_type is list:
+        if return_type is list or return_type is None:
             return vector
         elif return_type is np.ndarray:
             return np.array(vector)
@@ -208,7 +208,7 @@ class VectorServer:
                 "Unknown return type. Supported return types are list, numpy.ndarray and pandas.DataFrame"
             )
 
-    def get_feature_vectors(self, entry, passed_features=[], return_type=list):
+    def get_feature_vectors(self, entry, return_type, passed_features=[]):
         """Assembles serving vector from online feature store."""
 
         # create dict object that will have of order of the vector as key and values as
@@ -294,7 +294,7 @@ class VectorServer:
             )
         )
 
-        if return_type is list:
+        if return_type is list or return_type is None:
             return vectors
         elif return_type is np.ndarray:
             return np.array(vectors)

@@ -315,7 +315,7 @@ class FeatureView:
         entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]] = {},
         external: Optional[bool] = None,
-        return_type: Optional[Union[List, pd.DataFrame, np.ndarray]] = list,
+        return_type: Optional[Union[List, pd.DataFrame, np.ndarray]] = None,
     ):
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -393,7 +393,7 @@ class FeatureView:
         if self._single_vector_server is None:
             self.init_serving(external=external)
         return self._single_vector_server.get_feature_vector(
-            entry, passed_features, return_type
+            entry, return_type, passed_features
         )
 
     def get_feature_vectors(
@@ -401,7 +401,7 @@ class FeatureView:
         entry: List[Dict[str, Any]],
         passed_features: Optional[List[Dict[str, Any]]] = {},
         external: Optional[bool] = None,
-        return_type: Optional[Union[List, pd.DataFrame, np.ndarray]] = list,
+        return_type: Optional[Union[List, pd.DataFrame, np.ndarray]] = None,
     ):
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -478,7 +478,7 @@ class FeatureView:
         if self._batch_vectors_server is None:
             self.init_serving(external=external)
         return self._batch_vectors_server.get_feature_vectors(
-            entry, passed_features, return_type
+            entry, return_type, passed_features
         )
 
     def get_batch_data(
