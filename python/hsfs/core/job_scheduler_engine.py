@@ -69,16 +69,6 @@ class JobSchedulerEngine:
         else:
             start_date_time = convert_event_time_to_timestamp(start_date_time)
 
-        if job_frequency and job_frequency.upper() not in [
-            "HOURLY",
-            "DAILY",
-            "WEEKLY",
-            "CUSTOM",
-        ]:
-            raise ValueError(
-                "Invalid job frequency. Supported frequencies are HOURLY, DAILY, WEEKLY."
-            )
-
         return job_scheduler.JobScheduler(
             id=id,
             job_frequency=job_frequency,

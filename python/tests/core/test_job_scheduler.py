@@ -86,7 +86,7 @@ class TestJobScheduler:
         # Arrange
         timestamp = pd.Timestamp(DEFAULT_TIMESTAMP_DATE_STR)
         kwargs = {
-            "start_date_time": timestamp,
+            "start_date_time": round(timestamp.timestamp() * 1000),
             "job_frequency": "HOURLY",
             "enabled": True,
         }
@@ -124,7 +124,7 @@ class TestJobScheduler:
         # Arrange
         timestamp = pd.Timestamp(DEFAULT_TIMESTAMP_DATE_STR)
         kwargs = {
-            "start_date_time": round(timestamp.value),
+            "start_date_time": round(timestamp.value / 1e6),
             "cron_expression": "0 10 10 ? * * Mon",
             "enabled": True,
         }
@@ -134,7 +134,7 @@ class TestJobScheduler:
 
         # Assert
         assert schedule.id is None
-        assert schedule.start_date_time == round(timestamp.value)
+        assert schedule.start_date_time == round(timestamp.value / 1e6)
         assert schedule.job_frequency == "WEEKLY"
         assert schedule.cron_expression == "0 10 10 ? * * Mon"
         assert schedule.enabled is True

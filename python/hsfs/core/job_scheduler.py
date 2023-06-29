@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 import pandas as pd
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from typing import Any, Dict, Optional, Union
 import humps
 import json
@@ -40,35 +40,43 @@ class JobScheduler:
     ) -> None:
         """Contains the scheduler configuration for a Hopsworks job.
 
-        If you provide a `cron_expression`, the `job_frequency` will be ignored.
-
         # Arguments
             id: Id of the job scheduler in Hopsworks.
             start_date_time: Start date and time from which to schedule the job.
                 Even if the scheduler is enabled, the job will not be executed until the start date is reached.
             job_frequency: Frequency at which the job should be executed.
-                Available options are: "HOURLY", "DAILY", "WEEKLY".
+                Available options are: "NEAR REAL-TIME", "HOURLY", "DAILY", "WEEKLY".
+                Near real-time means that the job will be executed every 10 minutes.
             enabled: Whether the scheduler is enabled or not, useful to pause scheduled execution.
             job_name: Name of the job to be scheduled.
+            cron_expression: Cron expression to schedule the job. If provided, the `job_frequency` will be ignored.
+            The cron expression must follow the quartz specification, e.g `0 0 12 ? * * *` for daily at noon.
+            next_execution_date_time: Date and time at which the job will be executed next.
+            end_date_time: End date and time until which to schedule the job.
 
         # Returns
             `JobScheduler` The scheduler configuration.
         """
-        if cron_expression is None and job_frequency not in [
-            "HOURLY",
-            "DAILY",
-            "WEEKLY",
-        ]:
+        if cron_expression is None and (
+            job_frequency is None
+            or job_frequency.upper()
+            not in [
+                "NEAR REAL-TIME",
+                "HOURLY",
+                "DAILY",
+                "WEEKLY",
+            ]
+        ):
             raise ValueError(
-                "job_frequency must be one of: 'HOURLY', 'DAILY', 'WEEKLY' or a cron_expression must be provided.\n"
+                "job_frequency must be one of: 'NEAR REAL-TIME', 'HOURLY', 'DAILY', 'WEEKLY' or a cron_expression must be provided.\n"
                 + f" Got: {job_frequency}"
             )
         self._id = id
         self._job_name = job_name
         self._enabled = enabled
+        self.start_date_time = start_date_time
         self._cron_expression = cron_expression
         self.job_frequency = job_frequency
-        self.start_date_time = start_date_time
         self.end_date_time = end_date_time
         self._next_execution_date_time = util.convert_event_time_to_timestamp(
             next_execution_date_time
@@ -133,6 +141,7 @@ class JobScheduler:
         self._job_scheduler_engine.pause_or_resume_job_scheduler(
             job_name=self._job_name, pause=True
         )
+        self._enabled = False
 
     def resume(self):
         """Resumes the scheduling of job in Hopsworks.
@@ -150,6 +159,7 @@ class JobScheduler:
         self._job_scheduler_engine.pause_or_resume_job_scheduler(
             job_name=self._job_name, pause=False
         )
+        self._enabled = True
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -213,7 +223,7 @@ class JobScheduler:
         if self._end_date_time is None:
             return None
         if as_str_date:
-            return datetime.fromtimestamp(self._end_date_time / 1000).strftime(
+            return datetime.fromtimestamp(round(self._end_date_time / 1000)).strftime(
                 self._strftime_format
             )
         return self._end_date_time
@@ -280,20 +290,25 @@ class JobScheduler:
         # Arguments
             job_frequency: Frequency at which the job should be executed.
         """
-        now = datetime.now()
-        rounded_minutes = now.minute - (now.minute % 10) + 10
+        if self._start_date_time is None:
+            start = datetime.now()
+        else:
+            start = datetime.fromtimestamp(
+                self._start_date_time / 1000, tz=timezone.utc
+            )
+        rounded_minutes = start.minute - (start.minute % 10) + 10
         if rounded_minutes == 60:
             rounded_minutes = 0
-            now = now + timedelta(hours=1)
+            start = start + timedelta(hours=1)
         if job_frequency == "NEAR REAL-TIME":
             self._cron_expression = f"0 {rounded_minutes}/10 * ? * * *"
         elif job_frequency == "HOURLY":
             self._cron_expression = f"0 {rounded_minutes} * ? * * *"
         elif job_frequency == "DAILY":
-            self._cron_expression = f"0 0 {now.hour} ? * * *"
+            self._cron_expression = f"0 0 {start.hour} ? * * *"
         elif job_frequency == "WEEKLY":
             self._cron_expression = (
-                f"0 {rounded_minutes} {now.hour} ? * * {now.strftime('%a')}"
+                f"0 {rounded_minutes} {start.hour} ? * * {start.strftime('%a')}"
             )
         elif job_frequency == "CUSTOM" or job_frequency is None:
             self._job_frequency = "CUSTOM"

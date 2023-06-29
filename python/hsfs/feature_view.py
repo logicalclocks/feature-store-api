@@ -2475,7 +2475,8 @@ class FeatureView:
             feature_name: Name of the feature to monitor. If not specified, statistics
                 will be computed for all features.
             job_frequency: Frequency at which to compute the statistics for the feature.
-                Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
+                Options are "NEAR REAL-TIME", "HOURLY", "DAILY", "WEEKLY", defaults to "DAILY".
+                "NEAR REAL-TIME" schedules the job to run every 10 minutes.
             description: Description of the feature monitoring configuration.
             start_date_time: Start date and time from which to start computing statistics.
             end_date_time: End date and time at which to stop computing statistics.
@@ -2561,7 +2562,8 @@ class FeatureView:
                 name must be unique for all configurations attached to the feature group.
             feature_name: Name of the feature to monitor.
             job_frequency: Frequency at which to compute the statistics for the feature.
-                Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
+                Options are "NEAR REAL-TIME", "HOURLY", "DAILY", "WEEKLY", defaults to "DAILY".
+                "NEAR REAL-TIME" schedules the job to run every 10 minutes.
             description: Description of the feature monitoring configuration.
             start_date_time: Start date and time from which to start computing statistics.
             end_date_time: End date and time at which to stop computing statistics.

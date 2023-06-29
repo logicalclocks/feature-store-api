@@ -16,6 +16,7 @@
 from typing import Any, Dict, List, Optional, Union
 from datetime import date, datetime
 import re
+import pandas as pd
 
 from hsfs.core import feature_monitoring_config_api
 from hsfs.core import feature_monitoring_config as fmc
@@ -217,12 +218,12 @@ class FeatureMonitoringConfigEngine:
         name: str,
         feature_name: Optional[str] = None,
         job_frequency: str = "DAILY",
-        start_date_time: Optional[Union[str, int, date, datetime]] = None,
+        start_date_time: Optional[Union[str, int, date, datetime, pd.Timestamp]] = None,
         description: Optional[str] = None,
         valid_feature_names: Optional[List[str]] = None,
         is_event_time: bool = False,
         transformed_with_version: Optional[int] = None,
-        end_date_time: Optional[Union[str, int, date, datetime]] = None,
+        end_date_time: Optional[Union[str, int, date, datetime, pd.Timestamp]] = None,
         cron_expression: Optional[str] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Builds the default scheduled statistics config, default detection window is full snapshot.
@@ -236,8 +237,14 @@ class FeatureMonitoringConfigEngine:
                 defaults, compute statistics for all features.
             job_frequency: str, optional
                 defines how often the statistics should be computed. Defaults to daily.
-            start_date_time: Union[str, int, date, datetime], optional
+            cron_expression: str, optional
+                cron expression defining the schedule for computing statistics. The expression
+                must be in UTC timezone and based on Quartz cron syntax. E.g '0 0 12 ? * * *' will
+                schedule the job to run every day at 12pm UTC.
+            start_date_time: Union[str, int, date, datetime, pd.Timestamp], optional
                 Statistics will start being computed on schedule from that time.
+            end_date_time: Union[str, int, date, datetime, pd.Timestamp], optional
+                Statistics will stop being computed on schedule from that time.
             description: str, optional
                 Description of the feature monitoring configuration.
             valid_feature_names: List[str], optional
@@ -286,12 +293,12 @@ class FeatureMonitoringConfigEngine:
         name: str,
         feature_name: str,
         job_frequency: Optional[str] = "DAILY",
-        start_date_time: Optional[Union[str, int, date, datetime]] = None,
+        start_date_time: Optional[Union[str, int, date, datetime, pd.Timestamp]] = None,
         description: Optional[str] = None,
         valid_feature_names: Optional[List[str]] = None,
         is_event_time: bool = False,
         transformed_with_version: Optional[int] = None,
-        end_date_time: Optional[Union[str, int, date, datetime]] = None,
+        end_date_time: Optional[Union[str, int, date, datetime, pd.Timestamp]] = None,
         cron_expression: Optional[str] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Builds the default scheduled statistics config, default detection window is full snapshot.
@@ -305,8 +312,14 @@ class FeatureMonitoringConfigEngine:
                 defaults, compute statistics for all features.
             job_frequency: str, optional
                 defines how often the statistics should be computed. Defaults to daily.
-            start_date_time: Union[str, int, date, datetime], optional
+            cron_expression: str, optional
+                cron expression defining the schedule for computing statistics. The expression
+                must be in UTC timezone and based on Quartz cron syntax. E.g '0 0 12 ? * * *' will
+                schedule the job to run every day at 12pm UTC.
+            start_date_time: Union[str, int, date, datetime, pd.Timestamp], optional
                 Statistics will start being computed on schedule from that time.
+            end_date_time: Union[str, int, date, datetime, pd.Timestamp], optional
+                Statistics will stop being computed on schedule from that time.
             description: str, optional
                 Description of the feature monitoring configuration.
             valid_feature_names: List[str], optional

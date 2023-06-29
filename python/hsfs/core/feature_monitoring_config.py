@@ -477,6 +477,9 @@ class FeatureMonitoringConfig:
             my_monitoring_config.run_job()
             ```
 
+        !!! info
+            The job will be triggered asynchronously and the method will return immediately.
+
         # Raises
             `FeatureStoreException`: If the feature monitoring config has not been saved.
 
