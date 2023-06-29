@@ -121,6 +121,36 @@ class JobScheduler:
 
         return self._job_scheduler_engine.update_job_scheduler(the_job_scheduler=self)
 
+    def pause(self):
+        """Pauses the scheduling of job in Hopsworks, the job can still be triggered manually."""
+        if self._id:
+            raise ValueError(
+                "Cannot pause a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
+            )
+        if not self._job_name:
+            raise ValueError("Cannot pause a scheduler without a job name.")
+
+        self._job_scheduler_engine.pause_or_resume_job_scheduler(
+            job_name=self._job_name, pause=True
+        )
+
+    def resume(self):
+        """Resumes the scheduling of job in Hopsworks.
+
+        !!! info
+            On resuming, the next execution date and time will be updated based on the job frequency or cron expression.
+        """
+        if self._id:
+            raise ValueError(
+                "Cannot resume a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
+            )
+        if not self._job_name:
+            raise ValueError("Cannot resume a scheduler without a job name.")
+
+        self._job_scheduler_engine.pause_or_resume_job_scheduler(
+            job_name=self._job_name, pause=False
+        )
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self._id,

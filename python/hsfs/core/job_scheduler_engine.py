@@ -29,6 +29,9 @@ class JobSchedulerEngine:
         job_frequency: str = "DAILY",
         start_date_time: Optional[Union[str, int, date, datetime, pd.Timestamp]] = None,
         end_date_time: Optional[Union[str, int, date, datetime, pd.Timestamp]] = None,
+        next_execution_date_time: Optional[
+            Union[str, int, date, datetime, pd.Timestamp]
+        ] = None,
         cron_expression: Optional[str] = None,
         job_name: Optional[str] = None,
         enabled: bool = True,
@@ -84,6 +87,7 @@ class JobSchedulerEngine:
             cron_expression=cron_expression,
             job_name=job_name,
             enabled=enabled,
+            next_execution_date_time=next_execution_date_time,
         )
 
     def create_job_scheduler(
@@ -153,3 +157,18 @@ class JobSchedulerEngine:
             job_name: job name
         """
         return self._job_scheduler_api.delete_job_scheduler(job_name=job_name)
+
+    def pause_or_resume_job_scheduler(
+        self,
+        job_name: str,
+        pause: bool,
+    ):
+        """Pause or resume a job scheduler.
+
+        Args:
+            job_name: job name
+            pause: pause if true otherwise resume the job scheduling
+        """
+        return self._job_scheduler_api.pause_or_resume_job_scheduler(
+            job_name=job_name, pause=pause
+        )

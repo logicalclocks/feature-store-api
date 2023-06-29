@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from typing import List
+from typing import List, Optional
 from hsfs import client
 from hsfs.core import job_scheduler
 
@@ -98,7 +98,25 @@ class JobSchedulerApi:
             ),
         )
 
-    def build_path_params(self, job_name: str) -> List[str]:
+    def pause_or_resume_job_scheduler(self, job_name: str, pause: bool):
+        """
+        Pause or resume a job scheduler.
+
+        :param job_name: name of the job
+        :param pause: True to pause, False to resume
+        """
+        _client = client.get_instance()
+        _client._send_request(
+            "POST",
+            path_params=self.build_path_params(
+                job_name=job_name,
+                extra="pause" if pause else "resume",
+            ),
+        )
+
+    def build_path_params(
+        self, job_name: str, extra: Optional[str] = None
+    ) -> List[str]:
         """
         Single source of truth for path parameters of the job scheduler API.
 
@@ -108,4 +126,16 @@ class JobSchedulerApi:
         :return: list of path parameters
         """
         _client = client.get_instance()
-        return ["project", _client._project_id, "jobs", job_name, "scheduler", "v2"]
+        path_params = [
+            "project",
+            _client._project_id,
+            "jobs",
+            job_name,
+            "scheduler",
+            "v2",
+        ]
+
+        if extra:
+            path_params.append(extra)
+
+        return path_params
