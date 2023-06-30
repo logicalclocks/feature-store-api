@@ -24,9 +24,12 @@ from hsfs.client.exceptions import FeatureStoreException
 
 from hsfs.core import monitoring_window_config as mwc
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
-from hsfs.core import monitoring_window_config_engine
-from hsfs.core import feature_monitoring_config_engine
-from hsfs.core import feature_monitoring_result_engine
+from hsfs.core import (
+    monitoring_window_config_engine,
+    feature_monitoring_config_engine,
+    feature_monitoring_result_engine,
+    job_scheduler_engine,
+)
 
 MAX_LENGTH_NAME = 63
 MAX_LENGTH_DESCRIPTION = 2000
@@ -66,7 +69,7 @@ class FeatureMonitoringConfig:
         href: Optional[str] = None,
         transformed_with_version: Optional[int] = None,
         is_event_time: bool = False,
-    ) -> "FeatureMonitoringConfig":
+    ):
         self.name = name
         self._id = id
         self._href = href
@@ -81,6 +84,7 @@ class FeatureMonitoringConfig:
         self._transformed_with_version = transformed_with_version
         self._is_event_time = is_event_time
 
+        self._job_scheduler_engine = job_scheduler_engine.JobSchedulerEngine()
         self._feature_monitoring_config_engine = (
             feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
                 feature_store_id=feature_store_id,
@@ -313,7 +317,7 @@ class FeatureMonitoringConfig:
             `FeatureMonitoringConfig`. The updated FeatureMonitoringConfig object.
         """
         self.reference_window_config = {
-            "specific_value": float(value),
+            "specific_value": value,
         }
 
         return self
@@ -473,13 +477,16 @@ class FeatureMonitoringConfig:
             my_monitoring_config.run_job()
             ```
 
+        !!! info
+            The job will be triggered asynchronously and the method will return immediately.
+
         # Raises
             `FeatureStoreException`: If the feature monitoring config has not been saved.
 
         # Returns
             `Job`. A handle for the job computing the statistics.
         """
-        if not self._id:
+        if not self._id or not self._job_name:
             raise FeatureStoreException(
                 "Feature monitoring config must be registered via `.save()` before computing statistics."
             )
@@ -509,7 +516,7 @@ class FeatureMonitoringConfig:
         # Returns
             `Job`. A handle for the job computing the statistics.
         """
-        if not self._id:
+        if not self._id or not self._job_name:
             raise FeatureStoreException(
                 "Feature monitoring config must be registered via `.save()` before fetching"
                 "the associated job."
@@ -749,10 +756,8 @@ class FeatureMonitoringConfig:
         if isinstance(scheduler_config, JobScheduler):
             self._scheduler_config = scheduler_config
         elif isinstance(scheduler_config, dict):
-            self._scheduler_config = (
-                self._feature_monitoring_config_engine.build_job_scheduler(
-                    **scheduler_config
-                )
+            self._scheduler_config = self._job_scheduler_engine.build_job_scheduler(
+                **scheduler_config
             )
         elif scheduler_config is None:
             self._scheduler_config = scheduler_config
