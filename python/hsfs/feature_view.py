@@ -2539,7 +2539,9 @@ class FeatureView:
         feature_name: Optional[str] = None,
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
-        is_event_time: Optional[bool] = True,
+        end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        cron_expression: Optional[str] = None,
+        is_event_time: bool = True,
         transformed_with_version: Optional[int] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Run a job to compute statistics on snapshot of feature data on a schedule.
@@ -2571,9 +2573,15 @@ class FeatureView:
             feature_name: Name of the feature to monitor. If not specified, statistics
                 will be computed for all features.
             job_frequency: Frequency at which to compute the statistics for the feature.
-                Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
+                Options are "NEAR REAL-TIME", "HOURLY", "DAILY", "WEEKLY", defaults to "DAILY".
+                "NEAR REAL-TIME" schedules the job to run every 10 minutes.
             description: Description of the feature monitoring configuration.
             start_date_time: Start date and time from which to start computing statistics.
+            end_date_time: End date and time at which to stop computing statistics.
+            cron_expression: Cron expression to use to schedule the job. If provided,
+                job_frequency is ignored. The cron expression must be in UTC and
+                follow the Quartz specification. Defaults to None.
+                Example: "0 0 12 ? * * *" for a daily job at 12:00 UTC.
             is_event_time: If true, use event time to compute statistics.
                 Defaults to False.
             transformed_with_version: The version of the dataset to use
@@ -2602,6 +2610,8 @@ class FeatureView:
             is_event_time=is_event_time,
             transformed_with_version=transformed_with_version,
             valid_feature_names=[feat.name for feat in self._features],
+            cron_expression=cron_expression,
+            end_date_time=end_date_time,
         )
 
     def _create_feature_monitoring(
@@ -2611,7 +2621,9 @@ class FeatureView:
         job_frequency: str = "DAILY",
         description: Optional[str] = None,
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
-        is_event_time: Optional[bool] = True,
+        end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        cron_expression: Optional[str] = None,
+        is_event_time: bool = True,
         transformed_with_version: Optional[int] = None,
     ) -> "fmc.FeatureMonitoringConfig":
         """Enable feature monitoring to compare statistics on snapshots of feature data over time.
@@ -2648,9 +2660,15 @@ class FeatureView:
                 name must be unique for all configurations attached to the feature group.
             feature_name: Name of the feature to monitor.
             job_frequency: Frequency at which to compute the statistics for the feature.
-                Options are "HOURLY", "DAILY", "WEEKLY", "MONTHLY", defaults to "DAILY".
+                Options are "NEAR REAL-TIME", "HOURLY", "DAILY", "WEEKLY", defaults to "DAILY".
+                "NEAR REAL-TIME" schedules the job to run every 10 minutes.
             description: Description of the feature monitoring configuration.
             start_date_time: Start date and time from which to start computing statistics.
+            end_date_time: End date and time at which to stop computing statistics.
+            cron_expression: Cron expression to use to schedule the job. If provided,
+                job_frequency is ignored. The cron expression must be in UTC and
+                follow the Quartz specification. Defaults to None.
+                Example: "0 0 12 ? * * *" for a daily job at 12:00 UTC.
             is_event_time: If true, use event time to compute statistics.
                 Defaults to False.
             transformed_with_version: The version of the dataset to use
@@ -2679,6 +2697,8 @@ class FeatureView:
             is_event_time=is_event_time,
             transformed_with_version=transformed_with_version,
             valid_feature_names=[feat.name for feat in self._features],
+            end_date_time=end_date_time,
+            cron_expression=cron_expression,
         )
 
     @classmethod
