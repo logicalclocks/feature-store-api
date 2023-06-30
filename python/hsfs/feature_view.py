@@ -315,7 +315,7 @@ class FeatureView:
         entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]] = {},
         external: Optional[bool] = None,
-        return_type: Optional[Union[List, pd.DataFrame, np.ndarray]] = None,
+        return_type: Optional[str] = "list",
     ):
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -341,13 +341,13 @@ class FeatureView:
             # get assembled serving vector as a pandas dataframe
             feature_view.get_feature_vector(
                 entry = {"pk1": 1, "pk2": 2},
-                return_type = pd.DataFrame
+                return_type = "pandas"
             )
 
             # get assembled serving vector as a numpy array
             feature_view.get_feature_vector(
                 entry = {"pk1": 1, "pk2": 2},
-                return_type = np.ndarray
+                return_type = "numpy"
             )
             ```
 
@@ -379,10 +379,11 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: type of object to return: list, pd.DataFrame or np.ndarray. Defauts to list.
+            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
 
         # Returns
-            `list`, `pd.DataFrame` or `np.ndarray` if `return type` is set to respective object. Defaulst to `list`.
+            `list`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"pandas"` or `"numpy"`
+            respectively. Defaults to `list`.
             Returned `list`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary keys,
             ordered according to positions of this features in the feature view query.
 
@@ -401,7 +402,7 @@ class FeatureView:
         entry: List[Dict[str, Any]],
         passed_features: Optional[List[Dict[str, Any]]] = {},
         external: Optional[bool] = None,
-        return_type: Optional[Union[List, pd.DataFrame, np.ndarray]] = None,
+        return_type: Optional[str] = "list",
     ):
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -438,7 +439,7 @@ class FeatureView:
                     {"pk1": 3, "pk2": 4},
                     {"pk1": 5, "pk2": 6}
                 ],
-                return_type = pd.DataFrame
+                return_type = "pandas"
             )
 
             # get assembled serving vectors as a numpy array
@@ -448,7 +449,7 @@ class FeatureView:
                     {"pk1": 3, "pk2": 4},
                     {"pk1": 5, "pk2": 6}
                 ],
-                return_type = np.ndarray
+                return_type = "numpy"
             )
             ```
 
@@ -463,11 +464,12 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: type of object to return: list, pd.DataFrame or np.ndarray. Defauts to list.
+            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
 
         # Returns
-            `List[list]`, `pd.DataFrame` or `np.ndarray` if `return type` is set to respective object.
-            Defaulst to `List[list]`.
+            `List[list]`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"pandas"` or `"numpy"`
+            respectively. Defaults to `List[list]`.
+
             Returned `List[list]`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary
             keys, ordered according to positions of this features in the feature view query.
 

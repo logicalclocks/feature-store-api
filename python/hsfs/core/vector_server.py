@@ -195,17 +195,17 @@ class VectorServer:
 
         vector, feature_names = self._generate_vector(result_dict)
 
-        if return_type is list or return_type is None:
+        if return_type.lower() == "list":
             return vector
-        elif return_type is np.ndarray:
+        elif return_type.lower() == "numpy":
             return np.array(vector)
-        elif return_type is pd.DataFrame:
+        elif return_type.lower() == "pandas":
             pandas_df = pd.DataFrame(vector).transpose()
             pandas_df.columns = feature_names
             return pandas_df
         else:
             raise Exception(
-                "Unknown return type. Supported return types are list, numpy.ndarray and pandas.DataFrame"
+                "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
             )
 
     def get_feature_vectors(self, entry, return_type, passed_features=[]):
@@ -279,34 +279,33 @@ class VectorServer:
             )
         )
 
-        vector, feature_names = self._generate_vector(result_dict)
-
         # get column names for pandas dataframe
         feature_names = list(
             map(
-                lambda result_dict: feature_names,
+                lambda result_dict: self._generate_vector(result_dict)[1],
                 [batch_transformed[0]],
             )
         )[0]
 
+        # get vectors
         vectors = list(
             map(
-                lambda result_dict: vector,
+                lambda result_dict: self._generate_vector(result_dict)[0],
                 batch_transformed,
             )
         )
 
-        if return_type is list or return_type is None:
+        if return_type.lower() == "list":
             return vectors
-        elif return_type is np.ndarray:
+        elif return_type.lower() == "numpy":
             return np.array(vectors)
-        elif return_type is pd.DataFrame:
+        elif return_type.lower() == "pandas":
             pandas_df = pd.DataFrame(vectors)
             pandas_df.columns = feature_names
             return pandas_df
         else:
             raise Exception(
-                "Unknown return type. Supported return types are list, numpy.ndarray and pandas.DataFrame"
+                "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
             )
 
     def get_complex_feature_schemas(self):
