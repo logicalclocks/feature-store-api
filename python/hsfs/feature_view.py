@@ -467,7 +467,7 @@ class FeatureView:
             return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
 
         # Returns
-            `List[list]`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"pandas"` or `"numpy"`
+            `List[list]`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"` or `"numpy"`
             respectively. Defaults to `List[list]`.
 
             Returned `List[list]`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary
