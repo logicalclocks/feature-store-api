@@ -1686,7 +1686,7 @@ class FeatureGroup(FeatureGroupBase):
         if (features is None and len(self._features) > 0) or (
             isinstance(features, List)
             and len(features) > 0
-            and isinstance(features[0], feature.Feature)
+            and all([isinstance(f, feature.Feature) for f in features])
         ):
             # This is done for compatibility. Users can specify the feature list in the
             # (get_or_)create_feature_group. Users can also provide the feature list in the save().
