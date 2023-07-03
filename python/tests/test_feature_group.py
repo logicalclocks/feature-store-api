@@ -376,6 +376,93 @@ class TestFeatureGroup:
         mock_writer.insert.assert_called_once()
         assert fg._multi_part_insert is True
 
+    def test_save_feature_list(self, mocker, dataframe_fixture_basic):
+        mock_save_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata",
+            return_value=None,
+        )
+
+        features = [
+            feature.Feature(name="pk", type="int"),
+            feature.Feature(name="et", type="timestamp"),
+            feature.Feature(name="feat", type="int"),
+        ]
+
+        fg = feature_group.FeatureGroup(
+            name="test_fg",
+            version=2,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+        )
+
+        fg.save(features)
+        mock_save_metadata.assert_called_once_with(fg, None, {})
+
+    def test_save_feature_in_create(self, mocker, dataframe_fixture_basic):
+        mock_save_metadata = mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata",
+            return_value=None,
+        )
+
+        features = [
+            feature.Feature(name="pk", type="int"),
+            feature.Feature(name="et", type="timestamp"),
+            feature.Feature(name="feat", type="int"),
+        ]
+
+        fg = feature_group.FeatureGroup(
+            name="test_fg",
+            version=2,
+            featurestore_id=99,
+            features=features,
+            primary_key=[],
+            partition_key=[],
+        )
+
+        fg.save()
+        mock_save_metadata.assert_called_once_with(fg, None, {})
+
+    def test_save_exception_empty_input(self, mocker, dataframe_fixture_basic):
+        fg = feature_group.FeatureGroup(
+            name="test_fg",
+            version=2,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+        )
+
+        with pytest.raises(FeatureStoreException) as e:
+            fg.save()
+
+        assert "Feature list not provided" in str(e.value)
+
+    def test_save_with_non_feature_list(self, mocker, dataframe_fixture_basic):
+        engine = python.Engine()
+        mocker.patch("hsfs.engine.get_instance", return_value=engine)
+        mocker.patch("hsfs.engine.get_type", return_value="python")
+        mocker.patch("hsfs.engine.get_type", return_value="python")
+        mock_convert_to_default_dataframe = mocker.patch(
+            "hsfs.engine.python.Engine.convert_to_default_dataframe"
+        )
+        mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save",
+            return_value=(None, None),
+        )
+
+        fg = feature_group.FeatureGroup(
+            name="test_fg",
+            version=2,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+        )
+
+        data = [[1, "test_1"], [2, "test_2"]]
+        fg.save(data)
+
+        mock_convert_to_default_dataframe.assert_called_once_with(data)
+
     def test_save_code_true(self, mocker, dataframe_fixture_basic):
         engine = python.Engine()
         mocker.patch("hsfs.engine.get_instance", return_value=engine)

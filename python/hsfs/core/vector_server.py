@@ -18,6 +18,8 @@ import io
 import avro.schema
 import avro.io
 from sqlalchemy import sql, bindparam, exc, text
+import numpy as np
+import pandas as pd
 from hsfs import util
 from hsfs import training_dataset, feature_view, client
 from hsfs.core import (
@@ -143,7 +145,7 @@ class VectorServer:
         # get schemas for complex features once
         self._complex_features = self.get_complex_feature_schemas()
 
-    def get_feature_vector(self, entry, passed_features={}):
+    def get_feature_vector(self, entry, return_type, passed_features={}):
         """Assembles serving vector from online feature store."""
 
         if all([isinstance(val, list) for val in entry.values()]):
@@ -191,9 +193,22 @@ class VectorServer:
         # apply transformation functions
         result_dict = self._apply_transformation(serving_vector)
 
-        return self._generate_vector(result_dict)
+        vector, feature_names = self._generate_vector(result_dict)
 
-    def get_feature_vectors(self, entry, passed_features=[]):
+        if return_type.lower() == "list":
+            return vector
+        elif return_type.lower() == "numpy":
+            return np.array(vector)
+        elif return_type.lower() == "pandas":
+            pandas_df = pd.DataFrame(vector).transpose()
+            pandas_df.columns = feature_names
+            return pandas_df
+        else:
+            raise Exception(
+                "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
+            )
+
+    def get_feature_vectors(self, entry, return_type, passed_features=[]):
         """Assembles serving vector from online feature store."""
 
         # create dict object that will have of order of the vector as key and values as
@@ -264,12 +279,34 @@ class VectorServer:
             )
         )
 
-        return list(
+        # get column names for pandas dataframe
+        feature_names = list(
             map(
-                lambda result_dict: self._generate_vector(result_dict),
+                lambda result_dict: self._generate_vector(result_dict)[1],
+                [batch_transformed[0]],
+            )
+        )[0]
+
+        # get vectors
+        vectors = list(
+            map(
+                lambda result_dict: self._generate_vector(result_dict)[0],
                 batch_transformed,
             )
         )
+
+        if return_type.lower() == "list":
+            return vectors
+        elif return_type.lower() == "numpy":
+            return np.array(vectors)
+        elif return_type.lower() == "pandas":
+            pandas_df = pd.DataFrame(vectors)
+            pandas_df.columns = feature_names
+            return pandas_df
+        else:
+            raise Exception(
+                "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
+            )
 
     def get_complex_feature_schemas(self):
         return {
@@ -305,7 +342,10 @@ class VectorServer:
         )
 
     def _generate_vector(self, result_dict):
+        # feature values
         vector = []
+        # column names for pandas dataframe
+        feature_names = []
         for feature in self._features:
             if feature.label:
                 # Skip the label
@@ -319,10 +359,10 @@ class VectorServer:
                     + "Please provide the required entry to retrieve it from the feature store "
                     + " or provide the feature as passed_feature"
                 )
-
+            feature_names.append(feature.name)
             vector.append(result_dict[feature.name])
 
-        return vector
+        return vector, feature_names
 
     def _apply_transformation(self, row_dict):
         for feature_name in self._transformation_functions:
