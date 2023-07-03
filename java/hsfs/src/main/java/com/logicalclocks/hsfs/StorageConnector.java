@@ -415,8 +415,9 @@ public abstract class StorageConnector {
       // set connection properties
       config.put(Constants.KAFKA_BOOTSTRAP_SERVERS, bootstrapServers);
       config.put(Constants.KAFKA_SECURITY_PROTOCOL, securityProtocol.toString());
-      config.put(Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm.getValue());
 
+      // set ssl
+      config.put(Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm.getValue());
       if (!Strings.isNullOrEmpty(sslTruststoreLocation)) {
         config.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
         config.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);

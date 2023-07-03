@@ -828,12 +828,15 @@ class Engine:
         if not file:
             return file
 
-        # todo temp solution
+        # This is used for unit testing
+        if not file.startswith("file://"):
+            file = "hdfs://" + file
+
         local_file = os.path.join("/tmp", os.path.basename(file))
         if not os.path.exists(local_file):
             from pydoop import hdfs
 
-            hdfs.get("hdfs://" + file, local_file)
+            hdfs.get(file, local_file)
         return local_file
 
     def _apply_transformation_function(self, transformation_functions, dataset):

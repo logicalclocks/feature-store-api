@@ -85,11 +85,15 @@ class Client(base.Client):
         """Convert truststore from jks to pem and return the location"""
         ca_chain_path = Path(self.PEM_CA_CHAIN)
         if not ca_chain_path.exists():
+            ks = jks.KeyStore.load(
+                self._get_jks_key_store_path(), self._cert_key, try_decrypt_keys=True
+            )
+            ts = jks.KeyStore.load(
+                self._get_jks_trust_store_path(), self._cert_key, try_decrypt_keys=True
+            )
             self._write_ca_chain(
-                self._get_jks_key_store_path(),
-                self._cert_key,
-                self._get_jks_trust_store_path(),
-                self._cert_key,
+                ks,
+                ts,
                 ca_chain_path,
             )
         return str(ca_chain_path)
@@ -106,51 +110,43 @@ class Client(base.Client):
     def _write_pem(
         self, keystore_path, keystore_pw, truststore_path, truststore_pw, prefix
     ):
-        ca_chain_path = os.path.join("/tmp", f"{prefix}_ca_chain.pem")
-        if not os.path.exists(ca_chain_path):
-            self._write_ca_chain(
-                keystore_path,
-                keystore_pw,
-                truststore_path,
-                truststore_pw,
-                ca_chain_path,
-            )
-
-        client_cert_path = os.path.join("/tmp", f"{prefix}_client_cert.pem")
-        if not os.path.exists(client_cert_path):
-            self._write_client_cert(keystore_path, keystore_pw, client_cert_path)
-
-        client_key_path = os.path.join("/tmp", f"{prefix}_client_key.pem")
-        if not os.path.exists(client_key_path):
-            self._write_client_key(keystore_path, keystore_pw, client_key_path)
-
-        return ca_chain_path, client_cert_path, client_key_path
-
-    def _write_ca_chain(
-        self, keystore_path, keystore_pw, truststore_path, truststore_pw, ca_chain_path
-    ):
-        """
-        Converts JKS keystore and truststore file into ca chain PEM to be compatible with Python libraries
-        """
-        ca_chain = ""
         ks = jks.KeyStore.load(Path(keystore_path), keystore_pw, try_decrypt_keys=True)
-        for alias, c in ks.certs.items():
-            ca_chain = ca_chain + self._bytes_to_pem_str(c.cert, "CERTIFICATE")
-
         ts = jks.KeyStore.load(
             Path(truststore_path), truststore_pw, try_decrypt_keys=True
         )
-        for alias, c in ts.certs.items():
-            ca_chain = ca_chain + self._bytes_to_pem_str(c.cert, "CERTIFICATE")
+
+        ca_chain_path = os.path.join("/tmp", f"{prefix}_ca_chain.pem")
+        self._write_ca_chain(ks, ts, ca_chain_path)
+
+        client_cert_path = os.path.join("/tmp", f"{prefix}_client_cert.pem")
+        self._write_client_cert(ks, client_cert_path)
+
+        client_key_path = os.path.join("/tmp", f"{prefix}_client_key.pem")
+        self._write_client_key(ks, client_key_path)
+
+        return ca_chain_path, client_cert_path, client_key_path
+
+    def _write_ca_chain(self, ks, ts, ca_chain_path):
+        """
+        Converts JKS keystore and truststore file into ca chain PEM to be compatible with Python libraries
+        """
+        if os.path.exists(ca_chain_path):
+            return
+
+        ca_chain = ""
+        for store in [ks, ts]:
+            for alias, c in store.certs.items():
+                ca_chain = ca_chain + self._bytes_to_pem_str(c.cert, "CERTIFICATE")
 
         with Path(ca_chain_path).open("w") as f:
             f.write(ca_chain)
 
-    def _write_client_cert(self, keystore_path, keystore_pw, client_cert_path):
+    def _write_client_cert(self, ks, client_cert_path):
         """
         Converts JKS keystore file into client cert PEM to be compatible with Python libraries
         """
-        ks = jks.KeyStore.load(Path(keystore_path), keystore_pw, try_decrypt_keys=True)
+        if os.path.exists(client_cert_path):
+            return
 
         client_cert = ""
         for alias, pk in ks.private_keys.items():
@@ -160,11 +156,12 @@ class Client(base.Client):
         with Path(client_cert_path).open("w") as f:
             f.write(client_cert)
 
-    def _write_client_key(self, keystore_path, keystore_pw, client_key_path):
+    def _write_client_key(self, ks, client_key_path):
         """
         Converts JKS keystore file into client key PEM to be compatible with Python libraries
         """
-        ks = jks.KeyStore.load(Path(keystore_path), keystore_pw, try_decrypt_keys=True)
+        if os.path.exists(client_key_path):
+            return
 
         client_key = ""
         for alias, pk in ks.private_keys.items():
