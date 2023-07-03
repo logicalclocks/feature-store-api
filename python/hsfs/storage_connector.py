@@ -982,12 +982,16 @@ class KafkaConnector(StorageConnector):
         pem_files_created = False
         kafka_options = self.kafka_options()
         for key, value in kafka_options.items():
-            if key in [
-                "ssl.truststore.location",
-                "ssl.truststore.password",
-                "ssl.keystore.location",
-                "ssl.keystore.password",
-            ] and not pem_files_created:
+            if (
+                key
+                in [
+                    "ssl.truststore.location",
+                    "ssl.truststore.password",
+                    "ssl.keystore.location",
+                    "ssl.keystore.password",
+                ]
+                and not pem_files_created
+            ):
                 (
                     ca_chain_path,
                     client_cert_path,
