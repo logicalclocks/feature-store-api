@@ -15,6 +15,7 @@
 #
 import os
 from abc import ABC, abstractmethod
+import re
 from typing import Optional
 
 import humps
@@ -586,6 +587,51 @@ class AdlsConnector(StorageConnector):
 
     def _get_path(self, sub_path: str):
         return os.path.join(self.path, sub_path)
+
+    def read(
+        self,
+        query: str = None,
+        data_format: str = None,
+        options: dict = {},
+        path: str = "",
+    ):
+
+        """Reads a path into a dataframe using the storage connector.
+        # Arguments
+            query: Not relevant for ADLS connectors.
+            data_format: The file format of the files to be read, e.g. `csv`, `parquet`.
+            options: Any additional key/value options to be passed to the ADLS connector.
+            path: Path within the bucket to be read. e.g. 'abfss://[container-name]@[account_name].dfs.core.windows.net/[path]'.
+            If no path is specified default path will be derived from connector.
+
+        # Returns
+            `DataFrame`.
+        """
+        return engine.get_instance().read(
+            self, data_format, options, self._validate_path(path)
+        )
+
+    def _validate_path(self, read_path: str) -> str:
+        ERROR_GEN2_PATH = "Not a valid ADLS path. For Gen2 connectors, path should follow format as 'abfss://[container-name]@[account_name].dfs.core.windows.net/[path]' "
+        ERROR_GEN1_PATH = "Not a valid ADLS path. For Gen1 connectors, path should follow format as 'adl://[account_name].azuredatalakestore.net' "
+        read_path = read_path.strip()
+        if not read_path:
+            print(
+                "No path provided. Using default path from connector, final path to read {}".format(
+                    self._get_path(read_path)
+                )
+            )
+            return self._get_path(read_path)
+        if self.generation == 2 and not re.search(
+            "^abfss://.*@.*dfs.core.windows.net", read_path
+        ):
+            raise ValueError(ERROR_GEN2_PATH)
+        if self.generation == 1 and not re.search(
+            "^adl://.*azuredatalakestore.net", read_path
+        ):
+            raise ValueError(ERROR_GEN1_PATH)
+
+        return read_path
 
 
 class SnowflakeConnector(StorageConnector):
