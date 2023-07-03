@@ -963,36 +963,40 @@ class Engine:
             producer.flush()
             progress_bar.close()
 
-        # start backfilling job
-        # if topic didn't exist, always run the backfill job to reset the offsets except if it's a multi insert
+        # start materialization job
+        # if topic didn't exist, always run the materialization job to reset the offsets except if it's a multi insert
         if (
             not isinstance(feature_group, ExternalFeatureGroup)
             and reset_offsets
             and not feature_group._multi_part_insert
         ):
-            if offline_write_options is not None and not offline_write_options.get(
-                "start_offline_backfill", True
+            if offline_write_options is not None and not (
+                offline_write_options.get("start_offline_materialization", True)
+                or offline_write_options.get("start_offline_backfill", True)
             ):
                 warnings.warn(
-                    "This is the first ingestion after an upgrade or backup/restore, running backfill job even though `start_offline_backfill` was set to `False`.",
+                    "This is the first ingestion after an upgrade or backup/restore, running materialization job even though `start_offline_materialization` was set to `False`.",
                     util.FeatureGroupWarning,
                 )
-            feature_group.backfill_job.run(
-                args=feature_group.backfill_job.config.get("defaultArgs", "")
+            feature_group.materialization_job.run(
+                args=feature_group.materialization_job.config.get("defaultArgs", "")
                 + " -kafkaOffsetReset true",
                 await_termination=offline_write_options.get("wait_for_job", False),
             )
         elif (
             not isinstance(feature_group, ExternalFeatureGroup)
             and offline_write_options is not None
-            and offline_write_options.get("start_offline_backfill", True)
+            and (
+                offline_write_options.get("start_offline_materialization", True)
+                or offline_write_options.get("start_offline_backfill", True)
+            )
         ):
-            feature_group.backfill_job.run(
+            feature_group.materialization_job.run(
                 await_termination=offline_write_options.get("wait_for_job", False)
             )
         if isinstance(feature_group, ExternalFeatureGroup):
             return None
-        return feature_group.backfill_job
+        return feature_group.materialization_job
 
     def _kafka_produce(
         self, producer, feature_group, key, encoded_row, acked, offline_write_options

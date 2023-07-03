@@ -2682,7 +2682,7 @@ class TestPython:
         python_engine._write_dataframe_kafka(
             feature_group=fg,
             dataframe=df,
-            offline_write_options={"start_offline_backfill": True},
+            offline_write_options={"start_offline_materialization": True},
         )
 
         # Assert
@@ -2908,7 +2908,7 @@ class TestPython:
             "test_name_1": "test_value_1",
         }
 
-    def test_backfill_kafka_offset_reset(self, mocker):
+    def test_materialization_kafka_offset_reset(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
         mocker.patch("hsfs.feature_group.FeatureGroup._get_encoded_avro_schema")
@@ -2947,7 +2947,7 @@ class TestPython:
         fg._online_topic_name = "topic_name"
         job_mock = mocker.MagicMock()
         job_mock.config = {"defaultArgs": "defaults"}
-        fg._backfill_job = job_mock
+        fg._materialization_job = job_mock
 
         df = pd.DataFrame(data={"col1": [1, 2, 2, 3]})
 
@@ -2955,7 +2955,7 @@ class TestPython:
         python_engine._write_dataframe_kafka(
             feature_group=fg,
             dataframe=df,
-            offline_write_options={"start_offline_backfill": True},
+            offline_write_options={"start_offline_materialization": True},
         )
 
         # Assert
@@ -2981,6 +2981,6 @@ class TestPython:
         fg._online_topic_name = "topic_name"
         job_mock = mocker.MagicMock()
         job_mock.config = {"defaultArgs": "defaults"}
-        fg._backfill_job = job_mock
+        fg._materialization_job = job_mock
 
-        assert fg.backfill_job.config == {"defaultArgs": "defaults"}
+        assert fg.materialization_job.config == {"defaultArgs": "defaults"}

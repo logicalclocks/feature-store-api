@@ -315,7 +315,7 @@ class TestFeatureGroup:
         assert len(features) == 2
         assert set([f.name for f in features]) == {"f1", "f2"}
 
-    def test_backfill_job(self, mocker):
+    def test_materialization_job(self, mocker):
         mock_job = mocker.Mock()
         mock_job_api = mocker.patch(
             "hsfs.core.job_api.JobApi.get", return_value=mock_job
@@ -331,17 +331,17 @@ class TestFeatureGroup:
         )
 
         # call first time should populate cache
-        fg.backfill_job
+        fg.materialization_job
 
-        mock_job_api.assert_called_once_with("test_fg_2_offline_fg_backfill")
-        assert fg._backfill_job == mock_job
+        mock_job_api.assert_called_once_with("test_fg_2_offline_fg_materialization")
+        assert fg._materialization_job == mock_job
 
         # call second time
-        fg.backfill_job
+        fg.materialization_job
 
         # make sure it still was called only once
         mock_job_api.assert_called_once
-        assert fg.backfill_job == mock_job
+        assert fg.materialization_job == mock_job
 
     def test_multi_part_insert_return_writer(self, mocker):
         fg = feature_group.FeatureGroup(
