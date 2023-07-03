@@ -315,6 +315,7 @@ class FeatureView:
         entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]] = {},
         external: Optional[bool] = None,
+        return_type: Optional[str] = "list",
     ):
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -332,9 +333,21 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # get a feature vector
+            # get assembled serving vector as a python list
             feature_view.get_feature_vector(
                 entry = {"pk1": 1, "pk2": 2}
+            )
+
+            # get assembled serving vector as a pandas dataframe
+            feature_view.get_feature_vector(
+                entry = {"pk1": 1, "pk2": 2},
+                return_type = "pandas"
+            )
+
+            # get assembled serving vector as a numpy array
+            feature_view.get_feature_vector(
+                entry = {"pk1": 1, "pk2": 2},
+                return_type = "numpy"
             )
             ```
 
@@ -366,10 +379,13 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
 
         # Returns
-            `list` List of feature values related to provided primary keys, ordered according to positions of this
-            features in the feature view query.
+            `list`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"` or `"numpy"`
+            respectively. Defaults to `list`.
+            Returned `list`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary keys,
+            ordered according to positions of this features in the feature view query.
 
         # Raises
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
@@ -377,13 +393,16 @@ class FeatureView:
         """
         if self._single_vector_server is None:
             self.init_serving(external=external)
-        return self._single_vector_server.get_feature_vector(entry, passed_features)
+        return self._single_vector_server.get_feature_vector(
+            entry, return_type, passed_features
+        )
 
     def get_feature_vectors(
         self,
         entry: List[Dict[str, Any]],
         passed_features: Optional[List[Dict[str, Any]]] = {},
         external: Optional[bool] = None,
+        return_type: Optional[str] = "list",
     ):
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -404,13 +423,33 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # get assembled serving vectors
+            # get assembled serving vectors as a python list of lists
             feature_view.get_feature_vectors(
                 entry = [
                     {"pk1": 1, "pk2": 2},
                     {"pk1": 3, "pk2": 4},
                     {"pk1": 5, "pk2": 6}
                 ]
+            )
+
+            # get assembled serving vectors as a pandas dataframe
+            feature_view.get_feature_vectors(
+                entry = [
+                    {"pk1": 1, "pk2": 2},
+                    {"pk1": 3, "pk2": 4},
+                    {"pk1": 5, "pk2": 6}
+                ],
+                return_type = "pandas"
+            )
+
+            # get assembled serving vectors as a numpy array
+            feature_view.get_feature_vectors(
+                entry = [
+                    {"pk1": 1, "pk2": 2},
+                    {"pk1": 3, "pk2": 4},
+                    {"pk1": 5, "pk2": 6}
+                ],
+                return_type = "numpy"
             )
             ```
 
@@ -425,10 +464,14 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
 
         # Returns
-            `List[list]` List of lists of feature values related to provided primary keys, ordered according
-                to positions of this features in the feature view query.
+            `List[list]`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"` or `"numpy"`
+            respectively. Defaults to `List[list]`.
+
+            Returned `List[list]`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary
+            keys, ordered according to positions of this features in the feature view query.
 
         # Raises
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
@@ -436,7 +479,9 @@ class FeatureView:
         """
         if self._batch_vectors_server is None:
             self.init_serving(external=external)
-        return self._batch_vectors_server.get_feature_vectors(entry, passed_features)
+        return self._batch_vectors_server.get_feature_vectors(
+            entry, return_type, passed_features
+        )
 
     def get_batch_data(
         self,
