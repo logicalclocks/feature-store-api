@@ -316,6 +316,7 @@ class TestArrowFlightClient:
                     "right_filter": None,
                 },
             },
+            "connectors": {},
         }
 
         query_object["features"] = {
@@ -356,6 +357,7 @@ class TestArrowFlightClient:
                 },
                 "right_filter": None,
             },
+            "connectors": {},
         }
 
         query_object["features"] = {
@@ -393,6 +395,7 @@ class TestArrowFlightClient:
                 },
                 "right_filter": None,
             },
+            "connectors": {},
         }
 
         query_object["features"] = {
@@ -430,6 +433,7 @@ class TestArrowFlightClient:
                 },
                 "right_filter": None,
             },
+            "connectors": {},
         }
 
         query_object["features"] = {
