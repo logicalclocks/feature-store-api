@@ -55,6 +55,9 @@ public abstract class HopsworksConnectionBase implements Closeable {
   protected boolean hostnameVerification;
 
   @Getter
+  protected String keyStorePath;
+
+  @Getter
   protected String trustStorePath;
 
   @Getter
