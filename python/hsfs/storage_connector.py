@@ -626,7 +626,7 @@ class AdlsConnector(StorageConnector):
             "^abfss://.*@.*dfs.core.windows.net", read_path
         ):
             raise ValueError(ERROR_GEN2_PATH)
-        if self.generation == 1 and not re.search(
+        elif self.generation == 1 and not re.search(
             "^adl://.*azuredatalakestore.net", read_path
         ):
             raise ValueError(ERROR_GEN1_PATH)
