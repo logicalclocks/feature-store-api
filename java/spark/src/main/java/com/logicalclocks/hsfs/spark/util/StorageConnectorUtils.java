@@ -75,7 +75,7 @@ public class StorageConnectorUtils {
     }
     if (path != null && !path.startsWith("s3://")) {
       path = connector.getPath(path);
-      logger.info(String.format( "Prepending default bucket specified on connector, final path: %s", path));
+      logger.info(String.format("Prepending default bucket specified on connector, final path: %s", path));
     }
     return SparkEngine.getInstance().read(connector, dataFormat, readOptions, path);
   }
@@ -111,7 +111,7 @@ public class StorageConnectorUtils {
    * @throws IOException Generic IO exception.
    */
   public Dataset<Row> read(StorageConnector.AdlsConnector connector, String dataFormat, Map<String, String> options,
-    String path) throws FeatureStoreException, IOException {
+      String path) throws FeatureStoreException, IOException {
     return SparkEngine.getInstance().read(connector, dataFormat, options, validateAdlsPath(connector, path));
   }
 
