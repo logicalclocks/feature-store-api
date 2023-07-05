@@ -208,13 +208,13 @@ class ArrowFlightClient:
     def is_flyingduck_query_object(self, query_obj):
         return isinstance(query_obj, dict) and "query_string" in query_obj
 
-    def create_query_object(self, query, query_str, on_demand_fg_aliases):
+    def create_query_object(self, query, query_str, on_demand_fg_aliases=[]):
         features = {}
         connectors = {}
         for fg in query.featuregroups:
             fg_name = self._serialize_featuregroup_name(fg)
             fg_connector = self._serialize_featuregroup_connector(
-                fg, on_demand_fg_aliases, query
+                fg, query, on_demand_fg_aliases
             )
             features[fg_name] = [feat.name for feat in fg.features]
             connectors[fg_name] = fg_connector
@@ -230,7 +230,7 @@ class ArrowFlightClient:
         }
         return query
 
-    def _serialize_featuregroup_connector(self, fg, on_demand_fg_aliases, query):
+    def _serialize_featuregroup_connector(self, fg, query, on_demand_fg_aliases):
         connector = {}
         if isinstance(fg, feature_group.ExternalFeatureGroup):
             connector["type"] = fg.storage_connector.type
