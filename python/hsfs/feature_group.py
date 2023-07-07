@@ -2423,9 +2423,7 @@ class FeatureGroup(FeatureGroupBase):
         return self.name + "_" + str(self.version)
 
     def _get_project_name(self):
-        if self.feature_store_name.endswith("_featurestore"):
-            return self.feature_store_name[:-13]
-        return self.feature_store_name
+        return util.strip_feature_store_name(self.feature_store_name)
 
     @property
     def id(self):
@@ -2631,9 +2629,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._href = href
 
     def _get_project_name(self):
-        if self.feature_store_name.endswith("_featurestore"):
-            return self.feature_store_name[:-13]
-        return self.feature_store_name
+        return util.strip_feature_store_name(self.feature_store_name)
 
     def save(self):
         """Persist the metadata for this external feature group.

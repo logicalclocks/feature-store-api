@@ -30,6 +30,8 @@ from hsfs import client, feature
 from hsfs.client import exceptions
 from hsfs.core import variable_api
 
+FEATURE_STORE_NAME_SUFFIX = "_featurestore"
+
 
 class FeatureStoreEncoder(json.JSONEncoder):
     def default(self, o):
@@ -62,12 +64,19 @@ def feature_group_name(feature_group):
 
 
 def rewrite_feature_store_name(name):
-    FEATURE_STORE_NAME_SUFFIX = "_featurestore"
     name = name.lower()
     if name.endswith(FEATURE_STORE_NAME_SUFFIX):
         return name
     else:
         return name + FEATURE_STORE_NAME_SUFFIX
+
+
+def strip_feature_store_name(name):
+    name = name.lower()
+    if name.endswith(FEATURE_STORE_NAME_SUFFIX):
+        return name[: -1 * len(FEATURE_STORE_NAME_SUFFIX)]
+    else:
+        return name
 
 
 def create_mysql_engine(online_conn, external, options=None):
