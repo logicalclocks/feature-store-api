@@ -2745,16 +2745,21 @@ class ExternalFeatureGroup(FeatureGroupBase):
             `hsfs.client.exceptions.RestAPIError`.
         """
 
-        #
-        # if engine.get_type() == "python" and not online:
-        #    raise FeatureStoreException(
-        #        "Reading an External Feature Group directly into a Pandas Dataframe using "
-        #        + "Python/Pandas as Engine from the external storage system "
-        #        + "is not supported, however, if the feature group is online enabled, you can read "
-        #        + "from online storage or you can use the "
-        #        + "Query API to create Feature Views/Training Data containing External "
-        #         + "Feature Groups."
-        #    )
+        if (
+            engine.get_type() == "python"
+            and not online
+            and not engine.get_instance().is_flyingduck_query_supported(
+                self.select_all()
+            )
+        ):
+            raise FeatureStoreException(
+                "Reading an External Feature Group directly into a Pandas Dataframe using "
+                + "Python/Pandas as Engine from the external storage system "
+                + "is not supported, however, if the feature group is online enabled, you can read "
+                + "from online storage or you can use the "
+                + "Query API to create Feature Views/Training Data containing External "
+                + "Feature Groups."
+            )
         engine.get_instance().set_job_group(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
