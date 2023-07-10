@@ -1306,8 +1306,10 @@ class Engine:
     def _start_offline_materialization(offline_write_options):
         if offline_write_options is not None:
             if "start_offline_materialization" in offline_write_options:
-                return offline_write_options.get("start_offline_materialization", True)
+                return offline_write_options.get("start_offline_materialization")
             elif "start_offline_backfill" in offline_write_options:
-                return offline_write_options.get("start_offline_backfill", True)
+                return offline_write_options.get("start_offline_backfill")
+            else:
+                return True
         else:
             return False

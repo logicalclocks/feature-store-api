@@ -1662,6 +1662,12 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it does not wait.
+                * key `start_offline_backfill` and value `True` or `False` to configure
+                  whether or not to start the materialization job to write data to the offline
+                  storage. `start_offline_backfill` is deprecated. Use `start_offline_materialization` instead.
+                * key `start_offline_backfill` and value `True` or `False` to configure
+                  whether or not to start the materialization job to write data to the offline
+                  storage. `start_offline_backfill` is deprecated. Use `start_offline_materialization` instead.
                 * key `start_offline_materialization` and value `True` or `False` to configure
                   whether or not to start the materialization job to write data to the offline
                   storage. By default the materialization job gets started immediately.
@@ -1842,6 +1848,9 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the insert call should return only
                   after the Hopsworks Job has finished. By default it waits.
+                * key `start_offline_backfill` and value `True` or `False` to configure
+                  whether or not to start the materialization job to write data to the offline
+                  storage. `start_offline_backfill` is deprecated. Use `start_offline_materialization` instead.
                 * key `start_offline_materialization` and value `True` or `False` to configure
                   whether or not to start the materialization job to write data to the offline
                   storage. By default the materialization job gets started immediately.
@@ -1988,6 +1997,9 @@ class FeatureGroup(FeatureGroupBase):
                 * key `wait_for_job` and value `True` or `False` to configure
                   whether or not to the insert call should return only
                   after the Hopsworks Job has finished. By default it waits.
+                * key `start_offline_backfill` and value `True` or `False` to configure
+                  whether or not to start the materialization job to write data to the offline
+                  storage. `start_offline_backfill` is deprecated. Use `start_offline_materialization` instead.
                 * key `start_offline_materialization` and value `True` or `False` to configure
                   whether or not to start the materialization job to write data to the offline
                   storage. By default the materialization job does not get started automatically
