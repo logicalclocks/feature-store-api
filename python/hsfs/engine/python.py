@@ -970,10 +970,7 @@ class Engine:
             and reset_offsets
             and not feature_group._multi_part_insert
         ):
-            if offline_write_options is not None and not (
-                offline_write_options.get("start_offline_materialization", True)
-                or offline_write_options.get("start_offline_backfill", True)
-            ):
+            if self._start_offline_materialization(offline_write_options):
                 warnings.warn(
                     "This is the first ingestion after an upgrade or backup/restore, running materialization job even though `start_offline_materialization` was set to `False`.",
                     util.FeatureGroupWarning,
@@ -983,14 +980,9 @@ class Engine:
                 + " -kafkaOffsetReset true",
                 await_termination=offline_write_options.get("wait_for_job", False),
             )
-        elif (
-            not isinstance(feature_group, ExternalFeatureGroup)
-            and offline_write_options is not None
-            and (
-                offline_write_options.get("start_offline_materialization", True)
-                or offline_write_options.get("start_offline_backfill", True)
-            )
-        ):
+        elif not isinstance(
+            feature_group, ExternalFeatureGroup
+        ) and self._start_offline_materialization(offline_write_options):
             feature_group.materialization_job.run(
                 await_termination=offline_write_options.get("wait_for_job", False)
             )
@@ -1309,3 +1301,13 @@ class Engine:
             StorageConnector.SNOWFLAKE,
             StorageConnector.KAFKA,
         ]
+
+    @staticmethod
+    def _start_offline_materialization(offline_write_options):
+        if offline_write_options is not None:
+            if "start_offline_materialization" in offline_write_options:
+                return offline_write_options.get("start_offline_materialization", True)
+            elif "start_offline_backfill" in offline_write_options:
+                return offline_write_options.get("start_offline_backfill", True)
+        else:
+            return False
