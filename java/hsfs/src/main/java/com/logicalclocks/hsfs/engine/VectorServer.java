@@ -17,6 +17,7 @@
 
 package com.logicalclocks.hsfs.engine;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.logicalclocks.hsfs.constructor.ServingPreparedStatement;
 import com.logicalclocks.hsfs.metadata.FeatureViewApi;
@@ -30,6 +31,8 @@ import com.logicalclocks.hsfs.FeatureViewBase;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.TrainingDatasetBase;
 import com.logicalclocks.hsfs.TrainingDatasetFeature;
+import com.logicalclocks.hsfs.metadata.Variable;
+import com.logicalclocks.hsfs.metadata.VariablesApi;
 import com.logicalclocks.hsfs.util.Constants;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -53,6 +56,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -73,6 +77,7 @@ public class VectorServer {
   @Getter
   private HashSet<String> servingKeys;
   private boolean isBatch = false;
+  private VariablesApi variablesApi = new VariablesApi();
 
   public VectorServer(boolean isBatch) {
     this.isBatch = isBatch;
@@ -377,11 +382,19 @@ public class VectorServer {
     if (external) {
       // if external is true, replace the IP coming from the storage connector with the host
       // used during the connection setup
-      url = url.replaceAll("/[0-9.]+:", "/" + HopsworksClient.getInstance().getHost() + ":");
+      String host;
+      Optional<Variable> loadbalancerVariable = variablesApi.get(VariablesApi.LOADBALANCER_EXTERNAL_DOMAIN);
+      if (loadbalancerVariable.isPresent() && !Strings.isNullOrEmpty(loadbalancerVariable.get().getValue())) {
+        host = loadbalancerVariable.get().getValue();
+      } else {
+        // Fall back to the mysql server on the head node
+        host = HopsworksClient.getInstance().getHost();
+      }
+
+      url = url.replaceAll("/[0-9.]+:", "/" + host + ":");
     }
-    Connection jdbcConnection =
+    preparedStatementConnection =
         DriverManager.getConnection(url, jdbcOptions.get(Constants.JDBC_USER), jdbcOptions.get(Constants.JDBC_PWD));
-    preparedStatementConnection = jdbcConnection;
   }
 
   private String zipArraysToTupleString(List<List<Object>> lists) {

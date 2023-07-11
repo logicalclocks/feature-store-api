@@ -67,13 +67,13 @@ setup(
         ],
         "hive": [
             "pyhopshive[thrift]",
-            "pyarrow",
+            "pyarrow>=10.0",
             "confluent-kafka<=1.9.0",
             "fastavro>=1.4.11,<=1.7.3",
         ],
         "python": [
             "pyhopshive[thrift]",
-            "pyarrow",
+            "pyarrow>=10.0",
             "confluent-kafka<=1.9.0",
             "fastavro>=1.4.11,<=1.7.3",
             "tqdm",

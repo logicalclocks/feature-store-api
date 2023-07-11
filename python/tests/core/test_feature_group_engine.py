@@ -29,7 +29,7 @@ class TestFeatureGroupEngine:
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata"
         )
         mocker.patch("hsfs.core.great_expectation_engine.GreatExpectationEngine")
 
@@ -63,7 +63,7 @@ class TestFeatureGroupEngine:
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata"
         )
         mock_ge_engine = mocker.patch(
             "hsfs.core.great_expectation_engine.GreatExpectationEngine"
@@ -109,7 +109,7 @@ class TestFeatureGroupEngine:
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata"
         )
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
@@ -150,7 +150,7 @@ class TestFeatureGroupEngine:
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata"
         )
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
@@ -192,7 +192,7 @@ class TestFeatureGroupEngine:
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata"
         )
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
@@ -245,7 +245,7 @@ class TestFeatureGroupEngine:
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata"
         )
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
@@ -290,7 +290,7 @@ class TestFeatureGroupEngine:
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata"
         )
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
@@ -719,7 +719,7 @@ class TestFeatureGroupEngine:
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata"
         )
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
@@ -768,7 +768,7 @@ class TestFeatureGroupEngine:
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata"
         )
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
@@ -818,7 +818,7 @@ class TestFeatureGroupEngine:
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata"
         )
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
@@ -862,7 +862,7 @@ class TestFeatureGroupEngine:
         mocker.patch("hsfs.engine.get_type")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._save_feature_group_metadata"
+            "hsfs.core.feature_group_engine.FeatureGroupEngine.save_feature_group_metadata"
         )
         mocker.patch(
             "hsfs.core.feature_group_engine.FeatureGroupEngine._verify_schema_compatibility"
@@ -1076,7 +1076,7 @@ class TestFeatureGroupEngine:
         )
 
         # Act
-        fg_engine._save_feature_group_metadata(
+        fg_engine.save_feature_group_metadata(
             feature_group=fg, dataframe_features=[f], write_options=None
         )
 
@@ -1125,7 +1125,7 @@ class TestFeatureGroupEngine:
         )
 
         # Act
-        fg_engine._save_feature_group_metadata(
+        fg_engine.save_feature_group_metadata(
             feature_group=fg, dataframe_features=None, write_options=None
         )
 
@@ -1174,7 +1174,7 @@ class TestFeatureGroupEngine:
         )
 
         # Act
-        fg_engine._save_feature_group_metadata(
+        fg_engine.save_feature_group_metadata(
             feature_group=fg, dataframe_features=[f], write_options=None
         )
 
@@ -1226,7 +1226,7 @@ class TestFeatureGroupEngine:
                 time_travel_format="HUDI",
             )
 
-            fg_engine._save_feature_group_metadata(
+            fg_engine.save_feature_group_metadata(
                 feature_group=fg, dataframe_features=[f], write_options=None
             )
 
@@ -1242,7 +1242,7 @@ class TestFeatureGroupEngine:
                 time_travel_format="HUDI",
             )
 
-            fg_engine._save_feature_group_metadata(
+            fg_engine.save_feature_group_metadata(
                 feature_group=fg, dataframe_features=[f], write_options=None
             )
 
@@ -1258,7 +1258,7 @@ class TestFeatureGroupEngine:
                 time_travel_format="HUDI",
             )
 
-            fg_engine._save_feature_group_metadata(
+            fg_engine.save_feature_group_metadata(
                 feature_group=fg, dataframe_features=[f], write_options=None
             )
 
@@ -1274,7 +1274,7 @@ class TestFeatureGroupEngine:
                 time_travel_format="HUDI",
             )
 
-            fg_engine._save_feature_group_metadata(
+            fg_engine.save_feature_group_metadata(
                 feature_group=fg, dataframe_features=[f], write_options=None
             )
 
@@ -1330,7 +1330,7 @@ class TestFeatureGroupEngine:
         )
 
         # Act
-        fg_engine._save_feature_group_metadata(
+        fg_engine.save_feature_group_metadata(
             feature_group=fg, dataframe_features=[f], write_options=write_options
         )
 

@@ -59,6 +59,7 @@ from hsfs.core import (
     feature_view_api,
     transformation_function_engine,
     arrow_flight_client,
+    variable_api,
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -706,9 +707,15 @@ class Engine:
         return td_job
 
     def _create_hive_connection(self, feature_store, hive_config=None):
+        host = variable_api.VariableApi().get_loadbalancer_external_domain()
+        if host == "":
+            # If the load balancer is not configured, then fall back to use
+            # the hive server on the head node
+            host = client.get_instance().host
+
         try:
             return hive.Connection(
-                host=client.get_instance()._host,
+                host=host,
                 port=9085,
                 # database needs to be set every time, 'default' doesn't work in pyhive
                 database=feature_store,
@@ -1154,14 +1161,32 @@ class Engine:
         if pa.types.is_list(arrow_type):
             # figure out sub type
             sub_arrow_type = arrow_type.value_type
-            sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            try:
+                sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            except NotImplementedError:
+                sub_dtype = np.dtype("object")
             subtype = Engine._convert_pandas_dtype_to_offline_type(
                 sub_dtype, sub_arrow_type
             )
             return "array<{}>".format(subtype)
         if pa.types.is_struct(arrow_type):
-            # best effort, based on pyarrow's string representation
-            return str(arrow_type)
+            struct_schema = {}
+            for index in range(arrow_type.num_fields):
+                sub_arrow_type = arrow_type.field(index).type
+                try:
+                    sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+                except NotImplementedError:
+                    sub_dtype = np.dtype("object")
+                struct_schema[
+                    arrow_type.field(index).name
+                ] = Engine._convert_pandas_dtype_to_offline_type(
+                    sub_dtype, arrow_type.field(index).type
+                )
+            return (
+                "struct<"
+                + ",".join([f"{key}:{value}" for key, value in struct_schema.items()])
+                + ">"
+            )
         # Currently not supported
         # elif pa.types.is_decimal(arrow_type):
         #    return str(arrow_type).replace("decimal128", "decimal")

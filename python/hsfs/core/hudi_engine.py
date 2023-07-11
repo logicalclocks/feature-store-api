@@ -84,7 +84,6 @@ class HudiEngine:
     def save_hudi_fg(
         self, dataset, save_mode, operation, write_options, validation_id=None
     ):
-
         fg_commit = self._write_hudi_dataset(
             dataset, save_mode, operation, write_options
         )
