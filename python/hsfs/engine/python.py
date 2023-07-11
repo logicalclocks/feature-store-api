@@ -1312,4 +1312,4 @@ class Engine:
             else:
                 return True
         else:
-            return False
+            return True

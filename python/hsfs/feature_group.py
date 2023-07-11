@@ -1665,9 +1665,6 @@ class FeatureGroup(FeatureGroupBase):
                 * key `start_offline_backfill` and value `True` or `False` to configure
                   whether or not to start the materialization job to write data to the offline
                   storage. `start_offline_backfill` is deprecated. Use `start_offline_materialization` instead.
-                * key `start_offline_backfill` and value `True` or `False` to configure
-                  whether or not to start the materialization job to write data to the offline
-                  storage. `start_offline_backfill` is deprecated. Use `start_offline_materialization` instead.
                 * key `start_offline_materialization` and value `True` or `False` to configure
                   whether or not to start the materialization job to write data to the offline
                   storage. By default the materialization job gets started immediately.
