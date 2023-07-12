@@ -87,7 +87,7 @@ class Job:
             fg = fs.get_or_create_feature_group(...)
 
             # insert in to feature group
-            job, _ = fg.insert(df, write_options={"start_offline_backfill": False})
+            job, _ = fg.insert(df, write_options={"start_offline_materialization": False})
 
             # run job
             job.run()
