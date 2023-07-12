@@ -35,7 +35,6 @@ class User:
         two_factor=None,
         tours_state=None,
         max_num_projects=None,
-        num_created_projects=None,
         test_user=None,
         user_account_type=None,
         num_active_projects=None,
@@ -53,7 +52,6 @@ class User:
         self._two_factor = two_factor
         self._tours_state = tours_state
         self._max_num_projects = max_num_projects
-        self._num_created_projects = num_created_projects
         self._test_user = test_user
         self._user_account_type = user_account_type
         self._num_active_projects = num_active_projects
@@ -117,10 +115,6 @@ class User:
     @property
     def max_num_projects(self):
         return self._max_num_projects
-
-    @property
-    def num_created_projects(self):
-        return self._num_created_projects
 
     @property
     def test_user(self):
