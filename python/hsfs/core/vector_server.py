@@ -373,7 +373,6 @@ class VectorServer:
     def _generate_vector(self, result_dict, fill_na=False):
         # feature values
         vector = []
-        feature_names = []
         for feature in self._feature_vector_col:
             if feature.name not in result_dict:
                 if fill_na:
