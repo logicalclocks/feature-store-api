@@ -122,8 +122,8 @@ class Query:
             dataframe_type: DataFrame type to return. Defaults to `"default"`.
             read_options: Dictionary of read options for Spark in spark engine.
                 Only for python engine:
-                * key `"use_hive"` and value `True` to read query with Hive instead of ArrowFlight Server.
-                  (see https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                * key `"use_hive"` and value `True` to read query with Hive instead of
+                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key "hive_config" to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
