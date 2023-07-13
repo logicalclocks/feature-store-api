@@ -69,7 +69,6 @@
                 "lastName": "Admin",
                 "maxNumProjects": 0,
                 "numActiveProjects": 0,
-                "numCreatedProjects": 0,
                 "numRemainingProjects": 0,
                 "status": 0,
                 "testUser": false,
