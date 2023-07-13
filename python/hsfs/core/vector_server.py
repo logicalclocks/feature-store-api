@@ -42,7 +42,9 @@ class VectorServer:
     ):
         self._training_dataset_version = training_dataset_version
         self._features = features
-        self._feature_vector_col = [feat for feat in features if not feat.label]
+        self._feature_vector_col_name = (
+            [feat.name for feat in features if not feat.label] if features else []
+        )
         self._prepared_statement_engine = None
         self._prepared_statements = None
         self._serving_keys = serving_keys
@@ -181,7 +183,9 @@ class VectorServer:
                     f" followings: [{', '.join(self.serving_keys)}]"
                 )
 
-    def get_feature_vector(self, entry, return_type, passed_features={}):
+    def get_feature_vector(
+        self, entry, return_type=None, passed_features=[], allow_missing=False
+    ):
         """Assembles serving vector from online feature store."""
 
         if all([isinstance(val, list) for val in entry.values()]):
@@ -227,7 +231,7 @@ class VectorServer:
         # apply transformation functions
         result_dict = self._apply_transformation(serving_vector)
 
-        vector = self._generate_vector(result_dict)
+        vector = self._generate_vector(result_dict, allow_missing)
 
         if return_type.lower() == "list":
             return vector
@@ -235,14 +239,16 @@ class VectorServer:
             return np.array(vector)
         elif return_type.lower() == "pandas":
             pandas_df = pd.DataFrame(vector).transpose()
-            pandas_df.columns = self._feature_vector_col
+            pandas_df.columns = self._feature_vector_col_name
             return pandas_df
         else:
             raise Exception(
                 "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
             )
 
-    def get_feature_vectors(self, entries, return_type, passed_features=[]):
+    def get_feature_vectors(
+        self, entries, return_type=None, passed_features=[], allow_missing=False
+    ):
         """Assembles serving vector from online feature store."""
 
         # create dict object that will have of order of the vector as key and values as
@@ -317,12 +323,12 @@ class VectorServer:
         )
 
         # get vectors
-        vectors = list(
-            map(
-                lambda result: self._generate_vector(result, fill_na=True),
-                batch_transformed,
-            )
-        )
+        vectors = []
+        for result in batch_transformed:
+            # for backward compatibility, before 3.4, if result is empty,
+            # instead of throwing error, it skips the result
+            if len(result) != 0 or allow_missing:
+                vectors.append(self._generate_vector(result, fill_na=allow_missing))
 
         if return_type.lower() == "list":
             return vectors
@@ -330,7 +336,7 @@ class VectorServer:
             return np.array(vectors)
         elif return_type.lower() == "pandas":
             pandas_df = pd.DataFrame(vectors)
-            pandas_df.columns = self._feature_vector_col
+            pandas_df.columns = self._feature_vector_col_name
             return pandas_df
         else:
             raise Exception(
@@ -373,19 +379,19 @@ class VectorServer:
     def _generate_vector(self, result_dict, fill_na=False):
         # feature values
         vector = []
-        for feature in self._feature_vector_col:
-            if feature.name not in result_dict:
+        for feature_name in self._feature_vector_col_name:
+            if feature_name not in result_dict:
                 if fill_na:
                     vector.append(None)
                 else:
                     raise Exception(
-                        f"Feature {feature.name} is missing from vector"
+                        f"Feature {feature_name} is missing from vector"
                         " because there is no match in the given entry."
                         " Please check if the entry exists in the online feature store"
                         " or provide the feature as passed_feature."
                     )
             else:
-                vector.append(result_dict[feature.name])
+                vector.append(result_dict[feature_name])
         return vector
 
     def _apply_transformation(self, row_dict):
@@ -494,7 +500,7 @@ class VectorServer:
 
     @property
     def serving_keys(self):
-        """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
+        """Set of primary key names that is used as keys in input dict object for `get_feature_vector` method."""
         if self._serving_keys is not None:
             return set([key.required_serving_key for key in self._serving_keys])
         else:

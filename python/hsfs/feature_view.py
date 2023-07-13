@@ -328,6 +328,7 @@ class FeatureView:
         passed_features: Optional[Dict[str, Any]] = {},
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
+        allow_missing: Optional[bool] = False,
     ):
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -336,6 +337,7 @@ class FeatureView:
         !!! warning "Missing primary key entries"
             If the provided primary key `entry` can't be found in one or more of the feature groups
             used by this feature view the call to this method will raise an exception.
+            Alternatively, setting `allow_missing` to `True` returns a feature vector with missing values.
 
         !!! example
             ```python
@@ -382,6 +384,7 @@ class FeatureView:
 
         # Arguments
             entry: dictionary of feature group primary key and values provided by serving application.
+                Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
             passed_features: dictionary of feature values provided by the application at runtime.
                 They can replace features values fetched from the feature store as well as
                 providing feature values which are not available in the feature store.
@@ -392,6 +395,7 @@ class FeatureView:
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
             return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
+            allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
             `list`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"` or `"numpy"`
@@ -406,7 +410,7 @@ class FeatureView:
         if self._single_vector_server is None:
             self.init_serving(external=external)
         return self._single_vector_server.get_feature_vector(
-            entry, return_type, passed_features
+            entry, return_type, passed_features, allow_missing
         )
 
     def get_feature_vectors(
@@ -415,6 +419,7 @@ class FeatureView:
         passed_features: Optional[List[Dict[str, Any]]] = {},
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
+        allow_missing: Optional[bool] = False,
     ):
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -426,6 +431,7 @@ class FeatureView:
             returned.
             If it can be found in at least one but not all feature groups used by
             this feature view the call to this method will raise an exception.
+            Alternatively, setting `allow_missing` to `True` returns feature vectors with missing values.
 
         !!! example
             ```python
@@ -467,6 +473,7 @@ class FeatureView:
 
         # Arguments
             entry: a list of dictionary of feature group primary key and values provided by serving application.
+                Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
             passed_features: a list of dictionary of feature values provided by the application at runtime.
                 They can replace features values fetched from the feature store as well as
                 providing feature values which are not available in the feature store.
@@ -477,6 +484,7 @@ class FeatureView:
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
             return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
+            allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
             `List[list]`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"` or `"numpy"`
@@ -492,7 +500,7 @@ class FeatureView:
         if self._batch_vectors_server is None:
             self.init_serving(external=external)
         return self._batch_vectors_server.get_feature_vectors(
-            entry, return_type, passed_features
+            entry, return_type, passed_features, allow_missing
         )
 
     def get_batch_data(
@@ -2525,7 +2533,7 @@ class FeatureView:
 
     @property
     def primary_keys(self):
-        """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
+        """Set of primary key names that is required as keys in input dict object for `get_feature_vector(s)` method."""
         _vector_server = self._single_vector_server or self._batch_vectors_server
         if _vector_server:
             return _vector_server.serving_keys
@@ -2538,6 +2546,7 @@ class FeatureView:
 
     @property
     def serving_keys(self):
+        """All primary keys of the feature groups included in the query."""
         return self._serving_keys
 
     @serving_keys.setter
