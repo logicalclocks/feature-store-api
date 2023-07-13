@@ -173,7 +173,7 @@ class FeatureView:
         external: Optional[bool] = None,
         options: Optional[dict] = None,
     ):
-        """Initialise feature view to retrieve feature vector from online feature store.
+        """Initialise feature view to retrieve feature vector from online and offline feature store.
 
         !!! example
             ```python
@@ -188,8 +188,8 @@ class FeatureView:
             ```
 
         # Arguments
-            training_dataset_version: int, optional. Default to be 1. Transformation statistics
-                are fetched from training dataset and applied to the feature vector.
+            training_dataset_version: int, optional. Default to be 1 for online feature store.
+                Transformation statistics are fetched from training dataset and applied to the feature vector.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
@@ -200,6 +200,10 @@ class FeatureView:
                 * key: kwargs of SqlAlchemy engine creation (See: https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
                   For example: `{"pool_size": 10}`
         """
+
+        # initiate batch scoring server
+        # `training_dataset_version` should not be set if `None` otherwise backend will look up the td.
+        self.init_batch_scoring(training_dataset_version)
 
         if training_dataset_version is None:
             training_dataset_version = 1
@@ -219,9 +223,6 @@ class FeatureView:
             self._featurestore_id, self._features, training_dataset_version
         )
         self._batch_vectors_server.init_serving(self, True, external, options=options)
-
-        # initiate batch scoring server
-        self.init_batch_scoring(training_dataset_version)
 
     def init_batch_scoring(
         self,
