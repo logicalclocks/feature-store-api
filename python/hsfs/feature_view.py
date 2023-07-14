@@ -2036,7 +2036,7 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
                 * key `"use_hive"` and value `True` to read training dataset
-                  with HopsFS Rest instead of
+                  with the Hopsworks API instead of
                   [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
@@ -2077,7 +2077,7 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
                 * key `"use_hive"` and value `True` to read training dataset
-                  with HopsFS Rest instead of
+                  with the Hopsworks API instead of
                   [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
@@ -2122,7 +2122,7 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
                 * key `"use_hive"` and value `True` to read training dataset
-                  with HopsFS Rest instead of
+                  with the Hopsworks API instead of
                   [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
