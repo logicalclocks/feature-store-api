@@ -2429,7 +2429,7 @@ class FeatureGroup(FeatureGroupBase):
         return self.feature_store_name + "." + self.name + "_" + str(self.version)
 
     def _get_online_table_name(self):
-        return self.name + "_" + str(self.version)
+        return f"{self.name}_{self.version}"
 
     def _get_project_name(self):
         if self.feature_store_name.endswith("_featurestore"):

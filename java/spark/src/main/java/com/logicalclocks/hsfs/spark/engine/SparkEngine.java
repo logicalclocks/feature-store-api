@@ -120,6 +120,8 @@ public class SparkEngine {
 
   private final StorageConnectorUtils storageConnectorUtils = new StorageConnectorUtils();
 
+  private FeatureGroupUtils featureGroupUtils = new FeatureGroupUtils();
+
   private static SparkEngine INSTANCE = null;
 
   public static synchronized SparkEngine getInstance() {
@@ -531,19 +533,19 @@ public class SparkEngine {
   public void writeOnlineDataframe(FeatureGroupBase featureGroupBase, Dataset<Row> dataset, String onlineTopicName,
                                    Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    byte[] schemaVersion = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
-    byte[] featureStoreId = String.valueOf(featureGroupBase.getFeatureStore().getId()).getBytes(StandardCharsets.UTF_8);
     byte[] featureGroupId = String.valueOf(featureGroupBase.getId()).getBytes(StandardCharsets.UTF_8);
+    byte[] tableName = featureGroupUtils.getFgName(featureGroupBase).getBytes(StandardCharsets.UTF_8);
+    byte[] schemaVersion = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
 
     onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
         .withColumn("headers", array(
             struct(
-                lit("featureStoreId").as("key"),
-                lit(featureStoreId).as("value")
-            ),
-            struct(
                 lit("featureGroupId").as("key"),
                 lit(featureGroupId).as("value")
+            ),
+            struct(
+                lit("tableName").as("key"),
+                lit(tableName).as("value")
             ),
             struct(
                 lit("schemaVersion").as("key"),
@@ -562,8 +564,9 @@ public class SparkEngine {
                                                  Long timeout, String checkpointLocation,
                                                  Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
-    byte[] schemaVersion = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
     byte[] featureGroupId = String.valueOf(featureGroupBase.getId()).getBytes(StandardCharsets.UTF_8);
+    byte[] tableName = featureGroupUtils.getFgName(featureGroupBase).getBytes(StandardCharsets.UTF_8);
+    byte[] schemaVersion = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
 
     DataStreamWriter<Row> writer =
         onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
@@ -571,6 +574,10 @@ public class SparkEngine {
                 struct(
                     lit("featureGroupId").as("key"),
                     lit(featureGroupId).as("value")
+                ),
+                struct(
+                    lit("tableName").as("key"),
+                    lit(tableName).as("value")
                 ),
                 struct(
                     lit("schemaVersion").as("key"),

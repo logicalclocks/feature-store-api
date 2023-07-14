@@ -57,10 +57,6 @@ public class FeatureGroupUtils {
         + offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
   }
 
-  public String getOnlineTableName(FeatureGroupBase offlineFeatureGroup) {
-    return offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
-  }
-
   public Seq<String> getPartitionColumns(FeatureGroupBase offlineFeatureGroup) {
     List<Feature> features = offlineFeatureGroup.getFeatures();
     List<String> partitionCols = features.stream()
