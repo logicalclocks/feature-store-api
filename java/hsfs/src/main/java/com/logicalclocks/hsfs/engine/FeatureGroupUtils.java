@@ -171,11 +171,6 @@ public class FeatureGroupUtils {
     return commitDetails;
   }
 
-  public String getAvroSchema(FeatureGroupBase featureGroup, FeatureStoreBase featureStoreBase)
-      throws FeatureStoreException, IOException {
-    return kafkaApi.getTopicSubject(featureStoreBase, featureGroup.getOnlineTopicName()).getSchema();
-  }
-
   public List<String> getComplexFeatures(List<Feature> features) {
     return features.stream().filter(Feature::isComplex).map(Feature::getName).collect(Collectors.toList());
   }
@@ -249,6 +244,6 @@ public class FeatureGroupUtils {
   }
 
   public Subject getSubject(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
-    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName());
+    return kafkaApi.getSubject(featureGroup.getFeatureStore(), getFgName(featureGroup));
   }
 }

@@ -153,4 +153,5 @@ class FeatureGroupBaseEngine:
             )
 
     def get_subject(self, feature_group):
-        return self._kafka_api.get_topic_subject(feature_group._online_topic_name)
+        subject_name = f"{feature_group.name}_{feature_group.version}"
+        return self._kafka_api.get_subject(subject_name)

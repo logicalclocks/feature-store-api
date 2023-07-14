@@ -531,14 +531,23 @@ public class SparkEngine {
   public void writeOnlineDataframe(FeatureGroupBase featureGroupBase, Dataset<Row> dataset, String onlineTopicName,
                                    Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-
-    byte[] version = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
+    byte[] schemaVersion = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
+    byte[] featureStoreId = String.valueOf(featureGroupBase.getFeatureStore().getId()).getBytes(StandardCharsets.UTF_8);
+    byte[] featureGroupId = String.valueOf(featureGroupBase.getId()).getBytes(StandardCharsets.UTF_8);
 
     onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
         .withColumn("headers", array(
             struct(
-                lit("version").as("key"),
-                lit(version).as("value")
+                lit("featureStoreId").as("key"),
+                lit(featureStoreId).as("value")
+            ),
+            struct(
+                lit("featureGroupId").as("key"),
+                lit(featureGroupId).as("value")
+            ),
+            struct(
+                lit("schemaVersion").as("key"),
+                lit(schemaVersion).as("value")
             )
         ))
         .write()
@@ -553,14 +562,19 @@ public class SparkEngine {
                                                  Long timeout, String checkpointLocation,
                                                  Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
-    byte[] version = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
+    byte[] schemaVersion = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
+    byte[] featureGroupId = String.valueOf(featureGroupBase.getId()).getBytes(StandardCharsets.UTF_8);
 
     DataStreamWriter<Row> writer =
         onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
             .withColumn("headers", array(
                 struct(
-                    lit("version").as("key"),
-                    lit(version).as("value")
+                    lit("featureGroupId").as("key"),
+                    lit(featureGroupId).as("value")
+                ),
+                struct(
+                    lit("schemaVersion").as("key"),
+                    lit(schemaVersion).as("value")
                 )
             ))
             .writeStream()
