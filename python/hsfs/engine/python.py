@@ -993,7 +993,7 @@ class Engine:
     def _kafka_get_offsets(self, feature_group, offline_write_options):
         consumer = Consumer(self._get_kafka_config(offline_write_options))
         topic_name = feature_group._online_topic_name
-        partition_details = kafka_api.get_topic_details(topic_name)
+        partition_details = self._kafka_api.get_topic_details(topic_name)
 
         offsets = ""
         for partition_detail in partition_details:
