@@ -40,7 +40,6 @@ class PartitionDetails:
 
     @classmethod
     def from_response_json(cls, json_dict):
-        print(json_dict)
         if json_dict is None:
             return None
 

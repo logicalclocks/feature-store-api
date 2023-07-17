@@ -873,7 +873,7 @@ class Engine:
         dataframe: pd.DataFrame,
         offline_write_options: dict,
     ):
-        reset_offsets = False
+        initial_check_point = None
         if feature_group._multi_part_insert:
             if feature_group._kafka_producer is None:
                 producer, feature_writers, writer = self._init_kafka_resources(
@@ -900,13 +900,16 @@ class Engine:
                 mininterval=1,
             )
 
-            reset_offsets = (
+            if (
                 feature_group._online_topic_name
                 not in producer.list_topics(
                     timeout=offline_write_options.get("kafka_timeout", 6)
                 ).topics.keys()
-                and len(feature_group.commit_details(limit=1)) == 1
-            )
+            ):
+                # set initial_check_point to the current offset
+                initial_check_point = self._kafka_get_offsets(
+                    feature_group, offline_write_options, True
+                )
 
         def acked(err, msg):
             if err is not None:
@@ -967,7 +970,6 @@ class Engine:
         # if topic didn't exist, always run the materialization job to reset the offsets except if it's a multi insert
         if (
             not isinstance(feature_group, ExternalFeatureGroup)
-            and reset_offsets
             and not feature_group._multi_part_insert
         ):
             if self._start_offline_materialization(offline_write_options):
@@ -975,9 +977,14 @@ class Engine:
                     "This is the first ingestion after an upgrade or backup/restore, running materialization job even though `start_offline_materialization` was set to `False`.",
                     util.FeatureGroupWarning,
                 )
+            if not initial_check_point:
+                # set the initial_check_point to the lowest offset (it was not set due to topic not existing)
+                initial_check_point = self._kafka_get_offsets(
+                    feature_group, offline_write_options, False
+                )
             feature_group.materialization_job.run(
                 args=feature_group.materialization_job.config.get("defaultArgs", "")
-                + f" -initialCheckPointString {self._kafka_get_offsets(feature_group, offline_write_options)}",
+                + f" -initialCheckPointString {initial_check_point}",
                 await_termination=offline_write_options.get("wait_for_job", False),
             )
         elif not isinstance(
@@ -990,15 +997,21 @@ class Engine:
             return None
         return feature_group.materialization_job
 
-    def _kafka_get_offsets(self, feature_group, offline_write_options):
-        consumer = Consumer(self._get_kafka_config(offline_write_options))
+    def _kafka_get_offsets(
+        self, feature_group: FeatureGroup, offline_write_options: dict, high: bool
+    ):
+        consumer_config = self._get_kafka_config(offline_write_options)
+        if "group.id" not in consumer_config:
+            consumer_config["group.id"] = "hsfs_consumer_group"
+        consumer = Consumer(consumer_config)
         topic_name = feature_group._online_topic_name
-        partition_details = self._kafka_api.get_topic_details(topic_name)
+        partition_details = self._kafka_api.get_topic_details(topic_name)  # todo: use producer instead of this
 
         offsets = ""
+        tuple_value = int(high)
         for partition_detail in partition_details:
             partition = TopicPartition(topic=topic_name, partition=partition_detail.id)
-            offsets += f",{partition_detail.id}:{consumer.get_watermark_offsets(partition)[1]}"
+            offsets += f",{partition_detail.id}:{consumer.get_watermark_offsets(partition)[tuple_value]}"
 
         consumer.close()
         return topic_name + offsets
@@ -1017,8 +1030,12 @@ class Engine:
                     callback=acked,
                     headers={
                         "featureGroupId": str(feature_group.id).encode("utf8"),
-                        "tableName": feature_group._get_online_table_name().encode("utf8"),
-                        "schemaVersion": str(feature_group.subject["version"]).encode("utf8")
+                        "tableName": feature_group._get_online_table_name().encode(
+                            "utf8"
+                        ),
+                        "schemaVersion": str(feature_group.subject["version"]).encode(
+                            "utf8"
+                        ),
                     },
                 )
 
