@@ -58,4 +58,7 @@ class KafkaApi:
         headers = {"content-type": "application/json"}
         json_list = _client._send_request("GET", path_params, headers=headers)
 
-        return partition_details.PartitionDetails.from_response_json(json_list)
+        partitions = []
+        for partition in json_list["items"]:
+            partitions.append(partition_details.PartitionDetails.from_response_json(partition))
+        return partitions
