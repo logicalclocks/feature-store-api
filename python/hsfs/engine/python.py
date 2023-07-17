@@ -39,7 +39,7 @@ from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
 from typing import TypeVar, Optional, Dict, Any
-from confluent_kafka import Producer, KafkaError
+from confluent_kafka import Consumer, Producer, KafkaError
 from tqdm.auto import tqdm
 from botocore.response import StreamingBody
 from sqlalchemy import sql
@@ -977,7 +977,7 @@ class Engine:
                 )
             feature_group.materialization_job.run(
                 args=feature_group.materialization_job.config.get("defaultArgs", "")
-                + " -kafkaOffsetReset true",
+                + f" -initialCheckPointString {self._kafka_get_offsets(feature_group)}",
                 await_termination=offline_write_options.get("wait_for_job", False),
             )
         elif not isinstance(
@@ -989,6 +989,14 @@ class Engine:
         if isinstance(feature_group, ExternalFeatureGroup):
             return None
         return feature_group.materialization_job
+
+    def _kafka_get_offsets(self, feature_group):
+        partition_details = kafka_api.get_topic_details(feature_group._online_topic_name)
+
+        print(partition_details)
+
+        return partition_details
+
 
     def _kafka_produce(
         self, producer, feature_group, key, encoded_row, acked, offline_write_options

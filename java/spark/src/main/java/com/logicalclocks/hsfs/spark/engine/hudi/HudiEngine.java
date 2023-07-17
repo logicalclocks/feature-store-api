@@ -26,7 +26,6 @@ import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
-import com.logicalclocks.hsfs.metadata.PartitionDetails;
 
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.spark.FeatureGroup;
@@ -58,7 +57,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Collectors;
 import java.util.Arrays;
 
 public class HudiEngine {
@@ -130,7 +128,6 @@ public class HudiEngine {
   protected static final String FEATURE_STORE_NAME = "featureStoreName";
   protected static final String FEATURE_GROUP_NAME = "featureGroupName";
   protected static final String FEATURE_GROUP_VERSION = "featureGroupVersion";
-  protected static final String FEATURE_GROUP_KAFKA_OFFSET_RESET = "kafkaOffsetReset";
   protected static final String FUNCTION_TYPE = "functionType";
   protected static final String STREAMING_QUERY = "streamingQuery";
 
@@ -362,17 +359,6 @@ public class HudiEngine {
     return true;
   }
 
-  private String generetaInitialCheckPointStr(StreamFeatureGroup streamFeatureGroup)
-      throws FeatureStoreException, IOException {
-
-    List<PartitionDetails> partitionDetails =  kafkaApi.getTopicDetails(streamFeatureGroup.getFeatureStore(),
-        streamFeatureGroup.getOnlineTopicName());
-
-    String partitionOffsets = partitionDetails.stream().map(partition -> partition.getId() + ":0")
-        .collect(Collectors.joining(","));
-    return streamFeatureGroup.getOnlineTopicName() + "," + partitionOffsets;
-  }
-
   public void streamToHoodieTable(SparkSession sparkSession, StreamFeatureGroup streamFeatureGroup,
                                   Map<String, String> writeOptions) throws Exception {
 
@@ -405,10 +391,6 @@ public class HudiEngine {
     if (getLastCommitMetadata(sparkSession, streamFeatureGroup.getLocation()) == null) {
       // set "kafka.auto.offset.reset": "earliest"
       hudiWriteOpts.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-    }
-
-    if (writeOptions.getOrDefault(HudiEngine.FEATURE_GROUP_KAFKA_OFFSET_RESET, "false").equalsIgnoreCase("true")) {
-      hudiWriteOpts.put(HudiEngine.INITIAL_CHECKPOINT_STRING, generetaInitialCheckPointStr(streamFeatureGroup));
     }
 
     deltaStreamerConfig.streamToHoodieTable(hudiWriteOpts, sparkSession);

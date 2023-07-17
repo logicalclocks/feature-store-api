@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs import client
+from hsfs import client, partition_details
 
 
 class KafkaApi:
@@ -45,3 +45,17 @@ class KafkaApi:
         return _client._send_request(
             "GET", path_params, query_params=query_params, headers=headers
         )["brokers"]
+
+    def get_topic_details(self, topic_name: str):
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "kafka",
+            "topics",
+            topic_name
+        ]
+        headers = {"content-type": "application/json"}
+        json_list = _client._send_request("GET", path_params, headers=headers)
+
+        return partition_details.PartitionDetails.from_response_json(json_list)
