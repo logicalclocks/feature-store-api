@@ -902,7 +902,7 @@ class Engine:
 
             if (
                 feature_group._online_topic_name
-                not in producer.list_topics(
+                in producer.list_topics(
                     timeout=offline_write_options.get("kafka_timeout", 6)
                 ).topics.keys()
             ):
@@ -1006,7 +1006,9 @@ class Engine:
             consumer_config["group.id"] = "hsfs_consumer_group"
         consumer = Consumer(consumer_config)
         topic_name = feature_group._online_topic_name
-        partition_details = self._kafka_api.get_topic_details(topic_name)  # todo: use producer instead of this
+        partition_details = self._kafka_api.get_topic_details(
+            topic_name
+        )  # todo: use producer instead of this
 
         offsets = ""
         tuple_value = int(high)
