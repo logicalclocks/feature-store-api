@@ -1000,6 +1000,7 @@ class Engine:
     def _kafka_get_offsets(
         self, feature_group: FeatureGroup, offline_write_options: dict, high: bool
     ):
+        print(high)
         consumer_config = self._get_kafka_config(offline_write_options)
         if "group.id" not in consumer_config:
             consumer_config["group.id"] = "hsfs_consumer_group"
