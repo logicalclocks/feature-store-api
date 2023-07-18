@@ -40,6 +40,7 @@ from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.training_dataset_split import TrainingDatasetSplit
+from hsfs.serving_key import ServingKey
 
 
 class FeatureView:
@@ -56,6 +57,7 @@ class FeatureView:
         labels: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
         featurestore_name=None,
+        serving_keys: Optional[List[ServingKey]] = None,
     ):
         self._name = name
         self._id = id
@@ -83,6 +85,7 @@ class FeatureView:
         self._single_vector_server = None
         self._batch_vectors_server = None
         self._batch_scoring_server = None
+        self._serving_keys = serving_keys
 
     def delete(self):
         """Delete current feature view, all associated metadata and training data.
@@ -217,13 +220,19 @@ class FeatureView:
 
         # initiate single vector server
         self._single_vector_server = vector_server.VectorServer(
-            self._featurestore_id, self._features, training_dataset_version
+            self._featurestore_id,
+            self._features,
+            training_dataset_version,
+            serving_keys=self._serving_keys,
         )
         self._single_vector_server.init_serving(self, False, external, options=options)
 
         # initiate batch vector server
         self._batch_vectors_server = vector_server.VectorServer(
-            self._featurestore_id, self._features, training_dataset_version
+            self._featurestore_id,
+            self._features,
+            training_dataset_version,
+            serving_keys=self._serving_keys,
         )
         self._batch_vectors_server.init_serving(self, True, external, options=options)
 
@@ -257,7 +266,10 @@ class FeatureView:
         """
 
         self._batch_scoring_server = vector_server.VectorServer(
-            self._featurestore_id, self._features, training_dataset_version
+            self._featurestore_id,
+            self._features,
+            training_dataset_version,
+            serving_keys=self._serving_keys,
         )
         self._batch_scoring_server.init_batch_scoring(self)
 
@@ -316,6 +328,7 @@ class FeatureView:
         passed_features: Optional[Dict[str, Any]] = {},
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
+        allow_missing: Optional[bool] = False,
     ):
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -324,6 +337,7 @@ class FeatureView:
         !!! warning "Missing primary key entries"
             If the provided primary key `entry` can't be found in one or more of the feature groups
             used by this feature view the call to this method will raise an exception.
+            Alternatively, setting `allow_missing` to `True` returns a feature vector with missing values.
 
         !!! example
             ```python
@@ -370,6 +384,7 @@ class FeatureView:
 
         # Arguments
             entry: dictionary of feature group primary key and values provided by serving application.
+                Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
             passed_features: dictionary of feature values provided by the application at runtime.
                 They can replace features values fetched from the feature store as well as
                 providing feature values which are not available in the feature store.
@@ -380,6 +395,7 @@ class FeatureView:
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
             return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
+            allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
             `list`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"` or `"numpy"`
@@ -394,7 +410,7 @@ class FeatureView:
         if self._single_vector_server is None:
             self.init_serving(external=external)
         return self._single_vector_server.get_feature_vector(
-            entry, return_type, passed_features
+            entry, return_type, passed_features, allow_missing
         )
 
     def get_feature_vectors(
@@ -403,6 +419,7 @@ class FeatureView:
         passed_features: Optional[List[Dict[str, Any]]] = {},
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
+        allow_missing: Optional[bool] = False,
     ):
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -414,6 +431,7 @@ class FeatureView:
             returned.
             If it can be found in at least one but not all feature groups used by
             this feature view the call to this method will raise an exception.
+            Alternatively, setting `allow_missing` to `True` returns feature vectors with missing values.
 
         !!! example
             ```python
@@ -455,6 +473,7 @@ class FeatureView:
 
         # Arguments
             entry: a list of dictionary of feature group primary key and values provided by serving application.
+                Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
             passed_features: a list of dictionary of feature values provided by the application at runtime.
                 They can replace features values fetched from the feature store as well as
                 providing feature values which are not available in the feature store.
@@ -465,6 +484,7 @@ class FeatureView:
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
             return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
+            allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
             `List[list]`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"` or `"numpy"`
@@ -480,7 +500,7 @@ class FeatureView:
         if self._batch_vectors_server is None:
             self.init_serving(external=external)
         return self._batch_vectors_server.get_feature_vectors(
-            entry, return_type, passed_features
+            entry, return_type, passed_features, allow_missing
         )
 
     def get_batch_data(
@@ -532,7 +552,11 @@ class FeatureView:
             end_time: End event time for the batch query, exclusive. Optional. Strings should be
                 formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`. Int, i.e Unix Epoch should be in seconds.
-            read_options: User provided read options. Defaults to `{}`.
+            read_options: User provided read options.
+                Dictionary of read options for python engine:
+                * key `"use_hive"` and value `True` to read batch data with Hive instead of
+                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                Defaults to `{}`.
             spine: Spine dataframe with primary key, event time and
                 label column to use for point in time join when fetching features. Defaults to `None` and is only required
                 when feature view was created with spine group in the feature query.
@@ -1584,12 +1608,15 @@ class FeatureView:
                 `None` and will compute only descriptive statistics.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
-                When using the `python` engine, write_options can contain the
+                When using the `python` engine, read_options can contain the
                 following entries:
+                * key `"use_hive"` and value `True` to create in-memory training dataset
+                  with Hive instead of
+                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
                 Defaults to `{}`.
             spine: Spine dataframe with primary key, event time and
@@ -1725,12 +1752,15 @@ class FeatureView:
                 `None` and will compute only descriptive statistics.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
-                When using the `python` engine, write_options can contain the
+                When using the `python` engine, read_options can contain the
                 following entries:
+                * key `"use_hive"` and value `True` to create in-memory training dataset
+                  with Hive instead of
+                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
                 Defaults to `{}`.
             spine: Spine dataframe with primary key, event time and
@@ -1903,12 +1933,15 @@ class FeatureView:
                 `None` and will compute only descriptive statistics.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
-                When using the `python` engine, write_options can contain the
+                When using the `python` engine, read_options can contain the
                 following entries:
+                * key `"use_hive"` and value `True` to create in-memory training dataset
+                  with Hive instead of
+                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
-                [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
+                  [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
                 Defaults to `{}`.
             spine: Spine dataframe with primary key, event time and
@@ -2022,6 +2055,9 @@ class FeatureView:
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
+                * key `"use_hive"` and value `True` to read training dataset
+                  with the Hopsworks API instead of
+                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
@@ -2060,6 +2096,9 @@ class FeatureView:
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
+                * key `"use_hive"` and value `True` to read training dataset
+                  with the Hopsworks API instead of
+                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
@@ -2102,6 +2141,9 @@ class FeatureView:
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
+                * key `"use_hive"` and value `True` to read training dataset
+                  with the Hopsworks API instead of
+                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
@@ -2336,6 +2378,9 @@ class FeatureView:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        serving_keys = json_decamelized.get("serving_keys", None)
+        if serving_keys is not None:
+            serving_keys = [ServingKey.from_response_json(sk) for sk in serving_keys]
         fv = cls(
             id=json_decamelized.get("id", None),
             name=json_decamelized["name"],
@@ -2344,6 +2389,7 @@ class FeatureView:
             version=json_decamelized.get("version", None),
             description=json_decamelized.get("description", None),
             featurestore_name=json_decamelized.get("featurestore_name", None),
+            serving_keys=serving_keys,
         )
         features = json_decamelized.get("features", [])
         if features:
@@ -2368,6 +2414,7 @@ class FeatureView:
             "version",
             "labels",
             "schema",
+            "serving_keys",
         ]:
             self._update_attribute_if_present(self, other, key)
         return self
@@ -2486,13 +2533,22 @@ class FeatureView:
 
     @property
     def primary_keys(self):
-        """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
+        """Set of primary key names that is required as keys in input dict object for `get_feature_vector(s)` method."""
         _vector_server = self._single_vector_server or self._batch_vectors_server
         if _vector_server:
             return _vector_server.serving_keys
         else:
             _vector_server = vector_server.VectorServer(
-                self._featurestore_id, self._features
+                self._featurestore_id, self._features, serving_keys=self._serving_keys
             )
             _vector_server.init_prepared_statement(self, False, False)
             return _vector_server.serving_keys
+
+    @property
+    def serving_keys(self):
+        """All primary keys of the feature groups included in the query."""
+        return self._serving_keys
+
+    @serving_keys.setter
+    def serving_keys(self, serving_keys):
+        self._serving_keys = serving_keys

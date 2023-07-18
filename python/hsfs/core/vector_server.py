@@ -22,6 +22,7 @@ import numpy as np
 import pandas as pd
 from hsfs import util
 from hsfs import training_dataset, feature_view, client
+from hsfs.serving_key import ServingKey
 from hsfs.core import (
     training_dataset_api,
     storage_connector_api,
@@ -32,14 +33,24 @@ from hsfs.core import (
 
 
 class VectorServer:
-    def __init__(self, feature_store_id, features=[], training_dataset_version=None):
+    def __init__(
+        self,
+        feature_store_id,
+        features=[],
+        training_dataset_version=None,
+        serving_keys=None,
+    ):
         self._training_dataset_version = training_dataset_version
         self._features = features
+        self._feature_vector_col_name = (
+            [feat.name for feat in features if not feat.label] if features else []
+        )
         self._prepared_statement_engine = None
         self._prepared_statements = None
-        self._serving_keys = None
+        self._serving_keys = serving_keys
         self._pkname_by_serving_index = None
         self._prefix_by_serving_index = None
+        self._serving_key_by_serving_index = {}
         self._external = True
         self._feature_store_id = feature_store_id
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
@@ -89,15 +100,13 @@ class VectorServer:
         # reset values to default, as user may be re-initialising with different parameters
         self._prepared_statement_engine = None
         self._prepared_statements = None
-        self._serving_keys = None
         self._external = external
 
         self._set_mysql_connection(options=options)
 
         prepared_statements_dict = {}
-        pkname_by_serving_index = {}
-        prefix_by_serving_index = {}
-        serving_vector_keys = set()
+        serving_keys = set()
+        feature_name_order_by_psp = dict()
         for prepared_statement in prepared_statements:
             query_online = str(prepared_statement.query_online).replace("\n", " ")
 
@@ -110,9 +119,27 @@ class VectorServer:
                     key=lambda psp: psp.index,
                 )
             ]
-
-            for pk_name in pk_names:
-                serving_vector_keys.add(pk_name)
+            feature_name_order_by_psp[
+                prepared_statement.prepared_statement_index
+            ] = dict(
+                [
+                    (psp.name, psp.index)
+                    for psp in prepared_statement.prepared_statement_parameters
+                ]
+            )
+            # construct serving key if it is not provided.
+            if self._serving_keys is None:
+                for pk_name in pk_names:
+                    # should use `ignore_prefix=True` because before hsfs 3.3,
+                    # only primary key of a feature group are matched in
+                    # user provided entry.
+                    serving_key = ServingKey(
+                        feature_name=pk_name,
+                        join_index=prepared_statement.prepared_statement_index,
+                        prefix=prepared_statement.prefix,
+                        ignore_prefix=True,
+                    )
+                    serving_keys.add(serving_key)
 
             if not batch:
                 for pk_name in pk_names:
@@ -125,27 +152,40 @@ class VectorServer:
                     batch_ids=bindparam("batch_ids", expanding=True)
                 )
 
-            pkname_by_serving_index[
-                prepared_statement.prepared_statement_index
-            ] = pk_names
-
-            prefix_by_serving_index[
-                prepared_statement.prepared_statement_index
-            ] = prepared_statement.prefix
-
             prepared_statements_dict[
                 prepared_statement.prepared_statement_index
             ] = query_online
+        # assign serving key if it is not provided.
+        if self._serving_keys is None:
+            self._serving_keys = serving_keys
 
         self._prepared_statements = prepared_statements_dict
-        self._serving_keys = serving_vector_keys
-        self._pkname_by_serving_index = pkname_by_serving_index
-        self._prefix_by_serving_index = prefix_by_serving_index
-
+        for sk in self._serving_keys:
+            self._serving_key_by_serving_index[
+                sk.join_index
+            ] = self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
+        # sort the serving by PreparedStatementParameter.index
+        for join_index in self._serving_key_by_serving_index:
+            self._serving_key_by_serving_index[join_index] = sorted(
+                self._serving_key_by_serving_index[join_index],
+                key=lambda _sk: feature_name_order_by_psp[join_index].get(
+                    _sk.feature_name, 0
+                ),
+            )
         # get schemas for complex features once
         self._complex_features = self.get_complex_feature_schemas()
 
-    def get_feature_vector(self, entry, return_type, passed_features={}):
+    def _validate_serving_key(self, entry):
+        for key in entry:
+            if key not in self.serving_keys:
+                raise ValueError(
+                    f"'{key}' is not a correct serving key. Expect one of the"
+                    f" followings: [{', '.join(self.serving_keys)}]"
+                )
+
+    def get_feature_vector(
+        self, entry, return_type=None, passed_features=[], allow_missing=False
+    ):
         """Assembles serving vector from online feature store."""
 
         if all([isinstance(val, list) for val in entry.values()]):
@@ -156,44 +196,42 @@ class VectorServer:
                 "`training_dataset.init_prepared_statement()` "
                 "or `feature_view.init_serving()`"
             )
-
+        self._validate_serving_key(entry)
         # Initialize the set of values
         serving_vector = {}
         with self._prepared_statement_engine.connect() as mysql_conn:
             for prepared_statement_index in self._prepared_statements:
-                if any(
-                    e not in entry.keys()
-                    for e in self._pkname_by_serving_index[prepared_statement_index]
-                ):
-                    # User did not provide the necessary serving keys, we expect they have
-                    # provided the necessary features as passed_features.
-                    # We are going to check later if this is true
+                pk_entry = {}
+                next_statement = False
+                for sk in self._serving_key_by_serving_index[prepared_statement_index]:
+                    if sk.required_serving_key not in entry.keys():
+                        # User did not provide the necessary serving keys, we expect they have
+                        # provided the necessary features as passed_features.
+                        # We are going to check later if this is true
+                        next_statement = True
+                        break
+                    else:
+                        pk_entry[sk.feature_name] = entry[sk.required_serving_key]
+                if next_statement:
                     continue
 
                 # Fetch the data from the online feature store
                 prepared_statement = self._prepared_statements[prepared_statement_index]
-
-                result_proxy = mysql_conn.execute(prepared_statement, entry).fetchall()
-
+                result_proxy = mysql_conn.execute(
+                    prepared_statement, pk_entry
+                ).fetchall()
                 for row in result_proxy:
                     result_dict = self.deserialize_complex_features(
                         self._complex_features, row._asdict()
                     )
-                    if not result_dict:
-                        raise Exception(
-                            "No data was retrieved from online feature store using input "
-                            + entry
-                        )
-
                     serving_vector.update(result_dict)
-
         # Add the passed features
         serving_vector.update(passed_features)
 
         # apply transformation functions
         result_dict = self._apply_transformation(serving_vector)
 
-        vector, feature_names = self._generate_vector(result_dict)
+        vector = self._generate_vector(result_dict, allow_missing)
 
         if return_type.lower() == "list":
             return vector
@@ -201,72 +239,77 @@ class VectorServer:
             return np.array(vector)
         elif return_type.lower() == "pandas":
             pandas_df = pd.DataFrame(vector).transpose()
-            pandas_df.columns = feature_names
+            pandas_df.columns = self._feature_vector_col_name
             return pandas_df
         else:
             raise Exception(
                 "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
             )
 
-    def get_feature_vectors(self, entry, return_type, passed_features=[]):
+    def get_feature_vectors(
+        self, entries, return_type=None, passed_features=[], allow_missing=False
+    ):
         """Assembles serving vector from online feature store."""
 
         # create dict object that will have of order of the vector as key and values as
         # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
         # expect that backend will return correctly ordered vectors.
-        batch_results = {}
+        batch_results = [{} for _ in range(len(entries))]
+        # for each prepare statement, do a batch look up
+        # then concatenate the results
         with self._prepared_statement_engine.connect() as mysql_conn:
             for prepared_statement_index in self._prepared_statements:
                 prepared_statement = self._prepared_statements[prepared_statement_index]
-
                 entry_values_tuples = list(
                     map(
                         lambda e: tuple(
                             [
-                                e.get(key)
-                                for key in self._pkname_by_serving_index[
+                                e.get(sk.required_serving_key)
+                                for sk in self._serving_key_by_serving_index[
                                     prepared_statement_index
                                 ]
                             ]
                         ),
-                        entry,
+                        entries,
                     )
                 )
-
                 result_proxy = mysql_conn.execute(
                     prepared_statement,
                     {"batch_ids": entry_values_tuples},
                 ).fetchall()
 
-                statement_results = []
+                statement_results = {}
+                serving_keys = [
+                    sk.required_serving_key
+                    for sk in self._serving_key_by_serving_index[
+                        prepared_statement_index
+                    ]
+                ]
+                prefix_features = [
+                    sk.prefix + sk.feature_name
+                    for sk in self._serving_key_by_serving_index[
+                        prepared_statement_index
+                    ]
+                ]
                 for row in result_proxy:
+                    row_dict = row._asdict()
+                    # can primary key be complex feature?
                     result_dict = self.deserialize_complex_features(
-                        self._complex_features, row._asdict()
+                        self._complex_features, row_dict
                     )
-
-                    if not result_dict:
-                        raise Exception(
-                            "No data was retrieved from online feature store using input "
-                            + entry
-                        )
-
-                    statement_results.append(result_dict)
-
-                # sort the results based on the order of keys provided by the user
-                sorted_results = self._get_sorted_results(
-                    self._pkname_by_serving_index[prepared_statement_index],
-                    entry,
-                    statement_results,
-                    self._prefix_by_serving_index[prepared_statement_index],
-                )
+                    # note: should used serialized value
+                    # as it is from users' input
+                    statement_results[
+                        self._get_result_key(prefix_features, row_dict)
+                    ] = result_dict
 
                 # add partial results to the global results
-                for vector_index, results_dict in enumerate(sorted_results):
-                    if vector_index not in batch_results:
-                        batch_results[vector_index] = results_dict
-                    else:
-                        batch_results[vector_index].update(results_dict)
-
+                for i, entry in enumerate(entries):
+                    batch_results[i].update(
+                        statement_results.get(
+                            self._get_result_key(serving_keys, entry), {}
+                        )
+                    )
         # apply passed features to each batch result
         for vector_index, pf in enumerate(passed_features):
             batch_results[vector_index].update(pf)
@@ -275,25 +318,17 @@ class VectorServer:
         batch_transformed = list(
             map(
                 lambda results_dict: self._apply_transformation(results_dict),
-                batch_results.values(),
+                batch_results,
             )
         )
-
-        # get column names for pandas dataframe
-        feature_names = list(
-            map(
-                lambda result_dict: self._generate_vector(result_dict)[1],
-                [batch_transformed[0]],
-            )
-        )[0]
 
         # get vectors
-        vectors = list(
-            map(
-                lambda result_dict: self._generate_vector(result_dict)[0],
-                batch_transformed,
-            )
-        )
+        vectors = []
+        for result in batch_transformed:
+            # for backward compatibility, before 3.4, if result is empty,
+            # instead of throwing error, it skips the result
+            if len(result) != 0 or allow_missing:
+                vectors.append(self._generate_vector(result, fill_na=allow_missing))
 
         if return_type.lower() == "list":
             return vectors
@@ -301,7 +336,7 @@ class VectorServer:
             return np.array(vectors)
         elif return_type.lower() == "pandas":
             pandas_df = pd.DataFrame(vectors)
-            pandas_df.columns = feature_names
+            pandas_df.columns = self._feature_vector_col_name
             return pandas_df
         else:
             raise Exception(
@@ -341,28 +376,23 @@ class VectorServer:
             online_conn, self._external, options=options
         )
 
-    def _generate_vector(self, result_dict):
+    def _generate_vector(self, result_dict, fill_na=False):
         # feature values
         vector = []
-        # column names for pandas dataframe
-        feature_names = []
-        for feature in self._features:
-            if feature.label:
-                # Skip the label
-                continue
-
-            if feature.name not in result_dict:
-                raise Exception(
-                    "Feature "
-                    + feature.name
-                    + " is missing from vector. "
-                    + "Please provide the required entry to retrieve it from the feature store "
-                    + " or provide the feature as passed_feature"
-                )
-            feature_names.append(feature.name)
-            vector.append(result_dict[feature.name])
-
-        return vector, feature_names
+        for feature_name in self._feature_vector_col_name:
+            if feature_name not in result_dict:
+                if fill_na:
+                    vector.append(None)
+                else:
+                    raise Exception(
+                        f"Feature {feature_name} is missing from vector"
+                        " because there is no match in the given entry."
+                        " Please check if the entry exists in the online feature store"
+                        " or provide the feature as passed_feature."
+                    )
+            else:
+                vector.append(result_dict[feature_name])
+        return vector
 
     def _apply_transformation(self, row_dict):
         for feature_name in self._transformation_functions:
@@ -374,20 +404,11 @@ class VectorServer:
         return row_dict
 
     @staticmethod
-    def _get_sorted_results(pknames, entries, results, prefix):
-        sorted_results = []
-        for e in entries:
-            for row in results:
-                if all(
-                    [
-                        e[pkname] == row[(prefix if prefix else "") + pkname]
-                        for pkname in pknames
-                    ]
-                ):
-                    sorted_results.append(row)
-                    break
-
-        return sorted_results
+    def _get_result_key(primary_keys, result_dict):
+        result_key = []
+        for pk in primary_keys:
+            result_key.append(result_dict.get(pk))
+        return tuple(result_key)
 
     @staticmethod
     def _parametrize_query(name, query_online):
@@ -479,8 +500,11 @@ class VectorServer:
 
     @property
     def serving_keys(self):
-        """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
-        return self._serving_keys
+        """Set of primary key names that is used as keys in input dict object for `get_feature_vector` method."""
+        if self._serving_keys is not None:
+            return set([key.required_serving_key for key in self._serving_keys])
+        else:
+            return set()
 
     @serving_keys.setter
     def serving_keys(self, serving_vector_keys):
