@@ -467,8 +467,6 @@ class TestArrowFlightClient:
             query, "SELECT * FROM..."
         )
 
-        print(query_object)
-
         # Assert
         query_object_reference = {
             "query_string": "SELECT * FROM...",
