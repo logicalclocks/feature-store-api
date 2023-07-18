@@ -91,22 +91,19 @@ public class DeltaStreamerKafkaSource extends AvroSource {
     if (totalNewMsgs <= 0L) {
       return new InputBatch(Option.empty(), KafkaOffsetGen.CheckpointUtils.offsetsToStr(offsetRanges));
     } else {
-      JavaRDD<GenericRecord> newDataRdd = this.toRdd(offsetRanges);
+      JavaRDD<GenericRecord> newDataRdd = this.toRdd(offsetRanges, props.getString(HudiEngine.FEATURE_GROUP_ID));
       return new InputBatch(Option.of(newDataRdd), KafkaOffsetGen.CheckpointUtils.offsetsToStr(offsetRanges));
     }
   }
 
-  private JavaRDD<GenericRecord> toRdd(OffsetRange[] offsetRanges) {
+  private JavaRDD<GenericRecord> toRdd(OffsetRange[] offsetRanges, String fgId) {
     return KafkaUtils.createRDD(this.sparkContext, this.offsetGen.getKafkaParams(), offsetRanges,
         LocationStrategies.PreferConsistent())
-            .filter(obj -> {
-              String featureGroupId = getHeader(obj.headers(), "featureGroupId");
-              return props.get(HudiEngine.FEATURE_GROUP_ID).equals(featureGroupId);
-            })
+            .filter(obj -> fgId.equals(getHeader(obj.headers(), "featureGroupId")))
             .map(obj -> (GenericRecord) obj.value());
   }
 
-  private String getHeader(Headers headers, String headerKey) {
+  private static String getHeader(Headers headers, String headerKey) {
     Header header = headers.lastHeader(headerKey);
     if (header != null) {
       return new String(header.value(), StandardCharsets.UTF_8);
