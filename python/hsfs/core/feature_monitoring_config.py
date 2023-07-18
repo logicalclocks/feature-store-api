@@ -150,7 +150,6 @@ class FeatureMonitoringConfig:
             "id": self._id,
             "featureStoreId": self._feature_store_id,
             "featureName": self._feature_name,
-            "enabled": self.enabled,
             "name": self._name,
             "description": self._description,
             "jobName": self._job_name,
