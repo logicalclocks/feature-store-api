@@ -129,7 +129,7 @@ class Engine:
     ):
         if arrow_flight_client.get_instance().is_flyingduck_query_object(sql_query):
             result_df = util.run_with_loading_animation(
-                "Reading data from Hopsworks, using FlyingDuck",
+                "Reading data from Hopsworks, using ArrowFlight",
                 arrow_flight_client.get_instance().read_query,
                 sql_query,
             )
