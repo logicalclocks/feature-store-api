@@ -672,6 +672,21 @@ class TestExternalFeatureGroup:
         assert fg.event_time is None
         assert fg.expectation_suite is None
 
+    def test_feature_group_set_expectation_suite(
+        self,
+        mocker,
+        backend_fixtures,
+    ):
+        # Arrange
+        json = backend_fixtures["expectation_suite"]["get"]["response"]
+        es = expectation_suite.ExpectationSuite.from_response_json(json)
+        json = backend_fixtures["feature_group"]["get_stream_basic_info"]["response"]
+        fg = feature_group.FeatureGroup.from_response_json(json)
+
+        fg.expectation_suite = es
+
+        assert fg.expectation_suite.id == es.id
+
     def test_feature_group_save_expectation_suite_from_ge_type(
         self, mocker, backend_fixtures
     ):
