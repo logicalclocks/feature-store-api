@@ -1342,6 +1342,9 @@ class FeatureGroupBase:
     def features(self, new_features):
         self._features = new_features
 
+    def _get_project_name(self):
+        return util.strip_feature_store_suffix(self.feature_store_name)
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -2433,11 +2436,6 @@ class FeatureGroup(FeatureGroupBase):
     def _get_online_table_name(self):
         return self.name + "_" + str(self.version)
 
-    def _get_project_name(self):
-        if self.feature_store_name.endswith("_featurestore"):
-            return self.feature_store_name[:-13]
-        return self.feature_store_name
-
     @property
     def id(self):
         """Feature group id."""
@@ -2765,7 +2763,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        if engine.get_type() == "python" and not online:
+
+        if (
+            engine.get_type() == "python"
+            and not online
+            and not engine.get_instance().is_flyingduck_query_supported(
+                self.select_all()
+            )
+        ):
             raise FeatureStoreException(
                 "Reading an External Feature Group directly into a Pandas Dataframe using "
                 + "Python/Pandas as Engine from the external storage system "

@@ -114,7 +114,7 @@ class Engine:
                 sql_query, online_conn, dataframe_type, read_options, schema
             )
 
-    def is_flyingduck_query_supported(self, query, read_options):
+    def is_flyingduck_query_supported(self, query, read_options={}):
         return arrow_flight_client.get_instance().is_query_supported(
             query, read_options
         )

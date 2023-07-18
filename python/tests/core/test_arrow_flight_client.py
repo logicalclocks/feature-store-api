@@ -22,6 +22,7 @@ from hsfs.core import arrow_flight_client
 from hsfs.engine import python
 from hsfs.feature import Feature
 from hsfs.storage_connector import HopsFSConnector
+from hsfs import storage_connector
 
 
 class TestArrowFlightClient:
@@ -316,6 +317,7 @@ class TestArrowFlightClient:
                     "right_filter": None,
                 },
             },
+            "connectors": {"test.fg_test_1": {"type": "hudi"}},
         }
 
         query_object["features"] = {
@@ -356,6 +358,7 @@ class TestArrowFlightClient:
                 },
                 "right_filter": None,
             },
+            "connectors": {"test.fg_test_1": {"type": "hudi"}},
         }
 
         query_object["features"] = {
@@ -393,6 +396,7 @@ class TestArrowFlightClient:
                 },
                 "right_filter": None,
             },
+            "connectors": {"test.fg_test_1": {"type": "hudi"}},
         }
 
         query_object["features"] = {
@@ -429,6 +433,90 @@ class TestArrowFlightClient:
                     "feature": "test.fg_test_1.intt",
                 },
                 "right_filter": None,
+            },
+            "connectors": {"test.fg_test_1": {"type": "hudi"}},
+        }
+
+        query_object["features"] = {
+            key: sorted(value) for key, value in query_object["features"].items()
+        }
+
+        assert str(query_object_reference) == str(query_object)
+
+    def test_construct_query_object_snowflake(self, mocker, backend_fixtures):
+        # Arrange
+        self._arrange_engine_mocks(mocker, backend_fixtures)
+
+        json_sf = backend_fixtures["storage_connector"]["get_snowflake"]["response"]
+        sc = storage_connector.StorageConnector.from_response_json(json_sf)
+
+        json1 = backend_fixtures["feature_group"]["get_external_snowflake"]["response"]
+        test_fg1 = feature_group.ExternalFeatureGroup.from_response_json(json1)
+        test_fg1._storage_connector = sc
+
+        mocker.patch("hsfs.constructor.query.Query.to_string", return_value="")
+        mocker.patch("hsfs.constructor.query.Query._to_string", return_value="")
+        mocker.patch(
+            "hsfs.feature_group.ExternalFeatureGroup._get_project_name",
+            return_value="test",
+        )
+        query = test_fg1.filter(Feature("c_acctbal") > 500)
+
+        # Act
+        query_object = arrow_flight_client.get_instance().create_query_object(
+            query, "SELECT * FROM..."
+        )
+
+        # Assert
+        query_object_reference = {
+            "query_string": "SELECT * FROM...",
+            "features": {
+                "test.tpch1snowflake_1": [
+                    "c_acctbal",
+                    "c_address",
+                    "c_comment",
+                    "c_custkey",
+                    "c_mktsegment",
+                    "c_name",
+                    "c_nationkey",
+                    "c_phone",
+                ]
+            },
+            "filters": {
+                "type": "logic",
+                "logic_type": "SINGLE",
+                "left_filter": {
+                    "type": "filter",
+                    "condition": "GREATER_THAN",
+                    "value": 500,
+                    "feature": "test.tpch1snowflake_1.c_acctbal",
+                },
+                "right_filter": None,
+            },
+            "connectors": {
+                "test.tpch1snowflake_1": {
+                    "type": "SNOWFLAKE",
+                    "options": {
+                        "user": "test_user",
+                        "account": "test_url",
+                        "database": "test_database/test_schema",
+                        "password": "test_password",
+                        "warehouse": "test_warehouse",
+                        "application": "test_application",
+                    },
+                    "query": "select * from Customer",
+                    "filters": {
+                        "type": "logic",
+                        "logic_type": "SINGLE",
+                        "left_filter": {
+                            "type": "filter",
+                            "condition": "GREATER_THAN",
+                            "value": 500,
+                            "feature": "c_acctbal",
+                        },
+                        "right_filter": None,
+                    },
+                }
             },
         }
 
