@@ -1342,6 +1342,9 @@ class FeatureGroupBase:
     def features(self, new_features):
         self._features = new_features
 
+    def _get_project_name(self):
+        return util.strip_feature_store_suffix(self.feature_store_name)
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -2422,9 +2425,6 @@ class FeatureGroup(FeatureGroupBase):
     def _get_online_table_name(self):
         return self.name + "_" + str(self.version)
 
-    def _get_project_name(self):
-        return util.strip_feature_store_name(self.feature_store_name)
-
     @property
     def id(self):
         """Feature group id."""
@@ -2627,9 +2627,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
             self._storage_connector = storage_connector
 
         self._href = href
-
-    def _get_project_name(self):
-        return util.strip_feature_store_name(self.feature_store_name)
 
     def save(self):
         """Persist the metadata for this external feature group.

@@ -219,8 +219,6 @@ class ArrowFlightClient:
             features[fg_name] = [feat.name for feat in fg.features]
             connectors[fg_name] = fg_connector
         filters = self._serialize_filter_expression(query.filters, query)
-        for fg_name in features:
-            features[fg_name] = list(features[fg_name])
 
         query = {
             "query_string": self._translate_to_duckdb(query, query_str),

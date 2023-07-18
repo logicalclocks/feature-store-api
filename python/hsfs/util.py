@@ -63,7 +63,7 @@ def feature_group_name(feature_group):
     return feature_group.name + "_" + str(feature_group.version)
 
 
-def rewrite_feature_store_name(name):
+def append_feature_store_suffix(name):
     name = name.lower()
     if name.endswith(FEATURE_STORE_NAME_SUFFIX):
         return name
@@ -71,7 +71,7 @@ def rewrite_feature_store_name(name):
         return name + FEATURE_STORE_NAME_SUFFIX
 
 
-def strip_feature_store_name(name):
+def strip_feature_store_suffix(name):
     name = name.lower()
     if name.endswith(FEATURE_STORE_NAME_SUFFIX):
         return name[: -1 * len(FEATURE_STORE_NAME_SUFFIX)]
