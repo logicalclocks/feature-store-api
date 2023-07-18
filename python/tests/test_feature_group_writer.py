@@ -41,7 +41,7 @@ class TestFeatureGroupWriter:
             overwrite=False,
             operation="upsert",
             storage=None,
-            write_options={"start_offline_backfill": False},
+            write_options={"start_offline_materialization": False},
             validation_options={"fetch_expectation_suite": False},
             save_code=False,
         )
