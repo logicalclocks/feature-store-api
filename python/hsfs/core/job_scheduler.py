@@ -50,7 +50,7 @@ class JobScheduler:
             enabled: Whether the scheduler is enabled or not, useful to pause scheduled execution.
             job_name: Name of the job to be scheduled.
             cron_expression: Cron expression to schedule the job. If provided, the `job_frequency` will be ignored.
-            The cron expression must follow the quartz specification, e.g `0 0 12 ? * * *` for daily at noon.
+            The cron expression must follow the quartz specification, e.g `0 0 12 ? * *` for daily at noon.
             next_execution_date_time: Date and time at which the job will be executed next.
             end_date_time: End date and time until which to schedule the job.
 
@@ -266,10 +266,10 @@ class JobScheduler:
             return "NEAR REAL-TIME"
         elif re.match(r"^0 (0|10|20|30|40|50) \* ", self._cron_expression):
             return "HOURLY"
-        elif re.match(r"^0 (0|10|20|30|40|50) \d+ \? \* \* \*$", self._cron_expression):
+        elif re.match(r"^0 (0|10|20|30|40|50) \d+ \? \* \*$", self._cron_expression):
             return "DAILY"
         elif re.match(
-            r"^0 (0|10|20|30|40|50) \d+ \? \* \* (Mon|Tue|Wed|Thu|Fri|Sat|Sun|1|2|3|4|5|6|7)$",
+            r"^0 (0|10|20|30|40|50) \d+ \? \* (Mon|Tue|Wed|Thu|Fri|Sat|Sun|1|2|3|4|5|6|7)$",
             self._cron_expression,
         ):
             return "WEEKLY"
@@ -301,14 +301,14 @@ class JobScheduler:
             rounded_minutes = 0
             start = start + timedelta(hours=1)
         if job_frequency == "NEAR REAL-TIME":
-            self._cron_expression = f"0 {rounded_minutes}/10 * ? * * *"
+            self._cron_expression = f"0 {rounded_minutes}/10 * ? * *"
         elif job_frequency == "HOURLY":
-            self._cron_expression = f"0 {rounded_minutes} * ? * * *"
+            self._cron_expression = f"0 {rounded_minutes} * ? * *"
         elif job_frequency == "DAILY":
-            self._cron_expression = f"0 0 {start.hour} ? * * *"
+            self._cron_expression = f"0 0 {start.hour} ? * *"
         elif job_frequency == "WEEKLY":
             self._cron_expression = (
-                f"0 {rounded_minutes} {start.hour} ? * * {start.strftime('%a')}"
+                f"0 {rounded_minutes} {start.hour} ? * {start.strftime('%a')}"
             )
         elif job_frequency == "CUSTOM" or job_frequency is None:
             self._job_frequency = "CUSTOM"
@@ -349,7 +349,7 @@ class JobScheduler:
 
         !!! warning
             Cron expression must be provided in UTC timezone and following the QUARTZ specification.
-            Example: `0 0 12 ? * * WED` for every Wednesday at 12:00 UTC.
+            Example: `0 0 12 ? * WED` for every Wednesday at 12:00 UTC.
 
         !!! info
             The setter does not persist change in the backend, call `save()` to persist the change.
