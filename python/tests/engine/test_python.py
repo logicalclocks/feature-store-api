@@ -19,6 +19,7 @@ import pytest
 import pandas as pd
 import numpy as np
 import pyarrow as pa
+from confluent_kafka.admin import TopicMetadata, PartitionMetadata
 
 from datetime import datetime, date
 from hsfs import (
@@ -2635,60 +2636,6 @@ class TestPython:
         assert 2 in result
         assert 3 in result
 
-    def test_write_dataframe_kafka(self, mocker):
-        # Arrange
-        mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
-        mocker.patch("hsfs.feature_group.FeatureGroup._get_encoded_avro_schema")
-        mocker.patch("hsfs.engine.python.Engine._get_encoder_func")
-        mocker.patch("hsfs.engine.python.Engine._encode_complex_features")
-        mock_python_engine_kafka_produce = mocker.patch(
-            "hsfs.engine.python.Engine._kafka_produce"
-        )
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-
-        mock_job_api.return_value.get.return_value = job.Job(
-            1, "test_job", None, None, None, None
-        )
-        producer = mocker.MagicMock()
-        topic_mock = mocker.MagicMock()
-        topic_mock.topics = {"topic_name": "NA"}
-        producer.list_topics = mocker.MagicMock(return_value=topic_mock)
-        mocker.patch(
-            "hsfs.engine.python.Engine._init_kafka_resources",
-            return_value=(producer, mocker.MagicMock(), mocker.MagicMock()),
-        )
-        python_engine = python.Engine()
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=99,
-            primary_key=[],
-            partition_key=[],
-            id=10,
-            stream=False,
-            time_travel_format="HUDI",
-        )
-
-        mocker.patch.object(fg, "commit_details", return_value={"commit1": 1})
-
-        fg._online_topic_name = "topic_name"
-
-        df = pd.DataFrame(data={"col1": [1, 2, 2, 3]})
-
-        # Act
-        python_engine._write_dataframe_kafka(
-            feature_group=fg,
-            dataframe=df,
-            offline_write_options={"start_offline_materialization": True},
-        )
-
-        # Assert
-        assert mock_python_engine_kafka_produce.call_count == 4
-        assert mock_engine_get_instance.return_value.wait_for_job.call_count == 1
-
     def test_kafka_produce(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
@@ -2920,14 +2867,25 @@ class TestPython:
         mocker.patch("hsfs.engine.python.Engine.get_job_url")
 
         producer = mocker.MagicMock()
+        topic_name = "test_topic"
+        partition_metadata = PartitionMetadata()
+        partition_metadata.id = 0
+        topic_metadata = TopicMetadata()
+        topic_metadata.partitions = {partition_metadata.id: partition_metadata}
         topic_mock = mocker.MagicMock()
 
-        # return no topics and one commit so it should start the job with the extra arg
-        topic_mock.topics = {}
+        # return no topics and one commit, so it should start the job with the extra arg
+        topic_mock.topics = {topic_name: topic_metadata}
         producer.list_topics = mocker.MagicMock(return_value=topic_mock)
         mocker.patch(
             "hsfs.engine.python.Engine._init_kafka_resources",
             return_value=(producer, mocker.MagicMock(), mocker.MagicMock()),
+        )
+        consumer = mocker.MagicMock()
+        consumer.get_watermark_offsets = mocker.MagicMock(return_value=(0, 11))
+        mocker.patch(
+            "hsfs.engine.python.Engine._init_kafka_consumer",
+            return_value=consumer,
         )
         python_engine = python.Engine()
 
@@ -2944,7 +2902,7 @@ class TestPython:
 
         mocker.patch.object(fg, "commit_details", return_value={"commit1": 1})
 
-        fg._online_topic_name = "topic_name"
+        fg._online_topic_name = topic_name
         job_mock = mocker.MagicMock()
         job_mock.config = {"defaultArgs": "defaults"}
         fg._materialization_job = job_mock
@@ -2961,7 +2919,7 @@ class TestPython:
         # Assert
         assert mock_python_engine_kafka_produce.call_count == 4
         job_mock.run.assert_called_once_with(
-            args="defaults -kafkaOffsetReset true", await_termination=False
+            args=f"defaults -initialCheckPointString {topic_name},0:11", await_termination=False
         )
 
     def test_test(self, mocker):

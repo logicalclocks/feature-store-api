@@ -1016,14 +1016,15 @@ class Engine:
         ).topics
         if topic_name in topics.keys():
             # topic exists
-            with self._init_kafka_consumer(offline_write_options) as consumer:
-                offsets = ""
-                tuple_value = int(high)
-                for partition_metadata in topics.get(topic_name).partitions.values():
-                    partition = TopicPartition(
-                        topic=topic_name, partition=partition_metadata.id
-                    )
-                    offsets += f",{partition.id}:{consumer.get_watermark_offsets(partition)[tuple_value]}"
+            consumer = self._init_kafka_consumer(offline_write_options)
+            offsets = ""
+            tuple_value = int(high)
+            for partition_metadata in topics.get(topic_name).partitions.values():
+                partition = TopicPartition(
+                    topic=topic_name, partition=partition_metadata.id
+                )
+                offsets += f",{partition_metadata.id}:{consumer.get_watermark_offsets(partition)[tuple_value]}"
+            consumer.close()
 
             return topic_name + offsets
         return None

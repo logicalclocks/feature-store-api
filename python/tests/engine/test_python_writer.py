@@ -21,6 +21,7 @@ import fastavro
 
 from hsfs import feature_group
 from hsfs.engine import python
+from confluent_kafka.admin import TopicMetadata
 
 
 class TestPythonWriter:
@@ -51,7 +52,9 @@ class TestPythonWriter:
         mocker.patch("hsfs.engine.python.Engine.wait_for_job")
         producer = mocker.MagicMock()
         topic_mock = mocker.MagicMock()
-        topic_mock.topics = {"topic_name": "NA"}
+        topic_name = "test_topic"
+        topic_metadata = TopicMetadata()
+        topic_mock.topics = {topic_name: topic_metadata}
         producer.list_topics = mocker.MagicMock(return_value=topic_mock)
         mocker.patch(
             "hsfs.engine.python.Producer",
@@ -70,7 +73,7 @@ class TestPythonWriter:
         )
 
         mocker.patch.object(fg, "commit_details", return_value={"commit1": 1})
-        fg._online_topic_name = "topic_name"
+        fg._online_topic_name = topic_name
 
         # Act
         python_engine._write_dataframe_kafka(
