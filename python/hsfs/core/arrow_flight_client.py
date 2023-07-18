@@ -58,9 +58,9 @@ class ArrowFlightClient:
     def _disable(self, message):
         self._is_enabled = False
         warnings.warn(
-            f"Could not establish connection to FlyingDuck. ({message}) "
+            f"Could not establish connection to ArrowFlight Server. ({message}) "
             f"Will fall back to hive/spark for this session. "
-            f"If the error persists, you can disable FlyingDuck "
+            f"If the error persists, you can disable using ArrowFlight "
             f"by changing the cluster configuration (set 'enable_flyingduck'='false')."
         )
 
@@ -182,7 +182,7 @@ class ArrowFlightClient:
                     return method(*args, **kw)
                 else:
                     raise FeatureStoreException(
-                        "Could not read data using FlyingDuck. "
+                        "Could not read data using ArrowFlight. "
                         "If the issue persists, "
                         'use read_options={"use_hive": True} instead.'
                     ) from e
