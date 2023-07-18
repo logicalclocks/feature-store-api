@@ -851,9 +851,21 @@ class Engine:
     def get_unique_values(feature_dataframe, feature_name):
         return feature_dataframe[feature_name].unique()
 
+    def _init_kafka_producer(self, offline_write_options):
+        # setup kafka producer
+        return Producer(self._get_kafka_config(offline_write_options))
+
+    def _init_kafka_consumer(self, offline_write_options):
+        # setup kafka consumer
+        consumer_config = self._get_kafka_config(offline_write_options)
+        if "group.id" not in consumer_config:
+            consumer_config["group.id"] = "hsfs_consumer_group"
+
+        return Consumer(consumer_config)
+
     def _init_kafka_resources(self, feature_group, offline_write_options):
         # setup kafka producer
-        producer = Producer(self._get_kafka_config(offline_write_options))
+        producer = self._init_kafka_producer(offline_write_options)
 
         # setup complex feature writers
         feature_writers = {
@@ -900,16 +912,10 @@ class Engine:
                 mininterval=1,
             )
 
-            if (
-                feature_group._online_topic_name
-                in producer.list_topics(
-                    timeout=offline_write_options.get("kafka_timeout", 6)
-                ).topics.keys()
-            ):
-                # set initial_check_point to the current offset
-                initial_check_point = self._kafka_get_offsets(
-                    feature_group, offline_write_options, True
-                )
+            # set initial_check_point to the current offset
+            initial_check_point = self._kafka_get_offsets(
+                feature_group, offline_write_options, producer, True
+            )
 
         def acked(err, msg):
             if err is not None:
@@ -980,7 +986,7 @@ class Engine:
             if not initial_check_point:
                 # set the initial_check_point to the lowest offset (it was not set due to topic not existing)
                 initial_check_point = self._kafka_get_offsets(
-                    feature_group, offline_write_options, False
+                    feature_group, offline_write_options, producer, False
                 )
             feature_group.materialization_job.run(
                 args=feature_group.materialization_job.config.get("defaultArgs", "")
@@ -998,25 +1004,21 @@ class Engine:
         return feature_group.materialization_job
 
     def _kafka_get_offsets(
-        self, feature_group: FeatureGroup, offline_write_options: dict, high: bool
+        self, feature_group: FeatureGroup, offline_write_options: dict, producer: Producer, high: bool
     ):
-        consumer_config = self._get_kafka_config(offline_write_options)
-        if "group.id" not in consumer_config:
-            consumer_config["group.id"] = "hsfs_consumer_group"
-        consumer = Consumer(consumer_config)
         topic_name = feature_group._online_topic_name
-        partition_details = self._kafka_api.get_topic_details(
-            topic_name
-        )  # todo: use producer instead of this
+        topics = producer.list_topics(timeout=offline_write_options.get("kafka_timeout", 6)).topics
+        if topic_name in topics.keys():
+            # topic exists
+            with self._init_kafka_consumer(offline_write_options) as consumer:
+                offsets = ""
+                tuple_value = int(high)
+                for partition_metadata in topics.get(topic_name).partitions.values():
+                    partition = TopicPartition(topic=topic_name, partition=partition_metadata.id)
+                    offsets += f",{partition.id}:{consumer.get_watermark_offsets(partition)[tuple_value]}"
 
-        offsets = ""
-        tuple_value = int(high)
-        for partition_detail in partition_details:
-            partition = TopicPartition(topic=topic_name, partition=partition_detail.id)
-            offsets += f",{partition_detail.id}:{consumer.get_watermark_offsets(partition)[tuple_value]}"
-
-        consumer.close()
-        return topic_name + offsets
+            return topic_name + offsets
+        return None
 
     def _kafka_produce(
         self, producer, feature_group, key, encoded_row, acked, offline_write_options
