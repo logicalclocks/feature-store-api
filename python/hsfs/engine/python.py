@@ -1004,17 +1004,25 @@ class Engine:
         return feature_group.materialization_job
 
     def _kafka_get_offsets(
-        self, feature_group: FeatureGroup, offline_write_options: dict, producer: Producer, high: bool
+        self,
+        feature_group: FeatureGroup,
+        offline_write_options: dict,
+        producer: Producer,
+        high: bool,
     ):
         topic_name = feature_group._online_topic_name
-        topics = producer.list_topics(timeout=offline_write_options.get("kafka_timeout", 6)).topics
+        topics = producer.list_topics(
+            timeout=offline_write_options.get("kafka_timeout", 6)
+        ).topics
         if topic_name in topics.keys():
             # topic exists
             with self._init_kafka_consumer(offline_write_options) as consumer:
                 offsets = ""
                 tuple_value = int(high)
                 for partition_metadata in topics.get(topic_name).partitions.values():
-                    partition = TopicPartition(topic=topic_name, partition=partition_metadata.id)
+                    partition = TopicPartition(
+                        topic=topic_name, partition=partition_metadata.id
+                    )
                     offsets += f",{partition.id}:{consumer.get_watermark_offsets(partition)[tuple_value]}"
 
             return topic_name + offsets
