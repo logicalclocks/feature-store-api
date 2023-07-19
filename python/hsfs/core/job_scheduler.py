@@ -131,7 +131,7 @@ class JobScheduler:
 
     def pause(self):
         """Pauses the scheduling of job in Hopsworks, the job can still be triggered manually."""
-        if self._id:
+        if not self._id:
             raise ValueError(
                 "Cannot pause a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
             )
@@ -149,7 +149,7 @@ class JobScheduler:
         !!! info
             On resuming, the next execution date and time will be updated based on the job frequency or cron expression.
         """
-        if self._id:
+        if not self._id:
             raise ValueError(
                 "Cannot resume a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
             )
