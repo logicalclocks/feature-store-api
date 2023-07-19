@@ -12,9 +12,8 @@
   <artifactId>hsfs-flink</artifactId>
 
   <properties>
-    <flink.version>1.14.3.1</flink.version>
+    <flink.version>1.17.1.0</flink.version>
     <fasterxml.version>2.13.4.2</fasterxml.version>
-    <scala.base>2.11</scala.base>
   </properties>
 
   <dependencies>
@@ -45,7 +44,7 @@
 
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-streaming-java_${scala.base}</artifactId>
+      <artifactId>flink-streaming-java</artifactId>
       <version>${flink.version}</version>
       <scope>provided</scope>
       <exclusions>
@@ -59,7 +58,7 @@
     <!-- connector dependencies -->
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-connector-kafka_${scala.base}</artifactId>
+      <artifactId>flink-connector-kafka</artifactId>
       <version>${flink.version}</version>
       <scope>provided</scope>
       <exclusions>
