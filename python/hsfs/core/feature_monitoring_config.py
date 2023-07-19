@@ -60,7 +60,6 @@ class FeatureMonitoringConfig:
         statistics_comparison_config: Optional[Dict[str, Any]] = None,
         scheduler_config: Optional[Union[Dict[str, Any], JobScheduler]] = None,
         description: Optional[str] = None,
-        enabled: bool = True,
         id: Optional[int] = None,
         feature_group_id: Optional[int] = None,
         feature_view_id: Optional[int] = None,
@@ -80,7 +79,6 @@ class FeatureMonitoringConfig:
         self._feature_view_id = feature_view_id
         self._job_name = job_name
         self._feature_monitoring_type = FeatureMonitoringType(feature_monitoring_type)
-        self._enabled = enabled
         self._transformed_with_version = transformed_with_version
         self._is_event_time = is_event_time
 
@@ -152,7 +150,6 @@ class FeatureMonitoringConfig:
             "id": self._id,
             "featureStoreId": self._feature_store_id,
             "featureName": self._feature_name,
-            "enabled": self._enabled,
             "name": self._name,
             "description": self._description,
             "jobName": self._job_name,
@@ -552,7 +549,7 @@ class FeatureMonitoringConfig:
         self._feature_monitoring_config_engine.delete(config_id=self._id)
 
     def disable(self):
-        """Disables the feature monitoring configuration.
+        """Disables the spawning of monitoring job at time-interval controlled by the scheduler.
 
         !!! example
             ```python
@@ -569,10 +566,12 @@ class FeatureMonitoringConfig:
         # Raises
             `FeatureStoreException`: If the feature monitoring config has not been saved.
         """
-        self.enabled = False
+        self.scheduler_config.disable()
 
     def enable(self):
-        """Enables the feature monitoring configuration.
+        """Enables the spawning of monitoring job at time-interval controlled by the scheduler.
+
+        The scheduler can be configured via the `scheduler_config` property.
 
         !!! example
             ```python
@@ -589,7 +588,7 @@ class FeatureMonitoringConfig:
         # Raises
             `FeatureStoreException`: If the feature monitoring config has not been saved.
         """
-        self.enabled = True
+        self.scheduler_config.enable()
 
     def get_history(
         self,
@@ -703,18 +702,20 @@ class FeatureMonitoringConfig:
 
     @property
     def enabled(self) -> bool:
-        return self._enabled
+        """Controls whether or not this config is spawning new monitoring jobs.
+
+        This field belongs to the scheduler configuration but is made transparent to the user for convenience.
+        """
+        return self.scheduler_config.enabled
 
     @enabled.setter
     def enabled(self, enabled: bool):
-        if not isinstance(enabled, bool):
-            raise TypeError("enabled must be of type bool")
-        if self._id is not None:
-            self._feature_monitoring_config_engine.pause_or_resume_monitoring(
-                config_id=self._id, enabled=enabled
-            )
-        self._enabled = enabled
-        self._scheduler_config._enabled = enabled
+        """
+        Controls whether or not this config is spawning new monitoring jobs.
+
+        This field belongs to the scheduler configuration but is made transparent to the user for convenience.
+        """
+        self.scheduler_config.enabled = enabled
 
     @property
     def is_event_time(self) -> bool:
@@ -748,19 +749,17 @@ class FeatureMonitoringConfig:
         return self._feature_monitoring_type
 
     @property
-    def scheduler_config(self) -> Optional[JobScheduler]:
+    def scheduler_config(self) -> JobScheduler:
         return self._scheduler_config
 
     @scheduler_config.setter
-    def scheduler_config(self, scheduler_config):
+    def scheduler_config(self, scheduler_config: Union[JobScheduler, Dict[str, Any]]):
         if isinstance(scheduler_config, JobScheduler):
             self._scheduler_config = scheduler_config
         elif isinstance(scheduler_config, dict):
             self._scheduler_config = self._job_scheduler_engine.build_job_scheduler(
                 **scheduler_config
             )
-        elif scheduler_config is None:
-            self._scheduler_config = scheduler_config
         else:
             raise TypeError(
                 "scheduler_config must be of type JobScheduler, dict or None"

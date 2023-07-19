@@ -5,7 +5,7 @@
       "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
       "startDateTime": 1672569000000,
       "endDateTime": 1893493800000,
-      "cronExpression": "0 0 10 ? * * *",
+      "cronExpression": "0 0 10 ? * *",
       "enabled": true,
       "nextExecutionDateTime": 1898589600000
     }
@@ -15,18 +15,18 @@
       "id": 222,
       "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
       "startDateTime": 1672569000000,
-      "cronExpression": "0 20 * ? * * *",
+      "cronExpression": "0 20 * ? * *",
       "enabled": true,
       "nextExecutionDateTime": 1898589600000
     }
   },
-  "get_paused_schedule": {
+  "get_disabled_schedule": {
     "response": {
       "id": 222,
       "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
       "startDateTime": 1672569000000,
       "endDateTime": 1893493800000,
-      "cronExpression": "0 0 10 ? * * *",
+      "cronExpression": "0 0 10 ? * *",
       "enabled": false,
       "nextExecutionDateTime": null
     }

@@ -195,29 +195,6 @@ class FeatureMonitoringConfigApi:
             _client._send_request("GET", path_params)
         )
 
-    def pause_or_resume_monitoring(
-        self,
-        config_id: int,
-        enabled: bool,
-    ) -> None:
-        """Pause or resume monitoring for a configuration.
-
-        :param config_id: Id of the feature monitoring configuration to pause or resume monitoring for
-        :type config_id: int
-        """
-        _client = client.get_instance()
-        path_params = self.build_path_params(
-            project_id=_client._project_id,
-            config_id=config_id,
-        )
-        path_params.append("enabled")
-        if enabled:
-            path_params.append("resume")
-        else:
-            path_params.append("pause")
-
-        _client._send_request("PUT", path_params)
-
     def setup_feature_monitoring_job(
         self,
         config_name: str,

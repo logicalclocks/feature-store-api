@@ -34,7 +34,7 @@ class TestFeatureMonitoringConfig:
         assert config._feature_group_id == 13
         assert config._href[-2:] == "32"
         assert config._feature_name == "monitored_feature"
-        assert config._enabled is True
+        assert config.enabled is True
         assert config._name == "unit_test_config"
         assert (
             config._feature_monitoring_type
@@ -84,7 +84,7 @@ class TestFeatureMonitoringConfig:
         assert config._feature_group_id is None
         assert config._href[-2:] == "32"
         assert config._feature_name == "monitored_feature"
-        assert config._enabled is True
+        assert config.enabled is True
         assert config._name == "unit_test_config"
         assert (
             config._feature_monitoring_type
@@ -135,7 +135,7 @@ class TestFeatureMonitoringConfig:
         assert config._href[-2:] == "32"
         assert config._name == "unit_test_config"
         assert config._feature_name == "monitored_feature"
-        assert config._enabled is True
+        assert config.enabled is False
         assert config._feature_monitoring_type == "STATISTICS_MONITORING"
 
         assert isinstance(config._scheduler_config, JobScheduler)
@@ -172,7 +172,7 @@ class TestFeatureMonitoringConfig:
         assert config._href[-2:] == "32"
         assert config._name == "unit_test_config"
         assert config._feature_name == "monitored_feature"
-        assert config._enabled is True
+        assert config.enabled is False
         assert config._feature_monitoring_type == "STATISTICS_MONITORING"
 
         assert isinstance(config._scheduler_config, JobScheduler)
@@ -212,7 +212,7 @@ class TestFeatureMonitoringConfig:
         assert config._feature_group_id is None
         assert config._href[-2:] == "32"
         assert config._feature_name == "monitored_feature"
-        assert config._enabled is True
+        assert config.enabled is False
         assert (
             config._feature_monitoring_type
             == fmc.FeatureMonitoringType.STATISTICS_COMPARISON
