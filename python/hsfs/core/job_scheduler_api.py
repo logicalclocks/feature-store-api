@@ -131,7 +131,7 @@ class JobSchedulerApi:
             _client._project_id,
             "jobs",
             job_name,
-            "scheduler",
+            "schedule",
             "v2",
         ]
 
