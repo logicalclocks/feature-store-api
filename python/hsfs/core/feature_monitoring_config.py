@@ -548,8 +548,8 @@ class FeatureMonitoringConfig:
 
         self._feature_monitoring_config_engine.delete(config_id=self._id)
 
-    def pause(self):
-        """Pauses the spawning of monitoring job at time-interval controlled by the scheduler.
+    def disable(self):
+        """Disables the spawning of monitoring job at time-interval controlled by the scheduler.
 
         !!! example
             ```python
@@ -559,17 +559,17 @@ class FeatureMonitoringConfig:
             # fetch registered config by name
             my_monitoring_config = fg.get_feature_monitoring_config(name="my_monitoring_config")
 
-            # pause the feature monitoring config
-            my_monitoring_config.pause()
+            # disable the feature monitoring config
+            my_monitoring_config.disable()
             ```
 
         # Raises
             `FeatureStoreException`: If the feature monitoring config has not been saved.
         """
-        self.scheduler_config.pause()
+        self.scheduler_config.disable()
 
-    def resume(self):
-        """Resumes the spawning of monitoring job at time-interval controlled by the scheduler.
+    def enable(self):
+        """Enables the spawning of monitoring job at time-interval controlled by the scheduler.
 
         The scheduler can be configured via the `scheduler_config` property.
 
@@ -581,14 +581,14 @@ class FeatureMonitoringConfig:
             # fetch registered config by name
             my_monitoring_config = fg.get_feature_monitoring_config(name="my_monitoring_config")
 
-            # resume the feature monitoring config
-            my_monitoring_config.resume()
+            # enable the feature monitoring config
+            my_monitoring_config.enable()
             ```
 
         # Raises
             `FeatureStoreException`: If the feature monitoring config has not been saved.
         """
-        self.scheduler_config.resume()
+        self.scheduler_config.enable()
 
     def get_history(
         self,

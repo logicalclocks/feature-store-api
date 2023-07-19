@@ -98,19 +98,33 @@ class JobSchedulerApi:
             ),
         )
 
-    def pause_or_resume_job_scheduler(self, job_name: str, pause: bool):
+    def enable_job_scheduler(self, job_name: str):
         """
-        Pause or resume a job scheduler.
+        Enable a job scheduler
 
         :param job_name: name of the job
-        :param pause: True to pause, False to resume
         """
         _client = client.get_instance()
         _client._send_request(
-            "POST",
+            "PUT",
             path_params=self.build_path_params(
                 job_name=job_name,
-                extra="pause" if pause else "resume",
+                extra="enable",
+            ),
+        )
+
+    def disable_job_scheduler(self, job_name: str):
+        """
+        Disable a job scheduler.
+
+        :param job_name: name of the job
+        """
+        _client = client.get_instance()
+        _client._send_request(
+            "PUT",
+            path_params=self.build_path_params(
+                job_name=job_name,
+                extra="disable",
             ),
         )
 

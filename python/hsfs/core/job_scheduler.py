@@ -129,36 +129,32 @@ class JobScheduler:
 
         return self._job_scheduler_engine.update_job_scheduler(the_job_scheduler=self)
 
-    def pause(self):
-        """Pauses the scheduling of job in Hopsworks, the job can still be triggered manually."""
+    def disable(self):
+        """Disables the scheduling of job in Hopsworks, the job can still be triggered manually."""
         if not self._id:
             raise ValueError(
-                "Cannot pause a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
+                "Cannot disable a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
             )
         if not self._job_name:
-            raise ValueError("Cannot pause a scheduler without a job name.")
+            raise ValueError("Cannot disable a scheduler without a job name.")
 
-        self._job_scheduler_engine.pause_or_resume_job_scheduler(
-            job_name=self._job_name, pause=True
-        )
+        self._job_scheduler_engine.disable_job_scheduler(job_name=self._job_name)
         self._enabled = False
 
-    def resume(self):
-        """Resumes the scheduling of job in Hopsworks.
+    def enable(self):
+        """Enables the scheduling of job in Hopsworks.
 
         !!! info
-            On resuming, the next execution date and time will be updated based on the job frequency or cron expression.
+            On enabling, the next execution date and time will be updated based on the job frequency or cron expression.
         """
         if not self._id:
             raise ValueError(
-                "Cannot resume a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
+                "Cannot enable a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
             )
         if not self._job_name:
-            raise ValueError("Cannot resume a scheduler without a job name.")
+            raise ValueError("Cannot enable a scheduler without a job name.")
 
-        self._job_scheduler_engine.pause_or_resume_job_scheduler(
-            job_name=self._job_name, pause=False
-        )
+        self._job_scheduler_engine.enable_job_scheduler(job_name=self._job_name)
         self._enabled = True
 
     def to_dict(self) -> Dict[str, Any]:

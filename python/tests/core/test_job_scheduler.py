@@ -62,9 +62,9 @@ class TestJobScheduler:
         assert schedule.next_execution_date_time == 1898589600000
         assert schedule.end_date_time is None
 
-    def test_from_response_json_paused(self, backend_fixtures):
+    def test_from_response_json_disabled(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["job_scheduler"]["get_paused_schedule"]["response"]
+        json = backend_fixtures["job_scheduler"]["get_disabled_schedule"]["response"]
 
         # Act
         schedule = job_scheduler.JobScheduler.from_response_json(json)
