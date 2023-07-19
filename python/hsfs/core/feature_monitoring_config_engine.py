@@ -407,20 +407,6 @@ class FeatureMonitoringConfigEngine:
             )
         return self._feature_monitoring_config_api.update(config)
 
-    def pause_or_resume_monitoring(self, config_id: int, enabled: bool) -> None:
-        """Enable or disable a feature monitoring config.
-
-        Args:
-            config_id: int, required
-                The id of the feature monitoring config to enable.
-            enabled: bool, required
-                Whether to enable (true) or disable (true) the feature monitoring config.
-        """
-        self._feature_monitoring_config_api.pause_or_resume_monitoring(
-            config_id=config_id,
-            enabled=enabled,
-        )
-
     def delete(self, config_id: int) -> None:
         """Deletes a feature monitoring config.
 

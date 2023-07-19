@@ -148,17 +148,20 @@ class JobSchedulerEngine:
         """
         return self._job_scheduler_api.delete_job_scheduler(job_name=job_name)
 
-    def pause_or_resume_job_scheduler(
-        self,
-        job_name: str,
-        pause: bool,
-    ):
-        """Pause or resume a job scheduler.
+    def enable_job_scheduler(self, job_name: str):
+        """
+        Enable a job scheduler.
 
         Args:
             job_name: job name
-            pause: pause if true otherwise resume the job scheduling
         """
-        return self._job_scheduler_api.pause_or_resume_job_scheduler(
-            job_name=job_name, pause=pause
-        )
+        return self._job_scheduler_api.enable_job_scheduler(job_name=job_name)
+
+    def disable_job_scheduler(self, job_name: str):
+        """
+        Disable a job scheduler.
+
+        Args:
+            job_name: job name
+        """
+        return self._job_scheduler_api.disable_job_scheduler(job_name=job_name)

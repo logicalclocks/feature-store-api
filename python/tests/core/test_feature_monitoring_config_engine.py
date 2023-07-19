@@ -67,7 +67,7 @@ class TestFeatureMonitoringConfigEngine:
         assert config._feature_group_id == default_config._feature_group_id
         assert config._feature_view_id == default_config._feature_view_id
         assert config.feature_name == default_config._feature_name is None
-        assert config.enabled == default_config._enabled is True
+        assert config.enabled == default_config.enabled is True
         assert config.name == DEFAULT_NAME
         assert config.description == default_config._description is None
         assert (

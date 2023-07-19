@@ -50,7 +50,7 @@ class JobScheduler:
             enabled: Whether the scheduler is enabled or not, useful to pause scheduled execution.
             job_name: Name of the job to be scheduled.
             cron_expression: Cron expression to schedule the job. If provided, the `job_frequency` will be ignored.
-            The cron expression must follow the quartz specification, e.g `0 0 12 ? * * *` for daily at noon.
+            The cron expression must follow the quartz specification, e.g `0 0 12 ? * *` for daily at noon.
             next_execution_date_time: Date and time at which the job will be executed next.
             end_date_time: End date and time until which to schedule the job.
 
@@ -129,36 +129,32 @@ class JobScheduler:
 
         return self._job_scheduler_engine.update_job_scheduler(the_job_scheduler=self)
 
-    def pause(self):
-        """Pauses the scheduling of job in Hopsworks, the job can still be triggered manually."""
-        if self._id:
+    def disable(self):
+        """Disables the scheduling of job in Hopsworks, the job can still be triggered manually."""
+        if not self._id:
             raise ValueError(
-                "Cannot pause a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
+                "Cannot disable a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
             )
         if not self._job_name:
-            raise ValueError("Cannot pause a scheduler without a job name.")
+            raise ValueError("Cannot disable a scheduler without a job name.")
 
-        self._job_scheduler_engine.pause_or_resume_job_scheduler(
-            job_name=self._job_name, pause=True
-        )
+        self._job_scheduler_engine.disable_job_scheduler(job_name=self._job_name)
         self._enabled = False
 
-    def resume(self):
-        """Resumes the scheduling of job in Hopsworks.
+    def enable(self):
+        """Enables the scheduling of job in Hopsworks.
 
         !!! info
-            On resuming, the next execution date and time will be updated based on the job frequency or cron expression.
+            On enabling, the next execution date and time will be updated based on the job frequency or cron expression.
         """
-        if self._id:
+        if not self._id:
             raise ValueError(
-                "Cannot resume a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
+                "Cannot enable a scheduler not registered, use `save()` to register a new scheduler to Hopsworks."
             )
         if not self._job_name:
-            raise ValueError("Cannot resume a scheduler without a job name.")
+            raise ValueError("Cannot enable a scheduler without a job name.")
 
-        self._job_scheduler_engine.pause_or_resume_job_scheduler(
-            job_name=self._job_name, pause=False
-        )
+        self._job_scheduler_engine.enable_job_scheduler(job_name=self._job_name)
         self._enabled = True
 
     def to_dict(self) -> Dict[str, Any]:
@@ -266,10 +262,10 @@ class JobScheduler:
             return "NEAR REAL-TIME"
         elif re.match(r"^0 (0|10|20|30|40|50) \* ", self._cron_expression):
             return "HOURLY"
-        elif re.match(r"^0 (0|10|20|30|40|50) \d+ \? \* \* \*$", self._cron_expression):
+        elif re.match(r"^0 (0|10|20|30|40|50) \d+ \? \* \*$", self._cron_expression):
             return "DAILY"
         elif re.match(
-            r"^0 (0|10|20|30|40|50) \d+ \? \* \* (Mon|Tue|Wed|Thu|Fri|Sat|Sun|1|2|3|4|5|6|7)$",
+            r"^0 (0|10|20|30|40|50) \d+ \? \* (Mon|Tue|Wed|Thu|Fri|Sat|Sun|1|2|3|4|5|6|7)$",
             self._cron_expression,
         ):
             return "WEEKLY"
@@ -301,14 +297,14 @@ class JobScheduler:
             rounded_minutes = 0
             start = start + timedelta(hours=1)
         if job_frequency == "NEAR REAL-TIME":
-            self._cron_expression = f"0 {rounded_minutes}/10 * ? * * *"
+            self._cron_expression = f"0 {rounded_minutes}/10 * ? * *"
         elif job_frequency == "HOURLY":
-            self._cron_expression = f"0 {rounded_minutes} * ? * * *"
+            self._cron_expression = f"0 {rounded_minutes} * ? * *"
         elif job_frequency == "DAILY":
-            self._cron_expression = f"0 0 {start.hour} ? * * *"
+            self._cron_expression = f"0 0 {start.hour} ? * *"
         elif job_frequency == "WEEKLY":
             self._cron_expression = (
-                f"0 {rounded_minutes} {start.hour} ? * * {start.strftime('%a')}"
+                f"0 {rounded_minutes} {start.hour} ? * {start.strftime('%a')}"
             )
         elif job_frequency == "CUSTOM" or job_frequency is None:
             self._job_frequency = "CUSTOM"
@@ -349,7 +345,7 @@ class JobScheduler:
 
         !!! warning
             Cron expression must be provided in UTC timezone and following the QUARTZ specification.
-            Example: `0 0 12 ? * * WED` for every Wednesday at 12:00 UTC.
+            Example: `0 0 12 ? * WED` for every Wednesday at 12:00 UTC.
 
         !!! info
             The setter does not persist change in the backend, call `save()` to persist the change.
