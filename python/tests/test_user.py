@@ -39,7 +39,6 @@ class TestUser:
         assert u.two_factor == "test_two_factor"
         assert u.tours_state == "test_tours_state"
         assert u.max_num_projects == "test_max_num_projects"
-        assert u.num_created_projects == "test_num_created_projects"
         assert u.test_user == "test_test_user"
         assert u.user_account_type == "test_user_account_type"
         assert u.num_active_projects == "test_num_active_projects"

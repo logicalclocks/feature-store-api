@@ -642,7 +642,6 @@ class FeatureStore:
         # Returns
             `FeatureGroup`. The feature group metadata object.
         """
-
         try:
             return self._feature_group_api.get(
                 name, version, feature_group_api.FeatureGroupApi.CACHED

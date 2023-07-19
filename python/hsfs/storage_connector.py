@@ -704,8 +704,7 @@ class SnowflakeConnector(StorageConnector):
         props = {
             "user": self._user,
             "account": self.account,
-            "database": self._database,
-            "schema": self._schema,
+            "database": self._database + "/" + self._schema,
         }
         if self._password:
             props["password"] = self._password
