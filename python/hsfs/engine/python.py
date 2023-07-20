@@ -1043,9 +1043,6 @@ class Engine:
                     callback=acked,
                     headers={
                         "featureGroupId": str(feature_group.id).encode("utf8"),
-                        "tableName": feature_group._get_online_table_name().encode(
-                            "utf8"
-                        ),
                         "schemaVersion": str(feature_group.subject["version"]).encode(
                             "utf8"
                         ),

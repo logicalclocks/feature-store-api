@@ -534,7 +534,6 @@ public class SparkEngine {
                                    Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     byte[] featureGroupId = String.valueOf(featureGroupBase.getId()).getBytes(StandardCharsets.UTF_8);
-    byte[] tableName = featureGroupUtils.getFgName(featureGroupBase).getBytes(StandardCharsets.UTF_8);
     byte[] schemaVersion = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
 
     onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
@@ -542,10 +541,6 @@ public class SparkEngine {
             struct(
                 lit("featureGroupId").as("key"),
                 lit(featureGroupId).as("value")
-            ),
-            struct(
-                lit("tableName").as("key"),
-                lit(tableName).as("value")
             ),
             struct(
                 lit("schemaVersion").as("key"),
@@ -565,7 +560,6 @@ public class SparkEngine {
                                                  Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
     byte[] featureGroupId = String.valueOf(featureGroupBase.getId()).getBytes(StandardCharsets.UTF_8);
-    byte[] tableName = featureGroupUtils.getFgName(featureGroupBase).getBytes(StandardCharsets.UTF_8);
     byte[] schemaVersion = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
 
     DataStreamWriter<Row> writer =
@@ -574,10 +568,6 @@ public class SparkEngine {
                 struct(
                     lit("featureGroupId").as("key"),
                     lit(featureGroupId).as("value")
-                ),
-                struct(
-                    lit("tableName").as("key"),
-                    lit(tableName).as("value")
                 ),
                 struct(
                     lit("schemaVersion").as("key"),
