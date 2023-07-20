@@ -670,11 +670,13 @@ class Engine:
                 "Currently only query based training datasets are supported by the Python engine"
             )
 
-        if (arrow_flight_client.get_instance()
-                    .is_query_supported(dataset, user_write_options)):
+        if arrow_flight_client.get_instance().is_query_supported(
+            dataset, user_write_options
+        ):
             query_obj, _ = dataset._prep_read(False, user_write_options)
             response = arrow_flight_client.get_instance().create_training_dataset(
-                feature_view_obj, training_dataset, query_obj)
+                feature_view_obj, training_dataset, query_obj
+            )
             return response
 
         # As for creating a feature group, users have the possibility of passing

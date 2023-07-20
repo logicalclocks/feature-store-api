@@ -102,14 +102,9 @@ class ArrowFlightClient:
         list(self._connection.do_action(action, options=options))
 
     def _should_be_used(self, read_options):
-        if (
-            read_options
-            and (
-               ("use_hive" in read_options
-                and read_options["use_hive"] is True) or
-               ("use_spark" in read_options
-                and read_options["use_spark"] is True)
-            )
+        if read_options and (
+            ("use_hive" in read_options and read_options["use_hive"] is True)
+            or ("use_spark" in read_options and read_options["use_spark"] is True)
         ):
             return False
 
@@ -211,9 +206,13 @@ class ArrowFlightClient:
         return self._get_dataset(descriptor)
 
     @_handle_afs_exception
-    def create_training_dataset(self, feature_view_obj, training_dataset_obj, query_obj):
+    def create_training_dataset(
+        self, feature_view_obj, training_dataset_obj, query_obj
+    ):
         training_dataset = {}
-        training_dataset["fs_name"] = util.strip_feature_store_suffix(feature_view_obj.feature_store_name)
+        training_dataset["fs_name"] = util.strip_feature_store_suffix(
+            feature_view_obj.feature_store_name
+        )
         training_dataset["fv_name"] = feature_view_obj.name
         training_dataset["fv_version"] = feature_view_obj.version
         training_dataset["tds_version"] = training_dataset_obj.version
