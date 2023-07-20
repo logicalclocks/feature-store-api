@@ -25,6 +25,7 @@ from hsfs import client
 from hsfs import feature_group
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi
+from hsfs import util
 
 _arrow_flight_instance = None
 
@@ -103,8 +104,12 @@ class ArrowFlightClient:
     def _should_be_used(self, read_options):
         if (
             read_options
-            and "use_hive" in read_options
-            and read_options["use_hive"] is True
+            and (
+               ("use_hive" in read_options
+                and read_options["use_hive"] is True) or
+               ("use_spark" in read_options
+                and read_options["use_spark"] is True)
+            )
         ):
             return False
 
@@ -204,6 +209,26 @@ class ArrowFlightClient:
     def read_path(self, path):
         descriptor = pyarrow.flight.FlightDescriptor.for_path(path)
         return self._get_dataset(descriptor)
+
+    @_handle_afs_exception
+    def create_training_dataset(self, feature_view_obj, training_dataset_obj, query_obj):
+        training_dataset = {}
+        training_dataset["fs_name"] = util.strip_feature_store_suffix(feature_view_obj.feature_store_name)
+        training_dataset["fv_name"] = feature_view_obj.name
+        training_dataset["fv_version"] = feature_view_obj.version
+        training_dataset["tds_version"] = training_dataset_obj.version
+        training_dataset["query"] = query_obj
+
+        try:
+            training_dataset_encoded = json.dumps(training_dataset).encode("ascii")
+            training_dataset_buf = pyarrow.py_buffer(training_dataset_encoded)
+            action = pyarrow.flight.Action(
+                "create-training-dataset", training_dataset_buf
+            )
+            for result in self.connection.do_action(action):
+                return result.body.to_pybytes()
+        except pyarrow.lib.ArrowIOError as e:
+            print("Error calling action:", e)
 
     def is_flyingduck_query_object(self, query_obj):
         return isinstance(query_obj, dict) and "query_string" in query_obj
