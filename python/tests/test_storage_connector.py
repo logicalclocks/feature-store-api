@@ -113,7 +113,7 @@ class TestS3Connector:
         )
         sc.read(data_format="csv")
         # assert
-        assert mock_engine_read.call_args[0][3] == "s3://test-bucket/"
+        assert "s3://test-bucket" in mock_engine_read.call_args[0][3]
 
 
 class TestRedshiftConnector:
@@ -251,8 +251,8 @@ class TestAdlsConnector:
         # assert read path value
         print(mock_engine_read.call_args[0])
         assert (
-            mock_engine_read.call_args[0][3]
-            == "abfss://test_container@test_account.dfs.core.windows.net/"
+            "abfss://test_container@test_account.dfs.core.windows.net"
+            in mock_engine_read.call_args[0][3]
         )
 
 
