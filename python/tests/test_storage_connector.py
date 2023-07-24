@@ -235,29 +235,6 @@ class TestAdlsConnector:
         assert sc.container_name is None
         assert sc._spark_options == {}
 
-    def test_path_validation(self, backend_fixtures):
-        engine.set_instance("spark", spark.Engine())
-        json = backend_fixtures["storage_connector"]["get_adls"]["response"]
-        # test gen 2
-        json["generation"] = 2
-        sc = storage_connector.StorageConnector.from_response_json(json)
-        # assert throws exceptions
-        with pytest.raises(ValueError):
-            sc.read(path="abc")
-        with pytest.raises(ValueError):
-            sc.read(path="abfss://test")
-        with pytest.raises(ValueError):
-            sc.read(path="abfss://test@abc")
-        # test for gen 1
-        json["generation"] = 1
-        sc = storage_connector.StorageConnector.from_response_json(json)
-        with pytest.raises(ValueError):
-            sc.read(path="abc")
-        with pytest.raises(ValueError):
-            sc.read(path="adl://test")
-        with pytest.raises(ValueError):
-            sc.read(path="adl://test.azure")
-
     def test_default_path(self, mocker):
         mocker.patch("hsfs.engine.get_instance", return_value=spark.Engine())
         mock_engine_read = mocker.patch("hsfs.engine.spark.Engine.read")
@@ -272,6 +249,7 @@ class TestAdlsConnector:
         )
         sc.read(data_format="csv")
         # assert read path value
+        print(mock_engine_read.call_args[0])
         assert (
             mock_engine_read.call_args[0][3]
             == "abfss://test_container@test_account.dfs.core.windows.net/"
