@@ -3,6 +3,7 @@
     "version": "3.3.0-RC1",
     "title": "3.3.0-RC1",
     "aliases": [
+      "latest",
       "3.3"
     ]
   },
@@ -15,8 +16,7 @@
     "version": "3.2.1",
     "title": "3.2.1",
     "aliases": [
-      "3.2",
-      "latest"
+      "3.2"
     ]
   },
   {
