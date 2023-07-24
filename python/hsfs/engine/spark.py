@@ -32,6 +32,7 @@ import tzlocal
 # in case importing in %%local
 
 try:
+    import pyspark
     from pyspark import SparkFiles
     from pyspark.sql import SparkSession, DataFrame, SQLContext
     from pyspark.rdd import RDD
@@ -62,13 +63,21 @@ try:
         BooleanType,
         StructField,
     )
+
+    if pd.__version__ >= "2.0.0" and pyspark.__version__ < "3.2.3":
+
+        def iteritems(self):
+            return self.items()
+
+        setattr(pd.DataFrame, "iteritems", iteritems)
 except ImportError:
     pass
 
 from hsfs import feature, training_dataset_feature, client, util
-from hsfs.feature_group import ExternalFeatureGroup
+from hsfs.feature_group import ExternalFeatureGroup, SpineGroup
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.client import hopsworks
 from hsfs.core import hudi_engine, transformation_function_engine, kafka_api
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -122,7 +131,7 @@ class Engine:
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def is_flyingduck_query_supported(self, query, read_options):
+    def is_flyingduck_query_supported(self, query, read_options={}):
         return False  # we do not support flyingduck on pyspark clients
 
     def _sql_offline(self, sql_query, feature_store):
@@ -139,12 +148,15 @@ class Engine:
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
     def register_external_temporary_table(self, external_fg, alias):
-        external_dataset = external_fg.storage_connector.read(
-            external_fg.query,
-            external_fg.data_format,
-            external_fg.options,
-            external_fg.storage_connector._get_path(external_fg.path),
-        )
+        if not isinstance(external_fg, SpineGroup):
+            external_dataset = external_fg.storage_connector.read(
+                external_fg.query,
+                external_fg.data_format,
+                external_fg.options,
+                external_fg.storage_connector._get_path(external_fg.path),
+            )
+        else:
+            external_dataset = external_fg.dataframe
         if external_fg.location:
             self._spark_session.sparkContext.textFile(external_fg.location).collect()
 
@@ -247,6 +259,8 @@ class Engine:
                 )
 
             return lowercase_dataframe
+        if dataframe == "spine":
+            return None
 
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: spark rdds, spark dataframes, "
@@ -379,7 +393,6 @@ class Engine:
             )
 
     def _save_online_dataframe(self, feature_group, dataframe, write_options):
-
         write_options = self._get_kafka_config(write_options)
 
         serialized_df = self._online_fg_to_avro(
@@ -847,6 +860,7 @@ class Engine:
             return path
 
     def _setup_s3_hadoop_conf(self, storage_connector, path):
+        FS_S3_ENDPOINT = "fs.s3a.endpoint"
         if storage_connector.access_key:
             self._spark_context._jsc.hadoopConfiguration().set(
                 "fs.s3a.access.key", storage_connector.access_key
@@ -874,6 +888,11 @@ class Engine:
                 "fs.s3a.session.token",
                 storage_connector.session_token,
             )
+        if FS_S3_ENDPOINT in storage_connector.arguments:
+            self._spark_context._jsc.hadoopConfiguration().set(
+                FS_S3_ENDPOINT, storage_connector.spark_options().get(FS_S3_ENDPOINT)
+            )
+
         return path.replace("s3", "s3a", 1) if path is not None else None
 
     def _setup_adls_hadoop_conf(self, storage_connector, path):
@@ -964,7 +983,6 @@ class Engine:
         return transformed_dataset.select(*dataset.columns)
 
     def _setup_gcp_hadoop_conf(self, storage_connector, path):
-
         PROPERTY_ENCRYPTION_KEY = "fs.gs.encryption.key"
         PROPERTY_ENCRYPTION_HASH = "fs.gs.encryption.key.hash"
         PROPERTY_ALGORITHM = "fs.gs.encryption.algorithm"
@@ -1113,12 +1131,6 @@ class Engine:
     def _get_kafka_config(self, write_options: dict = {}) -> dict:
         if self._kafka_config is None:
             self._kafka_config = {
-                "kafka.bootstrap.servers": ",".join(
-                    [
-                        endpoint.replace("INTERNAL://", "")
-                        for endpoint in self._kafka_api.get_broker_endpoints()
-                    ]
-                ),
                 "kafka.security.protocol": "SSL",
                 "kafka.ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),
                 "kafka.ssl.truststore.password": client.get_instance()._cert_key,
@@ -1127,7 +1139,32 @@ class Engine:
                 "kafka.ssl.key.password": client.get_instance()._cert_key,
                 "kafka.ssl.endpoint.identification.algorithm": "",
             }
+            if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
+                "internal_kafka", False
+            ):
+                self._kafka_config["kafka.bootstrap.servers"] = ",".join(
+                    [
+                        endpoint.replace("INTERNAL://", "")
+                        for endpoint in self._kafka_api.get_broker_endpoints(
+                            externalListeners=False
+                        )
+                    ]
+                )
+            else:
+                self._kafka_config["kafka.bootstrap.servers"] = ",".join(
+                    [
+                        endpoint.replace("EXTERNAL://", "")
+                        for endpoint in self._kafka_api.get_broker_endpoints(
+                            externalListeners=True
+                        )
+                    ]
+                )
+
         return {**write_options, **self._kafka_config}
+
+    @staticmethod
+    def is_connector_type_supported(type):
+        return True
 
 
 class SchemaError(Exception):

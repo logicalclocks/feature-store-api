@@ -29,12 +29,14 @@ import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class FeatureGroupEngine extends FeatureGroupEngineBase {
 
   @SneakyThrows
-  public DataStreamSink<?> insertStream(StreamFeatureGroup streamFeatureGroup, DataStream<?> featureData) {
-    return FlinkEngine.getInstance().writeDataStream(streamFeatureGroup, featureData);
+  public DataStreamSink<?> insertStream(StreamFeatureGroup streamFeatureGroup, DataStream<?> featureData,
+      Map<String, String> writeOptions) {
+    return FlinkEngine.getInstance().writeDataStream(streamFeatureGroup, featureData,  writeOptions);
   }
 
   public StreamFeatureGroup getStreamFeatureGroup(FeatureStore featureStore, String fgName, Integer fgVersion)

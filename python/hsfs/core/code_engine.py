@@ -24,7 +24,6 @@ import os
 
 
 class CodeEngine:
-
     WEB_PROXY_ENV = "APPLICATION_WEB_PROXY_BASE"
 
     # JUPYTER

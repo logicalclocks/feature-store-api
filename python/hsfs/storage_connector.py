@@ -180,6 +180,7 @@ class S3Connector(StorageConnector):
         bucket=None,
         session_token=None,
         iam_role=None,
+        arguments=None,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -191,6 +192,9 @@ class S3Connector(StorageConnector):
         self._bucket = bucket
         self._session_token = session_token
         self._iam_role = iam_role
+        self._arguments = (
+            {opt["name"]: opt["value"] for opt in arguments} if arguments else {}
+        )
 
     @property
     def access_key(self):
@@ -232,11 +236,15 @@ class S3Connector(StorageConnector):
         """If the connector refers to a path (e.g. S3) - return the path of the connector"""
         return "s3://" + self._bucket
 
+    @property
+    def arguments(self):
+        return self._arguments
+
     def spark_options(self):
         """Return prepared options to be passed to Spark, based on the additional
         arguments.
         """
-        return {}
+        return self._arguments
 
     def prepare_spark(self, path: Optional[str] = None):
         """Prepare Spark to use this Storage Connector.
@@ -260,7 +268,7 @@ class S3Connector(StorageConnector):
         query: str = None,
         data_format: str = None,
         options: dict = {},
-        path: str = None,
+        path: str = "",
     ):
         """Reads a query or a path into a dataframe using the storage connector.
 
@@ -277,6 +285,19 @@ class S3Connector(StorageConnector):
             `DataFrame`.
         """
         self.refetch()
+        options = (
+            {**self.spark_options(), **options}
+            if options is not None
+            else self.spark_options()
+        )
+        if not path.startswith("s3://"):
+            path = self._get_path(path)
+            print(
+                "Prepending default bucket specified on connector, final path: {}".format(
+                    path
+                )
+            )
+
         return engine.get_instance().read(self, data_format, options, path)
 
     def _get_path(self, sub_path: str):
@@ -683,8 +704,7 @@ class SnowflakeConnector(StorageConnector):
         props = {
             "user": self._user,
             "account": self.account,
-            "database": self._database,
-            "schema": self._schema,
+            "database": self._database + "/" + self._schema,
         }
         if self._password:
             props["password"] = self._password
@@ -1001,6 +1021,7 @@ class KafkaConnector(StorageConnector):
 
 class GcsConnector(StorageConnector):
     type = StorageConnector.GCS
+    GS_FS_PREFIX = "gs://"  # Google Storage Filesystem prefix
 
     def __init__(
         self,
@@ -1046,7 +1067,7 @@ class GcsConnector(StorageConnector):
     @property
     def path(self):
         """the path of the connector along with gs file system prefixed"""
-        return "gs://" + self._bucket
+        return self.GS_FS_PREFIX + self._bucket
 
     @property
     def bucket(self):
@@ -1070,14 +1091,23 @@ class GcsConnector(StorageConnector):
         query: str = None,
         data_format: str = None,
         options: dict = {},
-        path: str = None,
+        path: str = "",
     ):
         """Reads GCS path into a dataframe using the storage connector.
 
+        To read directly from the default bucket, you can omit the path argument:
+        ```python
+        conn.read(data_format='spark_formats')
+        ```
+        Or to read objects from default bucket provide the object path without gsUtil URI schema. For example,
+        following will read from a path gs://bucket_on_connector/Path/object :
+        ```python
+        conn.read(data_format='spark_formats', paths='Path/object')
+        ```
+        Or to read with full gsUtil URI path,
         ```python
         conn.read(data_format='spark_formats',path='gs://BUCKET/DATA')
         ```
-
         # Arguments
             query: Not relevant for GCS connectors.
             data_format: Spark data format. Defaults to `None`.
@@ -1089,6 +1119,20 @@ class GcsConnector(StorageConnector):
         # Returns
             `Dataframe`: A Spark dataframe.
         """
+        # validate engine supports connector type
+        if not engine.get_instance().is_connector_type_supported(self.type):
+            raise NotImplementedError(
+                "GCS connector not yet supported for engine: " + engine.get_type()
+            )
+
+        # validate path begins with gs://
+        if not path.startswith(self.GS_FS_PREFIX):
+            path = self._get_path(path)
+            print(
+                "Prepending default bucket specified on connector, final path: {}".format(
+                    path
+                )
+            )
 
         return engine.get_instance().read(self, data_format, options, path)
 
@@ -1244,7 +1288,11 @@ class BigQueryConnector(StorageConnector):
         # Returns
             `Dataframe`: A Spark dataframe.
         """
-
+        # validate engine supports connector type
+        if not engine.get_instance().is_connector_type_supported(self.type):
+            raise NotImplementedError(
+                "BigQuery connector not yet supported for engine: " + engine.get_type()
+            )
         # merge user spark options on top of default spark options
         options = (
             {**self.spark_options(), **options}
@@ -1252,6 +1300,15 @@ class BigQueryConnector(StorageConnector):
             else self.spark_options()
         )
         if query:
+            if not {self.BIGQ_MATERIAL_DATASET, self.BIGQ_VIEWS_ENABLED}.issubset(
+                options.keys()
+            ):
+                raise ValueError(
+                    "BigQuery materialization views should be enabled for SQL query. "
+                    "Set spark options viewsEnabled=True and "
+                    + self.BIGQ_MATERIAL_DATASET
+                    + "=<temporaryDatasetName> to options argument or instead use BigQuery Query type connector from UI."
+                )
             path = query
         elif self._query_table:
             path = self._query_table

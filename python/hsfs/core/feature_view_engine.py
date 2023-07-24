@@ -16,7 +16,7 @@
 
 import datetime
 import warnings
-from hsfs import engine, training_dataset_feature, client, util
+from hsfs import engine, training_dataset_feature, client, util, feature_group
 from hsfs.client import exceptions
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -37,13 +37,6 @@ class FeatureViewEngine:
     _TRAINING_DATA_API_PATH = "trainingdatasets"
     _OVERWRITE = "overwrite"
     _APPEND = "append"
-    AMBIGUOUS_LABEL_ERROR = (
-        "Provided label '{}' is ambiguous and exists in more than one feature groups. "
-        "You can provide the label with the prefix you specify in the join."
-    )
-    LABEL_NOT_EXIST_ERROR = (
-        "Provided label '{}' do not exist in any of the feature groups."
-    )
 
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
@@ -76,53 +69,19 @@ class FeatureViewEngine:
                 " feature view does not support time travel query."
             )
         if feature_view_obj.labels:
-            # If provided label matches column with prefix, then attach label.
-            # If provided label matches only one column without prefix, then attach label. (For
-            # backward compatibility purpose, as of v3.0, labels are matched to columns without prefix.)
-            # If provided label matches multiple columns without prefix, then raise exception because it is ambiguous.
-            prefix_feature_map = {}
-            feature_map = {}
-            for feat in feature_view_obj.query.features:
-                prefix_feature_map[feat.name] = (
-                    feat.name,
-                    feature_view_obj.query._left_feature_group,
-                )
-            for join in feature_view_obj.query.joins:
-                for feat in join.query.features:
-                    if join.prefix:
-                        prefix_feature_map[join.prefix + feat.name] = (
-                            feat.name,
-                            join.query._left_feature_group,
-                        )
-                    feature_map[feat.name] = feature_map.get(feat.name, []) + [
-                        join.query._left_feature_group
-                    ]
-
             for label_name in feature_view_obj.labels:
-                if label_name in prefix_feature_map:
-                    feature_view_obj._features.append(
-                        training_dataset_feature.TrainingDatasetFeature(
-                            name=prefix_feature_map[label_name][0],
-                            label=True,
-                            featuregroup=prefix_feature_map[label_name][1],
-                        )
+                (
+                    feature,
+                    prefix,
+                    featuregroup,
+                ) = feature_view_obj.query._get_feature_by_name(label_name)
+                feature_view_obj._features.append(
+                    training_dataset_feature.TrainingDatasetFeature(
+                        name=feature.name,
+                        label=True,
+                        featuregroup=featuregroup,
                     )
-                elif label_name in feature_map:
-                    if len(feature_map[label_name]) > 1:
-                        raise FeatureStoreException(
-                            FeatureViewEngine.AMBIGUOUS_LABEL_ERROR.format(label_name)
-                        )
-                    feature_view_obj._features.append(
-                        training_dataset_feature.TrainingDatasetFeature(
-                            name=label_name,
-                            label=True,
-                            featuregroup=feature_map[label_name][0],
-                        )
-                    )
-                else:
-                    raise FeatureStoreException(
-                        FeatureViewEngine.LABEL_NOT_EXIST_ERROR.format(label_name)
-                    )
+                )
         self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
         updated_fv = self._feature_view_api.post(feature_view_obj)
         self.attach_transformation_function(updated_fv)
@@ -169,9 +128,10 @@ class FeatureViewEngine:
         end_time,
         with_label=False,
         training_dataset_version=None,
+        spine=None,
     ):
         try:
-            return self._feature_view_api.get_batch_query(
+            query = self._feature_view_api.get_batch_query(
                 feature_view_obj.name,
                 feature_view_obj.version,
                 util.convert_event_time_to_timestamp(start_time),
@@ -180,6 +140,28 @@ class FeatureViewEngine:
                 is_python_engine=engine.get_type() == "python",
                 with_label=with_label,
             )
+            # verify whatever is passed 1. spine group with dataframe contained, or 2. dataframe
+            # the schema has to be consistent
+
+            # allow passing new spine group or dataframe
+            if isinstance(spine, feature_group.SpineGroup):
+                # schema of original fg on left side needs to be consistent with schema contained in the
+                # spine group to overwrite the feature group
+                dataframe_features = engine.get_instance().parse_schema_feature_group(
+                    spine.dataframe
+                )
+                spine._feature_group_engine._verify_schema_compatibility(
+                    query._left_feature_group.features, dataframe_features
+                )
+                query._left_feature_group = spine
+            elif isinstance(query._left_feature_group, feature_group.SpineGroup):
+                if spine is None:
+                    raise FeatureStoreException(
+                        "Feature View was created with a spine group, setting the `spine` argument is mandatory."
+                    )
+                # the dataframe setter will verify the schema of the dataframe
+                query._left_feature_group.dataframe = spine
+            return query
         except exceptions.RestAPIError as e:
             if e.response.json().get("errorCode", "") == 270172:
                 raise ValueError(
@@ -235,7 +217,7 @@ class FeatureViewEngine:
         return transformation_functions_dict
 
     def create_training_dataset(
-        self, feature_view_obj, training_dataset_obj, user_write_options
+        self, feature_view_obj, training_dataset_obj, user_write_options, spine=None
     ):
         self._set_event_time(feature_view_obj, training_dataset_obj)
         updated_instance = self._create_training_data_metadata(
@@ -245,6 +227,7 @@ class FeatureViewEngine:
             feature_view_obj,
             user_write_options,
             training_dataset_obj=training_dataset_obj,
+            spine=spine,
         )
         return updated_instance, td_job
 
@@ -255,6 +238,7 @@ class FeatureViewEngine:
         splits=[],
         training_dataset_obj=None,
         training_dataset_version=None,
+        spine=None,
     ):
         # check if provided td version has already existed.
         if training_dataset_version:
@@ -294,6 +278,7 @@ class FeatureViewEngine:
                 start_time=td_updated.event_start_time,
                 end_time=td_updated.event_end_time,
                 with_label=True,
+                spine=spine,
             )
             split_df = engine.get_instance().get_training_data(
                 td_updated, feature_view_obj, query, read_options
@@ -353,7 +338,7 @@ class FeatureViewEngine:
         return int(float(datetime.datetime.now().timestamp()) * 1000)
 
     def recreate_training_dataset(
-        self, feature_view_obj, training_dataset_version, user_write_options
+        self, feature_view_obj, training_dataset_version, user_write_options, spine=None
     ):
         training_dataset_obj = self._get_training_data_metadata(
             feature_view_obj, training_dataset_version
@@ -362,6 +347,7 @@ class FeatureViewEngine:
             feature_view_obj,
             user_write_options,
             training_dataset_obj=training_dataset_obj,
+            spine=spine,
         )
         return training_dataset_obj, td_job
 
@@ -415,6 +401,7 @@ class FeatureViewEngine:
         user_write_options,
         training_dataset_obj=None,
         training_dataset_version=None,
+        spine=None,
     ):
         if training_dataset_obj:
             pass
@@ -431,6 +418,7 @@ class FeatureViewEngine:
             training_dataset_obj.event_end_time,
             with_label=True,
             training_dataset_version=training_dataset_obj.version,
+            spine=spine,
         )
         td_job = engine.get_instance().write_training_dataset(
             training_dataset_obj,
@@ -537,6 +525,7 @@ class FeatureViewEngine:
         training_dataset_version,
         transformation_functions,
         read_options=None,
+        spine=None,
     ):
         self._check_feature_group_accessibility(feature_view_obj)
 
@@ -546,6 +535,7 @@ class FeatureViewEngine:
             end_time,
             with_label=False,
             training_dataset_version=training_dataset_version,
+            spine=spine,
         ).read(read_options=read_options)
         if transformation_functions:
             return engine.get_instance()._apply_transformation_function(
@@ -599,10 +589,12 @@ class FeatureViewEngine:
     def _check_feature_group_accessibility(self, feature_view_obj):
         if (
             engine.get_type() == "python" or engine.get_type() == "hive"
-        ) and not feature_view_obj.query.from_cache_feature_group_only():
+        ) and not feature_view_obj.query.is_cache_feature_group_only():
             raise NotImplementedError(
-                "Python kernel can only read from cached feature group."
-                " Please use `feature_view.create_training_data` instead."
+                "Python kernel can only read from cached feature groups."
+                " When using external feature groups please use "
+                "`feature_view.create_training_data` instead. "
+                "If you are using spines, use a Spark Kernel."
             )
 
     def _get_feature_view_url(self, feature_view):

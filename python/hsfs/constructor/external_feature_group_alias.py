@@ -21,11 +21,16 @@ from hsfs import feature_group
 
 class ExternalFeatureGroupAlias:
     def __init__(self, on_demand_feature_group, alias):
-        self._on_demand_feature_group = (
-            feature_group.ExternalFeatureGroup.from_response_json(
+        if not on_demand_feature_group["spine"]:
+            self._on_demand_feature_group = (
+                feature_group.ExternalFeatureGroup.from_response_json(
+                    on_demand_feature_group
+                )
+            )
+        else:
+            self._on_demand_feature_group = feature_group.SpineGroup.from_response_json(
                 on_demand_feature_group
             )
-        )
         self._alias = alias
 
     @classmethod

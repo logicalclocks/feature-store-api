@@ -20,7 +20,6 @@ from hsfs.engine import python
 
 class TestFeatureGroupWriter:
     def test_fg_writer_context_manager(self, mocker, dataframe_fixture_basic):
-
         mock_insert = mocker.patch("hsfs.feature_group.FeatureGroup.insert")
 
         fg = feature_group.FeatureGroup(
@@ -42,7 +41,7 @@ class TestFeatureGroupWriter:
             overwrite=False,
             operation="upsert",
             storage=None,
-            write_options={"start_offline_backfill": False},
+            write_options={"start_offline_materialization": False},
             validation_options={"fetch_expectation_suite": False},
             save_code=False,
         )

@@ -20,7 +20,6 @@ from hsfs import util
 
 
 class JobConfiguration:
-
     DTO_TYPE = "sparkJobConfiguration"
 
     def __init__(

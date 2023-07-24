@@ -21,6 +21,7 @@ import time
 import re
 import ast
 import warnings
+import logging
 import avro
 import socket
 import pyarrow as pa
@@ -58,6 +59,7 @@ from hsfs.core import (
     feature_view_api,
     transformation_function_engine,
     arrow_flight_client,
+    variable_api,
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -65,6 +67,11 @@ from hsfs.client import exceptions, hopsworks
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
+
+from hsfs.storage_connector import StorageConnector
+
+# Disable pyhive INFO logging
+logging.getLogger("pyhive").setLevel(logging.WARNING)
 
 HAS_FAST = False
 try:
@@ -107,7 +114,7 @@ class Engine:
                 sql_query, online_conn, dataframe_type, read_options, schema
             )
 
-    def is_flyingduck_query_supported(self, query, read_options):
+    def is_flyingduck_query_supported(self, query, read_options={}):
         return arrow_flight_client.get_instance().is_query_supported(
             query, read_options
         )
@@ -121,12 +128,24 @@ class Engine:
         hive_config=None,
     ):
         if arrow_flight_client.get_instance().is_flyingduck_query_object(sql_query):
-            result_df = arrow_flight_client.get_instance().read_query(sql_query)
+            result_df = util.run_with_loading_animation(
+                "Reading data from Hopsworks, using ArrowFlight",
+                arrow_flight_client.get_instance().read_query,
+                sql_query,
+            )
         else:
             with self._create_hive_connection(
                 feature_store, hive_config=hive_config
             ) as hive_conn:
-                result_df = pd.read_sql(sql_query, hive_conn)
+                # Suppress SQLAlchemy pandas warning
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", UserWarning)
+                    result_df = util.run_with_loading_animation(
+                        "Reading data from Hopsworks, using Hive",
+                        pd.read_sql,
+                        sql_query,
+                        hive_conn,
+                    )
 
         if schema:
             result_df = Engine.cast_columns(result_df, schema)
@@ -143,7 +162,9 @@ class Engine:
                 ),
             )
         with self._mysql_online_fs_engine.connect() as mysql_conn:
-            result_df = pd.read_sql(sql.text(sql_query), mysql_conn)
+            if "sqlalchemy" in str(type(mysql_conn)):
+                sql_query = sql.text(sql_query)
+            result_df = pd.read_sql(sql_query, mysql_conn)
             if schema:
                 result_df = Engine.cast_columns(result_df, schema, online=True)
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -339,7 +360,8 @@ class Engine:
             stats = df[target_cols].describe()
         final_stats = []
         for col in stats.columns:
-            stat = self._convert_pandas_statistics(stats[col].to_dict())
+            stats_dict = json.loads(stats[col].to_json())
+            stat = self._convert_pandas_statistics(stats_dict)
             stat["dataType"] = (
                 "Fractional"
                 if isinstance(stats[col].dtype, type(np.dtype(np.float64)))
@@ -423,6 +445,8 @@ class Engine:
                 ):
                     dataframe_copy[col] = dataframe_copy[col].dt.tz_convert(None)
             return dataframe_copy
+        elif dataframe == "spine":
+            return None
 
         raise TypeError(
             "The provided dataframe type is not recognized. Supported types are: pandas dataframe. "
@@ -683,9 +707,15 @@ class Engine:
         return td_job
 
     def _create_hive_connection(self, feature_store, hive_config=None):
+        host = variable_api.VariableApi().get_loadbalancer_external_domain()
+        if host == "":
+            # If the load balancer is not configured, then fall back to use
+            # the hive server on the head node
+            host = client.get_instance().host
+
         try:
             return hive.Connection(
-                host=client.get_instance()._host,
+                host=host,
                 port=9085,
                 # database needs to be set every time, 'default' doesn't work in pyhive
                 database=feature_store,
@@ -910,6 +940,8 @@ class Engine:
                     row[k] = row[k].to_pydatetime()
                 if isinstance(row[k], datetime) and row[k].tzinfo is None:
                     row[k] = row[k].replace(tzinfo=timezone.utc)
+                if isinstance(row[k], pd._libs.missing.NAType):
+                    row[k] = None
 
             # encode complex features
             row = self._encode_complex_features(feature_writers, row)
@@ -931,36 +963,32 @@ class Engine:
             producer.flush()
             progress_bar.close()
 
-        # start backfilling job
-        # if topic didn't exist, always run the backfill job to reset the offsets except if it's a multi insert
+        # start materialization job
+        # if topic didn't exist, always run the materialization job to reset the offsets except if it's a multi insert
         if (
             not isinstance(feature_group, ExternalFeatureGroup)
             and reset_offsets
             and not feature_group._multi_part_insert
         ):
-            if offline_write_options is not None and not offline_write_options.get(
-                "start_offline_backfill", True
-            ):
+            if self._start_offline_materialization(offline_write_options):
                 warnings.warn(
-                    "This is the first ingestion after an upgrade or backup/restore, running backfill job even though `start_offline_backfill` was set to `False`.",
+                    "This is the first ingestion after an upgrade or backup/restore, running materialization job even though `start_offline_materialization` was set to `False`.",
                     util.FeatureGroupWarning,
                 )
-            feature_group.backfill_job.run(
-                args=feature_group.backfill_job.config.get("defaultArgs", "")
+            feature_group.materialization_job.run(
+                args=feature_group.materialization_job.config.get("defaultArgs", "")
                 + " -kafkaOffsetReset true",
-                await_termination=offline_write_options.get("wait_for_job", True),
+                await_termination=offline_write_options.get("wait_for_job", False),
             )
-        elif (
-            not isinstance(feature_group, ExternalFeatureGroup)
-            and offline_write_options is not None
-            and offline_write_options.get("start_offline_backfill", True)
-        ):
-            feature_group.backfill_job.run(
-                await_termination=offline_write_options.get("wait_for_job", True)
+        elif not isinstance(
+            feature_group, ExternalFeatureGroup
+        ) and self._start_offline_materialization(offline_write_options):
+            feature_group.materialization_job.run(
+                await_termination=offline_write_options.get("wait_for_job", False)
             )
         if isinstance(feature_group, ExternalFeatureGroup):
             return None
-        return feature_group.backfill_job
+        return feature_group.materialization_job
 
     def _kafka_produce(
         self, producer, feature_group, key, encoded_row, acked, offline_write_options
@@ -1110,6 +1138,8 @@ class Engine:
             return "boolean"
         elif dtype == "category":
             return "string"
+        elif str(dtype) == "string":
+            return "string"
         elif not isinstance(dtype, np.dtype):
             if dtype == pd.Int8Dtype():
                 return "int"
@@ -1127,14 +1157,32 @@ class Engine:
         if pa.types.is_list(arrow_type):
             # figure out sub type
             sub_arrow_type = arrow_type.value_type
-            sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            try:
+                sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            except NotImplementedError:
+                sub_dtype = np.dtype("object")
             subtype = Engine._convert_pandas_dtype_to_offline_type(
                 sub_dtype, sub_arrow_type
             )
             return "array<{}>".format(subtype)
         if pa.types.is_struct(arrow_type):
-            # best effort, based on pyarrow's string representation
-            return str(arrow_type)
+            struct_schema = {}
+            for index in range(arrow_type.num_fields):
+                sub_arrow_type = arrow_type.field(index).type
+                try:
+                    sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+                except NotImplementedError:
+                    sub_dtype = np.dtype("object")
+                struct_schema[
+                    arrow_type.field(index).name
+                ] = Engine._convert_pandas_dtype_to_offline_type(
+                    sub_dtype, arrow_type.field(index).type
+                )
+            return (
+                "struct<"
+                + ",".join([f"{key}:{value}" for key, value in struct_schema.items()])
+                + ">"
+            )
         # Currently not supported
         # elif pa.types.is_decimal(arrow_type):
         #    return str(arrow_type).replace("decimal128", "decimal")
@@ -1241,3 +1289,27 @@ class Engine:
                     df[_feat.name], _feat.online_type
                 )
         return df
+
+    @staticmethod
+    def is_connector_type_supported(connector_type):
+        return connector_type in [
+            StorageConnector.HOPSFS,
+            StorageConnector.S3,
+            StorageConnector.JDBC,
+            StorageConnector.REDSHIFT,
+            StorageConnector.ADLS,
+            StorageConnector.SNOWFLAKE,
+            StorageConnector.KAFKA,
+        ]
+
+    @staticmethod
+    def _start_offline_materialization(offline_write_options):
+        if offline_write_options is not None:
+            if "start_offline_materialization" in offline_write_options:
+                return offline_write_options.get("start_offline_materialization")
+            elif "start_offline_backfill" in offline_write_options:
+                return offline_write_options.get("start_offline_backfill")
+            else:
+                return True
+        else:
+            return True

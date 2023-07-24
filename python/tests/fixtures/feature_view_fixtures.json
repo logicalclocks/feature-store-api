@@ -13,7 +13,6 @@
             "lastName": "Admin",
             "maxNumProjects": 0,
             "numActiveProjects": 0,
-            "numCreatedProjects": 0,
             "numRemainingProjects": 0,
             "status": 0,
             "testUser": false,
@@ -79,7 +78,6 @@
                   "lastName": "Admin",
                   "maxNumProjects": 0,
                   "numActiveProjects": 0,
-                  "numCreatedProjects": 0,
                   "numRemainingProjects": 0,
                   "status": 0,
                   "testUser": false,
@@ -138,7 +136,7 @@
             "on": "test_on",
             "left_on": "test_left_on",
             "right_on": "test_right_on",
-            "join_type": "test_join_type",
+            "type": "test_join_type",
             "prefix": "test_prefix"
           }
         ],
@@ -189,7 +187,6 @@
             "lastName": "Admin",
             "maxNumProjects": 0,
             "numActiveProjects": 0,
-            "numCreatedProjects": 0,
             "numRemainingProjects": 0,
             "status": 0,
             "testUser": false,
@@ -255,7 +252,6 @@
                   "lastName": "Admin",
                   "maxNumProjects": 0,
                   "numActiveProjects": 0,
-                  "numCreatedProjects": 0,
                   "numRemainingProjects": 0,
                   "status": 0,
                   "testUser": false,
@@ -314,7 +310,7 @@
             "on": "test_on",
             "left_on": "test_left_on",
             "right_on": "test_right_on",
-            "join_type": "test_join_type",
+            "type": "test_join_type",
             "prefix": "test_prefix"
           }
         ],

@@ -17,6 +17,9 @@
 import re
 import json
 import pandas as pd
+import time
+import threading
+import itertools
 
 from datetime import datetime, date, timezone
 from urllib.parse import urljoin, urlparse
@@ -25,6 +28,9 @@ from sqlalchemy import create_engine
 
 from hsfs import client, feature
 from hsfs.client import exceptions
+from hsfs.core import variable_api
+
+FEATURE_STORE_NAME_SUFFIX = "_featurestore"
 
 
 class FeatureStoreEncoder(json.JSONEncoder):
@@ -57,13 +63,20 @@ def feature_group_name(feature_group):
     return feature_group.name + "_" + str(feature_group.version)
 
 
-def rewrite_feature_store_name(name):
-    FEATURE_STORE_NAME_SUFFIX = "_featurestore"
+def append_feature_store_suffix(name):
     name = name.lower()
     if name.endswith(FEATURE_STORE_NAME_SUFFIX):
         return name
     else:
         return name + FEATURE_STORE_NAME_SUFFIX
+
+
+def strip_feature_store_suffix(name):
+    name = name.lower()
+    if name.endswith(FEATURE_STORE_NAME_SUFFIX):
+        return name[: -1 * len(FEATURE_STORE_NAME_SUFFIX)]
+    else:
+        return name
 
 
 def create_mysql_engine(online_conn, external, options=None):
@@ -77,9 +90,15 @@ def create_mysql_engine(online_conn, external, options=None):
     if external:
         # This only works with external clients.
         # Hopsworks clients should use the storage connector
+        host = variable_api.VariableApi().get_loadbalancer_external_domain()
+        if host == "":
+            # If the load balancer is not configured, then fall back to
+            # use the MySQL node on the head node
+            host = client.get_instance().host
+
         online_options["url"] = re.sub(
             "/[0-9.]+:",
-            "/{}:".format(client.get_instance().host),
+            "/{}:".format(host),
             online_options["url"],
         )
 
@@ -298,6 +317,42 @@ def translate_legacy_spark_type(output_type):
         return "BOOLEAN"
     else:
         return "STRING"  # handle gracefully, and return STRING type, the default for spark udfs
+
+
+def _loading_animation(message, stop_event):
+    for char in itertools.cycle([".", "..", "...", ""]):
+        if stop_event.is_set():
+            break
+        print(f"{message}{char}   ", end="\r")
+        time.sleep(0.5)
+
+
+def run_with_loading_animation(message, func, *args, **kwargs):
+    stop_event = threading.Event()
+    t = threading.Thread(
+        target=_loading_animation,
+        args=(
+            message,
+            stop_event,
+        ),
+    )
+    t.daemon = True
+    t.start()
+    start = time.time()
+    end = None
+
+    try:
+        result = func(*args, **kwargs)
+        end = time.time()
+        return result
+    finally:
+        # Stop the animation and print the "Finished Querying" message
+        stop_event.set()
+        t.join()
+        if not end:
+            print(f"\rError: {message}           ", end="\n")
+        else:
+            print(f"\rFinished: {message} ({(end-start):.2f}s) ", end="\n")
 
 
 class VersionWarning(Warning):

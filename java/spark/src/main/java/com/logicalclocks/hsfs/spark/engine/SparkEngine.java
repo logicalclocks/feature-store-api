@@ -23,6 +23,7 @@ import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.DataFormat;
@@ -734,19 +735,23 @@ public class SparkEngine {
     }
     if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionAlgorithm())) {
       sparkSession.sparkContext().hadoopConfiguration().set(
-          "fs.s3a.server-side-encryption-algorithm",
+          Constants.S3_ENCRYPTION_ALGO,
           storageConnector.getServerEncryptionAlgorithm()
       );
     }
     if (!Strings.isNullOrEmpty(storageConnector.getServerEncryptionKey())) {
       sparkSession.sparkContext().hadoopConfiguration()
-          .set("fs.s3a.server-side-encryption-key", storageConnector.getServerEncryptionKey());
+          .set(Constants.S3_ENCRYPTION_KEY, storageConnector.getServerEncryptionKey());
     }
     if (!Strings.isNullOrEmpty(storageConnector.getSessionToken())) {
       sparkSession.sparkContext().hadoopConfiguration()
           .set(Constants.S3_CREDENTIAL_PROVIDER_ENV, Constants.S3_TEMPORARY_CREDENTIAL_PROVIDER);
       sparkSession.sparkContext().hadoopConfiguration()
           .set(Constants.S3_SESSION_KEY_ENV, storageConnector.getSessionToken());
+    }
+    if (storageConnector.sparkOptions().containsKey(Constants.S3_ENDPOINT)) {
+      sparkSession.sparkContext().hadoopConfiguration()
+      .set(Constants.S3_ENDPOINT, storageConnector.sparkOptions().get(Constants.S3_ENDPOINT));
     }
   }
 
@@ -1003,14 +1008,26 @@ public class SparkEngine {
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
     Map<String, String> config = new HashMap<>();
+    boolean internalKafka = false;
     if (writeOptions != null) {
+      internalKafka = Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"));
       config.putAll(writeOptions);
     }
     HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
-    config.put("kafka.bootstrap.servers",
-        kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
-            "INTERNAL://", "")).collect(Collectors.joining(",")));
+    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) || internalKafka) {
+      config.put("kafka.bootstrap.servers",
+          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
+              "INTERNAL://", ""))
+            .collect(Collectors.joining(",")));
+    } else {
+      config.put("kafka.bootstrap.servers",
+          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
+            .map(broker -> broker.replaceAll("EXTERNAL://", ""))
+            .collect(Collectors.joining(","))
+      );
+    }
+
     config.put("kafka.security.protocol", "SSL");
     config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
     config.put("kafka.ssl.truststore.password", client.getCertKey());

@@ -24,6 +24,7 @@ from hsfs.core import explicit_provenance
 class FeatureGroupApi:
     CACHED = "cached"
     ONDEMAND = "ondemand"
+    SPINE = "spine"
 
     def __init__(self, feature_store_id):
         self._feature_store_id = feature_store_id
@@ -46,7 +47,6 @@ class FeatureGroupApi:
             "featuregroups",
         ]
         headers = {"content-type": "application/json"}
-
         return feature_group_instance.update_from_response_json(
             _client._send_request(
                 "POST",
@@ -82,6 +82,8 @@ class FeatureGroupApi:
 
         if fg_type == self.CACHED:
             fg_list = feature_group.FeatureGroup.from_response_json(json_list)
+        elif fg_type == self.SPINE:
+            fg_list = feature_group.SpineGroup.from_response_json(json_list)
         else:
             fg_list = feature_group.ExternalFeatureGroup.from_response_json(json_list)
 
