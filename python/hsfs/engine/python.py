@@ -678,9 +678,14 @@ class Engine:
             and len(training_dataset.transformation_functions) == 0
         ):
             query_obj, _ = dataset._prep_read(False, user_write_options)
-            response = arrow_flight_client.get_instance().create_training_dataset(
-                feature_view_obj, training_dataset, query_obj
+            response = util.run_with_loading_animation(
+                "Materializing data to Hopsworks, using ArrowFlight",
+                arrow_flight_client.get_instance().create_training_dataset,
+                feature_view_obj,
+                training_dataset,
+                query_obj,
             )
+
             return response
 
         # As for creating a feature group, users have the possibility of passing
