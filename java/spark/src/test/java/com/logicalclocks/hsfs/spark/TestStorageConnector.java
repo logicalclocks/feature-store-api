@@ -31,6 +31,8 @@ import org.apache.parquet.Strings;
 import org.apache.spark.SparkContext;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
@@ -42,6 +44,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -94,105 +97,168 @@ public class TestStorageConnector {
     SparkEngine.setInstance(null);
   }
 
-  @Test
-  public void testGcsConnectorCredentials(@TempDir Path tempDir) throws IOException, FeatureStoreException {
-    // Arrange
-    String credentials = "{\"type\": \"service_account\", \"project_id\": \"test\", \"private_key_id\": \"123456\", "+
-      "\"private_key\": \"-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----\", " +
-      "\"client_email\": \"test@project.iam.gserviceaccount.com\"}";
-    Path credentialsFile = tempDir.resolve("gcs.json");
-    Files.write(credentialsFile, credentials.getBytes());
-
+  @Nested
+  class Gcs {
+    StorageConnectorUtils storageConnectorUtils = new StorageConnectorUtils();
     StorageConnector.GcsConnector gcsConnector = new StorageConnector.GcsConnector();
-    if (SystemUtils.IS_OS_WINDOWS) {
-      gcsConnector.setKeyPath("file:///" + credentialsFile.toString().replace( "\\", "/" ));
-    } else {
-      gcsConnector.setKeyPath("file://" + credentialsFile);
+    @BeforeEach
+    public void setup(
+      @TempDir
+      Path tempDir) throws IOException {
+      String credentials =
+        "{\"type\": \"service_account\", \"project_id\": \"test\", \"private_key_id\": \"123456\", " +
+          "\"private_key\": \"-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----\", " +
+          "\"client_email\": \"test@project.iam.gserviceaccount.com\"}";
+      Path credentialsFile = tempDir.resolve("gcs.json");
+      Files.write(credentialsFile, credentials.getBytes());
+
+      if (SystemUtils.IS_OS_WINDOWS) {
+        gcsConnector.setKeyPath("file:///" + credentialsFile.toString().replace("\\", "/"));
+      } else {
+        gcsConnector.setKeyPath("file://" + credentialsFile);
+      }
+      gcsConnector.setStorageConnectorType(StorageConnectorType.GCS);
+      gcsConnector.setBucket("bucket");
     }
-    gcsConnector.setStorageConnectorType(StorageConnectorType.GCS);
 
-    // Act
-    SparkEngine.getInstance().setupConnectorHadoopConf(gcsConnector);
-    SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
-    // Assert
-    Assertions.assertEquals(
-      "test@project.iam.gserviceaccount.com",
-      sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_EMAIL));
-    Assertions.assertEquals(
-      "123456",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_KEY_ID));
-    Assertions.assertEquals("-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_KEY));
-    Assertions.assertEquals(Constants.PROPERTY_GCS_FS_VALUE,sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_FS_KEY));
-    Assertions.assertEquals("true",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_ENABLE));
-    Assertions.assertTrue(Strings.isNullOrEmpty(sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_KEY)));
-    Assertions.assertTrue(Strings.isNullOrEmpty(sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_HASH)));
-    Assertions.assertTrue(Strings.isNullOrEmpty(sc.hadoopConfiguration().get(Constants.PROPERTY_ALGORITHM)));
-  }
-
-  @Test
-  public void testGcsConnectorCredentials_encrypted(@TempDir Path tempDir) throws IOException,
-    FeatureStoreException {
-    // Arrange
-    String credentials = "{\"type\": \"service_account\", \"project_id\": \"test\", \"private_key_id\": \"123456\", "+
-      "\"private_key\": \"-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----\", " +
-      "\"client_email\": \"test@project.iam.gserviceaccount.com\"}";
-    Path credentialsFile = tempDir.resolve("gcs.json");
-    Files.write(credentialsFile, credentials.getBytes());
-
-    StorageConnector.GcsConnector gcsConnector = new StorageConnector.GcsConnector();
-    if (SystemUtils.IS_OS_WINDOWS) {
-      gcsConnector.setKeyPath("file:///" + credentialsFile.toString().replace( "\\", "/" ));
-    } else {
-      gcsConnector.setKeyPath("file://" + credentialsFile);
+    @Test
+    public void testGcsConnectorCredentials() throws IOException {
+      // Act
+      SparkEngine.getInstance().setupConnectorHadoopConf(gcsConnector);
+      SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
+      // Assert
+      Assertions.assertEquals(
+        "test@project.iam.gserviceaccount.com",
+        sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_EMAIL));
+      Assertions.assertEquals(
+        "123456", sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_KEY_ID));
+      Assertions.assertEquals("-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----",
+        sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_KEY));
+      Assertions.assertEquals(Constants.PROPERTY_GCS_FS_VALUE,
+        sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_FS_KEY));
+      Assertions.assertEquals("true", sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_ENABLE));
+      Assertions.assertTrue(Strings.isNullOrEmpty(sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_KEY)));
+      Assertions.assertTrue(Strings.isNullOrEmpty(sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_HASH)));
+      Assertions.assertTrue(Strings.isNullOrEmpty(sc.hadoopConfiguration().get(Constants.PROPERTY_ALGORITHM)));
     }
-    gcsConnector.setStorageConnectorType(StorageConnectorType.GCS);
-    gcsConnector.setAlgorithm("AES256");
-    gcsConnector.setEncryptionKey("encryptionkey");
-    gcsConnector.setEncryptionKeyHash("encryptionkeyhash");
 
-    // Act
-    SparkEngine.getInstance().setupConnectorHadoopConf(gcsConnector);
-    SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
+    @Test
+    public void testGcsConnectorCredentials_encrypted() throws IOException {
+      // Arrange
+      gcsConnector.setAlgorithm("AES256");
+      gcsConnector.setEncryptionKey("encryptionkey");
+      gcsConnector.setEncryptionKeyHash("encryptionkeyhash");
+      // Act
+      SparkEngine.getInstance().setupConnectorHadoopConf(gcsConnector);
+      SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
+      // Assert
+      Assertions.assertEquals("test@project.iam.gserviceaccount.com",
+        sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_EMAIL));
+      Assertions.assertEquals("123456", sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_KEY_ID));
+      Assertions.assertEquals("-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----",
+        sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_KEY));
+      Assertions.assertEquals(Constants.PROPERTY_GCS_FS_VALUE,
+        sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_FS_KEY));
+      Assertions.assertEquals("true", sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_ENABLE));
+      Assertions.assertEquals("encryptionkey", sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_KEY));
+      Assertions.assertEquals("encryptionkeyhash", sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_HASH));
+      Assertions.assertEquals("AES256", sc.hadoopConfiguration().get(Constants.PROPERTY_ALGORITHM));
+    }
 
-    // Assert
-    Assertions.assertEquals("test@project.iam.gserviceaccount.com",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_EMAIL));
-    Assertions.assertEquals("123456",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_KEY_ID));
-    Assertions.assertEquals("-----BEGIN PRIVATE KEY-----test-----END PRIVATE KEY-----",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_KEY));
-    Assertions.assertEquals(Constants.PROPERTY_GCS_FS_VALUE,sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_FS_KEY));
-    Assertions.assertEquals("true",sc.hadoopConfiguration().get(Constants.PROPERTY_GCS_ACCOUNT_ENABLE));
-    Assertions.assertEquals("encryptionkey",sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_KEY));
-    Assertions.assertEquals("encryptionkeyhash",sc.hadoopConfiguration().get(Constants.PROPERTY_ENCRYPTION_HASH));
-    Assertions.assertEquals("AES256",sc.hadoopConfiguration().get(Constants.PROPERTY_ALGORITHM));
+    @Test
+    void testDefaultPathGcs() throws FeatureStoreException, IOException {
+      SparkEngine sparkEngine = Mockito.mock(SparkEngine.class);
+      SparkEngine.setInstance(sparkEngine);
+      ArgumentCaptor<String> pathArg = ArgumentCaptor.forClass(String.class);
+      // Act
+      storageConnectorUtils.read(gcsConnector, "csv", new HashMap<String, String>(), "");
+      Mockito.verify(sparkEngine).read(Mockito.any(), Mockito.any(), Mockito.any(), pathArg.capture());
+      // Assert
+      Assertions.assertEquals("gs://bucket/", pathArg.getValue());
+      SparkEngine.setInstance(null);
+    }
   }
 
-  @Test
-  public void test_s3_hadoop_conf() throws IOException {
-    StorageConnector.S3Connector connector = new StorageConnector.S3Connector();
-    connector.setBucket("test-bucket");
-    connector.setName("testName");
-    connector.setStorageConnectorType(StorageConnectorType.S3);
-    List<Option> arguments = new java.util.ArrayList<>();
-    arguments.add(new Option("fs.s3a.endpoint", "testEndpoint"));
-    connector.setArguments(arguments);
-    connector.setAccessKey("testAccessKey");
-    connector.setSecretKey("testSecretKey");
-    connector.setServerEncryptionAlgorithm("AES256");
-    connector.setServerEncryptionKey("testEncryptionKey");
-    connector.setSessionToken("testSessionToken");
+  @Nested
+  class S3 {
+    StorageConnector.S3Connector s3Connector = new StorageConnector.S3Connector();
 
-    // Act
-    SparkEngine.getInstance().setupConnectorHadoopConf(connector);
-    SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
+    @BeforeEach
+    public void setup() {
+      s3Connector.setBucket("test-bucket");
+      s3Connector.setName("testName");
+      s3Connector.setStorageConnectorType(StorageConnectorType.S3);
+      List<Option> arguments = new java.util.ArrayList<>();
+      arguments.add(new Option("fs.s3a.endpoint", "testEndpoint"));
+      s3Connector.setArguments(arguments);
+      s3Connector.setAccessKey("testAccessKey");
+      s3Connector.setSecretKey("testSecretKey");
+      s3Connector.setServerEncryptionAlgorithm("AES256");
+      s3Connector.setServerEncryptionKey("testEncryptionKey");
+      s3Connector.setSessionToken("testSessionToken");
+    }
 
-    // Assert
-    Assertions.assertEquals("testEndpoint", sc.hadoopConfiguration().get(Constants.S3_ENDPOINT));
-    Assertions.assertEquals("testAccessKey", sc.hadoopConfiguration().get(Constants.S3_ACCESS_KEY_ENV));
-    Assertions.assertEquals("testSecretKey", sc.hadoopConfiguration().get(Constants.S3_SECRET_KEY_ENV));
-    Assertions.assertEquals("AES256", sc.hadoopConfiguration().get(Constants.S3_ENCRYPTION_ALGO));
-    Assertions.assertEquals("testEncryptionKey", sc.hadoopConfiguration().get(Constants.S3_ENCRYPTION_KEY));
-    Assertions.assertEquals("testSessionToken", sc.hadoopConfiguration().get(Constants.S3_SESSION_KEY_ENV));
-    Assertions.assertEquals(Constants.S3_TEMPORARY_CREDENTIAL_PROVIDER,
-      sc.hadoopConfiguration().get(Constants.S3_CREDENTIAL_PROVIDER_ENV));
+    @Test
+    void testS3HadoopConf() throws IOException {
+      // Act
+      SparkEngine.getInstance().setupConnectorHadoopConf(s3Connector);
+      SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
+      // Assert
+      Assertions.assertEquals("testEndpoint", sc.hadoopConfiguration().get(Constants.S3_ENDPOINT));
+      Assertions.assertEquals("testAccessKey", sc.hadoopConfiguration().get(Constants.S3_ACCESS_KEY_ENV));
+      Assertions.assertEquals("testSecretKey", sc.hadoopConfiguration().get(Constants.S3_SECRET_KEY_ENV));
+      Assertions.assertEquals("AES256", sc.hadoopConfiguration().get(Constants.S3_ENCRYPTION_ALGO));
+      Assertions.assertEquals("testEncryptionKey", sc.hadoopConfiguration().get(Constants.S3_ENCRYPTION_KEY));
+      Assertions.assertEquals("testSessionToken", sc.hadoopConfiguration().get(Constants.S3_SESSION_KEY_ENV));
+      Assertions.assertEquals(Constants.S3_TEMPORARY_CREDENTIAL_PROVIDER,
+        sc.hadoopConfiguration().get(Constants.S3_CREDENTIAL_PROVIDER_ENV));
+    }
 
+    @Test
+    void testDefaultPathS3() throws FeatureStoreException, IOException {
+      StorageConnectorUtils storageConnectorUtils = new StorageConnectorUtils();
+      SparkEngine sparkEngine = Mockito.mock(SparkEngine.class);
+      SparkEngine.setInstance(sparkEngine);
+      ArgumentCaptor<String> pathArg = ArgumentCaptor.forClass(String.class);
+
+      StorageConnector.S3Connector s3ConnectorMock = Mockito.mock(StorageConnector.S3Connector.class);
+      Mockito.when(s3ConnectorMock.refetch()).thenReturn(s3Connector);
+      Mockito.when(s3ConnectorMock.getPath("")).thenReturn("s3://" + s3Connector.getBucket() + "/");
+      // act
+      storageConnectorUtils.read(s3ConnectorMock, "csv", new HashMap<String, String>(), "");
+      // Assert
+      Mockito.verify(sparkEngine).read(Mockito.any(), Mockito.any(), Mockito.any(), pathArg.capture());
+      Assertions.assertEquals("s3://"+s3Connector.getBucket()+"/", pathArg.getValue());
+      // reset
+      SparkEngine.setInstance(null);
+    }
   }
 
+  @Nested
+  class Adls {
+    StorageConnector.AdlsConnector adlsConnector = new StorageConnector.AdlsConnector();
+    StorageConnectorUtils storageConnectorUtils = new StorageConnectorUtils();
+    SparkEngine sparkEngine;
+
+    @BeforeEach
+    public void setup() {
+      adlsConnector.setName("test");
+      adlsConnector.setAccountName("test_acccount");
+      adlsConnector.setContainerName("test_container");
+      adlsConnector.setGeneration(2);
+    }
+
+    @Test
+    void testDefaultPathAdls() throws FeatureStoreException, IOException {
+      sparkEngine = Mockito.mock(SparkEngine.class);
+      SparkEngine.setInstance(sparkEngine);
+      ArgumentCaptor<String> pathArg = ArgumentCaptor.forClass(String.class);
+      // Act
+      storageConnectorUtils.read(adlsConnector, "csv", new HashMap<String, String>(), "");
+      Mockito.verify(sparkEngine).read(Mockito.any(), Mockito.any(), Mockito.any(), pathArg.capture());
+      // Assert
+      Assertions.assertEquals("abfss://test_container@test_acccount.dfs.core.windows.net/", pathArg.getValue());
+      SparkEngine.setInstance(null);
+    }
+  }
 }
