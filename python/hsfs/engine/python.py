@@ -676,6 +676,7 @@ class Engine:
             )
             and len(training_dataset.splits) == 0
             and len(training_dataset.transformation_functions) == 0
+            and training_dataset.data_format == "parquet"
         ):
             query_obj, _ = dataset._prep_read(False, user_write_options)
             response = util.run_with_loading_animation(
