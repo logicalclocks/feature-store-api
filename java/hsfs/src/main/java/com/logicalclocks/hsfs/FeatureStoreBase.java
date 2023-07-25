@@ -76,9 +76,9 @@ public abstract class FeatureStoreBase<T2 extends QueryBase> {
 
   public abstract Object getOrCreateFeatureGroup(String name, Integer version, String description,
                                                  List<String> primaryKeys, List<String> partitionKeys,
-                                                 String hudiPrecombineKey,
-                                                 boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
-                                                 StatisticsConfig statisticsConfig, String eventTime)
+                                                 String hudiPrecombineKey, boolean onlineEnabled,
+                                                 TimeTravelFormat timeTravelFormat, StatisticsConfig statisticsConfig,
+                                                 boolean useProjectTopic, String eventTime)
       throws IOException, FeatureStoreException;
 
   /**

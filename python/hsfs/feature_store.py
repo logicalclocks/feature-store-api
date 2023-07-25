@@ -453,6 +453,7 @@ class FeatureStore:
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
         parents: Optional[List[feature_group.FeatureGroup]] = [],
+        use_project_topic: Optional[bool] = True,
     ):
         """Create a feature group metadata object.
 
@@ -526,6 +527,8 @@ class FeatureStore:
                 Defaults to `None`.
             parents: Optionally, Define the parents of this feature group as the
                 origin where the data is coming from.
+            use_project_topic: Define whether the feature group should use a project wide topic or dedicated topic for
+                data ingestion, defaults to`True`.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -547,6 +550,7 @@ class FeatureStore:
             stream=stream,
             expectation_suite=expectation_suite,
             parents=parents,
+            use_project_topic=use_project_topic,
         )
 
     def get_or_create_feature_group(
@@ -567,6 +571,7 @@ class FeatureStore:
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
         parents: Optional[List[feature_group.FeatureGroup]] = [],
+        use_project_topic: Optional[bool] = True,
     ):
         """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
 
@@ -638,6 +643,8 @@ class FeatureStore:
                 to both online and offline store.
             parents: Optionally, Define the parents of this feature group as the
                 origin where the data is coming from.
+            use_project_topic: Define whether the feature group should use a project wide topic or dedicated topic for
+                data ingestion, defaults to`True`.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -668,6 +675,7 @@ class FeatureStore:
                     stream=stream,
                     expectation_suite=expectation_suite,
                     parents=parents,
+                    use_project_topic=use_project_topic,
                 )
             else:
                 raise e
@@ -689,6 +697,7 @@ class FeatureStore:
         expectation_suite: Optional[
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
+        use_project_topic: Optional[bool] = True,
     ):
         """Create a external feature group metadata object.
 
@@ -739,6 +748,8 @@ class FeatureStore:
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
+            use_project_topic: Define whether the feature group should use a project wide topic or dedicated topic for
+                data ingestion, defaults to`True`.
 
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
@@ -766,6 +777,7 @@ class FeatureStore:
             statistics_config=statistics_config,
             event_time=event_time,
             expectation_suite=expectation_suite,
+            use_project_topic=use_project_topic,
         )
 
     def create_external_feature_group(
@@ -786,6 +798,7 @@ class FeatureStore:
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
         online_enabled: Optional[bool] = False,
+        use_project_topic: Optional[bool] = True,
     ):
         """Create a external feature group metadata object.
 
@@ -879,6 +892,8 @@ class FeatureStore:
                 Defaults to `None`.
             online_enabled: Define whether it should be possible to sync the feature group to
                 the online feature store for low latency access, defaults to `False`.
+            use_project_topic: Define whether the feature group should use a project wide topic or dedicated topic for
+                data ingestion, defaults to`True`.
 
         # Returns
             `ExternalFeatureGroup`. The external feature group metadata object.
@@ -900,6 +915,7 @@ class FeatureStore:
             event_time=event_time,
             expectation_suite=expectation_suite,
             online_enabled=online_enabled,
+            use_project_topic=use_project_topic,
         )
 
     def get_or_create_spine_group(

@@ -67,7 +67,7 @@ class FeatureGroupBase:
         id=None,
         expectation_suite=None,
         online_topic_name=None,
-        use_project_topic=None,
+        use_project_topic=True,
     ):
         self.event_time = event_time
         self._online_enabled = online_enabled
@@ -1369,7 +1369,7 @@ class FeatureGroup(FeatureGroupBase):
         time_travel_format=None,
         statistics_config=None,
         online_topic_name=None,
-        use_project_topic=None,
+        use_project_topic=True,
         event_time=None,
         stream=False,
         expectation_suite=None,
@@ -2586,7 +2586,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         online_enabled=False,
         href=None,
         online_topic_name=None,
-        use_project_topic=None,
+        use_project_topic=True,
         spine=False,
     ):
         super().__init__(
@@ -2944,7 +2944,7 @@ class SpineGroup(FeatureGroupBase):
         online_enabled=False,
         href=None,
         online_topic_name=None,
-        use_project_topic=None,
+        use_project_topic=True,
         spine=True,
         dataframe="spine",
     ):

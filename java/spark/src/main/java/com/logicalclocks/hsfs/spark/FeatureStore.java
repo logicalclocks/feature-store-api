@@ -176,7 +176,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   @Override
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
     return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, null,
-        null, null, false, null, null, null);
+        null, null, false, null, null, true, null);
   }
 
   /**
@@ -210,7 +210,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
                                               boolean onlineEnabled, String eventTime)
       throws IOException, FeatureStoreException {
     return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
-        null, null, onlineEnabled, null, null, eventTime);
+        null, null, onlineEnabled, null, null, true, eventTime);
   }
 
   /**
@@ -249,7 +249,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
                                               String eventTime) throws IOException, FeatureStoreException {
 
     return featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
-        partitionKeys, null, onlineEnabled, null, null, eventTime);
+        partitionKeys, null, onlineEnabled, null, null, true, eventTime);
   }
 
   /**
@@ -293,13 +293,14 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   @Override
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, String description,
                                               List<String> primaryKeys, List<String> partitionKeys,
-                                              String hudiPrecombineKey,
-                                              boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
-                                              StatisticsConfig statisticsConfig, String eventTime)
+                                              String hudiPrecombineKey, boolean onlineEnabled,
+                                              TimeTravelFormat timeTravelFormat, StatisticsConfig statisticsConfig,
+                                              boolean useProjectTopic, String eventTime)
       throws IOException, FeatureStoreException {
 
-    return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, description, primaryKeys,
-        partitionKeys, hudiPrecombineKey, onlineEnabled, timeTravelFormat, statisticsConfig, eventTime);
+    return featureGroupEngine.getOrCreateFeatureGroup(this, name, version, description, primaryKeys,
+        partitionKeys, hudiPrecombineKey, onlineEnabled, timeTravelFormat, statisticsConfig, useProjectTopic,
+        eventTime);
   }
 
   /**
