@@ -260,30 +260,5 @@ public class TestStorageConnector {
       Assertions.assertEquals("abfss://test_container@test_acccount.dfs.core.windows.net/", pathArg.getValue());
       SparkEngine.setInstance(null);
     }
-
-    @Test
-    void testGen2PathValidation() {
-      String path = "adls://test";
-      Exception exception = Assertions.assertThrows(FeatureStoreException.class, () -> {
-        storageConnectorUtils.validateAdlsPath(adlsConnector, path);
-      });
-      String expectedMessage = "Not a valid ADLS path. For Gen2 connectors, path should follow format as " +
-        "'abfss://[container-name]@[account_name].dfs.core.windows.net/[path]' ";
-      String actualMessage = exception.getMessage();
-      Assertions.assertTrue(actualMessage.contains(expectedMessage));
-    }
-
-    @Test
-    void testGen1PathValidation() {
-      String path = "adls://test";
-      adlsConnector.setGeneration(1);
-      Exception exception = Assertions.assertThrows(FeatureStoreException.class, () -> {
-        storageConnectorUtils.validateAdlsPath(adlsConnector, path);
-      });
-      String expectedMessage = "Not a valid ADLS path. For Gen1 connectors, path should follow format as "
-        + "'adl://[account_name].azuredatalakestore.net' ";
-      String actualMessage = exception.getMessage();
-      Assertions.assertTrue(actualMessage.contains(expectedMessage));
-    }
   }
 }

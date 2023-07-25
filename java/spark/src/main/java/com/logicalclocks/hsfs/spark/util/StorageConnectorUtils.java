@@ -112,7 +112,11 @@ public class StorageConnectorUtils {
    */
   public Dataset<Row> read(StorageConnector.AdlsConnector connector, String dataFormat, Map<String, String> options,
       String path) throws FeatureStoreException, IOException {
-    return SparkEngine.getInstance().read(connector, dataFormat, options, validateAdlsPath(connector, path));
+    if (path != null && (!path.startsWith("abfss://") || !path.startsWith("adl://"))) {
+      path = connector.getPath(path);
+      logger.info(String.format("Using default container specified on connector, final path: %s", path));
+    }
+    return SparkEngine.getInstance().read(connector, dataFormat, options, path);
   }
 
   /**
@@ -289,23 +293,5 @@ public class StorageConnectorUtils {
         messageFormat.toLowerCase(), schema, options, includeMetadata);
   }
 
-  public String validateAdlsPath(StorageConnector.AdlsConnector connector, String path) throws FeatureStoreException {
-    final String ErrorGen2 =
-        "Not a valid ADLS path. For Gen2 connectors, path should follow format as "
-          + "'abfss://[container-name]@[account_name].dfs.core.windows.net/[path]' ";
-    final String ErrorGen1 =
-        "Not a valid ADLS path. For Gen1 connectors, path should follow format as "
-          + "'adl://[account_name].azuredatalakestore.net' ";
-    if (Strings.isNullOrEmpty(path)) {
-      path = connector.getPath("");
-      logger.info(String.format("No path provided. Using default path from connector, final path to read: %s", path));
-      return path;
-    }
-    if (connector.getGeneration() == 2 && !path.matches("^abfss://.*@.*dfs.core.windows.net")) {
-      throw new FeatureStoreException(ErrorGen2);
-    } else if (connector.getGeneration() == 1 && !path.matches("^adl://.*azuredatalakestore.net")) {
-      throw new FeatureStoreException(ErrorGen1);
-    }
-    return path;
-  }
+
 }
