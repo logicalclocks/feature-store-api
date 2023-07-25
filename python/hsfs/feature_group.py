@@ -1292,6 +1292,15 @@ class FeatureGroupBase:
         self._online_enabled = online_enabled
 
     @property
+    def use_project_topic(self):
+        """Setting if the feature group is available in online storage."""
+        return self._use_project_topic
+
+    @use_project_topic.setter
+    def use_project_topic(self, use_project_topic):
+        self._use_project_topic = use_project_topic
+
+    @property
     def subject(self):
         """Subject of the feature group."""
         if self._subject is None:
@@ -2426,6 +2435,7 @@ class FeatureGroup(FeatureGroupBase):
             "eventTime": self.event_time,
             "expectationSuite": self._expectation_suite,
             "parents": self._parents,
+            "useProjectTopic": self.use_project_topic,
         }
         if self._stream:
             fg_meta_dict["deltaStreamerJobConf"] = self._deltastreamer_jobconf
@@ -2851,6 +2861,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "expectationSuite": self._expectation_suite,
             "onlineEnabled": self._online_enabled,
             "spine": False,
+            "useProjectTopic": self.use_project_topic,
         }
 
     @property
@@ -3083,4 +3094,5 @@ class SpineGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
             "eventTime": self._event_time,
             "spine": True,
+            "useProjectTopic": self.use_project_topic,
         }
