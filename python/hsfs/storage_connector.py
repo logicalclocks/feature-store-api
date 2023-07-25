@@ -600,7 +600,7 @@ class AdlsConnector(StorageConnector):
             query: Not relevant for ADLS connectors.
             data_format: The file format of the files to be read, e.g. `csv`, `parquet`.
             options: Any additional key/value options to be passed to the ADLS connector.
-            path: Path within the bucket to be read. For example, `Path/to/file` will read directly from the default container specified on connector. To read from another container, you can also specify full URI .e.g. 'abfss://[container-name]@[account_name].dfs.core.windows.net/[path]'.
+            path: Path within the bucket to be read. For example, path=`path` will read directly from the container specified on connector by constructing the URI as 'abfss://[container-name]@[account_name].dfs.core.windows.net/[path]'.
             If no path is specified default container path will be used from connector.
 
         # Returns
@@ -610,7 +610,7 @@ class AdlsConnector(StorageConnector):
         if not path.startswith("abfss://") or path.startswith("adl://"):
             path = self._get_path(path)
             print(
-                "Prepending default bucket specified on connector, final path: {}".format(
+                "Using default container specified on connector, final path: {}".format(
                     path
                 )
             )
