@@ -50,7 +50,7 @@ public class TestExternalFeatureGroup {
 
     ExternalFeatureGroup externalFeatureGroup = new ExternalFeatureGroup(featureStore, "fgName", 1,
         "SELECT *", ExternalDataFormat.HUDI, "path", null, storageConnector, "description",
-        Collections.singletonList("primaryKey"), features, null, "featureA", false, "topic");
+        Collections.singletonList("primaryKey"), features, null, "featureA", false, "topic", false);
 
     Exception pkException = assertThrows(FeatureStoreException.class, () -> {
       externalFeatureGroupEngine.saveExternalFeatureGroup(externalFeatureGroup);
@@ -76,7 +76,7 @@ public class TestExternalFeatureGroup {
 
     ExternalFeatureGroup externalFeatureGroup = new ExternalFeatureGroup(featureStore, "fgName", 1,
         "SELECT *", ExternalDataFormat.HUDI, "path", null, storageConnector, "description",
-        Collections.singletonList("featureA"), features, null, "eventTime", false, "topic");
+        Collections.singletonList("featureA"), features, null, "eventTime", false, "topic", false);
 
     Exception pkException = assertThrows(FeatureStoreException.class, () -> {
       externalFeatureGroupEngine.saveExternalFeatureGroup(externalFeatureGroup);

@@ -66,7 +66,7 @@ public class TestFeatureGroup {
 
     StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
         Collections.singletonList("primaryKey"), Collections.singletonList("partitionKey"), "hudiPrecombineKey",
-        true, features, null, "onlineTopicName", null);
+        true, features, null, "onlineTopicName", false, null);
 
     Exception pkException = assertThrows(FeatureStoreException.class, () -> {
       featureGroupEngine.saveFeatureGroupMetaData(featureGroup,
@@ -92,7 +92,7 @@ public class TestFeatureGroup {
 
     StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
         Collections.singletonList("featureA"), null, null,
-        true, features, null, "onlineTopicName", "eventTime");
+        true, features, null, "onlineTopicName", false, "eventTime");
 
     Exception eventTimeException = assertThrows(FeatureStoreException.class, () -> {
       streamFeatureGroupEngine.saveFeatureGroupMetaData(featureGroup,
@@ -118,7 +118,7 @@ public class TestFeatureGroup {
 
     StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
         Collections.singletonList("featureA"), Collections.singletonList("partitionKey"), "hudiPrecombineKey",
-        true, features, null, "onlineTopicName", null);
+        true, features, null, "onlineTopicName", false, null);
 
     Exception partitionException = assertThrows(FeatureStoreException.class, () -> {
       streamFeatureGroupEngine.saveFeatureGroupMetaData(featureGroup,
@@ -162,7 +162,7 @@ public class TestFeatureGroup {
 
     StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
         Collections.singletonList("featureA"), null, null,
-        true, features, null, "onlineTopicName", "eventTime");
+        true, features, null, "onlineTopicName", false, "eventTime");
     featureGroup.featureGroupEngine = featureGroupEngine;
 
     // Act

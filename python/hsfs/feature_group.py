@@ -67,6 +67,7 @@ class FeatureGroupBase:
         id=None,
         expectation_suite=None,
         online_topic_name=None,
+        use_project_topic=None,
     ):
         self.event_time = event_time
         self._online_enabled = online_enabled
@@ -74,6 +75,7 @@ class FeatureGroupBase:
         self._id = id
         self._subject = None
         self._online_topic_name = online_topic_name  # same for the whole project
+        self._use_project_topic = use_project_topic
         self._feature_store_id = featurestore_id
         # use setter for correct conversion
         self.expectation_suite = expectation_suite
@@ -1367,6 +1369,7 @@ class FeatureGroup(FeatureGroupBase):
         time_travel_format=None,
         statistics_config=None,
         online_topic_name=None,
+        use_project_topic=None,
         event_time=None,
         stream=False,
         expectation_suite=None,
@@ -1382,6 +1385,7 @@ class FeatureGroup(FeatureGroupBase):
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
+            use_project_topic=use_project_topic,
         )
 
         self._feature_store_name = featurestore_name
@@ -2582,6 +2586,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         online_enabled=False,
         href=None,
         online_topic_name=None,
+        use_project_topic=None,
         spine=False,
     ):
         super().__init__(
@@ -2592,6 +2597,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
+            use_project_topic=use_project_topic,
         )
 
         self._feature_store_name = featurestore_name
@@ -2938,6 +2944,7 @@ class SpineGroup(FeatureGroupBase):
         online_enabled=False,
         href=None,
         online_topic_name=None,
+        use_project_topic=None,
         spine=True,
         dataframe="spine",
     ):
@@ -2949,6 +2956,7 @@ class SpineGroup(FeatureGroupBase):
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
+            use_project_topic=use_project_topic,
         )
 
         self._feature_store_name = featurestore_name

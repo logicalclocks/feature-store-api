@@ -62,10 +62,10 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
 
   @Builder
   public FeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version,
-                      String description,
-                      List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
-                      boolean onlineEnabled, TimeTravelFormat timeTravelFormat, List<Feature> features,
-                      StatisticsConfig statisticsConfig, String onlineTopicName, String eventTime) {
+                      String description, List<String> primaryKeys, List<String> partitionKeys,
+                      String hudiPrecombineKey, boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
+                      List<Feature> features, StatisticsConfig statisticsConfig, String onlineTopicName,
+                      boolean useProjectTopic, String eventTime) {
     this();
     this.featureStore = featureStore;
     this.name = name;
@@ -82,6 +82,7 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
     this.features = features;
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.onlineTopicName = onlineTopicName;
+    this.useProjectTopic = useProjectTopic;
     this.eventTime = eventTime;
   }
 

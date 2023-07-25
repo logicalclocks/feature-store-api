@@ -112,6 +112,10 @@ public abstract class FeatureGroupBase<T> {
 
   @Getter
   @Setter
+  protected Boolean useProjectTopic;
+
+  @Getter
+  @Setter
   protected List<String> statisticColumns;
 
   @Setter
