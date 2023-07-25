@@ -670,8 +670,12 @@ class Engine:
                 "Currently only query based training datasets are supported by the Python engine"
             )
 
-        if arrow_flight_client.get_instance().is_query_supported(
-            dataset, user_write_options
+        if (
+            arrow_flight_client.get_instance().is_query_supported(
+                dataset, user_write_options
+            )
+            and len(training_dataset.splits) == 0
+            and len(training_dataset.transformation_functions) == 0
         ):
             query_obj, _ = dataset._prep_read(False, user_write_options)
             response = arrow_flight_client.get_instance().create_training_dataset(
