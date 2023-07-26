@@ -490,7 +490,7 @@ class Query:
         new._joins = humps.camelize(new._joins)
         return new
 
-    def to_string(self, online=False):
+    def to_string(self, online=False, arrow_flight=False):
         """
         !!! example
             ```python
@@ -504,7 +504,7 @@ class Query:
         """
         fs_query = self._query_constructor_api.construct_query(self)
 
-        return self._to_string(fs_query, online)
+        return self._to_string(fs_query, online, arrow_flight)
 
     def _to_string(self, fs_query, online=False, asof=False):
         if online:
