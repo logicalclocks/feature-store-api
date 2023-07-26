@@ -670,6 +670,25 @@ class Engine:
                 "Currently only query based training datasets are supported by the Python engine"
             )
 
+        if (
+            arrow_flight_client.get_instance().is_query_supported(
+                dataset, user_write_options
+            )
+            and len(training_dataset.splits) == 0
+            and len(training_dataset.transformation_functions) == 0
+            and training_dataset.data_format == "parquet"
+        ):
+            query_obj, _ = dataset._prep_read(False, user_write_options)
+            response = util.run_with_loading_animation(
+                "Materializing data to Hopsworks, using ArrowFlight",
+                arrow_flight_client.get_instance().create_training_dataset,
+                feature_view_obj,
+                training_dataset,
+                query_obj,
+            )
+
+            return response
+
         # As for creating a feature group, users have the possibility of passing
         # a spark_job_configuration object as part of the user_write_options with the key "spark"
         spark_job_configuration = user_write_options.pop("spark", None)
