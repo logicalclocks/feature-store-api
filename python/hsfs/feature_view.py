@@ -213,7 +213,15 @@ class FeatureView:
 
         # initiate batch scoring server
         # `training_dataset_version` should not be set if `None` otherwise backend will look up the td.
-        self.init_batch_scoring(training_dataset_version)
+        try:
+            self.init_batch_scoring(training_dataset_version)
+        except ValueError as e:
+            # In 3.3 or before, td version is set to 1 by default.
+            # For backward compatibility, if a td version is required, set it to 1.
+            if "Training data version is required for transformation" in str(e):
+                self.init_batch_scoring(1)
+            else:
+                raise e
 
         if training_dataset_version is None:
             training_dataset_version = 1
