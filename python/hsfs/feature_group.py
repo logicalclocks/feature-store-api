@@ -2694,10 +2694,13 @@ class FeatureGroup(FeatureGroupBase):
         feature_name: Optional[str] = None,
         row_percentage: Optional[float] = None,
     ):
-        """Returns the statistics for this feature group based on a commit time window.
+        """Returns the statistics for this feature group. If time travel is enabled, it returns statistics computed on a commit time window.
+           Otherwise, it returns statistics computed on the whole feature group data at specific commit time.
+
+        The parameters `from_commit_time`, `feature_name`and `row_percentage` only apply to time travel enabled feature groups and will be ignored otherwise.
 
         If `commit_time` is `None`, the most recent statistics are returned.
-        If `from_commit_time` is `None`, statistics of feature values from the first commit are returned.
+        If `from_commit_time` is `None`, the commit time window starts from the first commit.
 
         !!! example
             ```python
@@ -2726,15 +2729,20 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        return self._statistics_engine.get_by_time_window(
-            self,
-            start_time=from_commit_time,
-            end_time=commit_time,
-            feature_name=feature_name,
-            row_percentage=row_percentage,
-            is_event_time=False,
-            computed_at=None,
-        )
+        if (
+            self._time_travel_format is not None
+            and self._time_travel_format.upper() == "HUDI"
+        ):
+            return self._statistics_engine.get_by_time_window(
+                self,
+                start_time=from_commit_time,
+                end_time=commit_time,
+                feature_name=feature_name,
+                row_percentage=row_percentage,
+                is_event_time=False,
+                computed_at=None,
+            )
+        return self._statistics_engine.get_computed_at(self, computed_at=commit_time)
 
     def compute_statistics(
         self, wallclock_time: Optional[Union[str, int, datetime, date]] = None
