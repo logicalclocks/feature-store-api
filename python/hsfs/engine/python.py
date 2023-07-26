@@ -1314,10 +1314,6 @@ class Engine:
         return connector_type in [
             StorageConnector.HOPSFS,
             StorageConnector.S3,
-            StorageConnector.JDBC,
-            StorageConnector.REDSHIFT,
-            StorageConnector.ADLS,
-            StorageConnector.SNOWFLAKE,
             StorageConnector.KAFKA,
         ]
 
