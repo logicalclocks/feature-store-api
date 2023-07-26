@@ -107,8 +107,7 @@ class ArrowFlightClient:
 
     def _should_be_used(self, read_options):
         if read_options and (
-            ("use_hive" in read_options and read_options["use_hive"] is True)
-            or ("use_spark" in read_options and read_options["use_spark"] is True)
+            read_options.get("use_hive", False) or read_options.get("use_spark", False)
         ):
             return False
 
