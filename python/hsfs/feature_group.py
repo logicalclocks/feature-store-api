@@ -2724,7 +2724,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
         )
 
     def read(
-        self, dataframe_type: Optional[str] = "default", online: Optional[bool] = False
+        self, dataframe_type: Optional[str] = "default", online: Optional[bool] = False,
+            read_options = {}
     ):
         """Get the feature group as a DataFrame.
 
@@ -2752,6 +2753,10 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
+            read_options: Additional options as key/value pairs to pass to the execution engine.
+                For python engine:
+                * key `"use_hive"` and value `True` to read feature group
+                with Hive instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
 
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
@@ -2785,7 +2790,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().read(dataframe_type=dataframe_type, online=online)
+        return self.select_all().read(dataframe_type=dataframe_type, online=online, read_options=read_options)
 
     def show(self, n):
         """Show the first n rows of the feature group.

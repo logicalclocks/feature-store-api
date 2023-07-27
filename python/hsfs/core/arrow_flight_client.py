@@ -233,7 +233,7 @@ class ArrowFlightClient:
         if isinstance(fg, feature_group.ExternalFeatureGroup):
             connector["type"] = fg.storage_connector.type
             connector["options"] = fg.storage_connector.snowflake_connector_options()
-            connector["query"] = fg.query
+            connector["query"] = fg.query[:-1] if fg.query.endswith(";") else fg.query
             for on_demand_fg_alias in on_demand_fg_aliases:
                 if on_demand_fg_alias.on_demand_feature_group.name == fg.name:
                     connector["alias"] = on_demand_fg_alias.alias
