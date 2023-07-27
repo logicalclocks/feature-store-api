@@ -62,8 +62,8 @@ public class KafkaRecordSerializer implements KafkaRecordSerializationSchema<Gen
   public ProducerRecord<byte[], byte[]> serialize(GenericRecord genericRecord,
                                                   KafkaRecordSerializationSchema.KafkaSinkContext context,
                                                   Long timestamp) {
-    byte[] value = this.serializeKey(genericRecord);
-    byte[] key = this.serializeValue(genericRecord);
+    byte[] key = this.serializeKey(genericRecord);
+    byte[] value = this.serializeValue(genericRecord);
     ProducerRecord<byte[], byte[]> producerRecord = new ProducerRecord<>(topic, null, timestamp, key, value);
     for (Map.Entry<String, byte[]> entry: headerMap.entrySet()) {
       producerRecord.headers().add(entry.getKey(), entry.getValue());
@@ -80,11 +80,12 @@ public class KafkaRecordSerializer implements KafkaRecordSerializationSchema<Gen
   }
 
   public byte[] serializeValue(GenericRecord genericRecord) {
+    DatumWriter<GenericRecord> datumWriter = new ReflectDatumWriter<>(genericRecord.getSchema());
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     byteArrayOutputStream.reset();
+
+    BinaryEncoder binaryEncoder = new EncoderFactory().binaryEncoder(byteArrayOutputStream, null);
     try {
-      BinaryEncoder binaryEncoder = new EncoderFactory().binaryEncoder(byteArrayOutputStream, null);
-      DatumWriter<GenericRecord> datumWriter = new ReflectDatumWriter<>(genericRecord.getSchema());
       datumWriter.write(genericRecord, binaryEncoder);
       binaryEncoder.flush();
     } catch (IOException e) {
