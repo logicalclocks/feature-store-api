@@ -213,7 +213,15 @@ class FeatureView:
 
         # initiate batch scoring server
         # `training_dataset_version` should not be set if `None` otherwise backend will look up the td.
-        self.init_batch_scoring(training_dataset_version)
+        try:
+            self.init_batch_scoring(training_dataset_version)
+        except ValueError as e:
+            # In 3.3 or before, td version is set to 1 by default.
+            # For backward compatibility, if a td version is required, set it to 1.
+            if "Training data version is required for transformation" in str(e):
+                self.init_batch_scoring(1)
+            else:
+                raise e
 
         if training_dataset_version is None:
             training_dataset_version = 1
@@ -865,6 +873,8 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
+                * key `use_spark` and value `True` to materialize training dataset
+                  with Spark instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.

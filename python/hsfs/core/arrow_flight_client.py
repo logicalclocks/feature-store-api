@@ -18,6 +18,8 @@ import datetime
 import json
 import base64
 import warnings
+from functools import wraps
+
 import pyarrow
 import pyarrow.flight
 from pyarrow.flight import FlightServerError
@@ -25,6 +27,7 @@ from hsfs import client
 from hsfs import feature_group
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi
+from hsfs import util
 
 _arrow_flight_instance = None
 
@@ -39,6 +42,8 @@ def get_instance():
 class ArrowFlightClient:
     SUPPORTED_FORMATS = ["parquet"]
     FILTER_NUMERIC_TYPES = ["bigint", "tinyint", "smallint", "int", "float", "double"]
+    READ_ERROR = 'Could not read data using ArrowFlight. If the issue persists, use read_options={"use_hive": True} instead.'
+    WRITE_ERROR = 'Could not write data using ArrowFlight. If the issue persists, use write_options={"use_spark": True} instead.'
 
     def __init__(self):
         try:
@@ -101,10 +106,8 @@ class ArrowFlightClient:
         list(self._connection.do_action(action, options=options))
 
     def _should_be_used(self, read_options):
-        if (
-            read_options
-            and "use_hive" in read_options
-            and read_options["use_hive"] is True
+        if read_options and (
+            read_options.get("use_hive", False) or read_options.get("use_spark", False)
         ):
             return False
 
@@ -167,43 +170,66 @@ class ArrowFlightClient:
         )
         self._connection.do_action(action)
 
-    def _handle_afs_exception(method):
-        def afs_error_handler_wrapper(*args, **kw):
-            try:
-                return method(*args, **kw)
-            except Exception as e:
-                message = str(e)
-                if (
-                    isinstance(e, FlightServerError)
-                    and "Please register client certificates first." in message
-                ):
-                    self = args[0]
-                    self._register_certificates()
-                    return method(*args, **kw)
-                else:
-                    raise FeatureStoreException(
-                        "Could not read data using ArrowFlight. "
-                        "If the issue persists, "
-                        'use read_options={"use_hive": True} instead.'
-                    ) from e
+    def _handle_afs_exception(user_message="None"):
+        def decorator(func):
+            @wraps(func)
+            def afs_error_handler_wrapper(instance, *args, **kw):
+                try:
+                    return func(instance, *args, **kw)
+                except Exception as e:
+                    message = str(e)
+                    if (
+                        isinstance(e, FlightServerError)
+                        and "Please register client certificates first." in message
+                    ):
+                        instance._register_certificates()
+                        return func(instance, *args, **kw)
+                    else:
+                        raise FeatureStoreException(user_message) from e
 
-        return afs_error_handler_wrapper
+            return afs_error_handler_wrapper
+
+        return decorator
 
     def _get_dataset(self, descriptor):
         info = self._connection.get_flight_info(descriptor)
         reader = self._connection.do_get(self._info_to_ticket(info))
         return reader.read_pandas()
 
-    @_handle_afs_exception
+    @_handle_afs_exception(user_message=READ_ERROR)
     def read_query(self, query_object):
         query_encoded = json.dumps(query_object).encode("ascii")
         descriptor = pyarrow.flight.FlightDescriptor.for_command(query_encoded)
         return self._get_dataset(descriptor)
 
-    @_handle_afs_exception
+    @_handle_afs_exception(user_message=READ_ERROR)
     def read_path(self, path):
         descriptor = pyarrow.flight.FlightDescriptor.for_path(path)
         return self._get_dataset(descriptor)
+
+    @_handle_afs_exception(user_message=WRITE_ERROR)
+    def create_training_dataset(
+        self, feature_view_obj, training_dataset_obj, query_obj
+    ):
+        training_dataset = {}
+        training_dataset["fs_name"] = util.strip_feature_store_suffix(
+            training_dataset_obj.feature_store_name
+        )
+        training_dataset["fv_name"] = feature_view_obj.name
+        training_dataset["fv_version"] = feature_view_obj.version
+        training_dataset["tds_version"] = training_dataset_obj.version
+        training_dataset["query"] = query_obj
+
+        try:
+            training_dataset_encoded = json.dumps(training_dataset).encode("ascii")
+            training_dataset_buf = pyarrow.py_buffer(training_dataset_encoded)
+            action = pyarrow.flight.Action(
+                "create-training-dataset", training_dataset_buf
+            )
+            for result in self._connection.do_action(action):
+                return result.body.to_pybytes()
+        except pyarrow.lib.ArrowIOError as e:
+            print("Error calling action:", e)
 
     def is_flyingduck_query_object(self, query_obj):
         return isinstance(query_obj, dict) and "query_string" in query_obj

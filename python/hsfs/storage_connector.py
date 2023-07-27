@@ -587,6 +587,36 @@ class AdlsConnector(StorageConnector):
     def _get_path(self, sub_path: str):
         return os.path.join(self.path, sub_path)
 
+    def read(
+        self,
+        query: str = None,
+        data_format: str = None,
+        options: dict = {},
+        path: str = "",
+    ):
+
+        """Reads a path into a dataframe using the storage connector.
+        # Arguments
+            query: Not relevant for ADLS connectors.
+            data_format: The file format of the files to be read, e.g. `csv`, `parquet`.
+            options: Any additional key/value options to be passed to the ADLS connector.
+            path: Path within the bucket to be read. For example, path=`path` will read directly from the container specified on connector by constructing the URI as 'abfss://[container-name]@[account_name].dfs.core.windows.net/[path]'.
+            If no path is specified default container path will be used from connector.
+
+        # Returns
+            `DataFrame`.
+        """
+        path = path.strip()
+        if not path.startswith("abfss://") or path.startswith("adl://"):
+            path = self._get_path(path)
+            print(
+                "Using default container specified on connector, final path: {}".format(
+                    path
+                )
+            )
+
+        return engine.get_instance().read(self, data_format, options, path)
+
 
 class SnowflakeConnector(StorageConnector):
     type = StorageConnector.SNOWFLAKE
