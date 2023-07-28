@@ -24,7 +24,6 @@ class SplitStatistics:
     def __init__(
         self, name, content, href=None, expand=None, items=None, count=None, type=None
     ):
-
         self._name = name
         if not isinstance(content, dict):
             self._content = json.loads(content)

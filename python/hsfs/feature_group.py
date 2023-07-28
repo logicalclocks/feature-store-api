@@ -51,7 +51,7 @@ from hsfs.statistics_config import StatisticsConfig
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.validation_report import ValidationReport
 from hsfs.constructor import query, filter
-from hsfs.client.exceptions import FeatureStoreException
+from hsfs.client.exceptions import FeatureStoreException, RestAPIError
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core import great_expectation_engine
@@ -1256,9 +1256,9 @@ class FeatureGroupBase:
         ],
     ):
         if isinstance(expectation_suite, ExpectationSuite):
-            tmp_expectation_suite = expectation_suite.to_json_dict()
-            tmp_expectation_suite["featuregroup_id"] = self._id
-            tmp_expectation_suite["featurestore_id"] = self._feature_store_id
+            tmp_expectation_suite = expectation_suite.to_json_dict(decamelize=True)
+            tmp_expectation_suite["feature_group_id"] = self._id
+            tmp_expectation_suite["feature_store_id"] = self._feature_store_id
             self._expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         elif isinstance(expectation_suite, ge.core.expectation_suite.ExpectationSuite):
             self._expectation_suite = ExpectationSuite(
@@ -1342,6 +1342,9 @@ class FeatureGroupBase:
     def features(self, new_features):
         self._features = new_features
 
+    def _get_project_name(self):
+        return util.strip_feature_store_suffix(self.feature_store_name)
+
 
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
@@ -1403,7 +1406,7 @@ class FeatureGroup(FeatureGroupBase):
         self._parents = parents
         self._deltastreamer_jobconf = delta_streamer_job_conf
 
-        self._backfill_job = None
+        self._materialization_job = None
 
         if self._id:
             # initialized by backend
@@ -1513,11 +1516,13 @@ class FeatureGroup(FeatureGroupBase):
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
+                * key `"use_hive"` and value `True` to read feature group
+                  with Hive instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
-                * key `"pandas_types"` and value `True` to retrieve columns as Pandas nullable types
+                * key `"pandas_types"` and value `True` to retrieve columns as
+                  [Pandas nullable types](https://pandas.pydata.org/docs/user_guide/integer_na.html)
                   rather than numpy/object(string) types (experimental).
-                  (see https://pandas.pydata.org/docs/user_guide/integer_na.html).
                 Defaults to `{}`.
 
         # Returns
@@ -1629,30 +1634,29 @@ class FeatureGroup(FeatureGroupBase):
             TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
             TypeVar("pyspark.RDD"),  # noqa: F821
             np.ndarray,
-            List[list],
-        ],
+            List[feature.Feature],
+        ] = None,
         write_options: Optional[Dict[Any, Any]] = {},
         validation_options: Optional[Dict[Any, Any]] = {},
         wait: bool = False,
     ):
         """Persist the metadata and materialize the feature group to the feature store.
 
-        !!! warning "Deprecated"
-            `save` method is deprecated. Use the `insert` method instead.
-
         !!! warning "Changed in 3.3.0"
             `insert` and `save` methods are now async by default in non-spark clients.
             To achieve the old behaviour, set `wait` argument to `True`.
 
-        Calling `save` creates the metadata for the feature group in the feature store
-        and writes the specified `features` dataframe as feature group to the
+        Calling `save` creates the metadata for the feature group in the feature store.
+        If a DataFrame, RDD or Ndarray is provided, the data is written to the
         online/offline feature store as specified.
         By default, this writes the feature group to the offline storage, and if
         `online_enabled` for the feature group, also to the online feature store.
         The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
         # Arguments
-            features: Query, DataFrame, RDD, Ndarray, list. Features to be saved.
+            features: DataFrame, RDD, Ndarray or a list of features. Features to be saved.
+                This argument is optional if the feature list is provided in the create_feature_group or
+                in the get_or_create_feature_group method invokation.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, write_options can contain the
                 following entries:
@@ -1664,8 +1668,11 @@ class FeatureGroup(FeatureGroupBase):
                   whether or not to the save call should return only
                   after the Hopsworks Job has finished. By default it does not wait.
                 * key `start_offline_backfill` and value `True` or `False` to configure
-                  whether or not to start the backfill job to write data to the offline
-                  storage. By default the backfill job gets started immediately.
+                  whether or not to start the materialization job to write data to the offline
+                  storage. `start_offline_backfill` is deprecated. Use `start_offline_materialization` instead.
+                * key `start_offline_materialization` and value `True` or `False` to configure
+                  whether or not to start the materialization job to write data to the offline
+                  storage. By default the materialization job gets started immediately.
                 * key `internal_kafka` and value `True` or `False` in case you established
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
@@ -1684,6 +1691,31 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `hsfs.client.exceptions.RestAPIError`. Unable to create feature group.
         """
+        if (features is None and len(self._features) > 0) or (
+            isinstance(features, List)
+            and len(features) > 0
+            and all([isinstance(f, feature.Feature) for f in features])
+        ):
+            # This is done for compatibility. Users can specify the feature list in the
+            # (get_or_)create_feature_group. Users can also provide the feature list in the save().
+            # Though it's an optional parameter.
+            # For consistency reasons if the user specify both the feature list in the (get_or_)create_feature_group
+            # and in the `save()` call, then the (get_or_)create_feature_group wins.
+            # This is consistent with the behavior of the insert method where the feature list wins over the
+            # dataframe structure
+            self._features = self._features if len(self._features) > 0 else features
+            self._feature_group_engine.save_feature_group_metadata(
+                self, None, write_options
+            )
+
+            return None, None
+
+        if features is None:
+            raise FeatureStoreException(
+                "Feature list not provided in the create_feature_group or get_or_create_feature_group invokations."
+                + " Please provide a list of features or a Dataframe"
+            )
+
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         user_version = self._version
@@ -1819,8 +1851,11 @@ class FeatureGroup(FeatureGroupBase):
                   whether or not to the insert call should return only
                   after the Hopsworks Job has finished. By default it waits.
                 * key `start_offline_backfill` and value `True` or `False` to configure
-                  whether or not to start the backfill job to write data to the offline
-                  storage. By default the backfill job gets started immediately.
+                  whether or not to start the materialization job to write data to the offline
+                  storage. `start_offline_backfill` is deprecated. Use `start_offline_materialization` instead.
+                * key `start_offline_materialization` and value `True` or `False` to configure
+                  whether or not to start the materialization job to write data to the offline
+                  storage. By default the materialization job gets started immediately.
                 * key `internal_kafka` and value `True` or `False` in case you established
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
@@ -1939,10 +1974,10 @@ class FeatureGroup(FeatureGroupBase):
             blocking call that returns once all rows have been transmitted.
 
             Once you are done with the multi part insert, it is good practice to
-            start the backfill job in order to write the data to the offline
+            start the materialization job in order to write the data to the offline
             storage:
             ```python
-            feature_group.backfill_job.run(await_termination=True)
+            feature_group.materialization_job.run(await_termination=True)
             ```
 
         # Arguments
@@ -1965,8 +2000,11 @@ class FeatureGroup(FeatureGroupBase):
                   whether or not to the insert call should return only
                   after the Hopsworks Job has finished. By default it waits.
                 * key `start_offline_backfill` and value `True` or `False` to configure
-                  whether or not to start the backfill job to write data to the offline
-                  storage. By default the backfill job does not get started automatically
+                  whether or not to start the materialization job to write data to the offline
+                  storage. `start_offline_backfill` is deprecated. Use `start_offline_materialization` instead.
+                * key `start_offline_materialization` and value `True` or `False` to configure
+                  whether or not to start the materialization job to write data to the offline
+                  storage. By default the materialization job does not get started automatically
                   for multi part inserts.
                 * key `internal_kafka` and value `True` or `False` in case you established
                   connectivity from you Python environment to the internal advertised
@@ -2398,11 +2436,6 @@ class FeatureGroup(FeatureGroupBase):
     def _get_online_table_name(self):
         return self.name + "_" + str(self.version)
 
-    def _get_project_name(self):
-        if self.feature_store_name.endswith("_featurestore"):
-            return self.feature_store_name[:-13]
-        return self.feature_store_name
-
     @property
     def id(self):
         """Feature group id."""
@@ -2469,15 +2502,26 @@ class FeatureGroup(FeatureGroupBase):
         return self._parents
 
     @property
-    def backfill_job(self):
-        """Get the Job object reference for the backfill job for this
+    def materialization_job(self):
+        """Get the Job object reference for the materialization job for this
         Feature Group."""
-        if self._backfill_job is None:
-            job_name = "{fg_name}_{version}_offline_fg_backfill".format(
-                fg_name=self._name, version=self._version
-            )
-            self._backfill_job = job_api.JobApi().get(job_name)
-        return self._backfill_job
+        if self._materialization_job is None:
+            try:
+                job_name = "{fg_name}_{version}_offline_fg_materialization".format(
+                    fg_name=self._name, version=self._version
+                )
+                self._materialization_job = job_api.JobApi().get(job_name)
+            except RestAPIError as e:
+                if (
+                    e.response.json().get("errorCode", "") == 130009
+                    and e.response.status_code == 404
+                ):
+                    job_name = "{fg_name}_{version}_offline_fg_backfill".format(
+                        fg_name=self._name, version=self._version
+                    )
+                    self._materialization_job = job_api.JobApi().get(job_name)
+
+        return self._materialization_job
 
     @version.setter
     def version(self, version):
@@ -2719,7 +2763,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        if engine.get_type() == "python" and not online:
+
+        if (
+            engine.get_type() == "python"
+            and not online
+            and not engine.get_instance().is_flyingduck_query_supported(
+                self.select_all()
+            )
+        ):
             raise FeatureStoreException(
                 "Reading an External Feature Group directly into a Pandas Dataframe using "
                 + "Python/Pandas as Engine from the external storage system "

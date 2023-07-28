@@ -45,13 +45,12 @@ class FeatureGroupWriter:
         write_options: Optional[Dict[str, Any]] = {},
         validation_options: Optional[Dict[str, Any]] = {},
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
-
         return self._feature_group.insert(
             features=features,
             overwrite=overwrite,
             operation=operation,
             storage=storage,
-            write_options={"start_offline_backfill": False, **write_options},
+            write_options={"start_offline_materialization": False, **write_options},
             validation_options={"fetch_expectation_suite": False, **validation_options},
             save_code=False,
         )

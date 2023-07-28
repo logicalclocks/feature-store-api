@@ -131,7 +131,7 @@ class Engine:
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def is_flyingduck_query_supported(self, query, read_options):
+    def is_flyingduck_query_supported(self, query, read_options={}):
         return False  # we do not support flyingduck on pyspark clients
 
     def _sql_offline(self, sql_query, feature_store):
@@ -1130,7 +1130,6 @@ class Engine:
 
     def _get_kafka_config(self, write_options: dict = {}) -> dict:
         if self._kafka_config is None:
-
             self._kafka_config = {
                 "kafka.security.protocol": "SSL",
                 "kafka.ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),

@@ -1353,6 +1353,183 @@ class TestPython:
         # Assert
         assert str(e_info.value) == "dtype 'O' (arrow_type 'time32[s]') not supported"
 
+    def test_infer_type_pyarrow_struct_with_decimal_fields(self):
+        # Arrange
+        mapping = {f"user{i}": 2.0 for i in range(2)}
+        pdf = pd.DataFrame(
+            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_schema.field("mapping").type
+        )
+
+        # Assert
+        assert arrow_type == "struct<user0:double,user1:double>"
+
+    def test_infer_type_pyarrow_struct_with_decimal_and_string_fields(self):
+        # Arrange
+        mapping = {"user0": 2.0, "user1": "test"}
+        pdf = pd.DataFrame(
+            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_schema.field("mapping").type
+        )
+
+        # Assert
+        assert arrow_type == "struct<user0:double,user1:string>"
+
+    def test_infer_type_pyarrow_struct_with_list_fields(self):
+        # Arrange
+        mapping = {"user0": list(np.random.normal(size=5)), "user1": ["test", "test"]}
+        pdf = pd.DataFrame(
+            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_schema.field("mapping").type
+        )
+
+        # Assert
+        assert arrow_type == "struct<user0:array<double>,user1:array<string>>"
+
+    def test_infer_type_pyarrow_struct_with_string_fields(self):
+        # Arrange
+        mapping = {f"user{i}": "test" for i in range(2)}
+        pdf = pd.DataFrame(
+            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_schema.field("mapping").type
+        )
+
+        # Assert
+        assert arrow_type == "struct<user0:string,user1:string>"
+
+    def test_infer_type_pyarrow_struct_with_struct_fields(self):
+        # Arrange
+        mapping = {f"user{i}": {"value": "test"} for i in range(2)}
+        pdf = pd.DataFrame(
+            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_schema.field("mapping").type
+        )
+
+        # Assert
+        assert (
+            arrow_type
+            == "struct<user0:struct<value:string>,user1:struct<value:string>>"
+        )
+
+    def test_infer_type_pyarrow_struct_with_struct_fields_with_list_values(self):
+        # Arrange
+        mapping = {
+            f"user{i}": {"value": list(np.random.normal(size=5))} for i in range(2)
+        }
+        pdf = pd.DataFrame(
+            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_schema.field("mapping").type
+        )
+
+        # Assert
+        assert (
+            arrow_type
+            == "struct<user0:struct<value:array<double>>,user1:struct<value:array<double>>>"
+        )
+
+    def test_infer_type_pyarrow_struct_with_nested_struct_fields(self):
+        # Arrange
+        mapping = {f"user{i}": {"value": {"value": "test"}} for i in range(2)}
+        pdf = pd.DataFrame(
+            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_schema.field("mapping").type
+        )
+
+        # Assert
+        assert (
+            arrow_type
+            == "struct<user0:struct<value:struct<value:string>>,user1:struct<value:struct<value:string>>>"
+        )
+
+    def test_infer_type_pyarrow_list_of_struct_fields(self):
+        # Arrange
+        mapping = [{"value": np.random.normal(size=5)}]
+        pdf = pd.DataFrame(
+            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_schema.field("mapping").type
+        )
+
+        # Assert
+        assert arrow_type == "array<struct<value:array<double>>>"
+
+    def test_infer_type_pyarrow_struct_with_list_of_struct_fields(self):
+        # Arrange
+        mapping = {f"user{i}": [{"value": np.random.normal(size=5)}] for i in range(2)}
+        pdf = pd.DataFrame(
+            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_schema.field("mapping").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert (
+            arrow_type
+            == "struct<user0:array<struct<value:array<double>>>,user1:array<struct<value:array<double>>>>"
+        )
+
     def test_save_dataframe(self, mocker):
         # Arrange
         mock_python_engine_write_dataframe_kafka = mocker.patch(
@@ -2505,7 +2682,7 @@ class TestPython:
         python_engine._write_dataframe_kafka(
             feature_group=fg,
             dataframe=df,
-            offline_write_options={"start_offline_backfill": True},
+            offline_write_options={"start_offline_materialization": True},
         )
 
         # Assert
@@ -2731,7 +2908,7 @@ class TestPython:
             "test_name_1": "test_value_1",
         }
 
-    def test_backfill_kafka_offset_reset(self, mocker):
+    def test_materialization_kafka_offset_reset(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
         mocker.patch("hsfs.feature_group.FeatureGroup._get_encoded_avro_schema")
@@ -2770,7 +2947,7 @@ class TestPython:
         fg._online_topic_name = "topic_name"
         job_mock = mocker.MagicMock()
         job_mock.config = {"defaultArgs": "defaults"}
-        fg._backfill_job = job_mock
+        fg._materialization_job = job_mock
 
         df = pd.DataFrame(data={"col1": [1, 2, 2, 3]})
 
@@ -2778,7 +2955,7 @@ class TestPython:
         python_engine._write_dataframe_kafka(
             feature_group=fg,
             dataframe=df,
-            offline_write_options={"start_offline_backfill": True},
+            offline_write_options={"start_offline_materialization": True},
         )
 
         # Assert
@@ -2804,6 +2981,6 @@ class TestPython:
         fg._online_topic_name = "topic_name"
         job_mock = mocker.MagicMock()
         job_mock.config = {"defaultArgs": "defaults"}
-        fg._backfill_job = job_mock
+        fg._materialization_job = job_mock
 
-        assert fg.backfill_job.config == {"defaultArgs": "defaults"}
+        assert fg.materialization_job.config == {"defaultArgs": "defaults"}

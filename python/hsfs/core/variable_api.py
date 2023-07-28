@@ -25,7 +25,6 @@ class VariableApi:
         pass
 
     def get_version(self, software: str):
-
         _client = client.get_instance()
         path_params = [
             "variables",
@@ -39,7 +38,6 @@ class VariableApi:
         return None
 
     def parse_major_and_minor(self, backend_version):
-
         version_pattern = r"(\d+)\.(\d+)"
         matches = re.match(version_pattern, backend_version)
 

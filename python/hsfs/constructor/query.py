@@ -28,7 +28,6 @@ from hsfs.feature import Feature
 
 
 class Query:
-
     ERROR_MESSAGE_FEATURE_AMBIGUOUS = (
         "Provided feature name '{}' is ambiguous and exists in more than one feature group. "
         "Consider prepending the prefix specified in the join."
@@ -81,7 +80,7 @@ class Query:
 
             if engine.get_instance().is_flyingduck_query_supported(self, read_options):
                 sql_query = arrow_flight_client.get_instance().create_query_object(
-                    self, sql_query
+                    self, sql_query, fs_query.on_demand_fg_aliases
                 )
             else:
                 # Register on demand feature groups as temporary tables
@@ -122,8 +121,11 @@ class Query:
             online: Read from online storage. Defaults to `False`.
             dataframe_type: DataFrame type to return. Defaults to `"default"`.
             read_options: Dictionary of read options for Spark in spark engine.
-                Only for python engine: Use key "hive_config" to pass a dictionary of hive or tez configurations.
-                For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
+                Only for python engine:
+                * key `"use_hive"` and value `True` to read query with Hive instead of
+                  [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                * key "hive_config" to pass a dictionary of hive or tez configurations.
+                  For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
 
         # Returns

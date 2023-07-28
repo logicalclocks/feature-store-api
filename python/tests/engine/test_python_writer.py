@@ -76,7 +76,7 @@ class TestPythonWriter:
         python_engine._write_dataframe_kafka(
             feature_group=fg,
             dataframe=dataframe_fixture_times,
-            offline_write_options={"start_offline_backfill": True},
+            offline_write_options={"start_offline_materialization": True},
         )
 
         # Assert

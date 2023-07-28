@@ -59,6 +59,7 @@ from hsfs.core import (
     feature_view_api,
     transformation_function_engine,
     arrow_flight_client,
+    variable_api,
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -113,7 +114,7 @@ class Engine:
                 sql_query, online_conn, dataframe_type, read_options, schema
             )
 
-    def is_flyingduck_query_supported(self, query, read_options):
+    def is_flyingduck_query_supported(self, query, read_options={}):
         return arrow_flight_client.get_instance().is_query_supported(
             query, read_options
         )
@@ -128,7 +129,7 @@ class Engine:
     ):
         if arrow_flight_client.get_instance().is_flyingduck_query_object(sql_query):
             result_df = util.run_with_loading_animation(
-                "Reading data from Hopsworks, using FlyingDuck",
+                "Reading data from Hopsworks, using ArrowFlight",
                 arrow_flight_client.get_instance().read_query,
                 sql_query,
             )
@@ -669,6 +670,25 @@ class Engine:
                 "Currently only query based training datasets are supported by the Python engine"
             )
 
+        if (
+            arrow_flight_client.get_instance().is_query_supported(
+                dataset, user_write_options
+            )
+            and len(training_dataset.splits) == 0
+            and len(training_dataset.transformation_functions) == 0
+            and training_dataset.data_format == "parquet"
+        ):
+            query_obj, _ = dataset._prep_read(False, user_write_options)
+            response = util.run_with_loading_animation(
+                "Materializing data to Hopsworks, using ArrowFlight",
+                arrow_flight_client.get_instance().create_training_dataset,
+                feature_view_obj,
+                training_dataset,
+                query_obj,
+            )
+
+            return response
+
         # As for creating a feature group, users have the possibility of passing
         # a spark_job_configuration object as part of the user_write_options with the key "spark"
         spark_job_configuration = user_write_options.pop("spark", None)
@@ -706,9 +726,15 @@ class Engine:
         return td_job
 
     def _create_hive_connection(self, feature_store, hive_config=None):
+        host = variable_api.VariableApi().get_loadbalancer_external_domain()
+        if host == "":
+            # If the load balancer is not configured, then fall back to use
+            # the hive server on the head node
+            host = client.get_instance().host
+
         try:
             return hive.Connection(
-                host=client.get_instance()._host,
+                host=host,
                 port=9085,
                 # database needs to be set every time, 'default' doesn't work in pyhive
                 database=feature_store,
@@ -956,36 +982,32 @@ class Engine:
             producer.flush()
             progress_bar.close()
 
-        # start backfilling job
-        # if topic didn't exist, always run the backfill job to reset the offsets except if it's a multi insert
+        # start materialization job
+        # if topic didn't exist, always run the materialization job to reset the offsets except if it's a multi insert
         if (
             not isinstance(feature_group, ExternalFeatureGroup)
             and reset_offsets
             and not feature_group._multi_part_insert
         ):
-            if offline_write_options is not None and not offline_write_options.get(
-                "start_offline_backfill", True
-            ):
+            if self._start_offline_materialization(offline_write_options):
                 warnings.warn(
-                    "This is the first ingestion after an upgrade or backup/restore, running backfill job even though `start_offline_backfill` was set to `False`.",
+                    "This is the first ingestion after an upgrade or backup/restore, running materialization job even though `start_offline_materialization` was set to `False`.",
                     util.FeatureGroupWarning,
                 )
-            feature_group.backfill_job.run(
-                args=feature_group.backfill_job.config.get("defaultArgs", "")
+            feature_group.materialization_job.run(
+                args=feature_group.materialization_job.config.get("defaultArgs", "")
                 + " -kafkaOffsetReset true",
                 await_termination=offline_write_options.get("wait_for_job", False),
             )
-        elif (
-            not isinstance(feature_group, ExternalFeatureGroup)
-            and offline_write_options is not None
-            and offline_write_options.get("start_offline_backfill", True)
-        ):
-            feature_group.backfill_job.run(
+        elif not isinstance(
+            feature_group, ExternalFeatureGroup
+        ) and self._start_offline_materialization(offline_write_options):
+            feature_group.materialization_job.run(
                 await_termination=offline_write_options.get("wait_for_job", False)
             )
         if isinstance(feature_group, ExternalFeatureGroup):
             return None
-        return feature_group.backfill_job
+        return feature_group.materialization_job
 
     def _kafka_produce(
         self, producer, feature_group, key, encoded_row, acked, offline_write_options
@@ -1154,14 +1176,32 @@ class Engine:
         if pa.types.is_list(arrow_type):
             # figure out sub type
             sub_arrow_type = arrow_type.value_type
-            sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            try:
+                sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+            except NotImplementedError:
+                sub_dtype = np.dtype("object")
             subtype = Engine._convert_pandas_dtype_to_offline_type(
                 sub_dtype, sub_arrow_type
             )
             return "array<{}>".format(subtype)
         if pa.types.is_struct(arrow_type):
-            # best effort, based on pyarrow's string representation
-            return str(arrow_type)
+            struct_schema = {}
+            for index in range(arrow_type.num_fields):
+                sub_arrow_type = arrow_type.field(index).type
+                try:
+                    sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
+                except NotImplementedError:
+                    sub_dtype = np.dtype("object")
+                struct_schema[
+                    arrow_type.field(index).name
+                ] = Engine._convert_pandas_dtype_to_offline_type(
+                    sub_dtype, arrow_type.field(index).type
+                )
+            return (
+                "struct<"
+                + ",".join([f"{key}:{value}" for key, value in struct_schema.items()])
+                + ">"
+            )
         # Currently not supported
         # elif pa.types.is_decimal(arrow_type):
         #    return str(arrow_type).replace("decimal128", "decimal")
@@ -1274,9 +1314,17 @@ class Engine:
         return connector_type in [
             StorageConnector.HOPSFS,
             StorageConnector.S3,
-            StorageConnector.JDBC,
-            StorageConnector.REDSHIFT,
-            StorageConnector.ADLS,
-            StorageConnector.SNOWFLAKE,
             StorageConnector.KAFKA,
         ]
+
+    @staticmethod
+    def _start_offline_materialization(offline_write_options):
+        if offline_write_options is not None:
+            if "start_offline_materialization" in offline_write_options:
+                return offline_write_options.get("start_offline_materialization")
+            elif "start_offline_backfill" in offline_write_options:
+                return offline_write_options.get("start_offline_backfill")
+            else:
+                return True
+        else:
+            return True
