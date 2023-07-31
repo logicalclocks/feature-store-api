@@ -447,7 +447,7 @@ class FeatureViewEngine:
                 )
         else:
             td_df = None
-        # currently we do not save the training dataset statistics config for training datasets
+
         self.compute_training_dataset_statistics(
             feature_view_obj,
             training_dataset_obj,
