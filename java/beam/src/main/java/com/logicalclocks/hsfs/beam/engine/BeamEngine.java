@@ -71,6 +71,19 @@ public class BeamEngine {
     if (writeOptions != null) {
       internalKafka = Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"));
     }
+    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) || internalKafka) {
+      properties.put("bootstrap.servers",
+          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
+            "INTERNAL://", ""))
+          .collect(Collectors.joining(",")));
+    } else {
+      properties.put("bootstrap.servers",
+          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
+          .map(broker -> broker.replaceAll("EXTERNAL://", ""))
+          .collect(Collectors.joining(","))
+      );
+    }
+
     properties.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/tmp/"
         + Paths.get(client.getTrustStorePath()).getFileName());
     properties.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/tmp/"
@@ -80,19 +93,6 @@ public class BeamEngine {
     properties.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, client.getCertKey());
     properties.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
     properties.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
-
-    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) || internalKafka) {
-      properties.put("bootstrap.servers",
-            kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
-                "INTERNAL://", ""))
-              .collect(Collectors.joining(",")));
-    } else {
-      properties.put("bootstrap.servers",
-            kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
-              .map(broker -> broker.replaceAll("EXTERNAL://", ""))
-              .collect(Collectors.joining(","))
-      );
-    }
 
     return properties;
   }
