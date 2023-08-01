@@ -175,7 +175,7 @@ class Connection:
         """
         if not name:
             name = client.get_instance()._project_name
-        return self._feature_store_api.get(util.rewrite_feature_store_name(name))
+        return self._feature_store_api.get(util.append_feature_store_suffix(name))
 
     @not_connected
     def connect(self):

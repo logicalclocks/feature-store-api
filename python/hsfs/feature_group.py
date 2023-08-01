@@ -1258,9 +1258,9 @@ class FeatureGroupBase:
         ],
     ):
         if isinstance(expectation_suite, ExpectationSuite):
-            tmp_expectation_suite = expectation_suite.to_json_dict()
-            tmp_expectation_suite["featuregroup_id"] = self._id
-            tmp_expectation_suite["featurestore_id"] = self._feature_store_id
+            tmp_expectation_suite = expectation_suite.to_json_dict(decamelize=True)
+            tmp_expectation_suite["feature_group_id"] = self._id
+            tmp_expectation_suite["feature_store_id"] = self._feature_store_id
             self._expectation_suite = ExpectationSuite(**tmp_expectation_suite)
         elif isinstance(expectation_suite, ge.core.expectation_suite.ExpectationSuite):
             self._expectation_suite = ExpectationSuite(
@@ -1352,6 +1352,9 @@ class FeatureGroupBase:
     @features.setter
     def features(self, new_features):
         self._features = new_features
+
+    def _get_project_name(self):
+        return util.strip_feature_store_suffix(self.feature_store_name)
 
 
 class FeatureGroup(FeatureGroupBase):
@@ -2447,11 +2450,6 @@ class FeatureGroup(FeatureGroupBase):
     def _get_online_table_name(self):
         return f"{self.name}_{self.version}"
 
-    def _get_project_name(self):
-        if self.feature_store_name.endswith("_featurestore"):
-            return self.feature_store_name[:-13]
-        return self.feature_store_name
-
     @property
     def id(self):
         """Feature group id."""
@@ -2781,7 +2779,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        if engine.get_type() == "python" and not online:
+
+        if (
+            engine.get_type() == "python"
+            and not online
+            and not engine.get_instance().is_flyingduck_query_supported(
+                self.select_all()
+            )
+        ):
             raise FeatureStoreException(
                 "Reading an External Feature Group directly into a Pandas Dataframe using "
                 + "Python/Pandas as Engine from the external storage system "

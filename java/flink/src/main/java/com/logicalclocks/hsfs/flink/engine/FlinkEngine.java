@@ -142,6 +142,7 @@ public class FlinkEngine {
     properties.put("ssl.keystore.password", client.getCertKey());
     properties.put("ssl.key.password", client.getCertKey());
     properties.put("ssl.endpoint.identification.algorithm", "");
+    properties.put("enable.idempotence", false);
     return properties;
   }
 

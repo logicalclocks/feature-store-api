@@ -183,7 +183,7 @@ class FeatureView:
         external: Optional[bool] = None,
         options: Optional[dict] = None,
     ):
-        """Initialise feature view to retrieve feature vector from online feature store.
+        """Initialise feature view to retrieve feature vector from online and offline feature store.
 
         !!! example
             ```python
@@ -198,8 +198,8 @@ class FeatureView:
             ```
 
         # Arguments
-            training_dataset_version: int, optional. Default to be 1. Transformation statistics
-                are fetched from training dataset and applied to the feature vector.
+            training_dataset_version: int, optional. Default to be 1 for online feature store.
+                Transformation statistics are fetched from training dataset and applied to the feature vector.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
@@ -210,6 +210,18 @@ class FeatureView:
                 * key: kwargs of SqlAlchemy engine creation (See: https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
                   For example: `{"pool_size": 10}`
         """
+
+        # initiate batch scoring server
+        # `training_dataset_version` should not be set if `None` otherwise backend will look up the td.
+        try:
+            self.init_batch_scoring(training_dataset_version)
+        except ValueError as e:
+            # In 3.3 or before, td version is set to 1 by default.
+            # For backward compatibility, if a td version is required, set it to 1.
+            if "Training data version is required for transformation" in str(e):
+                self.init_batch_scoring(1)
+            else:
+                raise e
 
         if training_dataset_version is None:
             training_dataset_version = 1
@@ -235,9 +247,6 @@ class FeatureView:
             serving_keys=self._serving_keys,
         )
         self._batch_vectors_server.init_serving(self, True, external, options=options)
-
-        # initiate batch scoring server
-        self.init_batch_scoring(training_dataset_version)
 
     def init_batch_scoring(
         self,
@@ -864,6 +873,8 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
+                * key `use_spark` and value `True` to materialize training dataset
+                  with Spark instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
