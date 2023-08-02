@@ -404,8 +404,16 @@ class Engine:
 
         serialized_df.withColumn(
             "headers",
-            array(struct(lit("featureGroupId").alias("key"), lit(feature_group_id).alias("value")),
-                  struct(lit("schemaVersion").alias("key"), lit(schema_version).alias("value"))),
+            array(
+                struct(
+                    lit("featureGroupId").alias("key"),
+                    lit(feature_group_id).alias("value"),
+                ),
+                struct(
+                    lit("schemaVersion").alias("key"),
+                    lit(schema_version).alias("value"),
+                ),
+            ),
         ).write.format(self.KAFKA_FORMAT).options(**write_options).option(
             "topic", feature_group._online_topic_name
         ).save()
