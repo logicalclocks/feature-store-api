@@ -1768,10 +1768,9 @@ class FeatureGroup(FeatureGroupBase):
         """Persist the metadata and materialize the feature group to the feature store
         or insert data from a dataframe into the existing feature group.
 
-        Incrementally insert data to a feature group or overwrite all  data contained in the feature group. By
+        Incrementally insert data to a feature group or overwrite all data contained in the feature group. By
         default, the data is inserted into the offline storage as well as the online storage if the feature group is
-        `online_enabled=True`. To insert only into the online or offline storage set `storage="online"` or
-        `storage="offline"` respectively.
+        `online_enabled=True`.
 
         The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
@@ -1780,7 +1779,7 @@ class FeatureGroup(FeatureGroupBase):
         If feature group's time travel format is `HUDI` then `operation` argument can be
         either `insert` or `upsert`.
 
-        If feature group doesn't exists  the insert method will create the necessary metadata the first time it is
+        If feature group doesn't exist the insert method will create the necessary metadata the first time it is
         invoked and writes the specified `features` dataframe as feature group to the online/offline feature store.
 
         !!! warning "Changed in 3.3.0"
@@ -1839,7 +1838,7 @@ class FeatureGroup(FeatureGroupBase):
                 Defaults to `"upsert"`.
             storage: Overwrite default behaviour, write to offline
                 storage only with `"offline"` or online only with `"online"`, defaults
-                to `None`.
+                to `None` (Not supported for streaming feature groups).
             write_options: Additional write options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, write_options can contain the
                 following entries:
@@ -1876,6 +1875,11 @@ class FeatureGroup(FeatureGroupBase):
         # Returns
             (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
         """
+        if storage and self.stream:
+            warnings.warn(
+                "Stream feature groups don't support writing exclusively to 'online' or 'offline' storage"
+            )
+
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         if write_options is None:

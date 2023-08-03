@@ -566,7 +566,7 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   }
 
   /**
-   * Incrementally insert data to a stream feature group or overwrite all  data contained in the feature group.
+   * Incrementally insert data to a stream feature group or overwrite all data contained in the feature group.
    * The `features` dataframe can be a Spark DataFrame or RDD.
    * If the stream feature group doesn't exist, the insert method will create the necessary metadata the first time it
    * is invoked and write the specified `features` dataframe as feature group to the online/offline feature store.
@@ -596,6 +596,8 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * </pre>
    *
    * @param featureData Spark DataFrame, RDD. Features to be saved.
+   * @param storage Overwrite default behaviour, write to offline storage only with `Storage.OFFLINE` or online only
+   *                with `Storage.ONLINE` (Not supported for streaming feature groups).
    * @param overwrite Drop all data in the feature group before inserting new data. This does not affect metadata.
    * @param operation commit operation type, INSERT or UPSERT.
    * @param writeOptions Additional write options as key-value pairs.
@@ -607,6 +609,9 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   @Override
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, HudiOperationType operation,
                      Map<String, String> writeOptions) throws FeatureStoreException, IOException, ParseException {
+    if (storage != null) {
+      LOGGER.warn("Stream feature groups don't support writing exclusively to 'online' or 'offline' storage");
+    }
     insert(featureData, false, writeOptions, null);
   }
 

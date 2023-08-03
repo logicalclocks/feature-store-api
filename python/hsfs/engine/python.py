@@ -484,11 +484,6 @@ class Engine:
         online_write_options: dict,
         validation_id: int = None,
     ):
-        if storage:
-            warnings.warn(
-                "Python engine doesn't support writing exclusively to 'online' or 'offline' storage"
-            )
-
         if (
             isinstance(feature_group, ExternalFeatureGroup)
             and feature_group.online_enabled
