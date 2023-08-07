@@ -482,7 +482,7 @@ class Engine:
         dataframe: pd.DataFrame,
         operation: str,
         online_enabled: bool,
-        storage: bool,
+        storage: str,
         offline_write_options: dict,
         online_write_options: dict,
         validation_id: int = None,

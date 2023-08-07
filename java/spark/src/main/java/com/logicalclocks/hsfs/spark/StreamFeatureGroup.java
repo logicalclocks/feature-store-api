@@ -483,7 +483,7 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   @Override
   public void insert(Dataset<Row> featureData, Storage storage)
       throws IOException, FeatureStoreException, ParseException {
-    new FeatureStoreException("This method is implemented in StreamFeatureGroup");
+    new FeatureStoreException("This method is not implemented in StreamFeatureGroup");
   }
 
   /**
@@ -519,7 +519,7 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   @Override
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite)
       throws IOException, FeatureStoreException, ParseException {
-    new FeatureStoreException("This method is implemented in StreamFeatureGroup");
+    new FeatureStoreException("This method is not implemented in StreamFeatureGroup");
   }
 
   /**
@@ -562,52 +562,13 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   @Override
   public void insert(Dataset<Row> featureData, HudiOperationType operation)
       throws FeatureStoreException, IOException, ParseException {
-    new FeatureStoreException("This method is implemented in StreamFeatureGroup");
+    new FeatureStoreException("This method is not implemented in StreamFeatureGroup");
   }
 
-  /**
-   * Incrementally insert data to a stream feature group or overwrite all  data contained in the feature group.
-   * The `features` dataframe can be a Spark DataFrame or RDD.
-   * If the stream feature group doesn't exist, the insert method will create the necessary metadata the first time it
-   * is invoked and write the specified `features` dataframe as feature group to the online/offline feature store.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        // get feature group handle
-   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("electricity_prices", 1);
-   *        // define additional write options
-   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
-   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
-   *                           put("hoodie.insert.shuffle.parallelism", "5");
-   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
-   *                           };
-   *        // Define additional write options (this example applies to HUDI enabled FGs)
-   *        Map<String, String> writeOptions = = new HashMap<String, String>() {{
-   *                           put("hoodie.bulkinsert.shuffle.parallelism", "5");
-   *                           put("hoodie.insert.shuffle.parallelism", "5");
-   *                           put("hoodie.upsert.shuffle.parallelism", "5");}
-   *                           };
-   *        // insert feature data in offline only with additional write options and drop all previous data before new
-   *        // data is inserted
-   *        fg.insert(featureData, Storage.OFFLINE, true, HudiOperationType.INSERT, writeOptions);
-   * }
-   * </pre>
-   *
-   * @param featureData Spark DataFrame, RDD. Features to be saved.
-   * @param overwrite Drop all data in the feature group before inserting new data. This does not affect metadata.
-   * @param operation commit operation type, INSERT or UPSERT.
-   * @param writeOptions Additional write options as key-value pairs.
-   * @throws IOException Generic IO exception.
-   * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
-   *                               can't reconcile HUDI schema.
-   * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
-   */
   @Override
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, HudiOperationType operation,
                      Map<String, String> writeOptions) throws FeatureStoreException, IOException, ParseException {
-    insert(featureData, false, writeOptions, null);
+    new FeatureStoreException("This method is not implemented in StreamFeatureGroup");
   }
 
   /**
