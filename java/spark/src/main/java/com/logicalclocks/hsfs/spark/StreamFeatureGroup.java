@@ -483,7 +483,7 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   @Override
   public void insert(Dataset<Row> featureData, Storage storage)
       throws IOException, FeatureStoreException, ParseException {
-    new FeatureStoreException("This method is implemented in StreamFeatureGroup");
+    new FeatureStoreException("This method is not implemented in StreamFeatureGroup");
   }
 
   /**
@@ -519,7 +519,7 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   @Override
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite)
       throws IOException, FeatureStoreException, ParseException {
-    new FeatureStoreException("This method is implemented in StreamFeatureGroup");
+    new FeatureStoreException("This method is not implemented in StreamFeatureGroup");
   }
 
   /**
@@ -562,13 +562,13 @@ public class StreamFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   @Override
   public void insert(Dataset<Row> featureData, HudiOperationType operation)
       throws FeatureStoreException, IOException, ParseException {
-    new FeatureStoreException("This method is implemented in StreamFeatureGroup");
+    new FeatureStoreException("This method is not implemented in StreamFeatureGroup");
   }
 
   @Override
   public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, HudiOperationType operation,
                      Map<String, String> writeOptions) throws FeatureStoreException, IOException, ParseException {
-    new FeatureStoreException("This method is implemented in StreamFeatureGroup");
+    new FeatureStoreException("This method is not implemented in StreamFeatureGroup");
   }
 
   /**
