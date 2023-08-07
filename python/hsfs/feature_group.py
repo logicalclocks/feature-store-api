@@ -1838,7 +1838,7 @@ class FeatureGroup(FeatureGroupBase):
                 Defaults to `"upsert"`.
             storage: Overwrite default behaviour, write to offline
                 storage only with `"offline"` or online only with `"online"`, defaults
-                to `None` (Not supported for streaming feature groups).
+                to `None` (If the streaming APIs are enabled, specifying the storage option is not supported).
             write_options: Additional write options as key-value pairs, defaults to `{}`.
                 When using the `python` engine, write_options can contain the
                 following entries:
@@ -1877,7 +1877,7 @@ class FeatureGroup(FeatureGroupBase):
         """
         if storage and self.stream:
             warnings.warn(
-                "Stream feature groups don't support writing exclusively to 'online' or 'offline' storage"
+                "Specifying the storage option is not supported if the streaming APIs are enabled"
             )
 
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
