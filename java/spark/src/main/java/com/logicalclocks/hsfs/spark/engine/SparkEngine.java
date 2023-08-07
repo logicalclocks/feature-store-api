@@ -493,7 +493,11 @@ public class SparkEngine {
   // OnDemand Feature Group in TFRecords format. However Spark does not use an enum but a string.
   public Dataset<Row> read(StorageConnector storageConnector, String dataFormat,
                            Map<String, String> readOptions, String location) throws FeatureStoreException, IOException {
-    setupConnectorHadoopConf((StorageConnector) storageConnector);
+    if (Strings.isNullOrEmpty(dataFormat)) {
+      throw new FeatureStoreException("dataFormat is not specified.");
+    }
+
+    setupConnectorHadoopConf(storageConnector);
 
     String path = "";
     if (location != null) {

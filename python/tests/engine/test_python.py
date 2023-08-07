@@ -146,6 +146,42 @@ class TestPython:
         assert mock_util_create_mysql_engine.call_count == 1
         assert mock_python_engine_return_dataframe_type.call_count == 1
 
+    def test_read_none_data_format(self, mocker):
+        # Arrange
+        mocker.patch("pandas.concat")
+
+        python_engine = python.Engine()
+
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as e_info:
+            python_engine.read(
+                storage_connector=None,
+                data_format=None,
+                read_options=None,
+                location=None,
+            )
+
+        # Assert
+        assert str(e_info.value) == "data_format is not specified"
+
+    def test_read_empty_data_format(self, mocker):
+        # Arrange
+        mocker.patch("pandas.concat")
+
+        python_engine = python.Engine()
+
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as e_info:
+            python_engine.read(
+                storage_connector=None,
+                data_format="",
+                read_options=None,
+                location=None,
+            )
+
+        # Assert
+        assert str(e_info.value) == "data_format is not specified"
+
     def test_read_hopsfs_connector(self, mocker):
         # Arrange
         mocker.patch("pandas.concat")
@@ -163,7 +199,7 @@ class TestPython:
         # Act
         python_engine.read(
             storage_connector=connector,
-            data_format=None,
+            data_format="csv",
             read_options=None,
             location=None,
         )
@@ -189,7 +225,7 @@ class TestPython:
         # Act
         python_engine.read(
             storage_connector=connector,
-            data_format=None,
+            data_format="csv",
             read_options=None,
             location=None,
         )
@@ -215,7 +251,7 @@ class TestPython:
         with pytest.raises(NotImplementedError) as e_info:
             python_engine.read(
                 storage_connector=connector,
-                data_format=None,
+                data_format="csv",
                 read_options=None,
                 location=None,
             )
