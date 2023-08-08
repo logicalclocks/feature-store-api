@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -51,7 +52,8 @@ public class FeatureGroupApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
-  public <T> T getInternal(FeatureStoreBase featureStoreBase, String fgName, Integer fgVersion, Class<T> fgType)
+  public <T extends FeatureGroupBase> T[] getInternal(FeatureStoreBase featureStoreBase, String fgName,
+                                                      Integer fgVersion, Class<T[]> fgType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -69,7 +71,9 @@ public class FeatureGroupApi {
     String uriString = uri.expand();
 
     LOGGER.info("Sending metadata request: " + uriString);
-    return hopsworksClient.handleRequest(new HttpGet(uriString), fgType);
+    T[] featureGroups = hopsworksClient.handleRequest(new HttpGet(uriString), fgType);
+    Arrays.stream(featureGroups).forEach(FeatureGroupBase::checkDeprecated);
+    return featureGroups;
   }
 
   public <U extends FeatureGroupBase> FeatureGroupBase save(FeatureGroupBase featureGroup, Class<U> fgType)

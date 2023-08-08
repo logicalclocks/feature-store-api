@@ -137,6 +137,12 @@ public abstract class FeatureGroupBase<T> {
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
 
+  public void checkDeprecated() {
+    if (Boolean.TRUE.equals(this.deprecated)) {
+      LOGGER.warn(String.format("Feature Group `%s`, version `%s` is deprecated", this.name, this.version));
+    }
+  }
+
   public void delete() throws FeatureStoreException, IOException {
     LOGGER.warn("JobWarning: All jobs associated to feature group `" + name + "`, version `"
         + version + "` will be removed.");

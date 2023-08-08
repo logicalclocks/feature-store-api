@@ -112,6 +112,12 @@ class FeatureGroupBase:
         self._feature_group_engine = None
         self._multi_part_insert = False
 
+        self.check_deprecated()
+
+    def check_deprecated(self):
+        if self.deprecated:
+            warnings.warn("This feature group is deprecated.")
+
     def delete(self):
         """Drop the entire feature group along with its feature data.
 
