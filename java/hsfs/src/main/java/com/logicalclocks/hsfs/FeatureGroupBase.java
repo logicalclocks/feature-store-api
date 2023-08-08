@@ -117,6 +117,10 @@ public abstract class FeatureGroupBase<T> {
   @Setter
   protected DeltaStreamerJobConf deltaStreamerJobConf;
 
+  @Getter
+  @Setter
+  protected Boolean deprecated;
+
   @JsonIgnore
   // These are only used in the client. In the server they are aggregated in the `features` field
   protected List<String> partitionKeys;

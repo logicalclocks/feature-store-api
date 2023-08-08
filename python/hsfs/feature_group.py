@@ -67,6 +67,7 @@ class FeatureGroupBase:
         id=None,
         expectation_suite=None,
         online_topic_name=None,
+        deprecated=False,
     ):
         self.event_time = event_time
         self._online_enabled = online_enabled
@@ -74,6 +75,7 @@ class FeatureGroupBase:
         self._id = id
         self._subject = None
         self._online_topic_name = online_topic_name
+        self._deprecated = deprecated
         self._feature_store_id = featurestore_id
         # use setter for correct conversion
         self.expectation_suite = expectation_suite
@@ -1290,6 +1292,15 @@ class FeatureGroupBase:
         self._online_enabled = online_enabled
 
     @property
+    def deprecated(self):
+        """Setting if the feature group is deprecated."""
+        return self._deprecated
+
+    @deprecated.setter
+    def deprecated(self, deprecated):
+        self._deprecated = deprecated
+
+    @property
     def subject(self):
         """Subject of the feature group."""
         if self._subject is None:
@@ -1376,6 +1387,7 @@ class FeatureGroup(FeatureGroupBase):
         parents=None,
         href=None,
         delta_streamer_job_conf=None,
+        deprecated=False,
     ):
         super().__init__(
             featurestore_id,
@@ -1385,6 +1397,7 @@ class FeatureGroup(FeatureGroupBase):
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
+            deprecated=deprecated,
         )
 
         self._feature_store_name = featurestore_name
@@ -2429,6 +2442,7 @@ class FeatureGroup(FeatureGroupBase):
             "eventTime": self.event_time,
             "expectationSuite": self._expectation_suite,
             "parents": self._parents,
+            "deprecated": self.deprecated,
         }
         if self._stream:
             fg_meta_dict["deltaStreamerJobConf"] = self._deltastreamer_jobconf
@@ -2585,6 +2599,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         href=None,
         online_topic_name=None,
         spine=False,
+        deprecated=False,
     ):
         super().__init__(
             featurestore_id,
@@ -2594,6 +2609,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
+            deprecated=deprecated,
         )
 
         self._feature_store_name = featurestore_name
@@ -2854,6 +2870,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "expectationSuite": self._expectation_suite,
             "onlineEnabled": self._online_enabled,
             "spine": False,
+            "deprecated": self.deprecated,
         }
 
     @property
@@ -2949,6 +2966,7 @@ class SpineGroup(FeatureGroupBase):
         online_topic_name=None,
         spine=True,
         dataframe="spine",
+        deprecated=False,
     ):
         super().__init__(
             featurestore_id,
@@ -2958,6 +2976,7 @@ class SpineGroup(FeatureGroupBase):
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
+            deprecated=deprecated,
         )
 
         self._feature_store_name = featurestore_name
@@ -3084,4 +3103,5 @@ class SpineGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
             "eventTime": self._event_time,
             "spine": True,
+            "deprecated": self.deprecated,
         }
