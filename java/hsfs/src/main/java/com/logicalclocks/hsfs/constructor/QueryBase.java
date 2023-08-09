@@ -76,9 +76,11 @@ public abstract class QueryBase<T extends QueryBase<T, T2>, T2> {
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
   public QueryBase(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
-    leftFeatureGroup.checkDeprecated();
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
+    if (this.leftFeatureGroup != null) {
+      this.leftFeatureGroup.checkDeprecated();
+    }
   }
 
   public abstract String sql();

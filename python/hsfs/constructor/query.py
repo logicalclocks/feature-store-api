@@ -55,7 +55,6 @@ class Query:
         joins=None,
         filter=None,
     ):
-        left_feature_group.check_deprecated()
         self._feature_store_name = feature_store_name
         self._feature_store_id = feature_store_id
         self._left_feature_group = left_feature_group
@@ -69,6 +68,9 @@ class Query:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi(
             feature_store_id
         )
+
+        if self._left_feature_group:
+            self._left_feature_group.check_deprecated()
 
     def _prep_read(self, online, read_options):
         fs_query = self._query_constructor_api.construct_query(self)
