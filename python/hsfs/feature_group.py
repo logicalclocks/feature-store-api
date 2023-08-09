@@ -1304,7 +1304,31 @@ class FeatureGroupBase:
 
     @deprecated.setter
     def deprecated(self, deprecated):
-        self._deprecated = deprecated
+        """Deprecate the feature group.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            fg.deprecated=True
+            ```
+
+        !!! info "Safe update"
+            This method updates the feature group safely. In case of failure
+            your local metadata object will be kept unchanged.
+
+        # Arguments
+            deprecate: Boolean value identifying if the feature group should be deprecated. Defaults to True.
+
+        # Returns
+            `FeatureGroup`. The updated feature group object.
+        """
+        self._feature_group_engine.set_deprecated(self, deprecated)
+        return self
 
     @property
     def subject(self):

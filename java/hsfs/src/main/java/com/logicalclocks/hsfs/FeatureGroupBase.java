@@ -118,7 +118,6 @@ public abstract class FeatureGroupBase<T> {
   protected DeltaStreamerJobConf deltaStreamerJobConf;
 
   @Getter
-  @Setter
   protected Boolean deprecated;
 
   @JsonIgnore
@@ -206,6 +205,27 @@ public abstract class FeatureGroupBase<T> {
    */
   public void updateDescription(String description) throws FeatureStoreException, IOException {
     featureGroupEngineBase.updateDescription(this, description, this.getClass());
+  }
+
+  /**
+   * Deprecate the feature group.
+   *
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   */
+  public void setDeprecated() throws FeatureStoreException, IOException {
+    setDeprecated(true);
+  }
+
+  /**
+   * Deprecate the feature group.
+   *
+   * @param deprecate identifies if feature group should be deprecated.
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   */
+  public void setDeprecated(Boolean deprecate) throws FeatureStoreException, IOException {
+    featureGroupEngineBase.setDeprecated(this, deprecate, this.getClass());
   }
 
   /**

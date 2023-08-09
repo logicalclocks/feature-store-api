@@ -82,6 +82,13 @@ public class FeatureGroupEngineBase {
     featureGroup.setDescription(apiFG.getDescription());
   }
 
+  public <T extends FeatureGroupBase> void setDeprecated(FeatureGroupBase featureGroup, Boolean deprecate,
+                                                          Class<T> fgClass)
+      throws FeatureStoreException, IOException {
+    T apiFG = featureGroupApi.updateMetadata(featureGroup, "deprecate", deprecate, fgClass);
+    featureGroup.setDeprecated(apiFG.getDeprecated());
+  }
+
   public <T extends FeatureGroupBase> void updateFeatures(FeatureGroupBase featureGroup, List<Feature> features,
                                                           Class<T> fgClass)
       throws FeatureStoreException, IOException {
