@@ -217,7 +217,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             feature_group, copy_feature_group, "updateMetadata"
         )
 
-    def set_deprecated(self, feature_group, deprecate):
+    def update_deprecated(self, feature_group, deprecate):
         """Updates the description of a feature group."""
         copy_feature_group = fg.FeatureGroup.from_response_json(feature_group.to_dict())
         self._feature_group_api.update_metadata(
