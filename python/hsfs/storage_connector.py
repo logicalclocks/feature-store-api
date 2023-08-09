@@ -594,7 +594,6 @@ class AdlsConnector(StorageConnector):
         options: dict = {},
         path: str = "",
     ):
-
         """Reads a path into a dataframe using the storage connector.
         # Arguments
             query: Not relevant for ADLS connectors.
@@ -1253,6 +1252,26 @@ class BigQueryConnector(StorageConnector):
     def arguments(self):
         """Additional spark options"""
         return self._arguments
+
+    def bigquery_connector_options(self):
+        """In order to use the ibis bigquery connector, this method
+        prepares a Python dictionary with the needed arguments for you to connect to
+        a Snowflake database.
+
+        ```python
+        import snowflake.connector
+
+        sc = fs.get_storage_connector("snowflake_conn")
+        ctx = snowflake.connector.connect(**sc.snowflake_connector_options())
+        ```
+        """
+        props = {
+            "key_path": self._key_path,
+            "project_id": self._query_project,
+            "dataset_id": self._dataset,
+            "parent_project": self._parent_project,
+        }
+        return props
 
     def spark_options(self):
         """Return spark options to be set for BigQuery spark connector"""

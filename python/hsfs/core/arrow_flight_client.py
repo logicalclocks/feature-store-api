@@ -28,6 +28,7 @@ from hsfs import feature_group
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi
 from hsfs import util
+from hsfs.storage_connector import StorageConnector
 
 _arrow_flight_instance = None
 
@@ -136,9 +137,15 @@ class ArrowFlightClient:
         )
         snowflake = (
             isinstance(query._left_feature_group, feature_group.ExternalFeatureGroup)
-            and query._left_feature_group.storage_connector.type == "SNOWFLAKE"
+            and query._left_feature_group.storage_connector.type
+            == StorageConnector.SNOWFLAKE
         )
-        supported = hudi_no_time_travel or snowflake
+        bigquery = (
+            isinstance(query._left_feature_group, feature_group.ExternalFeatureGroup)
+            and query._left_feature_group.storage_connector.type
+            == StorageConnector.BIGQUERY
+        )
+        supported = hudi_no_time_travel or snowflake or bigquery
         for j in query._joins:
             supported &= self._is_query_supported_rec(j._query)
         return supported
@@ -258,7 +265,12 @@ class ArrowFlightClient:
         connector = {}
         if isinstance(fg, feature_group.ExternalFeatureGroup):
             connector["type"] = fg.storage_connector.type
-            connector["options"] = fg.storage_connector.snowflake_connector_options()
+            if fg.storage_connector.type == StorageConnector.SNOWFLAKE:
+                connector[
+                    "options"
+                ] = fg.storage_connector.snowflake_connector_options()
+            elif fg.storage_connector.type == StorageConnector.BIGQUERY:
+                connector["options"] = fg.storage_connector.bigquery_connector_options()
             connector["query"] = fg.query
             for on_demand_fg_alias in on_demand_fg_aliases:
                 if on_demand_fg_alias.on_demand_feature_group.name == fg.name:
