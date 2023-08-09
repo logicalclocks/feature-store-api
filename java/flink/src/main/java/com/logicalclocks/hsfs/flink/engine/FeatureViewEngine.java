@@ -20,6 +20,7 @@ package com.logicalclocks.hsfs.flink.engine;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.engine.FeatureViewEngineBase;
 
+import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
 import com.logicalclocks.hsfs.flink.constructor.Query;
 import com.logicalclocks.hsfs.flink.FeatureView;
 import com.logicalclocks.hsfs.flink.FeatureStore;
@@ -31,7 +32,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView, FeatureStore, DataStream<?>> {
+public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView, FeatureStore, StreamFeatureGroup,
+    DataStream<?>> {
 
   @Override
   public FeatureView update(FeatureView featureView) throws FeatureStoreException, IOException {

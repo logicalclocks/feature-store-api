@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public abstract class QueryBase<T extends QueryBase<T, T2>, T2> {
+public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends FeatureGroupBase, T3> {
 
   @Getter
   protected FeatureGroupBase leftFeatureGroup;
@@ -65,8 +65,15 @@ public abstract class QueryBase<T extends QueryBase<T, T2>, T2> {
   @Setter
   protected Boolean hiveEngine = false;
 
-  protected void setLeftFeatureGroup(FeatureGroupBase leftFeatureGroup) {
+  protected void setLeftFeatureGroup(T2 leftFeatureGroup) {
+    setLeftBaseFeatureGroup(leftFeatureGroup);
+  }
+
+  private void setLeftBaseFeatureGroup(FeatureGroupBase leftFeatureGroup) {
     this.leftFeatureGroup = leftFeatureGroup;
+    if (this.leftFeatureGroup != null) {
+      this.leftFeatureGroup.checkDeprecated();
+    }
   }
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(QueryBase.class);
@@ -75,19 +82,16 @@ public abstract class QueryBase<T extends QueryBase<T, T2>, T2> {
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
-  public QueryBase(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
-    this.leftFeatureGroup = leftFeatureGroup;
+  protected QueryBase(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
+    setLeftBaseFeatureGroup(leftFeatureGroup);
     this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
-    if (this.leftFeatureGroup != null) {
-      this.leftFeatureGroup.checkDeprecated();
-    }
   }
 
   public abstract String sql();
 
   public abstract String sql(Storage storage);
 
-  public <U> String sql(Storage storage, Class<U> fsQueryType) {
+  public <T2> String sql(Storage storage, Class<T2> fsQueryType) {
     try {
       return queryConstructorApi
           .constructQuery(this.getLeftFeatureGroup().getFeatureStore(), this, fsQueryType)

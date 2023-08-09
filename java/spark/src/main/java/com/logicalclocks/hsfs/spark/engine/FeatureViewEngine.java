@@ -30,6 +30,7 @@ import com.logicalclocks.hsfs.engine.FeatureViewEngineBase;
 import com.logicalclocks.hsfs.metadata.Statistics;
 import com.logicalclocks.hsfs.DataFormat;
 import com.logicalclocks.hsfs.spark.FeatureView;
+import com.logicalclocks.hsfs.spark.StreamFeatureGroup;
 import com.logicalclocks.hsfs.spark.FeatureStore;
 import com.logicalclocks.hsfs.spark.TrainingDataset;
 import com.logicalclocks.hsfs.spark.TrainingDatasetBundle;
@@ -45,7 +46,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView, FeatureStore, Dataset<Row>> {
+public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView, FeatureStore, StreamFeatureGroup,
+    Dataset<Row>> {
 
   private TrainingDatasetEngine trainingDatasetEngine = new TrainingDatasetEngine();
   private StatisticsEngine statisticsEngine = new StatisticsEngine(EntityEndpointType.TRAINING_DATASET);

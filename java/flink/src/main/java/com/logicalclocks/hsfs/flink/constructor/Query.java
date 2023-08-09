@@ -21,6 +21,7 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.constructor.QueryBase;
 
+import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
 import lombok.NoArgsConstructor;
 import org.apache.flink.streaming.api.datastream.DataStream;
 
@@ -28,7 +29,7 @@ import java.io.IOException;
 import java.util.Map;
 
 @NoArgsConstructor
-public class Query extends QueryBase<Query, DataStream<?>> {
+public class Query extends QueryBase<Query, StreamFeatureGroup, DataStream<?>> {
 
   @Override
   public String sql() {
