@@ -1256,14 +1256,7 @@ class BigQueryConnector(StorageConnector):
     def bigquery_connector_options(self):
         """In order to use the ibis bigquery connector, this method
         prepares a Python dictionary with the needed arguments for you to connect to
-        a Snowflake database.
-
-        ```python
-        import snowflake.connector
-
-        sc = fs.get_storage_connector("snowflake_conn")
-        ctx = snowflake.connector.connect(**sc.snowflake_connector_options())
-        ```
+        a BigQuery database.
         """
         props = {
             "key_path": self._key_path,
