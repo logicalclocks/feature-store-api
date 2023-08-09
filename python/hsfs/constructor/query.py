@@ -55,6 +55,7 @@ class Query:
         joins=None,
         filter=None,
     ):
+        left_feature_group.check_deprecated()
         self._feature_store_name = feature_store_name
         self._feature_store_id = feature_store_id
         self._left_feature_group = left_feature_group
