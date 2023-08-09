@@ -116,7 +116,6 @@ class FeatureGroupBase:
 
     def check_deprecated(self):
         if self.deprecated:
-            raise FeatureStoreException("1111")
             warnings.warn("This feature group is deprecated.")
 
     def delete(self):

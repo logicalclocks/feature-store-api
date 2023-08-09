@@ -70,6 +70,7 @@ class Query:
         )
 
         if self._left_feature_group:
+            raise FeatureStoreException("1111")
             self._left_feature_group.check_deprecated()
 
     def _prep_read(self, online, read_options):
