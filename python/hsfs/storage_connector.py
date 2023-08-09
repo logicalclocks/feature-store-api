@@ -1254,10 +1254,6 @@ class BigQueryConnector(StorageConnector):
         return self._arguments
 
     def bigquery_connector_options(self):
-        """In order to use the ibis bigquery connector, this method
-        prepares a Python dictionary with the needed arguments for you to connect to
-        a BigQuery database.
-        """
         props = {
             "key_path": self._key_path,
             "project_id": self._query_project,
