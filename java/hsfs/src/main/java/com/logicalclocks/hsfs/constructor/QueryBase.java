@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends FeatureGroupBase, T3> {
+public abstract class QueryBase<T extends QueryBase<T, T2>, T2> {
 
   @Getter
   protected FeatureGroupBase leftFeatureGroup;
@@ -65,7 +65,7 @@ public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends Featu
   @Setter
   protected Boolean hiveEngine = false;
 
-  protected void setLeftFeatureGroup(T2 leftFeatureGroup) {
+  protected void setLeftFeatureGroup(FeatureGroupBase leftFeatureGroup) {
     this.leftFeatureGroup = leftFeatureGroup;
   }
 
@@ -75,16 +75,17 @@ public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends Featu
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
-  public QueryBase(T2 leftFeatureGroup, List<Feature> leftFeatures) {
+  public QueryBase(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
+    leftFeatureGroup.checkDeprecated();
     this.leftFeatureGroup = leftFeatureGroup;
-    this.leftFeatures = leftFeatures;
+    this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
   }
 
   public abstract String sql();
 
   public abstract String sql(Storage storage);
 
-  public <T2> String sql(Storage storage, Class<T2> fsQueryType) {
+  public <U> String sql(Storage storage, Class<U> fsQueryType) {
     try {
       return queryConstructorApi
           .constructQuery(this.getLeftFeatureGroup().getFeatureStore(), this, fsQueryType)
@@ -289,7 +290,7 @@ public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends Featu
     return false;
   }
 
-  protected List<Feature>  addFeatureGroupToFeatures(FeatureGroupBase featureGroupBase, List<Feature> leftFeatures) {
+  private List<Feature> addFeatureGroupToFeatures(FeatureGroupBase featureGroupBase, List<Feature> leftFeatures) {
     List<Feature> updatedFeatures = new ArrayList<>();
     for (Feature feature: leftFeatures) {
       feature.setFeatureGroupId(featureGroupBase.getId());

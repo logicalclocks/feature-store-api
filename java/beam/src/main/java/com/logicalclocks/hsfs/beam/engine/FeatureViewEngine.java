@@ -20,7 +20,6 @@ package com.logicalclocks.hsfs.beam.engine;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.beam.FeatureStore;
 import com.logicalclocks.hsfs.beam.FeatureView;
-import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
 import com.logicalclocks.hsfs.beam.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureViewEngineBase;
 import org.apache.beam.sdk.values.PCollection;
@@ -30,8 +29,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView, FeatureStore, StreamFeatureGroup,
-    PCollection<Object>> {
+public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView, FeatureStore, PCollection<Object>> {
   @Override
   public FeatureView update(FeatureView featureView) throws FeatureStoreException, IOException {
     throw new UnsupportedOperationException("Not supported for Beam");

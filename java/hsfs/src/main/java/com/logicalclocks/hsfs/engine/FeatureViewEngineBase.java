@@ -43,8 +43,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1, T4, T5>, T2
-    extends FeatureViewBase<T2, T3, T1, T5>, T3 extends FeatureStoreBase<T1>, T4 extends FeatureGroupBase, T5> {
+public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1, T4>, T2
+    extends FeatureViewBase<T2, T3, T1, T4>, T3 extends FeatureStoreBase<T1>, T4> {
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureViewEngineBase.class);
 
@@ -304,7 +304,7 @@ public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1, T4, T5>, T2
                                            String description, List<String> labels)
       throws FeatureStoreException, IOException;
 
-  public abstract T5 getBatchData(
+  public abstract T4 getBatchData(
       T2 featureView, Date startTime, Date endTime, Map<String, String> readOptions,
       Integer trainingDataVersion
   ) throws FeatureStoreException, IOException;

@@ -23,7 +23,6 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
 import com.logicalclocks.hsfs.constructor.QueryBase;
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.spark.StreamFeatureGroup;
 import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 
 import com.logicalclocks.hsfs.spark.util.StorageConnectorUtils;
@@ -36,14 +35,12 @@ import java.util.List;
 import java.util.Map;
 
 @NoArgsConstructor
-public class Query extends QueryBase<Query, StreamFeatureGroup, Dataset<Row>> {
+public class Query extends QueryBase<Query, Dataset<Row>> {
 
   private final StorageConnectorUtils storageConnectorUtils = new StorageConnectorUtils();
 
   public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
-    leftFeatureGroup.checkDeprecated();
-    this.leftFeatureGroup = leftFeatureGroup;
-    this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
+    super(leftFeatureGroup, leftFeatures);
   }
 
   @Override

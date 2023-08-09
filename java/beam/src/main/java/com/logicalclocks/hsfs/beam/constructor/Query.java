@@ -19,7 +19,6 @@ package com.logicalclocks.hsfs.beam.constructor;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.Storage;
-import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
 import com.logicalclocks.hsfs.constructor.QueryBase;
 
 import org.apache.beam.sdk.values.PCollection;
@@ -27,7 +26,7 @@ import org.apache.beam.sdk.values.PCollection;
 import java.io.IOException;
 import java.util.Map;
 
-public class Query extends QueryBase<Query, StreamFeatureGroup, PCollection<Object>> {
+public class Query extends QueryBase<Query, PCollection<Object>> {
   @Override
   public String sql() {
     throw new UnsupportedOperationException("Not supported for Beam");
