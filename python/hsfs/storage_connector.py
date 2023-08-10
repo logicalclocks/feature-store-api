@@ -1264,7 +1264,7 @@ class BigQueryConnector(StorageConnector):
         return self._arguments
 
     def connector_options(self):
-        """ "Return options to be passed to an external BigQuery connector library"""
+        """Return options to be passed to an external BigQuery connector library"""
         props = {
             "key_path": self._key_path,
             "project_id": self._query_project,
