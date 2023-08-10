@@ -78,7 +78,12 @@ from hsfs.feature_group import ExternalFeatureGroup, SpineGroup
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.client import hopsworks
-from hsfs.core import hudi_engine, transformation_function_engine, kafka_api
+from hsfs.core import (
+    dataset_api,
+    hudi_engine,
+    transformation_function_engine,
+    kafka_api,
+)
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
@@ -1007,7 +1012,16 @@ class Engine:
 
         # The JSON key file of the service account used for GCS
         # access when google.cloud.auth.service.account.enable is true.
-        local_path = self.add_file(storage_connector.key_path)
+        if not isinstance(client.get_instance(), client.external.Client):
+            local_path = self.add_file(storage_connector.key_path)
+        else:
+            response = dataset_api.DatasetApi.read_content(
+                dataset_api, path=self._key_path, query_params={"type": "HIVEDB"}
+            )
+            local_path = os.path.basename(self._key_path)
+            with open(local_path, "wb") as f:
+                f.write(response.content)
+
         with open(local_path, "r") as f_in:
             jsondata = json.load(f_in)
         self._spark_context._jsc.hadoopConfiguration().set(

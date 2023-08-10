@@ -1262,7 +1262,6 @@ class BigQueryConnector(StorageConnector):
         if not isinstance(client.get_instance(), client.external.Client):
             local_key_path = engine.get_instance().add_file(self._key_path)
         else:
-            print("!!!! External client !!!!")
             response = dataset_api.DatasetApi.read_content(
                 dataset_api, path=self._key_path, query_params={"type": "HIVEDB"}
             )
