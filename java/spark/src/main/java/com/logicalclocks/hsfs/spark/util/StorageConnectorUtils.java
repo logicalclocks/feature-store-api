@@ -51,7 +51,7 @@ public class StorageConnectorUtils {
   public Dataset<Row> read(StorageConnector.HopsFsConnector connector,
                            String dataFormat, Map<String, String> options, String path)
       throws FeatureStoreException, IOException {
-    return SparkEngine.getInstance().read(connector,  dataFormat, options, path);
+    return SparkEngine.getInstance().read(connector, dataFormat, options, path);
   }
 
   /**
@@ -236,7 +236,7 @@ public class StorageConnectorUtils {
   public Dataset<Row> read(StorageConnector connector, String query, String dataFormat, Map<String, String> options,
                            String path) throws FeatureStoreException, IOException {
     if (connector instanceof StorageConnector.HopsFsConnector) {
-      return read((StorageConnector.HopsFsConnector) connector, dataFormat,options, path);
+      return read((StorageConnector.HopsFsConnector) connector, dataFormat, options, path);
     } else if (connector instanceof  StorageConnector.S3Connector) {
       return read((StorageConnector.S3Connector) connector, dataFormat, options, path);
     } else if (connector instanceof StorageConnector.RedshiftConnector) {

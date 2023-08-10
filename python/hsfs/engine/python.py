@@ -170,6 +170,9 @@ class Engine:
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def read(self, storage_connector, data_format, read_options, location):
+        if not data_format:
+            raise FeatureStoreException("data_format is not specified")
+
         if storage_connector.type == storage_connector.HOPSFS:
             df_list = self._read_hopsfs(location, data_format, read_options)
         elif storage_connector.type == storage_connector.S3:
@@ -479,7 +482,7 @@ class Engine:
         dataframe: pd.DataFrame,
         operation: str,
         online_enabled: bool,
-        storage: bool,
+        storage: str,
         offline_write_options: dict,
         online_write_options: dict,
         validation_id: int = None,
