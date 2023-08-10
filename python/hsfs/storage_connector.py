@@ -133,6 +133,12 @@ class StorageConnector(ABC):
     def _get_path(self, sub_path: str):
         return None
 
+    def connector_options(self):
+        """Return prepared options to be passed to an external connector library.
+        Not implemented for this connector type.
+        """
+        return {}
+
 
 class HopsFSConnector(StorageConnector):
     type = StorageConnector.HOPSFS
@@ -719,6 +725,10 @@ class SnowflakeConnector(StorageConnector):
         return self._options
 
     def snowflake_connector_options(self):
+        """Alias for `connector_options`"""
+        return self.connector_options()
+
+    def connector_options(self):
         """In order to use the `snowflake.connector` Python library, this method
         prepares a Python dictionary with the needed arguments for you to connect to
         a Snowflake database.
@@ -727,7 +737,7 @@ class SnowflakeConnector(StorageConnector):
         import snowflake.connector
 
         sc = fs.get_storage_connector("snowflake_conn")
-        ctx = snowflake.connector.connect(**sc.snowflake_connector_options())
+        ctx = snowflake.connector.connect(**sc.connector_options())
         ```
         """
         props = {
@@ -1253,7 +1263,8 @@ class BigQueryConnector(StorageConnector):
         """Additional spark options"""
         return self._arguments
 
-    def bigquery_connector_options(self):
+    def connector_options(self):
+        """ "Return options to be passed to an external BigQuery connector library"""
         props = {
             "key_path": self._key_path,
             "project_id": self._query_project,

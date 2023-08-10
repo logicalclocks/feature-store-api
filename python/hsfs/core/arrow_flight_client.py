@@ -42,6 +42,10 @@ def get_instance():
 
 class ArrowFlightClient:
     SUPPORTED_FORMATS = ["parquet"]
+    SUPPORTED_EXTERNAL_CONNECTORS = [
+        StorageConnector.SNOWFLAKE,
+        StorageConnector.BIGQUERY,
+    ]
     FILTER_NUMERIC_TYPES = ["bigint", "tinyint", "smallint", "int", "float", "double"]
     READ_ERROR = 'Could not read data using ArrowFlight. If the issue persists, use read_options={"use_hive": True} instead.'
     WRITE_ERROR = 'Could not write data using ArrowFlight. If the issue persists, use write_options={"use_spark": True} instead.'
@@ -135,17 +139,12 @@ class ArrowFlightClient:
             )
             and query._left_feature_group_end_time is None
         )
-        snowflake = (
+        supported_connector = (
             isinstance(query._left_feature_group, feature_group.ExternalFeatureGroup)
             and query._left_feature_group.storage_connector.type
-            == StorageConnector.SNOWFLAKE
+            in ArrowFlightClient.SUPPORTED_EXTERNAL_CONNECTORS
         )
-        bigquery = (
-            isinstance(query._left_feature_group, feature_group.ExternalFeatureGroup)
-            and query._left_feature_group.storage_connector.type
-            == StorageConnector.BIGQUERY
-        )
-        supported = hudi_no_time_travel or snowflake or bigquery
+        supported = hudi_no_time_travel or supported_connector
         for j in query._joins:
             supported &= self._is_query_supported_rec(j._query)
         return supported
@@ -265,12 +264,7 @@ class ArrowFlightClient:
         connector = {}
         if isinstance(fg, feature_group.ExternalFeatureGroup):
             connector["type"] = fg.storage_connector.type
-            if fg.storage_connector.type == StorageConnector.SNOWFLAKE:
-                connector[
-                    "options"
-                ] = fg.storage_connector.snowflake_connector_options()
-            elif fg.storage_connector.type == StorageConnector.BIGQUERY:
-                connector["options"] = fg.storage_connector.bigquery_connector_options()
+            connector["options"] = fg.storage_connector.connector_options()
             connector["query"] = fg.query
             for on_demand_fg_alias in on_demand_fg_aliases:
                 if on_demand_fg_alias.on_demand_feature_group.name == fg.name:
