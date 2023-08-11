@@ -723,8 +723,18 @@ class Engine:
         # This is used for unit testing
         if not file.startswith("file://"):
             file = "hdfs://" + file
+        # for external clients, download the file
+        if isinstance(client.get_instance(), client.external.Client):
+            print("Downloading key file from storage connector.")
+            response = dataset_api.DatasetApi.read_content(
+                dataset_api, path=file, query_params={"type": "HIVEDB"}
+            )
+            file = os.path.join(SparkFiles.getRootDirectory(), os.path.basename(file))
+            with open(file, "wb") as f:
+                f.write(response.content)
+        else:
+            self._spark_context.addFile(file)
 
-        self._spark_context.addFile(file)
         return SparkFiles.get(os.path.basename(file))
 
     def profile(
@@ -1012,15 +1022,7 @@ class Engine:
 
         # The JSON key file of the service account used for GCS
         # access when google.cloud.auth.service.account.enable is true.
-        if not isinstance(client.get_instance(), client.external.Client):
-            local_path = self.add_file(storage_connector.key_path)
-        else:
-            response = dataset_api.DatasetApi.read_content(
-                dataset_api, path=self._key_path, query_params={"type": "HIVEDB"}
-            )
-            local_path = os.path.basename(self._key_path)
-            with open(local_path, "wb") as f:
-                f.write(response.content)
+        local_path = self.add_file(storage_connector.key_path)
 
         with open(local_path, "r") as f_in:
             jsondata = json.load(f_in)
@@ -1054,7 +1056,6 @@ class Engine:
             self._spark_context._jsc.hadoopConfiguration().unset(
                 PROPERTY_ENCRYPTION_KEY
             )
-
         return path
 
     def create_empty_df(self, streaming_df):

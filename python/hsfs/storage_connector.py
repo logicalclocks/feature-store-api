@@ -20,8 +20,8 @@ from typing import Optional
 import humps
 import base64
 
-from hsfs import engine, client
-from hsfs.core import storage_connector_api, dataset_api
+from hsfs import engine
+from hsfs.core import storage_connector_api
 
 
 class StorageConnector(ABC):
@@ -1259,16 +1259,7 @@ class BigQueryConnector(StorageConnector):
         properties = self._arguments
         properties[self.BIGQ_PARENT_PROJECT] = self._parent_project
 
-        if not isinstance(client.get_instance(), client.external.Client):
-            local_key_path = engine.get_instance().add_file(self._key_path)
-        else:
-            response = dataset_api.DatasetApi.read_content(
-                dataset_api, path=self._key_path, query_params={"type": "HIVEDB"}
-            )
-            local_key_path = os.path.basename(self._key_path)
-            with open(local_key_path, "wb") as f:
-                f.write(response.content)
-
+        local_key_path = engine.get_instance().add_file(self._key_path)
         with open(local_key_path, "rb") as credentials_file:
             properties[self.BIGQ_CREDENTIALS] = str(
                 base64.b64encode(credentials_file.read()), "utf-8"
