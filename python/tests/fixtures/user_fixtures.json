@@ -13,7 +13,6 @@
       "two_factor": "test_two_factor",
       "tours_state": "test_tours_state",
       "max_num_projects": "test_max_num_projects",
-      "num_created_projects": "test_num_created_projects",
       "test_user": "test_test_user",
       "user_account_type": "test_user_account_type",
       "num_active_projects": "test_num_active_projects",

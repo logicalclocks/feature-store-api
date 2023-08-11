@@ -146,6 +146,42 @@ class TestPython:
         assert mock_util_create_mysql_engine.call_count == 1
         assert mock_python_engine_return_dataframe_type.call_count == 1
 
+    def test_read_none_data_format(self, mocker):
+        # Arrange
+        mocker.patch("pandas.concat")
+
+        python_engine = python.Engine()
+
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as e_info:
+            python_engine.read(
+                storage_connector=None,
+                data_format=None,
+                read_options=None,
+                location=None,
+            )
+
+        # Assert
+        assert str(e_info.value) == "data_format is not specified"
+
+    def test_read_empty_data_format(self, mocker):
+        # Arrange
+        mocker.patch("pandas.concat")
+
+        python_engine = python.Engine()
+
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as e_info:
+            python_engine.read(
+                storage_connector=None,
+                data_format="",
+                read_options=None,
+                location=None,
+            )
+
+        # Assert
+        assert str(e_info.value) == "data_format is not specified"
+
     def test_read_hopsfs_connector(self, mocker):
         # Arrange
         mocker.patch("pandas.concat")
@@ -163,7 +199,7 @@ class TestPython:
         # Act
         python_engine.read(
             storage_connector=connector,
-            data_format=None,
+            data_format="csv",
             read_options=None,
             location=None,
         )
@@ -189,7 +225,7 @@ class TestPython:
         # Act
         python_engine.read(
             storage_connector=connector,
-            data_format=None,
+            data_format="csv",
             read_options=None,
             location=None,
         )
@@ -215,7 +251,7 @@ class TestPython:
         with pytest.raises(NotImplementedError) as e_info:
             python_engine.read(
                 storage_connector=connector,
-                data_format=None,
+                data_format="csv",
                 read_options=None,
                 location=None,
             )
@@ -2682,7 +2718,7 @@ class TestPython:
         python_engine._write_dataframe_kafka(
             feature_group=fg,
             dataframe=df,
-            offline_write_options={"start_offline_backfill": True},
+            offline_write_options={"start_offline_materialization": True},
         )
 
         # Assert
@@ -2869,7 +2905,7 @@ class TestPython:
             "test_name_1": "test_value_1",
         }
 
-    def test_backfill_kafka_offset_reset(self, mocker):
+    def test_materialization_kafka_offset_reset(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
         mocker.patch("hsfs.feature_group.FeatureGroup._get_encoded_avro_schema")
@@ -2908,7 +2944,7 @@ class TestPython:
         fg._online_topic_name = "topic_name"
         job_mock = mocker.MagicMock()
         job_mock.config = {"defaultArgs": "defaults"}
-        fg._backfill_job = job_mock
+        fg._materialization_job = job_mock
 
         df = pd.DataFrame(data={"col1": [1, 2, 2, 3]})
 
@@ -2916,7 +2952,7 @@ class TestPython:
         python_engine._write_dataframe_kafka(
             feature_group=fg,
             dataframe=df,
-            offline_write_options={"start_offline_backfill": True},
+            offline_write_options={"start_offline_materialization": True},
         )
 
         # Assert
@@ -2942,6 +2978,6 @@ class TestPython:
         fg._online_topic_name = "topic_name"
         job_mock = mocker.MagicMock()
         job_mock.config = {"defaultArgs": "defaults"}
-        fg._backfill_job = job_mock
+        fg._materialization_job = job_mock
 
-        assert fg.backfill_job.config == {"defaultArgs": "defaults"}
+        assert fg.materialization_job.config == {"defaultArgs": "defaults"}

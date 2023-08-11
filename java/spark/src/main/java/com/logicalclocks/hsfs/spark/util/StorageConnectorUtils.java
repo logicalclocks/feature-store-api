@@ -18,9 +18,9 @@
 package com.logicalclocks.hsfs.spark.util;
 
 import com.google.common.base.Strings;
-import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.spark.engine.SparkEngine;
 import com.logicalclocks.hsfs.util.Constants;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -32,8 +32,10 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class StorageConnectorUtils {
+  Logger logger = Logger.getLogger(StorageConnectorUtils.class.getName());
 
   /**
    * Reads path into a spark dataframe using the HopsFsConnector.
@@ -49,7 +51,7 @@ public class StorageConnectorUtils {
   public Dataset<Row> read(StorageConnector.HopsFsConnector connector,
                            String dataFormat, Map<String, String> options, String path)
       throws FeatureStoreException, IOException {
-    return SparkEngine.getInstance().read(connector,  dataFormat, options, path);
+    return SparkEngine.getInstance().read(connector, dataFormat, options, path);
   }
 
   /**
@@ -70,6 +72,10 @@ public class StorageConnectorUtils {
     // merge user spark options on top of default spark options
     if (options != null && !options.isEmpty()) {
       readOptions.putAll(options);
+    }
+    if (path != null && !path.startsWith("s3://")) {
+      path = connector.getPath(path);
+      logger.info(String.format("Prepending default bucket specified on connector, final path: %s", path));
     }
     return SparkEngine.getInstance().read(connector, dataFormat, readOptions, path);
   }
@@ -104,8 +110,12 @@ public class StorageConnectorUtils {
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  public Dataset<Row> read(StorageConnector.AdlsConnector connector, String dataFormat,
-                           Map<String, String> options, String path) throws FeatureStoreException, IOException {
+  public Dataset<Row> read(StorageConnector.AdlsConnector connector, String dataFormat, Map<String, String> options,
+      String path) throws FeatureStoreException, IOException {
+    if (path != null && (!path.startsWith("abfss://") || !path.startsWith("adl://"))) {
+      path = connector.getPath(path);
+      logger.info(String.format("Using default container specified on connector, final path: %s", path));
+    }
     return SparkEngine.getInstance().read(connector, dataFormat, options, path);
   }
 
@@ -162,6 +172,10 @@ public class StorageConnectorUtils {
   public Dataset<Row> read(StorageConnector.GcsConnector connector, String dataFormat,
                            Map<String, String> options, String path)
       throws FeatureStoreException, IOException {
+    if (path != null && !path.startsWith("gs://")) {
+      path = connector.getPath(path);
+      logger.info(String.format("Prepending default bucket specified on connector, final path: %s", path));
+    }
     return SparkEngine.getInstance().read(connector, dataFormat, options, path);
   }
 
@@ -222,7 +236,7 @@ public class StorageConnectorUtils {
   public Dataset<Row> read(StorageConnector connector, String query, String dataFormat, Map<String, String> options,
                            String path) throws FeatureStoreException, IOException {
     if (connector instanceof StorageConnector.HopsFsConnector) {
-      return read((StorageConnector.HopsFsConnector) connector, dataFormat,options, path);
+      return read((StorageConnector.HopsFsConnector) connector, dataFormat, options, path);
     } else if (connector instanceof  StorageConnector.S3Connector) {
       return read((StorageConnector.S3Connector) connector, dataFormat, options, path);
     } else if (connector instanceof StorageConnector.RedshiftConnector) {
@@ -278,4 +292,6 @@ public class StorageConnectorUtils {
     return SparkEngine.getInstance().readStream(connector, connector.sparkFormat,
         messageFormat.toLowerCase(), schema, options, includeMetadata);
   }
+
+
 }

@@ -315,7 +315,7 @@ class TestFeatureGroup:
         assert len(features) == 2
         assert set([f.name for f in features]) == {"f1", "f2"}
 
-    def test_backfill_job(self, mocker):
+    def test_materialization_job(self, mocker):
         mock_job = mocker.Mock()
         mock_job_api = mocker.patch(
             "hsfs.core.job_api.JobApi.get", return_value=mock_job
@@ -331,17 +331,17 @@ class TestFeatureGroup:
         )
 
         # call first time should populate cache
-        fg.backfill_job
+        fg.materialization_job
 
-        mock_job_api.assert_called_once_with("test_fg_2_offline_fg_backfill")
-        assert fg._backfill_job == mock_job
+        mock_job_api.assert_called_once_with("test_fg_2_offline_fg_materialization")
+        assert fg._materialization_job == mock_job
 
         # call second time
-        fg.backfill_job
+        fg.materialization_job
 
         # make sure it still was called only once
         mock_job_api.assert_called_once
-        assert fg.backfill_job == mock_job
+        assert fg.materialization_job == mock_job
 
     def test_multi_part_insert_return_writer(self, mocker):
         fg = feature_group.FeatureGroup(
@@ -671,6 +671,23 @@ class TestExternalFeatureGroup:
         assert isinstance(fg.statistics_config, statistics_config.StatisticsConfig)
         assert fg.event_time is None
         assert fg.expectation_suite is None
+
+    def test_feature_group_set_expectation_suite(
+        self,
+        mocker,
+        backend_fixtures,
+    ):
+        # Arrange
+        json = backend_fixtures["expectation_suite"]["get"]["response"]
+        es = expectation_suite.ExpectationSuite.from_response_json(json)
+        json = backend_fixtures["feature_group"]["get_stream_basic_info"]["response"]
+        fg = feature_group.FeatureGroup.from_response_json(json)
+
+        fg.expectation_suite = es
+
+        assert fg.expectation_suite.id == es.id
+        assert fg.expectation_suite._feature_group_id == fg.id
+        assert fg.expectation_suite._feature_store_id == fg.feature_store_id
 
     def test_feature_group_save_expectation_suite_from_ge_type(
         self, mocker, backend_fixtures

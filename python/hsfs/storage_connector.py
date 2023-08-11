@@ -134,6 +134,12 @@ class StorageConnector(ABC):
     def _get_path(self, sub_path: str):
         return None
 
+    def connector_options(self):
+        """Return prepared options to be passed to an external connector library.
+        Not implemented for this connector type.
+        """
+        return {}
+
 
 class HopsFSConnector(StorageConnector):
     type = StorageConnector.HOPSFS
@@ -588,6 +594,35 @@ class AdlsConnector(StorageConnector):
     def _get_path(self, sub_path: str):
         return os.path.join(self.path, sub_path)
 
+    def read(
+        self,
+        query: str = None,
+        data_format: str = None,
+        options: dict = {},
+        path: str = "",
+    ):
+        """Reads a path into a dataframe using the storage connector.
+        # Arguments
+            query: Not relevant for ADLS connectors.
+            data_format: The file format of the files to be read, e.g. `csv`, `parquet`.
+            options: Any additional key/value options to be passed to the ADLS connector.
+            path: Path within the bucket to be read. For example, path=`path` will read directly from the container specified on connector by constructing the URI as 'abfss://[container-name]@[account_name].dfs.core.windows.net/[path]'.
+            If no path is specified default container path will be used from connector.
+
+        # Returns
+            `DataFrame`.
+        """
+        path = path.strip()
+        if not path.startswith("abfss://") or path.startswith("adl://"):
+            path = self._get_path(path)
+            print(
+                "Using default container specified on connector, final path: {}".format(
+                    path
+                )
+            )
+
+        return engine.get_instance().read(self, data_format, options, path)
+
 
 class SnowflakeConnector(StorageConnector):
     type = StorageConnector.SNOWFLAKE
@@ -691,6 +726,10 @@ class SnowflakeConnector(StorageConnector):
         return self._options
 
     def snowflake_connector_options(self):
+        """Alias for `connector_options`"""
+        return self.connector_options()
+
+    def connector_options(self):
         """In order to use the `snowflake.connector` Python library, this method
         prepares a Python dictionary with the needed arguments for you to connect to
         a Snowflake database.
@@ -699,14 +738,13 @@ class SnowflakeConnector(StorageConnector):
         import snowflake.connector
 
         sc = fs.get_storage_connector("snowflake_conn")
-        ctx = snowflake.connector.connect(**sc.snowflake_connector_options())
+        ctx = snowflake.connector.connect(**sc.connector_options())
         ```
         """
         props = {
             "user": self._user,
             "account": self.account,
-            "database": self._database,
-            "schema": self._schema,
+            "database": self._database + "/" + self._schema,
         }
         if self._password:
             props["password"] = self._password
@@ -1351,6 +1389,16 @@ class BigQueryConnector(StorageConnector):
     def arguments(self):
         """Additional spark options"""
         return self._arguments
+
+    def connector_options(self):
+        """Return options to be passed to an external BigQuery connector library"""
+        props = {
+            "key_path": self._key_path,
+            "project_id": self._query_project,
+            "dataset_id": self._dataset,
+            "parent_project": self._parent_project,
+        }
+        return props
 
     def spark_options(self):
         """Return spark options to be set for BigQuery spark connector"""
