@@ -197,19 +197,21 @@ public abstract class FeatureStoreBase<T2 extends QueryBase> {
    * {@code
    *        // get feature store handle
    *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector.KafkaConnector kafkaSc = fs.getKafkaConnector();
+   *        StorageConnector.KafkaConnector kafkaSc = fs.getKafkaConnector(SparkEngine.getInstance(), false);
    * }
    * </pre>
    *
+   * @param engine Engine being used
+   * @param external Distinguishes between external and internal boostrap servers
    * @return StorageConnector.KafkaConnector Storage connector object.
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  public StorageConnector.KafkaConnector getKafkaConnector(EngineBase engineBase)
+  public StorageConnector.KafkaConnector getKafkaConnector(EngineBase engine, boolean external)
       throws FeatureStoreException, IOException {
-    StorageConnector.KafkaConnector kafkaConnector = storageConnectorApi.getKafkaStorageConnector(this);
-    kafkaConnector.sslTruststoreLocation = engineBase.addFile(kafkaConnector.sslTruststoreLocation);
-    kafkaConnector.sslKeystoreLocation = engineBase.addFile(kafkaConnector.sslKeystoreLocation);
+    StorageConnector.KafkaConnector kafkaConnector = storageConnectorApi.getKafkaStorageConnector(this, external);
+    kafkaConnector.sslTruststoreLocation = engine.addFile(kafkaConnector.sslTruststoreLocation);
+    kafkaConnector.sslKeystoreLocation = engine.addFile(kafkaConnector.sslKeystoreLocation);
     return kafkaConnector;
   }
 

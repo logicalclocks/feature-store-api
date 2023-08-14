@@ -33,7 +33,6 @@ public class KafkaApi {
   private static final String KAFKA_PATH = "/kafka";
   private static final String TOPIC_PATH = "/topics{/topicName}";
   private static final String SUBJECT_PATH = "/subjects{/subjectName}";
-  private static final String CLUSTERINFO_PATH = "/clusterinfo";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaApi.class);
 
@@ -74,18 +73,5 @@ public class KafkaApi {
     }
     LOGGER.info("Received partitions: " + partitionDetails);
     return partitionDetails;
-  }
-
-  public List<String> getBrokerEndpoints(FeatureStoreBase featureStoreBase) throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
-        + KAFKA_PATH + CLUSTERINFO_PATH;
-
-    String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStoreBase.getProjectId())
-        .expand();
-
-    LOGGER.info("Sending metadata request: " + uri);
-    return hopsworksClient.handleRequest(new HttpGet(uri), KafkaClusterInfo.class).getBrokers();
   }
 }

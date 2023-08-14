@@ -17,9 +17,7 @@
 
 package com.logicalclocks.hsfs.beam.engine;
 
-import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
 import com.logicalclocks.hsfs.engine.EngineBase;
 import org.apache.avro.Schema;
@@ -54,17 +52,6 @@ public class BeamEngine extends EngineBase {
       getKafkaConfig(streamFeatureGroup, writeOptions),
       streamFeatureGroup.getDeserializedAvroSchema(), deserializedEncodedSchema, complexFeatureSchemas,
       streamFeatureGroup.getPrimaryKeys());
-  }
-
-  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
-    StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector(this);
-    Map<String, String> config = storageConnector.kafkaOptions();
-
-    if (writeOptions != null) {
-      config.putAll(writeOptions);
-    }
-    return config;
   }
 
 }

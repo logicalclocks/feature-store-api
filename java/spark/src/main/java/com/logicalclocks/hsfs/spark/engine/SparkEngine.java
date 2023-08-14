@@ -1009,17 +1009,6 @@ public class SparkEngine extends EngineBase {
         + "/Resources/" + queryName + "-checkpoint";
   }
 
-  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
-    StorageConnector.KafkaConnector connector = featureGroup.getFeatureStore().getKafkaConnector(this);
-    Map<String, String> config = connector.sparkOptions();
-
-    if (writeOptions != null) {
-      config.putAll(writeOptions);
-    }
-    return config;
-  }
-
   public String checkpointDirPath(String queryName, String onlineTopicName) throws FeatureStoreException {
     if (Strings.isNullOrEmpty(queryName)) {
       queryName = "insert_stream_" + onlineTopicName;

@@ -33,7 +33,7 @@ public class StorageConnectorApi {
   private static final String CONNECTOR_TYPE_PATH =
       CONNECTOR_PATH + "{/connType}{/name}{?temporaryCredentials}";
   private static final String ONLINE_CONNECTOR_PATH = CONNECTOR_PATH + "/onlinefeaturestore";
-  private static final String KAFKA_CONNECTOR_PATH = CONNECTOR_PATH + "/kafka_connector";
+  private static final String KAFKA_CONNECTOR_PATH = CONNECTOR_PATH + "/kafka_connector{?external}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageConnectorApi.class);
 
@@ -76,7 +76,7 @@ public class StorageConnectorApi {
     return hopsworksClient.handleRequest(new HttpGet(uri), storageConnectorType);
   }
 
-  public StorageConnector.KafkaConnector getKafkaStorageConnector(FeatureStoreBase featureStoreBase)
+  public StorageConnector.KafkaConnector getKafkaStorageConnector(FeatureStoreBase featureStoreBase, boolean external)
           throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -86,6 +86,7 @@ public class StorageConnectorApi {
     String uri = UriTemplate.fromTemplate(pathTemplate)
             .set("projectId", featureStoreBase.getProjectId())
             .set("fsId", featureStoreBase.getId())
+            .set("external", external)
             .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
