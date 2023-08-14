@@ -77,6 +77,7 @@ from hsfs import feature, training_dataset_feature, client, util
 from hsfs.feature_group import ExternalFeatureGroup, SpineGroup
 from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.client import hopsworks
 from hsfs.core import (
     hudi_engine,
     transformation_function_engine,
@@ -1141,9 +1142,11 @@ class Engine:
     def _get_kafka_config(
         self, feature_store_id: int, write_options: dict = {}
     ) -> dict:
+        external = not isinstance(client.get_instance(), hopsworks.Client) or not write_options.get("internal_kafka", False)
+
         storage_connector = storage_connector_api.StorageConnectorApi(
             feature_store_id
-        ).get_kafka_connector()
+        ).get_kafka_connector(external)
 
         config = storage_connector.spark_options()
         config.update(write_options)

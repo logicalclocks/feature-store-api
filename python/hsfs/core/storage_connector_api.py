@@ -69,7 +69,7 @@ class StorageConnectorApi:
             _client._send_request("GET", path_params)
         )
 
-    def get_kafka_connector(self):
+    def get_kafka_connector(self, external: bool = False):
         _client = client.get_instance()
         path_params = [
             "project",
@@ -79,7 +79,8 @@ class StorageConnectorApi:
             "storageconnectors",
             "kafka_connector",
         ]
+        query_params = {"external": external}
 
         return storage_connector.StorageConnector.from_response_json(
-            _client._send_request("GET", path_params)
+            _client._send_request("GET", path_params, query_params=query_params)
         )

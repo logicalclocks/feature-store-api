@@ -63,7 +63,7 @@ from hsfs.core import (
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.client import exceptions
+from hsfs.client import exceptions, hopsworks
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
@@ -1073,9 +1073,11 @@ class Engine:
     def _get_kafka_config(
         self, feature_store_id: int, write_options: dict = {}
     ) -> dict:
+        external = not isinstance(client.get_instance(), hopsworks.Client) or not write_options.get("internal_kafka", False)
+
         storage_connector = storage_connector_api.StorageConnectorApi(
             feature_store_id
-        ).get_kafka_connector()
+        ).get_kafka_connector(external)
 
         config = storage_connector.confluent_options()
         config.update(write_options.get("kafka_producer_config", {}))
