@@ -21,13 +21,14 @@ import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
+import com.logicalclocks.hsfs.engine.EngineBase;
 import org.apache.avro.Schema;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BeamEngine {
+public class BeamEngine extends EngineBase {
   private static BeamEngine INSTANCE = null;
 
   public static synchronized BeamEngine getInstance() throws FeatureStoreException {
@@ -57,7 +58,7 @@ public class BeamEngine {
 
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector();
+    StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector(this);
     Map<String, String> config = storageConnector.kafkaOptions();
 
     if (writeOptions != null) {

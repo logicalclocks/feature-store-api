@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.constructor.QueryBase;
+import com.logicalclocks.hsfs.engine.EngineBase;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
@@ -204,8 +205,12 @@ public abstract class FeatureStoreBase<T2 extends QueryBase> {
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  public StorageConnector.KafkaConnector getKafkaConnector() throws FeatureStoreException, IOException {
-    return storageConnectorApi.getKafkaStorageConnector(this);
+  public StorageConnector.KafkaConnector getKafkaConnector(EngineBase engineBase)
+      throws FeatureStoreException, IOException {
+    StorageConnector.KafkaConnector kafkaConnector = storageConnectorApi.getKafkaStorageConnector(this);
+    kafkaConnector.sslTruststoreLocation = engineBase.addFile(kafkaConnector.sslTruststoreLocation);
+    kafkaConnector.sslKeystoreLocation = engineBase.addFile(kafkaConnector.sslKeystoreLocation);
+    return kafkaConnector;
   }
 
   public abstract Object getBigqueryConnector(String name) throws FeatureStoreException, IOException;

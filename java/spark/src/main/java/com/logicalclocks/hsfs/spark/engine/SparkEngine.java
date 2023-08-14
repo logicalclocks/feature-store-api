@@ -23,6 +23,7 @@ import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.logicalclocks.hsfs.engine.EngineBase;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.DataFormat;
@@ -36,7 +37,6 @@ import com.logicalclocks.hsfs.constructor.FeatureGroupAlias;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
-import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
@@ -114,7 +114,7 @@ import static org.apache.spark.sql.functions.from_json;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.struct;
 
-public class SparkEngine {
+public class SparkEngine extends EngineBase {
 
   private final StorageConnectorUtils storageConnectorUtils = new StorageConnectorUtils();
 
@@ -137,7 +137,6 @@ public class SparkEngine {
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
   private HudiEngine hudiEngine = new HudiEngine();
-  private KafkaApi kafkaApi = new KafkaApi();
 
   private SparkEngine() {
     sparkSession = SparkSession.builder()
@@ -1012,9 +1011,7 @@ public class SparkEngine {
 
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    StorageConnector.KafkaConnector connector = featureGroup.getFeatureStore().getKafkaConnector();
-    connector.setSslTruststoreLocation(SparkEngine.getInstance().addFile(connector.getSslTruststoreLocation()));
-    connector.setSslKeystoreLocation(SparkEngine.getInstance().addFile(connector.getSslKeystoreLocation()));
+    StorageConnector.KafkaConnector connector = featureGroup.getFeatureStore().getKafkaConnector(this);
     Map<String, String> config = connector.sparkOptions();
 
     if (writeOptions != null) {

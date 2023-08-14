@@ -20,9 +20,7 @@ package com.logicalclocks.hsfs.flink.engine;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
-import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
-import com.logicalclocks.hsfs.metadata.KafkaApi;
+import com.logicalclocks.hsfs.engine.EngineBase;
 import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
 
 import lombok.Getter;
@@ -46,7 +44,7 @@ import java.util.Properties;
 
 import static org.apache.flink.configuration.ConfigOptions.key;
 
-public class FlinkEngine {
+public class FlinkEngine extends EngineBase {
   private static FlinkEngine INSTANCE = null;
 
   public static synchronized FlinkEngine getInstance() throws FeatureStoreException {
@@ -58,9 +56,6 @@ public class FlinkEngine {
 
   @Getter
   private StreamExecutionEnvironment streamExecutionEnvironment;
-
-  private final KafkaApi kafkaApi = new KafkaApi();
-  private final HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
   private final Configuration flinkConfig = GlobalConfiguration.loadConfiguration();
   private final ConfigOption<String> keyStorePath =
@@ -121,7 +116,7 @@ public class FlinkEngine {
 
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
           throws FeatureStoreException, IOException {
-    StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector();
+    StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector(this);
     Map<String, String> config = storageConnector.kafkaOptions();
 
     if (writeOptions != null) {
