@@ -995,6 +995,14 @@ class KafkaConnector(StorageConnector):
                     "ssl.truststore.password": self._ssl_truststore_password,
                 }
             )
+        elif self.security_protocol == "SSL":
+            config.update(
+                {
+                    "ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),
+                    "ssl.truststore.password": client.get_instance()._cert_key,
+                }
+            )
+
         if self.ssl_keystore_location:
             config.update(
                 {
@@ -1002,10 +1010,24 @@ class KafkaConnector(StorageConnector):
                     "ssl.keystore.password": self._ssl_keystore_password,
                 }
             )
+        elif self.security_protocol == "SSL":
+            config.update(
+                {
+                    "ssl.keystore.location": client.get_instance()._get_jks_key_store_path(),
+                    "ssl.keystore.password": client.get_instance()._cert_key,
+                }
+            )
+
         if self._ssl_key_password:
             config.update(
                 {
                     "ssl.key.password": self._ssl_key_password,
+                }
+            )
+        elif self.security_protocol == "SSL":
+            config.update(
+                {
+                    "ssl.key.password": client.get_instance()._cert_key,
                 }
             )
 
