@@ -911,7 +911,6 @@ class KafkaConnector(StorageConnector):
         ssl_key_password=None,
         ssl_endpoint_identification_algorithm=None,
         options=None,
-        hopsworks_managed=None,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -935,7 +934,6 @@ class KafkaConnector(StorageConnector):
             if options is not None
             else {}
         )
-        self._hopsworks_managed = hopsworks_managed
 
     @property
     def bootstrap_servers(self):
@@ -989,7 +987,7 @@ class KafkaConnector(StorageConnector):
             "ssl.endpoint.identification.algorithm"
         ] = self._ssl_endpoint_identification_algorithm
 
-        if self._hopsworks_managed:
+        if self.id == -1:
             self._ssl_truststore_location = (
                 client.get_instance()._get_jks_trust_store_path()
             )

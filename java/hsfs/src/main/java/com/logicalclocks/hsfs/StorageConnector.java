@@ -405,9 +405,6 @@ public abstract class StorageConnector {
     @Getter @Setter
     protected List<Option> options;
 
-    @Getter @Setter
-    protected Boolean hopsworksManaged;
-
     public Map<String, String> kafkaOptions() throws FeatureStoreException {
       HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
       Map<String, String> config = new HashMap<>();
@@ -426,7 +423,7 @@ public abstract class StorageConnector {
       // set ssl
       config.put(Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm.getValue());
 
-      if (Boolean.TRUE.equals(hopsworksManaged)) {
+      if (id == -1) {
         sslTruststoreLocation = client.getTrustStorePath();
         sslTruststorePassword = client.getCertKey();
         sslKeystoreLocation = client.getKeyStorePath();
