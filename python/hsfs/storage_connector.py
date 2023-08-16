@@ -985,12 +985,18 @@ class KafkaConnector(StorageConnector):
         )
 
         # set ssl
-        config["ssl.endpoint.identification.algorithm"] = self._ssl_endpoint_identification_algorithm
+        config[
+            "ssl.endpoint.identification.algorithm"
+        ] = self._ssl_endpoint_identification_algorithm
 
         if self._hopsworks_managed:
-            self._ssl_truststore_location = client.get_instance()._get_jks_trust_store_path()
+            self._ssl_truststore_location = (
+                client.get_instance()._get_jks_trust_store_path()
+            )
             self._ssl_truststore_password = client.get_instance()._cert_key
-            self._ssl_keystore_location = client.get_instance()._get_jks_key_store_path()
+            self._ssl_keystore_location = (
+                client.get_instance()._get_jks_key_store_path()
+            )
             self._ssl_keystore_password = client.get_instance()._cert_key
             self._ssl_key_password = client.get_instance()._cert_key
 
