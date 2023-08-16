@@ -39,6 +39,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -404,6 +405,9 @@ public abstract class StorageConnector {
     @Getter @Setter
     protected List<Option> options;
 
+    @Getter @Setter
+    protected Boolean hopsworksManaged;
+
     public Map<String, String> kafkaOptions() throws FeatureStoreException {
       HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
       Map<String, String> config = new HashMap<>();
@@ -421,25 +425,21 @@ public abstract class StorageConnector {
 
       // set ssl
       config.put(Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm.getValue());
-      if (!Strings.isNullOrEmpty(sslTruststoreLocation)) {
-        config.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
-        config.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
-      } else if (securityProtocol.equals(SecurityProtocol.SSL)) {
-        config.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, client.getTrustStorePath());
-        config.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, client.getCertKey());
+
+      if (Boolean.TRUE.equals(hopsworksManaged)) {
+        sslTruststoreLocation = client.getTrustStorePath();
+        sslTruststorePassword = client.getCertKey();
+        sslKeystoreLocation = client.getKeyStorePath();
+        sslKeystorePassword = client.getCertKey();
+        sslKeyPassword = client.getCertKey();
       }
-      if (!Strings.isNullOrEmpty(sslKeystoreLocation)) {
-        config.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
-        config.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
-      } else if (securityProtocol.equals(SecurityProtocol.SSL)) {
-        config.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, client.getKeyStorePath());
-        config.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, client.getCertKey());
-      }
-      if (!Strings.isNullOrEmpty(sslKeyPassword)) {
-        config.put(Constants.KAFKA_SSL_KEY_PASSWORD, sslKeyPassword);
-      } else if (securityProtocol.equals(SecurityProtocol.SSL)) {
-        config.put(Constants.KAFKA_SSL_KEY_PASSWORD, client.getCertKey());
-      }
+
+      Optional.ofNullable(sslTruststoreLocation).ifPresent(v -> config.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, v));
+      Optional.ofNullable(sslTruststorePassword).ifPresent(v -> config.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, v));
+      Optional.ofNullable(sslKeystoreLocation).ifPresent(v -> config.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, v));
+      Optional.ofNullable(sslKeystorePassword).ifPresent(v -> config.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, v));
+      Optional.ofNullable(sslKeyPassword).ifPresent(v -> config.put(Constants.KAFKA_SSL_KEY_PASSWORD, v));
+
       return config;
     }
 

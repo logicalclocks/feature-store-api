@@ -911,6 +911,7 @@ class KafkaConnector(StorageConnector):
         ssl_key_password=None,
         ssl_endpoint_identification_algorithm=None,
         options=None,
+        hopsworks_managed=None,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -934,6 +935,7 @@ class KafkaConnector(StorageConnector):
             if options is not None
             else {}
         )
+        self._hopsworks_managed = hopsworks_managed
 
     @property
     def bootstrap_servers(self):
@@ -983,53 +985,25 @@ class KafkaConnector(StorageConnector):
         )
 
         # set ssl
-        config.update(
-            {
-                "ssl.endpoint.identification.algorithm": self._ssl_endpoint_identification_algorithm,
-            }
-        )
-        if self.ssl_truststore_location:
-            config.update(
-                {
-                    "ssl.truststore.location": self.ssl_truststore_location,
-                    "ssl.truststore.password": self._ssl_truststore_password,
-                }
-            )
-        elif self.security_protocol == "SSL":
-            config.update(
-                {
-                    "ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),
-                    "ssl.truststore.password": client.get_instance()._cert_key,
-                }
-            )
+        config["ssl.endpoint.identification.algorithm"] = self._ssl_endpoint_identification_algorithm
 
-        if self.ssl_keystore_location:
-            config.update(
-                {
-                    "ssl.keystore.location": self.ssl_keystore_location,
-                    "ssl.keystore.password": self._ssl_keystore_password,
-                }
-            )
-        elif self.security_protocol == "SSL":
-            config.update(
-                {
-                    "ssl.keystore.location": client.get_instance()._get_jks_key_store_path(),
-                    "ssl.keystore.password": client.get_instance()._cert_key,
-                }
-            )
+        if self._hopsworks_managed:
+            self._ssl_truststore_location = client.get_instance()._get_jks_trust_store_path()
+            self._ssl_truststore_password = client.get_instance()._cert_key
+            self._ssl_keystore_location = client.get_instance()._get_jks_key_store_path()
+            self._ssl_keystore_password = client.get_instance()._cert_key
+            self._ssl_key_password = client.get_instance()._cert_key
 
-        if self._ssl_key_password:
-            config.update(
-                {
-                    "ssl.key.password": self._ssl_key_password,
-                }
-            )
-        elif self.security_protocol == "SSL":
-            config.update(
-                {
-                    "ssl.key.password": client.get_instance()._cert_key,
-                }
-            )
+        if self.ssl_truststore_location is not None:
+            config["ssl.truststore.location"] = self._ssl_truststore_location
+        if self._ssl_truststore_password is not None:
+            config["ssl.truststore.password"] = self._ssl_truststore_password
+        if self.ssl_keystore_location is not None:
+            config["ssl.keystore.location"] = self._ssl_keystore_location
+        if self._ssl_keystore_password is not None:
+            config["ssl.keystore.password"] = self._ssl_keystore_password
+        if self._ssl_key_password is not None:
+            config["ssl.key.password"] = self._ssl_key_password
 
         return config
 
