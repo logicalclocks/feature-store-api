@@ -4486,7 +4486,7 @@ class TestSpark:
     def test_get_kafka_config(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.engine.get_type")
-
+        mocker.patch("hsfs.client.get_instance")
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
         mock_engine_get_instance.return_value.add_file.return_value = (
             "result_from_add_file"
