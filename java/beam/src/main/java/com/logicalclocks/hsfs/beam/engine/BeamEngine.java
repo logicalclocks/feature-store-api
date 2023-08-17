@@ -21,6 +21,7 @@ import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
 import com.logicalclocks.hsfs.engine.EngineBase;
 import org.apache.avro.Schema;
+import org.apache.beam.repackaged.core.org.apache.commons.lang3.NotImplementedException;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -54,4 +55,8 @@ public class BeamEngine extends EngineBase {
       streamFeatureGroup.getPrimaryKeys());
   }
 
+  @Override
+  public String addFile(String filePath) {
+    throw new NotImplementedException("addFile not implemented");
+  }
 }

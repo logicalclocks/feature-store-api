@@ -17,6 +17,7 @@
 
 package com.logicalclocks.hsfs.flink.engine;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.engine.EngineBase;
 import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
@@ -110,6 +111,20 @@ public class FlinkEngine extends EngineBase {
           );
 
     return avroRecordDataStream.sinkTo(sink);
+  }
+
+  @Override
+  public String addFile(String filePath) {
+    if (Strings.isNullOrEmpty(filePath)) {
+      return filePath;
+    }
+    // this is used for unit testing
+    if (!filePath.startsWith("file://")) {
+      filePath = "hdfs://" + filePath;
+    }
+    String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
+    streamExecutionEnvironment.registerCachedFile(filePath, fileName);
+    return fileName;
   }
 
   public String getTrustStorePath() {

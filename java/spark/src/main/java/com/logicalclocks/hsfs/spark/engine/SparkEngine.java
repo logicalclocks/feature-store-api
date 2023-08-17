@@ -879,6 +879,7 @@ public class SparkEngine extends EngineBase {
     }
   }
 
+  @Override
   public String addFile(String filePath) {
     if (Strings.isNullOrEmpty(filePath)) {
       return filePath;
