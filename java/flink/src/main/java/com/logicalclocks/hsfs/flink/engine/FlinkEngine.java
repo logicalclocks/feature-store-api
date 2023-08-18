@@ -31,10 +31,12 @@ import org.apache.flink.configuration.GlobalConfiguration;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
+import org.apache.flink.core.fs.Path;
 import org.apache.flink.formats.avro.typeutils.GenericRecordAvroTypeInfo;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.util.FileUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -114,7 +116,7 @@ public class FlinkEngine extends EngineBase {
   }
 
   @Override
-  public String addFile(String filePath) {
+  public String addFile(String filePath) throws IOException {
     if (Strings.isNullOrEmpty(filePath)) {
       return filePath;
     }
@@ -122,9 +124,10 @@ public class FlinkEngine extends EngineBase {
     if (!filePath.startsWith("file://")) {
       filePath = "hdfs://" + filePath;
     }
-    String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
-    streamExecutionEnvironment.registerCachedFile(filePath, fileName);
-    return fileName;
+    String targetPath = FileUtils.getCurrentWorkingDirectory().toString()
+        + filePath.substring(filePath.lastIndexOf("/"));
+    FileUtils.copy(new Path(filePath), new Path(targetPath), false);
+    return targetPath;
   }
 
   public String getTrustStorePath() {

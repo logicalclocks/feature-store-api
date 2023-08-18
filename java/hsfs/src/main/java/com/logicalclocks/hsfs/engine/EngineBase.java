@@ -31,7 +31,7 @@ public abstract class EngineBase {
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(EngineBase.class);
 
-  public abstract String addFile(String filePath);
+  public abstract String addFile(String filePath) throws IOException;
 
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
