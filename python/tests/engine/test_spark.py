@@ -2758,36 +2758,41 @@ class TestSpark:
         assert mock_spark_engine_apply_transformation_function.call_count == 1
         assert mock_spark_engine_setup_storage_connector.call_count == 0
 
-    def test_read(self, mocker):
+    def test_read_none_data_format(self, mocker):
         # Arrange
-        mock_pyspark_getOrCreate = mocker.patch(
-            "pyspark.sql.session.SparkSession.builder.getOrCreate"
-        )
-        mock_spark_engine_setup_storage_connector = mocker.patch(
-            "hsfs.engine.spark.Engine.setup_storage_connector"
-        )
+        mocker.patch("pyspark.sql.session.SparkSession.builder.getOrCreate")
 
         spark_engine = spark.Engine()
 
         # Act
-        result = spark_engine.read(
-            storage_connector=None,
-            data_format="",
-            read_options=None,
-            location=None,
-        )
+        with pytest.raises(exceptions.FeatureStoreException) as e_info:
+            spark_engine.read(
+                storage_connector=None,
+                data_format=None,
+                read_options=None,
+                location=None,
+            )
 
         # Assert
-        assert result is not None
-        assert mock_spark_engine_setup_storage_connector.call_count == 1
-        assert mock_spark_engine_setup_storage_connector.call_args[0][1] is None
-        assert mock_pyspark_getOrCreate.return_value.read.format.call_args[0][0] == ""
-        assert (
-            mock_pyspark_getOrCreate.return_value.read.format.return_value.options.call_args[
-                1
-            ]
-            == {}
-        )
+        assert str(e_info.value) == "data_format is not specified"
+
+    def test_read_empty_data_format(self, mocker):
+        # Arrange
+        mocker.patch("pyspark.sql.session.SparkSession.builder.getOrCreate")
+
+        spark_engine = spark.Engine()
+
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as e_info:
+            spark_engine.read(
+                storage_connector=None,
+                data_format="",
+                read_options=None,
+                location=None,
+            )
+
+        # Assert
+        assert str(e_info.value) == "data_format is not specified"
 
     def test_read_read_options(self, mocker):
         # Arrange
@@ -2803,7 +2808,7 @@ class TestSpark:
         # Act
         result = spark_engine.read(
             storage_connector=None,
-            data_format="",
+            data_format="csv",
             read_options={"name": "value"},
             location=None,
         )
@@ -2812,40 +2817,14 @@ class TestSpark:
         assert result is not None
         assert mock_spark_engine_setup_storage_connector.call_count == 1
         assert mock_spark_engine_setup_storage_connector.call_args[0][1] is None
-        assert mock_pyspark_getOrCreate.return_value.read.format.call_args[0][0] == ""
+        assert (
+            mock_pyspark_getOrCreate.return_value.read.format.call_args[0][0] == "csv"
+        )
         assert mock_pyspark_getOrCreate.return_value.read.format.return_value.options.call_args[
             1
         ] == {
             "name": "value"
         }
-
-    def test_read_location(self, mocker):
-        # Arrange
-        mock_pyspark_getOrCreate = mocker.patch(
-            "pyspark.sql.session.SparkSession.builder.getOrCreate"
-        )
-        mock_spark_engine_setup_storage_connector = mocker.patch(
-            "hsfs.engine.spark.Engine.setup_storage_connector"
-        )
-
-        spark_engine = spark.Engine()
-
-        # Act
-        result = spark_engine.read(
-            storage_connector=None,
-            data_format="",
-            read_options=None,
-            location="test_location",
-        )
-
-        # Assert
-        assert result is not None
-        assert mock_spark_engine_setup_storage_connector.call_count == 1
-        assert (
-            mock_spark_engine_setup_storage_connector.call_args[0][1]
-            == "test_location/**"
-        )
-        assert mock_pyspark_getOrCreate.return_value.read.format.call_args[0][0] == ""
 
     def test_read_location_format_delta(self, mocker):
         # Arrange

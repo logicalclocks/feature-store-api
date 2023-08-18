@@ -122,7 +122,6 @@ public class FlinkEngine {
       internalKafka = Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"));
       properties.putAll(writeOptions);
     }
-
     if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) || internalKafka) {
       properties.put("bootstrap.servers",
           kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(

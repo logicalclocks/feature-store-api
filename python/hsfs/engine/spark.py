@@ -640,6 +640,9 @@ class Engine:
         feature_dataframe.unpersist()
 
     def read(self, storage_connector, data_format, read_options, location):
+        if not data_format:
+            raise FeatureStoreException("data_format is not specified")
+
         if isinstance(location, str):
             if data_format.lower() in ["delta", "parquet", "hudi", "orc", "bigquery"]:
                 # All the above data format readers can handle partitioning
