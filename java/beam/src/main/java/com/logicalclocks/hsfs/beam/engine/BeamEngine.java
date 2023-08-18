@@ -66,7 +66,7 @@ public class BeamEngine extends EngineBase {
     if (!filePath.startsWith("file://")) {
       filePath = "hdfs://" + filePath;
     }
-    String targetPath = filePath.substring(filePath.lastIndexOf("/") + 1);
+    String targetPath = System.getProperty("java.io.tmpdir") + filePath.substring(filePath.lastIndexOf("/"));
     FileUtils.copyFile(new File(filePath), new File(targetPath));
     return targetPath;
   }
