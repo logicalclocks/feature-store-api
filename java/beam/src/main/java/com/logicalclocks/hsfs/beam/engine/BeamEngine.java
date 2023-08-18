@@ -17,12 +17,14 @@
 
 package com.logicalclocks.hsfs.beam.engine;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
 import com.logicalclocks.hsfs.engine.EngineBase;
 import org.apache.avro.Schema;
-import org.apache.beam.repackaged.core.org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.io.FileUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,7 +58,16 @@ public class BeamEngine extends EngineBase {
   }
 
   @Override
-  public String addFile(String filePath) {
-    throw new NotImplementedException("addFile not implemented");
+  public String addFile(String filePath) throws IOException {
+    if (Strings.isNullOrEmpty(filePath)) {
+      return filePath;
+    }
+    // this is used for unit testing
+    if (!filePath.startsWith("file://")) {
+      filePath = "hdfs://" + filePath;
+    }
+    String targetPath = filePath.substring(filePath.lastIndexOf("/") + 1);
+    FileUtils.copyFile(new File(filePath), new File(targetPath));
+    return targetPath;
   }
 }
