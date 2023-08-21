@@ -3081,7 +3081,6 @@ class TestPython:
         # Assert
         assert result == ""
 
-
     def test_test(self, mocker):
         fg = feature_group.FeatureGroup(
             name="test",
