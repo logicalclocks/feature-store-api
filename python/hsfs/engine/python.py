@@ -907,7 +907,7 @@ class Engine:
         dataframe: pd.DataFrame,
         offline_write_options: dict,
     ):
-        initial_check_point = None
+        initial_check_point = ""
         if feature_group._multi_part_insert:
             if feature_group._kafka_producer is None:
                 producer, feature_writers, writer = self._init_kafka_resources(
@@ -998,6 +998,7 @@ class Engine:
         # if topic didn't exist, always run the materialization job to reset the offsets except if it's a multi insert
         if (
             not isinstance(feature_group, ExternalFeatureGroup)
+            and not initial_check_point
             and not feature_group._multi_part_insert
         ):
             if self._start_offline_materialization(offline_write_options):
@@ -1005,20 +1006,20 @@ class Engine:
                     "This is the first ingestion after an upgrade or backup/restore, running materialization job even though `start_offline_materialization` was set to `False`.",
                     util.FeatureGroupWarning,
                 )
-            if not initial_check_point:
-                # set the initial_check_point to the lowest offset (it was not set due to topic not existing)
-                initial_check_point = self._kafka_get_offsets(
-                    feature_group, offline_write_options, producer, False
-                )
+            # set the initial_check_point to the lowest offset (it was not set previously due to topic not existing)
+            initial_check_point = self._kafka_get_offsets(
+                feature_group, offline_write_options, producer, False
+            )
             feature_group.materialization_job.run(
-                args=feature_group.materialization_job.config.get("defaultArgs", "")
-                + f" -initialCheckPointString {initial_check_point}",
+                args=feature_group.materialization_job.config.get("defaultArgs", "") + initial_check_point,
                 await_termination=offline_write_options.get("wait_for_job", False),
             )
         elif not isinstance(
             feature_group, ExternalFeatureGroup
         ) and self._start_offline_materialization(offline_write_options):
+            # provide the initial_check_point as it will reduce the read amplification of materialization job
             feature_group.materialization_job.run(
+                args=initial_check_point,
                 await_termination=offline_write_options.get("wait_for_job", False)
             )
         if isinstance(feature_group, ExternalFeatureGroup):
@@ -1048,8 +1049,8 @@ class Engine:
                 offsets += f",{partition_metadata.id}:{consumer.get_watermark_offsets(partition)[tuple_value]}"
             consumer.close()
 
-            return topic_name + offsets
-        return None
+            return f" -initialCheckPointString {topic_name + offsets}"
+        return ""
 
     def _kafka_produce(
         self, producer, feature_group, key, encoded_row, acked, offline_write_options
