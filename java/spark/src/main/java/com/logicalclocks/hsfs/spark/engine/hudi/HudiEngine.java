@@ -389,7 +389,7 @@ public class HudiEngine {
       hudiWriteOpts.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
     }
 
-    // it is possible that table was generated from empty topic, thus we need to generate InitialCheckPointStr
+    // it is possible that table was generated from empty topic
     if (getLastCommitMetadata(sparkSession, streamFeatureGroup.getLocation()) == null) {
       // set "kafka.auto.offset.reset": "earliest"
       hudiWriteOpts.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
