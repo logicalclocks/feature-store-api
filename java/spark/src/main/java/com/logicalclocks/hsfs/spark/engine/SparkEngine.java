@@ -909,7 +909,7 @@ public class SparkEngine {
         e.printStackTrace();
         throw new FeatureStoreException("Error while reading key file from project path.");
       }
-  }
+    }
 
     return SparkFiles.get((new Path(filePath)).getName());
   }
