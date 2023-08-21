@@ -893,9 +893,9 @@ public class SparkEngine {
     }
     // for hopsworks internal client
     if (!HopsworksClient.getInstance().getHopsworksHttpClient()
-      .getClass().isAssignableFrom(HopsworksExternalClient.class)) {
-        sparkSession.sparkContext().addFile(filePath);
-      } else {
+        .getClass().isAssignableFrom(HopsworksExternalClient.class)) {
+      sparkSession.sparkContext().addFile(filePath);
+    } else {
       // for external client then read the file from hive path
       java.nio.file.Path keyFileLocalPath = Paths.get(
           SparkFiles.getRootDirectory(), Paths.get(filePath).getFileName().toString());
