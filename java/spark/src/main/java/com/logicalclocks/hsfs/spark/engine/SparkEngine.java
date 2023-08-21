@@ -23,6 +23,8 @@ import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.logicalclocks.hsfs.metadata.DatasetApi;
+import com.logicalclocks.hsfs.metadata.HopsworksExternalClient;
 import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
@@ -90,6 +92,8 @@ import org.apache.spark.sql.types.TimestampType;
 import org.json.JSONObject;
 import scala.collection.JavaConverters;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -698,7 +702,7 @@ public class SparkEngine {
   }
 
   public void setupConnectorHadoopConf(StorageConnector storageConnector)
-          throws IOException {
+      throws IOException, FeatureStoreException {
     if (storageConnector == null) {
       return;
     }
@@ -882,12 +886,31 @@ public class SparkEngine {
     }
   }
 
-  public String addFile(String filePath) {
+  public String addFile(String filePath) throws FeatureStoreException  {
     // this is used for unit testing
     if (!filePath.startsWith("file://")) {
       filePath = "hdfs://" + filePath;
     }
-    sparkSession.sparkContext().addFile(filePath);
+    // for hopsworks internal client
+    if (!HopsworksClient.getInstance().getHopsworksHttpClient()
+      .getClass().isAssignableFrom(HopsworksExternalClient.class)) {
+        sparkSession.sparkContext().addFile(filePath);
+      } else {
+      // for external client then read the file from hive path
+      java.nio.file.Path keyFileLocalPath = Paths.get(
+          SparkFiles.getRootDirectory(), Paths.get(filePath).getFileName().toString());
+      try {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(keyFileLocalPath.toString()));
+        // read key file from project and write to local
+        writer.write(DatasetApi.downloadHdfsPath(HopsworksClient.getInstance().getProject().getProjectId(), filePath,
+            "HIVEDB"));
+        writer.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+        throw new FeatureStoreException("Error while reading key file from project path.");
+      }
+  }
+
     return SparkFiles.get((new Path(filePath)).getName());
   }
 
@@ -949,7 +972,8 @@ public class SparkEngine {
     return (Dataset<Row>) obj;
   }
 
-  private void setupGcsConnectorHadoopConf(StorageConnector.GcsConnector storageConnector) throws IOException {
+  private void setupGcsConnectorHadoopConf(StorageConnector.GcsConnector storageConnector)
+      throws IOException, FeatureStoreException {
     // The AbstractFileSystem for 'gs:' URIs
     sparkSession.sparkContext().hadoopConfiguration().set(
         Constants.PROPERTY_GCS_FS_KEY, Constants.PROPERTY_GCS_FS_VALUE

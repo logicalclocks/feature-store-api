@@ -51,7 +51,7 @@ import java.util.Map;
 public class TestStorageConnector {
 
   @Test
-  public void testBigQueryCredentialsBase64Encoded(@TempDir Path tempDir) throws IOException {
+  public void testBigQueryCredentialsBase64Encoded(@TempDir Path tempDir) throws IOException, FeatureStoreException {
     // Arrange
     String credentials = "{\"type\": \"service_account\", \"project_id\": \"test\"}";
     Path credentialsFile = tempDir.resolve("bigquery.json");
@@ -122,7 +122,7 @@ public class TestStorageConnector {
     }
 
     @Test
-    public void testGcsConnectorCredentials() throws IOException {
+    public void testGcsConnectorCredentials() throws IOException, FeatureStoreException {
       // Act
       SparkEngine.getInstance().setupConnectorHadoopConf(gcsConnector);
       SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
@@ -143,7 +143,7 @@ public class TestStorageConnector {
     }
 
     @Test
-    public void testGcsConnectorCredentials_encrypted() throws IOException {
+    public void testGcsConnectorCredentials_encrypted() throws IOException, FeatureStoreException {
       // Arrange
       gcsConnector.setAlgorithm("AES256");
       gcsConnector.setEncryptionKey("encryptionkey");
@@ -199,7 +199,7 @@ public class TestStorageConnector {
     }
 
     @Test
-    void testS3HadoopConf() throws IOException {
+    void testS3HadoopConf() throws IOException, FeatureStoreException {
       // Act
       SparkEngine.getInstance().setupConnectorHadoopConf(s3Connector);
       SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
