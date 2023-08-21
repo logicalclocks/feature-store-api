@@ -2993,7 +2993,7 @@ class TestPython:
             await_termination=False,
         )
 
-    def test_kafka_get_offsets(self, mocker):
+    def test_kafka_get_offsets_high(self, mocker):
         # Arrange
         producer = mocker.MagicMock()
         topic_name = "test_topic"
@@ -3038,6 +3038,52 @@ class TestPython:
 
         # Assert
         assert result == f" -initialCheckPointString {topic_name},0:11"
+
+    def test_kafka_get_offsets_low(self, mocker):
+        # Arrange
+        producer = mocker.MagicMock()
+        topic_name = "test_topic"
+        partition_metadata = PartitionMetadata()
+        partition_metadata.id = 0
+        topic_metadata = TopicMetadata()
+        topic_metadata.partitions = {partition_metadata.id: partition_metadata}
+        topic_mock = mocker.MagicMock()
+
+        # return no topics and one commit, so it should start the job with the extra arg
+        topic_mock.topics = {topic_name: topic_metadata}
+        producer.list_topics = mocker.MagicMock(return_value=topic_mock)
+
+        consumer = mocker.MagicMock()
+        consumer.get_watermark_offsets = mocker.MagicMock(return_value=(0, 11))
+        mocker.patch(
+            "hsfs.engine.python.Engine._init_kafka_consumer",
+            return_value=consumer,
+        )
+
+        python_engine = python.Engine()
+
+        fg = feature_group.FeatureGroup(
+            name="test",
+            version=1,
+            featurestore_id=99,
+            primary_key=[],
+            partition_key=[],
+            id=10,
+            stream=False,
+            time_travel_format="HUDI",
+        )
+        fg._online_topic_name = topic_name
+
+        # Act
+        result = python_engine._kafka_get_offsets(
+            feature_group=fg,
+            offline_write_options={},
+            producer=producer,
+            high=False,
+        )
+
+        # Assert
+        assert result == f" -initialCheckPointString {topic_name},0:0"
 
     def test_kafka_get_offsets_no_topic(self, mocker):
         # Arrange
