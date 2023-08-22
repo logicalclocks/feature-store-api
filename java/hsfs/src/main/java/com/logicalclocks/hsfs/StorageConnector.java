@@ -423,7 +423,7 @@ public abstract class StorageConnector {
       // set ssl
       config.put(Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm.getValue());
 
-      if (id == -1) {
+      if (id < 0) {
         sslTruststoreLocation = client.getTrustStorePath();
         sslTruststorePassword = client.getCertKey();
         sslKeystoreLocation = client.getKeyStorePath();
