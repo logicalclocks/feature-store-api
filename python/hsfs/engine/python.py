@@ -1066,8 +1066,7 @@ class Engine:
                     value=encoded_row,
                     callback=acked,
                     headers={
-                        "featureGroupId": str(feature_group.id).encode("utf8"),
-                        "schemaVersion": str(feature_group.subject["version"]).encode(
+                        "subjectId": str(feature_group.subject["id"]).encode(
                             "utf8"
                         ),
                     },

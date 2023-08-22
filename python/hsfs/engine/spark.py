@@ -333,12 +333,12 @@ class Engine:
         if query_name is None:
             query_name = "insert_stream_" + feature_group._online_topic_name
 
-        version = str(feature_group.subject["version"]).encode("utf8")
+        subject_id = str(feature_group.subject["id"]).encode("utf8")
 
         query = (
             serialized_df.withColumn(
                 "headers",
-                array(struct(lit("version").alias("key"), lit(version).alias("value"))),
+                array(struct(lit("subjectId").alias("key"), lit(subject_id).alias("value"))),
             )
             .writeStream.outputMode(output_mode)
             .format(self.KAFKA_FORMAT)
@@ -399,19 +399,14 @@ class Engine:
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
 
-        feature_group_id = str(feature_group.id).encode("utf8")
-        schema_version = str(feature_group.subject["version"]).encode("utf8")
+        subject_id = str(feature_group.subject["id"]).encode("utf8")
 
         serialized_df.withColumn(
             "headers",
             array(
                 struct(
-                    lit("featureGroupId").alias("key"),
-                    lit(feature_group_id).alias("value"),
-                ),
-                struct(
-                    lit("schemaVersion").alias("key"),
-                    lit(schema_version).alias("value"),
+                    lit("subjectId").alias("key"),
+                    lit(subject_id).alias("value"),
                 ),
             ),
         ).write.format(self.KAFKA_FORMAT).options(**write_options).option(

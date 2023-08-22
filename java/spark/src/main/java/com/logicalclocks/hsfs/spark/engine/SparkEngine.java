@@ -537,18 +537,13 @@ public class SparkEngine {
   public void writeOnlineDataframe(FeatureGroupBase featureGroupBase, Dataset<Row> dataset, String onlineTopicName,
                                    Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    byte[] featureGroupId = String.valueOf(featureGroupBase.getId()).getBytes(StandardCharsets.UTF_8);
-    byte[] schemaVersion = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
+    byte[] subjectId = String.valueOf(featureGroupBase.getSubject().getId()).getBytes(StandardCharsets.UTF_8);
 
     onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
         .withColumn("headers", array(
             struct(
-                lit("featureGroupId").as("key"),
-                lit(featureGroupId).as("value")
-            ),
-            struct(
-                lit("schemaVersion").as("key"),
-                lit(schemaVersion).as("value")
+                lit("subjectId").as("key"),
+                lit(subjectId).as("value")
             )
         ))
         .write()
@@ -563,19 +558,14 @@ public class SparkEngine {
                                                  Long timeout, String checkpointLocation,
                                                  Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
-    byte[] featureGroupId = String.valueOf(featureGroupBase.getId()).getBytes(StandardCharsets.UTF_8);
-    byte[] schemaVersion = String.valueOf(featureGroupBase.getSubject().getVersion()).getBytes(StandardCharsets.UTF_8);
+    byte[] subjectId = String.valueOf(featureGroupBase.getSubject().getId()).getBytes(StandardCharsets.UTF_8);
 
     DataStreamWriter<Row> writer =
         onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
             .withColumn("headers", array(
                 struct(
-                    lit("featureGroupId").as("key"),
-                    lit(featureGroupId).as("value")
-                ),
-                struct(
-                    lit("schemaVersion").as("key"),
-                    lit(schemaVersion).as("value")
+                    lit("subjectId").as("key"),
+                    lit(subjectId).as("value")
                 )
             ))
             .writeStream()
