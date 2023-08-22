@@ -20,11 +20,13 @@ package com.logicalclocks.hsfs.beam.engine;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
+import com.logicalclocks.hsfs.metadata.DatasetApi;
 import com.logicalclocks.hsfs.engine.EngineBase;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import org.apache.avro.Schema;
-import org.apache.commons.io.FileUtils;
 
-import java.io.File;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,7 +60,7 @@ public class BeamEngine extends EngineBase {
   }
 
   @Override
-  public String addFile(String filePath) throws IOException {
+  public String addFile(String filePath) throws IOException, FeatureStoreException {
     if (Strings.isNullOrEmpty(filePath)) {
       return filePath;
     }
@@ -67,7 +69,10 @@ public class BeamEngine extends EngineBase {
       filePath = "hdfs://" + filePath;
     }
     String targetPath = System.getProperty("java.io.tmpdir") + filePath.substring(filePath.lastIndexOf("/"));
-    FileUtils.copyFile(new File(filePath), new File(targetPath));
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(targetPath))) {
+      writer.write(DatasetApi.downloadHdfsPath(HopsworksClient.getInstance().getProject().getProjectId(), filePath,
+          "HIVEDB"));
+    }
     return targetPath;
   }
 }
