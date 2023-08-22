@@ -6,16 +6,14 @@ import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.common.header.Header;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
 public class BeamKafkaProducer extends KafkaProducer<String, GenericRecord> {
   @Setter
-  public List<Header> headers = new ArrayList<>();
+  private Map<String, byte[]> headerMap = new HashMap<>();
 
   public BeamKafkaProducer(Map configs) {
     super(configs);
@@ -32,8 +30,8 @@ public class BeamKafkaProducer extends KafkaProducer<String, GenericRecord> {
   }
 
   private void addHeaders(ProducerRecord record) {
-    for (Header header: headers) {
-      record.headers().add(header);
+    for (Map.Entry<String, byte[]> entry: headerMap.entrySet()) {
+      record.headers().add(entry.getKey(), entry.getValue());
     }
   }
 }
