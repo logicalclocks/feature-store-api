@@ -338,7 +338,11 @@ class Engine:
         query = (
             serialized_df.withColumn(
                 "headers",
-                array(struct(lit("subjectId").alias("key"), lit(subject_id).alias("value"))),
+                array(
+                    struct(
+                        lit("subjectId").alias("key"), lit(subject_id).alias("value")
+                    )
+                ),
             )
             .writeStream.outputMode(output_mode)
             .format(self.KAFKA_FORMAT)

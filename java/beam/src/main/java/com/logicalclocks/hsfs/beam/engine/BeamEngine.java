@@ -61,7 +61,7 @@ public class BeamEngine {
     return new BeamProducer(streamFeatureGroup.getOnlineTopicName(),
       getKafkaProperties(streamFeatureGroup, writeOptions),
       streamFeatureGroup.getDeserializedAvroSchema(), deserializedEncodedSchema, complexFeatureSchemas,
-      streamFeatureGroup.getPrimaryKeys());
+      streamFeatureGroup.getPrimaryKeys(), streamFeatureGroup);
   }
 
   private Map<String, String> getKafkaProperties(StreamFeatureGroup featureGroup, Map<String, String> writeOptions)
