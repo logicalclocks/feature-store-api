@@ -162,7 +162,9 @@ class TestFeatureGroup:
 
     def test_from_response_json_basic_info_deprecated(self, backend_fixtures):
         # Arrange
-        json = backend_fixtures["feature_group"]["get_basic_info_deprecated"]["response"]
+        json = backend_fixtures["feature_group"]["get_basic_info_deprecated"][
+            "response"
+        ]
 
         # Act
         with warnings.catch_warnings(record=True) as warning_record:
@@ -192,7 +194,7 @@ class TestFeatureGroup:
         assert fg.deprecated is True
         assert len(warning_record) == 1
         assert str(warning_record[0].message) == (
-                f"Feature Group `{fg.name}`, version `{fg.version}` is deprecated"
+            f"Feature Group `{fg.name}`, version `{fg.version}` is deprecated"
         )
 
     def test_from_response_json_stream(self, backend_fixtures):
