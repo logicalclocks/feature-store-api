@@ -118,7 +118,6 @@ public abstract class FeatureGroupBase<T> {
   protected DeltaStreamerJobConf deltaStreamerJobConf;
 
   @Getter
-  @Setter
   protected Boolean deprecated;
 
   @JsonIgnore
@@ -136,6 +135,11 @@ public abstract class FeatureGroupBase<T> {
   protected FeatureGroupUtils utils = new FeatureGroupUtils();
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
+
+  public void setDeprecated(Boolean deprecated) {
+    this.deprecated = deprecated;
+    checkDeprecated();
+  }
 
   public void checkDeprecated() {
     if (Boolean.TRUE.equals(this.deprecated)) {

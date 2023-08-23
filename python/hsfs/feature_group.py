@@ -60,6 +60,8 @@ from hsfs.core import great_expectation_engine
 class FeatureGroupBase:
     def __init__(
         self,
+        name,
+        version,
         featurestore_id,
         location,
         event_time=None,
@@ -69,6 +71,8 @@ class FeatureGroupBase:
         online_topic_name=None,
         deprecated=False,
     ):
+        self._version = version
+        self._name = name
         self.event_time = event_time
         self._online_enabled = online_enabled
         self._location = location
@@ -1161,6 +1165,20 @@ class FeatureGroupBase:
             )
 
     @property
+    def name(self):
+        """Name of the feature group."""
+        return self._name
+
+    @property
+    def version(self):
+        """Version number of the feature group."""
+        return self._version
+
+    @version.setter
+    def version(self, version):
+        self._version = version
+
+    @property
     def statistics(self):
         """Get the latest computed statistics for the feature group."""
         return self._statistics_engine.get_last(self)
@@ -1425,6 +1443,8 @@ class FeatureGroup(FeatureGroupBase):
         deprecated=False,
     ):
         super().__init__(
+            name,
+            version,
             featurestore_id,
             location,
             event_time=event_time,
@@ -1439,8 +1459,6 @@ class FeatureGroup(FeatureGroupBase):
         self._description = description
         self._created = created
         self._creator = user.User.from_response_json(creator)
-        self._version = version
-        self._name = name
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in (features or [])
@@ -2495,16 +2513,6 @@ class FeatureGroup(FeatureGroupBase):
         return self._id
 
     @property
-    def name(self):
-        """Name of the feature group."""
-        return self._name
-
-    @property
-    def version(self):
-        """Version number of the feature group."""
-        return self._version
-
-    @property
     def description(self):
         """Description of the feature group contents."""
         return self._description
@@ -2576,10 +2584,6 @@ class FeatureGroup(FeatureGroupBase):
 
         return self._materialization_job
 
-    @version.setter
-    def version(self, version):
-        self._version = version
-
     @description.setter
     def description(self, new_description):
         self._description = new_description
@@ -2637,6 +2641,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
         deprecated=False,
     ):
         super().__init__(
+            name,
+            version,
             featurestore_id,
             location,
             event_time=event_time,
@@ -2651,8 +2657,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._description = description
         self._created = created
         self._creator = user.User.from_response_json(creator)
-        self._version = version
-        self._name = name
         self._query = query
         self._data_format = data_format.upper() if data_format else None
         self._path = path
@@ -2913,14 +2917,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         return self._id
 
     @property
-    def name(self):
-        return self._name
-
-    @property
-    def version(self):
-        return self._version
-
-    @property
     def description(self):
         return self._description
 
@@ -2951,10 +2947,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
     @property
     def created(self):
         return self._created
-
-    @version.setter
-    def version(self, version):
-        self._version = version
 
     @description.setter
     def description(self, new_description):
@@ -3004,6 +2996,8 @@ class SpineGroup(FeatureGroupBase):
         deprecated=False,
     ):
         super().__init__(
+            name,
+            version,
             featurestore_id,
             location,
             event_time=event_time,
@@ -3018,8 +3012,6 @@ class SpineGroup(FeatureGroupBase):
         self._description = description
         self._created = created
         self._creator = user.User.from_response_json(creator)
-        self._version = version
-        self._name = name
 
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat

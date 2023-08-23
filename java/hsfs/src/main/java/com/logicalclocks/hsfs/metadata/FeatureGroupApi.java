@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -72,7 +71,6 @@ public class FeatureGroupApi {
 
     LOGGER.info("Sending metadata request: " + uriString);
     T[] featureGroups = hopsworksClient.handleRequest(new HttpGet(uriString), fgType);
-    Arrays.stream(featureGroups).forEach(FeatureGroupBase::checkDeprecated);
     return featureGroups;
   }
 
