@@ -911,6 +911,7 @@ class KafkaConnector(StorageConnector):
         ssl_key_password=None,
         ssl_endpoint_identification_algorithm=None,
         options=None,
+        external_kafka=None,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -934,6 +935,7 @@ class KafkaConnector(StorageConnector):
             if options is not None
             else {}
         )
+        self._external_kafka = external_kafka
 
     @property
     def bootstrap_servers(self):
@@ -987,7 +989,7 @@ class KafkaConnector(StorageConnector):
             "ssl.endpoint.identification.algorithm"
         ] = self._ssl_endpoint_identification_algorithm
 
-        if self.id < 0:
+        if self._external_kafka:
             self._ssl_truststore_location = (
                 client.get_instance()._get_jks_trust_store_path()
             )
