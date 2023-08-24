@@ -900,7 +900,8 @@ public class SparkEngine extends EngineBase {
         && (writeOptions == null
         || !Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false")));
 
-    StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector(this, external);
+    StorageConnector.KafkaConnector storageConnector =
+        storageConnectorApi.getKafkaStorageConnector(featureGroup.getFeatureStore(), external);
 
     Map<String, String> config = storageConnector.sparkOptions();
 

@@ -19,7 +19,6 @@ package com.logicalclocks.hsfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.logicalclocks.hsfs.constructor.QueryBase;
-import com.logicalclocks.hsfs.engine.EngineBase;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.metadata.TrainingDatasetApi;
@@ -189,31 +188,6 @@ public abstract class FeatureStoreBase<T2 extends QueryBase> {
   public abstract Object getAdlsConnector(String name) throws FeatureStoreException, IOException;
 
   public abstract Object getKafkaConnector(String name) throws FeatureStoreException, IOException;
-
-  /**
-   * Get a Kafka compliant storage connector used for online feature store.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *        StorageConnector.KafkaConnector kafkaSc = fs.getKafkaConnector(SparkEngine.getInstance(), false);
-   * }
-   * </pre>
-   *
-   * @param engine Engine being used
-   * @param external Distinguishes between external and internal boostrap servers
-   * @return StorageConnector.KafkaConnector Storage connector object.
-   * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
-   * @throws IOException Generic IO exception.
-   */
-  public StorageConnector.KafkaConnector getKafkaConnector(EngineBase engine, boolean external)
-      throws FeatureStoreException, IOException {
-    StorageConnector.KafkaConnector kafkaConnector = storageConnectorApi.getKafkaStorageConnector(this, external);
-    kafkaConnector.sslTruststoreLocation = engine.addFile(kafkaConnector.sslTruststoreLocation);
-    kafkaConnector.sslKeystoreLocation = engine.addFile(kafkaConnector.sslKeystoreLocation);
-    return kafkaConnector;
-  }
 
   public abstract Object getBigqueryConnector(String name) throws FeatureStoreException, IOException;
 
