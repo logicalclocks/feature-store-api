@@ -42,7 +42,9 @@ class StorageConnectorApi:
         :return: the storage connector
         :rtype: StorageConnector
         """
-        return storage_connector.StorageConnector.from_response_json(self._get(feature_store_id, name))
+        return storage_connector.StorageConnector.from_response_json(
+            self._get(feature_store_id, name)
+        )
 
     def refetch(self, storage_connector_instance):
         """
@@ -50,7 +52,10 @@ class StorageConnectorApi:
         credentials.
         """
         return storage_connector_instance.update_from_response_json(
-            self._get(storage_connector_instance._featurestore_id, storage_connector_instance.name)
+            self._get(
+                storage_connector_instance._featurestore_id,
+                storage_connector_instance.name,
+            )
         )
 
     def get_online_connector(self, feature_store_id: int):

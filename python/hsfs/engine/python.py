@@ -1080,7 +1080,9 @@ class Engine:
             client.get_instance(), hopsworks.Client
         ) or not write_options.get("internal_kafka", False)
 
-        storage_connector = self._storage_connector_api.get_kafka_connector(feature_store_id, external)
+        storage_connector = self._storage_connector_api.get_kafka_connector(
+            feature_store_id, external
+        )
 
         config = storage_connector.confluent_options()
         config.update(write_options.get("kafka_producer_config", {}))

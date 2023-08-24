@@ -72,7 +72,9 @@ class Query:
 
         if online:
             sql_query = self._to_string(fs_query, online)
-            online_conn = self._storage_connector_api.get_online_connector(self._feature_store_id)
+            online_conn = self._storage_connector_api.get_online_connector(
+                self._feature_store_id
+            )
         else:
             online_conn = None
 
