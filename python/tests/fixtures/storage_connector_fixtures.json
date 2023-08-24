@@ -341,7 +341,41 @@
             "ssl_keystore_password": "test_ssl_keystore_password",
             "ssl_key_password": "test_ssl_key_password",
             "ssl_endpoint_identification_algorithm": "test_ssl_endpoint_identification_algorithm",
-            "options": [{"name":  "test_option_name", "value":  "test_option_value"}]
+            "options": [{"name":  "test_option_name", "value":  "test_option_value"}],
+            "externalKafka": false
+        },
+        "method": "GET",
+        "path_params": [
+            "project",
+            "119",
+            "featurestores",
+            67,
+            "storageconnectors",
+            "test_kafka"
+        ],
+        "query_params": {
+            "temporaryCredentials": true
+        },
+        "headers": null
+    },
+    "get_kafka_external": {
+        "response": {
+            "type": "featurestoreKafkaConnectorDTO",
+            "description": "Kafka connector description",
+            "featurestoreId": 67,
+            "id": 1,
+            "name": "test_kafka",
+            "storageConnectorType": "KAFKA",
+            "bootstrap_servers": "test_bootstrap_servers",
+            "security_protocol": "test_security_protocol",
+            "ssl_truststore_location": "test_ssl_truststore_location",
+            "ssl_truststore_password": "test_ssl_truststore_password",
+            "ssl_keystore_location": "test_ssl_keystore_location",
+            "ssl_keystore_password": "test_ssl_keystore_password",
+            "ssl_key_password": "test_ssl_key_password",
+            "ssl_endpoint_identification_algorithm": "test_ssl_endpoint_identification_algorithm",
+            "options": [{"name":  "test_option_name", "value":  "test_option_value"}],
+            "externalKafka": true
         },
         "method": "GET",
         "path_params": [
