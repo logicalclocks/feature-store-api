@@ -42,9 +42,7 @@ class StorageConnector(ABC):
         self._description = description
         self._featurestore_id = featurestore_id
 
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
-            self._featurestore_id
-        )
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
 
     @classmethod
     def from_response_json(cls, json_dict):

@@ -114,6 +114,7 @@ class Engine:
         if importlib.util.find_spec("pydoop"):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             util.setup_pydoop()
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
 
     def sql(
         self,
@@ -1146,9 +1147,7 @@ class Engine:
             client.get_instance(), hopsworks.Client
         ) or not write_options.get("internal_kafka", False)
 
-        storage_connector = storage_connector_api.StorageConnectorApi(
-            feature_store_id
-        ).get_kafka_connector(external)
+        storage_connector = self._storage_connector_api.get_kafka_connector(feature_store_id, external)
 
         config = storage_connector.spark_options()
         config.update(write_options)

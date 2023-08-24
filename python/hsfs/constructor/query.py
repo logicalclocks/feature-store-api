@@ -65,16 +65,14 @@ class Query:
         self._filter = Logic.from_response_json(filter)
         self._python_engine = True if engine.get_type() == "python" else False
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
-            feature_store_id
-        )
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
 
     def _prep_read(self, online, read_options):
         fs_query = self._query_constructor_api.construct_query(self)
 
         if online:
             sql_query = self._to_string(fs_query, online)
-            online_conn = self._storage_connector_api.get_online_connector()
+            online_conn = self._storage_connector_api.get_online_connector(self._feature_store_id)
         else:
             online_conn = None
 

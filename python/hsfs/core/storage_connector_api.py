@@ -18,32 +18,31 @@ from hsfs import client, storage_connector
 
 
 class StorageConnectorApi:
-    def __init__(self, feature_store_id):
-        self._feature_store_id = feature_store_id
-
-    def _get(self, name):
+    def _get(self, feature_store_id: int, name: str):
         """Returning response dict instead of initialized object."""
         _client = client.get_instance()
         path_params = [
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_store_id,
             "storageconnectors",
             name,
         ]
         query_params = {"temporaryCredentials": True}
         return _client._send_request("GET", path_params, query_params=query_params)
 
-    def get(self, name):
-        """Get storage connector with name and type.
+    def get(self, feature_store_id: int, name: str):
+        """Get storage connector with name.
 
+        :param feature_store_id: feature store id
+        :type feature_store_id: int
         :param name: name of the storage connector
         :type name: str
         :return: the storage connector
         :rtype: StorageConnector
         """
-        return storage_connector.StorageConnector.from_response_json(self._get(name))
+        return storage_connector.StorageConnector.from_response_json(self._get(feature_store_id, name))
 
     def refetch(self, storage_connector_instance):
         """
@@ -51,16 +50,16 @@ class StorageConnectorApi:
         credentials.
         """
         return storage_connector_instance.update_from_response_json(
-            self._get(storage_connector_instance.name)
+            self._get(storage_connector_instance._featurestore_id, storage_connector_instance.name)
         )
 
-    def get_online_connector(self):
+    def get_online_connector(self, feature_store_id: int):
         _client = client.get_instance()
         path_params = [
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_store_id,
             "storageconnectors",
             "onlinefeaturestore",
         ]
@@ -69,13 +68,13 @@ class StorageConnectorApi:
             _client._send_request("GET", path_params)
         )
 
-    def get_kafka_connector(self, external: bool = False):
+    def get_kafka_connector(self, feature_store_id: int, external: bool = False):
         _client = client.get_instance()
         path_params = [
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_store_id,
             "storageconnectors",
             "kafka_connector",
         ]

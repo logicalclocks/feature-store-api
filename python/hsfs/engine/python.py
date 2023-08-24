@@ -87,6 +87,7 @@ class Engine:
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
 
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None
@@ -856,9 +857,11 @@ class Engine:
 
         local_file = os.path.join("/tmp", os.path.basename(file))
         if not os.path.exists(local_file):
-            from pydoop import hdfs
-
-            hdfs.get(file, local_file)
+            content_stream = self._dataset_api.read_content(file)
+            bytesio_object = BytesIO(content_stream.content)
+            # Write the stuff
+            with open(local_file, "wb") as f:
+                f.write(bytesio_object.getbuffer())
         return local_file
 
     def _apply_transformation_function(self, transformation_functions, dataset):
@@ -1077,9 +1080,7 @@ class Engine:
             client.get_instance(), hopsworks.Client
         ) or not write_options.get("internal_kafka", False)
 
-        storage_connector = storage_connector_api.StorageConnectorApi(
-            feature_store_id
-        ).get_kafka_connector(external)
+        storage_connector = self._storage_connector_api.get_kafka_connector(feature_store_id, external)
 
         config = storage_connector.confluent_options()
         config.update(write_options.get("kafka_producer_config", {}))
