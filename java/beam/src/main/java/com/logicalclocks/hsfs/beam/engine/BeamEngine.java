@@ -28,8 +28,7 @@ import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import org.apache.avro.Schema;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -72,9 +71,9 @@ public class BeamEngine extends EngineBase {
       filePath = "hdfs://" + filePath;
     }
     String targetPath = System.getProperty("java.io.tmpdir") + filePath.substring(filePath.lastIndexOf("/"));
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter(targetPath))) {
-      writer.write(DatasetApi.downloadHdfsPath(HopsworksClient.getInstance().getProject().getProjectId(), filePath,
-          "HIVEDB"));
+    try (FileOutputStream outputStream = new FileOutputStream(targetPath)) {
+      outputStream.write(DatasetApi.readContent(HopsworksClient.getInstance().getProject().getProjectId(),
+          filePath, "HIVEDB"));
     }
     return targetPath;
   }

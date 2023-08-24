@@ -21,7 +21,7 @@ import com.damnhandy.uri.template.UriTemplate;
 import com.google.common.base.Strings;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ public class DatasetApi {
   public DatasetApi()  {
   }
 
-  public static String downloadHdfsPath(Integer projectId,String path, String datasetType) throws FeatureStoreException,
+  public static byte[] readContent(Integer projectId, String path, String datasetType) throws FeatureStoreException,
       IOException {
     if (Strings.isNullOrEmpty(datasetType)) {
       datasetType = "DATASET";
@@ -51,6 +51,7 @@ public class DatasetApi {
         .set("type",datasetType);
     String uriString = uri.expand();
 
-    return HopsworksClient.getInstance().handleRequest(new HttpGet(uriString), new BasicResponseHandler());
+    return HopsworksClient.getInstance().handleRequest(new HttpGet(uriString),
+        response -> EntityUtils.toByteArray(response.getEntity()));
   }
 }
