@@ -512,9 +512,7 @@ class TestKafkaConnector:
         mock_client_get_instance.return_value._get_jks_key_store_path.return_value = (
             "result_from_get_jks_key_store_path"
         )
-        mock_client_get_instance.return_value._cert_key = (
-            "result_from_cert_key"
-        )
+        mock_client_get_instance.return_value._cert_key = "result_from_cert_key"
 
         sc = storage_connector.StorageConnector.from_response_json(json)
 
@@ -573,9 +571,7 @@ class TestKafkaConnector:
         mock_client_get_instance.return_value._get_jks_key_store_path.return_value = (
             "result_from_get_jks_key_store_path"
         )
-        mock_client_get_instance.return_value._cert_key = (
-            "result_from_cert_key"
-        )
+        mock_client_get_instance.return_value._cert_key = "result_from_cert_key"
 
         sc = storage_connector.StorageConnector.from_response_json(json)
 
