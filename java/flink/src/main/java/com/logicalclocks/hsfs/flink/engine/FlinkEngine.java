@@ -142,6 +142,8 @@ public class FlinkEngine extends EngineBase {
 
     StorageConnector.KafkaConnector storageConnector =
         storageConnectorApi.getKafkaStorageConnector(featureGroup.getFeatureStore(), external);
+    storageConnector.setSslTruststoreLocation(addFile(storageConnector.getSslTruststoreLocation()));
+    storageConnector.setSslKeystoreLocation(addFile(storageConnector.getSslKeystoreLocation()));
 
     Map<String, String> config = storageConnector.kafkaOptions();
 
