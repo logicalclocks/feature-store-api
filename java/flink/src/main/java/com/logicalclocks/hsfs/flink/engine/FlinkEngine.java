@@ -18,10 +18,13 @@
 package com.logicalclocks.hsfs.flink.engine;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.engine.EngineBase;
 import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
 
+import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import lombok.Getter;
 
 import org.apache.avro.generic.GenericRecord;
@@ -128,6 +131,23 @@ public class FlinkEngine extends EngineBase {
         + filePath.substring(filePath.lastIndexOf("/"));
     FileUtils.copy(new Path(filePath), new Path(targetPath), false);
     return targetPath;
+  }
+
+  @Override
+  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    boolean external = !System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)
+        && (writeOptions == null
+        || !Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false")));
+
+    StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector(this, external);
+
+    Map<String, String> config = storageConnector.kafkaOptions();
+
+    if (writeOptions != null) {
+      config.putAll(writeOptions);
+    }
+    return config;
   }
 
   public String getTrustStorePath() {

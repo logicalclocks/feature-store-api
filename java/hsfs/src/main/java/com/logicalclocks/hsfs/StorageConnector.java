@@ -426,7 +426,7 @@ public abstract class StorageConnector {
       // set ssl
       config.put(Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm.getValue());
 
-      if (Boolean.FALSE.equals(externalKafka)) {
+      if (!externalKafka) {
         sslTruststoreLocation = client.getTrustStorePath();
         sslTruststorePassword = client.getCertKey();
         sslKeystoreLocation = client.getKeyStorePath();
@@ -434,11 +434,21 @@ public abstract class StorageConnector {
         sslKeyPassword = client.getCertKey();
       }
 
-      Optional.ofNullable(sslTruststoreLocation).ifPresent(v -> config.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, v));
-      Optional.ofNullable(sslTruststorePassword).ifPresent(v -> config.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, v));
-      Optional.ofNullable(sslKeystoreLocation).ifPresent(v -> config.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, v));
-      Optional.ofNullable(sslKeystorePassword).ifPresent(v -> config.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, v));
-      Optional.ofNullable(sslKeyPassword).ifPresent(v -> config.put(Constants.KAFKA_SSL_KEY_PASSWORD, v));
+      if (sslTruststoreLocation != null) {
+        config.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
+      }
+      if (sslTruststorePassword != null) {
+        config.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
+      }
+      if (sslKeystoreLocation != null) {
+        config.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
+      }
+      if (sslKeystorePassword != null) {
+        config.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
+      }
+      if (sslKeyPassword != null) {
+        config.put(Constants.KAFKA_SSL_KEY_PASSWORD, sslKeyPassword);
+      }
 
       return config;
     }

@@ -19,8 +19,6 @@ package com.logicalclocks.hsfs.engine;
 
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,20 +31,6 @@ public abstract class EngineBase {
 
   public abstract String addFile(String filePath) throws IOException, FeatureStoreException;
 
-  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
-    boolean external = !System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)
-        && (writeOptions == null
-          || !Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false")));
-
-    StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector(this, external);
-
-    Map<String, String> config = this.getClass().getName().endsWith("SparkEngine")
-        ? storageConnector.sparkOptions() : storageConnector.kafkaOptions();
-
-    if (writeOptions != null) {
-      config.putAll(writeOptions);
-    }
-    return config;
-  }
+  public abstract Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException;
 }

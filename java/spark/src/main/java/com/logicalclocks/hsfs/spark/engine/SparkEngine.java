@@ -24,6 +24,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.logicalclocks.hsfs.engine.EngineBase;
+import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
 import com.logicalclocks.hsfs.DataFormat;
@@ -890,6 +891,23 @@ public class SparkEngine extends EngineBase {
     }
     sparkSession.sparkContext().addFile(filePath);
     return SparkFiles.get((new Path(filePath)).getName());
+  }
+
+  @Override
+  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    boolean external = !System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)
+        && (writeOptions == null
+        || !Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false")));
+
+    StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector(this, external);
+
+    Map<String, String> config = storageConnector.sparkOptions();
+
+    if (writeOptions != null) {
+      config.putAll(writeOptions);
+    }
+    return config;
   }
 
   public Dataset<Row> readStream(StorageConnector storageConnector, String dataFormat, String messageFormat,

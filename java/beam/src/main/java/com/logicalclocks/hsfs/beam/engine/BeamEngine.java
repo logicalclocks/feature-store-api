@@ -18,11 +18,14 @@
 package com.logicalclocks.hsfs.beam.engine;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.DatasetApi;
 import com.logicalclocks.hsfs.engine.EngineBase;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import org.apache.avro.Schema;
 
 import java.io.BufferedWriter;
@@ -74,5 +77,22 @@ public class BeamEngine extends EngineBase {
           "HIVEDB"));
     }
     return targetPath;
+  }
+
+  @Override
+  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    boolean external = !System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)
+        && (writeOptions == null
+        || !Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false")));
+
+    StorageConnector.KafkaConnector storageConnector = featureGroup.getFeatureStore().getKafkaConnector(this, external);
+
+    Map<String, String> config = storageConnector.kafkaOptions();
+
+    if (writeOptions != null) {
+      config.putAll(writeOptions);
+    }
+    return config;
   }
 }

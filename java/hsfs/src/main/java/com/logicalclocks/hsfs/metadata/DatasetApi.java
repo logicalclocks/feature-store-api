@@ -36,9 +36,6 @@ public class DatasetApi {
 
   public static String downloadHdfsPath(Integer projectId,String path, String datasetType) throws FeatureStoreException,
       IOException {
-    if (projectId == null) {
-      throw new  FeatureStoreException("Project Id cannot be null for reading HDFS file path.");
-    }
     if (Strings.isNullOrEmpty(datasetType)) {
       datasetType = "DATASET";
     }

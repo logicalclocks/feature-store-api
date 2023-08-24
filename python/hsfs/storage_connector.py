@@ -989,7 +989,7 @@ class KafkaConnector(StorageConnector):
             "ssl.endpoint.identification.algorithm"
         ] = self._ssl_endpoint_identification_algorithm
 
-        if self._external_kafka:
+        if not self._external_kafka:
             self._ssl_truststore_location = (
                 client.get_instance()._get_jks_trust_store_path()
             )
