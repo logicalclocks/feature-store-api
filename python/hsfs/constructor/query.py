@@ -69,9 +69,6 @@ class Query:
             feature_store_id
         )
 
-        if self._left_feature_group:
-            self._left_feature_group.check_deprecated()
-
     def _prep_read(self, online, read_options):
         fs_query = self._query_constructor_api.construct_query(self)
 
