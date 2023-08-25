@@ -71,9 +71,6 @@ public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends Featu
 
   private void setLeftBaseFeatureGroup(FeatureGroupBase leftFeatureGroup) {
     this.leftFeatureGroup = leftFeatureGroup;
-    if (this.leftFeatureGroup != null) {
-      this.leftFeatureGroup.checkDeprecated();
-    }
   }
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(QueryBase.class);
