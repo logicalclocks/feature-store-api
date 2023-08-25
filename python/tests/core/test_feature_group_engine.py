@@ -710,7 +710,7 @@ class TestFeatureGroupEngine:
         fg_engine.get_subject(feature_group=fg)
 
         # Assert
-        assert mock_kafka_api.return_value.get_topic_subject.call_count == 1
+        assert mock_kafka_api.return_value.get_subject.call_count == 1
 
     def test_insert_stream(self, mocker):
         # Arrange

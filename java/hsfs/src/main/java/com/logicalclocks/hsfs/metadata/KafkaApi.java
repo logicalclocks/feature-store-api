@@ -32,19 +32,25 @@ public class KafkaApi {
 
   private static final String KAFKA_PATH = "/kafka";
   private static final String TOPIC_PATH = "/topics{/topicName}";
-  private static final String SUBJECT_PATH = "/subjects{/subjectName}";
+  private static final String SUBJECT_PATH = "/subjects/{subject}/versions/{version}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaApi.class);
 
-  public Subject getTopicSubject(FeatureStoreBase featureStoreBase, String topicName)
+  public Subject getSubject(FeatureStoreBase featureStoreBase, String subjectName)
+      throws FeatureStoreException, IOException {
+    return getSubject(featureStoreBase, subjectName, "latest");
+  }
+
+  public Subject getSubject(FeatureStoreBase featureStoreBase, String subjectName, String subjectVersion)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
-        + KAFKA_PATH + TOPIC_PATH + SUBJECT_PATH;
+        + KAFKA_PATH + SUBJECT_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
         .set("projectId", featureStoreBase.getProjectId())
-        .set("topicName", topicName)
+        .set("subject", subjectName)
+        .set("version", subjectVersion)
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);

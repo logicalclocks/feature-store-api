@@ -38,21 +38,14 @@ import org.apache.beam.sdk.values.PDone;
 import org.apache.beam.sdk.values.Row;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class BeamProducer extends PTransform<@NonNull PCollection<Row>, @NonNull PDone> {
   private String topic;
@@ -128,23 +121,6 @@ public class BeamProducer extends PTransform<@NonNull PCollection<Row>, @NonNull
         .withValueSerializer(GenericAvroSerializer.class)
         .withInputTimestamp()
         .withProducerFactoryFn(props -> {
-          // copy jks files from resources to dataflow workers
-          try {
-            Path keyStorePath = Paths.get(properties.get(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG));
-            InputStream keyStoreStream = Objects.requireNonNull(BeamProducer.class.getClassLoader()
-                .getResourceAsStream(keyStorePath.getFileName().toString()));
-            if (!Files.exists(keyStorePath)) {
-              Files.copy(keyStoreStream, keyStorePath, StandardCopyOption.REPLACE_EXISTING);
-            }
-            Path trustStorePath = Paths.get(properties.get(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG));
-            InputStream trustStoreStream = Objects.requireNonNull(BeamProducer.class.getClassLoader()
-                .getResourceAsStream(trustStorePath.getFileName().toString()));
-            if (!Files.exists(trustStorePath)) {
-              Files.copy(trustStoreStream, trustStorePath, StandardCopyOption.REPLACE_EXISTING);
-            }
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
           props.putAll(properties);
           return new KafkaProducer<>(props);
         })
