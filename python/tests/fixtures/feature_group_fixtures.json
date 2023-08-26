@@ -215,6 +215,29 @@
     },
     "headers": null
   },
+  "get_basic_info_deprecated": {
+    "response": {
+      "type": "cachedFeaturegroupDTO",
+      "featurestoreId": 67,
+      "id": 15,
+      "name": "fg_test",
+      "version": 1,
+      "deprecated": true
+    },
+    "method": "GET",
+    "path_params": [
+      "project",
+      "119",
+      "featurestores",
+      67,
+      "featuregroups",
+      "fg_test"
+    ],
+    "query_params": {
+      "version": 1
+    },
+    "headers": null
+  },
   "get_stream": {
     "response": {
       "type": "streamFeatureGroupDTO",

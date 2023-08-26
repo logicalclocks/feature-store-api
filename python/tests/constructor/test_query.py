@@ -13,6 +13,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import warnings
+
 import pytest
 from hsfs import feature_group, feature
 from hsfs.constructor import query, join, filter
@@ -168,6 +170,33 @@ class TestQuery:
         assert len(q._joins) == 0
         assert q._filter is None
         assert q._python_engine is True
+        assert q._left_feature_group.deprecated is False
+
+    def test_from_response_json_basic_info_deprecated(self, mocker, backend_fixtures):
+        # Arrange
+        mocker.patch("hsfs.engine.get_type", return_value="python")
+        json = backend_fixtures["query"]["get_basic_info_deprecated"]["response"]
+
+        # Act
+        with warnings.catch_warnings(record=True) as warning_record:
+            q = query.Query.from_response_json(json)
+
+        # Assert
+        assert q._feature_store_name is None
+        assert q._feature_store_id is None
+        assert isinstance(q._left_feature_group, feature_group.FeatureGroup)
+        assert len(q._left_features) == 1
+        assert isinstance(q._left_features[0], feature.Feature)
+        assert q._left_feature_group_start_time is None
+        assert q._left_feature_group_end_time is None
+        assert len(q._joins) == 0
+        assert q._filter is None
+        assert q._python_engine is True
+        assert q._left_feature_group.deprecated is True
+        assert len(warning_record) == 1
+        assert str(warning_record[0].message) == (
+            f"Feature Group `{q._left_feature_group.name}`, version `{q._left_feature_group.version}` is deprecated"
+        )
 
     def test_as_of(self, mocker, backend_fixtures):
         mocker.patch("hsfs.engine.get_type", return_value="python")
