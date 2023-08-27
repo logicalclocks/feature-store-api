@@ -66,6 +66,10 @@ public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends Featu
   protected Boolean hiveEngine = false;
 
   protected void setLeftFeatureGroup(T2 leftFeatureGroup) {
+    setLeftBaseFeatureGroup(leftFeatureGroup);
+  }
+
+  private void setLeftBaseFeatureGroup(FeatureGroupBase leftFeatureGroup) {
     this.leftFeatureGroup = leftFeatureGroup;
   }
 
@@ -75,9 +79,9 @@ public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends Featu
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
-  public QueryBase(T2 leftFeatureGroup, List<Feature> leftFeatures) {
-    this.leftFeatureGroup = leftFeatureGroup;
-    this.leftFeatures = leftFeatures;
+  protected QueryBase(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
+    setLeftBaseFeatureGroup(leftFeatureGroup);
+    this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
   }
 
   public abstract String sql();
@@ -289,7 +293,7 @@ public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends Featu
     return false;
   }
 
-  protected List<Feature>  addFeatureGroupToFeatures(FeatureGroupBase featureGroupBase, List<Feature> leftFeatures) {
+  private List<Feature> addFeatureGroupToFeatures(FeatureGroupBase featureGroupBase, List<Feature> leftFeatures) {
     List<Feature> updatedFeatures = new ArrayList<>();
     for (Feature feature: leftFeatures) {
       feature.setFeatureGroupId(featureGroupBase.getId());
