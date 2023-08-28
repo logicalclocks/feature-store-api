@@ -23,6 +23,7 @@ import com.amazon.deequ.profiles.ColumnProfiles;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.logicalclocks.hsfs.engine.EngineBase;
 import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import com.logicalclocks.hsfs.spark.constructor.Query;
 import com.logicalclocks.hsfs.spark.engine.hudi.HudiEngine;
@@ -37,8 +38,6 @@ import com.logicalclocks.hsfs.constructor.FeatureGroupAlias;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
-import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
-import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
@@ -116,7 +115,7 @@ import static org.apache.spark.sql.functions.from_json;
 import static org.apache.spark.sql.functions.lit;
 import static org.apache.spark.sql.functions.struct;
 
-public class SparkEngine {
+public class SparkEngine extends EngineBase {
 
   private final StorageConnectorUtils storageConnectorUtils = new StorageConnectorUtils();
 
@@ -139,7 +138,6 @@ public class SparkEngine {
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
   private HudiEngine hudiEngine = new HudiEngine();
-  private KafkaApi kafkaApi = new KafkaApi();
 
   private SparkEngine() {
     sparkSession = SparkSession.builder()
@@ -882,13 +880,37 @@ public class SparkEngine {
     }
   }
 
+  @Override
   public String addFile(String filePath) {
+    if (Strings.isNullOrEmpty(filePath)) {
+      return filePath;
+    }
     // this is used for unit testing
     if (!filePath.startsWith("file://")) {
       filePath = "hdfs://" + filePath;
     }
     sparkSession.sparkContext().addFile(filePath);
     return SparkFiles.get((new Path(filePath)).getName());
+  }
+
+  @Override
+  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    boolean external = !System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)
+        && (writeOptions == null
+        || !Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false")));
+
+    StorageConnector.KafkaConnector storageConnector =
+        storageConnectorApi.getKafkaStorageConnector(featureGroup.getFeatureStore(), external);
+    storageConnector.setSslTruststoreLocation(addFile(storageConnector.getSslTruststoreLocation()));
+    storageConnector.setSslKeystoreLocation(addFile(storageConnector.getSslKeystoreLocation()));
+
+    Map<String, String> config = storageConnector.sparkOptions();
+
+    if (writeOptions != null) {
+      config.putAll(writeOptions);
+    }
+    return config;
   }
 
   public Dataset<Row> readStream(StorageConnector storageConnector, String dataFormat, String messageFormat,
@@ -1007,39 +1029,6 @@ public class SparkEngine {
     }
     return "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
         + "/Resources/" + queryName + "-checkpoint";
-  }
-
-  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
-    Map<String, String> config = new HashMap<>();
-    boolean internalKafka = false;
-    if (writeOptions != null) {
-      internalKafka = Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"));
-      config.putAll(writeOptions);
-    }
-    HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
-
-    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) || internalKafka) {
-      config.put("kafka.bootstrap.servers",
-          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
-              "INTERNAL://", ""))
-            .collect(Collectors.joining(",")));
-    } else {
-      config.put("kafka.bootstrap.servers",
-          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
-            .map(broker -> broker.replaceAll("EXTERNAL://", ""))
-            .collect(Collectors.joining(","))
-      );
-    }
-
-    config.put("kafka.security.protocol", "SSL");
-    config.put("kafka.ssl.truststore.location", client.getTrustStorePath());
-    config.put("kafka.ssl.truststore.password", client.getCertKey());
-    config.put("kafka.ssl.keystore.location", client.getKeyStorePath());
-    config.put("kafka.ssl.keystore.password", client.getCertKey());
-    config.put("kafka.ssl.key.password", client.getCertKey());
-    config.put("kafka.ssl.endpoint.identification.algorithm", "");
-    return config;
   }
 
   public String checkpointDirPath(String queryName, String onlineTopicName) throws FeatureStoreException {

@@ -280,9 +280,6 @@ public class StorageConnectorUtils {
       throw new IllegalArgumentException("Can only read JSON and AVRO encoded records from Kafka.");
     }
 
-    connector.setSslTruststoreLocation(SparkEngine.getInstance().addFile(connector.getSslTruststoreLocation()));
-    connector.setSslKeystoreLocation(SparkEngine.getInstance().addFile(connector.getSslTruststoreLocation()));
-
     if (topicPattern) {
       options.put("subscribePattern", topic);
     } else {
