@@ -1333,6 +1333,7 @@ class FeatureStore:
         version: Optional[int] = None,
         description: Optional[str] = "",
         labels: Optional[List[str]] = [],
+        extra_features: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
         """Create a feature view metadata object and saved it to hopsworks.
@@ -1400,6 +1401,11 @@ class FeatureStore:
                 the feature view. When replaying a `Query` during model inference,
                 the label features can be omitted from the feature vector retrieval.
                 Defaults to `[]`, no label.
+            extra_features: A list of feature names the feature view, such as primary keys and datetime that
+                are not used in training itself but can be useful to sort dataframe and or merge to predictions back
+                to original dataframes. When replaying a `Query` during model inference,
+                the extra features can be omitted from the feature vector retrieval.
+                Defaults to `[]`, no label.
             transformation_functions: A dictionary mapping tansformation functions to
                 to the features they should be applied to before writing out the
                 vector and at inference time. Defaults to `{}`, no
@@ -1415,6 +1421,7 @@ class FeatureStore:
             version=version,
             description=description,
             labels=labels,
+            extra_features=extra_features,
             transformation_functions=transformation_functions,
         )
         return self._feature_view_engine.save(feat_view)
@@ -1426,6 +1433,7 @@ class FeatureStore:
         version: int,
         description: Optional[str] = "",
         labels: Optional[List[str]] = [],
+        extra_features: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
         """Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
@@ -1455,6 +1463,11 @@ class FeatureStore:
                 the feature view. When replaying a `Query` during model inference,
                 the label features can be omitted from the feature vector retrieval.
                 Defaults to `[]`, no label.
+            extra_features: A list of feature names the feature view, such as primary keys and datetime that
+                are not used in training itself but can be useful to sort dataframe and or merge to predictions back
+                to original dataframes. When replaying a `Query` during model inference,
+                the extra features can be omitted from the feature vector retrieval.
+                Defaults to `[]`, no label.
             transformation_functions: A dictionary mapping tansformation functions to
                 to the features they should be applied to before writing out the
                 vector and at inference time. Defaults to `{}`, no
@@ -1477,6 +1490,7 @@ class FeatureStore:
                     version=version,
                     description=description,
                     labels=labels,
+                    extra_features=extra_features,
                     transformation_functions=transformation_functions,
                 )
             else:

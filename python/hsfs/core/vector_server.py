@@ -184,7 +184,11 @@ class VectorServer:
                 )
 
     def get_feature_vector(
-        self, entry, return_type=None, passed_features=[], allow_missing=False
+        self,
+        entry,
+        return_type=None,
+        passed_features=[],
+        allow_missing=False,
     ):
         """Assembles serving vector from online feature store."""
 
@@ -247,7 +251,12 @@ class VectorServer:
             )
 
     def get_feature_vectors(
-        self, entries, return_type=None, passed_features=[], allow_missing=False
+        self,
+        entries,
+        return_type=None,
+        passed_features=[],
+        allow_missing=False,
+        # TODO (Davit): with_extra_features= False,
     ):
         """Assembles serving vector from online feature store."""
 

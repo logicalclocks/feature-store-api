@@ -127,6 +127,7 @@ class FeatureViewEngine:
         start_time,
         end_time,
         with_label=False,
+        with_extra_features=False,
         training_dataset_version=None,
         spine=None,
     ):
@@ -139,6 +140,7 @@ class FeatureViewEngine:
                 training_dataset_version=training_dataset_version,
                 is_python_engine=engine.get_type() == "python",
                 with_label=with_label,
+                with_extra_features=with_extra_features,
             )
             # verify whatever is passed 1. spine group with dataframe contained, or 2. dataframe
             # the schema has to be consistent
@@ -278,6 +280,8 @@ class FeatureViewEngine:
                 start_time=td_updated.event_start_time,
                 end_time=td_updated.event_end_time,
                 with_label=True,
+                # TODO (Davit):
+                with_extra_features=False,
                 spine=spine,
             )
             split_df = engine.get_instance().get_training_data(
@@ -402,6 +406,7 @@ class FeatureViewEngine:
         training_dataset_obj=None,
         training_dataset_version=None,
         spine=None,
+        with_extra_features=False,
     ):
         if training_dataset_obj:
             pass
@@ -417,6 +422,7 @@ class FeatureViewEngine:
             training_dataset_obj.event_start_time,
             training_dataset_obj.event_end_time,
             with_label=True,
+            with_extra_features=with_extra_features,
             training_dataset_version=training_dataset_obj.version,
             spine=spine,
         )
@@ -526,6 +532,7 @@ class FeatureViewEngine:
         transformation_functions,
         read_options=None,
         spine=None,
+        with_extra_features=False,
     ):
         self._check_feature_group_accessibility(feature_view_obj)
 
@@ -534,6 +541,7 @@ class FeatureViewEngine:
             start_time,
             end_time,
             with_label=False,
+            with_extra_features=with_extra_features,
             training_dataset_version=training_dataset_version,
             spine=spine,
         ).read(read_options=read_options)

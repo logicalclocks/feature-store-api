@@ -55,6 +55,7 @@ class FeatureView:
         version: Optional[int] = None,
         description: Optional[str] = "",
         labels: Optional[List[str]] = [],
+        extra_features: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
         featurestore_name=None,
         serving_keys: Optional[List[ServingKey]] = None,
@@ -67,6 +68,7 @@ class FeatureView:
         self._version = version
         self._description = description
         self._labels = labels
+        self._extra_features = extra_features
         self._transformation_functions = (
             {
                 ft_name: copy.deepcopy(transformation_functions[ft_name])
@@ -527,6 +529,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
+        with_extra_feature=False,
     ):
         """Get a batch of data from an event time interval from the offline feature store.
 
@@ -588,6 +591,7 @@ class FeatureView:
             self._batch_scoring_server._transformation_functions,
             read_options,
             spine,
+            with_extra_feature,
         )
 
     def add_tag(self, name: str, value):
@@ -2412,6 +2416,9 @@ class FeatureView:
             ]
         fv.schema = features
         fv.labels = [feature.name for feature in features if feature.label]
+        fv.extra_features = [
+            feature.name for feature in features if feature.extra_feature
+        ]
         return fv
 
     def update_from_response_json(self, json_dict):
@@ -2424,6 +2431,7 @@ class FeatureView:
             "featurestore_id",
             "version",
             "labels",
+            "extra_features",
             "schema",
             "serving_keys",
         ]:
@@ -2500,6 +2508,18 @@ class FeatureView:
     @labels.setter
     def labels(self, labels):
         self._labels = [lb.lower() for lb in labels]
+
+    @property
+    def extra_features(self):
+        """The extra feature sof the feature view.
+
+        Can be a composite of multiple features.
+        """
+        return self._extra_features
+
+    @extra_features.setter
+    def extra_features(self, extra_features):
+        self._extra_features = [exf.lower() for exf in extra_features]
 
     @property
     def description(self):
