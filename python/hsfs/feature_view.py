@@ -529,7 +529,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_extra_feature=False,
+        with_extra_features=False,
     ):
         """Get a batch of data from an event time interval from the offline feature store.
 
@@ -575,7 +575,12 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-
+            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+                in the feature view, defined during its creation, that may not be used in training the model
+                itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
+                back to original dataframes). When replaying a `Query` during model inference, the extra
+                features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
         # Returns
             `DataFrame`: A dataframe
         """
@@ -591,7 +596,7 @@ class FeatureView:
             self._batch_scoring_server._transformation_functions,
             read_options,
             spine,
-            with_extra_feature,
+            with_extra_features,
         )
 
     def add_tag(self, name: str, value):
@@ -951,6 +956,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
+        with_extra_features=False,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train and test set at random or according to time ranges.
@@ -1158,7 +1164,12 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-
+            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+                in the feature view, defined during its creation, that may not be used in training the model
+                itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
+                back to original dataframes). When replaying a `Query` during model inference, the extra
+                features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -1190,7 +1201,7 @@ class FeatureView:
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
-            self, td, write_options, spine
+            self, td, write_options, spine, with_extra_features
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1228,6 +1239,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
+        with_extra_features=False,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train, validation, and test set at random or according to time range.
@@ -1421,7 +1433,12 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-
+            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+                in the feature view, defined during its creation, that may not be used in training the model
+                itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
+                back to original dataframes). When replaying a `Query` during model inference, the extra
+                features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -1461,7 +1478,7 @@ class FeatureView:
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
-            self, td, write_options, spine
+            self, td, write_options, spine, with_extra_features
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1555,6 +1572,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
+        with_extra_features=False,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1640,7 +1658,12 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-
+            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+                in the feature view, defined during its creation, that may not be used in training the model
+                itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
+                back to original dataframes). When replaying a `Query` during model inference, the extra
+                features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
         """
@@ -1660,7 +1683,11 @@ class FeatureView:
             extra_filter=extra_filter,
         )
         td, df = self._feature_view_engine.get_training_data(
-            self, read_options, training_dataset_obj=td, spine=spine
+            self,
+            read_options,
+            training_dataset_obj=td,
+            spine=spine,
+            with_extra_features=with_extra_features,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1689,6 +1716,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
+        with_extra_features=False,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1784,7 +1812,12 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-
+            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+                in the feature view, defined during its creation, that may not be used in training the model
+                itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
+                back to original dataframes). When replaying a `Query` during model inference, the extra
+                features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -1817,6 +1850,7 @@ class FeatureView:
             training_dataset_obj=td,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
             spine=spine,
+            with_extra_features=with_extra_features,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1857,6 +1891,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
+        with_extra_features=False,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1965,7 +2000,12 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-
+            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+                in the feature view, defined during its creation, that may not be used in training the model
+                itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
+                back to original dataframes). When replaying a `Query` during model inference, the extra
+                features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2011,6 +2051,7 @@ class FeatureView:
                 TrainingDatasetSplit.TEST,
             ],
             spine=spine,
+            with_extra_features=with_extra_features,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -2043,6 +2084,7 @@ class FeatureView:
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
+        with_extra_features=False,
     ):
         """
         Get training data created by `feature_view.create_training_data`
@@ -2076,12 +2118,20 @@ class FeatureView:
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-
+            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+                in the feature view, defined during its creation, that may not be used in training the model
+                itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
+                back to original dataframes). When replaying a `Query` during model inference, the extra
+                features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
         # Returns
             (X, y): Tuple of dataframe of features and labels
         """
         td, df = self._feature_view_engine.get_training_data(
-            self, read_options, training_dataset_version=training_dataset_version
+            self,
+            read_options,
+            training_dataset_version=training_dataset_version,
+            with_extra_features=with_extra_features,
         )
         return df
 

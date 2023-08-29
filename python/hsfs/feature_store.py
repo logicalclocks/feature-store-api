@@ -1401,11 +1401,11 @@ class FeatureStore:
                 the feature view. When replaying a `Query` during model inference,
                 the label features can be omitted from the feature vector retrieval.
                 Defaults to `[]`, no label.
-            extra_features: A list of feature names the feature view, such as primary keys and datetime that
-                are not used in training itself but can be useful to sort dataframe and or merge to predictions back
-                to original dataframes. When replaying a `Query` during model inference,
-                the extra features can be omitted from the feature vector retrieval.
-                Defaults to `[]`, no label.
+            extra_features: A list of feature names in the feature view, that may not be used in training the model
+                itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
+                back to original dataframes). When replaying a `Query` during model inference, the extra
+                features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
+                online inference (`get_feature_vector(s)`) . Defaults to `[]`, no extra features.
             transformation_functions: A dictionary mapping tansformation functions to
                 to the features they should be applied to before writing out the
                 vector and at inference time. Defaults to `{}`, no
@@ -1463,11 +1463,11 @@ class FeatureStore:
                 the feature view. When replaying a `Query` during model inference,
                 the label features can be omitted from the feature vector retrieval.
                 Defaults to `[]`, no label.
-            extra_features: A list of feature names the feature view, such as primary keys and datetime that
-                are not used in training itself but can be useful to sort dataframe and or merge to predictions back
-                to original dataframes. When replaying a `Query` during model inference,
-                the extra features can be omitted from the feature vector retrieval.
-                Defaults to `[]`, no label.
+            extra_features: A list of feature names in the feature view, that may not be used in training the model
+                itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
+                back to original dataframes). When replaying a `Query` during model inference, the extra
+                features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
+                online inference (`get_feature_vector(s)`) . Defaults to `[]`, no extra features.
             transformation_functions: A dictionary mapping tansformation functions to
                 to the features they should be applied to before writing out the
                 vector and at inference time. Defaults to `{}`, no

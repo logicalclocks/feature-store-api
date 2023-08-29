@@ -82,6 +82,21 @@ class FeatureViewEngine:
                         featuregroup=featuregroup,
                     )
                 )
+        if feature_view_obj.extra_features:
+            for extra_feature_name in feature_view_obj.extra_features:
+                (
+                    feature,
+                    prefix,
+                    featuregroup,
+                ) = feature_view_obj.query._get_feature_by_name(extra_feature_name)
+                feature_view_obj._features.append(
+                    training_dataset_feature.TrainingDatasetFeature(
+                        name=feature.name,
+                        extra_feature=True,
+                        featuregroup=featuregroup,
+                    )
+                )
+
         self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
         updated_fv = self._feature_view_api.post(feature_view_obj)
         self.attach_transformation_function(updated_fv)
@@ -219,7 +234,12 @@ class FeatureViewEngine:
         return transformation_functions_dict
 
     def create_training_dataset(
-        self, feature_view_obj, training_dataset_obj, user_write_options, spine=None
+        self,
+        feature_view_obj,
+        training_dataset_obj,
+        user_write_options,
+        spine=None,
+        with_extra_features=False,
     ):
         self._set_event_time(feature_view_obj, training_dataset_obj)
         updated_instance = self._create_training_data_metadata(
@@ -230,6 +250,7 @@ class FeatureViewEngine:
             user_write_options,
             training_dataset_obj=training_dataset_obj,
             spine=spine,
+            with_extra_features=with_extra_features,
         )
         return updated_instance, td_job
 
@@ -241,6 +262,7 @@ class FeatureViewEngine:
         training_dataset_obj=None,
         training_dataset_version=None,
         spine=None,
+        with_extra_features=False,
     ):
         # check if provided td version has already existed.
         if training_dataset_version:
@@ -269,6 +291,12 @@ class FeatureViewEngine:
         )
 
         if td_updated.training_dataset_type != td_updated.IN_MEMORY:
+            if with_extra_features:
+                warnings.warn(
+                    "Argument `with_extra_features` was set to `True`. However, when reading already materialised "
+                    "training dataset this will not have anny effect. If this training dataset was materialised with"
+                    "`with_extra_features=True` it will include return extra features, otherwise it will not."
+                )
             split_df = self._read_from_storage_connector(
                 td_updated, td_updated.splits, read_options, feature_view_obj.schema
             )
@@ -280,8 +308,7 @@ class FeatureViewEngine:
                 start_time=td_updated.event_start_time,
                 end_time=td_updated.event_end_time,
                 with_label=True,
-                # TODO (Davit):
-                with_extra_features=False,
+                with_extra_features=with_extra_features,
                 spine=spine,
             )
             split_df = engine.get_instance().get_training_data(

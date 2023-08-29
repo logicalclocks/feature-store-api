@@ -30,6 +30,7 @@ class TrainingDatasetFeature:
         featuregroup=None,
         feature_group_feature_name=None,
         label=False,
+        extra_feature=False,
         transformation_function=None,
     ):
         self._name = name.lower()
@@ -42,6 +43,7 @@ class TrainingDatasetFeature:
         )
         self._feature_group_feature_name = feature_group_feature_name
         self._label = label
+        self._extra_feature = extra_feature
         self._transformation_function = (
             TransformationFunction.from_response_json(transformation_function)
             if isinstance(transformation_function, dict)
@@ -54,6 +56,7 @@ class TrainingDatasetFeature:
             "type": self._type,
             "index": self._index,
             "label": self._label,
+            "extraFeature": self._extra_feature,
             "transformationFunction": self._transformation_function,
             "featureGroupFeatureName": self._feature_group_feature_name,
             "featuregroup": self._feature_group,
@@ -98,6 +101,15 @@ class TrainingDatasetFeature:
     @label.setter
     def label(self, label):
         self._label = label
+
+    @property
+    def extra_feature(self):
+        """Indicator if it is feature."""
+        return self._extra_feature
+
+    @extra_feature.setter
+    def extra_feature(self, extra_feature):
+        self._label = extra_feature
 
     @property
     def transformation_function(self):
