@@ -17,13 +17,14 @@
 
 package com.logicalclocks.hsfs.flink.engine;
 
+import com.google.common.base.Strings;
+import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
-import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
-import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
-import com.logicalclocks.hsfs.metadata.KafkaApi;
+import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.engine.EngineBase;
 import com.logicalclocks.hsfs.flink.StreamFeatureGroup;
 
+import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import lombok.Getter;
 
 import org.apache.avro.generic.GenericRecord;
@@ -33,20 +34,21 @@ import org.apache.flink.configuration.GlobalConfiguration;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
+import org.apache.flink.core.fs.Path;
 import org.apache.flink.formats.avro.typeutils.GenericRecordAvroTypeInfo;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.util.FileUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import static org.apache.flink.configuration.ConfigOptions.key;
 
-public class FlinkEngine {
+public class FlinkEngine extends EngineBase {
   private static FlinkEngine INSTANCE = null;
 
   public static synchronized FlinkEngine getInstance() throws FeatureStoreException {
@@ -58,9 +60,6 @@ public class FlinkEngine {
 
   @Getter
   private StreamExecutionEnvironment streamExecutionEnvironment;
-
-  private final KafkaApi kafkaApi = new KafkaApi();
-  private final HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
   private final Configuration flinkConfig = GlobalConfiguration.loadConfiguration();
   private final ConfigOption<String> keyStorePath =
@@ -89,7 +88,8 @@ public class FlinkEngine {
       Map<String, String> writeOptions) throws FeatureStoreException, IOException {
 
     DataStream<Object> genericDataStream = (DataStream<Object>) dataStream;
-    Properties properties = getKafkaProperties(streamFeatureGroup, writeOptions);
+    Properties properties = new Properties();
+    properties.putAll(getKafkaConfig(streamFeatureGroup, writeOptions));
 
     KafkaSink<GenericRecord> sink = KafkaSink.<GenericRecord>builder()
         .setBootstrapServers(properties.getProperty("bootstrap.servers"))
@@ -118,36 +118,39 @@ public class FlinkEngine {
     return avroRecordDataStream.sinkTo(sink);
   }
 
-  private Properties getKafkaProperties(StreamFeatureGroup featureGroup, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException {
+  @Override
+  public String addFile(String filePath) throws IOException {
+    if (Strings.isNullOrEmpty(filePath)) {
+      return filePath;
+    }
+    // this is used for unit testing
+    if (!filePath.startsWith("file://")) {
+      filePath = "hdfs://" + filePath;
+    }
+    String targetPath = FileUtils.getCurrentWorkingDirectory().toString()
+        + filePath.substring(filePath.lastIndexOf("/"));
+    FileUtils.copy(new Path(filePath), new Path(targetPath), false);
+    return targetPath;
+  }
 
-    Properties properties = new Properties();
-    boolean internalKafka = false;
+  @Override
+  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
+      throws FeatureStoreException, IOException {
+    boolean external = !System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)
+        && (writeOptions == null
+        || !Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false")));
+
+    StorageConnector.KafkaConnector storageConnector =
+        storageConnectorApi.getKafkaStorageConnector(featureGroup.getFeatureStore(), external);
+    storageConnector.setSslTruststoreLocation(addFile(storageConnector.getSslTruststoreLocation()));
+    storageConnector.setSslKeystoreLocation(addFile(storageConnector.getSslKeystoreLocation()));
+
+    Map<String, String> config = storageConnector.kafkaOptions();
+
     if (writeOptions != null) {
-      internalKafka = Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"));
-      properties.putAll(writeOptions);
+      config.putAll(writeOptions);
     }
-    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) || internalKafka) {
-      properties.put("bootstrap.servers",
-          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
-          "INTERNAL://", ""))
-            .collect(Collectors.joining(",")));
-    } else {
-      properties.put("bootstrap.servers",
-          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
-            .map(broker -> broker.replaceAll("EXTERNAL://", ""))
-            .collect(Collectors.joining(","))
-      );
-    }
-    properties.put("security.protocol", "SSL");
-    properties.put("ssl.truststore.location", client.getTrustStorePath());
-    properties.put("ssl.truststore.password", client.getCertKey());
-    properties.put("ssl.keystore.location", client.getKeyStorePath());
-    properties.put("ssl.keystore.password", client.getCertKey());
-    properties.put("ssl.key.password", client.getCertKey());
-    properties.put("ssl.endpoint.identification.algorithm", "");
-    properties.put("enable.idempotence", false);
-    return properties;
+    return config;
   }
 
   public String getTrustStorePath() {
