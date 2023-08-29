@@ -31,11 +31,8 @@ class TestFeatureStore:
         assert fs.id == 11
         assert fs.name == "test_featurestore_name"
         assert fs._created == "test_created"
-        assert fs._hdfs_store_path == "test_hdfs_store_path"
         assert fs.project_name == "test_project_name"
         assert fs.project_id == 67
-        assert fs.description == "test_featurestore_description"
-        assert fs._inode_id == 44
         assert fs._online_feature_store_name == "test_online_featurestore_name"
         assert fs._online_feature_store_size == 31
         assert fs._offline_feature_store_name == "test_offline_featurestore_name"
@@ -59,11 +56,8 @@ class TestFeatureStore:
         assert fs.id == 11
         assert fs.name == "test_featurestore_name"
         assert fs._created == "test_created"
-        assert fs._hdfs_store_path == "test_hdfs_store_path"
         assert fs.project_name == "test_project_name"
         assert fs.project_id == 67
-        assert fs.description == "test_featurestore_description"
-        assert fs._inode_id == 44
         assert fs._online_feature_store_name is None
         assert fs._online_feature_store_size is None
         assert fs._offline_feature_store_name == "test_offline_featurestore_name"
