@@ -2864,7 +2864,7 @@ class TestPython:
         mocker.patch("hsfs.engine.python.Engine.get_job_url")
         mocker.patch(
             "hsfs.engine.python.Engine._kafka_get_offsets",
-            return_value="tests_offsets",
+            return_value=" tests_offsets",
         )
 
         python_engine = python.Engine()
@@ -2899,7 +2899,7 @@ class TestPython:
         # Assert
         assert mock_python_engine_kafka_produce.call_count == 4
         job_mock.run.assert_called_once_with(
-            args="tests_offsets",
+            args="defaults tests_offsets",
             await_termination=False,
         )
 
