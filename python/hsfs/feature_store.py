@@ -57,11 +57,8 @@ class FeatureStore:
         featurestore_id,
         featurestore_name,
         created,
-        hdfs_store_path,
         project_name,
         project_id,
-        featurestore_description,
-        inode_id,
         offline_featurestore_name,
         hive_endpoint,
         online_enabled,
@@ -76,11 +73,8 @@ class FeatureStore:
         self._id = featurestore_id
         self._name = featurestore_name
         self._created = created
-        self._hdfs_store_path = hdfs_store_path
         self._project_name = project_name
         self._project_id = project_id
-        self._description = featurestore_description
-        self._inode_id = inode_id
         self._online_feature_store_name = online_featurestore_name
         self._online_feature_store_size = online_featurestore_size
         self._offline_feature_store_name = offline_featurestore_name
@@ -1580,11 +1574,6 @@ class FeatureStore:
     def project_id(self):
         """Id of the project in which the feature store is located."""
         return self._project_id
-
-    @property
-    def description(self):
-        """Description of the feature store."""
-        return self._description
 
     @property
     def online_featurestore_name(self):
