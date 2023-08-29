@@ -60,6 +60,8 @@ from hsfs.core import great_expectation_engine
 class FeatureGroupBase:
     def __init__(
         self,
+        name,
+        version,
         featurestore_id,
         location,
         event_time=None,
@@ -68,14 +70,18 @@ class FeatureGroupBase:
         expectation_suite=None,
         online_topic_name=None,
         use_project_topic=True,
+        deprecated=False,
     ):
+        self._version = version
+        self._name = name
         self.event_time = event_time
         self._online_enabled = online_enabled
         self._location = location
         self._id = id
         self._subject = None
-        self._online_topic_name = online_topic_name  # same for the whole project
+        self._online_topic_name = online_topic_name
         self._use_project_topic = use_project_topic
+        self._deprecated = deprecated
         self._feature_store_id = featurestore_id
         # use setter for correct conversion
         self.expectation_suite = expectation_suite
@@ -111,6 +117,14 @@ class FeatureGroupBase:
         self._variable_api = VariableApi()
         self._feature_group_engine = None
         self._multi_part_insert = False
+
+        self.check_deprecated()
+
+    def check_deprecated(self):
+        if self.deprecated:
+            warnings.warn(
+                f"Feature Group `{self._name}`, version `{self._version}` is deprecated"
+            )
 
     def delete(self):
         """Drop the entire feature group along with its feature data.
@@ -575,6 +589,33 @@ class FeatureGroupBase:
             `FeatureGroup`. The updated feature group object.
         """
         self._feature_group_engine.update_description(self, description)
+        return self
+
+    def update_deprecated(self, deprecate: bool = True):
+        """Deprecate the feature group.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            fg.update_deprecated(deprecate=True)
+            ```
+
+        !!! info "Safe update"
+            This method updates the feature group safely. In case of failure
+            your local metadata object will be kept unchanged.
+
+        # Arguments
+            deprecate: Boolean value identifying if the feature group should be deprecated. Defaults to True.
+
+        # Returns
+            `FeatureGroup`. The updated feature group object.
+        """
+        self._feature_group_engine.update_deprecated(self, deprecate)
         return self
 
     def update_features(self, features: Union[feature.Feature, List[feature.Feature]]):
@@ -1126,6 +1167,20 @@ class FeatureGroupBase:
             )
 
     @property
+    def name(self):
+        """Name of the feature group."""
+        return self._name
+
+    @property
+    def version(self):
+        """Version number of the feature group."""
+        return self._version
+
+    @version.setter
+    def version(self, version):
+        self._version = version
+
+    @property
     def statistics(self):
         """Get the latest computed statistics for the feature group."""
         return self._statistics_engine.get_last(self)
@@ -1301,6 +1356,15 @@ class FeatureGroupBase:
         self._use_project_topic = use_project_topic
 
     @property
+    def deprecated(self):
+        """Setting if the feature group is deprecated."""
+        return self._deprecated
+
+    @deprecated.setter
+    def deprecated(self, deprecated):
+        self._deprecated = deprecated
+
+    @property
     def subject(self):
         """Subject of the feature group."""
         if self._subject is None:
@@ -1388,8 +1452,11 @@ class FeatureGroup(FeatureGroupBase):
         parents=None,
         href=None,
         delta_streamer_job_conf=None,
+        deprecated=False,
     ):
         super().__init__(
+            name,
+            version,
             featurestore_id,
             location,
             event_time=event_time,
@@ -1398,14 +1465,13 @@ class FeatureGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             use_project_topic=use_project_topic,
+            deprecated=deprecated,
         )
 
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
         self._creator = user.User.from_response_json(creator)
-        self._version = version
-        self._name = name
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
             for feat in (features or [])
@@ -2443,6 +2509,7 @@ class FeatureGroup(FeatureGroupBase):
             "expectationSuite": self._expectation_suite,
             "parents": self._parents,
             "useProjectTopic": self.use_project_topic,
+            "deprecated": self.deprecated,
         }
         if self._stream:
             fg_meta_dict["deltaStreamerJobConf"] = self._deltastreamer_jobconf
@@ -2458,16 +2525,6 @@ class FeatureGroup(FeatureGroupBase):
     def id(self):
         """Feature group id."""
         return self._id
-
-    @property
-    def name(self):
-        """Name of the feature group."""
-        return self._name
-
-    @property
-    def version(self):
-        """Version number of the feature group."""
-        return self._version
 
     @property
     def description(self):
@@ -2541,10 +2598,6 @@ class FeatureGroup(FeatureGroupBase):
 
         return self._materialization_job
 
-    @version.setter
-    def version(self, version):
-        self._version = version
-
     @description.setter
     def description(self, new_description):
         self._description = new_description
@@ -2600,8 +2653,11 @@ class ExternalFeatureGroup(FeatureGroupBase):
         online_topic_name=None,
         use_project_topic=True,
         spine=False,
+        deprecated=False,
     ):
         super().__init__(
+            name,
+            version,
             featurestore_id,
             location,
             event_time=event_time,
@@ -2610,14 +2666,13 @@ class ExternalFeatureGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             use_project_topic=use_project_topic,
+            deprecated=deprecated,
         )
 
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
         self._creator = user.User.from_response_json(creator)
-        self._version = version
-        self._name = name
         self._query = query
         self._data_format = data_format.upper() if data_format else None
         self._path = path
@@ -2871,19 +2926,12 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "onlineEnabled": self._online_enabled,
             "spine": False,
             "useProjectTopic": self.use_project_topic,
+            "deprecated": self.deprecated,
         }
 
     @property
     def id(self):
         return self._id
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def version(self):
-        return self._version
 
     @property
     def description(self):
@@ -2916,10 +2964,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
     @property
     def created(self):
         return self._created
-
-    @version.setter
-    def version(self, version):
-        self._version = version
 
     @description.setter
     def description(self, new_description):
@@ -2967,8 +3011,11 @@ class SpineGroup(FeatureGroupBase):
         use_project_topic=True,
         spine=True,
         dataframe="spine",
+        deprecated=False,
     ):
         super().__init__(
+            name,
+            version,
             featurestore_id,
             location,
             event_time=event_time,
@@ -2977,14 +3024,13 @@ class SpineGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             use_project_topic=use_project_topic,
+            deprecated=deprecated,
         )
 
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
         self._creator = user.User.from_response_json(creator)
-        self._version = version
-        self._name = name
 
         self._features = [
             feature.Feature.from_response_json(feat) if isinstance(feat, dict) else feat
@@ -3104,4 +3150,5 @@ class SpineGroup(FeatureGroupBase):
             "eventTime": self._event_time,
             "spine": True,
             "useProjectTopic": self.use_project_topic,
+            "deprecated": self.deprecated,
         }

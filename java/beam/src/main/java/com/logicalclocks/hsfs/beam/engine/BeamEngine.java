@@ -17,23 +17,23 @@
 
 package com.logicalclocks.hsfs.beam.engine;
 
+import com.google.common.base.Strings;
+import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
-import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
-import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
-import com.logicalclocks.hsfs.metadata.KafkaApi;
+import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
+import com.logicalclocks.hsfs.metadata.DatasetApi;
+import com.logicalclocks.hsfs.engine.EngineBase;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import org.apache.avro.Schema;
-import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.common.config.SslConfigs;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-public class BeamEngine {
+public class BeamEngine extends EngineBase {
   private static BeamEngine INSTANCE = null;
 
   public static synchronized BeamEngine getInstance() throws FeatureStoreException {
@@ -42,9 +42,6 @@ public class BeamEngine {
     }
     return INSTANCE;
   }
-
-  private final KafkaApi kafkaApi = new KafkaApi();
-  private final HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
 
   private BeamEngine() throws FeatureStoreException {
   }
@@ -59,41 +56,45 @@ public class BeamEngine {
     Schema deserializedEncodedSchema = new Schema.Parser().parse(streamFeatureGroup.getEncodedAvroSchema());
 
     return new BeamProducer(streamFeatureGroup.getOnlineTopicName(),
-      getKafkaProperties(streamFeatureGroup, writeOptions),
+      getKafkaConfig(streamFeatureGroup, writeOptions),
       streamFeatureGroup.getDeserializedAvroSchema(), deserializedEncodedSchema, complexFeatureSchemas,
       streamFeatureGroup.getPrimaryKeys(), streamFeatureGroup);
   }
 
-  private Map<String, String> getKafkaProperties(StreamFeatureGroup featureGroup, Map<String, String> writeOptions)
+  @Override
+  public String addFile(String filePath) throws IOException, FeatureStoreException {
+    if (Strings.isNullOrEmpty(filePath)) {
+      return filePath;
+    }
+    // this is used for unit testing
+    if (!filePath.startsWith("file://")) {
+      filePath = "hdfs://" + filePath;
+    }
+    String targetPath = System.getProperty("java.io.tmpdir") + filePath.substring(filePath.lastIndexOf("/"));
+    try (FileOutputStream outputStream = new FileOutputStream(targetPath)) {
+      outputStream.write(DatasetApi.readContent(HopsworksClient.getInstance().getProject().getProjectId(),
+          filePath, "HIVEDB"));
+    }
+    return targetPath;
+  }
+
+  @Override
+  public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    Map<String, String> properties = new HashMap<>();
-    boolean internalKafka = false;
+    boolean external = !System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)
+        && (writeOptions == null
+        || !Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false")));
+
+    StorageConnector.KafkaConnector storageConnector =
+        storageConnectorApi.getKafkaStorageConnector(featureGroup.getFeatureStore(), external);
+    storageConnector.setSslTruststoreLocation(addFile(storageConnector.getSslTruststoreLocation()));
+    storageConnector.setSslKeystoreLocation(addFile(storageConnector.getSslKeystoreLocation()));
+
+    Map<String, String> config = storageConnector.kafkaOptions();
+
     if (writeOptions != null) {
-      internalKafka = Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"));
+      config.putAll(writeOptions);
     }
-    if (System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS) || internalKafka) {
-      properties.put("bootstrap.servers",
-          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore()).stream().map(broker -> broker.replaceAll(
-            "INTERNAL://", ""))
-          .collect(Collectors.joining(",")));
-    } else {
-      properties.put("bootstrap.servers",
-          kafkaApi.getBrokerEndpoints(featureGroup.getFeatureStore(), true).stream()
-          .map(broker -> broker.replaceAll("EXTERNAL://", ""))
-          .collect(Collectors.joining(","))
-      );
-    }
-
-    properties.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "/tmp/"
-        + Paths.get(client.getTrustStorePath()).getFileName());
-    properties.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "/tmp/"
-        + Paths.get(client.getKeyStorePath()).getFileName());
-    properties.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, client.getCertKey());
-    properties.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, client.getCertKey());
-    properties.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, client.getCertKey());
-    properties.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-    properties.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
-
-    return properties;
+    return config;
   }
 }

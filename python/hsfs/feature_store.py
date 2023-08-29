@@ -93,9 +93,7 @@ class FeatureStore:
         self._num_feature_views = num_feature_views
 
         self._feature_group_api = feature_group_api.FeatureGroupApi(self._id)
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
-            self._id
-        )
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(self._id)
 
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(self._id)
@@ -372,7 +370,7 @@ class FeatureStore:
         # Returns
             `StorageConnector`. Storage connector object.
         """
-        return self._storage_connector_api.get(name)
+        return self._storage_connector_api.get(self._id, name)
 
     def sql(
         self,
@@ -433,7 +431,7 @@ class FeatureStore:
         # Returns
             `StorageConnector`. JDBC storage connector to the Online Feature Store.
         """
-        return self._storage_connector_api.get_online_connector()
+        return self._storage_connector_api.get_online_connector(self._id)
 
     def create_feature_group(
         self,

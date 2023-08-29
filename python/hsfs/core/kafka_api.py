@@ -31,17 +31,3 @@ class KafkaApi:
         ]
         headers = {"content-type": "application/json"}
         return _client._send_request("GET", path_params, headers=headers)
-
-    def get_broker_endpoints(self, externalListeners: bool = False):
-        _client = client.get_instance()
-        path_params = [
-            "project",
-            _client._project_id,
-            "kafka",
-            "clusterinfo",
-        ]
-        query_params = {"external": externalListeners}
-        headers = {"content-type": "application/json"}
-        return _client._send_request(
-            "GET", path_params, query_params=query_params, headers=headers
-        )["brokers"]

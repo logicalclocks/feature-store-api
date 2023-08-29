@@ -31,7 +31,6 @@ public class KafkaApi {
 
   private static final String KAFKA_PATH = "/kafka";
   private static final String SUBJECT_PATH = "/subjects/{subject}/versions/{version}";
-  private static final String CLUSTERINFO_PATH = "/clusterinfo{?external}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaApi.class);
 
@@ -54,24 +53,5 @@ public class KafkaApi {
 
     LOGGER.info("Sending metadata request: " + uri);
     return hopsworksClient.handleRequest(new HttpGet(uri), Subject.class);
-  }
-
-  public List<String> getBrokerEndpoints(FeatureStoreBase featureStoreBase) throws FeatureStoreException, IOException {
-    return getBrokerEndpoints(featureStoreBase, false);
-  }
-
-  public List<String> getBrokerEndpoints(FeatureStoreBase featureStoreBase, boolean externalListeners)
-      throws FeatureStoreException, IOException {
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
-        + KAFKA_PATH + CLUSTERINFO_PATH;
-
-    String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStoreBase.getProjectId())
-        .set("external", externalListeners)
-        .expand();
-
-    LOGGER.info("Sending metadata request: " + uri);
-    return hopsworksClient.handleRequest(new HttpGet(uri), KafkaClusterInfo.class).getBrokers();
   }
 }

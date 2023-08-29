@@ -121,6 +121,9 @@ public abstract class FeatureGroupBase<T> {
   @Setter
   protected DeltaStreamerJobConf deltaStreamerJobConf;
 
+  @Getter
+  protected Boolean deprecated;
+
   @JsonIgnore
   // These are only used in the client. In the server they are aggregated in the `features` field
   protected List<String> partitionKeys;
@@ -136,6 +139,17 @@ public abstract class FeatureGroupBase<T> {
   protected FeatureGroupUtils utils = new FeatureGroupUtils();
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupBase.class);
+
+  public void setDeprecated(Boolean deprecated) {
+    this.deprecated = deprecated;
+    checkDeprecated();
+  }
+
+  public void checkDeprecated() {
+    if (Boolean.TRUE.equals(this.deprecated)) {
+      LOGGER.warn(String.format("Feature Group `%s`, version `%s` is deprecated", this.name, this.version));
+    }
+  }
 
   public void delete() throws FeatureStoreException, IOException {
     LOGGER.warn("JobWarning: All jobs associated to feature group `" + name + "`, version `"
@@ -200,6 +214,27 @@ public abstract class FeatureGroupBase<T> {
    */
   public void updateDescription(String description) throws FeatureStoreException, IOException {
     featureGroupEngineBase.updateDescription(this, description, this.getClass());
+  }
+
+  /**
+   * Deprecate the feature group.
+   *
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   */
+  public void updateDeprecated() throws FeatureStoreException, IOException {
+    updateDeprecated(true);
+  }
+
+  /**
+   * Deprecate the feature group.
+   *
+   * @param deprecate identifies if feature group should be deprecated.
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   */
+  public void updateDeprecated(Boolean deprecate) throws FeatureStoreException, IOException {
+    featureGroupEngineBase.updateDeprecated(this, deprecate, this.getClass());
   }
 
   /**
