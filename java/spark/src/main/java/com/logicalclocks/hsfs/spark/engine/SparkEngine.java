@@ -92,6 +92,7 @@ import org.json.JSONObject;
 import scala.collection.JavaConverters;
 
 import java.io.BufferedWriter;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -885,7 +886,7 @@ public class SparkEngine extends EngineBase {
   }
 
   @Override
-  public String addFile(String filePath) {
+  public String addFile(String filePath) throws FeatureStoreException {
     if (Strings.isNullOrEmpty(filePath)) {
       return filePath;
     }
@@ -899,14 +900,12 @@ public class SparkEngine extends EngineBase {
       sparkSession.sparkContext().addFile(filePath);
     } else {
       // for external client then read the file from hive path
-      java.nio.file.Path keyFileLocalPath = Paths.get(
+      java.nio.file.Path targetPath = Paths.get(
           SparkFiles.getRootDirectory(), Paths.get(filePath).getFileName().toString());
-      try {
-        BufferedWriter writer = new BufferedWriter(new FileWriter(keyFileLocalPath.toString()));
-        // read key file from project and write to local
-        writer.write(DatasetApi.downloadHdfsPath(HopsworksClient.getInstance().getProject().getProjectId(), filePath,
-            "HIVEDB"));
-        writer.close();
+
+      try (FileOutputStream outputStream = new FileOutputStream(targetPath.toString())) {
+        outputStream.write(DatasetApi.readContent(HopsworksClient.getInstance().getProject().getProjectId(),
+            filePath, "HIVEDB"));
       } catch (IOException e) {
         e.printStackTrace();
         throw new FeatureStoreException("Error while reading key file from project path.");
