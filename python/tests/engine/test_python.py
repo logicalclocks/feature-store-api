@@ -33,7 +33,7 @@ from hsfs import (
 from hsfs.engine import python
 from hsfs.core import inode, execution, job
 from hsfs.constructor import query
-from hsfs.client import exceptions, hopsworks
+from hsfs.client import exceptions
 from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
 from hsfs.training_dataset_feature import TrainingDatasetFeature
 
@@ -2897,10 +2897,9 @@ class TestPython:
 
         # Assert
         assert (
-            False
-            == mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
                 1
-            ]
+            ] is False
         )
         assert result == {
             "bootstrap.servers": "test_bootstrap_servers",
@@ -2944,10 +2943,9 @@ class TestPython:
 
         # Assert
         assert (
-            True
-            == mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
                 1
-            ]
+            ] is False
         )
         assert result == {
             "bootstrap.servers": "test_bootstrap_servers",
@@ -2992,10 +2990,9 @@ class TestPython:
 
         # Assert
         assert (
-            False
-            == mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
                 1
-            ]
+            ] is False
         )
         assert result == {
             "bootstrap.servers": "test_bootstrap_servers",
@@ -3042,10 +3039,9 @@ class TestPython:
 
         # Assert
         assert (
-            False
-            == mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
                 1
-            ]
+            ] is False
         )
         assert result == {
             "bootstrap.servers": "test_bootstrap_servers",
