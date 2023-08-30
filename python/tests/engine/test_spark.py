@@ -3352,6 +3352,7 @@ class TestSpark:
             "pyspark.sql.session.SparkSession.builder.getOrCreate"
         )
         mock_pyspark_files_get = mocker.patch("pyspark.files.SparkFiles.get")
+        mocker.patch("hsfs.client.get_instance")
 
         spark_engine = spark.Engine()
 
