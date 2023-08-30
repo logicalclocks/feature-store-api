@@ -2897,9 +2897,8 @@ class TestPython:
 
         # Assert
         assert (
-            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
-                1
-            ] is False
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][1]
+            is False
         )
         assert result == {
             "bootstrap.servers": "test_bootstrap_servers",
@@ -2943,9 +2942,8 @@ class TestPython:
 
         # Assert
         assert (
-            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
-                1
-            ] is False
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][1]
+            is False
         )
         assert result == {
             "bootstrap.servers": "test_bootstrap_servers",
@@ -2990,9 +2988,8 @@ class TestPython:
 
         # Assert
         assert (
-            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
-                1
-            ] is False
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][1]
+            is False
         )
         assert result == {
             "bootstrap.servers": "test_bootstrap_servers",
@@ -3039,9 +3036,8 @@ class TestPython:
 
         # Assert
         assert (
-            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
-                1
-            ] is False
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][1]
+            is False
         )
         assert result == {
             "bootstrap.servers": "test_bootstrap_servers",

@@ -4524,9 +4524,8 @@ class TestSpark:
             mock_storage_connector_api.return_value.get_kafka_connector.call_count == 1
         )
         assert (
-            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
-                1
-            ] is False
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][1]
+            is False
         )
 
     def test_get_kafka_config_external_client(self, mocker, backend_fixtures):
@@ -4569,9 +4568,8 @@ class TestSpark:
             mock_storage_connector_api.return_value.get_kafka_connector.call_count == 1
         )
         assert (
-            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
-                1
-            ] is False
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][1]
+            is False
         )
 
     def test_get_kafka_config_internal_kafka(self, mocker, backend_fixtures):
@@ -4617,9 +4615,8 @@ class TestSpark:
             mock_storage_connector_api.return_value.get_kafka_connector.call_count == 1
         )
         assert (
-            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
-                1
-            ] is False
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][1]
+            is False
         )
 
     def test_get_kafka_config_external_client_internal_kafka(
@@ -4667,7 +4664,6 @@ class TestSpark:
             mock_storage_connector_api.return_value.get_kafka_connector.call_count == 1
         )
         assert (
-            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][
-                1
-            ] is False
+            mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][1]
+            is False
         )
