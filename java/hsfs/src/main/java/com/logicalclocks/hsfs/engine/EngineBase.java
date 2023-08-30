@@ -30,7 +30,7 @@ public abstract class EngineBase {
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(EngineBase.class);
 
-  protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
+  public StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
 
   public abstract String addFile(String filePath) throws IOException, FeatureStoreException;
 
