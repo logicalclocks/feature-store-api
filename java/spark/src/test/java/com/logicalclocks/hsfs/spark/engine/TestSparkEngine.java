@@ -17,7 +17,20 @@
 
 package com.logicalclocks.hsfs.spark.engine;
 
+import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.SecurityProtocol;
+import com.logicalclocks.hsfs.SslEndpointIdentificationAlgorithm;
+import com.logicalclocks.hsfs.StorageConnector;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
+import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
+import com.logicalclocks.hsfs.metadata.Option;
+import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
+import com.logicalclocks.hsfs.spark.FeatureGroup;
+import com.logicalclocks.hsfs.spark.FeatureStore;
+import org.apache.spark.SparkContext;
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
@@ -25,10 +38,16 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import scala.collection.JavaConverters;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TestSparkEngine {
 
@@ -79,5 +98,137 @@ public class TestSparkEngine {
         for (int i = 0; i < originalExpectedJava.size(); i++) {
             Assertions.assertEquals(originalExpectedJava.get(i), dfOriginalJava.get(i));
         }
+    }
+
+    @Test
+    public void testGetKafkaConfig() throws FeatureStoreException, IOException {
+        // Arrange
+        HopsworksClient hopsworksClient = Mockito.mock(HopsworksClient.class);
+        hopsworksClient.setInstance(new HopsworksClient(Mockito.mock(HopsworksHttpClient.class), "host"));
+        System.setProperty(HopsworksInternalClient.REST_ENDPOINT_SYS, "");
+
+        SparkEngine sparkEngine = SparkEngine.getInstance();
+        sparkEngine.sparkSession = Mockito.mock(SparkSession.class);
+        Mockito.when(sparkEngine.sparkSession.sparkContext()).thenReturn(Mockito.mock(SparkContext.class));
+        StorageConnectorApi storageConnectorApi = Mockito.mock(StorageConnectorApi.class);
+        sparkEngine.storageConnectorApi = storageConnectorApi;
+        StorageConnector.KafkaConnector kafkaConnector = new StorageConnector.KafkaConnector();
+        kafkaConnector.setBootstrapServers("testServer:123");
+        kafkaConnector.setOptions(Collections.singletonList(new Option("testOptionName", "testOptionValue")));
+        kafkaConnector.setSslTruststoreLocation("sslTruststoreLocation");
+        kafkaConnector.setSslTruststorePassword("sslTruststorePassword");
+        kafkaConnector.setSslKeystoreLocation("sslKeystoreLocation");
+        kafkaConnector.setSslKeystorePassword("sslKeystorePassword");
+        kafkaConnector.setSslKeyPassword("sslKeyPassword");
+        kafkaConnector.setExternalKafka(Boolean.TRUE);
+        kafkaConnector.setSecurityProtocol(SecurityProtocol.SSL);
+        kafkaConnector.setSslEndpointIdentificationAlgorithm(SslEndpointIdentificationAlgorithm.EMPTY);
+
+        Mockito.when(storageConnectorApi.getKafkaStorageConnector(Mockito.any(), Mockito.anyBoolean()))
+            .thenReturn(kafkaConnector);
+        ArgumentCaptor<Boolean> externalArg = ArgumentCaptor.forClass(Boolean.class);
+
+        Map<String, String> writeOptions = new HashMap<>();
+        writeOptions.put("testName", "testValue");
+
+        // Act
+        Map<String, String> result = sparkEngine.getKafkaConfig(new FeatureGroup(), writeOptions);
+
+        // Assert
+        Mockito.verify(storageConnectorApi).getKafkaStorageConnector(Mockito.any(), externalArg.capture());
+        Assertions.assertEquals(Boolean.FALSE, externalArg.getValue());
+        Assertions.assertEquals("sslTruststorePassword", result.get("kafka.ssl.truststore.password"));
+        Assertions.assertEquals("testServer:123", result.get("kafka.bootstrap.servers"));
+        Assertions.assertEquals("SSL", result.get("kafka.security.protocol"));
+        Assertions.assertEquals("sslKeyPassword", result.get("kafka.ssl.key.password"));
+        Assertions.assertEquals("testOptionValue", result.get("kafka.testOptionName"));
+        Assertions.assertEquals("", result.get("kafka.ssl.endpoint.identification.algorithm"));
+        Assertions.assertEquals("sslKeystorePassword", result.get("kafka.ssl.keystore.password"));
+        Assertions.assertEquals("testValue", result.get("testName"));
+    }
+
+    @Test
+    public void testGetKafkaConfigExternalClient() throws FeatureStoreException, IOException {
+        // Arrange
+        HopsworksClient hopsworksClient = Mockito.mock(HopsworksClient.class);
+        hopsworksClient.setInstance(new HopsworksClient(Mockito.mock(HopsworksHttpClient.class), "host"));
+
+        SparkEngine sparkEngine = SparkEngine.getInstance();
+        StorageConnectorApi storageConnectorApi = Mockito.mock(StorageConnectorApi.class);
+        sparkEngine.storageConnectorApi = storageConnectorApi;
+        StorageConnector.KafkaConnector kafkaConnector = new StorageConnector.KafkaConnector();
+        kafkaConnector.setExternalKafka(Boolean.TRUE);
+        kafkaConnector.setSecurityProtocol(SecurityProtocol.SSL);
+        kafkaConnector.setSslEndpointIdentificationAlgorithm(SslEndpointIdentificationAlgorithm.EMPTY);
+
+        Mockito.when(storageConnectorApi.getKafkaStorageConnector(Mockito.any(), Mockito.anyBoolean()))
+            .thenReturn(kafkaConnector);
+        ArgumentCaptor<Boolean> externalArg = ArgumentCaptor.forClass(Boolean.class);
+
+        // Act
+        sparkEngine.getKafkaConfig(new FeatureGroup(), null);
+
+        // Assert
+        Mockito.verify(storageConnectorApi).getKafkaStorageConnector(Mockito.any(), externalArg.capture());
+        Assertions.assertEquals(Boolean.TRUE, externalArg.getValue());
+    }
+
+    @Test
+    public void testGetKafkaConfigInternalKafka() throws FeatureStoreException, IOException {
+        // Arrange
+        HopsworksClient hopsworksClient = Mockito.mock(HopsworksClient.class);
+        hopsworksClient.setInstance(new HopsworksClient(Mockito.mock(HopsworksHttpClient.class), "host"));
+        System.setProperty(HopsworksInternalClient.REST_ENDPOINT_SYS, "");
+
+        SparkEngine sparkEngine = SparkEngine.getInstance();
+        StorageConnectorApi storageConnectorApi = Mockito.mock(StorageConnectorApi.class);
+        sparkEngine.storageConnectorApi = storageConnectorApi;
+        StorageConnector.KafkaConnector kafkaConnector = new StorageConnector.KafkaConnector();
+        kafkaConnector.setExternalKafka(Boolean.TRUE);
+        kafkaConnector.setSecurityProtocol(SecurityProtocol.SSL);
+        kafkaConnector.setSslEndpointIdentificationAlgorithm(SslEndpointIdentificationAlgorithm.EMPTY);
+
+        Mockito.when(storageConnectorApi.getKafkaStorageConnector(Mockito.any(), Mockito.anyBoolean()))
+            .thenReturn(kafkaConnector);
+        ArgumentCaptor<Boolean> externalArg = ArgumentCaptor.forClass(Boolean.class);
+
+        Map<String, String> writeOptions = new HashMap<>();
+        writeOptions.put("internal_kafka", "true");
+
+        // Act
+        sparkEngine.getKafkaConfig(new FeatureGroup(), writeOptions);
+
+        // Assert
+        Mockito.verify(storageConnectorApi).getKafkaStorageConnector(Mockito.any(), externalArg.capture());
+        Assertions.assertEquals(Boolean.FALSE, externalArg.getValue());
+    }
+
+    @Test
+    public void testGetKafkaConfigExternalClientInternalKafka() throws FeatureStoreException, IOException {
+        // Arrange
+        HopsworksClient hopsworksClient = Mockito.mock(HopsworksClient.class);
+        hopsworksClient.setInstance(new HopsworksClient(Mockito.mock(HopsworksHttpClient.class), "host"));
+
+        SparkEngine sparkEngine = SparkEngine.getInstance();
+        StorageConnectorApi storageConnectorApi = Mockito.mock(StorageConnectorApi.class);
+        sparkEngine.storageConnectorApi = storageConnectorApi;
+        StorageConnector.KafkaConnector kafkaConnector = new StorageConnector.KafkaConnector();
+        kafkaConnector.setExternalKafka(Boolean.TRUE);
+        kafkaConnector.setSecurityProtocol(SecurityProtocol.SSL);
+        kafkaConnector.setSslEndpointIdentificationAlgorithm(SslEndpointIdentificationAlgorithm.EMPTY);
+
+        Mockito.when(storageConnectorApi.getKafkaStorageConnector(Mockito.any(), Mockito.anyBoolean()))
+            .thenReturn(kafkaConnector);
+        ArgumentCaptor<Boolean> externalArg = ArgumentCaptor.forClass(Boolean.class);
+
+        Map<String, String> writeOptions = new HashMap<>();
+        writeOptions.put("internal_kafka", "true");
+
+        // Act
+        sparkEngine.getKafkaConfig(new FeatureGroup(), writeOptions);
+
+        // Assert
+        Mockito.verify(storageConnectorApi).getKafkaStorageConnector(Mockito.any(), externalArg.capture());
+        Assertions.assertEquals(Boolean.FALSE, externalArg.getValue());
     }
 }
