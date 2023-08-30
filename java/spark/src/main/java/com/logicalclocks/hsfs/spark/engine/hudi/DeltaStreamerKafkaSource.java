@@ -91,15 +91,15 @@ public class DeltaStreamerKafkaSource extends AvroSource {
     if (totalNewMsgs <= 0L) {
       return new InputBatch(Option.empty(), KafkaOffsetGen.CheckpointUtils.offsetsToStr(offsetRanges));
     } else {
-      JavaRDD<GenericRecord> newDataRdd = this.toRdd(offsetRanges, props.getString(HudiEngine.FEATURE_GROUP_ID));
+      JavaRDD<GenericRecord> newDataRdd = this.toRdd(offsetRanges, props.getString(HudiEngine.SUBJECT_ID));
       return new InputBatch(Option.of(newDataRdd), KafkaOffsetGen.CheckpointUtils.offsetsToStr(offsetRanges));
     }
   }
 
-  private JavaRDD<GenericRecord> toRdd(OffsetRange[] offsetRanges, String fgId) {
+  private JavaRDD<GenericRecord> toRdd(OffsetRange[] offsetRanges, String subjectId) {
     return KafkaUtils.createRDD(this.sparkContext, this.offsetGen.getKafkaParams(), offsetRanges,
         LocationStrategies.PreferConsistent())
-            .filter(obj -> fgId.equals(getHeader(obj.headers(), "featureGroupId")))
+            .filter(obj -> subjectId.equals(getHeader(obj.headers(), "subjectId")))
             .map(obj -> (GenericRecord) obj.value());
   }
 
