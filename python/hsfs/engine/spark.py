@@ -82,6 +82,7 @@ from hsfs.core import (
     hudi_engine,
     transformation_function_engine,
     storage_connector_api,
+    dataset_api,
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -115,6 +116,7 @@ class Engine:
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             util.setup_pydoop()
         self._storage_connector_api = storage_connector_api.StorageConnectorApi()
+        self._dataset_api = dataset_api.DatasetApi()
 
     def sql(
         self,
@@ -728,7 +730,19 @@ class Engine:
         if not file.startswith("file://"):
             file = "hdfs://" + file
 
-        self._spark_context.addFile(file)
+        # for external clients, download the file
+        if isinstance(client.get_instance(), client.external.Client):
+            tmp_file = os.path.join(
+                SparkFiles.getRootDirectory(), os.path.basename(file)
+            )
+            print("Reading key file from storage connector.")
+            response = self._dataset_api.read_content(tmp_file, "HIVEDB")
+
+            with open(tmp_file, "wb") as f:
+                f.write(response.content)
+        else:
+            self._spark_context.addFile(file)
+
         return SparkFiles.get(os.path.basename(file))
 
     def profile(
@@ -1143,9 +1157,10 @@ class Engine:
     def _get_kafka_config(
         self, feature_store_id: int, write_options: dict = {}
     ) -> dict:
-        external = not isinstance(
-            client.get_instance(), hopsworks.Client
-        ) or not write_options.get("internal_kafka", False)
+        external = not (
+            isinstance(client.get_instance(), hopsworks.Client)
+            or write_options.get("internal_kafka", False)
+        )
 
         storage_connector = self._storage_connector_api.get_kafka_connector(
             feature_store_id, external

@@ -749,9 +749,10 @@ class TestBigQueryConnector:
         assert sc.materialization_dataset is None
         assert sc.arguments == {}
 
-    def test_credentials_base64_encoded(self, backend_fixtures, tmp_path):
+    def test_credentials_base64_encoded(self, mocker, backend_fixtures, tmp_path):
         # Arrange
         engine.set_instance("spark", spark.Engine())
+        mocker.patch("hsfs.client.get_instance")
 
         credentials = '{"type": "service_account", "project_id": "test"}'
 
@@ -780,16 +781,22 @@ class TestBigQueryConnector:
         )
 
     def test_python_support_validation(self, backend_fixtures):
+        # Arrange
         engine.set_instance("python", python.Engine())
         json = backend_fixtures["storage_connector"]["get_big_query_basic_info"][
             "response"
         ]
+        # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
+        # Assert
         with pytest.raises(NotImplementedError):
             sc.read()
 
-    def test_query_validation(self, backend_fixtures, tmp_path):
+    def test_query_validation(self, mocker, backend_fixtures, tmp_path):
+        # Arrange
         engine.set_instance("spark", spark.Engine())
+        mocker.patch("hsfs.client.get_instance")
+
         credentials = '{"type": "service_account", "project_id": "test"}'
         credentialsFile = tmp_path / "bigquery.json"
         credentialsFile.write_text(credentials)
@@ -802,7 +809,8 @@ class TestBigQueryConnector:
             )
         else:
             json["key_path"] = "file://" + str(credentialsFile.resolve())
-
+        # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
+        # Assert
         with pytest.raises(ValueError):
             sc.read(query="select * from")
