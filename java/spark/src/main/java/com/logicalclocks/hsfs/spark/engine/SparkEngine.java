@@ -91,9 +91,7 @@ import org.apache.spark.sql.types.TimestampType;
 import org.json.JSONObject;
 import scala.collection.JavaConverters;
 
-import java.io.BufferedWriter;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

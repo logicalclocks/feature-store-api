@@ -82,7 +82,7 @@ from hsfs.core import (
     hudi_engine,
     transformation_function_engine,
     storage_connector_api,
-    dataset_api
+    dataset_api,
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -732,7 +732,9 @@ class Engine:
 
         # for external clients, download the file
         if isinstance(client.get_instance(), client.external.Client):
-            tmp_file = os.path.join(SparkFiles.getRootDirectory(), os.path.basename(file))
+            tmp_file = os.path.join(
+                SparkFiles.getRootDirectory(), os.path.basename(file)
+            )
             print("Reading key file from storage connector.")
             response = self._dataset_api.read_content(tmp_file, "HIVEDB")
 
