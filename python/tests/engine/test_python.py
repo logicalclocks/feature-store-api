@@ -2943,7 +2943,7 @@ class TestPython:
         # Assert
         assert (
             mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][1]
-            is False
+            is True
         )
         assert result == {
             "bootstrap.servers": "test_bootstrap_servers",

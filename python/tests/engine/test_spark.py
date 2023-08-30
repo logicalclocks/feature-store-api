@@ -4569,7 +4569,7 @@ class TestSpark:
         )
         assert (
             mock_storage_connector_api.return_value.get_kafka_connector.call_args[0][1]
-            is False
+            is True
         )
 
     def test_get_kafka_config_internal_kafka(self, mocker, backend_fixtures):
