@@ -90,7 +90,7 @@ class DatasetApi:
 
         return inode_lst["count"], inode.Inode.from_response_json(inode_lst)
 
-    def read_content(self, path, query_params: dict = None):
+    def read_content(self, path: str, dataset_type: str = "DATASET"):
         _client = client.get_instance()
 
         path_params = [
@@ -102,8 +102,8 @@ class DatasetApi:
             path[1:],
         ]
 
-        query_params = query_params if query_params else {"type": "DATASET"}
+        query_params = {
+            "type": dataset_type,
+        }
 
-        return _client._send_request(
-            "GET", path_params, query_params=query_params, stream=True
-        )
+        return _client._send_request("GET", path_params, query_params, stream=True)

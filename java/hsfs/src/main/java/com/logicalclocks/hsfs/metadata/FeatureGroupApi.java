@@ -44,14 +44,15 @@ public class FeatureGroupApi {
   public static final String FEATURE_GROUP_ROOT_PATH = "/featuregroups";
   public static final String FEATURE_GROUP_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgName}{?version}";
   public static final String FEATURE_GROUP_ID_PATH = FEATURE_GROUP_ROOT_PATH + "{/fgId}{?updateStatsConfig,"
-      + "updateMetadata,validationType}";
+      + "updateMetadata,validationType,deprecate}";
   public static final String FEATURE_GROUP_COMMIT_PATH = FEATURE_GROUP_ID_PATH
       + "/commits{?filter_by,sort_by,offset,limit}";
   public static final String FEATURE_GROUP_CLEAR_PATH = FEATURE_GROUP_ID_PATH + "/clear";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureGroupApi.class);
 
-  public <T> T getInternal(FeatureStoreBase featureStoreBase, String fgName, Integer fgVersion, Class<T> fgType)
+  public <T extends FeatureGroupBase> T[] getInternal(FeatureStoreBase featureStoreBase, String fgName,
+                                                      Integer fgVersion, Class<T[]> fgType)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
@@ -69,7 +70,8 @@ public class FeatureGroupApi {
     String uriString = uri.expand();
 
     LOGGER.info("Sending metadata request: " + uriString);
-    return hopsworksClient.handleRequest(new HttpGet(uriString), fgType);
+    T[] featureGroups = hopsworksClient.handleRequest(new HttpGet(uriString), fgType);
+    return featureGroups;
   }
 
   public <U extends FeatureGroupBase> FeatureGroupBase save(FeatureGroupBase featureGroup, Class<U> fgType)

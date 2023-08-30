@@ -41,8 +41,7 @@ public class Query extends QueryBase<Query, StreamFeatureGroup, Dataset<Row>> {
   private final StorageConnectorUtils storageConnectorUtils = new StorageConnectorUtils();
 
   public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
-    this.leftFeatureGroup = leftFeatureGroup;
-    this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
+    super(leftFeatureGroup, leftFeatures);
   }
 
   @Override

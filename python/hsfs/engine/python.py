@@ -23,7 +23,6 @@ import ast
 import warnings
 import logging
 import avro
-import socket
 import pyarrow as pa
 import json
 import random
@@ -31,6 +30,7 @@ import uuid
 import decimal
 import numbers
 import math
+import os
 from datetime import datetime, timezone
 
 import great_expectations as ge
@@ -52,13 +52,13 @@ from hsfs.core import (
     dataset_api,
     job_api,
     ingestion_job_conf,
-    kafka_api,
     statistics_api,
     training_dataset_api,
     training_dataset_job_conf,
     feature_view_api,
     transformation_function_engine,
     arrow_flight_client,
+    storage_connector_api,
     variable_api,
 )
 from hsfs.constructor import query
@@ -87,7 +87,7 @@ class Engine:
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
-        self._kafka_api = kafka_api.KafkaApi()
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
 
         # cache the sql engine which contains the connection pool
         self._mysql_online_fs_engine = None
@@ -848,9 +848,21 @@ class Engine:
             time.sleep(3)
 
     def add_file(self, file):
-        # if streaming connectors are implemented in the future, this method
-        # can be used to materialize certificates locally
-        return file
+        if not file:
+            return file
+
+        # This is used for unit testing
+        if not file.startswith("file://"):
+            file = "hdfs://" + file
+
+        local_file = os.path.join("/tmp", os.path.basename(file))
+        if not os.path.exists(local_file):
+            content_stream = self._dataset_api.read_content(file, "HIVEDB")
+            bytesio_object = BytesIO(content_stream.content)
+            # Write the stuff
+            with open(local_file, "wb") as f:
+                f.write(bytesio_object.getbuffer())
+        return local_file
 
     def _apply_transformation_function(self, transformation_functions, dataset):
         for (
@@ -875,7 +887,11 @@ class Engine:
 
     def _init_kafka_resources(self, feature_group, offline_write_options):
         # setup kafka producer
-        producer = Producer(self._get_kafka_config(offline_write_options))
+        producer = Producer(
+            self._get_kafka_config(
+                feature_group.feature_store_id, offline_write_options
+            )
+        )
 
         # setup complex feature writers
         feature_writers = {
@@ -1057,38 +1073,19 @@ class Engine:
         writer = avro.io.DatumWriter(parsed_schema)
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
-    def _get_kafka_config(self, write_options: dict = {}) -> dict:
-        # producer configuration properties
-        # https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
-        config = {
-            "security.protocol": "SSL",
-            "ssl.ca.location": client.get_instance()._get_ca_chain_path(),
-            "ssl.certificate.location": client.get_instance()._get_client_cert_path(),
-            "ssl.key.location": client.get_instance()._get_client_key_path(),
-            "client.id": socket.gethostname(),
-            **write_options.get("kafka_producer_config", {}),
-        }
+    def _get_kafka_config(
+        self, feature_store_id: int, write_options: dict = {}
+    ) -> dict:
+        external = not isinstance(
+            client.get_instance(), hopsworks.Client
+        ) or not write_options.get("internal_kafka", False)
 
-        if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
-            "internal_kafka", False
-        ):
-            config["bootstrap.servers"] = ",".join(
-                [
-                    endpoint.replace("INTERNAL://", "")
-                    for endpoint in self._kafka_api.get_broker_endpoints(
-                        externalListeners=False
-                    )
-                ]
-            )
-        else:
-            config["bootstrap.servers"] = ",".join(
-                [
-                    endpoint.replace("EXTERNAL://", "")
-                    for endpoint in self._kafka_api.get_broker_endpoints(
-                        externalListeners=True
-                    )
-                ]
-            )
+        storage_connector = self._storage_connector_api.get_kafka_connector(
+            feature_store_id, external
+        )
+
+        config = storage_connector.confluent_options()
+        config.update(write_options.get("kafka_producer_config", {}))
         return config
 
     @staticmethod

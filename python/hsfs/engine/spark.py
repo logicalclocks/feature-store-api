@@ -79,10 +79,10 @@ from hsfs.storage_connector import StorageConnector
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.client import hopsworks
 from hsfs.core import (
-    dataset_api,
     hudi_engine,
     transformation_function_engine,
-    kafka_api,
+    storage_connector_api,
+    dataset_api
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
@@ -115,9 +115,7 @@ class Engine:
         if importlib.util.find_spec("pydoop"):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
             util.setup_pydoop()
-
-        self._kafka_api = kafka_api.KafkaApi()
-        self._kafka_config = None
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
 
     def sql(
         self,
@@ -330,7 +328,9 @@ class Engine:
         checkpoint_dir,
         write_options,
     ):
-        write_options = self._get_kafka_config(write_options)
+        write_options = self._get_kafka_config(
+            feature_group.feature_store_id, write_options
+        )
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
@@ -398,7 +398,9 @@ class Engine:
             )
 
     def _save_online_dataframe(self, feature_group, dataframe, write_options):
-        write_options = self._get_kafka_config(write_options)
+        write_options = self._get_kafka_config(
+            feature_group.feature_store_id, write_options
+        )
 
         serialized_df = self._online_fg_to_avro(
             feature_group, self._encode_complex_features(feature_group, dataframe)
@@ -720,6 +722,9 @@ class Engine:
         return stream.load().select("key", "value")
 
     def add_file(self, file):
+        if not file:
+            return file
+
         # This is used for unit testing
         if not file.startswith("file://"):
             file = "hdfs://" + file
@@ -1023,7 +1028,6 @@ class Engine:
         # The JSON key file of the service account used for GCS
         # access when google.cloud.auth.service.account.enable is true.
         local_path = self.add_file(storage_connector.key_path)
-
         with open(local_path, "r") as f_in:
             jsondata = json.load(f_in)
         self._spark_context._jsc.hadoopConfiguration().set(
@@ -1056,6 +1060,7 @@ class Engine:
             self._spark_context._jsc.hadoopConfiguration().unset(
                 PROPERTY_ENCRYPTION_KEY
             )
+
         return path
 
     def create_empty_df(self, streaming_df):
@@ -1146,39 +1151,20 @@ class Engine:
             df = df.withColumn(_feat, col(_feat).cast(pyspark_schema[_feat]))
         return df
 
-    def _get_kafka_config(self, write_options: dict = {}) -> dict:
-        if self._kafka_config is None:
-            self._kafka_config = {
-                "kafka.security.protocol": "SSL",
-                "kafka.ssl.truststore.location": client.get_instance()._get_jks_trust_store_path(),
-                "kafka.ssl.truststore.password": client.get_instance()._cert_key,
-                "kafka.ssl.keystore.location": client.get_instance()._get_jks_key_store_path(),
-                "kafka.ssl.keystore.password": client.get_instance()._cert_key,
-                "kafka.ssl.key.password": client.get_instance()._cert_key,
-                "kafka.ssl.endpoint.identification.algorithm": "",
-            }
-            if isinstance(client.get_instance(), hopsworks.Client) or write_options.get(
-                "internal_kafka", False
-            ):
-                self._kafka_config["kafka.bootstrap.servers"] = ",".join(
-                    [
-                        endpoint.replace("INTERNAL://", "")
-                        for endpoint in self._kafka_api.get_broker_endpoints(
-                            externalListeners=False
-                        )
-                    ]
-                )
-            else:
-                self._kafka_config["kafka.bootstrap.servers"] = ",".join(
-                    [
-                        endpoint.replace("EXTERNAL://", "")
-                        for endpoint in self._kafka_api.get_broker_endpoints(
-                            externalListeners=True
-                        )
-                    ]
-                )
+    def _get_kafka_config(
+        self, feature_store_id: int, write_options: dict = {}
+    ) -> dict:
+        external = not isinstance(
+            client.get_instance(), hopsworks.Client
+        ) or not write_options.get("internal_kafka", False)
 
-        return {**write_options, **self._kafka_config}
+        storage_connector = self._storage_connector_api.get_kafka_connector(
+            feature_store_id, external
+        )
+
+        config = storage_connector.spark_options()
+        config.update(write_options)
+        return config
 
     @staticmethod
     def is_connector_type_supported(type):

@@ -173,7 +173,7 @@ public class FeatureGroupUtils {
 
   public String getAvroSchema(FeatureGroupBase featureGroup, FeatureStoreBase featureStoreBase)
       throws FeatureStoreException, IOException {
-    return kafkaApi.getTopicSubject(featureStoreBase, featureGroup.getOnlineTopicName()).getSchema();
+    return kafkaApi.getSubject(featureStoreBase, featureGroup.getOnlineTopicName()).getSchema();
   }
 
   public List<String> getComplexFeatures(List<Feature> features) {
@@ -249,6 +249,6 @@ public class FeatureGroupUtils {
   }
 
   public Subject getSubject(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
-    return kafkaApi.getTopicSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName());
+    return kafkaApi.getSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName());
   }
 }
