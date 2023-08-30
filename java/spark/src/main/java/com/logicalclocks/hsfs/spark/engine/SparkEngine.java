@@ -134,7 +134,7 @@ public class SparkEngine extends EngineBase {
   }
 
   @Getter
-  protected SparkSession sparkSession;
+  private SparkSession sparkSession;
 
   private FeatureGroupUtils utils = new FeatureGroupUtils();
   private HudiEngine hudiEngine = new HudiEngine();

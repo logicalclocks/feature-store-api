@@ -108,16 +108,12 @@ public class TestSparkEngine {
         System.setProperty(HopsworksInternalClient.REST_ENDPOINT_SYS, "");
 
         SparkEngine sparkEngine = SparkEngine.getInstance();
-        sparkEngine.sparkSession = Mockito.mock(SparkSession.class);
-        Mockito.when(sparkEngine.sparkSession.sparkContext()).thenReturn(Mockito.mock(SparkContext.class));
         StorageConnectorApi storageConnectorApi = Mockito.mock(StorageConnectorApi.class);
         sparkEngine.storageConnectorApi = storageConnectorApi;
         StorageConnector.KafkaConnector kafkaConnector = new StorageConnector.KafkaConnector();
         kafkaConnector.setBootstrapServers("testServer:123");
         kafkaConnector.setOptions(Collections.singletonList(new Option("testOptionName", "testOptionValue")));
-        kafkaConnector.setSslTruststoreLocation("sslTruststoreLocation");
         kafkaConnector.setSslTruststorePassword("sslTruststorePassword");
-        kafkaConnector.setSslKeystoreLocation("sslKeystoreLocation");
         kafkaConnector.setSslKeystorePassword("sslKeystorePassword");
         kafkaConnector.setSslKeyPassword("sslKeyPassword");
         kafkaConnector.setExternalKafka(Boolean.TRUE);
