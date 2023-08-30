@@ -131,9 +131,9 @@ public class FlinkEngine extends EngineBase {
   @Override
   public Map<String, String> getKafkaConfig(FeatureGroupBase featureGroup, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
-    boolean external = !System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)
-        && (writeOptions == null
-        || !Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false")));
+    boolean external = !(System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)
+        || (writeOptions != null
+        && Boolean.parseBoolean(writeOptions.getOrDefault("internal_kafka", "false"))));
 
     StorageConnector.KafkaConnector storageConnector =
         storageConnectorApi.getKafkaStorageConnector(featureGroup.getFeatureStore(), external);

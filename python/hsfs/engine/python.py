@@ -1120,9 +1120,10 @@ class Engine:
     def _get_kafka_config(
         self, feature_store_id: int, write_options: dict = {}
     ) -> dict:
-        external = not isinstance(
-            client.get_instance(), hopsworks.Client
-        ) or not write_options.get("internal_kafka", False)
+        external = not (
+            isinstance(client.get_instance(), hopsworks.Client)
+            or write_options.get("internal_kafka", False)
+        )
 
         storage_connector = self._storage_connector_api.get_kafka_connector(
             feature_store_id, external
