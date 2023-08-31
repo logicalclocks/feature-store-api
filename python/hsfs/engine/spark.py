@@ -415,15 +415,14 @@ class Engine:
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
 
+        project_id = str(client.get_instance()._project_id).encode("utf8")
         subject_id = str(feature_group.subject["id"]).encode("utf8")
 
         serialized_df.withColumn(
             "headers",
             array(
-                struct(
-                    lit("subjectId").alias("key"),
-                    lit(subject_id).alias("value"),
-                ),
+                struct(lit("projectId").alias("key"), lit(project_id).alias("value")),
+                struct(lit("subjectId").alias("key"), lit(subject_id).alias("value")),
             ),
         ).write.format(self.KAFKA_FORMAT).options(**write_options).option(
             "topic", feature_group._online_topic_name
