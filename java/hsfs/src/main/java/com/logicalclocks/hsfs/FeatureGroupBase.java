@@ -112,7 +112,7 @@ public abstract class FeatureGroupBase<T> {
 
   @Getter
   @Setter
-  protected Boolean useProjectTopic;
+  protected String topicName;
 
   @Getter
   @Setter

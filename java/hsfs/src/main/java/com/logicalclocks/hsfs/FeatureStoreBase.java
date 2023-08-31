@@ -78,7 +78,7 @@ public abstract class FeatureStoreBase<T2 extends QueryBase> {
                                                  List<String> primaryKeys, List<String> partitionKeys,
                                                  String hudiPrecombineKey, boolean onlineEnabled,
                                                  TimeTravelFormat timeTravelFormat, StatisticsConfig statisticsConfig,
-                                                 boolean useProjectTopic, String eventTime)
+                                                 String topicName, String eventTime)
       throws IOException, FeatureStoreException;
 
   /**

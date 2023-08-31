@@ -46,6 +46,8 @@ public class KafkaRecordSerializer implements KafkaRecordSerializationSchema<Gen
     this.topic = streamFeatureGroup.getOnlineTopicName();
     this.primaryKeys = streamFeatureGroup.getPrimaryKeys();
 
+    headerMap.put("projectId",
+        String.valueOf(streamFeatureGroup.getFeatureStore().getProjectId()).getBytes(StandardCharsets.UTF_8));
     headerMap.put("subjectId",
         String.valueOf(streamFeatureGroup.getSubject().getId()).getBytes(StandardCharsets.UTF_8));
   }

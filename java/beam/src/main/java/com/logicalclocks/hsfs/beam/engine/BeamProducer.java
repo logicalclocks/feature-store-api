@@ -76,6 +76,8 @@ public class BeamProducer extends PTransform<@NonNull PCollection<Row>, @NonNull
     this.deserializedComplexFeatureSchemas = deserializedComplexFeatureSchemas;
     this.primaryKeys = primaryKeys;
 
+    headerMap.put("projectId",
+        String.valueOf(streamFeatureGroup.getFeatureStore().getProjectId()).getBytes(StandardCharsets.UTF_8));
     headerMap.put("subjectId",
         String.valueOf(streamFeatureGroup.getSubject().getId()).getBytes(StandardCharsets.UTF_8));
   }

@@ -339,12 +339,16 @@ class Engine:
         if query_name is None:
             query_name = "insert_stream_" + feature_group._online_topic_name
 
+        project_id = str(client.get_instance()._project_id).encode("utf8")
         subject_id = str(feature_group.subject["id"]).encode("utf8")
 
         query = (
             serialized_df.withColumn(
                 "headers",
                 array(
+                    struct(
+                        lit("projectId").alias("key"), lit(project_id).alias("value")
+                    ),
                     struct(
                         lit("subjectId").alias("key"), lit(subject_id).alias("value")
                     )

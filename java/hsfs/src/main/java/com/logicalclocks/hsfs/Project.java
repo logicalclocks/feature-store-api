@@ -33,6 +33,9 @@ public class Project {
   @Getter
   @Setter
   private String owner;
+  @Getter
+  @Setter
+  protected String topicName;
 
   public Project(Integer projectId) {
     this.projectId = projectId;

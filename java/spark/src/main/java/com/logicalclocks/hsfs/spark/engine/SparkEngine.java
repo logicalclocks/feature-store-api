@@ -538,10 +538,16 @@ public class SparkEngine extends EngineBase {
   public void writeOnlineDataframe(FeatureGroupBase featureGroupBase, Dataset<Row> dataset, String onlineTopicName,
                                    Map<String, String> writeOptions)
       throws FeatureStoreException, IOException {
+    byte[] projectId = String.valueOf(featureGroupBase.getFeatureStore().getProjectId())
+        .getBytes(StandardCharsets.UTF_8);
     byte[] subjectId = String.valueOf(featureGroupBase.getSubject().getId()).getBytes(StandardCharsets.UTF_8);
 
     onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
         .withColumn("headers", array(
+            struct(
+                lit("projectId").as("key"),
+                lit(projectId).as("value")
+            ),
             struct(
                 lit("subjectId").as("key"),
                 lit(subjectId).as("value")
@@ -559,11 +565,17 @@ public class SparkEngine extends EngineBase {
                                                  Long timeout, String checkpointLocation,
                                                  Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
+    byte[] projectId = String.valueOf(featureGroupBase.getFeatureStore().getProjectId())
+        .getBytes(StandardCharsets.UTF_8);
     byte[] subjectId = String.valueOf(featureGroupBase.getSubject().getId()).getBytes(StandardCharsets.UTF_8);
 
     DataStreamWriter<Row> writer =
         onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
             .withColumn("headers", array(
+                struct(
+                    lit("projectId").as("key"),
+                    lit(projectId).as("value")
+                ),
                 struct(
                     lit("subjectId").as("key"),
                     lit(subjectId).as("value")

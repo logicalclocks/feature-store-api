@@ -69,7 +69,7 @@ class FeatureGroupBase:
         id=None,
         expectation_suite=None,
         online_topic_name=None,
-        use_project_topic=True,
+        topic_name=None,
         deprecated=False,
     ):
         self._version = version
@@ -80,7 +80,7 @@ class FeatureGroupBase:
         self._id = id
         self._subject = None
         self._online_topic_name = online_topic_name
-        self._use_project_topic = use_project_topic
+        self._topic_name = topic_name
         self._deprecated = deprecated
         self._feature_store_id = featurestore_id
         # use setter for correct conversion
@@ -1347,13 +1347,13 @@ class FeatureGroupBase:
         self._online_enabled = online_enabled
 
     @property
-    def use_project_topic(self):
-        """Setting if the feature group is available in online storage."""
-        return self._use_project_topic
+    def topic_name(self):
+        """The topic used for feature group data ingestion."""
+        return self._topic_nameic
 
-    @use_project_topic.setter
-    def use_project_topic(self, use_project_topic):
-        self._use_project_topic = use_project_topic
+    @topic_name.setter
+    def topic_name(self, topic_name):
+        self._topic_name = topic_name
 
     @property
     def deprecated(self):
@@ -1445,7 +1445,7 @@ class FeatureGroup(FeatureGroupBase):
         time_travel_format=None,
         statistics_config=None,
         online_topic_name=None,
-        use_project_topic=True,
+        topic_name=None,
         event_time=None,
         stream=False,
         expectation_suite=None,
@@ -1464,7 +1464,7 @@ class FeatureGroup(FeatureGroupBase):
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
-            use_project_topic=use_project_topic,
+            topic_name=topic_name,
             deprecated=deprecated,
         )
 
@@ -2508,7 +2508,7 @@ class FeatureGroup(FeatureGroupBase):
             "eventTime": self.event_time,
             "expectationSuite": self._expectation_suite,
             "parents": self._parents,
-            "useProjectTopic": self.use_project_topic,
+            "topicName": self.topic_name,
             "deprecated": self.deprecated,
         }
         if self._stream:
@@ -2651,7 +2651,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         online_enabled=False,
         href=None,
         online_topic_name=None,
-        use_project_topic=True,
+        topic_name=None,
         spine=False,
         deprecated=False,
     ):
@@ -2665,7 +2665,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
-            use_project_topic=use_project_topic,
+            topic_name=topic_name,
             deprecated=deprecated,
         )
 
@@ -2925,7 +2925,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "expectationSuite": self._expectation_suite,
             "onlineEnabled": self._online_enabled,
             "spine": False,
-            "useProjectTopic": self.use_project_topic,
+            "topicName": self.topic_name,
             "deprecated": self.deprecated,
         }
 
@@ -3008,7 +3008,7 @@ class SpineGroup(FeatureGroupBase):
         online_enabled=False,
         href=None,
         online_topic_name=None,
-        use_project_topic=True,
+        topic_name=None,
         spine=True,
         dataframe="spine",
         deprecated=False,
@@ -3023,7 +3023,7 @@ class SpineGroup(FeatureGroupBase):
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
-            use_project_topic=use_project_topic,
+            topic_name=topic_name,
             deprecated=deprecated,
         )
 
@@ -3149,6 +3149,6 @@ class SpineGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
             "eventTime": self._event_time,
             "spine": True,
-            "useProjectTopic": self.use_project_topic,
+            "topicName": self.topic_name,
             "deprecated": self.deprecated,
         }

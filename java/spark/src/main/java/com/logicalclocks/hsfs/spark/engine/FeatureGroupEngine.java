@@ -305,7 +305,7 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
                                               String description, List<String> primaryKeys, List<String> partitionKeys,
                                               String hudiPrecombineKey, boolean onlineEnabled,
                                               TimeTravelFormat timeTravelFormat, StatisticsConfig statisticsConfig,
-                                              boolean useProjectTopic, String eventTime)
+                                              String topicName, String eventTime)
       throws IOException, FeatureStoreException {
 
     FeatureGroup featureGroup;
@@ -325,7 +325,7 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
             .timeTravelFormat(timeTravelFormat)
             .statisticsConfig(statisticsConfig)
             .eventTime(eventTime)
-            .useProjectTopic(useProjectTopic)
+            .topicName(topicName)
             .build();
 
         featureGroup.setFeatureStore(featureStore);
