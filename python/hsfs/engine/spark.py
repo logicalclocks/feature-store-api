@@ -351,7 +351,7 @@ class Engine:
                     ),
                     struct(
                         lit("subjectId").alias("key"), lit(subject_id).alias("value")
-                    )
+                    ),
                 ),
             )
             .writeStream.outputMode(output_mode)
