@@ -453,6 +453,10 @@ class FeatureViewEngine:
             training_dataset_version=training_dataset_obj.version,
             spine=spine,
         )
+
+        # for spark job
+        user_write_options["with_extra_features"] = user_write_options
+
         td_job = engine.get_instance().write_training_dataset(
             training_dataset_obj,
             batch_query,
