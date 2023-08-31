@@ -25,7 +25,6 @@ import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 
-import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,9 +112,8 @@ public class FeatureGroupEngineBase {
                                                                              Class<T> fgClass)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(externalFeatureGroup);
-
-    return (T) featureGroupApi.saveInternal(externalFeatureGroup, new StringEntity(featureGroupJson),
+    return (T) featureGroupApi.saveInternal(externalFeatureGroup,
+        hopsworksClient.buildStringEntity(externalFeatureGroup),
         fgClass);
   }
 }
