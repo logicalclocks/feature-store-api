@@ -1349,7 +1349,7 @@ class FeatureGroupBase:
     @property
     def topic_name(self):
         """The topic used for feature group data ingestion."""
-        return self._topic_nameic
+        return self._topic_name
 
     @topic_name.setter
     def topic_name(self, topic_name):
