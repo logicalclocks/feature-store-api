@@ -893,8 +893,7 @@ public class SparkEngine extends EngineBase {
       filePath = "hdfs://" + filePath;
     }
     // for hopsworks internal client
-    if (!HopsworksClient.getInstance().getHopsworksHttpClient()
-        .getClass().isAssignableFrom(HopsworksExternalClient.class)) {
+    if (!(HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient)) {
       sparkSession.sparkContext().addFile(filePath);
     } else {
       // for external client then read the file from hive path
