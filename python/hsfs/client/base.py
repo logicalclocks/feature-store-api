@@ -213,12 +213,9 @@ class Client(ABC):
         """
         Converts JKS keystore and truststore file into ca chain PEM to be compatible with Python libraries
         """
-        if os.path.exists(ca_chain_path):
-            return
-
         ca_chain = ""
         for store in [ks, ts]:
-            for alias, c in store.certs.items():
+            for _, c in store.certs.items():
                 ca_chain = ca_chain + self._bytes_to_pem_str(c.cert, "CERTIFICATE")
 
         with Path(ca_chain_path).open("w") as f:
@@ -228,11 +225,8 @@ class Client(ABC):
         """
         Converts JKS keystore file into client cert PEM to be compatible with Python libraries
         """
-        if os.path.exists(client_cert_path):
-            return
-
         client_cert = ""
-        for alias, pk in ks.private_keys.items():
+        for _, pk in ks.private_keys.items():
             for c in pk.cert_chain:
                 client_cert = client_cert + self._bytes_to_pem_str(c[1], "CERTIFICATE")
 
@@ -243,11 +237,8 @@ class Client(ABC):
         """
         Converts JKS keystore file into client key PEM to be compatible with Python libraries
         """
-        if os.path.exists(client_key_path):
-            return
-
         client_key = ""
-        for alias, pk in ks.private_keys.items():
+        for _, pk in ks.private_keys.items():
             client_key = client_key + self._bytes_to_pem_str(
                 pk.pkey_pkcs8, "PRIVATE KEY"
             )
