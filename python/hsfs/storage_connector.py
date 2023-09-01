@@ -1039,7 +1039,7 @@ class KafkaConnector(StorageConnector):
                     kafka_options["ssl.keystore.password"],
                     kafka_options["ssl.truststore.location"],
                     kafka_options["ssl.truststore.password"],
-                    f"kafka_sc_{self.id}",
+                    f"kafka_sc_{client.get_instance()._project_id}",
                 )
                 pem_files_created = True
                 config["ssl.ca.location"] = ca_chain_path
