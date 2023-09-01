@@ -30,7 +30,7 @@ jobs:
 
       - name: Test
         working-directory: ./java
-        run: mvn clean test --batch-mode
+        run: mvn clean test
 
   unit_tests_local:
     name: Java Unit Tests (Local TZ)
@@ -59,4 +59,4 @@ jobs:
 
       - name: Test
         working-directory: ./java
-        run: mvn clean test --batch-mode
+        run: mvn clean test
