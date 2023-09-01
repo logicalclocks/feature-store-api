@@ -29,6 +29,7 @@ from hsfs import (
     training_dataset_feature,
     storage_connector,
     training_dataset,
+    usage,
 )
 from hsfs.constructor import query, filter
 from hsfs.core import (
@@ -331,6 +332,7 @@ class FeatureView:
             ),
         )
 
+    @usage.method_logger
     def get_feature_vector(
         self,
         entry: Dict[str, Any],
@@ -422,6 +424,7 @@ class FeatureView:
             entry, return_type, passed_features, allow_missing
         )
 
+    @usage.method_logger
     def get_feature_vectors(
         self,
         entry: List[Dict[str, Any]],

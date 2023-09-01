@@ -37,6 +37,7 @@ from hsfs import (
     storage_connector,
     expectation_suite,
     feature_view,
+    usage,
 )
 from hsfs.core import (
     feature_group_api,
@@ -1419,6 +1420,7 @@ class FeatureStore:
         )
         return self._feature_view_engine.save(feat_view)
 
+    @usage.method_logger
     def get_or_create_feature_view(
         self,
         name: str,
@@ -1463,7 +1465,6 @@ class FeatureStore:
         # Returns:
             `FeatureView`: The feature view metadata object.
         """
-
         try:
             return self._feature_view_engine.get(name, version)
         except exceptions.RestAPIError as e:
@@ -1482,6 +1483,7 @@ class FeatureStore:
             else:
                 raise e
 
+    @usage.method_logger
     def get_feature_view(self, name: str, version: int = None):
         """Get a feature view entity from the feature store.
 

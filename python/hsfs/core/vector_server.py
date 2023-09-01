@@ -42,6 +42,9 @@ class VectorServer:
     ):
         self._training_dataset_version = training_dataset_version
         self._features = features
+        self._feature_type_map = (
+            dict((f.name, f.type) for f in features) if features else {}
+        )
         self._feature_vector_col_name = (
             [feat.name for feat in features if not feat.label] if features else []
         )
