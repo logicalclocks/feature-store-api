@@ -15,18 +15,16 @@
  *
  */
 
-package com.logicalclocks.hsfs.beam;
+package com.logicalclocks.hsfs;
 
-import com.logicalclocks.hsfs.Feature;
-import com.logicalclocks.hsfs.FeatureGroupBase;
-import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.StatisticsConfig;
-import com.logicalclocks.hsfs.beam.engine.FeatureGroupEngine;
-import com.logicalclocks.hsfs.beam.engine.BeamProducer;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import com.logicalclocks.hsfs.engine.FeatureGroupEngineBase;
 import com.logicalclocks.hsfs.metadata.Statistics;
+
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
-import org.apache.beam.sdk.values.PCollection;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -34,13 +32,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class StreamFeatureGroup extends FeatureGroupBase<PCollection<Object>> {
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class StreamFeatureGroup extends FeatureGroupBase<List<Object>> {
 
-
-  protected FeatureGroupEngine featureGroupEngine = new FeatureGroupEngine();
+  protected FeatureGroupEngineBase featureGroupEngine = new FeatureGroupEngineBase();
 
   @Builder
-  public StreamFeatureGroup(FeatureStore featureStore, @NonNull String name, Integer version, String description,
+  public StreamFeatureGroup(FeatureStoreBase featureStore, @NonNull String name, Integer version, String description,
       List<String> primaryKeys, List<String> partitionKeys, String hudiPrecombineKey,
       boolean onlineEnabled, List<Feature> features,
       StatisticsConfig statisticsConfig, String onlineTopicName, String eventTime) {
@@ -73,7 +72,7 @@ public class StreamFeatureGroup extends FeatureGroupBase<PCollection<Object>> {
     this.features = features;
   }
 
-  public StreamFeatureGroup(FeatureStore featureStore, int id) {
+  public StreamFeatureGroup(FeatureStoreBase featureStore, int id) {
     this();
     this.featureStore = featureStore;
     this.id = id;
@@ -81,90 +80,59 @@ public class StreamFeatureGroup extends FeatureGroupBase<PCollection<Object>> {
 
   @Override
   public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
+    throw new UnsupportedOperationException("Not supported for Flink");
   }
 
   @Override
   public Map<Long, Map<String, String>> commitDetails(Integer integer)
       throws IOException, FeatureStoreException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
+    throw new UnsupportedOperationException("Not supported for Flink");
   }
 
   @Override
   public Map<Long, Map<String, String>> commitDetails(String limit)
       throws IOException, FeatureStoreException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
+    throw new UnsupportedOperationException("Not supported for Flink");
   }
 
   @Override
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
-  }
-
-  /**
-   * Ingest a feature data to the online feature store using Beam Pipeline object. Currently,
-   * only org.apache.beam.sdk.values.Row types as feature data type are supported.
-   *
-   * <pre>
-   * {@code
-   *        // get feature store handle
-   *        FeatureStore fs = HopsworksConnection.builder().build().getFeatureStore();
-   *
-   *        // get feature group handle
-   *        StreamFeatureGroup fg = fs.getStreamFeatureGroup("taxi_ride", 1);
-   *
-   *        // create Beam pipeline
-   *        Pipeline pipeline = Pipeline.create();
-   *        pipeline
-   *         .apply("read stream from the source", PubsubIO.readStrings().fromTopic(options.getInputTopic()))
-   *         .apply("Parse JSON to Beam Rows", JsonToRow.withSchema(schema))
-   *         .apply("insert streaming feature data", fg.insertStream());
-   * }
-   * </pre>
-   *
-   * @return BeamProducer object, that can be wrapped inside Beam Pipeline `apply` method.
-   */
-  public BeamProducer insertStream() throws Exception {
-    return featureGroupEngine.insertStream(this, null);
-  }
-
-  public BeamProducer insertStream(Map<String, String> writeOptions) throws Exception {
-    return featureGroupEngine.insertStream(this, writeOptions);
+    throw new UnsupportedOperationException("Not implemented.");
   }
 
   @Override
-  public Object insertStream(PCollection<Object> featureData) throws Exception {
-    throw new UnsupportedOperationException("Not supported for Beam");
+  public List<Object> insertStream(List<Object> featureData) throws Exception {
+    throw new UnsupportedOperationException("Not implemented.");
   }
 
   @Override
-  public Object insertStream(PCollection<Object> featureData, Map<String, String> writeOptions) throws Exception {
-    return null;
-  }
-
-  @Override
-  public void updateFeatures(List<Feature> feature) throws FeatureStoreException, IOException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
+  public List<Object>  insertStream(List<Object> featureData, Map<String, String> writeOptions) throws Exception {
+    throw new UnsupportedOperationException("Not implemented.");
   }
 
   @Override
   public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
+    throw new UnsupportedOperationException("Not implemented.");
+  }
+
+  @Override
+  public void updateFeatures(List<Feature> feature) throws FeatureStoreException, IOException, ParseException {
+    throw new UnsupportedOperationException("Not implemented.");
   }
 
   @Override
   public void appendFeatures(List<Feature> feature) throws FeatureStoreException, IOException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
+    throw new UnsupportedOperationException("Not implemented.");
   }
 
   @Override
   public void appendFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
+    throw new UnsupportedOperationException("Not implemented.");
   }
 
   @Override
   public Statistics getStatistics() throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Beam");
+    throw new UnsupportedOperationException("Not implemented.");
   }
 }

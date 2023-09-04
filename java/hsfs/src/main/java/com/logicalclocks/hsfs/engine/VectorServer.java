@@ -428,7 +428,7 @@ public class VectorServer {
     for (TrainingDatasetFeature f : features) {
       if (f.isComplex()) {
         DatumReader<Object> datumReader =
-            new GenericDatumReader<>(parser.parse(f.getFeatureGroup().getFeatureAvroSchema(f.getName())));
+            new GenericDatumReader<>(parser.parse(f.getFeaturegroup().getFeatureAvroSchema(f.getName())));
         featureSchemaMap.put(f.getName(), datumReader);
       }
     }

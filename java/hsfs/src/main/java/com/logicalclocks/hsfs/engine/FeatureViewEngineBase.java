@@ -20,12 +20,12 @@ package com.logicalclocks.hsfs.engine;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.logicalclocks.hsfs.StreamFeatureGroup;
 import com.logicalclocks.hsfs.constructor.Join;
 import com.logicalclocks.hsfs.constructor.QueryBase;
 import com.logicalclocks.hsfs.metadata.FeatureViewApi;
 import com.logicalclocks.hsfs.metadata.TagsApi;
 import com.logicalclocks.hsfs.Feature;
-import com.logicalclocks.hsfs.FeatureGroupBaseForApi;
 import com.logicalclocks.hsfs.Split;
 import com.logicalclocks.hsfs.TrainingDatasetBase;
 import com.logicalclocks.hsfs.FeatureGroupBase;
@@ -79,17 +79,17 @@ public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1, T4, T5>, T2
       for (Feature feat : (List<Feature>) query.getLeftFeatures()) {
         labelWithPrefixToFeature.put(feat.getName(), feat.getName());
         labelWithPrefixToFeatureGroup.put(feat.getName(),
-            (new FeatureGroupBaseForApi(null, feat.getFeatureGroupId())));
+            (new StreamFeatureGroup(null, feat.getFeatureGroupId())));
       }
       for (Join join : (List<Join>) query.getJoins()) {
         for (Feature feat : (List<Feature>) join.getQuery().getLeftFeatures()) {
           String labelWithPrefix = join.getPrefix() + feat.getName();
           labelWithPrefixToFeature.put(labelWithPrefix, feat.getName());
           labelWithPrefixToFeatureGroup.put(labelWithPrefix,
-              new FeatureGroupBaseForApi(null, feat.getFeatureGroupId()));
+              new StreamFeatureGroup(null, feat.getFeatureGroupId()));
           List<FeatureGroupBase> featureGroups = labelToFeatureGroups.getOrDefault(feat.getName(),
               Lists.newArrayList());
-          featureGroups.add(new FeatureGroupBaseForApi(null, feat.getFeatureGroupId()));
+          featureGroups.add(new StreamFeatureGroup(null, feat.getFeatureGroupId()));
           labelToFeatureGroups.put(feat.getName(), featureGroups);
         }
       }
@@ -97,17 +97,17 @@ public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1, T4, T5>, T2
       for (String label : labels) {
         if (labelWithPrefixToFeature.containsKey(label)) {
           trainingDatasetFeatures.add(new TrainingDatasetFeature(
-              labelWithPrefixToFeatureGroup.get(label.toLowerCase()),
-              labelWithPrefixToFeature.get(label.toLowerCase()),
-              true));
+                (StreamFeatureGroup) labelWithPrefixToFeatureGroup.get(label.toLowerCase()),
+                  labelWithPrefixToFeature.get(label.toLowerCase()),
+                  true));
         } else if (labelToFeatureGroups.containsKey(label)) {
           if (labelToFeatureGroups.get(label.toLowerCase()).size() > 1) {
             throw new FeatureStoreException(String.format(AMBIGUOUS_LABEL_ERROR, label));
           }
           trainingDatasetFeatures.add(new TrainingDatasetFeature(
-              labelToFeatureGroups.get(label.toLowerCase()).get(0),
-              label.toLowerCase(),
-              true));
+                (StreamFeatureGroup) labelToFeatureGroups.get(label.toLowerCase()).get(0),
+                  label.toLowerCase(),
+                  true));
         } else {
           throw new FeatureStoreException(String.format(LABEL_NOT_EXIST_ERROR, label));
         }
@@ -127,14 +127,14 @@ public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1, T4, T5>, T2
     featureViewBase.setFeatureStore(featureStoreBase);
     List<TrainingDatasetFeature> features = featureViewBase.getFeatures();
     features.stream()
-        .filter(f -> f.getFeatureGroup() != null)
-        .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStoreBase));
+          .filter(f -> f.getFeaturegroup() != null)
+          .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStoreBase));
     featureViewBase.getQuery().getLeftFeatureGroup().setFeatureStore(featureStoreBase);
     featureViewBase.setLabels(
         features.stream()
-            .filter(TrainingDatasetFeature::getLabel)
-            .map(TrainingDatasetFeature::getName)
-            .collect(Collectors.toList()));
+          .filter(TrainingDatasetFeature::getLabel)
+          .map(TrainingDatasetFeature::getName)
+          .collect(Collectors.toList()));
     return (T2) featureViewBase;
   }
 
@@ -145,8 +145,8 @@ public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1, T4, T5>, T2
       fv.setFeatureStore(featureStoreBase);
       List<TrainingDatasetFeature> features = fv.getFeatures();
       features.stream()
-          .filter(f -> f.getFeatureGroup() != null)
-          .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStoreBase));
+          .filter(f -> f.getFeaturegroup() != null)
+          .forEach(f -> f.getFeaturegroup().setFeatureStore(featureStoreBase));
       fv.getQuery().getLeftFeatureGroup().setFeatureStore(featureStoreBase);
       fv.setLabels(
           features.stream()

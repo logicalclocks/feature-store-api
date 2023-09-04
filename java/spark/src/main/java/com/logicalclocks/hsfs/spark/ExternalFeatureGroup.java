@@ -25,13 +25,10 @@ import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.ExternalDataFormat;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
-import com.logicalclocks.hsfs.HudiOperationType;
-import com.logicalclocks.hsfs.JobConfiguration;
 import com.logicalclocks.hsfs.StatisticsConfig;
 import com.logicalclocks.hsfs.Storage;
 
 import com.logicalclocks.hsfs.StorageConnector;
-import com.logicalclocks.hsfs.constructor.QueryBase;
 import com.logicalclocks.hsfs.engine.CodeEngine;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.OnDemandOptions;
@@ -130,102 +127,32 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
     }
   }
 
-  @Override
   public Dataset<Row> read() throws FeatureStoreException, IOException {
     return selectAll().read();
   }
 
-  @Override
   public Dataset<Row> read(boolean online) throws FeatureStoreException, IOException {
     return selectAll().read(online);
   }
 
-  @Override
   public Dataset<Row> read(Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return selectAll().read(false, readOptions);
   }
 
-  @Override
   public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
     return selectAll().read(online, readOptions);
   }
 
-  @Override
-  public Dataset<Row> read(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
-    return null;
-  }
-
-  @Override
-  public Dataset<Row> read(String wallclockTime, Map<String, String> readOptions)
-      throws FeatureStoreException, IOException, ParseException {
-    return null;
-  }
-
-  @Override
-  public QueryBase asOf(String wallclockTime) throws FeatureStoreException, ParseException {
-    return null;
-  }
-
-  @Override
-  public QueryBase asOf(String wallclockTime, String excludeUntil) throws FeatureStoreException, ParseException {
-    return null;
-  }
-
-  @Override
   public void show(int numRows) throws FeatureStoreException, IOException {
     read().show(numRows);
   }
 
-  @Override
   public void show(int numRows, boolean online) throws FeatureStoreException, IOException {
     read(true).show(numRows);
   }
 
-  @Override
   public void insert(Dataset<Row> featureData, Storage storage)
       throws IOException, FeatureStoreException, ParseException {
-
-  }
-
-  @Override
-  public void insert(Dataset<Row> featureData, boolean overwrite)
-      throws IOException, FeatureStoreException, ParseException {
-
-  }
-
-  @Override
-  public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite)
-      throws IOException, FeatureStoreException, ParseException {
-
-  }
-
-  @Override
-  public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void insert(Dataset<Row> featureData, HudiOperationType operation)
-      throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void insert(Dataset<Row> featureData, Storage storage, boolean overwrite, HudiOperationType operation,
-                     Map<String, String> writeOptions) throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void insert(Dataset<Row> featureData, JobConfiguration jobConfiguration)
-      throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void insert(Dataset<Row> featureData, boolean overwrite, Map<String, String> writeOptions,
-                     JobConfiguration jobConfiguration) throws FeatureStoreException, IOException, ParseException {
 
   }
 
@@ -253,7 +180,6 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
    *                               can't reconcile schema.
    */
-  @Override
   public void insert(Dataset<Row> featureData)
       throws FeatureStoreException, IOException {
 
@@ -290,7 +216,6 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * @throws FeatureStoreException If client is not connected to Hopsworks; cannot run read query on storage and/or
    *                               can't reconcile schema.
    */
-  @Override
   public void insert(Dataset<Row> featureData, Map<String, String> writeOptions)
       throws FeatureStoreException, IOException, ParseException {
 
@@ -298,17 +223,6 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
 
     codeEngine.saveCode(this);
     computeStatistics();
-  }
-
-  @Override
-  public void commitDeleteRecord(Dataset<Row> featureData) throws FeatureStoreException, IOException, ParseException {
-
-  }
-
-  @Override
-  public void commitDeleteRecord(Dataset<Row> featureData, Map<String, String> writeOptions)
-      throws FeatureStoreException, IOException, ParseException {
-
   }
 
   @Override
@@ -334,12 +248,10 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
     return null;
   }
 
-  @Override
   public Query selectFeatures(List<Feature> features) {
     return new Query(this, features);
   }
 
-  @Override
   public Query select(List<String> features) {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
@@ -347,18 +259,15 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
     return selectFeatures(featureObjList);
   }
 
-  @Override
   public Query selectAll() {
     return new Query(this, getFeatures());
   }
 
-  @Override
   public Query selectExceptFeatures(List<Feature> features) {
     List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
     return selectExcept(exceptFeatures);
   }
 
-  @Override
   public Query selectExcept(List<String> features) {
     return new Query(this,
         getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));
@@ -370,61 +279,7 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   }
 
   @Override
-  public Object insertStream(Dataset<Row> featureData, String queryName) throws Exception {
-    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
-  }
-
-  @Override
   public Object insertStream(Dataset<Row> featureData, Map<String, String> writeOptions) throws Exception {
-    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
-  }
-
-  @Override
-  public Object insertStream(Dataset<Row> featureData, String queryName, Map<String, String> writeOptions)
-      throws Exception {
-    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
-  }
-
-  @Override
-  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode) throws Exception {
-    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
-  }
-
-  @Override
-  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, String checkpointLocation)
-      throws Exception {
-    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
-  }
-
-  @Override
-  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, boolean awaitTermination,
-                             Long timeout) throws Exception {
-    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
-  }
-
-  @Override
-  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, boolean awaitTermination,
-                             Long timeout, String checkpointLocation) throws Exception {
-    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
-  }
-
-  @Override
-  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, boolean awaitTermination,
-                             Long timeout, String checkpointLocation, Map<String, String> writeOptions)
-      throws Exception {
-    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
-  }
-
-  @Override
-  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, boolean awaitTermination,
-                             String checkpointLocation) throws Exception {
-    throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
-  }
-
-  @Override
-  public Object insertStream(Dataset<Row> featureData, String queryName, String outputMode, boolean awaitTermination,
-                             Long timeout, String checkpointLocation, Map<String, String> writeOptions,
-                             JobConfiguration jobConfiguration) throws Exception {
     throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
   }
 
@@ -450,7 +305,6 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
     featureGroupEngine.appendFeatures(this, featureList, this.getClass());
   }
 
-  @Override
   public Statistics computeStatistics() throws FeatureStoreException, IOException {
     if (statisticsConfig.getEnabled()) {
       return statisticsEngine.computeStatistics(this, read(), null);
@@ -458,11 +312,6 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
       LOGGER.info("StorageWarning: The statistics are not enabled of feature group `" + name + "`, with version `"
           + version + "`. No statistics computed.");
     }
-    return null;
-  }
-
-  @Override
-  public Statistics computeStatistics(String wallclockTime) throws FeatureStoreException, IOException, ParseException {
     return null;
   }
 
