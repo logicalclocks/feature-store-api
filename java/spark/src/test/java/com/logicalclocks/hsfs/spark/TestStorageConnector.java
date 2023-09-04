@@ -19,6 +19,8 @@ package com.logicalclocks.hsfs.spark;
 
 import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StorageConnectorType;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
+import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.util.Constants;
 
@@ -63,6 +65,9 @@ public class TestStorageConnector {
     } else {
       bigqueryConnector.setKeyPath("file://" + credentialsFile);
     }
+
+    HopsworksClient hopsworksClient = Mockito.mock(HopsworksClient.class);
+    hopsworksClient.setInstance(new HopsworksClient(Mockito.mock(HopsworksHttpClient.class), "host"));
 
     // Act
     // Base64 encode the credentials file
@@ -126,6 +131,10 @@ public class TestStorageConnector {
       // Act
       SparkEngine.getInstance().setupConnectorHadoopConf(gcsConnector);
       SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();
+
+      HopsworksClient hopsworksClient = Mockito.mock(HopsworksClient.class);
+      hopsworksClient.setInstance(new HopsworksClient(Mockito.mock(HopsworksHttpClient.class), "host"));
+
       // Assert
       Assertions.assertEquals(
         "test@project.iam.gserviceaccount.com",
@@ -148,6 +157,10 @@ public class TestStorageConnector {
       gcsConnector.setAlgorithm("AES256");
       gcsConnector.setEncryptionKey("encryptionkey");
       gcsConnector.setEncryptionKeyHash("encryptionkeyhash");
+
+      HopsworksClient hopsworksClient = Mockito.mock(HopsworksClient.class);
+      hopsworksClient.setInstance(new HopsworksClient(Mockito.mock(HopsworksHttpClient.class), "host"));
+
       // Act
       SparkEngine.getInstance().setupConnectorHadoopConf(gcsConnector);
       SparkContext sc = SparkEngine.getInstance().getSparkSession().sparkContext();

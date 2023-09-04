@@ -934,6 +934,7 @@ class KafkaConnector(StorageConnector):
             else {}
         )
         self._external_kafka = external_kafka
+        self._pem_files_created = False
 
     @property
     def bootstrap_servers(self):
@@ -1017,7 +1018,6 @@ class KafkaConnector(StorageConnector):
         https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
         """
         config = {}
-        pem_files_created = False
         kafka_options = self.kafka_options()
         for key, value in kafka_options.items():
             if (
@@ -1028,7 +1028,7 @@ class KafkaConnector(StorageConnector):
                     "ssl.keystore.location",
                     "ssl.keystore.password",
                 ]
-                and not pem_files_created
+                and not self._pem_files_created
             ):
                 (
                     ca_chain_path,
@@ -1039,9 +1039,9 @@ class KafkaConnector(StorageConnector):
                     kafka_options["ssl.keystore.password"],
                     kafka_options["ssl.truststore.location"],
                     kafka_options["ssl.truststore.password"],
-                    f"kafka_sc_{self.id}",
+                    f"kafka_sc_{client.get_instance()._project_id}_{self._id}",
                 )
-                pem_files_created = True
+                self._pem_files_created = True
                 config["ssl.ca.location"] = ca_chain_path
                 config["ssl.certificate.location"] = client_cert_path
                 config["ssl.key.location"] = client_key_path
