@@ -491,6 +491,8 @@ class Engine:
             training_dataset.data_format, user_write_options
         )
 
+        path = f"{training_dataset.location}/{training_dataset.name}_{training_dataset.version}"
+
         if len(training_dataset.splits) == 0:
             if isinstance(query_obj, query.Query):
                 dataset = self.convert_to_default_dataframe(
@@ -504,7 +506,7 @@ class Engine:
             )
             if training_dataset.coalesce:
                 dataset = dataset.coalesce(1)
-            path = training_dataset.location + "/" + training_dataset.name
+
             return self._write_training_dataset_single(
                 training_dataset.transformation_functions,
                 dataset,
@@ -512,7 +514,7 @@ class Engine:
                 training_dataset.data_format,
                 write_options,
                 save_mode,
-                path,
+                path=path,
                 to_df=to_df,
             )
         else:
@@ -529,7 +531,12 @@ class Engine:
                 training_dataset, feature_view_obj, split_dataset
             )
             return self._write_training_dataset_splits(
-                training_dataset, split_dataset, write_options, save_mode, to_df=to_df
+                training_dataset,
+                split_dataset,
+                write_options,
+                save_mode,
+                path=path,
+                to_df=to_df,
             )
 
     def _split_df(self, query_obj, training_dataset, read_options={}):
@@ -590,10 +597,11 @@ class Engine:
         feature_dataframes,
         write_options,
         save_mode,
+        path,
         to_df=False,
     ):
         for split_name, feature_dataframe in feature_dataframes.items():
-            split_path = training_dataset.location + "/" + str(split_name)
+            split_path = path + "/" + str(split_name)
             feature_dataframes[split_name] = self._write_training_dataset_single(
                 training_dataset.transformation_functions,
                 feature_dataframes[split_name],

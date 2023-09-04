@@ -350,16 +350,16 @@ class FeatureViewEngine:
     def _read_from_storage_connector(
         self, training_data_obj, splits, read_options, schema=None
     ):
+        path = f"{training_data_obj.location}/{training_data_obj.name}_{training_data_obj.version}"
         if splits:
             result = {}
             for split in splits:
-                path = training_data_obj.location + "/" + str(split.name)
+                split_path = path + "/" + str(split.name)
                 result[split.name] = self._read_dir_from_storage_connector(
-                    training_data_obj, path, read_options
+                    training_data_obj, split_path, read_options
                 )
             return result
         else:
-            path = training_data_obj.location + "/" + training_data_obj.name
             return self._read_dir_from_storage_connector(
                 training_data_obj, path, read_options
             )

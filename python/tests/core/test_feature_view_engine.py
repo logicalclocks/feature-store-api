@@ -1098,7 +1098,7 @@ class TestFeatureViewEngine:
         assert mock_fv_engine_read_dir_from_storage_connector.call_count == 1
         assert (
             mock_fv_engine_read_dir_from_storage_connector.call_args[0][1]
-            == "location/test"
+            == "location/test_1"
         )
 
     def test_read_from_storage_connector_splits(self, mocker):
@@ -1135,11 +1135,11 @@ class TestFeatureViewEngine:
         assert mock_fv_engine_read_dir_from_storage_connector.call_count == 2
         assert (
             mock_fv_engine_read_dir_from_storage_connector.mock_calls[0][1][1]
-            == "location/ss"
+            == "location/test_1/ss"
         )
         assert (
             mock_fv_engine_read_dir_from_storage_connector.mock_calls[1][1][1]
-            == "location/ss1"
+            == "location/test_1/ss1"
         )
 
     def test_read_dir_from_storage_connector(self, mocker):

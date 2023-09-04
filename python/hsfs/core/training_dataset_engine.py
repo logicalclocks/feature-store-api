@@ -99,10 +99,9 @@ class TrainingDatasetEngine:
             training_dataset.data_format, user_read_options
         )
 
+        path = f"{training_dataset.location}/{training_dataset.name}_{training_dataset.version}"
         if split is not None:
-            path = training_dataset.location + "/" + str(split)
-        else:
-            path = training_dataset.location + "/" + training_dataset.name
+            path = path + "/" + str(split)
 
         return training_dataset.storage_connector.read(
             # always read from materialized dataset, not query object
