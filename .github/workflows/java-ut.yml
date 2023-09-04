@@ -30,13 +30,13 @@ jobs:
 
       - name: Test
         working-directory: ./java
-        run: mvn --batch-mode test
-    
+        run: mvn clean test
+
   unit_tests_local:
     name: Java Unit Tests (Local TZ)
     runs-on: ubuntu-latest
 
-    steps:      
+    steps:
       - name: Set Timezone
         run: sudo timedatectl set-timezone Europe/Amsterdam
 
@@ -59,4 +59,4 @@ jobs:
 
       - name: Test
         working-directory: ./java
-        run: mvn --batch-mode test
+        run: mvn clean test
