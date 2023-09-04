@@ -65,7 +65,7 @@ class TestFeatureViewEngine {
     Assertions.assertEquals(tdFeatures.size(), 1);
     TrainingDatasetFeature labelFeature = tdFeatures.get(0);
     Assertions.assertTrue(labelFeature.getLabel());
-    Assertions.assertEquals(labelFeature.getFeatureGroup().getId(), fg1.getId());
+    Assertions.assertEquals(labelFeature.getFeaturegroup().getId(), fg1.getId());
     Assertions.assertEquals(labelFeature.getName(), label);
   }
 
@@ -76,7 +76,7 @@ class TestFeatureViewEngine {
     Assertions.assertEquals(tdFeatures.size(), 1);
     TrainingDatasetFeature labelFeature = tdFeatures.get(0);
     Assertions.assertTrue(labelFeature.getLabel());
-    Assertions.assertEquals(labelFeature.getFeatureGroup().getId(), fg1.getId());
+    Assertions.assertEquals(labelFeature.getFeaturegroup().getId(), fg1.getId());
     Assertions.assertEquals(labelFeature.getName(), label);
   }
 
@@ -87,7 +87,7 @@ class TestFeatureViewEngine {
     Assertions.assertEquals(tdFeatures.size(), 1);
     TrainingDatasetFeature labelFeature = tdFeatures.get(0);
     Assertions.assertTrue(labelFeature.getLabel());
-    Assertions.assertEquals(labelFeature.getFeatureGroup().getId(), fg2.getId());
+    Assertions.assertEquals(labelFeature.getFeaturegroup().getId(), fg2.getId());
     Assertions.assertEquals(labelFeature.getName(), label);
   }
 
@@ -98,7 +98,7 @@ class TestFeatureViewEngine {
     Assertions.assertEquals(tdFeatures.size(), 1);
     TrainingDatasetFeature labelFeature = tdFeatures.get(0);
     Assertions.assertTrue(labelFeature.getLabel());
-    Assertions.assertEquals(labelFeature.getFeatureGroup().getId(), fg2.getId());
+    Assertions.assertEquals(labelFeature.getFeaturegroup().getId(), fg2.getId());
     Assertions.assertEquals(labelFeature.getName(), label);
   }
 
@@ -109,7 +109,7 @@ class TestFeatureViewEngine {
     Assertions.assertEquals(tdFeatures.size(), 1);
     TrainingDatasetFeature labelFeature = tdFeatures.get(0);
     Assertions.assertTrue(labelFeature.getLabel());
-    Assertions.assertEquals(labelFeature.getFeatureGroup().getId(), fg3.getId());
+    Assertions.assertEquals(labelFeature.getFeaturegroup().getId(), fg3.getId());
     Assertions.assertEquals(labelFeature.getName(), label);
   }
 
@@ -130,7 +130,7 @@ class TestFeatureViewEngine {
     Assertions.assertEquals(tdFeatures.size(), 1);
     TrainingDatasetFeature labelFeature = tdFeatures.get(0);
     Assertions.assertTrue(labelFeature.getLabel());
-    Assertions.assertEquals(labelFeature.getFeatureGroup().getId(), fg2.getId());
+    Assertions.assertEquals(labelFeature.getFeaturegroup().getId(), fg2.getId());
     Assertions.assertEquals(labelFeature.getName(), label);
   }
 
@@ -141,7 +141,7 @@ class TestFeatureViewEngine {
     Assertions.assertEquals(tdFeatures.size(), 1);
     TrainingDatasetFeature labelFeature = tdFeatures.get(0);
     Assertions.assertTrue(labelFeature.getLabel());
-    Assertions.assertEquals(labelFeature.getFeatureGroup().getId(), fg2.getId());
+    Assertions.assertEquals(labelFeature.getFeaturegroup().getId(), fg2.getId());
     Assertions.assertEquals(labelFeature.getName(), label);
   }
 
@@ -162,7 +162,7 @@ class TestFeatureViewEngine {
     Assertions.assertEquals(tdFeatures.size(), 1);
     TrainingDatasetFeature labelFeature = tdFeatures.get(0);
     Assertions.assertTrue(labelFeature.getLabel());
-    Assertions.assertEquals(labelFeature.getFeatureGroup().getId(), fg1.getId());
+    Assertions.assertEquals(labelFeature.getFeaturegroup().getId(), fg1.getId());
     Assertions.assertEquals(labelFeature.getName(), label);
   }
 
@@ -173,7 +173,7 @@ class TestFeatureViewEngine {
     Assertions.assertEquals(tdFeatures.size(), 1);
     TrainingDatasetFeature labelFeature = tdFeatures.get(0);
     Assertions.assertTrue(labelFeature.getLabel());
-    Assertions.assertEquals(labelFeature.getFeatureGroup().getId(), fg1.getId());
+    Assertions.assertEquals(labelFeature.getFeaturegroup().getId(), fg1.getId());
     Assertions.assertEquals(labelFeature.getName(), label);
   }
 
