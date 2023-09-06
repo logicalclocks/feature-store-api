@@ -540,6 +540,7 @@ public class SparkEngine extends EngineBase {
       throws FeatureStoreException, IOException {
     byte[] projectId = String.valueOf(featureGroupBase.getFeatureStore().getProjectId())
         .getBytes(StandardCharsets.UTF_8);
+    byte[] featureGroupId = String.valueOf(featureGroupBase.getId()).getBytes(StandardCharsets.UTF_8);
     byte[] subjectId = String.valueOf(featureGroupBase.getSubject().getId()).getBytes(StandardCharsets.UTF_8);
 
     onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
@@ -547,6 +548,10 @@ public class SparkEngine extends EngineBase {
             struct(
                 lit("projectId").as("key"),
                 lit(projectId).as("value")
+            ),
+            struct(
+                lit("featureGroupId").as("key"),
+                lit(featureGroupId).as("value")
             ),
             struct(
                 lit("subjectId").as("key"),
@@ -567,6 +572,7 @@ public class SparkEngine extends EngineBase {
       throws FeatureStoreException, IOException, StreamingQueryException, TimeoutException {
     byte[] projectId = String.valueOf(featureGroupBase.getFeatureStore().getProjectId())
         .getBytes(StandardCharsets.UTF_8);
+    byte[] featureGroupId = String.valueOf(featureGroupBase.getId()).getBytes(StandardCharsets.UTF_8);
     byte[] subjectId = String.valueOf(featureGroupBase.getSubject().getId()).getBytes(StandardCharsets.UTF_8);
 
     DataStreamWriter<Row> writer =
@@ -575,6 +581,10 @@ public class SparkEngine extends EngineBase {
                 struct(
                     lit("projectId").as("key"),
                     lit(projectId).as("value")
+                ),
+                struct(
+                    lit("featureGroupId").as("key"),
+                    lit(featureGroupId).as("value")
                 ),
                 struct(
                     lit("subjectId").as("key"),

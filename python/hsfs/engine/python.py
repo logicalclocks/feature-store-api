@@ -1088,6 +1088,7 @@ class Engine:
                         "projectId": str(client.get_instance()._project_id).encode(
                             "utf8"
                         ),
+                        "featureGroupId": str(feature_group._id).encode("utf8"),
                         "subjectId": str(feature_group.subject["id"]).encode("utf8"),
                     },
                 )
