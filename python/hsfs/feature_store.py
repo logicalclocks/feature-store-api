@@ -100,6 +100,10 @@ class FeatureStore:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+        # fields below are removed from 3.4. remove them for backward compatibility.
+        json_decamelized.pop("hdfs_store_path", None)
+        json_decamelized.pop("featurestore_description", None)
+        json_decamelized.pop("inode_id", None)
         return cls(**json_decamelized)
 
     def get_feature_group(self, name: str, version: int = None):

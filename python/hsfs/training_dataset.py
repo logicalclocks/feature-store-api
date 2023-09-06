@@ -23,7 +23,7 @@ import numpy as np
 
 from datetime import datetime, date
 
-from hsfs import util, engine, training_dataset_feature
+from hsfs import util, engine, training_dataset_feature, client
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.storage_connector import StorageConnector, HopsFSConnector
@@ -499,6 +499,7 @@ class TrainingDataset:
         json_decamelized = humps.decamelize(json_dict)
         for td in json_decamelized:
             _ = td.pop("type")
+            cls._rewrite_location(td)
         return [cls(**td) for td in json_decamelized]
 
     @classmethod
@@ -506,14 +507,23 @@ class TrainingDataset:
         json_decamelized = humps.decamelize(json_dict)
         json_decamelized.pop("type", None)
         json_decamelized.pop("href", None)
+        cls._rewrite_location(json_decamelized)
         return cls(**json_decamelized)
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         _ = json_decamelized.pop("type")
         # here we lose the information that the user set, e.g. write_options
+        self._rewrite_location(json_decamelized)
         self.__init__(**json_decamelized)
         return self
+
+    @classmethod
+    def _rewrite_location(cls, td_json):
+        _client = client.get_instance()
+        if "location" in td_json:
+            if td_json["location"].endswith(f"/Projects/{_client._project_name}/{_client._project_name}_Training_Datasets"):
+                td_json["location"] = f"{td_json['location']}/{td_json['name']}_{td_json['version']}"
 
     def _infer_training_dataset_type(self, connector_type):
         if connector_type == StorageConnector.HOPSFS or connector_type is None:

@@ -74,8 +74,16 @@ public class TrainingDatasetApi {
       td.getFeatures().stream()
           .filter(f -> f.getFeatureGroup() != null)
           .forEach(f -> f.getFeatureGroup().setFeatureStore(featureStoreBase));
+      rewriteLocation(td);
     }
     return Arrays.asList(trainingDatasetBases);
+  }
+
+  private void rewriteLocation(TrainingDatasetBase td) {
+    String projectName = td.getFeatureStore().getName();
+    if (td.getLocation().endsWith(String.format("/Projects/%s/%s_Training_Datasets", projectName, projectName))) {
+      td.setLocation(String.format("%s/%s_%d", td.getLocation(), td.getName(), td.getVersion()));
+    }
   }
 
   public TrainingDatasetBase getTrainingDataset(FeatureStoreBase featureStoreBase, String tdName, Integer tdVersion)
@@ -100,7 +108,9 @@ public class TrainingDatasetApi {
     LOGGER.info("Sending metadata request: " + uri);
     HttpPost postRequest = new HttpPost(uri);
     postRequest.setEntity(hopsworksClient.buildStringEntity(trainingDatasetBase));
-    return hopsworksClient.handleRequest(postRequest, TrainingDatasetBase.class);
+    TrainingDatasetBase td = hopsworksClient.handleRequest(postRequest, TrainingDatasetBase.class);
+    rewriteLocation(td);
+    return td;
   }
 
   public FsQueryBase getQuery(TrainingDatasetBase trainingDatasetBase, boolean withLabel, boolean isHiveQuery)
@@ -163,7 +173,9 @@ public class TrainingDatasetApi {
     LOGGER.info("Sending metadata request: " + uri);
     HttpPut putRequest = new HttpPut(uri);
     putRequest.setEntity(hopsworksClient.buildStringEntity(trainingDatasetBase));
-    return hopsworksClient.handleRequest(putRequest, TrainingDatasetBase.class);
+    TrainingDatasetBase td = hopsworksClient.handleRequest(putRequest, TrainingDatasetBase.class);
+    rewriteLocation(td);
+    return td;
   }
 
   public void delete(TrainingDatasetBase trainingDatasetBase)
