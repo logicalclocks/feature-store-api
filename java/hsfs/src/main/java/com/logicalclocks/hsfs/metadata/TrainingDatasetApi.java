@@ -79,6 +79,8 @@ public class TrainingDatasetApi {
     return Arrays.asList(trainingDatasetBases);
   }
 
+  // A bug is introduced https://github.com/logicalclocks/hopsworks/blob/7adcad3cf5303ef19c996d75e6f4042cf565c8d5/hopsworks-common/src/main/java/io/hops/hopsworks/common/featurestore/trainingdatasets/hopsfs/HopsfsTrainingDatasetController.java#L85
+  // Rewrite the td location if it is TD root directory
   private void rewriteLocation(TrainingDatasetBase td) {
     String projectName = td.getFeatureStore().getName();
     if (td.getLocation().endsWith(String.format("/Projects/%s/%s_Training_Datasets", projectName, projectName))) {

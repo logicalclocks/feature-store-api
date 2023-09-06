@@ -518,6 +518,8 @@ class TrainingDataset:
         self.__init__(**json_decamelized)
         return self
 
+    # A bug is introduced https://github.com/logicalclocks/hopsworks/blob/7adcad3cf5303ef19c996d75e6f4042cf565c8d5/hopsworks-common/src/main/java/io/hops/hopsworks/common/featurestore/trainingdatasets/hopsfs/HopsfsTrainingDatasetController.java#L85
+    # Rewrite the td location if it is TD root directory
     @classmethod
     def _rewrite_location(cls, td_json):
         _client = client.get_instance()
