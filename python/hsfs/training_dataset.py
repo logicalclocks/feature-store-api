@@ -522,8 +522,12 @@ class TrainingDataset:
     def _rewrite_location(cls, td_json):
         _client = client.get_instance()
         if "location" in td_json:
-            if td_json["location"].endswith(f"/Projects/{_client._project_name}/{_client._project_name}_Training_Datasets"):
-                td_json["location"] = f"{td_json['location']}/{td_json['name']}_{td_json['version']}"
+            if td_json["location"].endswith(
+                f"/Projects/{_client._project_name}/{_client._project_name}_Training_Datasets"
+            ):
+                td_json[
+                    "location"
+                ] = f"{td_json['location']}/{td_json['name']}_{td_json['version']}"
 
     def _infer_training_dataset_type(self, connector_type):
         if connector_type == StorageConnector.HOPSFS or connector_type is None:
