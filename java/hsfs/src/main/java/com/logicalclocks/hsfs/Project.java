@@ -35,7 +35,7 @@ public class Project {
   private String owner;
   @Getter
   @Setter
-  protected String topicName;
+  protected String featureStoreTopic;
 
   public Project(Integer projectId) {
     this.projectId = projectId;
