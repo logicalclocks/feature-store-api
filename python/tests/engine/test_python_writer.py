@@ -50,16 +50,17 @@ class TestPythonWriter:
         mocker.patch("hsfs.core.job_api.JobApi")  # get, launch
         mocker.patch("hsfs.engine.python.Engine.get_job_url")
         mocker.patch("hsfs.engine.python.Engine.wait_for_job")
-        producer = mocker.MagicMock()
         topic_mock = mocker.MagicMock()
         topic_name = "test_topic"
         topic_metadata = TopicMetadata()
         topic_mock.topics = {topic_name: topic_metadata}
-        producer.list_topics = mocker.MagicMock(return_value=topic_mock)
+        consumer = mocker.MagicMock()
+        consumer.list_topics = mocker.MagicMock(return_value=topic_mock)
         mocker.patch(
-            "hsfs.engine.python.Producer",
-            return_value=producer,
+            "hsfs.engine.python.Consumer",
+            return_value=consumer,
         )
+        mocker.patch("hsfs.engine.python.Producer")
         python_engine = python.Engine()
 
         fg = feature_group.FeatureGroup(

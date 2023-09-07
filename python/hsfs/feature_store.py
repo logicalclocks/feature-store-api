@@ -544,7 +544,7 @@ class FeatureStore:
             parents=parents,
             topic_name=topic_name,
         )
-        feature_group_api._add_feature_store(feature_group_object, self)
+        feature_group_api._add_feature_store(self, feature_group_object)
         return feature_group_object
 
     def get_or_create_feature_group(
@@ -671,7 +671,7 @@ class FeatureStore:
                     parents=parents,
                     topic_name=topic_name,
                 )
-                feature_group_api._add_feature_store(feature_group_object, self)
+                feature_group_api._add_feature_store(self, feature_group_object)
                 return feature_group_object
             else:
                 raise e
@@ -775,7 +775,7 @@ class FeatureStore:
             expectation_suite=expectation_suite,
             topic_name=topic_name,
         )
-        feature_group_api._add_feature_store(feature_group_object, self)
+        feature_group_api._add_feature_store(self, feature_group_object)
         return feature_group_object
 
     def create_external_feature_group(
@@ -915,7 +915,7 @@ class FeatureStore:
             online_enabled=online_enabled,
             topic_name=topic_name,
         )
-        feature_group_api._add_feature_store(feature_group_object, self)
+        feature_group_api._add_feature_store(self, feature_group_object)
         return feature_group_object
 
     def get_or_create_spine_group(
@@ -1054,7 +1054,7 @@ class FeatureStore:
                     featurestore_id=self._id,
                     featurestore_name=self._name,
                 )
-                feature_group_api._add_feature_store(spine, self)
+                feature_group_api._add_feature_store(self, spine)
                 return spine._save()
             else:
                 raise e
