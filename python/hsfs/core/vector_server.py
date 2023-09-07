@@ -256,7 +256,7 @@ class VectorServer:
         return_type=None,
         passed_features=[],
         allow_missing=False,
-        # TODO (Davit): with_extra_features= False,
+        # TODO (Davit): with_helper_columns= False,
     ):
         """Assembles serving vector from online feature store."""
 

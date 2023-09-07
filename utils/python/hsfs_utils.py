@@ -101,7 +101,7 @@ def create_fv_td(job_conf: Dict[Any, Any]) -> None:
     fv_engine = feature_view_engine.FeatureViewEngine(fv.featurestore_id)
 
     user_write_options = job_conf.pop("write_options", {}) or {}
-    with_extra_features = user_write_options.get("with_extra_features")
+    with_extra_features = user_write_options.get("with_helper_columns")
     fv_engine.compute_training_dataset(
         fv,
         user_write_options,

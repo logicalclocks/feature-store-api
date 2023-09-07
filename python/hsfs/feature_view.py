@@ -55,7 +55,7 @@ class FeatureView:
         version: Optional[int] = None,
         description: Optional[str] = "",
         labels: Optional[List[str]] = [],
-        extra_features: Optional[List[str]] = [],
+        helper_columns: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
         featurestore_name=None,
         serving_keys: Optional[List[ServingKey]] = None,
@@ -68,7 +68,7 @@ class FeatureView:
         self._version = version
         self._description = description
         self._labels = labels
-        self._extra_features = extra_features
+        self._helper_columns = helper_columns
         self._transformation_functions = (
             {
                 ft_name: copy.deepcopy(transformation_functions[ft_name])
@@ -529,7 +529,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         """Get a batch of data from an event time interval from the offline feature store.
 
@@ -575,12 +575,12 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+            with_helper_columns: whether to include helper columns or not. Helper columns are a list of feature names
                 in the feature view, defined during its creation, that may not be used in training the model
                 itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
                 back to original dataframes). When replaying a `Query` during model inference, the extra
                 features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
-                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no helper columns.
         # Returns
             `DataFrame`: A dataframe
         """
@@ -596,7 +596,7 @@ class FeatureView:
             self._batch_scoring_server._transformation_functions,
             read_options,
             spine,
-            with_extra_features,
+            with_helper_columns,
         )
 
     def add_tag(self, name: str, value):
@@ -734,7 +734,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data can be retrieved by calling `feature_view.get_training_data`.
@@ -898,12 +898,12 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+            with_helper_columns: whether to include helper columns or not. Helper columns are a list of feature names
                 in the feature view, defined during its creation, that may not be used in training the model
                 itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
                 back to original dataframes). When replaying a `Query` during model inference, the extra
                 features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
-                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no helper columns.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -931,7 +931,7 @@ class FeatureView:
             td,
             write_options,
             spine=spine,
-            with_extra_features=with_extra_features,
+            with_helper_columns=with_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -966,7 +966,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train and test set at random or according to time ranges.
@@ -1174,12 +1174,12 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+            with_helper_columns: whether to include helper columns or not. Helper columns are a list of feature names
                 in the feature view, defined during its creation, that may not be used in training the model
                 itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
                 back to original dataframes). When replaying a `Query` during model inference, the extra
                 features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
-                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no helper columns.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -1215,7 +1215,7 @@ class FeatureView:
             td,
             write_options,
             spine=spine,
-            with_extra_features=with_extra_features,
+            with_helper_columns=with_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1253,7 +1253,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train, validation, and test set at random or according to time range.
@@ -1447,12 +1447,12 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+            with_helper_columns: whether to include helper columns or not. Helper columns are a list of feature names
                 in the feature view, defined during its creation, that may not be used in training the model
                 itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
                 back to original dataframes). When replaying a `Query` during model inference, the extra
                 features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
-                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no helper columns.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -1496,7 +1496,7 @@ class FeatureView:
             td,
             write_options,
             spine=spine,
-            with_extra_features=with_extra_features,
+            with_helper_columns=with_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1590,7 +1590,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1676,12 +1676,12 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+            with_helper_columns: whether to include helper columns or not. Helper columns are a list of feature names
                 in the feature view, defined during its creation, that may not be used in training the model
                 itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
                 back to original dataframes). When replaying a `Query` during model inference, the extra
                 features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
-                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no helper columns.
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
         """
@@ -1705,7 +1705,7 @@ class FeatureView:
             read_options,
             training_dataset_obj=td,
             spine=spine,
-            with_extra_features=with_extra_features,
+            with_helper_columns=with_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1734,7 +1734,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1830,12 +1830,12 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+            with_helper_columns: whether to include helper columns or not. Helper columns are a list of feature names
                 in the feature view, defined during its creation, that may not be used in training the model
                 itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
                 back to original dataframes). When replaying a `Query` during model inference, the extra
                 features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
-                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no helper columns.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -1868,7 +1868,7 @@ class FeatureView:
             training_dataset_obj=td,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
             spine=spine,
-            with_extra_features=with_extra_features,
+            with_helper_columns=with_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1909,7 +1909,7 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -2018,12 +2018,12 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+            with_helper_columns: whether to include helper columns or not. Helper columns are a list of feature names
                 in the feature view, defined during its creation, that may not be used in training the model
                 itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
                 back to original dataframes). When replaying a `Query` during model inference, the extra
                 features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
-                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no helper columns.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2069,7 +2069,7 @@ class FeatureView:
                 TrainingDatasetSplit.TEST,
             ],
             spine=spine,
-            with_extra_features=with_extra_features,
+            with_helper_columns=with_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -2102,7 +2102,7 @@ class FeatureView:
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         """
         Get training data created by `feature_view.create_training_data`
@@ -2136,12 +2136,12 @@ class FeatureView:
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+            with_helper_columns: whether to include helper columns or not. Helper columns are a list of feature names
                 in the feature view, defined during its creation, that may not be used in training the model
                 itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
                 back to original dataframes). When replaying a `Query` during model inference, the extra
                 features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
-                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no helper columns.
         # Returns
             (X, y): Tuple of dataframe of features and labels
         """
@@ -2149,7 +2149,7 @@ class FeatureView:
             self,
             read_options,
             training_dataset_version=training_dataset_version,
-            with_extra_features=with_extra_features,
+            with_helper_columns=with_helper_columns,
         )
         return df
 
@@ -2157,7 +2157,7 @@ class FeatureView:
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         """
         Get training data created by `feature_view.create_train_test_split`
@@ -2186,12 +2186,12 @@ class FeatureView:
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+            with_helper_columns: whether to include helper columns or not. Helper columns are a list of feature names
                 in the feature view, defined during its creation, that may not be used in training the model
                 itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
                 back to original dataframes). When replaying a `Query` during model inference, the extra
                 features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
-                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no helper columns.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -2201,7 +2201,7 @@ class FeatureView:
             read_options,
             training_dataset_version=training_dataset_version,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
-            with_extra_features=with_extra_features,
+            with_helper_columns=with_helper_columns,
         )
         return df
 
@@ -2209,7 +2209,7 @@ class FeatureView:
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         """
         Get training data created by `feature_view.create_train_validation_test_split`
@@ -2238,12 +2238,12 @@ class FeatureView:
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-            with_extra_features: whether to include extra features or not. Extra features are a list of feature names
+            with_helper_columns: whether to include helper columns or not. Helper columns are a list of feature names
                 in the feature view, defined during its creation, that may not be used in training the model
                 itself (e.g. primary keys and datetime that can be used to sort dataframe and or merge to predictions
                 back to original dataframes). When replaying a `Query` during model inference, the extra
                 features optionally can be omitted during batch inference (`get_batch_data`) and will be omitted during
-                online inference (`get_feature_vector(s)`) . Defaults to `False`, no extra features.
+                online inference (`get_feature_vector(s)`) . Defaults to `False`, no helper columns.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2257,7 +2257,7 @@ class FeatureView:
                 TrainingDatasetSplit.VALIDATION,
                 TrainingDatasetSplit.TEST,
             ],
-            with_extra_features=with_extra_features,
+            with_helper_columns=with_helper_columns,
         )
         return df
 
@@ -2498,8 +2498,8 @@ class FeatureView:
             ]
         fv.schema = features
         fv.labels = [feature.name for feature in features if feature.label]
-        fv.extra_features = [
-            feature.name for feature in features if feature.extra_feature
+        fv.helper_columns = [
+            feature.name for feature in features if feature.helper_column
         ]
         return fv
 
@@ -2513,7 +2513,7 @@ class FeatureView:
             "featurestore_id",
             "version",
             "labels",
-            "extra_features",
+            "helper_columns",
             "schema",
             "serving_keys",
         ]:
@@ -2592,16 +2592,16 @@ class FeatureView:
         self._labels = [lb.lower() for lb in labels]
 
     @property
-    def extra_features(self):
-        """The extra feature sof the feature view.
+    def helper_columns(self):
+        """The helper column sof the feature view.
 
         Can be a composite of multiple features.
         """
-        return self._extra_features
+        return self._helper_columns
 
-    @extra_features.setter
-    def extra_features(self, extra_features):
-        self._extra_features = [exf.lower() for exf in extra_features]
+    @helper_columns.setter
+    def helper_columns(self, helper_columns):
+        self._helper_columns = [exf.lower() for exf in helper_columns]
 
     @property
     def description(self):

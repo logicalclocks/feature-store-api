@@ -82,17 +82,17 @@ class FeatureViewEngine:
                         featuregroup=featuregroup,
                     )
                 )
-        if feature_view_obj.extra_features:
-            for extra_feature_name in feature_view_obj.extra_features:
+        if feature_view_obj.helper_columns:
+            for helper_column_name in feature_view_obj.helper_columns:
                 (
                     feature,
                     prefix,
                     featuregroup,
-                ) = feature_view_obj.query._get_feature_by_name(extra_feature_name)
+                ) = feature_view_obj.query._get_feature_by_name(helper_column_name)
                 feature_view_obj._features.append(
                     training_dataset_feature.TrainingDatasetFeature(
                         name=feature.name,
-                        extra_feature=True,
+                        helper_column=True,
                         featuregroup=featuregroup,
                     )
                 )
@@ -142,7 +142,7 @@ class FeatureViewEngine:
         start_time,
         end_time,
         with_label=False,
-        with_extra_features=False,
+        with_helper_columns=False,
         training_dataset_version=None,
         spine=None,
     ):
@@ -155,7 +155,7 @@ class FeatureViewEngine:
                 training_dataset_version=training_dataset_version,
                 is_python_engine=engine.get_type() == "python",
                 with_label=with_label,
-                with_extra_features=with_extra_features,
+                with_helper_columns=with_helper_columns,
             )
             # verify whatever is passed 1. spine group with dataframe contained, or 2. dataframe
             # the schema has to be consistent
@@ -239,7 +239,7 @@ class FeatureViewEngine:
         training_dataset_obj,
         user_write_options,
         spine=None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         self._set_event_time(feature_view_obj, training_dataset_obj)
         updated_instance = self._create_training_data_metadata(
@@ -250,7 +250,7 @@ class FeatureViewEngine:
             user_write_options,
             training_dataset_obj=training_dataset_obj,
             spine=spine,
-            with_extra_features=with_extra_features,
+            with_helper_columns=with_helper_columns,
         )
         return updated_instance, td_job
 
@@ -262,7 +262,7 @@ class FeatureViewEngine:
         training_dataset_obj=None,
         training_dataset_version=None,
         spine=None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         # check if provided td version has already existed.
         if training_dataset_version:
@@ -291,11 +291,11 @@ class FeatureViewEngine:
         )
 
         if td_updated.training_dataset_type != td_updated.IN_MEMORY:
-            if with_extra_features:
+            if with_helper_columns:
                 warnings.warn(
-                    "Argument `with_extra_features` was set to `True`. However, when reading already materialised "
-                    "training dataset this will not have anny effect. If this training dataset was materialised with"
-                    "`with_extra_features=True` it will include return extra features, otherwise it will not."
+                    "Argument `with_helper_columns` was set to `True`. However, when reading already materialised "
+                    "training dataset this will not have anny effect. If this training dataset was not materialised "
+                    "with `with_helper_columns=True` it will not return helper columns."
                 )
             split_df = self._read_from_storage_connector(
                 td_updated, td_updated.splits, read_options, feature_view_obj.schema
@@ -308,7 +308,7 @@ class FeatureViewEngine:
                 start_time=td_updated.event_start_time,
                 end_time=td_updated.event_end_time,
                 with_label=True,
-                with_extra_features=with_extra_features,
+                with_helper_columns=with_helper_columns,
                 spine=spine,
             )
             split_df = engine.get_instance().get_training_data(
@@ -433,7 +433,7 @@ class FeatureViewEngine:
         training_dataset_obj=None,
         training_dataset_version=None,
         spine=None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         if training_dataset_obj:
             pass
@@ -449,13 +449,13 @@ class FeatureViewEngine:
             training_dataset_obj.event_start_time,
             training_dataset_obj.event_end_time,
             with_label=True,
-            with_extra_features=with_extra_features,
+            with_helper_columns=with_helper_columns,
             training_dataset_version=training_dataset_obj.version,
             spine=spine,
         )
 
         # for spark job
-        user_write_options["with_extra_features"] = user_write_options
+        user_write_options["with_helper_columns"] = user_write_options
 
         td_job = engine.get_instance().write_training_dataset(
             training_dataset_obj,
@@ -563,7 +563,7 @@ class FeatureViewEngine:
         transformation_functions,
         read_options=None,
         spine=None,
-        with_extra_features=False,
+        with_helper_columns=False,
     ):
         self._check_feature_group_accessibility(feature_view_obj)
 
@@ -572,7 +572,7 @@ class FeatureViewEngine:
             start_time,
             end_time,
             with_label=False,
-            with_extra_features=with_extra_features,
+            with_helper_columns=with_helper_columns,
             training_dataset_version=training_dataset_version,
             spine=spine,
         ).read(read_options=read_options)

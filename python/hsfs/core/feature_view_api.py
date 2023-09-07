@@ -128,7 +128,7 @@ class FeatureViewApi:
         end_time,
         training_dataset_version=None,
         with_label=False,
-        with_extra_features=False,
+        with_helper_columns=False,
         is_python_engine=False,
     ):
         path = self._base_path + [
@@ -146,7 +146,7 @@ class FeatureViewApi:
                     "start_time": start_time,
                     "end_time": end_time,
                     "with_label": with_label,
-                    "with_extra_features": with_extra_features,
+                    "with_helper_columns": with_helper_columns,
                     "is_hive_engine": is_python_engine,
                     "td_version": training_dataset_version,
                 },
