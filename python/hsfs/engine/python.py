@@ -954,7 +954,7 @@ class Engine:
 
             # set initial_check_point to the current offset
             initial_check_point = self._kafka_get_offsets(
-                feature_group, offline_write_options, producer, True
+                feature_group, offline_write_options, True
             )
 
         def acked(err, msg):
@@ -1026,7 +1026,7 @@ class Engine:
                 )
             # set the initial_check_point to the lowest offset (it was not set previously due to topic not existing)
             initial_check_point = self._kafka_get_offsets(
-                feature_group, offline_write_options, producer, False
+                feature_group, offline_write_options, False
             )
             feature_group.materialization_job.run(
                 args=feature_group.materialization_job.config.get("defaultArgs", "")
@@ -1050,16 +1050,15 @@ class Engine:
         self,
         feature_group: FeatureGroup,
         offline_write_options: dict,
-        producer: Producer,
         high: bool,
     ):
         topic_name = feature_group._online_topic_name
-        topics = producer.list_topics(
+        consumer = self._init_kafka_consumer(feature_group, offline_write_options)
+        topics = consumer.list_topics(
             timeout=offline_write_options.get("kafka_timeout", 6)
         ).topics
         if topic_name in topics.keys():
             # topic exists
-            consumer = self._init_kafka_consumer(feature_group, offline_write_options)
             offsets = ""
             tuple_value = int(high)
             for partition_metadata in topics.get(topic_name).partitions.values():
