@@ -2689,6 +2689,7 @@ class TestPython:
             id=10,
             stream=False,
         )
+        fg.feature_store = mocker.Mock()
 
         # Act
         python_engine._kafka_produce(
@@ -2723,6 +2724,7 @@ class TestPython:
             id=10,
             stream=False,
         )
+        fg.feature_store = mocker.Mock()
 
         # Act
         python_engine._kafka_produce(
@@ -3100,7 +3102,6 @@ class TestPython:
 
     def test_kafka_get_offsets_high(self, mocker):
         # Arrange
-        producer = mocker.MagicMock()
         topic_name = "test_topic"
         partition_metadata = PartitionMetadata()
         partition_metadata.id = 0
@@ -3110,9 +3111,9 @@ class TestPython:
 
         # return no topics and one commit, so it should start the job with the extra arg
         topic_mock.topics = {topic_name: topic_metadata}
-        producer.list_topics = mocker.MagicMock(return_value=topic_mock)
 
         consumer = mocker.MagicMock()
+        consumer.list_topics = mocker.MagicMock(return_value=topic_mock)
         consumer.get_watermark_offsets = mocker.MagicMock(return_value=(0, 11))
         mocker.patch(
             "hsfs.engine.python.Engine._init_kafka_consumer",
@@ -3137,7 +3138,6 @@ class TestPython:
         result = python_engine._kafka_get_offsets(
             feature_group=fg,
             offline_write_options={},
-            producer=producer,
             high=True,
         )
 
@@ -3146,7 +3146,6 @@ class TestPython:
 
     def test_kafka_get_offsets_low(self, mocker):
         # Arrange
-        producer = mocker.MagicMock()
         topic_name = "test_topic"
         partition_metadata = PartitionMetadata()
         partition_metadata.id = 0
@@ -3156,9 +3155,9 @@ class TestPython:
 
         # return no topics and one commit, so it should start the job with the extra arg
         topic_mock.topics = {topic_name: topic_metadata}
-        producer.list_topics = mocker.MagicMock(return_value=topic_mock)
 
         consumer = mocker.MagicMock()
+        consumer.list_topics = mocker.MagicMock(return_value=topic_mock)
         consumer.get_watermark_offsets = mocker.MagicMock(return_value=(0, 11))
         mocker.patch(
             "hsfs.engine.python.Engine._init_kafka_consumer",
@@ -3183,7 +3182,6 @@ class TestPython:
         result = python_engine._kafka_get_offsets(
             feature_group=fg,
             offline_write_options={},
-            producer=producer,
             high=False,
         )
 
@@ -3192,15 +3190,14 @@ class TestPython:
 
     def test_kafka_get_offsets_no_topic(self, mocker):
         # Arrange
-        producer = mocker.MagicMock()
         topic_name = "test_topic"
         topic_mock = mocker.MagicMock()
 
         # return no topics and one commit, so it should start the job with the extra arg
         topic_mock.topics = {}
-        producer.list_topics = mocker.MagicMock(return_value=topic_mock)
 
         consumer = mocker.MagicMock()
+        consumer.list_topics = mocker.MagicMock(return_value=topic_mock)
         consumer.get_watermark_offsets = mocker.MagicMock(return_value=(0, 11))
         mocker.patch(
             "hsfs.engine.python.Engine._init_kafka_consumer",
@@ -3225,7 +3222,6 @@ class TestPython:
         result = python_engine._kafka_get_offsets(
             feature_group=fg,
             offline_write_options={},
-            producer=producer,
             high=True,
         )
 
