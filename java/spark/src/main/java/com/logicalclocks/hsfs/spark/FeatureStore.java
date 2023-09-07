@@ -176,7 +176,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   @Override
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
     return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, null,
-        null, null, false, null, null, null);
+        null, null, false, null, null, null, null);
   }
 
   /**
@@ -210,7 +210,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
                                               boolean onlineEnabled, String eventTime)
       throws IOException, FeatureStoreException {
     return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
-        null, null, onlineEnabled, null, null, eventTime);
+        null, null, onlineEnabled, null, null, null, eventTime);
   }
 
   /**
@@ -249,7 +249,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
                                               String eventTime) throws IOException, FeatureStoreException {
 
     return featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
-        partitionKeys, null, onlineEnabled, null, null, eventTime);
+        partitionKeys, null, onlineEnabled, null, null, null, eventTime);
   }
 
   /**
@@ -283,6 +283,8 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    *                          `"histograms"` to compute feature value frequencies and `"exact_uniqueness"` to compute
    *                          uniqueness, distinctness and entropy. The values should be booleans indicating the
    *                          setting. To fully turn off statistics computation pass `statisticsConfig=false`.
+   * @param topicName Optionally, define the name of the topic used for data ingestion. If left undefined it defaults
+   *                  to using project topic.
    * @param eventTime Name of the feature containing the event time for the features in this feature group. If
    *                  eventTime is set the feature group can be used for point-in-time joins.
    *                  The supported data types for the eventTime column are: timestamp, date and bigint
@@ -293,13 +295,14 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   @Override
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, String description,
                                               List<String> primaryKeys, List<String> partitionKeys,
-                                              String hudiPrecombineKey,
-                                              boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
-                                              StatisticsConfig statisticsConfig, String eventTime)
+                                              String hudiPrecombineKey, boolean onlineEnabled,
+                                              TimeTravelFormat timeTravelFormat, StatisticsConfig statisticsConfig,
+                                              String topicName, String eventTime)
       throws IOException, FeatureStoreException {
 
-    return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, description, primaryKeys,
-        partitionKeys, hudiPrecombineKey, onlineEnabled, timeTravelFormat, statisticsConfig, eventTime);
+    return featureGroupEngine.getOrCreateFeatureGroup(this, name, version, description, primaryKeys,
+        partitionKeys, hudiPrecombineKey, onlineEnabled, timeTravelFormat, statisticsConfig, topicName,
+        eventTime);
   }
 
   /**

@@ -17,6 +17,8 @@
 
 package com.logicalclocks.hsfs.beam.engine;
 
+import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
 import lombok.NonNull;
 
 import org.apache.avro.Schema;
@@ -37,7 +39,6 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PDone;
 import org.apache.beam.sdk.values.Row;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.serialization.StringSerializer;
 
@@ -45,11 +46,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -61,15 +64,23 @@ public class BeamProducer extends PTransform<@NonNull PCollection<Row>, @NonNull
   private transient Schema encodedSchema;
   private Map<String, Schema> deserializedComplexFeatureSchemas;
   private List<String> primaryKeys;
+  private final Map<String, byte[]> headerMap = new HashMap<>();
 
   public BeamProducer(String topic, Map<String, String> properties, Schema schema, Schema encodedSchema,
-      Map<String, Schema> deserializedComplexFeatureSchemas, List<String>  primaryKeys) {
+                      Map<String, Schema> deserializedComplexFeatureSchemas, List<String> primaryKeys,
+                      StreamFeatureGroup streamFeatureGroup) throws FeatureStoreException, IOException {
     this.schema = schema;
     this.encodedSchema = encodedSchema;
     this.topic = topic;
     this.properties = properties;
     this.deserializedComplexFeatureSchemas = deserializedComplexFeatureSchemas;
     this.primaryKeys = primaryKeys;
+
+    headerMap.put("projectId",
+        String.valueOf(streamFeatureGroup.getFeatureStore().getProjectId()).getBytes(StandardCharsets.UTF_8));
+    headerMap.put("featureGroupId", String.valueOf(streamFeatureGroup.getId()).getBytes(StandardCharsets.UTF_8));
+    headerMap.put("subjectId",
+        String.valueOf(streamFeatureGroup.getSubject().getId()).getBytes(StandardCharsets.UTF_8));
   }
 
   @Override
@@ -146,7 +157,9 @@ public class BeamProducer extends PTransform<@NonNull PCollection<Row>, @NonNull
             e.printStackTrace();
           }
           props.putAll(properties);
-          return new KafkaProducer<>(props);
+          BeamKafkaProducer producer = new BeamKafkaProducer(props);
+          producer.setHeaderMap(headerMap);
+          return producer;
         })
       );
   }
