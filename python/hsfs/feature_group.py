@@ -1180,6 +1180,9 @@ class FeatureGroupBase:
     def version(self, version):
         self._version = version
 
+    def get_fg_name(self):
+        return f"{self.name}_{self.version}"
+
     @property
     def statistics(self):
         """Get the latest computed statistics for the feature group."""
@@ -2516,10 +2519,7 @@ class FeatureGroup(FeatureGroupBase):
         return fg_meta_dict
 
     def _get_table_name(self):
-        return self.feature_store_name + "." + self.name + "_" + str(self.version)
-
-    def _get_online_table_name(self):
-        return self.name + "_" + str(self.version)
+        return self.feature_store_name + "." + self.get_fg_name()
 
     @property
     def id(self):

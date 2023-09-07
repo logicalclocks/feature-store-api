@@ -119,7 +119,7 @@ class HudiEngine:
         return feature_group_commit
 
     def _setup_hudi_write_opts(self, operation, write_options):
-        table_name = self._feature_group._get_online_table_name()
+        table_name = self._feature_group.get_fg_name()
 
         primary_key = ",".join(self._feature_group.primary_key)
 
