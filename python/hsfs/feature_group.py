@@ -1167,6 +1167,14 @@ class FeatureGroupBase:
             )
 
     @property
+    def feature_store(self):
+        return self._feature_store
+
+    @feature_store.setter
+    def feature_store(self, feature_store):
+        self._feature_store = feature_store
+
+    @property
     def name(self):
         """Name of the feature group."""
         return self._name

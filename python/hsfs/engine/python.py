@@ -1085,7 +1085,7 @@ class Engine:
                     value=encoded_row,
                     callback=acked,
                     headers={
-                        "projectId": str(client.get_instance()._project_id).encode(
+                        "projectId": str(feature_group.feature_store.project_id).encode(
                             "utf8"
                         ),
                         "featureGroupId": str(feature_group._id).encode("utf8"),

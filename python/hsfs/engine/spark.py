@@ -339,7 +339,7 @@ class Engine:
         if query_name is None:
             query_name = "insert_stream_" + feature_group._online_topic_name
 
-        project_id = str(client.get_instance()._project_id).encode("utf8")
+        project_id = str(feature_group.feature_store.project_id).encode("utf8")
         feature_group_id = str(feature_group._id).encode("utf8")
         subject_id = str(feature_group.subject["id"]).encode("utf8")
 
@@ -420,7 +420,7 @@ class Engine:
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
 
-        project_id = str(client.get_instance()._project_id).encode("utf8")
+        project_id = str(feature_group.feature_store.project_id).encode("utf8")
         feature_group_id = str(feature_group._id).encode("utf8")
         subject_id = str(feature_group.subject["id"]).encode("utf8")
 

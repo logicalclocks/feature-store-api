@@ -139,9 +139,11 @@ class FeatureStore:
                 util.VersionWarning,
             )
             version = self.DEFAULT_VERSION
-        return self._feature_group_api.get(
+        feature_group_object = self._feature_group_api.get(
             name, version, feature_group_api.FeatureGroupApi.CACHED
         )
+        feature_group_object.feature_store = self
+        return feature_group_object
 
     def get_feature_groups(self, name: str):
         """Get a list of all versions of a feature group entity from the feature store.
@@ -169,9 +171,12 @@ class FeatureStore:
         # Raises
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
-        return self._feature_group_api.get(
+        feature_group_objects = self._feature_group_api.get(
             name, None, feature_group_api.FeatureGroupApi.CACHED
         )
+        for feature_group_object in feature_group_objects:
+            feature_group_object.feature_store = self
+        return feature_group_objects
 
     def get_on_demand_feature_group(self, name: str, version: int = None):
         """Get a external feature group entity from the feature store.
@@ -194,7 +199,9 @@ class FeatureStore:
         # Raises
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
-        return self.get_external_feature_group(name, version)
+        feature_group_object = self.get_external_feature_group(name, version)
+        feature_group_object.feature_store = self
+        return feature_group_object
 
     def get_external_feature_group(self, name: str, version: int = None):
         """Get a external feature group entity from the feature store.
@@ -230,9 +237,11 @@ class FeatureStore:
                 util.VersionWarning,
             )
             version = self.DEFAULT_VERSION
-        return self._feature_group_api.get(
+        feature_group_object = self._feature_group_api.get(
             name, version, feature_group_api.FeatureGroupApi.ONDEMAND
         )
+        feature_group_object.feature_store = self
+        return feature_group_object
 
     def get_on_demand_feature_groups(self, name: str):
         """Get a list of all versions of an external feature group entity from the feature store.
@@ -253,7 +262,9 @@ class FeatureStore:
         # Raises
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
-        return self.get_external_feature_groups(name)
+        feature_group_object = self.get_external_feature_groups(name)
+        feature_group_object.feature_store = self
+        return feature_group_object
 
     def get_external_feature_groups(self, name: str):
         """Get a list of all versions of an external feature group entity from the feature store.
@@ -279,9 +290,11 @@ class FeatureStore:
         # Raises
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
-        return self._feature_group_api.get(
+        feature_group_object = self._feature_group_api.get(
             name, None, feature_group_api.FeatureGroupApi.ONDEMAND
         )
+        feature_group_object.feature_store = self
+        return feature_group_object
 
     def get_training_dataset(self, name: str, version: int = None):
         """Get a training dataset entity from the feature store.
@@ -525,7 +538,7 @@ class FeatureStore:
         # Returns
             `FeatureGroup`. The feature group metadata object.
         """
-        return feature_group.FeatureGroup(
+        feature_group_object = feature_group.FeatureGroup(
             name=name,
             version=version,
             description=description,
@@ -544,6 +557,8 @@ class FeatureStore:
             parents=parents,
             topic_name=topic_name,
         )
+        feature_group_object.feature_store = self
+        return feature_group_object
 
     def get_or_create_feature_group(
         self,
@@ -642,15 +657,17 @@ class FeatureStore:
             `FeatureGroup`. The feature group metadata object.
         """
         try:
-            return self._feature_group_api.get(
+            feature_group_object = self._feature_group_api.get(
                 name, version, feature_group_api.FeatureGroupApi.CACHED
             )
+            feature_group_object.feature_store = self
+            return feature_group_object
         except exceptions.RestAPIError as e:
             if (
                 e.response.json().get("errorCode", "") == 270009
                 and e.response.status_code == 404
             ):
-                return feature_group.FeatureGroup(
+                feature_group_object = feature_group.FeatureGroup(
                     name=name,
                     version=version,
                     description=description,
@@ -669,6 +686,8 @@ class FeatureStore:
                     parents=parents,
                     topic_name=topic_name,
                 )
+                feature_group_object.feature_store = self
+                return feature_group_object
             else:
                 raise e
 
@@ -753,7 +772,7 @@ class FeatureStore:
         # Returns
             `ExternalFeatureGroup`. The external feature group metadata object.
         """
-        return feature_group.ExternalFeatureGroup(
+        feature_group_object = feature_group.ExternalFeatureGroup(
             name=name,
             query=query,
             data_format=data_format,
@@ -771,6 +790,8 @@ class FeatureStore:
             expectation_suite=expectation_suite,
             topic_name=topic_name,
         )
+        feature_group_object.feature_store = self
+        return feature_group_object
 
     def create_external_feature_group(
         self,
@@ -890,7 +911,7 @@ class FeatureStore:
         # Returns
             `ExternalFeatureGroup`. The external feature group metadata object.
         """
-        return feature_group.ExternalFeatureGroup(
+        feature_group_object = feature_group.ExternalFeatureGroup(
             name=name,
             query=query,
             data_format=data_format,
@@ -909,6 +930,8 @@ class FeatureStore:
             online_enabled=online_enabled,
             topic_name=topic_name,
         )
+        feature_group_object.feature_store = self
+        return feature_group_object
 
     def get_or_create_spine_group(
         self,
@@ -1028,6 +1051,7 @@ class FeatureStore:
             spine = self._feature_group_api.get(
                 name, version, feature_group_api.FeatureGroupApi.SPINE
             )
+            spine.feature_store = self
             spine.dataframe = dataframe
             return spine
         except exceptions.RestAPIError as e:
@@ -1046,6 +1070,7 @@ class FeatureStore:
                     featurestore_id=self._id,
                     featurestore_name=self._name,
                 )
+                spine.feature_store = self
                 return spine._save()
             else:
                 raise e
