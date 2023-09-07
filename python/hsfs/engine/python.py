@@ -87,6 +87,7 @@ class Engine:
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
+        self._feature_group_api = feature_group_api.FeatureGroupApi()
         self._storage_connector_api = storage_connector_api.StorageConnectorApi()
 
         # cache the sql engine which contains the connection pool
@@ -524,8 +525,7 @@ class Engine:
         # Setup job for ingestion
         # Configure Hopsworks ingestion job
         print("Configuring ingestion job...")
-        fg_api = feature_group_api.FeatureGroupApi(feature_group.feature_store_id)
-        ingestion_job = fg_api.ingestion(feature_group, app_options)
+        ingestion_job = self._feature_group_api.ingestion(feature_group, app_options)
 
         # Upload dataframe into Hopsworks
         print("Uploading Pandas dataframe...")

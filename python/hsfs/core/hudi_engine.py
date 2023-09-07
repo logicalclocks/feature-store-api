@@ -79,7 +79,7 @@ class HudiEngine:
         self._feature_store_id = feature_store_id
         self._feature_store_name = feature_store_name
 
-        self._feature_group_api = feature_group_api.FeatureGroupApi(feature_store_id)
+        self._feature_group_api = feature_group_api.FeatureGroupApi()
 
     def save_hudi_fg(
         self, dataset, save_mode, operation, write_options, validation_id=None

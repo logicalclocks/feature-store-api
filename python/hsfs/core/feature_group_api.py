@@ -26,9 +26,6 @@ class FeatureGroupApi:
     ONDEMAND = "ondemand"
     SPINE = "spine"
 
-    def __init__(self, feature_store_id):
-        self._feature_store_id = feature_store_id
-
     def save(self, feature_group_instance):
         """Save feature group metadata to the feature store.
 
@@ -43,11 +40,11 @@ class FeatureGroupApi:
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_group_instance.feature_store.id,
             "featuregroups",
         ]
         headers = {"content-type": "application/json"}
-        return feature_group_instance.update_from_response_json(
+        feature_group_object = feature_group_instance.update_from_response_json(
             _client._send_request(
                 "POST",
                 path_params,
@@ -55,10 +52,15 @@ class FeatureGroupApi:
                 data=feature_group_instance.json(),
             ),
         )
+        return _add_feature_store(
+            feature_group_instance.feature_store, feature_group_object
+        )
 
-    def get(self, name, version, fg_type):
+    def get(self, feature_store_object, name, version, fg_type):
         """Get the metadata of a feature group with a certain name and version.
 
+        :param feature_store_object: feature store object
+        :type feature_store_object: FeatureStore
         :param name: name of the feature group
         :type name: str
         :param version: version of the feature group
@@ -73,7 +75,7 @@ class FeatureGroupApi:
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_store_object.id,
             "featuregroups",
             name,
         ]
@@ -88,9 +90,9 @@ class FeatureGroupApi:
             fg_list = feature_group.ExternalFeatureGroup.from_response_json(json_list)
 
         if version is not None:
-            return fg_list[0]
+            return _add_feature_store(feature_store_object, fg_list[0])
         else:
-            return fg_list
+            return _add_feature_store(feature_store_object, fg_list)
 
     def delete_content(self, feature_group_instance):
         """Delete the content of a feature group.
@@ -106,14 +108,12 @@ class FeatureGroupApi:
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_group_instance.feature_store.id,
             "featuregroups",
             feature_group_instance.id,
             "clear",
         ]
-        feature_group_instance.update_from_response_json(
-            _client._send_request("POST", path_params)
-        )
+        _client._send_request("POST", path_params)
 
     def delete(self, feature_group_instance):
         """Drop a feature group from the feature store.
@@ -128,7 +128,7 @@ class FeatureGroupApi:
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_group_instance.feature_store.id,
             "featuregroups",
             feature_group_instance.id,
         ]
@@ -164,13 +164,13 @@ class FeatureGroupApi:
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_group_instance.feature_store.id,
             "featuregroups",
             feature_group_instance.id,
         ]
         headers = {"content-type": "application/json"}
         query_params = {query_parameter: query_parameter_value}
-        return feature_group_instance.update_from_response_json(
+        feature_group_object = feature_group_instance.update_from_response_json(
             _client._send_request(
                 "PUT",
                 path_params,
@@ -178,6 +178,9 @@ class FeatureGroupApi:
                 headers=headers,
                 data=feature_group_copy.json(),
             ),
+        )
+        return _add_feature_store(
+            feature_group_instance.feature_store, feature_group_object
         )
 
     def commit(self, feature_group_instance, feature_group_commit_instance):
@@ -196,7 +199,7 @@ class FeatureGroupApi:
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_group_instance.feature_store.id,
             "featuregroups",
             feature_group_instance.id,
             "commits",
@@ -227,7 +230,7 @@ class FeatureGroupApi:
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_group_instance.feature_store.id,
             "featuregroups",
             feature_group_instance.id,
             "commits",
@@ -255,7 +258,7 @@ class FeatureGroupApi:
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_group_instance.feature_store.id,
             "featuregroups",
             feature_group_instance.id,
             "ingestion",
@@ -287,7 +290,7 @@ class FeatureGroupApi:
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_group_instance.feature_store.id,
             "featuregroups",
             feature_group_instance.id,
             "provenance",
@@ -324,7 +327,7 @@ class FeatureGroupApi:
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_group_instance.feature_store.id,
             "featuregroups",
             feature_group_instance.id,
             "provenance",
@@ -361,7 +364,7 @@ class FeatureGroupApi:
             "project",
             _client._project_id,
             "featurestores",
-            self._feature_store_id,
+            feature_group_instance.feature_store.id,
             "featuregroups",
             feature_group_instance.id,
             "provenance",
@@ -378,3 +381,12 @@ class FeatureGroupApi:
             explicit_provenance.Links.Direction.DOWNSTREAM,
             explicit_provenance.Links.Type.FEATURE_GROUP,
         )
+
+
+def _add_feature_store(feature_store_object, feature_group_object):
+    if isinstance(feature_group_object, list):
+        for fg_object in feature_group_object:
+            _add_feature_store(feature_store_object, fg_object)
+    elif isinstance(feature_group_object, feature_group.FeatureGroup):
+        feature_group_object.feature_store = feature_store_object
+    return feature_group_object
