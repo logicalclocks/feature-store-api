@@ -519,7 +519,8 @@ class FeatureStore:
                 Defaults to `None`.
             parents: Optionally, Define the parents of this feature group as the
                 origin where the data is coming from.
-            topic_name: Name of the topic used for data ingestion.
+            topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
+                defaults to using project topic.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -634,7 +635,8 @@ class FeatureStore:
                 to both online and offline store.
             parents: Optionally, Define the parents of this feature group as the
                 origin where the data is coming from.
-            topic_name: Name of the topic used for data ingestion.
+            topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
+                defaults to using project topic.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -738,7 +740,8 @@ class FeatureStore:
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
-            topic_name: Name of the topic used for data ingestion.
+            topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
+                defaults to using project topic.
 
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
@@ -881,7 +884,8 @@ class FeatureStore:
                 Defaults to `None`.
             online_enabled: Define whether it should be possible to sync the feature group to
                 the online feature store for low latency access, defaults to `False`.
-            topic_name: Name of the topic used for data ingestion.
+            topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
+                defaults to using project topic.
 
         # Returns
             `ExternalFeatureGroup`. The external feature group metadata object.

@@ -283,7 +283,8 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    *                          `"histograms"` to compute feature value frequencies and `"exact_uniqueness"` to compute
    *                          uniqueness, distinctness and entropy. The values should be booleans indicating the
    *                          setting. To fully turn off statistics computation pass `statisticsConfig=false`.
-   * @param topicName Name of the topic used for data ingestion
+   * @param topicName Optionally, define the name of the topic used for data ingestion. If left undefined it defaults
+   *                  to using project topic.
    * @param eventTime Name of the feature containing the event time for the features in this feature group. If
    *                  eventTime is set the feature group can be used for point-in-time joins.
    *                  The supported data types for the eventTime column are: timestamp, date and bigint
