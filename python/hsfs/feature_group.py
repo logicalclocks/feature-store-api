@@ -1167,6 +1167,10 @@ class FeatureGroupBase:
             )
 
     @property
+    def feature_store_id(self):
+        return self._feature_store_id
+
+    @property
     def feature_store(self):
         return self._feature_store
 
@@ -2555,10 +2559,6 @@ class FeatureGroup(FeatureGroupBase):
         return self._hudi_precombine_key
 
     @property
-    def feature_store_id(self):
-        return self._feature_store_id
-
-    @property
     def feature_store_name(self):
         """Name of the feature store in which the feature group is located."""
         return self._feature_store_name
@@ -2981,11 +2981,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
     def feature_store_name(self):
         """Name of the feature store in which the feature group is located."""
         return self._feature_store_name
-
-    @property
-    def feature_store_id(self):
-        """Id of the feature store in which the feature group is located."""
-        return self._feature_store_id
 
 
 class SpineGroup(FeatureGroupBase):
