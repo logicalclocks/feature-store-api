@@ -56,7 +56,7 @@ class TrainingDatasetFeature:
             "type": self._type,
             "index": self._index,
             "label": self._label,
-            "extraFeature": self._helper_column,
+            "helperColumn": self._helper_column,
             "transformationFunction": self._transformation_function,
             "featureGroupFeatureName": self._feature_group_feature_name,
             "featuregroup": self._feature_group,
