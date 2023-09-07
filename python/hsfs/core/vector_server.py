@@ -57,9 +57,7 @@ class VectorServer:
             feature_store_id
         )
         self._feature_view_api = feature_view_api.FeatureViewApi(feature_store_id)
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
-            feature_store_id
-        )
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(
                 feature_store_id
@@ -380,7 +378,9 @@ class VectorServer:
         return text(statement.text[: statement.text.find(" WHERE ")] + f" LIMIT {n}")
 
     def _set_mysql_connection(self, options=None):
-        online_conn = self._storage_connector_api.get_online_connector()
+        online_conn = self._storage_connector_api.get_online_connector(
+            self._feature_store_id
+        )
         self._prepared_statement_engine = util.create_mysql_engine(
             online_conn, self._external, options=options
         )

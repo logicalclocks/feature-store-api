@@ -21,8 +21,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.base.Strings;
+import com.logicalclocks.hsfs.metadata.HopsworksHttpClient;
 import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
+import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.util.Constants;
 
 import lombok.AllArgsConstructor;
@@ -81,7 +83,7 @@ public abstract class StorageConnector {
   @JsonIgnore
   public abstract String getPath(String subPath) throws FeatureStoreException;
 
-  public abstract Map<String, String> sparkOptions() throws IOException;
+  public abstract Map<String, String> sparkOptions() throws IOException, FeatureStoreException;
 
   public static class HopsFsConnector extends StorageConnector {
 
@@ -402,37 +404,61 @@ public abstract class StorageConnector {
     @Getter @Setter
     protected List<Option> options;
 
-    @Override
-    public Map<String, String> sparkOptions() {
-      Map<String, String> options = new HashMap<>();
-      options.put(Constants.KAFKA_BOOTSTRAP_SERVERS, bootstrapServers);
-      options.put(Constants.KAFKA_SECURITY_PROTOCOL, securityProtocol.toString());
-      if (!Strings.isNullOrEmpty(sslTruststoreLocation)) {
-        options.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
-      }
-      if (!Strings.isNullOrEmpty(sslTruststorePassword)) {
-        options.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
-      }
-      if (!Strings.isNullOrEmpty(sslKeystoreLocation)) {
-        options.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
-      }
-      if (!Strings.isNullOrEmpty(sslKeystorePassword)) {
-        options.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
-      }
-      if (!Strings.isNullOrEmpty(sslKeyPassword)) {
-        options.put(Constants.KAFKA_SSL_KEY_PASSWORD, sslKeyPassword);
-      }
-      // can be empty string
-      if (sslEndpointIdentificationAlgorithm != null) {
-        options.put(
-            Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm.getValue());
-      }
+    @Getter @Setter
+    protected Boolean externalKafka;
+
+    public Map<String, String> kafkaOptions() throws FeatureStoreException {
+      HopsworksHttpClient client = HopsworksClient.getInstance().getHopsworksHttpClient();
+      Map<String, String> config = new HashMap<>();
+
+      // set kafka storage connector options
       if (this.options != null && !this.options.isEmpty()) {
         Map<String, String> argOptions = this.options.stream()
-            .collect(Collectors.toMap(Option::getName, Option::getValue));
-        options.putAll(argOptions);
+                .collect(Collectors.toMap(Option::getName, Option::getValue));
+        config.putAll(argOptions);
       }
-      return options;
+
+      // set connection properties
+      config.put(Constants.KAFKA_BOOTSTRAP_SERVERS, bootstrapServers);
+      config.put(Constants.KAFKA_SECURITY_PROTOCOL, securityProtocol.toString());
+
+      // set ssl
+      config.put(Constants.KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM, sslEndpointIdentificationAlgorithm.getValue());
+
+      if (!externalKafka) {
+        sslTruststoreLocation = client.getTrustStorePath();
+        sslTruststorePassword = client.getCertKey();
+        sslKeystoreLocation = client.getKeyStorePath();
+        sslKeystorePassword = client.getCertKey();
+        sslKeyPassword = client.getCertKey();
+      }
+
+      if (sslTruststoreLocation != null) {
+        config.put(Constants.KAFKA_SSL_TRUSTSTORE_LOCATION, sslTruststoreLocation);
+      }
+      if (sslTruststorePassword != null) {
+        config.put(Constants.KAFKA_SSL_TRUSTSTORE_PASSWORD, sslTruststorePassword);
+      }
+      if (sslKeystoreLocation != null) {
+        config.put(Constants.KAFKA_SSL_KEYSTORE_LOCATION, sslKeystoreLocation);
+      }
+      if (sslKeystorePassword != null) {
+        config.put(Constants.KAFKA_SSL_KEYSTORE_PASSWORD, sslKeystorePassword);
+      }
+      if (sslKeyPassword != null) {
+        config.put(Constants.KAFKA_SSL_KEY_PASSWORD, sslKeyPassword);
+      }
+
+      return config;
+    }
+
+    @Override
+    public Map<String, String> sparkOptions() throws FeatureStoreException {
+      Map<String, String> config = new HashMap<>();
+      for (Map.Entry<String, String> entry: kafkaOptions().entrySet()) {
+        config.put(String.format("%s.%s", sparkFormat, entry.getKey()), entry.getValue());
+      }
+      return config;
     }
 
     @JsonIgnore
