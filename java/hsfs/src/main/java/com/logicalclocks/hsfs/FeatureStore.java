@@ -3,11 +3,9 @@ package com.logicalclocks.hsfs;
 import com.logicalclocks.hsfs.constructor.Query;
 import com.logicalclocks.hsfs.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.engine.FeatureViewEngine;
-import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import lombok.NonNull;
 
 import java.io.IOException;
-import java.util.List;
 
 public class FeatureStore extends FeatureStoreBase<Query> {
 
@@ -15,45 +13,10 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   private FeatureViewEngine featureViewEngine;
 
   public FeatureStore() {
-    storageConnectorApi = new StorageConnectorApi();
     featureViewEngine = new FeatureViewEngine();
     featureGroupEngine = new FeatureGroupEngine();
   }
 
-  @Override
-  public Object createFeatureGroup() {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getFeatureGroups(@NonNull String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-
-  @Override
-  public Object getOrCreateFeatureGroup(String name, Integer integer, List<String> primaryKeys,
-      boolean onlineEnabled, String eventTime) throws IOException, FeatureStoreException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getOrCreateFeatureGroup(String name, Integer version, List<String> primaryKeys,
-      List<String> partitionKeys, boolean onlineEnabled, String eventTime) throws IOException, FeatureStoreException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getOrCreateFeatureGroup(String name, Integer version, String description, List<String> primaryKeys,
-      List<String> partitionKeys, String hudiPrecombineKey, boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
-      StatisticsConfig statisticsConfig, String eventTime) throws IOException, FeatureStoreException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
 
   /**
    * Get a stream feature group object from the feature store.
@@ -109,144 +72,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
     return featureGroupEngine.getStreamFeatureGroup(this, name, version);
   }
 
-  @Override
-  public StreamFeatureGroup.StreamFeatureGroupBuilder createStreamFeatureGroup() {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version)
-      throws IOException, FeatureStoreException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
-      boolean onlineEnabled, String eventTime)
-      throws IOException, FeatureStoreException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
-      List<String> partitionKeys, boolean onlineEnabled,
-      String eventTime) throws IOException, FeatureStoreException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, String description,
-      List<String> primaryKeys, List<String> partitionKeys,
-      String hudiPrecombineKey, boolean onlineEnabled,
-      StatisticsConfig statisticsConfig,
-      String eventTime)
-      throws IOException, FeatureStoreException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object createExternalFeatureGroup() {
-    return null;
-  }
-
-  @Override
-  public Object createFeatureView() {
-    return null;
-  }
-
-  @Override
-  public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getHopsFsConnector(String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getJdbcConnector(String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getOnlineStorageConnector() throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getGcsConnector(String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getS3Connector(String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getRedshiftConnector(String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getSnowflakeConnector(String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getAdlsConnector(String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getKafkaConnector(String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getBigqueryConnector(String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getExternalFeatureGroups(@NonNull String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object sql(String query) {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public TrainingDatasetBase getTrainingDataset(@NonNull String name, @NonNull Integer version)
-      throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public TrainingDatasetBase getTrainingDataset(String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getTrainingDatasets(@NonNull String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public FeatureView getOrCreateFeatureView(String name, Query query, Integer version)
-      throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public FeatureView getOrCreateFeatureView(String name, Query query, Integer version, String description,
-      List<String> labels) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
   /**
    * Get a feature view object from the selected feature store.
    *
@@ -289,16 +114,5 @@ public class FeatureStore extends FeatureStoreBase<Query> {
     LOGGER.info("VersionWarning: No version provided for getting feature view `" + name + "`, defaulting to `"
         + DEFAULT_VERSION + "`.");
     return getFeatureView(name, DEFAULT_VERSION);
-  }
-
-  @Override
-  public Object getExternalFeatureGroup(@NonNull String name, @NonNull Integer version)
-      throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Object getExternalFeatureGroup(String name) throws FeatureStoreException, IOException {
-    throw new UnsupportedOperationException("Not supported for Flink");
   }
 }

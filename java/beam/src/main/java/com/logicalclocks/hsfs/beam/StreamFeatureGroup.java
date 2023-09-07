@@ -19,17 +19,13 @@ package com.logicalclocks.hsfs.beam;
 
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureGroupBase;
-import com.logicalclocks.hsfs.FeatureStoreException;
 import com.logicalclocks.hsfs.StatisticsConfig;
 import com.logicalclocks.hsfs.beam.engine.FeatureGroupEngine;
 import com.logicalclocks.hsfs.beam.engine.BeamProducer;
-import com.logicalclocks.hsfs.metadata.Statistics;
 import lombok.Builder;
 import lombok.NonNull;
 import org.apache.beam.sdk.values.PCollection;
 
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -79,29 +75,6 @@ public class StreamFeatureGroup extends FeatureGroupBase<PCollection<Object>> {
     this.id = id;
   }
 
-  @Override
-  public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
-  }
-
-  @Override
-  public Map<Long, Map<String, String>> commitDetails(Integer integer)
-      throws IOException, FeatureStoreException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
-  }
-
-  @Override
-  public Map<Long, Map<String, String>> commitDetails(String limit)
-      throws IOException, FeatureStoreException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
-  }
-
-  @Override
-  public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
-  }
-
   /**
    * Ingest a feature data to the online feature store using Beam Pipeline object. Currently,
    * only org.apache.beam.sdk.values.Row types as feature data type are supported.
@@ -140,31 +113,6 @@ public class StreamFeatureGroup extends FeatureGroupBase<PCollection<Object>> {
 
   @Override
   public Object insertStream(PCollection<Object> featureData, Map<String, String> writeOptions) throws Exception {
-    return null;
-  }
-
-  @Override
-  public void updateFeatures(List<Feature> feature) throws FeatureStoreException, IOException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
-  }
-
-  @Override
-  public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
-  }
-
-  @Override
-  public void appendFeatures(List<Feature> feature) throws FeatureStoreException, IOException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
-  }
-
-  @Override
-  public void appendFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Beam");
-  }
-
-  @Override
-  public Statistics getStatistics() throws FeatureStoreException, IOException {
     throw new UnsupportedOperationException("Not supported for Beam");
   }
 }

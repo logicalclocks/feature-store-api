@@ -225,29 +225,6 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
     computeStatistics();
   }
 
-  @Override
-  public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
-    return null;
-  }
-
-  @Override
-  public Map<Long, Map<String, String>> commitDetails(Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    return null;
-  }
-
-  @Override
-  public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
-      throws IOException, FeatureStoreException, ParseException {
-    return null;
-  }
-
-  @Override
-  public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    return null;
-  }
-
   public Query selectFeatures(List<Feature> features) {
     return new Query(this, features);
   }
@@ -283,22 +260,18 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
     throw new UnsupportedOperationException("insertStream method is not supported in ExternalFeatureGroup");
   }
 
-  @Override
   public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.appendFeatures(this, features, this.getClass());
   }
 
-  @Override
   public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.appendFeatures(this, Collections.singletonList(feature), this.getClass());
   }
 
-  @Override
   public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.appendFeatures(this, new ArrayList<>(features), this.getClass());
   }
 
-  @Override
   public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
     List<Feature> featureList = new ArrayList<>();
     featureList.add(features);
@@ -315,8 +288,7 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
     return null;
   }
 
-  @Override
   public Statistics getStatistics() throws FeatureStoreException, IOException {
-    return null;
+    return statisticsEngine.getLast(this);
   }
 }

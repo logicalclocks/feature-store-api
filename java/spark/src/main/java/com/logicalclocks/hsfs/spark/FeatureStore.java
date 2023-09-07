@@ -125,7 +125,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public scala.collection.Seq<FeatureGroup> getFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
     List<FeatureGroup> featureGroups = new ArrayList<>();
@@ -149,7 +148,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    *
    * @return FeatureGroup.FeatureGroupBuilder a FeatureGroup builder object.
    */
-  @Override
   public FeatureGroup.FeatureGroupBuilder createFeatureGroup() {
     return FeatureGroup.builder()
         .featureStore(this);
@@ -173,7 +171,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
    */
-  @Override
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
     return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, null,
         null, null, false, null, null, null);
@@ -205,7 +202,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
    */
-  @Override
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, List<String> primaryKeys,
                                               boolean onlineEnabled, String eventTime)
       throws IOException, FeatureStoreException {
@@ -241,7 +237,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
    */
-  @Override
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version,
                                               List<String> primaryKeys,
                                               List<String> partitionKeys,
@@ -290,7 +285,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
    */
-  @Override
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, String description,
                                               List<String> primaryKeys, List<String> partitionKeys,
                                               String hudiPrecombineKey,
@@ -392,7 +386,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve StreamFeatureGroup from the feature store.
    */
-  @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version)
       throws IOException, FeatureStoreException {
     return featureGroupEngine.getOrCreateStreamFeatureGroup(this, name, version, null,
@@ -425,7 +418,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve StreamFeatureGroup from the feature store.
    */
-  @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
                                                           boolean onlineEnabled, String eventTime)
       throws IOException, FeatureStoreException {
@@ -462,7 +454,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve StreamFeatureGroup from the feature store.
    */
-  @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, List<String> primaryKeys,
                                                           List<String> partitionKeys, boolean onlineEnabled,
                                                           String eventTime) throws IOException, FeatureStoreException {
@@ -510,7 +501,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws IOException Generic IO exception.
    * @throws FeatureStoreException If unable to retrieve FeatureGroup from the feature store.
    */
-  @Override
   public StreamFeatureGroup getOrCreateStreamFeatureGroup(String name, Integer version, String description,
                                                           List<String> primaryKeys, List<String> partitionKeys,
                                                           String hudiPrecombineKey, boolean onlineEnabled,
@@ -567,7 +557,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public scala.collection.Seq<ExternalFeatureGroup> getExternalFeatureGroups(@NonNull String name)
       throws FeatureStoreException, IOException {
     return JavaConverters.asScalaBufferConverter(featureGroupEngine.getExternalFeatureGroups(this, name))
@@ -595,7 +584,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public ExternalFeatureGroup getExternalFeatureGroup(@NonNull String name, @NonNull Integer version)
       throws FeatureStoreException, IOException {
     return featureGroupEngine.getExternalFeatureGroup(this, name, version);
@@ -621,7 +609,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve feature group from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public ExternalFeatureGroup getExternalFeatureGroup(String name) throws FeatureStoreException, IOException {
     LOGGER.info("VersionWarning: No version provided for getting feature group `" + name + "`, defaulting to `"
         + FeatureStoreBase.DEFAULT_VERSION + "`.");
@@ -650,7 +637,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public StorageConnector getStorageConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.class);
   }
@@ -671,7 +657,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public StorageConnector.HopsFsConnector getHopsFsConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.HopsFsConnector.class);
   }
@@ -695,7 +680,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public StorageConnector.JdbcConnector getJdbcConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.JdbcConnector.class);
   }
@@ -716,7 +700,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public StorageConnector.JdbcConnector getOnlineStorageConnector() throws FeatureStoreException, IOException {
     return storageConnectorApi.getOnlineStorageConnector(this, StorageConnector.JdbcConnector.class);
   }
@@ -737,7 +720,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public StorageConnector.S3Connector getS3Connector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.S3Connector.class);
   }
@@ -758,7 +740,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public StorageConnector.RedshiftConnector getRedshiftConnector(String name)
       throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.RedshiftConnector.class);
@@ -780,7 +761,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public StorageConnector.SnowflakeConnector getSnowflakeConnector(String name)
       throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.SnowflakeConnector.class);
@@ -802,7 +782,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public StorageConnector.AdlsConnector getAdlsConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.AdlsConnector.class);
   }
@@ -823,7 +802,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public StorageConnector.KafkaConnector getKafkaConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.KafkaConnector.class);
   }
@@ -844,7 +822,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public StorageConnector.BigqueryConnector getBigqueryConnector(String name) throws FeatureStoreException,
       IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.BigqueryConnector.class);
@@ -866,7 +843,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve StorageConnector from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public StorageConnector.GcsConnector getGcsConnector(String name) throws FeatureStoreException, IOException {
     return storageConnectorApi.getByName(this, name, StorageConnector.GcsConnector.class);
   }
@@ -891,7 +867,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
         .asScala().toSeq();
   }
 
-  @Override
   public FeatureView.FeatureViewBuilder createFeatureView() {
     return new FeatureView.FeatureViewBuilder(this);
   }
@@ -915,7 +890,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public FeatureView getOrCreateFeatureView(String name, Query query, Integer version)
       throws FeatureStoreException, IOException {
     return featureViewEngine.getOrCreateFeatureView(this, name, version, query, null, null);
@@ -943,7 +917,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    * @throws FeatureStoreException If unable to retrieve FeatureView from the feature store.
    * @throws IOException Generic IO exception.
    */
-  @Override
   public FeatureView getOrCreateFeatureView(String name, Query query, Integer version, String description,
                                             List<String> labels) throws FeatureStoreException, IOException {
     return featureViewEngine.getOrCreateFeatureView(this, name, version, query, description, labels);
@@ -995,7 +968,6 @@ public class FeatureStore extends FeatureStoreBase<Query> {
     return getFeatureView(name, FeatureStoreBase.DEFAULT_VERSION);
   }
 
-  @Override
   public Dataset<Row> sql(String query) {
     return SparkEngine.getInstance().sql(query);
   }

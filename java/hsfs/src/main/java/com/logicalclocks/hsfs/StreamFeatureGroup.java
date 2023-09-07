@@ -20,14 +20,11 @@ package com.logicalclocks.hsfs;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import com.logicalclocks.hsfs.engine.FeatureGroupEngineBase;
-import com.logicalclocks.hsfs.metadata.Statistics;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
 
-import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -79,60 +76,12 @@ public class StreamFeatureGroup extends FeatureGroupBase<List<Object>> {
   }
 
   @Override
-  public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Map<Long, Map<String, String>> commitDetails(Integer integer)
-      throws IOException, FeatureStoreException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Map<Long, Map<String, String>> commitDetails(String limit)
-      throws IOException, FeatureStoreException, ParseException {
-    throw new UnsupportedOperationException("Not supported for Flink");
-  }
-
-  @Override
-  public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
-      throws IOException, FeatureStoreException, ParseException {
-    throw new UnsupportedOperationException("Not implemented.");
-  }
-
-  @Override
   public List<Object> insertStream(List<Object> featureData) throws Exception {
     throw new UnsupportedOperationException("Not implemented.");
   }
 
   @Override
   public List<Object>  insertStream(List<Object> featureData, Map<String, String> writeOptions) throws Exception {
-    throw new UnsupportedOperationException("Not implemented.");
-  }
-
-  @Override
-  public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
-    throw new UnsupportedOperationException("Not implemented.");
-  }
-
-  @Override
-  public void updateFeatures(List<Feature> feature) throws FeatureStoreException, IOException, ParseException {
-    throw new UnsupportedOperationException("Not implemented.");
-  }
-
-  @Override
-  public void appendFeatures(List<Feature> feature) throws FeatureStoreException, IOException, ParseException {
-    throw new UnsupportedOperationException("Not implemented.");
-  }
-
-  @Override
-  public void appendFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
-    throw new UnsupportedOperationException("Not implemented.");
-  }
-
-  @Override
-  public Statistics getStatistics() throws FeatureStoreException, IOException {
     throw new UnsupportedOperationException("Not implemented.");
   }
 }

@@ -946,7 +946,6 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
-  @Override
   public Map<Long, Map<String, String>> commitDetails() throws IOException, FeatureStoreException, ParseException {
     return featureGroupEngine.commitDetails(this, null);
   }
@@ -973,7 +972,6 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
-  @Override
   public Map<Long, Map<String, String>> commitDetails(Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     return featureGroupEngine.commitDetails(this, limit);
@@ -1002,7 +1000,6 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
-  @Override
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime)
       throws IOException, FeatureStoreException, ParseException {
     return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, null);
@@ -1033,7 +1030,6 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse HUDI commit date string to date type.
    */
-  @Override
   public Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException {
     return featureGroupEngine.commitDetailsByWallclockTime(this, wallclockTime, limit);
@@ -1108,7 +1104,6 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse date string to date type.
    */
-  @Override
   public void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.appendFeatures(this, features, this.getClass());
   }
@@ -1123,7 +1118,6 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse date string to date type.
    */
-  @Override
   public void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.appendFeatures(this, Collections.singletonList(feature), this.getClass());
   }
@@ -1138,7 +1132,6 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse date string to date type.
    */
-  @Override
   public void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException {
     featureGroupEngine.appendFeatures(this, new ArrayList<>(features), this.getClass());
   }
@@ -1153,7 +1146,6 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * @throws IOException Generic IO exception.
    * @throws ParseException In case it's unable to parse date string to date type.
    */
-  @Override
   public void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException {
     List<Feature> featureList = new ArrayList<>();
     featureList.add(features);
@@ -1225,7 +1217,6 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * @throws IOException Generic IO exception.
    */
   @JsonIgnore
-  @Override
   public Statistics getStatistics() throws FeatureStoreException, IOException {
     return statisticsEngine.getLast(this);
   }

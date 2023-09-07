@@ -250,14 +250,12 @@ public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView,
     return query.read(false, userReadOptions);
   }
 
-  @Override
   public String getBatchQueryString(FeatureView featureView, Date startTime, Date endTime, Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
     Query query = getBatchQuery(featureView, startTime, endTime, false, trainingDataVersion, Query.class);
     return query.sql();
   }
 
-  @Override
   public Dataset<Row> getBatchData(
       FeatureView featureView, Date startTime, Date endTime, Map<String, String> readOptions,
       Integer trainingDataVersion
@@ -266,14 +264,12 @@ public class FeatureViewEngine extends FeatureViewEngineBase<Query, FeatureView,
         .read(false, readOptions);
   }
 
-  @Override
   public Query getBatchQuery(FeatureView featureView, Date startTime, Date endTime, Boolean withLabels,
                              Integer trainingDataVersion)
       throws FeatureStoreException, IOException {
     return getBatchQuery(featureView, startTime, endTime, false, trainingDataVersion, Query.class);
   }
 
-  @Override
   public FeatureView getOrCreateFeatureView(FeatureStore featureStore, String name, Integer version,  Query query,
                                             String description, List<String> labels)
       throws FeatureStoreException, IOException {

@@ -215,10 +215,6 @@ public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1, T4, T5>, T2
     return tagsApi.get(featureViewBase, trainingDataVersion);
   }
 
-  public abstract T1 getBatchQuery(T2 featureView, Date startTime, Date endTime, Boolean withLabels,
-                                  Integer trainingDataVersion)
-      throws FeatureStoreException, IOException;
-
   public T1 getBatchQuery(T2 featureView, Date startTime,  Date endTime, Boolean withLabels,
                           Integer trainingDataVersion, Class<T1> queryType) throws FeatureStoreException, IOException {
     QueryBase query;
@@ -296,16 +292,4 @@ public abstract class FeatureViewEngineBase<T1 extends QueryBase<T1, T4, T5>, T2
     featureViewApi.deleteTrainingDatasetOnly(featureView.getFeatureStore(), featureView.getName(),
         featureView.getVersion());
   }
-
-  public abstract String getBatchQueryString(T2 featureView, Date startTime, Date endTime, Integer trainingDataVersion)
-      throws FeatureStoreException, IOException;
-
-  public abstract T2 getOrCreateFeatureView(T3 featureStore, String name,  Integer version, T1 query,
-                                           String description, List<String> labels)
-      throws FeatureStoreException, IOException;
-
-  public abstract T5 getBatchData(
-      T2 featureView, Date startTime, Date endTime, Map<String, String> readOptions,
-      Integer trainingDataVersion
-  ) throws FeatureStoreException, IOException;
 }

@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import com.logicalclocks.hsfs.engine.FeatureGroupEngineBase;
 import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
-import com.logicalclocks.hsfs.metadata.Statistics;
 import com.logicalclocks.hsfs.metadata.Subject;
 import com.logicalclocks.hsfs.metadata.User;
 
@@ -33,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -247,65 +245,9 @@ public abstract class FeatureGroupBase<T> {
         this.getClass());
   }
 
-  public abstract Map<Long, Map<String, String>> commitDetails()
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Map<Long, Map<String, String>> commitDetails(Integer limit)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Map<Long, Map<String, String>> commitDetails(String wallclockTime)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
-      throws IOException, FeatureStoreException, ParseException;
-
   public abstract Object insertStream(T featureData) throws Exception;
 
   public abstract Object insertStream(T featureData, Map<String, String> writeOptions) throws Exception;
-
-  /**
-   * Update the metadata of multiple features.
-   * Currently only feature description updates are supported.
-   *
-   * @param features List of Feature metadata objects
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
-   */
-  public abstract void updateFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException;
-
-  /**
-   * Update the metadata of multiple features.
-   * Currently only feature description updates are supported.
-   *
-   * @param feature Feature metadata object
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
-   */
-  public abstract void updateFeatures(Feature feature) throws FeatureStoreException, IOException, ParseException;
-
-  /**
-   * Append features to the schema of the feature group.
-   * It is only possible to append features to a feature group. Removing features is considered a breaking change.
-   *
-   * @param features list of Feature metadata objects
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
-   */
-  public abstract void appendFeatures(List<Feature> features) throws FeatureStoreException, IOException, ParseException;
-
-  /**
-   * Append a single feature to the schema of the feature group.
-   * It is only possible to append features to a feature group. Removing features is considered a breaking change.
-   *
-   * @param features List of Feature metadata objects
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   * @throws ParseException ParseException
-   */
-  public abstract void appendFeatures(Feature features) throws FeatureStoreException, IOException, ParseException;
 
   /**
    * Update the statistics configuration of the feature group.
@@ -318,16 +260,6 @@ public abstract class FeatureGroupBase<T> {
   public void updateStatisticsConfig() throws FeatureStoreException, IOException {
     featureGroupEngineBase.updateStatisticsConfig(this, this.getClass());
   }
-
-  /**
-   * Get the last statistics commit for the feature group.
-   *
-   * @return statistics object of latest commit
-   * @throws FeatureStoreException FeatureStoreException
-   * @throws IOException IOException
-   */
-  @JsonIgnore
-  public abstract Statistics getStatistics() throws FeatureStoreException, IOException;
 
   @JsonIgnore
   public Subject getSubject() throws FeatureStoreException, IOException {
