@@ -86,7 +86,7 @@ class FeatureStore:
         self._num_storage_connectors = num_storage_connectors
         self._num_feature_views = num_feature_views
 
-        self._feature_group_api = feature_group_api.FeatureGroupApi(self._id)
+        self._feature_group_api = feature_group_api.FeatureGroupApi()
         self._storage_connector_api = storage_connector_api.StorageConnectorApi()
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(self._id)
 
@@ -139,9 +139,11 @@ class FeatureStore:
                 util.VersionWarning,
             )
             version = self.DEFAULT_VERSION
-        return self._feature_group_api.get(
-            name, version, feature_group_api.FeatureGroupApi.CACHED
+        feature_group_object = self._feature_group_api.get(
+            self.id, name, version, feature_group_api.FeatureGroupApi.CACHED
         )
+        feature_group_object.feature_store = self
+        return feature_group_object
 
     def get_feature_groups(self, name: str):
         """Get a list of all versions of a feature group entity from the feature store.
@@ -169,9 +171,12 @@ class FeatureStore:
         # Raises
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
-        return self._feature_group_api.get(
-            name, None, feature_group_api.FeatureGroupApi.CACHED
+        feature_group_object = self._feature_group_api.get(
+            self.id, name, None, feature_group_api.FeatureGroupApi.CACHED
         )
+        for fg_object in feature_group_object:
+            fg_object.feature_store = self
+        return feature_group_object
 
     def get_on_demand_feature_group(self, name: str, version: int = None):
         """Get a external feature group entity from the feature store.
@@ -230,9 +235,11 @@ class FeatureStore:
                 util.VersionWarning,
             )
             version = self.DEFAULT_VERSION
-        return self._feature_group_api.get(
-            name, version, feature_group_api.FeatureGroupApi.ONDEMAND
+        feature_group_object = self._feature_group_api.get(
+            self.id, name, version, feature_group_api.FeatureGroupApi.ONDEMAND
         )
+        feature_group_object.feature_store = self
+        return feature_group_object
 
     def get_on_demand_feature_groups(self, name: str):
         """Get a list of all versions of an external feature group entity from the feature store.
@@ -279,9 +286,12 @@ class FeatureStore:
         # Raises
             `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
         """
-        return self._feature_group_api.get(
-            name, None, feature_group_api.FeatureGroupApi.ONDEMAND
+        feature_group_object = self._feature_group_api.get(
+            self.id, name, None, feature_group_api.FeatureGroupApi.ONDEMAND
         )
+        for fg_object in feature_group_object:
+            fg_object.feature_store = self
+        return feature_group_object
 
     def get_training_dataset(self, name: str, version: int = None):
         """Get a training dataset entity from the feature store.
@@ -445,6 +455,7 @@ class FeatureStore:
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
         parents: Optional[List[feature_group.FeatureGroup]] = [],
+        topic_name: Optional[str] = None,
     ):
         """Create a feature group metadata object.
 
@@ -518,11 +529,13 @@ class FeatureStore:
                 Defaults to `None`.
             parents: Optionally, Define the parents of this feature group as the
                 origin where the data is coming from.
+            topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
+                defaults to using project topic.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
         """
-        return feature_group.FeatureGroup(
+        feature_group_object = feature_group.FeatureGroup(
             name=name,
             version=version,
             description=description,
@@ -539,7 +552,10 @@ class FeatureStore:
             stream=stream,
             expectation_suite=expectation_suite,
             parents=parents,
+            topic_name=topic_name,
         )
+        feature_group_object.feature_store = self
+        return feature_group_object
 
     def get_or_create_feature_group(
         self,
@@ -559,6 +575,7 @@ class FeatureStore:
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
         parents: Optional[List[feature_group.FeatureGroup]] = [],
+        topic_name: Optional[str] = None,
     ):
         """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
 
@@ -630,20 +647,24 @@ class FeatureStore:
                 to both online and offline store.
             parents: Optionally, Define the parents of this feature group as the
                 origin where the data is coming from.
+            topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
+                defaults to using project topic.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
         """
         try:
-            return self._feature_group_api.get(
-                name, version, feature_group_api.FeatureGroupApi.CACHED
+            feature_group_object = self._feature_group_api.get(
+                self.id, name, version, feature_group_api.FeatureGroupApi.CACHED
             )
+            feature_group_object.feature_store = self
+            return feature_group_object
         except exceptions.RestAPIError as e:
             if (
                 e.response.json().get("errorCode", "") == 270009
                 and e.response.status_code == 404
             ):
-                return feature_group.FeatureGroup(
+                feature_group_object = feature_group.FeatureGroup(
                     name=name,
                     version=version,
                     description=description,
@@ -660,7 +681,10 @@ class FeatureStore:
                     stream=stream,
                     expectation_suite=expectation_suite,
                     parents=parents,
+                    topic_name=topic_name,
                 )
+                feature_group_object.feature_store = self
+                return feature_group_object
             else:
                 raise e
 
@@ -681,6 +705,7 @@ class FeatureStore:
         expectation_suite: Optional[
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
+        topic_name: Optional[str] = None,
     ):
         """Create a external feature group metadata object.
 
@@ -731,6 +756,8 @@ class FeatureStore:
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
+            topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
+                defaults to using project topic.
 
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
@@ -742,7 +769,7 @@ class FeatureStore:
         # Returns
             `ExternalFeatureGroup`. The external feature group metadata object.
         """
-        return feature_group.ExternalFeatureGroup(
+        feature_group_object = feature_group.ExternalFeatureGroup(
             name=name,
             query=query,
             data_format=data_format,
@@ -758,7 +785,10 @@ class FeatureStore:
             statistics_config=statistics_config,
             event_time=event_time,
             expectation_suite=expectation_suite,
+            topic_name=topic_name,
         )
+        feature_group_object.feature_store = self
+        return feature_group_object
 
     def create_external_feature_group(
         self,
@@ -778,6 +808,7 @@ class FeatureStore:
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
         online_enabled: Optional[bool] = False,
+        topic_name: Optional[str] = None,
     ):
         """Create a external feature group metadata object.
 
@@ -871,11 +902,13 @@ class FeatureStore:
                 Defaults to `None`.
             online_enabled: Define whether it should be possible to sync the feature group to
                 the online feature store for low latency access, defaults to `False`.
+            topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
+                defaults to using project topic.
 
         # Returns
             `ExternalFeatureGroup`. The external feature group metadata object.
         """
-        return feature_group.ExternalFeatureGroup(
+        feature_group_object = feature_group.ExternalFeatureGroup(
             name=name,
             query=query,
             data_format=data_format,
@@ -892,7 +925,10 @@ class FeatureStore:
             event_time=event_time,
             expectation_suite=expectation_suite,
             online_enabled=online_enabled,
+            topic_name=topic_name,
         )
+        feature_group_object.feature_store = self
+        return feature_group_object
 
     def get_or_create_spine_group(
         self,
@@ -1010,8 +1046,9 @@ class FeatureStore:
         """
         try:
             spine = self._feature_group_api.get(
-                name, version, feature_group_api.FeatureGroupApi.SPINE
+                self.id, name, version, feature_group_api.FeatureGroupApi.SPINE
             )
+            spine.feature_store = self
             spine.dataframe = dataframe
             return spine
         except exceptions.RestAPIError as e:
@@ -1030,6 +1067,7 @@ class FeatureStore:
                     featurestore_id=self._id,
                     featurestore_name=self._name,
                 )
+                spine.feature_store = self
                 return spine._save()
             else:
                 raise e
