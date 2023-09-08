@@ -82,6 +82,7 @@ class StorageConnectorApi:
             feature_store_id,
             "storageconnectors",
             "kafka_connector",
+            "byok",
         ]
         query_params = {"external": external}
 
