@@ -25,7 +25,6 @@ import com.logicalclocks.hsfs.EntityEndpointType;
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
 
-import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,6 +81,13 @@ public class FeatureGroupEngineBase {
     featureGroup.setDescription(apiFG.getDescription());
   }
 
+  public <T extends FeatureGroupBase> void updateDeprecated(FeatureGroupBase featureGroup, Boolean deprecate,
+                                                            Class<T> fgClass)
+      throws FeatureStoreException, IOException {
+    T apiFG = featureGroupApi.updateMetadata(featureGroup, "deprecate", deprecate, fgClass);
+    featureGroup.setDeprecated(apiFG.getDeprecated());
+  }
+
   public <T extends FeatureGroupBase> void updateFeatures(FeatureGroupBase featureGroup, List<Feature> features,
                                                           Class<T> fgClass)
       throws FeatureStoreException, IOException {
@@ -113,9 +119,8 @@ public class FeatureGroupEngineBase {
                                                                              Class<T> fgClass)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String featureGroupJson = hopsworksClient.getObjectMapper().writeValueAsString(externalFeatureGroup);
-
-    return (T) featureGroupApi.saveInternal(externalFeatureGroup, new StringEntity(featureGroupJson),
+    return (T) featureGroupApi.saveInternal(externalFeatureGroup,
+        hopsworksClient.buildStringEntity(externalFeatureGroup),
         fgClass);
   }
 }

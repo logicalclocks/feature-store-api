@@ -65,24 +65,26 @@ class Query:
         self._filter = Logic.from_response_json(filter)
         self._python_engine = True if engine.get_type() == "python" else False
         self._query_constructor_api = query_constructor_api.QueryConstructorApi()
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
-            feature_store_id
-        )
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
 
     def _prep_read(self, online, read_options):
         fs_query = self._query_constructor_api.construct_query(self)
-        sql_query = self._to_string(fs_query, online)
 
         if online:
-            online_conn = self._storage_connector_api.get_online_connector()
+            sql_query = self._to_string(fs_query, online)
+            online_conn = self._storage_connector_api.get_online_connector(
+                self._feature_store_id
+            )
         else:
             online_conn = None
 
             if engine.get_instance().is_flyingduck_query_supported(self, read_options):
+                sql_query = self._to_string(fs_query, online, asof=True)
                 sql_query = arrow_flight_client.get_instance().create_query_object(
                     self, sql_query, fs_query.on_demand_fg_aliases
                 )
             else:
+                sql_query = self._to_string(fs_query, online)
                 # Register on demand feature groups as temporary tables
                 if isinstance(self._left_feature_group, feature_group.SpineGroup):
                     fs_query.register_external(self._left_feature_group.dataframe)
@@ -488,7 +490,7 @@ class Query:
         new._joins = humps.camelize(new._joins)
         return new
 
-    def to_string(self, online=False):
+    def to_string(self, online=False, arrow_flight=False):
         """
         !!! example
             ```python
@@ -502,13 +504,16 @@ class Query:
         """
         fs_query = self._query_constructor_api.construct_query(self)
 
-        return self._to_string(fs_query, online)
+        return self._to_string(fs_query, online, arrow_flight)
 
-    def _to_string(self, fs_query, online=False):
+    def _to_string(self, fs_query, online=False, asof=False):
         if online:
             return fs_query.query_online
         if fs_query.pit_query is not None:
-            return fs_query.pit_query
+            if asof:
+                return fs_query.pit_query_asof
+            else:
+                return fs_query.pit_query
         return fs_query.query
 
     def __str__(self):

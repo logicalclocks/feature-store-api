@@ -22,7 +22,6 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.core import (
     tags_api,
-    storage_connector_api,
     transformation_function_engine,
     feature_view_api,
     code_engine,
@@ -43,9 +42,6 @@ class FeatureViewEngine:
 
         self._feature_view_api = feature_view_api.FeatureViewApi(feature_store_id)
         self._tags_api = tags_api.TagsApi(feature_store_id, self.ENTITY_TYPE)
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
-            feature_store_id
-        )
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(
                 feature_store_id

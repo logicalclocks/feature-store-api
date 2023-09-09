@@ -471,7 +471,7 @@ class TestKafkaConnector:
             sc.ssl_endpoint_identification_algorithm
             == "test_ssl_endpoint_identification_algorithm"
         )
-        assert sc.options == {"test_name": "test_value"}
+        assert sc.options == {"test_option_name": "test_option_value"}
 
     def test_from_response_json_basic_info(self, mocker, backend_fixtures):
         # Arrange
@@ -499,6 +499,155 @@ class TestKafkaConnector:
         assert sc._ssl_key_password is None
         assert sc.ssl_endpoint_identification_algorithm is None
         assert sc.options == {}
+
+    def test_kafka_options(self, mocker, backend_fixtures):
+        # Arrange
+        mocker.patch("hsfs.engine.get_instance")
+        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
+        json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
+
+        mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
+            "result_from_get_jks_trust_store_path"
+        )
+        mock_client_get_instance.return_value._get_jks_key_store_path.return_value = (
+            "result_from_get_jks_key_store_path"
+        )
+        mock_client_get_instance.return_value._cert_key = "result_from_cert_key"
+
+        sc = storage_connector.StorageConnector.from_response_json(json)
+
+        # Act
+        config = sc.kafka_options()
+
+        # Assert
+        assert config == {
+            "test_option_name": "test_option_value",
+            "bootstrap.servers": "test_bootstrap_servers",
+            "security.protocol": "test_security_protocol",
+            "ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+            "ssl.truststore.location": "result_from_get_jks_trust_store_path",
+            "ssl.truststore.password": "result_from_cert_key",
+            "ssl.keystore.location": "result_from_get_jks_key_store_path",
+            "ssl.keystore.password": "result_from_cert_key",
+            "ssl.key.password": "result_from_cert_key",
+        }
+
+    def test_kafka_options_external(self, mocker, backend_fixtures):
+        # Arrange
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        json = backend_fixtures["storage_connector"]["get_kafka_external"]["response"]
+
+        mock_engine_get_instance.return_value.add_file.return_value = (
+            "result_from_add_file"
+        )
+
+        sc = storage_connector.StorageConnector.from_response_json(json)
+
+        # Act
+        config = sc.kafka_options()
+
+        # Assert
+        assert config == {
+            "test_option_name": "test_option_value",
+            "bootstrap.servers": "test_bootstrap_servers",
+            "security.protocol": "test_security_protocol",
+            "ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+            "ssl.truststore.location": "result_from_add_file",
+            "ssl.truststore.password": "test_ssl_truststore_password",
+            "ssl.keystore.location": "result_from_add_file",
+            "ssl.keystore.password": "test_ssl_keystore_password",
+            "ssl.key.password": "test_ssl_key_password",
+        }
+
+    def test_spark_options(self, mocker, backend_fixtures):
+        # Arrange
+        mocker.patch("hsfs.engine.get_instance")
+        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
+        json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
+
+        mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
+            "result_from_get_jks_trust_store_path"
+        )
+        mock_client_get_instance.return_value._get_jks_key_store_path.return_value = (
+            "result_from_get_jks_key_store_path"
+        )
+        mock_client_get_instance.return_value._cert_key = "result_from_cert_key"
+
+        sc = storage_connector.StorageConnector.from_response_json(json)
+
+        # Act
+        config = sc.spark_options()
+
+        # Assert
+        assert config == {
+            "kafka.test_option_name": "test_option_value",
+            "kafka.bootstrap.servers": "test_bootstrap_servers",
+            "kafka.security.protocol": "test_security_protocol",
+            "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+            "kafka.ssl.truststore.location": "result_from_get_jks_trust_store_path",
+            "kafka.ssl.truststore.password": "result_from_cert_key",
+            "kafka.ssl.keystore.location": "result_from_get_jks_key_store_path",
+            "kafka.ssl.keystore.password": "result_from_cert_key",
+            "kafka.ssl.key.password": "result_from_cert_key",
+        }
+
+    def test_spark_options_external(self, mocker, backend_fixtures):
+        # Arrange
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        json = backend_fixtures["storage_connector"]["get_kafka_external"]["response"]
+
+        mock_engine_get_instance.return_value.add_file.return_value = (
+            "result_from_add_file"
+        )
+
+        sc = storage_connector.StorageConnector.from_response_json(json)
+
+        # Act
+        config = sc.spark_options()
+
+        # Assert
+        assert config == {
+            "kafka.test_option_name": "test_option_value",
+            "kafka.bootstrap.servers": "test_bootstrap_servers",
+            "kafka.security.protocol": "test_security_protocol",
+            "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+            "kafka.ssl.truststore.location": "result_from_add_file",
+            "kafka.ssl.truststore.password": "test_ssl_truststore_password",
+            "kafka.ssl.keystore.location": "result_from_add_file",
+            "kafka.ssl.keystore.password": "test_ssl_keystore_password",
+            "kafka.ssl.key.password": "test_ssl_key_password",
+        }
+
+    def test_confluent_options(self, mocker, backend_fixtures):
+        # Arrange
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
+
+        mock_engine_get_instance.return_value.add_file.return_value = (
+            "result_from_add_file"
+        )
+
+        sc = storage_connector.StorageConnector.from_response_json(json)
+
+        mock_client = mocker.patch("hsfs.client.get_instance")
+        mock_client.return_value._write_pem.return_value = (
+            "test_ssl_ca_location",
+            "test_ssl_certificate_location",
+            "test_ssl_key_location",
+        )
+
+        # Act
+        config = sc.confluent_options()
+
+        # Assert
+        assert config == {
+            "bootstrap.servers": "test_bootstrap_servers",
+            "security.protocol": "test_security_protocol",
+            "ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+            "ssl.ca.location": "test_ssl_ca_location",
+            "ssl.certificate.location": "test_ssl_certificate_location",
+            "ssl.key.location": "test_ssl_key_location",
+        }
 
 
 class TestGcsConnector:
@@ -600,9 +749,10 @@ class TestBigQueryConnector:
         assert sc.materialization_dataset is None
         assert sc.arguments == {}
 
-    def test_credentials_base64_encoded(self, backend_fixtures, tmp_path):
+    def test_credentials_base64_encoded(self, mocker, backend_fixtures, tmp_path):
         # Arrange
         engine.set_instance("spark", spark.Engine())
+        mocker.patch("hsfs.client.get_instance")
 
         credentials = '{"type": "service_account", "project_id": "test"}'
 
@@ -631,16 +781,22 @@ class TestBigQueryConnector:
         )
 
     def test_python_support_validation(self, backend_fixtures):
+        # Arrange
         engine.set_instance("python", python.Engine())
         json = backend_fixtures["storage_connector"]["get_big_query_basic_info"][
             "response"
         ]
+        # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
+        # Assert
         with pytest.raises(NotImplementedError):
             sc.read()
 
-    def test_query_validation(self, backend_fixtures, tmp_path):
+    def test_query_validation(self, mocker, backend_fixtures, tmp_path):
+        # Arrange
         engine.set_instance("spark", spark.Engine())
+        mocker.patch("hsfs.client.get_instance")
+
         credentials = '{"type": "service_account", "project_id": "test"}'
         credentialsFile = tmp_path / "bigquery.json"
         credentialsFile.write_text(credentials)
@@ -653,7 +809,8 @@ class TestBigQueryConnector:
             )
         else:
             json["key_path"] = "file://" + str(credentialsFile.resolve())
-
+        # Act
         sc = storage_connector.StorageConnector.from_response_json(json)
+        # Assert
         with pytest.raises(ValueError):
             sc.read(query="select * from")

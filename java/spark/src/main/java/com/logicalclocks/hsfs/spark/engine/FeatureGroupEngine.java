@@ -304,8 +304,8 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
   public FeatureGroup getOrCreateFeatureGroup(FeatureStore featureStore, String name, Integer version,
                                               String description, List<String> primaryKeys, List<String> partitionKeys,
                                               String hudiPrecombineKey, boolean onlineEnabled,
-                                              TimeTravelFormat timeTravelFormat,
-                                              StatisticsConfig statisticsConfig, String eventTime)
+                                              TimeTravelFormat timeTravelFormat, StatisticsConfig statisticsConfig,
+                                              String topicName, String eventTime)
       throws IOException, FeatureStoreException {
 
     FeatureGroup featureGroup;
@@ -325,6 +325,7 @@ public class FeatureGroupEngine  extends FeatureGroupEngineBase {
             .timeTravelFormat(timeTravelFormat)
             .statisticsConfig(statisticsConfig)
             .eventTime(eventTime)
+            .topicName(topicName)
             .build();
 
         featureGroup.setFeatureStore(featureStore);

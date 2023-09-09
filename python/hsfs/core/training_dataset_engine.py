@@ -21,7 +21,6 @@ from hsfs.constructor import query
 from hsfs.core import (
     training_dataset_api,
     tags_api,
-    storage_connector_api,
     transformation_function_engine,
 )
 
@@ -38,9 +37,6 @@ class TrainingDatasetEngine:
             feature_store_id
         )
         self._tags_api = tags_api.TagsApi(feature_store_id, self.ENTITY_TYPE)
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
-            feature_store_id
-        )
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(
                 feature_store_id
