@@ -31,6 +31,8 @@ import org.apache.hudi.utilities.sources.AvroSource;
 import org.apache.hudi.utilities.sources.InputBatch;
 import org.apache.hudi.utilities.sources.helpers.KafkaOffsetGen;
 
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
 import org.apache.log4j.LogManager;
@@ -42,6 +44,8 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.streaming.kafka010.KafkaUtils;
 import org.apache.spark.streaming.kafka010.LocationStrategies;
 import org.apache.spark.streaming.kafka010.OffsetRange;
+
+import java.nio.charset.StandardCharsets;
 
 public class DeltaStreamerKafkaSource extends AvroSource {
   private static final Logger LOG = LogManager.getLogger(DeltaStreamerKafkaSource.class);
@@ -87,16 +91,24 @@ public class DeltaStreamerKafkaSource extends AvroSource {
     if (totalNewMsgs <= 0L) {
       return new InputBatch(Option.empty(), KafkaOffsetGen.CheckpointUtils.offsetsToStr(offsetRanges));
     } else {
-      JavaRDD<GenericRecord> newDataRdd = this.toRdd(offsetRanges);
+      JavaRDD<GenericRecord> newDataRdd = this.toRdd(offsetRanges, props.getString(HudiEngine.SUBJECT_ID));
       return new InputBatch(Option.of(newDataRdd), KafkaOffsetGen.CheckpointUtils.offsetsToStr(offsetRanges));
     }
   }
 
-  private JavaRDD<GenericRecord> toRdd(OffsetRange[] offsetRanges) {
+  private JavaRDD<GenericRecord> toRdd(OffsetRange[] offsetRanges, String subjectId) {
     return KafkaUtils.createRDD(this.sparkContext, this.offsetGen.getKafkaParams(), offsetRanges,
-        LocationStrategies.PreferConsistent()).map((obj) -> {
-          return (GenericRecord)obj.value();
-        });
+        LocationStrategies.PreferConsistent())
+            .filter(obj -> subjectId.equals(getHeader(obj.headers(), "subjectId")))
+            .map(obj -> (GenericRecord) obj.value());
+  }
+
+  private static String getHeader(Headers headers, String headerKey) {
+    Header header = headers.lastHeader(headerKey);
+    if (header != null) {
+      return new String(header.value(), StandardCharsets.UTF_8);
+    }
+    return null;
   }
 
   @Override

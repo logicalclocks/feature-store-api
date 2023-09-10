@@ -39,7 +39,7 @@ from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
 from typing import TypeVar, Optional, Dict, Any
-from confluent_kafka import Producer, KafkaError
+from confluent_kafka import Consumer, Producer, TopicPartition, KafkaError
 from tqdm.auto import tqdm
 from botocore.response import StreamingBody
 from sqlalchemy import sql
@@ -87,6 +87,7 @@ class Engine:
     def __init__(self):
         self._dataset_api = dataset_api.DatasetApi()
         self._job_api = job_api.JobApi()
+        self._feature_group_api = feature_group_api.FeatureGroupApi()
         self._storage_connector_api = storage_connector_api.StorageConnectorApi()
 
         # cache the sql engine which contains the connection pool
@@ -524,8 +525,7 @@ class Engine:
         # Setup job for ingestion
         # Configure Hopsworks ingestion job
         print("Configuring ingestion job...")
-        fg_api = feature_group_api.FeatureGroupApi(feature_group.feature_store_id)
-        ingestion_job = fg_api.ingestion(feature_group, app_options)
+        ingestion_job = self._feature_group_api.ingestion(feature_group, app_options)
 
         # Upload dataframe into Hopsworks
         print("Uploading Pandas dataframe...")
@@ -885,13 +885,27 @@ class Engine:
     def get_unique_values(feature_dataframe, feature_name):
         return feature_dataframe[feature_name].unique()
 
-    def _init_kafka_resources(self, feature_group, offline_write_options):
+    def _init_kafka_producer(self, feature_group, offline_write_options):
         # setup kafka producer
-        producer = Producer(
+        return Producer(
             self._get_kafka_config(
                 feature_group.feature_store_id, offline_write_options
             )
         )
+
+    def _init_kafka_consumer(self, feature_group, offline_write_options):
+        # setup kafka consumer
+        consumer_config = self._get_kafka_config(
+            feature_group.feature_store_id, offline_write_options
+        )
+        if "group.id" not in consumer_config:
+            consumer_config["group.id"] = "hsfs_consumer_group"
+
+        return Consumer(consumer_config)
+
+    def _init_kafka_resources(self, feature_group, offline_write_options):
+        # setup kafka producer
+        producer = self._init_kafka_producer(feature_group, offline_write_options)
 
         # setup complex feature writers
         feature_writers = {
@@ -911,7 +925,7 @@ class Engine:
         dataframe: pd.DataFrame,
         offline_write_options: dict,
     ):
-        reset_offsets = False
+        initial_check_point = ""
         if feature_group._multi_part_insert:
             if feature_group._kafka_producer is None:
                 producer, feature_writers, writer = self._init_kafka_resources(
@@ -938,12 +952,9 @@ class Engine:
                 mininterval=1,
             )
 
-            reset_offsets = (
-                feature_group._online_topic_name
-                not in producer.list_topics(
-                    timeout=offline_write_options.get("kafka_timeout", 6)
-                ).topics.keys()
-                and len(feature_group.commit_details(limit=1)) == 1
+            # set initial_check_point to the current offset
+            initial_check_point = self._kafka_get_offsets(
+                feature_group, offline_write_options, True
             )
 
         def acked(err, msg):
@@ -1005,7 +1016,7 @@ class Engine:
         # if topic didn't exist, always run the materialization job to reset the offsets except if it's a multi insert
         if (
             not isinstance(feature_group, ExternalFeatureGroup)
-            and reset_offsets
+            and not initial_check_point
             and not feature_group._multi_part_insert
         ):
             if self._start_offline_materialization(offline_write_options):
@@ -1013,20 +1024,55 @@ class Engine:
                     "This is the first ingestion after an upgrade or backup/restore, running materialization job even though `start_offline_materialization` was set to `False`.",
                     util.FeatureGroupWarning,
                 )
+            # set the initial_check_point to the lowest offset (it was not set previously due to topic not existing)
+            initial_check_point = self._kafka_get_offsets(
+                feature_group, offline_write_options, False
+            )
             feature_group.materialization_job.run(
                 args=feature_group.materialization_job.config.get("defaultArgs", "")
-                + " -kafkaOffsetReset true",
+                + initial_check_point,
                 await_termination=offline_write_options.get("wait_for_job", False),
             )
         elif not isinstance(
             feature_group, ExternalFeatureGroup
         ) and self._start_offline_materialization(offline_write_options):
+            if offline_write_options.get("skip_offsets", False):
+                # don't provide the current offsets (read from where the job last left off)
+                initial_check_point = ""
+            # provide the initial_check_point as it will reduce the read amplification of materialization job
             feature_group.materialization_job.run(
-                await_termination=offline_write_options.get("wait_for_job", False)
+                args=feature_group.materialization_job.config.get("defaultArgs", "")
+                + initial_check_point,
+                await_termination=offline_write_options.get("wait_for_job", False),
             )
         if isinstance(feature_group, ExternalFeatureGroup):
             return None
         return feature_group.materialization_job
+
+    def _kafka_get_offsets(
+        self,
+        feature_group: FeatureGroup,
+        offline_write_options: dict,
+        high: bool,
+    ):
+        topic_name = feature_group._online_topic_name
+        consumer = self._init_kafka_consumer(feature_group, offline_write_options)
+        topics = consumer.list_topics(
+            timeout=offline_write_options.get("kafka_timeout", 6)
+        ).topics
+        if topic_name in topics.keys():
+            # topic exists
+            offsets = ""
+            tuple_value = int(high)
+            for partition_metadata in topics.get(topic_name).partitions.values():
+                partition = TopicPartition(
+                    topic=topic_name, partition=partition_metadata.id
+                )
+                offsets += f",{partition_metadata.id}:{consumer.get_watermark_offsets(partition)[tuple_value]}"
+            consumer.close()
+
+            return f" -initialCheckPointString {topic_name + offsets}"
+        return ""
 
     def _kafka_produce(
         self, producer, feature_group, key, encoded_row, acked, offline_write_options
@@ -1041,7 +1087,11 @@ class Engine:
                     value=encoded_row,
                     callback=acked,
                     headers={
-                        "version": str(feature_group.subject["version"]).encode("utf8")
+                        "projectId": str(feature_group.feature_store.project_id).encode(
+                            "utf8"
+                        ),
+                        "featureGroupId": str(feature_group._id).encode("utf8"),
+                        "subjectId": str(feature_group.subject["id"]).encode("utf8"),
                     },
                 )
 

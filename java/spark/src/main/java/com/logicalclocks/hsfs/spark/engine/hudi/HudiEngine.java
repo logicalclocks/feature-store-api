@@ -26,7 +26,6 @@ import com.logicalclocks.hsfs.engine.FeatureGroupUtils;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
-import com.logicalclocks.hsfs.metadata.PartitionDetails;
 
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.spark.FeatureGroup;
@@ -58,7 +57,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Collectors;
 import java.util.Arrays;
 
 public class HudiEngine {
@@ -128,9 +126,9 @@ public class HudiEngine {
   protected static final String SPARK_MASTER = "yarn";
   protected static final String PROJECT_ID = "projectId";
   protected static final String FEATURE_STORE_NAME = "featureStoreName";
+  protected static final String SUBJECT_ID = "subjectId";
   protected static final String FEATURE_GROUP_NAME = "featureGroupName";
   protected static final String FEATURE_GROUP_VERSION = "featureGroupVersion";
-  protected static final String FEATURE_GROUP_KAFKA_OFFSET_RESET = "kafkaOffsetReset";
   protected static final String FUNCTION_TYPE = "functionType";
   protected static final String STREAMING_QUERY = "streamingQuery";
 
@@ -362,17 +360,6 @@ public class HudiEngine {
     return true;
   }
 
-  private String generetaInitialCheckPointStr(StreamFeatureGroup streamFeatureGroup)
-      throws FeatureStoreException, IOException {
-
-    List<PartitionDetails> partitionDetails =  kafkaApi.getTopicDetails(streamFeatureGroup.getFeatureStore(),
-        streamFeatureGroup.getOnlineTopicName());
-
-    String partitionOffsets = partitionDetails.stream().map(partition -> partition.getId() + ":0")
-        .collect(Collectors.joining(","));
-    return streamFeatureGroup.getOnlineTopicName() + "," + partitionOffsets;
-  }
-
   public void streamToHoodieTable(SparkSession sparkSession, StreamFeatureGroup streamFeatureGroup,
                                   Map<String, String> writeOptions) throws Exception {
 
@@ -380,6 +367,7 @@ public class HudiEngine {
         writeOptions);
     hudiWriteOpts.put(PROJECT_ID, String.valueOf(streamFeatureGroup.getFeatureStore().getProjectId()));
     hudiWriteOpts.put(FEATURE_STORE_NAME, streamFeatureGroup.getFeatureStore().getName());
+    hudiWriteOpts.put(SUBJECT_ID, String.valueOf(streamFeatureGroup.getSubject().getId()));
     hudiWriteOpts.put(FEATURE_GROUP_NAME, streamFeatureGroup.getName());
     hudiWriteOpts.put(FEATURE_GROUP_VERSION, String.valueOf(streamFeatureGroup.getVersion()));
     hudiWriteOpts.put(HUDI_TABLE_NAME, utils.getFgName(streamFeatureGroup));
@@ -401,14 +389,10 @@ public class HudiEngine {
       hudiWriteOpts.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
     }
 
-    // it is possible that table was generated from empty topic, thus we need to generate InitialCheckPointStr
+    // it is possible that table was generated from empty topic
     if (getLastCommitMetadata(sparkSession, streamFeatureGroup.getLocation()) == null) {
       // set "kafka.auto.offset.reset": "earliest"
       hudiWriteOpts.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-    }
-
-    if (writeOptions.getOrDefault(HudiEngine.FEATURE_GROUP_KAFKA_OFFSET_RESET, "false").equalsIgnoreCase("true")) {
-      hudiWriteOpts.put(HudiEngine.INITIAL_CHECKPOINT_STRING, generetaInitialCheckPointStr(streamFeatureGroup));
     }
 
     deltaStreamerConfig.streamToHoodieTable(hudiWriteOpts, sparkSession);
