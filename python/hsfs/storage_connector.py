@@ -1047,7 +1047,7 @@ class KafkaConnector(StorageConnector):
                 config["ssl.key.location"] = client_key_path
             elif key == "sasl.jaas.config":
                 groups = re.search(
-                    "(.+?) .*username=[\"|'](.+?)[\"|'] .*password=[\"|'](.+?)[\"|']",
+                    "(.+?) .*username=[\"'](.+?)[\"'] .*password=[\"'](.+?)[\"']",
                     value,
                 )
                 if "sasl.mechanisms" not in config:
