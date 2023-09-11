@@ -649,6 +649,68 @@ class TestKafkaConnector:
             "ssl.key.location": "test_ssl_key_location",
         }
 
+    def test_confluent_options_jaas_single_quotes(self, mocker):
+        # Arrange
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_engine_get_instance.return_value.add_file.return_value = None
+        mocker.patch("hsfs.client.get_instance")
+        sc = storage_connector.KafkaConnector(
+            1,
+            "kafka_connector",
+            0,
+            external_kafka=True,
+            options=[
+                {
+                    "name": "sasl.jaas.config",
+                    "value": "org.apache.kafka.common.security.plain.PlainLoginModule required username='222' password='111';",
+                }
+            ],
+        )
+
+        # Act
+        config = sc.confluent_options()
+
+        # Assert
+        assert config == {
+            "bootstrap.servers": None,
+            "security.protocol": None,
+            "ssl.endpoint.identification.algorithm": None,
+            "sasl.mechanisms": "PLAIN",
+            "sasl.password": "111",
+            "sasl.username": "222",
+        }
+
+    def test_confluent_options_jaas_double_quotes(self, mocker):
+        # Arrange
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_engine_get_instance.return_value.add_file.return_value = None
+        mocker.patch("hsfs.client.get_instance")
+        sc = storage_connector.KafkaConnector(
+            1,
+            "kafka_connector",
+            0,
+            external_kafka=True,
+            options=[
+                {
+                    "name": "sasl.jaas.config",
+                    "value": 'org.apache.kafka.common.security.plain.PlainLoginModule required username="222" password="111";',
+                }
+            ],
+        )
+
+        # Act
+        config = sc.confluent_options()
+
+        # Assert
+        assert config == {
+            "bootstrap.servers": None,
+            "security.protocol": None,
+            "ssl.endpoint.identification.algorithm": None,
+            "sasl.mechanisms": "PLAIN",
+            "sasl.password": "111",
+            "sasl.username": "222",
+        }
+
 
 class TestGcsConnector:
     def test_from_response_json(self, backend_fixtures):
