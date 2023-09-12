@@ -146,9 +146,8 @@ def init_usage(hostname, backend_version):
 
 
 def _is_target_hostname(hostname):
-    target_hostname = {"c.app.hopsworks.ai"}
-    if _logger.level == logging.DEBUG:
-        target_hostname.add("localhost")
+    # Add "localhost" in the first release for testing.
+    target_hostname = {"c.app.hopsworks.ai", "localhost"}
     return hostname in target_hostname
 
 
