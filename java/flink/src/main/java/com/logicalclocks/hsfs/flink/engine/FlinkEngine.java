@@ -145,6 +145,7 @@ public class FlinkEngine extends EngineBase {
     if (writeOptions != null) {
       config.putAll(writeOptions);
     }
+    config.put("enable.idempotence", "false");
     return config;
   }
 
