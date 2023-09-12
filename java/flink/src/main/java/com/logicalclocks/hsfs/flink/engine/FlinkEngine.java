@@ -89,6 +89,7 @@ public class FlinkEngine extends EngineBase {
     DataStream<Object> genericDataStream = (DataStream<Object>) dataStream;
     Properties properties = new Properties();
     properties.putAll(getKafkaConfig(streamFeatureGroup, writeOptions));
+    properties.put("enable.idempotence", false);
 
     KafkaSink<GenericRecord> sink = KafkaSink.<GenericRecord>builder()
         .setBootstrapServers(properties.getProperty("bootstrap.servers"))
