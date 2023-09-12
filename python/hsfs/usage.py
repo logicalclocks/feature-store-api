@@ -213,7 +213,7 @@ def method_logger(func):
                 # Send log to REST API server
                 if exception or _method_counter.should_sample(func):
                     _executor.submit(_send_log, execution_time, func, exception)
-            except Exception as e:
+            except Exception:
                 pass
 
     return wrapper
