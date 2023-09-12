@@ -123,9 +123,7 @@ _backend_hostname = None
 _backend_version = None
 HOPSWORKS_DIR = join(expanduser("~"), ".hopsworks")
 _USER_ID_FILE = "user_id"
-_is_enabled = (
-    os.environ.get("ENABLE_HOPSWORKS_USAGE", default="true").lower() == "true"
-)
+_is_enabled = os.environ.get("ENABLE_HOPSWORKS_USAGE", default="true").lower() == "true"
 
 
 def enable():
