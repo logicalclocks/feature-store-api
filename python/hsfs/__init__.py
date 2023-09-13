@@ -37,8 +37,8 @@ warnings.filterwarnings(
 )
 
 
-def disable_usage_log():
+def disable_usage_logging():
     usage.disable()
 
 
-__all__ = ["connection", "setup_databricks", "disable_usage_log"]
+__all__ = ["connection", "setup_databricks", "disable_usage_logging"]

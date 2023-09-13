@@ -142,9 +142,9 @@ is "c.app.hopsworks.ai". To turn it off, use one of the following way:
 import os
 os.environ["ENABLE_HOPSWORKS_USAGE"] = "false"
 
-# use `disable_usage_log`
+# use `disable_usage_logging`
 import hsfs
-hsfs.disable_usage_log()
+hsfs.disable_usage_logging()
 ```
 
 The source code can be found in python/hsfs/usage.py.

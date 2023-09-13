@@ -116,7 +116,8 @@ logging.basicConfig(stream=sys.__stdout__)
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
 _conn = http.client.HTTPSConnection("usage.hops.works")
-_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+_num_executor = os.environ.get("NUM_HOPSWORKS_USAGE_EXECUTORS", default="2")
+_executor = concurrent.futures.ThreadPoolExecutor(max_workers=int(_num_executor))
 _env_attr = EnvironmentAttribute()
 _method_counter = MethodCounter()
 _backend_hostname = None
@@ -196,7 +197,7 @@ def method_logger(func):
         if not _is_enabled:
             return func(*args, **kwargs)
 
-        start_time = time.time()
+        start_time = time.perf_counter()
         exception = None
         try:
             # Call the original method
@@ -207,7 +208,7 @@ def method_logger(func):
             raise e
         finally:
             try:
-                end_time = time.time()
+                end_time = time.perf_counter()
                 execution_time = end_time - start_time
                 _method_counter.add(func)
                 # Send log to REST API server
