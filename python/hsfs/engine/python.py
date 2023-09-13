@@ -1039,7 +1039,7 @@ class Engine:
             if offline_write_options.get("skip_offsets", True):
                 # don't provide the current offsets (read from where the job last left off)
                 initial_check_point = ""
-            # provide the initial_check_point as it will reduce the read amplification of materialization job
+            # the initial_check_point can reduce the read amplification of materialization job
             feature_group.materialization_job.run(
                 args=feature_group.materialization_job.config.get("defaultArgs", "")
                 + initial_check_point,
