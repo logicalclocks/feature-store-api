@@ -3090,7 +3090,10 @@ class TestPython:
         python_engine._write_dataframe_kafka(
             feature_group=fg,
             dataframe=df,
-            offline_write_options={"start_offline_materialization": True, "skip_offsets": False},
+            offline_write_options={
+                "start_offline_materialization": True,
+                "skip_offsets": False,
+            },
         )
 
         # Assert
