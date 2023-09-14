@@ -105,8 +105,13 @@ class VectorServer:
         prepared_statements_dict = {}
         serving_keys = set()
         feature_name_order_by_psp = dict()
+        prefix_by_serving_index = {}
+
         for prepared_statement in prepared_statements:
             query_online = str(prepared_statement.query_online).replace("\n", " ")
+            prefix_by_serving_index[
+                prepared_statement.prepared_statement_index
+            ] = prepared_statement.prefix
 
             # In java prepared statement `?` is used for parametrization.
             # In sqlalchemy `:feature_name` is used instead of `?`
@@ -158,18 +163,22 @@ class VectorServer:
             self._serving_keys = serving_keys
 
         self._prepared_statements = prepared_statements_dict
+        self._prefix_by_serving_index = prefix_by_serving_index
         for sk in self._serving_keys:
             self._serving_key_by_serving_index[
                 sk.join_index
             ] = self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
         # sort the serving by PreparedStatementParameter.index
         for join_index in self._serving_key_by_serving_index:
-            self._serving_key_by_serving_index[join_index] = sorted(
-                self._serving_key_by_serving_index[join_index],
-                key=lambda _sk: feature_name_order_by_psp[join_index].get(
-                    _sk.feature_name, 0
-                ),
-            )
+            # feature_name_order_by_psp do not include the join index when the joint feature only contains label only
+            # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
+            if join_index in feature_name_order_by_psp:
+                self._serving_key_by_serving_index[join_index] = sorted(
+                    self._serving_key_by_serving_index[join_index],
+                    key=lambda _sk: feature_name_order_by_psp[join_index].get(
+                        _sk.feature_name, 0
+                    ),
+                )
         # get schemas for complex features once
         self._complex_features = self.get_complex_feature_schemas()
 
@@ -266,6 +275,10 @@ class VectorServer:
         # then concatenate the results
         with self._prepared_statement_engine.connect() as mysql_conn:
             for prepared_statement_index in self._prepared_statements:
+                # prepared_statement_index include fg with label only
+                # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
+                if prepared_statement_index not in self._serving_key_by_serving_index:
+                    continue
                 prepared_statement = self._prepared_statements[prepared_statement_index]
                 entry_values_tuples = list(
                     map(
@@ -292,8 +305,10 @@ class VectorServer:
                         prepared_statement_index
                     ]
                 ]
+                # Use prefix from prepare statement because prefix from serving key is collision adjusted.
                 prefix_features = [
-                    sk.prefix + sk.feature_name
+                    (self._prefix_by_serving_index[prepared_statement_index] or "")
+                    + sk.feature_name
                     for sk in self._serving_key_by_serving_index[
                         prepared_statement_index
                     ]
