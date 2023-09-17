@@ -2486,7 +2486,7 @@ class FeatureView:
         fv.inference_helper_columns = [
             feature.name for feature in features if feature.inference_helper_column
         ]
-        fv.inference_training_columns = [
+        fv.training_helper_columns = [
             feature.name for feature in features if feature.training_helper_column
         ]
         return fv

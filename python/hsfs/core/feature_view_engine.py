@@ -153,7 +153,8 @@ class FeatureViewEngine:
         start_time,
         end_time,
         with_label=False,
-        with_helper_columns=False,
+        with_inference_helper_columns=False,
+        with_training_helper_columns=False,
         training_dataset_version=None,
         spine=None,
     ):
@@ -166,7 +167,8 @@ class FeatureViewEngine:
                 training_dataset_version=training_dataset_version,
                 is_python_engine=engine.get_type() == "python",
                 with_label=with_label,
-                with_helper_columns=with_helper_columns,
+                with_inference_helper_columns=with_inference_helper_columns,
+                with_training_helper_columns=with_training_helper_columns,
             )
             # verify whatever is passed 1. spine group with dataframe contained, or 2. dataframe
             # the schema has to be consistent
@@ -307,7 +309,7 @@ class FeatureViewEngine:
                 td_updated.splits,
                 read_options,
                 with_training_helper_columns,
-                feature_view_obj.trainig_helper_columns,
+                feature_view_obj.training_helper_columns,
             )
         else:
             self._check_feature_group_accessibility(feature_view_obj)
@@ -317,7 +319,8 @@ class FeatureViewEngine:
                 start_time=td_updated.event_start_time,
                 end_time=td_updated.event_end_time,
                 with_label=True,
-                with_helper_columns=with_training_helper_columns,
+                with_inference_helper_columns=False,
+                with_training_helper_columns=with_training_helper_columns,
                 spine=spine,
             )
             split_df = engine.get_instance().get_training_data(
@@ -490,7 +493,8 @@ class FeatureViewEngine:
             training_dataset_obj.event_start_time,
             training_dataset_obj.event_end_time,
             with_label=True,
-            with_helper_columns=with_training_helper_columns,
+            with_inference_helper_columns=False,
+            with_training_helper_columns=with_training_helper_columns,
             training_dataset_version=training_dataset_obj.version,
             spine=spine,
         )
@@ -606,7 +610,7 @@ class FeatureViewEngine:
         transformation_functions,
         read_options=None,
         spine=None,
-        with_helper_columns=False,
+        with_inference_helper_columns=False,
     ):
         self._check_feature_group_accessibility(feature_view_obj)
 
@@ -615,7 +619,8 @@ class FeatureViewEngine:
             start_time,
             end_time,
             with_label=False,
-            with_helper_columns=with_helper_columns,
+            with_inference_helper_columns=with_inference_helper_columns,
+            with_training_helper_columns=False,
             training_dataset_version=training_dataset_version,
             spine=spine,
         ).read(read_options=read_options)
