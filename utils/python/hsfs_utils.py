@@ -101,11 +101,13 @@ def create_fv_td(job_conf: Dict[Any, Any]) -> None:
     fv_engine = feature_view_engine.FeatureViewEngine(fv.featurestore_id)
 
     user_write_options = job_conf.pop("write_options", {}) or {}
-    with_extra_features = user_write_options.get("with_helper_columns")
+    with_training_helper_columns = user_write_options.get(
+        "with_training_helper_columns"
+    )
     fv_engine.compute_training_dataset(
-        fv,
-        user_write_options,
-        with_extra_features,
+        feature_view_obj=fv,
+        user_write_options=user_write_options,
+        with_training_helper_columns=with_training_helper_columns,
         training_dataset_version=job_conf["td_version"],
     )
 

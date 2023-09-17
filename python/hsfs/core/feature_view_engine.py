@@ -78,8 +78,8 @@ class FeatureViewEngine:
                         featuregroup=featuregroup,
                     )
                 )
-        if feature_view_obj.helper_columns:
-            for helper_column_name in feature_view_obj.helper_columns:
+        if feature_view_obj.inference_helper_columns:
+            for helper_column_name in feature_view_obj.inference_helper_columns:
                 (
                     feature,
                     prefix,
@@ -88,7 +88,22 @@ class FeatureViewEngine:
                 feature_view_obj._features.append(
                     training_dataset_feature.TrainingDatasetFeature(
                         name=feature.name,
-                        helper_column=True,
+                        inference_helper_column=True,
+                        featuregroup=featuregroup,
+                    )
+                )
+
+        if feature_view_obj.training_helper_columns:
+            for helper_column_name in feature_view_obj.training_helper_columns:
+                (
+                    feature,
+                    prefix,
+                    featuregroup,
+                ) = feature_view_obj.query._get_feature_by_name(helper_column_name)
+                feature_view_obj._features.append(
+                    training_dataset_feature.TrainingDatasetFeature(
+                        name=feature.name,
+                        training_helper_column=True,
                         featuregroup=featuregroup,
                     )
                 )
@@ -235,7 +250,7 @@ class FeatureViewEngine:
         training_dataset_obj,
         user_write_options,
         spine=None,
-        with_helper_columns=False,
+        with_training_helper_columns=False,
     ):
         self._set_event_time(feature_view_obj, training_dataset_obj)
         updated_instance = self._create_training_data_metadata(
@@ -246,7 +261,7 @@ class FeatureViewEngine:
             user_write_options,
             training_dataset_obj=training_dataset_obj,
             spine=spine,
-            with_helper_columns=with_helper_columns,
+            with_training_helper_columns=with_training_helper_columns,
         )
         return updated_instance, td_job
 
@@ -258,7 +273,7 @@ class FeatureViewEngine:
         training_dataset_obj=None,
         training_dataset_version=None,
         spine=None,
-        with_helper_columns=False,
+        with_training_helper_columns=False,
     ):
         # check if provided td version has already existed.
         if training_dataset_version:
@@ -287,14 +302,12 @@ class FeatureViewEngine:
         )
 
         if td_updated.training_dataset_type != td_updated.IN_MEMORY:
-            if with_helper_columns:
-                warnings.warn(
-                    "Argument `with_helper_columns` was set to `True`. However, when reading already materialised "
-                    "training dataset this will not have anny effect. If this training dataset was not materialised "
-                    "with `with_helper_columns=True` it will not return helper columns."
-                )
             split_df = self._read_from_storage_connector(
-                td_updated, td_updated.splits, read_options, feature_view_obj.schema
+                td_updated,
+                td_updated.splits,
+                read_options,
+                with_training_helper_columns,
+                feature_view_obj.trainig_helper_columns,
             )
         else:
             self._check_feature_group_accessibility(feature_view_obj)
@@ -304,7 +317,7 @@ class FeatureViewEngine:
                 start_time=td_updated.event_start_time,
                 end_time=td_updated.event_end_time,
                 with_label=True,
-                with_helper_columns=with_helper_columns,
+                with_helper_columns=with_training_helper_columns,
                 spine=spine,
             )
             split_df = engine.get_instance().get_training_data(
@@ -379,20 +392,34 @@ class FeatureViewEngine:
         return training_dataset_obj, td_job
 
     def _read_from_storage_connector(
-        self, training_data_obj, splits, read_options, schema=None
+        self,
+        training_data_obj,
+        splits,
+        read_options,
+        with_training_helper_columns,
+        training_helper_columns,
     ):
+
         if splits:
             result = {}
             for split in splits:
                 path = training_data_obj.location + "/" + str(split.name)
                 result[split.name] = self._read_dir_from_storage_connector(
-                    training_data_obj, path, read_options
+                    training_data_obj,
+                    path,
+                    read_options,
+                    with_training_helper_columns,
+                    training_helper_columns,
                 )
             return result
         else:
             path = training_data_obj.location + "/" + training_data_obj.name
             return self._read_dir_from_storage_connector(
-                training_data_obj, path, read_options
+                training_data_obj,
+                path,
+                read_options,
+                with_training_helper_columns,
+                training_helper_columns,
             )
 
     def _cast_columns(self, data_format, df, schema):
@@ -403,15 +430,33 @@ class FeatureViewEngine:
         else:
             return df
 
-    def _read_dir_from_storage_connector(self, training_data_obj, path, read_options):
+    def _read_dir_from_storage_connector(
+        self,
+        training_data_obj,
+        path,
+        read_options,
+        with_training_helper_columns,
+        training_helper_columns,
+    ):
         try:
-            return training_data_obj.storage_connector.read(
+            df = training_data_obj.storage_connector.read(
                 # always read from materialized dataset, not query object
                 query=None,
                 data_format=training_data_obj.data_format,
                 options=read_options,
                 path=path,
             )
+
+            if not with_training_helper_columns:
+                if training_helper_columns:
+                    df = engine.get_instance().drop_columns(df, training_helper_columns)
+            else:
+                if not training_helper_columns:
+                    warnings.warn(
+                        "Parent feature doesn't have training helper columns "
+                    )
+            return df
+
         except Exception as e:
             if isinstance(e, FileNotFoundError):
                 raise FileNotFoundError(
@@ -429,7 +474,7 @@ class FeatureViewEngine:
         training_dataset_obj=None,
         training_dataset_version=None,
         spine=None,
-        with_helper_columns=False,
+        with_training_helper_columns=False,
     ):
         if training_dataset_obj:
             pass
@@ -445,13 +490,15 @@ class FeatureViewEngine:
             training_dataset_obj.event_start_time,
             training_dataset_obj.event_end_time,
             with_label=True,
-            with_helper_columns=with_helper_columns,
+            with_helper_columns=with_training_helper_columns,
             training_dataset_version=training_dataset_obj.version,
             spine=spine,
         )
 
         # for spark job
-        user_write_options["with_helper_columns"] = user_write_options
+        user_write_options[
+            "with_training_helper_columns"
+        ] = with_training_helper_columns
 
         td_job = engine.get_instance().write_training_dataset(
             training_dataset_obj,

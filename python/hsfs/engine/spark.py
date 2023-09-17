@@ -499,6 +499,9 @@ class Engine:
         else:
             return df, None
 
+    def drop_columns(self, df, column_names):
+        return df.drop(*column_names)
+
     def write_training_dataset(
         self,
         training_dataset,
