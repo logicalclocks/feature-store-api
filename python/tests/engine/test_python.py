@@ -3049,7 +3049,7 @@ class TestPython:
             await_termination=False,
         )
 
-    def test_materialization_kafka_skip_offsets_False(self, mocker):
+    def test_materialization_kafka_use_current_offsets_True(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.python.Engine._get_kafka_config", return_value={})
         mocker.patch("hsfs.feature_group.FeatureGroup._get_encoded_avro_schema")
@@ -3092,7 +3092,7 @@ class TestPython:
             dataframe=df,
             offline_write_options={
                 "start_offline_materialization": True,
-                "skip_offsets": False,
+                "use_current_offsets": True,
             },
         )
 

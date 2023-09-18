@@ -1771,6 +1771,9 @@ class FeatureGroup(FeatureGroupBase):
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
                   will use external listeners when connecting from outside of Hopsworks.
+                * key `use_current_offsets` and value `True` or `False` to configure if materialization job
+                  should start consuming Kafka events from the offset that was received before anything was produced.
+                  By default the materialization job starts consuming from where it last left off.
             validation_options: Additional validation options as key-value pairs, defaults to `{}`.
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
@@ -1953,6 +1956,9 @@ class FeatureGroup(FeatureGroupBase):
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
                   will use external listeners when connecting from outside of Hopsworks.
+                * key `use_current_offsets` and value `True` or `False` to configure if materialization job
+                  should start consuming Kafka events from the offset that was received before anything was produced.
+                  By default the materialization job starts consuming from where it last left off.
             validation_options: Additional validation options as key-value pairs, defaults to `{}`.
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
@@ -2108,6 +2114,9 @@ class FeatureGroup(FeatureGroupBase):
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
                   will use external listeners when connecting from outside of Hopsworks.
+                * key `use_current_offsets` and value `True` or `False` to configure if materialization job
+                  should start consuming Kafka events from the offset that was received before anything was produced.
+                  By default the materialization job starts consuming from where it last left off.
             validation_options: Additional validation options as key-value pairs, defaults to `{}`.
                 * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
                 * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
