@@ -15,7 +15,7 @@ def read(fname):
 setup(
     name="hsfs",
     version=__version__,
-    python_requires=">=3.7,<3.11",
+    python_requires=">=3.7,<3.12",
     install_requires=[
         "pyhumps==1.6.1",
         "requests",
@@ -68,13 +68,13 @@ setup(
         "hive": [
             "pyhopshive[thrift]",
             "pyarrow>=10.0",
-            "confluent-kafka<=1.9.0",
+            "confluent-kafka<=2.1.1",
             "fastavro>=1.4.11,<=1.8.2",
         ],
         "python": [
             "pyhopshive[thrift]",
             "pyarrow>=10.0",
-            "confluent-kafka<=1.9.0",
+            "confluent-kafka<=2.1.1",
             "fastavro>=1.4.11,<=1.8.2",
             "tqdm",
         ],
@@ -97,6 +97,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Intended Audience :: Developers",
     ],
 )
