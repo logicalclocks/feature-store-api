@@ -69,6 +69,7 @@ class FeatureGroupBase:
         id=None,
         expectation_suite=None,
         online_topic_name=None,
+        topic_name=None,
         deprecated=False,
     ):
         self._version = version
@@ -79,6 +80,7 @@ class FeatureGroupBase:
         self._id = id
         self._subject = None
         self._online_topic_name = online_topic_name
+        self._topic_name = topic_name
         self._deprecated = deprecated
         self._feature_store_id = featurestore_id
         # use setter for correct conversion
@@ -1165,6 +1167,18 @@ class FeatureGroupBase:
             )
 
     @property
+    def feature_store_id(self):
+        return self._feature_store_id
+
+    @property
+    def feature_store(self):
+        return self._feature_store
+
+    @feature_store.setter
+    def feature_store(self, feature_store):
+        self._feature_store = feature_store
+
+    @property
     def name(self):
         """Name of the feature group."""
         return self._name
@@ -1177,6 +1191,9 @@ class FeatureGroupBase:
     @version.setter
     def version(self, version):
         self._version = version
+
+    def get_fg_name(self):
+        return f"{self.name}_{self.version}"
 
     @property
     def statistics(self):
@@ -1345,6 +1362,15 @@ class FeatureGroupBase:
         self._online_enabled = online_enabled
 
     @property
+    def topic_name(self):
+        """The topic used for feature group data ingestion."""
+        return self._topic_name
+
+    @topic_name.setter
+    def topic_name(self, topic_name):
+        self._topic_name = topic_name
+
+    @property
     def deprecated(self):
         """Setting if the feature group is deprecated."""
         return self._deprecated
@@ -1434,6 +1460,7 @@ class FeatureGroup(FeatureGroupBase):
         time_travel_format=None,
         statistics_config=None,
         online_topic_name=None,
+        topic_name=None,
         event_time=None,
         stream=False,
         expectation_suite=None,
@@ -1452,6 +1479,7 @@ class FeatureGroup(FeatureGroupBase):
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
+            topic_name=topic_name,
             deprecated=deprecated,
         )
 
@@ -2495,6 +2523,7 @@ class FeatureGroup(FeatureGroupBase):
             "eventTime": self.event_time,
             "expectationSuite": self._expectation_suite,
             "parents": self._parents,
+            "topicName": self.topic_name,
             "deprecated": self.deprecated,
         }
         if self._stream:
@@ -2502,10 +2531,7 @@ class FeatureGroup(FeatureGroupBase):
         return fg_meta_dict
 
     def _get_table_name(self):
-        return self.feature_store_name + "." + self.name + "_" + str(self.version)
-
-    def _get_online_table_name(self):
-        return self.name + "_" + str(self.version)
+        return self.feature_store_name + "." + self.get_fg_name()
 
     @property
     def id(self):
@@ -2531,10 +2557,6 @@ class FeatureGroup(FeatureGroupBase):
     def hudi_precombine_key(self):
         """Feature name that is the hudi precombine key."""
         return self._hudi_precombine_key
-
-    @property
-    def feature_store_id(self):
-        return self._feature_store_id
 
     @property
     def feature_store_name(self):
@@ -2637,6 +2659,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         online_enabled=False,
         href=None,
         online_topic_name=None,
+        topic_name=None,
         spine=False,
         deprecated=False,
     ):
@@ -2650,6 +2673,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
+            topic_name=topic_name,
             deprecated=deprecated,
         )
 
@@ -2909,6 +2933,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "expectationSuite": self._expectation_suite,
             "onlineEnabled": self._online_enabled,
             "spine": False,
+            "topicName": self.topic_name,
             "deprecated": self.deprecated,
         }
 
@@ -2957,11 +2982,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
         """Name of the feature store in which the feature group is located."""
         return self._feature_store_name
 
-    @property
-    def feature_store_id(self):
-        """Id of the feature store in which the feature group is located."""
-        return self._feature_store_id
-
 
 class SpineGroup(FeatureGroupBase):
     SPINE_GROUP = "ON_DEMAND_FEATURE_GROUP"
@@ -2991,6 +3011,7 @@ class SpineGroup(FeatureGroupBase):
         online_enabled=False,
         href=None,
         online_topic_name=None,
+        topic_name=None,
         spine=True,
         dataframe="spine",
         deprecated=False,
@@ -3005,6 +3026,7 @@ class SpineGroup(FeatureGroupBase):
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
+            topic_name=topic_name,
             deprecated=deprecated,
         )
 
@@ -3130,5 +3152,6 @@ class SpineGroup(FeatureGroupBase):
             "statisticsConfig": self._statistics_config,
             "eventTime": self._event_time,
             "spine": True,
+            "topicName": self.topic_name,
             "deprecated": self.deprecated,
         }

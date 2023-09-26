@@ -22,7 +22,6 @@ import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.KafkaApi;
 import com.logicalclocks.hsfs.metadata.Subject;
 import com.logicalclocks.hsfs.Feature;
-import com.logicalclocks.hsfs.FeatureStoreBase;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.FeatureGroupCommit;
 import com.logicalclocks.hsfs.FeatureStoreException;
@@ -53,12 +52,7 @@ public class FeatureGroupUtils {
 
   // TODO(Fabio): this should be moved in the backend
   public String getTableName(FeatureGroupBase offlineFeatureGroup) {
-    return offlineFeatureGroup.getFeatureStore().getName() + "."
-        + offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
-  }
-
-  public String getOnlineTableName(FeatureGroupBase offlineFeatureGroup) {
-    return offlineFeatureGroup.getName() + "_" + offlineFeatureGroup.getVersion();
+    return offlineFeatureGroup.getFeatureStore().getName() + "." + getFgName(offlineFeatureGroup);
   }
 
   public Seq<String> getPartitionColumns(FeatureGroupBase offlineFeatureGroup) {
@@ -171,11 +165,6 @@ public class FeatureGroupUtils {
     return commitDetails;
   }
 
-  public String getAvroSchema(FeatureGroupBase featureGroup, FeatureStoreBase featureStoreBase)
-      throws FeatureStoreException, IOException {
-    return kafkaApi.getSubject(featureStoreBase, featureGroup.getOnlineTopicName()).getSchema();
-  }
-
   public List<String> getComplexFeatures(List<Feature> features) {
     return features.stream().filter(Feature::isComplex).map(Feature::getName).collect(Collectors.toList());
   }
@@ -249,6 +238,6 @@ public class FeatureGroupUtils {
   }
 
   public Subject getSubject(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
-    return kafkaApi.getSubject(featureGroup.getFeatureStore(), featureGroup.getOnlineTopicName());
+    return kafkaApi.getSubject(featureGroup.getFeatureStore(), getFgName(featureGroup));
   }
 }

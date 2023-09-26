@@ -214,7 +214,7 @@ class Query:
 
             query = fg1.select_all()
                     .join(fg2.select_all(), on=["date", "location_id"])
-                    .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
+                    .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], join_type="left")
             ```
 
         # Arguments
@@ -379,7 +379,7 @@ class Query:
 
             query = fg1.select_all()
                 .join(fg2.select_all(), on=["date", "location_id"])
-                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
+                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], join_type="left")
                 .filter((fg1.location_id == 10) | (fg1.location_id == 20))
             ```
 
@@ -391,7 +391,7 @@ class Query:
 
             query = fg1.select_all()
                 .join(fg2.select_all().filter(fg2.avg_temp >= 22), on=["date", "location_id"])
-                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
+                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], join_type="left")
                 .filter(fg1.location_id == 10)
             ```
 

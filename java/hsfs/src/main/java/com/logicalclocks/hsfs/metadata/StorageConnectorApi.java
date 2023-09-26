@@ -33,7 +33,7 @@ public class StorageConnectorApi {
   private static final String CONNECTOR_TYPE_PATH =
       CONNECTOR_PATH + "{/connType}{/name}{?temporaryCredentials}";
   private static final String ONLINE_CONNECTOR_PATH = CONNECTOR_PATH + "/onlinefeaturestore";
-  private static final String KAFKA_CONNECTOR_PATH = CONNECTOR_PATH + "/kafka_connector{?external}";
+  private static final String KAFKA_CONNECTOR_PATH = CONNECTOR_PATH + "/kafka_connector/byok{?external}";
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageConnectorApi.class);
 

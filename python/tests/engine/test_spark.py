@@ -856,6 +856,7 @@ class TestSpark:
             id=10,
             online_topic_name="test_online_topic_name",
         )
+        fg.feature_store = mocker.Mock()
 
         mock_client_get_instance.return_value._project_name = "test_project_name"
 
@@ -982,6 +983,7 @@ class TestSpark:
             id=10,
             online_topic_name="test_online_topic_name",
         )
+        fg.feature_store = mocker.Mock()
 
         mock_client_get_instance.return_value._project_name = "test_project_name"
 
@@ -1108,6 +1110,7 @@ class TestSpark:
             id=10,
             online_topic_name="test_online_topic_name",
         )
+        fg.feature_store = mocker.Mock()
 
         mock_client_get_instance.return_value._project_name = "test_project_name"
 
@@ -1234,6 +1237,7 @@ class TestSpark:
             id=10,
             online_topic_name="test_online_topic_name",
         )
+        fg.feature_store = mocker.Mock()
 
         mock_client_get_instance.return_value._project_name = "test_project_name"
 
@@ -1350,6 +1354,7 @@ class TestSpark:
         fg = feature_group.FeatureGroup(
             name="test", version=1, featurestore_id=99, primary_key=[], id=10
         )
+        fg.feature_store = mocker.Mock()
 
         mock_df = mocker.Mock()
 
@@ -1507,6 +1512,7 @@ class TestSpark:
             id=10,
             online_topic_name="test_online_topic_name",
         )
+        fg.feature_store = mocker.Mock()
 
         # Act
         spark_engine._save_online_dataframe(

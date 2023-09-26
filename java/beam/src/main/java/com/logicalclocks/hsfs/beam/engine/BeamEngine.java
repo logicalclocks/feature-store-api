@@ -58,7 +58,7 @@ public class BeamEngine extends EngineBase {
     return new BeamProducer(streamFeatureGroup.getOnlineTopicName(),
       getKafkaConfig(streamFeatureGroup, writeOptions),
       streamFeatureGroup.getDeserializedAvroSchema(), deserializedEncodedSchema, complexFeatureSchemas,
-      streamFeatureGroup.getPrimaryKeys());
+      streamFeatureGroup.getPrimaryKeys(), streamFeatureGroup);
   }
 
   @Override

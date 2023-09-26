@@ -32,7 +32,6 @@ import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.GlobalConfiguration;
 import org.apache.flink.connector.base.DeliveryGuarantee;
-import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.formats.avro.typeutils.GenericRecordAvroTypeInfo;
@@ -94,11 +93,7 @@ public class FlinkEngine extends EngineBase {
     KafkaSink<GenericRecord> sink = KafkaSink.<GenericRecord>builder()
         .setBootstrapServers(properties.getProperty("bootstrap.servers"))
         .setKafkaProducerConfig(properties)
-        .setRecordSerializer(KafkaRecordSerializationSchema.builder()
-          .setTopic(streamFeatureGroup.getOnlineTopicName())
-          .setKeySerializationSchema(new KeySerializationSchema(streamFeatureGroup.getPrimaryKeys()))
-          .setValueSerializationSchema(new GenericRecordAvroSerializer())
-          .build())
+        .setRecordSerializer(new KafkaRecordSerializer(streamFeatureGroup))
         .setDeliverGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
         .build();
     Map<String, String> complexFeatureSchemas = new HashMap<>();
@@ -150,6 +145,7 @@ public class FlinkEngine extends EngineBase {
     if (writeOptions != null) {
       config.putAll(writeOptions);
     }
+    config.put("enable.idempotence", "false");
     return config;
   }
 

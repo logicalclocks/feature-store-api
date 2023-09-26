@@ -74,6 +74,7 @@ class TestFeatureGroupWriter:
             features=engine.parse_schema_feature_group(dataframe_fixture_basic, "HUDI"),
             stream=True,
         )
+        fg.feature_store = mocker.MagicMock()
 
         with fg.multi_part_insert() as writer:
             assert writer._feature_group == fg
@@ -124,6 +125,7 @@ class TestFeatureGroupWriter:
             features=engine.parse_schema_feature_group(dataframe_fixture_basic, "HUDI"),
             stream=True,
         )
+        fg.feature_store = mocker.MagicMock()
 
         fg.multi_part_insert(dataframe_fixture_basic)
 
