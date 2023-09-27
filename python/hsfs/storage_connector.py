@@ -14,13 +14,14 @@
 #   limitations under the License.
 #
 import os
+import re
 from abc import ABC, abstractmethod
 from typing import Optional
 
 import humps
 import base64
 
-from hsfs import engine
+from hsfs import engine, client
 from hsfs.core import storage_connector_api
 
 
@@ -41,9 +42,7 @@ class StorageConnector(ABC):
         self._description = description
         self._featurestore_id = featurestore_id
 
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi(
-            self._featurestore_id
-        )
+        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -894,17 +893,6 @@ class KafkaConnector(StorageConnector):
     type = StorageConnector.KAFKA
     SPARK_FORMAT = "kafka"
 
-    CONFIG_MAPPING = {
-        "_bootstrap_servers": "kafka.bootstrap.servers",
-        "_security_protocol": "kafka.security.protocol",
-        "_ssl_truststore_location": "kafka.ssl.truststore.location",
-        "_ssl_truststore_password": "kafka.ssl.truststore.password",
-        "_ssl_keystore_location": "kafka.ssl.keystore.location",
-        "_ssl_keystore_password": "kafka.ssl.keystore.password",
-        "_ssl_key_password": "kafka.ssl.key.password",
-        "_ssl_endpoint_identification_algorithm": "kafka.ssl.endpoint.identification.algorithm",
-    }
-
     def __init__(
         self,
         id,
@@ -921,6 +909,7 @@ class KafkaConnector(StorageConnector):
         ssl_key_password=None,
         ssl_endpoint_identification_algorithm=None,
         options=None,
+        external_kafka=None,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -944,9 +933,11 @@ class KafkaConnector(StorageConnector):
             if options is not None
             else {}
         )
+        self._external_kafka = external_kafka
+        self._pem_files_created = False
 
     @property
-    def boostrap_servers(self):
+    def bootstrap_servers(self):
         """Bootstrap servers string."""
         return self._bootstrap_servers
 
@@ -975,17 +966,156 @@ class KafkaConnector(StorageConnector):
         """Bootstrap servers string."""
         return self._options
 
-    def spark_options(self):
-        """Return prepared options to be passed to Spark, based on the additional
-        arguments.
+    def kafka_options(self):
+        """Return prepared options to be passed to kafka, based on the additional arguments.
+        https://kafka.apache.org/documentation/
         """
-        config = {
-            v: getattr(self, k)
-            for k, v in self.CONFIG_MAPPING.items()
-            if getattr(self, k) is not None
-        }
+        config = {}
 
-        return {**self._options, **config}
+        # set kafka storage connector options
+        config.update(self.options)
+
+        # set connection properties
+        config.update(
+            {
+                "bootstrap.servers": self.bootstrap_servers,
+                "security.protocol": self.security_protocol,
+            }
+        )
+
+        # set ssl
+        config[
+            "ssl.endpoint.identification.algorithm"
+        ] = self._ssl_endpoint_identification_algorithm
+
+        if not self._external_kafka:
+            self._ssl_truststore_location = (
+                client.get_instance()._get_jks_trust_store_path()
+            )
+            self._ssl_truststore_password = client.get_instance()._cert_key
+            self._ssl_keystore_location = (
+                client.get_instance()._get_jks_key_store_path()
+            )
+            self._ssl_keystore_password = client.get_instance()._cert_key
+            self._ssl_key_password = client.get_instance()._cert_key
+
+        if self.ssl_truststore_location is not None:
+            config["ssl.truststore.location"] = self._ssl_truststore_location
+        if self._ssl_truststore_password is not None:
+            config["ssl.truststore.password"] = self._ssl_truststore_password
+        if self.ssl_keystore_location is not None:
+            config["ssl.keystore.location"] = self._ssl_keystore_location
+        if self._ssl_keystore_password is not None:
+            config["ssl.keystore.password"] = self._ssl_keystore_password
+        if self._ssl_key_password is not None:
+            config["ssl.key.password"] = self._ssl_key_password
+
+        return config
+
+    def confluent_options(self):
+        """Return prepared options to be passed to confluent_kafka, based on the provided apache spark configuration.
+        Right now only producer values with Importance >= medium are implemented.
+        https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.html
+        """
+        config = {}
+        kafka_options = self.kafka_options()
+        for key, value in kafka_options.items():
+            if (
+                key
+                in [
+                    "ssl.truststore.location",
+                    "ssl.truststore.password",
+                    "ssl.keystore.location",
+                    "ssl.keystore.password",
+                ]
+                and not self._pem_files_created
+            ):
+                (
+                    ca_chain_path,
+                    client_cert_path,
+                    client_key_path,
+                ) = client.get_instance()._write_pem(
+                    kafka_options["ssl.keystore.location"],
+                    kafka_options["ssl.keystore.password"],
+                    kafka_options["ssl.truststore.location"],
+                    kafka_options["ssl.truststore.password"],
+                    f"kafka_sc_{client.get_instance()._project_id}_{self._id}",
+                )
+                self._pem_files_created = True
+                config["ssl.ca.location"] = ca_chain_path
+                config["ssl.certificate.location"] = client_cert_path
+                config["ssl.key.location"] = client_key_path
+            elif key == "sasl.jaas.config":
+                groups = re.search(
+                    "(.+?) .*username=[\"'](.+?)[\"'] .*password=[\"'](.+?)[\"']",
+                    value,
+                )
+                if "sasl.mechanisms" not in config:
+                    mechanism = groups.group(1)
+                    mechanism_value = None
+                    if (
+                        mechanism
+                        == "org.apache.kafka.common.security.plain.PlainLoginModule"
+                    ):
+                        mechanism_value = "PLAIN"
+                    elif (
+                        mechanism
+                        == "org.apache.kafka.common.security.scram.ScramLoginModule"
+                    ):
+                        mechanism_value = "SCRAM-SHA-256"  # could also be SCRAM-SHA-512
+                    elif (
+                        mechanism
+                        == "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule"
+                    ):
+                        mechanism_value = "OAUTHBEARER"
+                config["sasl.mechanisms"] = mechanism_value
+                config["sasl.username"] = groups.group(2)
+                config["sasl.password"] = groups.group(3)
+            elif key == "ssl.endpoint.identification.algorithm":
+                config[key] = "none" if value == "" else value
+            elif key == "queued.max.requests":
+                config["queue.buffering.max.messages"] = value
+            elif key == "queued.max.request.bytes":
+                config["queue.buffering.max.kbytes"] = value
+            elif key in [
+                "bootstrap.servers",
+                "security.protocol",
+                "compression.type",
+                "sasl.mechanism",
+                "request.timeout.ms",
+                "group.id",
+                "transactional.id",
+                "transaction.timeout.ms",
+                "enable.idempotence",
+                "message.max.bytes",
+                "linger.ms",
+                "retries",
+                "retry.backoff.ms",
+                "acks",
+                "socket.connection.setup.timeout.ms",
+                "connections.max.idle.ms",
+                "reconnect.backoff.ms",
+                "reconnect.backoff.max.ms",
+                "delivery.timeout.ms",
+            ]:
+                # same between config
+                config[key] = value
+            else:
+                # ignored values (if not specified then configuration is ignored)
+                continue
+
+        return config
+
+    def spark_options(self):
+        """Return prepared options to be passed to Spark, based on the additional arguments.
+        This is done by just adding 'kafka.' prefix to kafka_options.
+        https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html#kafka-specific-configurations
+        """
+        config = {}
+        for key, value in self.kafka_options().items():
+            config[f"{KafkaConnector.SPARK_FORMAT}.{key}"] = value
+
+        return config
 
     def read(
         self,
@@ -1028,7 +1158,7 @@ class KafkaConnector(StorageConnector):
             options: Additional options as key/value string pairs to be passed to Spark.
                 Defaults to `{}`.
             include_metadata: Indicate whether to return additional metadata fields from
-                messages in the stream. Otherwise only the decoded value fields are
+                messages in the stream. Otherwise, only the decoded value fields are
                 returned. Defaults to `False`.
 
         # Raises

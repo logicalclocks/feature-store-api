@@ -126,3 +126,11 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
         )
+
+    def update_deprecated(self, feature_group, deprecate):
+        """Updates the deprecation status of a feature group."""
+        fg_dict = feature_group.to_dict()
+        copy_feature_group = fg.ExternalFeatureGroup.from_response_json(fg_dict)
+        self._feature_group_api.update_metadata(
+            feature_group, copy_feature_group, "deprecate", deprecate
+        )

@@ -175,7 +175,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
     def sql(self, query, feature_store_name, dataframe_type, online, read_options):
         if online and self._online_conn is None:
-            self._online_conn = self._storage_connector_api.get_online_connector()
+            self._online_conn = self._storage_connector_api.get_online_connector(
+                self._feature_store_id
+            )
         return engine.get_instance().sql(
             query,
             feature_store_name,
@@ -215,6 +217,13 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         copy_feature_group.description = description
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
+        )
+
+    def update_deprecated(self, feature_group, deprecate):
+        """Updates the deprecation status of a feature group."""
+        copy_feature_group = fg.FeatureGroup.from_response_json(feature_group.to_dict())
+        self._feature_group_api.update_metadata(
+            feature_group, copy_feature_group, "deprecate", deprecate
         )
 
     def insert_stream(

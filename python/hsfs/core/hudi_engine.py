@@ -79,7 +79,7 @@ class HudiEngine:
         self._feature_store_id = feature_store_id
         self._feature_store_name = feature_store_name
 
-        self._feature_group_api = feature_group_api.FeatureGroupApi(feature_store_id)
+        self._feature_group_api = feature_group_api.FeatureGroupApi()
 
     def save_hudi_fg(
         self, dataset, save_mode, operation, write_options, validation_id=None
@@ -119,7 +119,7 @@ class HudiEngine:
         return feature_group_commit
 
     def _setup_hudi_write_opts(self, operation, write_options):
-        table_name = self._feature_group._get_online_table_name()
+        table_name = self._feature_group.get_fg_name()
 
         primary_key = ",".join(self._feature_group.primary_key)
 
@@ -230,6 +230,7 @@ class HudiEngine:
             self._spark_session.table(fg_table_name).columns
         ):
             full_fg = self._feature_group_api.get(
+                hudi_fg_alias.feature_group._feature_store_id,
                 hudi_fg_alias.feature_group.name,
                 hudi_fg_alias.feature_group.version,
                 feature_group_api.FeatureGroupApi.CACHED,

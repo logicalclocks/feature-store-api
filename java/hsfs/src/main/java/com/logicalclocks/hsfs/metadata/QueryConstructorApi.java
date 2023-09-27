@@ -26,7 +26,7 @@ import com.logicalclocks.hsfs.FeatureStoreBase;
 import com.logicalclocks.hsfs.FeatureStoreException;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,13 +50,11 @@ public class QueryConstructorApi {
         .set("projectId", featureStoreBase.getProjectId())
         .expand();
 
-    String queryJson = hopsworksClient.getObjectMapper().writeValueAsString(queryBase);
-    HttpPut putRequest = new HttpPut(uri);
-    putRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-    putRequest.setEntity(new StringEntity(queryJson));
-
     LOGGER.info("Sending metadata request: " + uri);
-    LOGGER.info("Sending query: " + queryJson);
+    HttpPut putRequest = new HttpPut(uri);
+    putRequest.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+    putRequest.setEntity(hopsworksClient.buildStringEntity(queryBase));
+
     FsQueryBase fsQueryBase = (FsQueryBase) hopsworksClient.handleRequest(putRequest, fsQueryType);
     fsQueryBase.removeNewLines();
     List<FeatureGroupAlias> onDemandFeatureGroupAliases = fsQueryBase.getOnDemandFeatureGroups();

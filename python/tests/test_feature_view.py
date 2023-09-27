@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
+import warnings
 
 from hsfs import feature_view, training_dataset_feature, transformation_function
 from hsfs.constructor import query, fs_query
@@ -60,6 +60,33 @@ class TestFeatureView:
         assert fv.labels == []
         assert fv.transformation_functions == {}
         assert len(fv.schema) == 0
+        assert fv.query._left_feature_group.deprecated is False
+
+    def test_from_response_json_basic_info_deprecated(self, mocker, backend_fixtures):
+        # Arrange
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.client.get_instance")
+        json = backend_fixtures["feature_view"]["get_basic_info_deprecated"]["response"]
+
+        # Act
+        with warnings.catch_warnings(record=True) as warning_record:
+            fv = feature_view.FeatureView.from_response_json(json)
+
+        # Assert
+        assert fv.name == "test_name"
+        assert fv.id is None
+        assert isinstance(fv.query, query.Query)
+        assert fv.featurestore_id == 5
+        assert fv.version is None
+        assert fv.description is None
+        assert fv.labels == []
+        assert fv.transformation_functions == {}
+        assert len(fv.schema) == 0
+        assert fv.query._left_feature_group.deprecated is True
+        assert len(warning_record) == 1
+        assert str(warning_record[0].message) == (
+            f"Feature Group `{fv.query._left_feature_group.name}`, version `{fv.query._left_feature_group.version}` is deprecated"
+        )
 
     def test_transformation_function_instances(self, mocker, backend_fixtures):
         # Arrange
