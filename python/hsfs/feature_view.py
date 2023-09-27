@@ -178,6 +178,7 @@ class FeatureView:
         """
         return self._feature_view_engine.update(self)
 
+    @usage.method_logger
     def init_serving(
         self,
         training_dataset_version: Optional[int] = None,
@@ -332,7 +333,6 @@ class FeatureView:
             ),
         )
 
-    @usage.method_logger
     def get_feature_vector(
         self,
         entry: Dict[str, Any],
@@ -424,7 +424,6 @@ class FeatureView:
             entry, return_type, passed_features, allow_missing
         )
 
-    @usage.method_logger
     def get_feature_vectors(
         self,
         entry: List[Dict[str, Any]],
