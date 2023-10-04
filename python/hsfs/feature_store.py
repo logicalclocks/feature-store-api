@@ -37,6 +37,7 @@ from hsfs import (
     storage_connector,
     expectation_suite,
     feature_view,
+    usage,
 )
 from hsfs.core import (
     feature_group_api,
@@ -182,6 +183,7 @@ class FeatureStore:
             fg_object.feature_store = self
         return feature_group_object
 
+    @usage.method_logger
     def get_on_demand_feature_group(self, name: str, version: int = None):
         """Get a external feature group entity from the feature store.
 
@@ -205,6 +207,7 @@ class FeatureStore:
         """
         return self.get_external_feature_group(name, version)
 
+    @usage.method_logger
     def get_external_feature_group(self, name: str, version: int = None):
         """Get a external feature group entity from the feature store.
 
@@ -245,6 +248,7 @@ class FeatureStore:
         feature_group_object.feature_store = self
         return feature_group_object
 
+    @usage.method_logger
     def get_on_demand_feature_groups(self, name: str):
         """Get a list of all versions of an external feature group entity from the feature store.
 
@@ -266,6 +270,7 @@ class FeatureStore:
         """
         return self.get_external_feature_groups(name)
 
+    @usage.method_logger
     def get_external_feature_groups(self, name: str):
         """Get a list of all versions of an external feature group entity from the feature store.
 
@@ -353,6 +358,7 @@ class FeatureStore:
         """
         return self._training_dataset_api.get(name, None)
 
+    @usage.method_logger
     def get_storage_connector(self, name: str):
         """Get a previously created storage connector from the feature store.
 
@@ -422,6 +428,7 @@ class FeatureStore:
             query, self._name, dataframe_type, online, read_options
         )
 
+    @usage.method_logger
     def get_online_storage_connector(self):
         """Get the storage connector for the Online Feature Store of the respective
         project's feature store.
@@ -441,6 +448,7 @@ class FeatureStore:
         """
         return self._storage_connector_api.get_online_connector(self._id)
 
+    @usage.method_logger
     def create_feature_group(
         self,
         name: str,
@@ -561,6 +569,7 @@ class FeatureStore:
         feature_group_object.feature_store = self
         return feature_group_object
 
+    @usage.method_logger
     def get_or_create_feature_group(
         self,
         name: str,
@@ -692,6 +701,7 @@ class FeatureStore:
             else:
                 raise e
 
+    @usage.method_logger
     def create_on_demand_feature_group(
         self,
         name: str,
@@ -794,6 +804,7 @@ class FeatureStore:
         feature_group_object.feature_store = self
         return feature_group_object
 
+    @usage.method_logger
     def create_external_feature_group(
         self,
         name: str,
@@ -934,6 +945,7 @@ class FeatureStore:
         feature_group_object.feature_store = self
         return feature_group_object
 
+    @usage.method_logger
     def get_or_create_spine_group(
         self,
         name: str,
@@ -1184,6 +1196,7 @@ class FeatureStore:
             train_split=train_split,
         )
 
+    @usage.method_logger
     def create_transformation_function(
         self,
         transformation_function: callable,
@@ -1242,6 +1255,7 @@ class FeatureStore:
             version=version,
         )
 
+    @usage.method_logger
     def get_transformation_function(
         self,
         name: str,
@@ -1343,6 +1357,7 @@ class FeatureStore:
         """
         return self._transformation_function_engine.get_transformation_fn(name, version)
 
+    @usage.method_logger
     def get_transformation_functions(self):
         """Get  all transformation functions metadata objects.
 
@@ -1360,6 +1375,7 @@ class FeatureStore:
         """
         return self._transformation_function_engine.get_transformation_fns()
 
+    @usage.method_logger
     def create_feature_view(
         self,
         name: str,
@@ -1468,6 +1484,7 @@ class FeatureStore:
         )
         return self._feature_view_engine.save(feat_view)
 
+    @usage.method_logger
     def get_or_create_feature_view(
         self,
         name: str,
@@ -1525,7 +1542,6 @@ class FeatureStore:
         # Returns:
             `FeatureView`: The feature view metadata object.
         """
-
         try:
             return self._feature_view_engine.get(name, version)
         except exceptions.RestAPIError as e:
@@ -1546,6 +1562,7 @@ class FeatureStore:
             else:
                 raise e
 
+    @usage.method_logger
     def get_feature_view(self, name: str, version: int = None):
         """Get a feature view entity from the feature store.
 
@@ -1584,6 +1601,7 @@ class FeatureStore:
             version = self.DEFAULT_VERSION
         return self._feature_view_engine.get(name, version)
 
+    @usage.method_logger
     def get_feature_views(self, name):
         """Get a list of all versions of a feature view entity from the feature store.
 

@@ -20,8 +20,14 @@ import importlib.util
 from requests.exceptions import ConnectionError
 
 from hsfs.decorators import connected, not_connected
-from hsfs import engine, client, util
-from hsfs.core import feature_store_api, project_api, hosts_api, services_api
+from hsfs import engine, client, util, usage
+from hsfs.core import (
+    feature_store_api,
+    project_api,
+    hosts_api,
+    services_api,
+    variable_api,
+)
 
 AWS_DEFAULT_REGION = "default"
 HOPSWORKS_PORT_DEFAULT = 443
@@ -146,6 +152,7 @@ class Connection:
 
         self.connect()
 
+    @usage.method_logger
     @connected
     def get_feature_store(self, name: str = None):
         """Get a reference to a feature store to perform operations on.
@@ -241,6 +248,9 @@ class Connection:
             self._project_api = project_api.ProjectApi()
             self._hosts_api = hosts_api.HostsApi()
             self._services_api = services_api.ServicesApi()
+            usage.init_usage(
+                self._host, variable_api.VariableApi().get_version("hopsworks")
+            )
         except (TypeError, ConnectionError):
             self._connected = False
             raise

@@ -29,6 +29,7 @@ from hsfs import (
     training_dataset_feature,
     storage_connector,
     training_dataset,
+    usage,
 )
 from hsfs.constructor import query, filter
 from hsfs.core import (
@@ -181,6 +182,7 @@ class FeatureView:
         """
         return self._feature_view_engine.update(self)
 
+    @usage.method_logger
     def init_serving(
         self,
         training_dataset_version: Optional[int] = None,
@@ -516,6 +518,7 @@ class FeatureView:
             entry, return_type, passed_features, allow_missing
         )
 
+    @usage.method_logger
     def get_batch_data(
         self,
         start_time: Optional[Union[str, int, datetime, date]] = None,
@@ -714,6 +717,7 @@ class FeatureView:
         """
         return self._feature_view_engine.delete_tag(self, name)
 
+    @usage.method_logger
     def create_training_data(
         self,
         start_time: Optional[Union[str, int, datetime, date]] = "",
@@ -941,6 +945,7 @@ class FeatureView:
 
         return td.version, td_job
 
+    @usage.method_logger
     def create_train_test_split(
         self,
         test_size: Optional[float] = None,
@@ -1223,6 +1228,7 @@ class FeatureView:
 
         return td.version, td_job
 
+    @usage.method_logger
     def create_train_validation_test_split(
         self,
         validation_size: Optional[float] = None,
@@ -1502,6 +1508,7 @@ class FeatureView:
 
         return td.version, td_job
 
+    @usage.method_logger
     def recreate_training_dataset(
         self,
         training_dataset_version: int,
@@ -1569,6 +1576,7 @@ class FeatureView:
         )
         return td_job
 
+    @usage.method_logger
     def training_data(
         self,
         start_time: Optional[Union[str, int, datetime, date]] = None,
@@ -1708,6 +1716,7 @@ class FeatureView:
         )
         return df
 
+    @usage.method_logger
     def train_test_split(
         self,
         test_size: Optional[float] = None,
@@ -1878,6 +1887,7 @@ class FeatureView:
                 " `test_size` should be between 0 and 1 if specified."
             )
 
+    @usage.method_logger
     def train_validation_test_split(
         self,
         validation_size: Optional[float] = None,
@@ -2089,6 +2099,7 @@ class FeatureView:
                 "`validation_size`, `test_size` and sum of `validationSize` and `testSize` should be between 0 and 1 if specified."
             )
 
+    @usage.method_logger
     def get_training_data(
         self,
         training_dataset_version,
@@ -2142,6 +2153,7 @@ class FeatureView:
         )
         return df
 
+    @usage.method_logger
     def get_train_test_split(
         self,
         training_dataset_version,
@@ -2192,6 +2204,7 @@ class FeatureView:
         )
         return df
 
+    @usage.method_logger
     def get_train_validation_test_split(
         self,
         training_dataset_version,
@@ -2246,6 +2259,7 @@ class FeatureView:
         )
         return df
 
+    @usage.method_logger
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
         """Attach a tag to a training dataset.
 
@@ -2277,6 +2291,7 @@ class FeatureView:
             self, name, value, training_dataset_version=training_dataset_version
         )
 
+    @usage.method_logger
     def get_training_dataset_tag(self, training_dataset_version: int, name: str):
         """Get the tags of a training dataset.
 
@@ -2309,6 +2324,7 @@ class FeatureView:
             self, name, training_dataset_version=training_dataset_version
         )
 
+    @usage.method_logger
     def get_training_dataset_tags(self, training_dataset_version: int):
         """Returns all tags attached to a training dataset.
 
@@ -2336,6 +2352,7 @@ class FeatureView:
             self, training_dataset_version=training_dataset_version
         )
 
+    @usage.method_logger
     def delete_training_dataset_tag(self, training_dataset_version: int, name: str):
         """Delete a tag attached to a training dataset.
 
@@ -2365,6 +2382,7 @@ class FeatureView:
             self, name, training_dataset_version=training_dataset_version
         )
 
+    @usage.method_logger
     def purge_training_data(self, training_dataset_version: int):
         """Delete a training dataset (data only).
 
@@ -2390,6 +2408,7 @@ class FeatureView:
             self, training_data_version=training_dataset_version
         )
 
+    @usage.method_logger
     def purge_all_training_data(self):
         """Delete all training datasets (data only).
 
@@ -2410,6 +2429,7 @@ class FeatureView:
         """
         self._feature_view_engine.delete_training_dataset_only(self)
 
+    @usage.method_logger
     def delete_training_dataset(self, training_dataset_version: int):
         """Delete a training dataset. This will delete both metadata and training data.
 
@@ -2437,6 +2457,7 @@ class FeatureView:
             self, training_data_version=training_dataset_version
         )
 
+    @usage.method_logger
     def delete_all_training_datasets(self):
         """Delete all training datasets. This will delete both metadata and training data.
 

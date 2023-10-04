@@ -133,6 +133,22 @@ attendances_features_fg.show(1)
 
 You can find more examples on how to use the library in our [hops-examples](https://github.com/logicalclocks/hops-examples) repository.
 
+## Usage
+
+Usage data is collected for improving quality of the library. It is turned on by default if the backend 
+is "c.app.hopsworks.ai". To turn it off, use one of the following way:
+```python
+# use environment variable
+import os
+os.environ["ENABLE_HOPSWORKS_USAGE"] = "false"
+
+# use `disable_usage_logging`
+import hsfs
+hsfs.disable_usage_logging()
+```
+
+The source code can be found in python/hsfs/usage.py.
+
 ## Documentation
 
 Documentation is available at [Hopsworks Feature Store Documentation](https://docs.hopsworks.ai/).
