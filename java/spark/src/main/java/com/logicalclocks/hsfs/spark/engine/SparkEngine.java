@@ -541,7 +541,7 @@ public class SparkEngine extends EngineBase {
     byte[] projectId = String.valueOf(featureGroupBase.getFeatureStore().getProjectId())
         .getBytes(StandardCharsets.UTF_8);
     byte[] featureGroupId = String.valueOf(featureGroupBase.getId()).getBytes(StandardCharsets.UTF_8);
-    byte[] subjectId = String.valueOf(featureGroupBase.getSubject().getId()).getBytes(StandardCharsets.UTF_8);
+    byte[] schemaId = String.valueOf(featureGroupBase.getSubject().getSchemaId()).getBytes(StandardCharsets.UTF_8);
 
     onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
         .withColumn("headers", array(
@@ -554,8 +554,8 @@ public class SparkEngine extends EngineBase {
                 lit(featureGroupId).as("value")
             ),
             struct(
-                lit("subjectId").as("key"),
-                lit(subjectId).as("value")
+                lit("schemaId").as("key"),
+                lit(schemaId).as("value")
             )
         ))
         .write()
@@ -573,7 +573,7 @@ public class SparkEngine extends EngineBase {
     byte[] projectId = String.valueOf(featureGroupBase.getFeatureStore().getProjectId())
         .getBytes(StandardCharsets.UTF_8);
     byte[] featureGroupId = String.valueOf(featureGroupBase.getId()).getBytes(StandardCharsets.UTF_8);
-    byte[] subjectId = String.valueOf(featureGroupBase.getSubject().getId()).getBytes(StandardCharsets.UTF_8);
+    byte[] schemaId = String.valueOf(featureGroupBase.getSubject().getSchemaId()).getBytes(StandardCharsets.UTF_8);
 
     DataStreamWriter<Row> writer =
         onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
@@ -587,8 +587,8 @@ public class SparkEngine extends EngineBase {
                     lit(featureGroupId).as("value")
                 ),
                 struct(
-                    lit("subjectId").as("key"),
-                    lit(subjectId).as("value")
+                    lit("schemaId").as("key"),
+                    lit(schemaId).as("value")
                 )
             ))
             .writeStream()

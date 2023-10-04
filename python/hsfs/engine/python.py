@@ -1091,7 +1091,9 @@ class Engine:
                             "utf8"
                         ),
                         "featureGroupId": str(feature_group._id).encode("utf8"),
-                        "subjectId": str(feature_group.subject["id"]).encode("utf8"),
+                        "schemaId": str(feature_group.subject["schemaId"]).encode(
+                            "utf8"
+                        ),
                     },
                 )
 

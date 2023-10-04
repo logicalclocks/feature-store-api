@@ -126,7 +126,7 @@ public class HudiEngine {
   protected static final String SPARK_MASTER = "yarn";
   protected static final String PROJECT_ID = "projectId";
   protected static final String FEATURE_STORE_NAME = "featureStoreName";
-  protected static final String SUBJECT_ID = "subjectId";
+  protected static final String SCHEMA_ID = "schemaId";
   protected static final String FEATURE_GROUP_NAME = "featureGroupName";
   protected static final String FEATURE_GROUP_VERSION = "featureGroupVersion";
   protected static final String FUNCTION_TYPE = "functionType";
@@ -367,7 +367,7 @@ public class HudiEngine {
         writeOptions);
     hudiWriteOpts.put(PROJECT_ID, String.valueOf(streamFeatureGroup.getFeatureStore().getProjectId()));
     hudiWriteOpts.put(FEATURE_STORE_NAME, streamFeatureGroup.getFeatureStore().getName());
-    hudiWriteOpts.put(SUBJECT_ID, String.valueOf(streamFeatureGroup.getSubject().getId()));
+    hudiWriteOpts.put(SCHEMA_ID, String.valueOf(streamFeatureGroup.getSubject().getSchemaId()));
     hudiWriteOpts.put(FEATURE_GROUP_NAME, streamFeatureGroup.getName());
     hudiWriteOpts.put(FEATURE_GROUP_VERSION, String.valueOf(streamFeatureGroup.getVersion()));
     hudiWriteOpts.put(HUDI_TABLE_NAME, utils.getFgName(streamFeatureGroup));

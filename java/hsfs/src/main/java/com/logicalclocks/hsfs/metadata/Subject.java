@@ -34,13 +34,17 @@ public class Subject {
 
   @Getter
   @Setter
-  private String schema;
-
-  @Getter
-  @Setter
   private String subject;
 
   @Getter
   @Setter
   private Integer version;
+
+  @Getter
+  @Setter
+  private Integer schemaId;
+
+  @Getter
+  @Setter
+  private String schema;
 }

@@ -341,7 +341,7 @@ class Engine:
 
         project_id = str(feature_group.feature_store.project_id).encode("utf8")
         feature_group_id = str(feature_group._id).encode("utf8")
-        subject_id = str(feature_group.subject["id"]).encode("utf8")
+        schema_id = str(feature_group.subject["schemaId"]).encode("utf8")
 
         query = (
             serialized_df.withColumn(
@@ -354,9 +354,7 @@ class Engine:
                         lit("featureGroupId").alias("key"),
                         lit(feature_group_id).alias("value"),
                     ),
-                    struct(
-                        lit("subjectId").alias("key"), lit(subject_id).alias("value")
-                    ),
+                    struct(lit("schemaId").alias("key"), lit(schema_id).alias("value")),
                 ),
             )
             .writeStream.outputMode(output_mode)
@@ -422,7 +420,7 @@ class Engine:
 
         project_id = str(feature_group.feature_store.project_id).encode("utf8")
         feature_group_id = str(feature_group._id).encode("utf8")
-        subject_id = str(feature_group.subject["id"]).encode("utf8")
+        schema_id = str(feature_group.subject["schemaId"]).encode("utf8")
 
         serialized_df.withColumn(
             "headers",
@@ -432,7 +430,7 @@ class Engine:
                     lit("featureGroupId").alias("key"),
                     lit(feature_group_id).alias("value"),
                 ),
-                struct(lit("subjectId").alias("key"), lit(subject_id).alias("value")),
+                struct(lit("schemaId").alias("key"), lit(schema_id).alias("value")),
             ),
         ).write.format(self.KAFKA_FORMAT).options(**write_options).option(
             "topic", feature_group._online_topic_name
