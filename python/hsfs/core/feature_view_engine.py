@@ -28,6 +28,7 @@ from hsfs.core import (
     statistics_engine,
     training_dataset_engine,
     query_constructor_api,
+    arrow_flight_client,
 )
 
 
@@ -583,15 +584,25 @@ class FeatureViewEngine:
         )
 
     def _check_feature_group_accessibility(self, feature_view_obj):
-        if (
-            engine.get_type() == "python" or engine.get_type() == "hive"
-        ) and not feature_view_obj.query.is_cache_feature_group_only():
-            raise NotImplementedError(
-                "Python kernel can only read from cached feature groups."
-                " When using external feature groups please use "
-                "`feature_view.create_training_data` instead. "
-                "If you are using spines, use a Spark Kernel."
-            )
+        if engine.get_type() in ["python", "hive"]:
+            if arrow_flight_client.get_instance().is_enabled():
+                if not arrow_flight_client.get_instance().supports(
+                    feature_view_obj.query.featuregroups
+                ):
+                    raise NotImplementedError(
+                        "ArrowFlightServer can only read from cached feature groups"
+                        " and external feature groups on BigQuery and Snowflake."
+                        " When using other external feature groups please use "
+                        "`feature_view.create_training_data` instead. "
+                        "If you are using spines, use a Spark Kernel."
+                    )
+            elif not feature_view_obj.query.is_cache_feature_group_only():
+                raise NotImplementedError(
+                    "Python kernel can only read from cached feature groups."
+                    " When using external feature groups please use "
+                    "`feature_view.create_training_data` instead. "
+                    "If you are using spines, use a Spark Kernel."
+                )
 
     def _get_feature_view_url(self, feature_view):
         path = (
