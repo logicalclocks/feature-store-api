@@ -57,6 +57,7 @@ import com.logicalclocks.hsfs.spark.util.StorageConnectorUtils;
 import lombok.Getter;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.SparkFiles;
 import org.apache.spark.sql.Column;
@@ -91,6 +92,7 @@ import org.apache.spark.sql.types.TimestampType;
 import org.json.JSONObject;
 import scala.collection.JavaConverters;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -915,24 +917,30 @@ public class SparkEngine extends EngineBase {
     if (!filePath.startsWith("file://")) {
       filePath = "hdfs://" + filePath;
     }
+
+    String fileName = Paths.get(filePath).getFileName().toString();
+
     // for hopsworks internal client
     if (!(HopsworksClient.getInstance().getHopsworksHttpClient() instanceof HopsworksExternalClient)) {
       sparkSession.sparkContext().addFile(filePath);
+      try {
+        FileUtils.copyFile(new File(SparkFiles.get(fileName)), new File(fileName));
+      } catch (IOException e) {
+        throw new FeatureStoreException("Error setting up file: " + filePath, e);
+      }
     } else {
       // for external client then read the file from hive path
-      java.nio.file.Path targetPath = Paths.get(
-          SparkFiles.getRootDirectory(), Paths.get(filePath).getFileName().toString());
+      java.nio.file.Path targetPath = Paths.get(SparkFiles.getRootDirectory(), fileName);
 
       try (FileOutputStream outputStream = new FileOutputStream(targetPath.toString())) {
         outputStream.write(DatasetApi.readContent(HopsworksClient.getInstance().getProject().getProjectId(),
             filePath, "HIVEDB"));
       } catch (IOException e) {
-        e.printStackTrace();
-        throw new FeatureStoreException("Error while reading key file from project path.");
+        throw new FeatureStoreException("Error setting up file: " + filePath, e);
       }
     }
 
-    return SparkFiles.get((new Path(filePath)).getName());
+    return fileName;
   }
 
   @Override
