@@ -26,7 +26,6 @@ from hsfs.constructor.filter import Filter, Logic
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.feature import Feature
 
-
 class Query:
     ERROR_MESSAGE_FEATURE_AMBIGUOUS = (
         "Provided feature name '{}' is ambiguous and exists in more than one feature group. "
@@ -138,7 +137,7 @@ class Query:
         """
         if not read_options:
             read_options = {}
-
+        # TODO (ken): throw exception if containing embedding
         sql_query, online_conn = self._prep_read(online, read_options)
 
         schema = None
@@ -179,6 +178,7 @@ class Query:
             n: Number of rows to show.
             online: Show from online storage. Defaults to `False`.
         """
+        # TODO (ken): throw exception if containing embedding
         read_options = {}
         sql_query, online_conn = self._prep_read(online, read_options)
 

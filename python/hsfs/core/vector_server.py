@@ -79,6 +79,7 @@ class VectorServer:
             feature_store_id
         )
         self._transformation_functions = None
+        self._required_serving_keys = None
 
     def init_serving(
         self, entity, batch, external, inference_helper_columns=False, options=None
@@ -488,7 +489,7 @@ class VectorServer:
     def get_complex_feature_schemas(self):
         return {
             f.name: avro.io.DatumReader(
-                avro.schema.parse(f._feature_group._get_feature_avro_schema(f.name))
+                avro.schema.parse(f._feature_group._get_feature_avro_schema(f.feature_group_feature_name))
             )
             for f in self._features
             if f.is_complex()
@@ -534,7 +535,7 @@ class VectorServer:
                         "1. There is no match in the given entry."
                         " Please check if the entry exists in the online feature store"
                         " or provide the feature as passed_feature. "
-                        f"2. Required entries [{', '.join(self.serving_keys)}] or "
+                        f"2. Required entries [{', '.join(self.required_serving_keys)}] or "
                         f"[{', '.join(set(sk.feature_name for sk in self._serving_keys))}] are not provided."
                     )
             else:
@@ -635,6 +636,16 @@ class VectorServer:
         )
         return transformation_fns
 
+    def filter_entry_by_join_index(self, entry, join_index):
+        fg_entry = {}
+        complete = True
+        for sk in self._serving_key_by_serving_index[join_index]:
+            fg_entry[sk.feature_name] = entry.get(sk.required_serving_key)
+            if fg_entry[sk.feature_name] is None:
+                complete = False
+                break
+        return complete, fg_entry
+
     @property
     def prepared_statement_engine(self):
         """JDBC connection engine to retrieve connections to online features store from."""
@@ -656,12 +667,21 @@ class VectorServer:
         self._prepared_statements = prepared_statements
 
     @property
-    def serving_keys(self):
+    def required_serving_keys(self):
         """Set of primary key names that is used as keys in input dict object for `get_feature_vector` method."""
+        if self._required_serving_keys is not None:
+            return self._required_serving_keys
         if self._serving_keys is not None:
-            return set([key.required_serving_key for key in self._serving_keys])
+            self._required_serving_keys = set(
+                [key.required_serving_key for key in self._serving_keys]
+            )
         else:
-            return set()
+            self._required_serving_keys = set()
+        return self._required_serving_keys
+
+    @property
+    def serving_keys(self):
+        return self._serving_keys
 
     @serving_keys.setter
     def serving_keys(self, serving_vector_keys):

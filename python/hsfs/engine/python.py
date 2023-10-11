@@ -1093,18 +1093,24 @@ class Engine:
             # if BufferError is thrown, we can be sure, message hasn't been send so we retry
             try:
                 # produce
+                header = {
+                        "projectId": str(feature_group.feature_store.project_id).encode(
+                            "utf8"
+                        ),
+                        "featureStoreId": str(
+                            feature_group.feature_store.id).encode(
+                            "utf8"
+                        ),
+                        "featureGroupId": str(feature_group._id).encode("utf8"),
+                        "subjectId": str(feature_group.subject["id"]).encode("utf8"),
+                    }
+
                 producer.produce(
                     topic=feature_group._online_topic_name,
                     key=key,
                     value=encoded_row,
                     callback=acked,
-                    headers={
-                        "projectId": str(feature_group.feature_store.project_id).encode(
-                            "utf8"
-                        ),
-                        "featureGroupId": str(feature_group._id).encode("utf8"),
-                        "subjectId": str(feature_group.subject["id"]).encode("utf8"),
-                    },
+                    headers=header,
                 )
 
                 # Trigger internal callbacks to empty op queue

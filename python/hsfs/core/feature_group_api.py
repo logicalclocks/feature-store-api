@@ -44,6 +44,7 @@ class FeatureGroupApi:
             "featuregroups",
         ]
         headers = {"content-type": "application/json"}
+
         feature_group_object = feature_group_instance.update_from_response_json(
             _client._send_request(
                 "POST",
@@ -53,6 +54,7 @@ class FeatureGroupApi:
             ),
         )
         feature_group_object.feature_store = feature_group_instance.feature_store
+
         return feature_group_object
 
     def get(self, feature_store_id, name, version, fg_type):

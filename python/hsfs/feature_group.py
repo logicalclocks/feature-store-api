@@ -17,6 +17,7 @@
 import copy
 import time
 
+from hsfs.embedding import Embedding
 from hsfs.ge_validation_result import ValidationResult
 import humps
 import json
@@ -57,6 +58,7 @@ from hsfs.client.exceptions import FeatureStoreException, RestAPIError
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core import great_expectation_engine
+from hsfs.core.vector_db_client import VectorDbClient
 
 
 class FeatureGroupBase:
@@ -69,6 +71,7 @@ class FeatureGroupBase:
         event_time=None,
         online_enabled=False,
         id=None,
+        embedding=None,
         expectation_suite=None,
         online_topic_name=None,
         topic_name=None,
@@ -120,6 +123,7 @@ class FeatureGroupBase:
         self._variable_api = VariableApi()
         self._feature_group_engine = None
         self._multi_part_insert = False
+        self._embedding = embedding
 
         self.check_deprecated()
 
@@ -1124,6 +1128,28 @@ class FeatureGroupBase:
             ge_type=ge_type,
         )
 
+    @classmethod
+    def from_response_json(cls, feature_group_json):
+        if (
+            feature_group_json["type"] == "onDemandFeaturegroupDTO"
+            and not feature_group_json["spine"]
+        ):
+            feature_group_obj = ExternalFeatureGroup.from_response_json(
+                feature_group_json
+            )
+        elif (
+            feature_group_json["type"] == "onDemandFeaturegroupDTO"
+            and feature_group_json["spine"]
+        ):
+            feature_group_obj = SpineGroup.from_response_json(
+                feature_group_json
+            )
+        else:
+            feature_group_obj = FeatureGroup.from_response_json(
+                feature_group_json
+            )
+        return feature_group_obj
+
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
@@ -1282,6 +1308,16 @@ class FeatureGroupBase:
                 ).format(self._name, self._version),
                 util.StorageWarning,
             )
+
+    @property
+    def embedding(self):
+        if self._embedding:
+            self._embedding.feature_group = self
+        return self._embedding
+
+    @embedding.setter
+    def embedding(self, embedding):
+        self._embedding = embedding
 
     @property
     def event_time(self):
@@ -1454,6 +1490,7 @@ class FeatureGroup(FeatureGroupBase):
         primary_key=None,
         hudi_precombine_key=None,
         featurestore_name=None,
+        embedding=None,
         created=None,
         creator=None,
         id=None,
@@ -1480,13 +1517,13 @@ class FeatureGroup(FeatureGroupBase):
             location,
             event_time=event_time,
             online_enabled=online_enabled,
+            embedding=embedding,
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
             deprecated=deprecated,
         )
-
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
@@ -1562,6 +1599,7 @@ class FeatureGroup(FeatureGroupBase):
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
         )
+        self._vector_db_client = None
         self._href = href
 
         # cache for optimized writes
@@ -1699,6 +1737,17 @@ class FeatureGroup(FeatureGroupBase):
             .read(False, "default", read_options)
         )
 
+    def find_neighbors(self, embedding, col=None, k=10, filter=None, min_score=0):
+        if self._vector_db_client is None:
+            self._vector_db_client = VectorDbClient(self.select_all())
+        results = self._vector_db_client.find_neighbors(
+            embedding,
+            feature=(self.__getattr__(col) if col else None),
+            k=k, filter=filter, min_score=min_score
+        )
+        return [(result[0], [result[1][f.name] for f in self.features])
+                for result in results]
+
     def show(self, n: int, online: Optional[bool] = False):
         """Show the first `n` rows of the feature group.
 
@@ -1725,6 +1774,17 @@ class FeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
+        if self.embedding:
+            if self._vector_db_client is None:
+                self._vector_db_client = VectorDbClient(self.select_all())
+            results = self._vector_db_client.read(
+                self.id,
+                {},
+                pk=self.embedding.col_prefix + self.primary_key[0],
+                index_name=self.embedding.index_name,
+                n=n
+            )
+            return [[result[f.name] for f in self.features] for result in results]
         return self.select_all().show(n, online)
 
     def save(
@@ -2474,18 +2534,25 @@ class FeatureGroup(FeatureGroupBase):
                 )
             _ = json_decamelized.pop("type", None)
             json_decamelized.pop("validation_type", None)
+            if "embedding" in json_decamelized:
+                json_decamelized["embedding"] = Embedding.from_json_response(json_decamelized["embedding"])
             return cls(**json_decamelized)
         for fg in json_decamelized:
             if "type" in fg:
                 fg["stream"] = fg["type"] == "streamFeatureGroupDTO"
             _ = fg.pop("type", None)
             fg.pop("validation_type", None)
+            if "embedding" in fg:
+                fg["embedding"] = Embedding.from_json_response(fg["embedding"])
         return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         json_decamelized["stream"] = json_decamelized["type"] == "streamFeatureGroupDTO"
         _ = json_decamelized.pop("type")
+        if "embedding" in json_decamelized:
+            json_decamelized["embedding"] = Embedding.from_json_response(
+                json_decamelized["embedding"])
         self.__init__(**json_decamelized)
         return self
 
@@ -2532,6 +2599,8 @@ class FeatureGroup(FeatureGroupBase):
             "topicName": self.topic_name,
             "deprecated": self.deprecated,
         }
+        if self.embedding:
+            fg_meta_dict["embedding"] = self.embedding
         if self._stream:
             fg_meta_dict["deltaStreamerJobConf"] = self._deltastreamer_jobconf
         return fg_meta_dict
