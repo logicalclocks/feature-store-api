@@ -153,8 +153,10 @@ class FeatureViewEngine:
         start_time,
         end_time,
         with_label=False,
-        with_inference_helper_columns=False,
-        with_training_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        inference_helper_columns=False,
+        training_helper_columns=False,
         training_dataset_version=None,
         spine=None,
     ):
@@ -167,8 +169,10 @@ class FeatureViewEngine:
                 training_dataset_version=training_dataset_version,
                 is_python_engine=engine.get_type() == "python",
                 with_label=with_label,
-                with_inference_helper_columns=with_inference_helper_columns,
-                with_training_helper_columns=with_training_helper_columns,
+                primary_keys=primary_keys,
+                event_time=event_time,
+                inference_helper_columns=inference_helper_columns,
+                training_helper_columns=training_helper_columns,
             )
             # verify whatever is passed 1. spine group with dataframe contained, or 2. dataframe
             # the schema has to be consistent
@@ -252,7 +256,9 @@ class FeatureViewEngine:
         training_dataset_obj,
         user_write_options,
         spine=None,
-        with_training_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         self._set_event_time(feature_view_obj, training_dataset_obj)
         updated_instance = self._create_training_data_metadata(
@@ -263,7 +269,9 @@ class FeatureViewEngine:
             user_write_options,
             training_dataset_obj=training_dataset_obj,
             spine=spine,
-            with_training_helper_columns=with_training_helper_columns,
+            with_primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         return updated_instance, td_job
 
@@ -275,7 +283,9 @@ class FeatureViewEngine:
         training_dataset_obj=None,
         training_dataset_version=None,
         spine=None,
-        with_training_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         # check if provided td version has already existed.
         if training_dataset_version:
@@ -308,7 +318,9 @@ class FeatureViewEngine:
                 td_updated,
                 td_updated.splits,
                 read_options,
-                with_training_helper_columns,
+                primary_keys,
+                event_time,
+                training_helper_columns,
                 feature_view_obj.training_helper_columns,
             )
         else:
@@ -319,8 +331,10 @@ class FeatureViewEngine:
                 start_time=td_updated.event_start_time,
                 end_time=td_updated.event_end_time,
                 with_label=True,
-                with_inference_helper_columns=False,
-                with_training_helper_columns=with_training_helper_columns,
+                inference_helper_columns=False,
+                primary_keys=primary_keys,
+                event_time=event_time,
+                training_helper_columns=training_helper_columns,
                 spine=spine,
             )
             split_df = engine.get_instance().get_training_data(
@@ -399,6 +413,8 @@ class FeatureViewEngine:
         training_data_obj,
         splits,
         read_options,
+        primary_keys,
+        event_time,
         with_training_helper_columns,
         training_helper_columns,
     ):
@@ -411,6 +427,8 @@ class FeatureViewEngine:
                     training_data_obj,
                     path,
                     read_options,
+                    primary_keys,
+                    event_time,
                     with_training_helper_columns,
                     training_helper_columns,
                 )
@@ -421,6 +439,8 @@ class FeatureViewEngine:
                 training_data_obj,
                 path,
                 read_options,
+                primary_keys,
+                event_time,
                 with_training_helper_columns,
                 training_helper_columns,
             )
@@ -438,6 +458,8 @@ class FeatureViewEngine:
         training_data_obj,
         path,
         read_options,
+        primary_keys,
+        event_time,
         with_training_helper_columns,
         training_helper_columns,
     ):
@@ -477,7 +499,9 @@ class FeatureViewEngine:
         training_dataset_obj=None,
         training_dataset_version=None,
         spine=None,
-        with_training_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         if training_dataset_obj:
             pass
@@ -493,16 +517,16 @@ class FeatureViewEngine:
             training_dataset_obj.event_start_time,
             training_dataset_obj.event_end_time,
             with_label=True,
-            with_inference_helper_columns=False,
-            with_training_helper_columns=with_training_helper_columns,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            inference_helper_columns=False,
+            training_helper_columns=training_helper_columns,
             training_dataset_version=training_dataset_obj.version,
             spine=spine,
         )
 
         # for spark job
-        user_write_options[
-            "with_training_helper_columns"
-        ] = with_training_helper_columns
+        user_write_options["training_helper_columns"] = training_helper_columns
 
         td_job = engine.get_instance().write_training_dataset(
             training_dataset_obj,
@@ -610,7 +634,9 @@ class FeatureViewEngine:
         transformation_functions,
         read_options=None,
         spine=None,
-        with_inference_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        inference_helper_columns=False,
     ):
         self._check_feature_group_accessibility(feature_view_obj)
 
@@ -619,8 +645,10 @@ class FeatureViewEngine:
             start_time,
             end_time,
             with_label=False,
-            with_inference_helper_columns=with_inference_helper_columns,
-            with_training_helper_columns=False,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            inference_helper_columns=inference_helper_columns,
+            training_helper_columns=False,
             training_dataset_version=training_dataset_version,
             spine=spine,
         ).read(read_options=read_options)

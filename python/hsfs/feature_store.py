@@ -1452,17 +1452,15 @@ class FeatureStore:
                 the feature view. When replaying a `Query` during model inference,
                 the label features can be omitted from the feature vector retrieval.
                 Defaults to `[]`, no label.
-            with_inference_helper_columns: whether to include inference helper columns or not.
-                Inference Helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe and or merge to predictions back to original dataframes). When replaying a `Query`
-                during model inference, the helper columns optionally can be omitted during batch inference (
-                `get_batch_data`) and will be omitted during online inference (`get_feature_vector(s)`) .
-                Defaults to `False`, no helper columns.
-            with_training_helper_columns: whether to include training helper columns or not.
-                Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe). Defaults to `False`, no training helper columns.
+            inference_helper_columns: Inference Helper columns are a list of feature names in the feature view, defined
+                during its creation, that may not be used in training the model itself (e.g. primary keys and
+                datetime that can be used to sort dataframe and or merge to predictions back to original dataframes).
+                When replaying a `Query` during model inference, the helper columns optionally can be omitted during
+                batch (`get_batch_data`) and online inference (`get_feature_vector(s)`). Defaults to `False`,
+                no helper columns.
+            training_helper_columns: Training helper columns are a list of feature names in the feature view,
+                defined during its creation, that may not be used in training the model itself . Defaults to `False`,
+                no training helper columns.
             transformation_functions: A dictionary mapping tansformation functions to
                 to the features they should be applied to before writing out the
                 vector and at inference time. Defaults to `{}`, no
@@ -1523,17 +1521,15 @@ class FeatureStore:
                 the feature view. When replaying a `Query` during model inference,
                 the label features can be omitted from the feature vector retrieval.
                 Defaults to `[]`, no label.
-            with_inference_helper_columns: whether to include inference helper columns or not.
-                Inference Helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe and or merge to predictions back to original dataframes). When replaying a `Query`
-                during model inference, the helper columns optionally can be omitted during batch inference (
-                `get_batch_data`) and will be omitted during online inference (`get_feature_vector(s)`) .
-                Defaults to `False`, no helper columns.
-            with_training_helper_columns: whether to include training helper columns or not.
-                Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe). Defaults to `False`, no training helper columns.
+            inference_helper_columns: Inference Helper columns are a list of feature names in the feature view, defined
+                during its creation, that may not be used in training the model itself (e.g. primary keys and
+                datetime that can be used to sort dataframe and or merge to predictions back to original dataframes).
+                When replaying a `Query` during model inference, the helper columns optionally can be omitted during
+                batch (`get_batch_data`) and online inference (`get_feature_vector(s)`). Defaults to `False`,
+                no helper columns.
+            training_helper_columns: Training helper columns are a list of feature names in the feature view,
+                defined during its creation, that may not be used in training the model itself . Defaults to `False`,
+                no training helper columns.
             transformation_functions: A dictionary mapping tansformation functions to
                 to the features they should be applied to before writing out the
                 vector and at inference time. Defaults to `{}`, no

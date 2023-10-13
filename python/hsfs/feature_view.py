@@ -187,6 +187,7 @@ class FeatureView:
         self,
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
+        inference_helper_columns: Optional[bool] = False,
         options: Optional[dict] = None,
     ):
         """Initialise feature view to retrieve feature vector from online and offline feature store.
@@ -243,7 +244,9 @@ class FeatureView:
             training_dataset_version,
             serving_keys=self._serving_keys,
         )
-        self._single_vector_server.init_serving(self, False, external, options=options)
+        self._single_vector_server.init_serving(
+            self, False, external, inference_helper_columns, options=options
+        )
 
         # initiate batch vector server
         self._batch_vectors_server = vector_server.VectorServer(
@@ -252,7 +255,9 @@ class FeatureView:
             training_dataset_version,
             serving_keys=self._serving_keys,
         )
-        self._batch_vectors_server.init_serving(self, True, external, options=options)
+        self._batch_vectors_server.init_serving(
+            self, True, external, inference_helper_columns, options=options
+        )
 
     def init_batch_scoring(
         self,
@@ -518,6 +523,185 @@ class FeatureView:
             entry, return_type, passed_features, allow_missing
         )
 
+    def get_inference_helper(
+        self,
+        entry: Dict[str, Any],
+        external: Optional[bool] = None,
+        return_type: Optional[str] = "pandas",
+    ):
+        """Returns assembled feature vector from online feature store.
+            Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
+              1. The training dataset version of the transformation statistics
+              2. Additional configurations of online serving engine
+        !!! warning "Missing primary key entries"
+            If the provided primary key `entry` can't be found in one or more of the feature groups
+            used by this feature view the call to this method will raise an exception.
+            Alternatively, setting `allow_missing` to `True` returns a feature vector with missing values.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get assembled serving vector as a python list
+            feature_view.get_feature_vector(
+                entry = {"pk1": 1, "pk2": 2}
+            )
+
+            # get assembled serving vector as a pandas dataframe
+            feature_view.get_feature_vector(
+                entry = {"pk1": 1, "pk2": 2},
+                return_type = "pandas"
+            )
+
+            # get assembled serving vector as a numpy array
+            feature_view.get_feature_vector(
+                entry = {"pk1": 1, "pk2": 2},
+                return_type = "numpy"
+            )
+            ```
+
+        !!! example "Get feature vector with user-supplied features"
+            ```python
+            # get feature store instance
+            fs = ...
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # the application provides a feature value 'app_attr'
+            app_attr = ...
+
+            # get a feature vector
+            feature_view.get_feature_vector(
+                entry = {"pk1": 1, "pk2": 2},
+                passed_features = { "app_feature" : app_attr }
+            )
+            ```
+
+        # Arguments
+            entry: dictionary of feature group primary key and values provided by serving application.
+                Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
+            passed_features: dictionary of feature values provided by the application at runtime.
+                They can replace features values fetched from the feature store as well as
+                providing feature values which are not available in the feature store.
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
+            allow_missing: Setting to `True` returns feature vectors with missing values.
+
+        # Returns
+            `list`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"` or `"numpy"`
+            respectively. Defaults to `list`.
+            Returned `list`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary keys,
+            ordered according to positions of this features in the feature view query.
+
+        # Raises
+            `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
+                feature view.
+        """
+        if (
+            self._single_vector_server is None
+            or self._single_vector_server._helper_column_prepared_statements is None
+        ):
+            self.init_serving(external=external, inference_helper_columns=True)
+        return self._single_vector_server.get_inference_helper(entry, return_type)
+
+    def get_inference_helpers(
+        self,
+        entry: List[Dict[str, Any]],
+        external: Optional[bool] = None,
+        return_type: Optional[str] = "pandas",
+    ):
+        """Returns assembled feature vectors in batches from online feature store.
+            Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
+              1. The training dataset version of the transformation statistics
+              2. Additional configurations of online serving engine
+        !!! warning "Missing primary key entries"
+            If any of the provided primary key elements in `entry` can't be found in any
+            of the feature groups, no feature vector for that primary key value will be
+            returned.
+            If it can be found in at least one but not all feature groups used by
+            this feature view the call to this method will raise an exception.
+            Alternatively, setting `allow_missing` to `True` returns feature vectors with missing values.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get assembled serving vectors as a python list of lists
+            feature_view.get_feature_vectors(
+                entry = [
+                    {"pk1": 1, "pk2": 2},
+                    {"pk1": 3, "pk2": 4},
+                    {"pk1": 5, "pk2": 6}
+                ]
+            )
+
+            # get assembled serving vectors as a pandas dataframe
+            feature_view.get_feature_vectors(
+                entry = [
+                    {"pk1": 1, "pk2": 2},
+                    {"pk1": 3, "pk2": 4},
+                    {"pk1": 5, "pk2": 6}
+                ],
+                return_type = "pandas"
+            )
+
+            # get assembled serving vectors as a numpy array
+            feature_view.get_feature_vectors(
+                entry = [
+                    {"pk1": 1, "pk2": 2},
+                    {"pk1": 3, "pk2": 4},
+                    {"pk1": 5, "pk2": 6}
+                ],
+                return_type = "numpy"
+            )
+            ```
+
+        # Arguments
+            entry: a list of dictionary of feature group primary key and values provided by serving application.
+                Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
+            passed_features: a list of dictionary of feature values provided by the application at runtime.
+                They can replace features values fetched from the feature store as well as
+                providing feature values which are not available in the feature store.
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
+            allow_missing: Setting to `True` returns feature vectors with missing values.
+
+        # Returns
+            `List[list]`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"` or `"numpy"`
+            respectively. Defaults to `List[list]`.
+
+            Returned `List[list]`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary
+            keys, ordered according to positions of this features in the feature view query.
+
+        # Raises
+            `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
+                feature view.
+        """
+        if (
+            self._batch_vectors_server is None
+            or self._single_vector_server._helper_column_prepared_statements is None
+        ):
+            self.init_serving(external=external, inference_helper_columns=True)
+        return self._batch_vectors_server.get_inference_helpers(entry, return_type)
+
     @usage.method_logger
     def get_batch_data(
         self,
@@ -534,7 +718,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_inference_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        inference_helper_columns=False,
     ):
         """Get a batch of data from an event time interval from the offline feature store.
 
@@ -580,13 +766,16 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_inference_helper_columns: whether to include inference helper columns or not.
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
+                features.
+            inference_helper_columns: whether to include inference helper columns or not.
                 Inference Helper columns are a list of feature names in the feature view, defined during its creation,
                 that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
                 sort dataframe and or merge to predictions back to original dataframes). When replaying a `Query`
-                during model inference, the helper columns optionally can be omitted during batch inference (
-                `get_batch_data`) and will be omitted during online inference (`get_feature_vector(s)`) .
-                Defaults to `False`, no helper columns.
+                during model inference, the helper columns optionally can be omitted during batch (`get_batch_data`)
+                and online inference (`get_feature_vector(s)`). Defaults to `False`, no helper columns.
         # Returns
             `DataFrame`: A dataframe
         """
@@ -602,7 +791,9 @@ class FeatureView:
             self._batch_scoring_server._transformation_functions,
             read_options,
             spine,
-            with_inference_helper_columns,
+            primary_keys,
+            event_time,
+            inference_helper_columns,
         )
 
     def add_tag(self, name: str, value):
@@ -741,7 +932,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_training_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data can be retrieved by calling `feature_view.get_training_data`.
@@ -905,10 +1098,13 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_training_helper_columns: whether to include training helper columns or not.
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
+                features.
+            training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe). Defaults to `False`, no training helper columns.
+                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -936,7 +1132,9 @@ class FeatureView:
             td,
             write_options,
             spine=spine,
-            with_training_helper_columns=with_training_helper_columns,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -972,7 +1170,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_training_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train and test set at random or according to time ranges.
@@ -1180,10 +1380,13 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_training_helper_columns: whether to include training helper columns or not.
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
+                features.
+            training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe). Defaults to `False`, no training helper columns.
+                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -1219,7 +1422,9 @@ class FeatureView:
             td,
             write_options,
             spine=spine,
-            with_training_helper_columns=with_training_helper_columns,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1258,7 +1463,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_training_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train, validation, and test set at random or according to time range.
@@ -1452,10 +1659,13 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_training_helper_columns: whether to include training helper columns or not.
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
+                features.
+            training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe). Defaults to `False`, no training helper columns.
+                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -1499,7 +1709,9 @@ class FeatureView:
             td,
             write_options,
             spine=spine,
-            with_training_helper_columns=with_training_helper_columns,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1595,7 +1807,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_training_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1681,10 +1895,13 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_training_helper_columns: whether to include training helper columns or not.
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
+                features.
+            training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe). Defaults to `False`, no training helper columns.
+                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
         """
@@ -1708,7 +1925,9 @@ class FeatureView:
             read_options,
             training_dataset_obj=td,
             spine=spine,
-            with_training_helper_columns=with_training_helper_columns,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1738,7 +1957,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_training_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1834,10 +2055,13 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_training_helper_columns: whether to include training helper columns or not.
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
+                features.
+            training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe). Defaults to `False`, no training helper columns.
+                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -1870,7 +2094,9 @@ class FeatureView:
             training_dataset_obj=td,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
             spine=spine,
-            with_training_helper_columns=with_training_helper_columns,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1912,7 +2138,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
-        with_training_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -2021,10 +2249,13 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-            with_training_helper_columns: whether to include training helper columns or not.
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
+                features.
+            training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe). Defaults to `False`, no training helper columns.
+                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2070,7 +2301,9 @@ class FeatureView:
                 TrainingDatasetSplit.TEST,
             ],
             spine=spine,
-            with_training_helper_columns=with_training_helper_columns,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -2104,7 +2337,9 @@ class FeatureView:
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
-        with_training_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """
         Get training data created by `feature_view.create_training_data`
@@ -2138,10 +2373,13 @@ class FeatureView:
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-            with_training_helper_columns: whether to include training helper columns or not.
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
+                features.
+            training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe). Defaults to `False`, no training helper columns.
+                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
         # Returns
             (X, y): Tuple of dataframe of features and labels
         """
@@ -2149,7 +2387,9 @@ class FeatureView:
             self,
             read_options,
             training_dataset_version=training_dataset_version,
-            with_training_helper_columns=with_training_helper_columns,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         return df
 
@@ -2158,7 +2398,9 @@ class FeatureView:
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
-        with_training_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """
         Get training data created by `feature_view.create_train_test_split`
@@ -2187,10 +2429,13 @@ class FeatureView:
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-            with_training_helper_columns: whether to include training helper columns or not.
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
+                features.
+            training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe). Defaults to `False`, no training helper columns.
+                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -2200,7 +2445,9 @@ class FeatureView:
             read_options,
             training_dataset_version=training_dataset_version,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
-            with_training_helper_columns=with_training_helper_columns,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         return df
 
@@ -2209,7 +2456,9 @@ class FeatureView:
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
-        with_training_helper_columns=False,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """
         Get training data created by `feature_view.create_train_validation_test_split`
@@ -2238,10 +2487,13 @@ class FeatureView:
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-            with_training_helper_columns: whether to include training helper columns or not.
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
+                features.
+            training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe). Defaults to `False`, no training helper columns.
+                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2255,7 +2507,9 @@ class FeatureView:
                 TrainingDatasetSplit.VALIDATION,
                 TrainingDatasetSplit.TEST,
             ],
-            with_training_helper_columns=with_training_helper_columns,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         return df
 
