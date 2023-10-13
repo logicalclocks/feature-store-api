@@ -269,7 +269,7 @@ class FeatureViewEngine:
             user_write_options,
             training_dataset_obj=training_dataset_obj,
             spine=spine,
-            with_primary_keys=primary_keys,
+            primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
         )
@@ -318,10 +318,12 @@ class FeatureViewEngine:
                 td_updated,
                 td_updated.splits,
                 read_options,
-                primary_keys,
-                event_time,
-                training_helper_columns,
-                feature_view_obj.training_helper_columns,
+                with_primary_keys=primary_keys,
+                primary_keys=feature_view_obj.primary_keys,
+                with_event_time=event_time,
+                event_time=feature_view_obj.query._left_feature_group.event_time,
+                with_training_helper_columns=training_helper_columns,
+                training_helper_columns=feature_view_obj.training_helper_columns,
             )
         else:
             self._check_feature_group_accessibility(feature_view_obj)
@@ -413,7 +415,9 @@ class FeatureViewEngine:
         training_data_obj,
         splits,
         read_options,
+        with_primary_keys,
         primary_keys,
+        with_event_time,
         event_time,
         with_training_helper_columns,
         training_helper_columns,
@@ -427,7 +431,9 @@ class FeatureViewEngine:
                     training_data_obj,
                     path,
                     read_options,
+                    with_primary_keys,
                     primary_keys,
+                    with_event_time,
                     event_time,
                     with_training_helper_columns,
                     training_helper_columns,
@@ -439,7 +445,9 @@ class FeatureViewEngine:
                 training_data_obj,
                 path,
                 read_options,
+                with_primary_keys,
                 primary_keys,
+                with_event_time,
                 event_time,
                 with_training_helper_columns,
                 training_helper_columns,
@@ -458,7 +466,9 @@ class FeatureViewEngine:
         training_data_obj,
         path,
         read_options,
+        with_primary_keys,
         primary_keys,
+        with_event_time,
         event_time,
         with_training_helper_columns,
         training_helper_columns,
@@ -472,14 +482,11 @@ class FeatureViewEngine:
                 path=path,
             )
 
-            if not with_training_helper_columns:
-                if training_helper_columns:
-                    df = engine.get_instance().drop_columns(df, training_helper_columns)
-            else:
-                if not training_helper_columns:
-                    warnings.warn(
-                        "Parent feature doesn't have training helper columns "
-                    )
+            df = self._drop_helper_columns(df, with_primary_keys, primary_keys)
+            df = self._drop_helper_columns(df, with_event_time, event_time)
+            df = self._drop_helper_columns(
+                df, with_training_helper_columns, training_helper_columns
+            )
             return df
 
         except Exception as e:
@@ -490,6 +497,17 @@ class FeatureViewEngine:
                 )
             else:
                 raise e
+
+    def _drop_helper_columns(self, df, with_columns, columns):
+        if not with_columns:
+            if columns:
+                df = engine.get_instance().drop_columns(df, columns)
+        else:
+            if not columns:
+                warnings.warn(
+                    "Parent feature view doesn't have provided helper columns, thus it will be ignored "
+                )
+        return df
 
     # This method is used by hsfs_utils to launch a job for python client
     def compute_training_dataset(
@@ -527,6 +545,8 @@ class FeatureViewEngine:
 
         # for spark job
         user_write_options["training_helper_columns"] = training_helper_columns
+        user_write_options["primary_keys"] = primary_keys
+        user_write_options["event_time"] = event_time
 
         td_job = engine.get_instance().write_training_dataset(
             training_dataset_obj,

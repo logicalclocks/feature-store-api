@@ -2859,7 +2859,7 @@ class FeatureView:
             _vector_server = vector_server.VectorServer(
                 self._featurestore_id, self._features, serving_keys=self._serving_keys
             )
-            _vector_server.init_prepared_statement(self, False, False)
+            _vector_server.init_prepared_statement(self, False, False, False)
             return _vector_server.serving_keys
 
     @property
