@@ -529,15 +529,7 @@ class FeatureView:
         external: Optional[bool] = None,
         return_type: Optional[str] = "pandas",
     ):
-        """Returns assembled feature vector from online feature store.
-            Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
-              1. The training dataset version of the transformation statistics
-              2. Additional configurations of online serving engine
-        !!! warning "Missing primary key entries"
-            If the provided primary key `entry` can't be found in one or more of the feature groups
-            used by this feature view the call to this method will raise an exception.
-            Alternatively, setting `allow_missing` to `True` returns a feature vector with missing values.
-
+        """Returns assembled inference helper column vectors from online feature store.
         !!! example
             ```python
             # get feature store instance
@@ -546,61 +538,25 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # get assembled serving vector as a python list
-            feature_view.get_feature_vector(
+            # get assembled inference helper column vector
+            feature_view.get_inference_helper(
                 entry = {"pk1": 1, "pk2": 2}
-            )
-
-            # get assembled serving vector as a pandas dataframe
-            feature_view.get_feature_vector(
-                entry = {"pk1": 1, "pk2": 2},
-                return_type = "pandas"
-            )
-
-            # get assembled serving vector as a numpy array
-            feature_view.get_feature_vector(
-                entry = {"pk1": 1, "pk2": 2},
-                return_type = "numpy"
-            )
-            ```
-
-        !!! example "Get feature vector with user-supplied features"
-            ```python
-            # get feature store instance
-            fs = ...
-            # get feature view instance
-            feature_view = fs.get_feature_view(...)
-
-            # the application provides a feature value 'app_attr'
-            app_attr = ...
-
-            # get a feature vector
-            feature_view.get_feature_vector(
-                entry = {"pk1": 1, "pk2": 2},
-                passed_features = { "app_feature" : app_attr }
             )
             ```
 
         # Arguments
             entry: dictionary of feature group primary key and values provided by serving application.
                 Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
-            passed_features: dictionary of feature values provided by the application at runtime.
-                They can replace features values fetched from the feature store as well as
-                providing feature values which are not available in the feature store.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
-            allow_missing: Setting to `True` returns feature vectors with missing values.
+            return_type: `"pandas"` or `"dict"`. Defaults to `"pandas"`.
 
         # Returns
-            `list`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"` or `"numpy"`
-            respectively. Defaults to `list`.
-            Returned `list`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary keys,
-            ordered according to positions of this features in the feature view query.
+            `pd.DataFrame` or `dict`. Defaults to `pd.DataFrame`.
 
         # Raises
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
@@ -619,17 +575,13 @@ class FeatureView:
         external: Optional[bool] = None,
         return_type: Optional[str] = "pandas",
     ):
-        """Returns assembled feature vectors in batches from online feature store.
-            Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
-              1. The training dataset version of the transformation statistics
-              2. Additional configurations of online serving engine
+        """Returns assembled inference helper column vectors in batches from online feature store.
         !!! warning "Missing primary key entries"
             If any of the provided primary key elements in `entry` can't be found in any
-            of the feature groups, no feature vector for that primary key value will be
+            of the feature groups, no inference helper column vectors for that primary key value will be
             returned.
             If it can be found in at least one but not all feature groups used by
             this feature view the call to this method will raise an exception.
-            Alternatively, setting `allow_missing` to `True` returns feature vectors with missing values.
 
         !!! example
             ```python
@@ -639,56 +591,31 @@ class FeatureView:
             # get feature view instance
             feature_view = fs.get_feature_view(...)
 
-            # get assembled serving vectors as a python list of lists
-            feature_view.get_feature_vectors(
+            # get assembled inference helper column vectors
+            feature_view.get_inference_helpers(
                 entry = [
                     {"pk1": 1, "pk2": 2},
                     {"pk1": 3, "pk2": 4},
                     {"pk1": 5, "pk2": 6}
                 ]
             )
-
-            # get assembled serving vectors as a pandas dataframe
-            feature_view.get_feature_vectors(
-                entry = [
-                    {"pk1": 1, "pk2": 2},
-                    {"pk1": 3, "pk2": 4},
-                    {"pk1": 5, "pk2": 6}
-                ],
-                return_type = "pandas"
-            )
-
-            # get assembled serving vectors as a numpy array
-            feature_view.get_feature_vectors(
-                entry = [
-                    {"pk1": 1, "pk2": 2},
-                    {"pk1": 3, "pk2": 4},
-                    {"pk1": 5, "pk2": 6}
-                ],
-                return_type = "numpy"
-            )
             ```
 
         # Arguments
             entry: a list of dictionary of feature group primary key and values provided by serving application.
                 Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
-            passed_features: a list of dictionary of feature values provided by the application at runtime.
-                They can replace features values fetched from the feature store as well as
-                providing feature values which are not available in the feature store.
             external: boolean, optional. If set to True, the connection to the
                 online feature store is established using the same host as
                 for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
-            allow_missing: Setting to `True` returns feature vectors with missing values.
+            return_type: `"pandas"` or `"dict"`. Defaults to `"dict"`.
 
         # Returns
-            `List[list]`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"` or `"numpy"`
-            respectively. Defaults to `List[list]`.
+            `pd.DataFrame` or `List[dict]`.  Defaults to `pd.DataFrame`.
 
-            Returned `List[list]`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary
+            Returned `pd.DataFrame` or `List[dict]`  contains feature values related to provided primary
             keys, ordered according to positions of this features in the feature view query.
 
         # Raises
