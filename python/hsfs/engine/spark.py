@@ -15,6 +15,7 @@
 #
 
 import os
+import shutil
 import json
 import copy
 import importlib.util
@@ -755,11 +756,11 @@ class Engine:
         if not file.startswith("file://"):
             file = "hdfs://" + file
 
+        file_name = os.path.basename(file)
+
         # for external clients, download the file
         if isinstance(client.get_instance(), client.external.Client):
-            tmp_file = os.path.join(
-                SparkFiles.getRootDirectory(), os.path.basename(file)
-            )
+            tmp_file = os.path.join(SparkFiles.getRootDirectory(), file_name)
             print("Reading key file from storage connector.")
             response = self._dataset_api.read_content(tmp_file, "HIVEDB")
 
@@ -768,7 +769,13 @@ class Engine:
         else:
             self._spark_context.addFile(file)
 
-        return SparkFiles.get(os.path.basename(file))
+            # The file is not added to the driver current working directory
+            # We should add it manually by copying from the download location
+            # The file will be added to the executors current working directory
+            # before the next task is executed
+            shutil.copy(SparkFiles.get(file_name), file_name)
+
+        return file_name
 
     def profile(
         self,
