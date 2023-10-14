@@ -28,6 +28,10 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import fs_query
 from hsfs.core import feature_view_engine
 from hsfs.constructor.query import Query
+from hsfs.core import arrow_flight_client
+from hsfs.storage_connector import BigQueryConnector, StorageConnector
+
+from unittest.mock import MagicMock
 
 engine.init("python")
 fg1 = feature_group.FeatureGroup(
@@ -1920,7 +1924,7 @@ class TestFeatureViewEngine:
         fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
 
         # Assert
-        assert mock_engine_get_type.call_count == 2
+        assert mock_engine_get_type.call_count == 1
 
     def test_check_feature_group_accessibility_cache_feature_group(self, mocker):
         # Arrange
@@ -1948,7 +1952,7 @@ class TestFeatureViewEngine:
         fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
 
         # Assert
-        assert mock_engine_get_type.call_count == 2
+        assert mock_engine_get_type.call_count == 1
 
     def test_check_feature_group_accessibility_get_type_python(self, mocker):
         # Arrange
@@ -2016,7 +2020,96 @@ class TestFeatureViewEngine:
             str(e_info.value)
             == "Python kernel can only read from cached feature groups. When using external feature groups please use `feature_view.create_training_data` instead. If you are using spines, use a Spark Kernel."
         )
-        assert mock_engine_get_type.call_count == 2
+        assert mock_engine_get_type.call_count == 1
+
+    def test_check_feature_group_accessibility_arrow_flight(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mock_engine_get_type = mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_type.return_value = "python"
+
+        afc = arrow_flight_client.get_instance()
+        afc._is_enabled = True
+
+        mock_constructor_query = mocker.patch("hsfs.constructor.query.Query")
+        connector = BigQueryConnector(0, "BigQueryConnector", 99)
+        mock_external_feature_group = feature_group.ExternalFeatureGroup(
+            storage_connector=connector, primary_key=""
+        )
+        mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
+        mock_constructor_query.featuregroups = [
+            mock_feature_group,
+            mock_external_feature_group,
+        ]
+
+        fv_engine = feature_view_engine.FeatureViewEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            version=1,
+            query=mock_constructor_query,
+            featurestore_id=feature_store_id,
+            labels=[],
+        )
+
+        assert arrow_flight_client.get_instance().is_enabled()
+        assert arrow_flight_client.get_instance().supports(
+            mock_constructor_query.featuregroups
+        )
+
+        # Act
+        # All good if we don't get an exception
+        fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
+
+    def test_check_feature_group_accessibility_arrow_flight_unsupported(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mock_engine_get_type = mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_type.return_value = "python"
+
+        afc = arrow_flight_client.get_instance()
+        afc._is_enabled = True
+
+        mock_constructor_query = mocker.patch("hsfs.constructor.query.Query")
+
+        class FakeConnector(StorageConnector):
+            def __init__(self):
+                self._type = "Fake"
+
+            def spark_options(self):
+                pass
+
+        connector = FakeConnector()
+        mock_external_feature_group = feature_group.ExternalFeatureGroup(
+            storage_connector=connector, primary_key=""
+        )
+        mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
+        mock_constructor_query.featuregroups = [
+            mock_feature_group,
+            mock_external_feature_group,
+        ]
+
+        fv_engine = feature_view_engine.FeatureViewEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            version=1,
+            query=mock_constructor_query,
+            featurestore_id=feature_store_id,
+            labels=[],
+        )
+
+        # Act
+        with pytest.raises(NotImplementedError):
+            fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
 
     def test_check_feature_group_accessibility_cache_feature_group_get_type_python(
         self, mocker
@@ -2078,7 +2171,7 @@ class TestFeatureViewEngine:
         fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
 
         # Assert
-        assert mock_engine_get_type.call_count == 2
+        assert mock_engine_get_type.call_count == 1
 
     def test_get_feature_view_url(self, mocker):
         # Arrange
