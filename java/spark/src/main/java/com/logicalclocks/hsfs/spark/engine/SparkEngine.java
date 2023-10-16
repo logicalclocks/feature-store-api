@@ -959,10 +959,10 @@ public class SparkEngine extends EngineBase {
     // add keytab file
     String saslJaasConfig = config.get("kafka.sasl.jaas.config");
     if (saslJaasConfig != null) {
-      Pattern p = Pattern.compile("keyTab=[\"'](.+?)[\"']");
-      Matcher m = p.matcher(saslJaasConfig);
-      while (m.find()) {
-        String originalKeytabLocation = m.group(1);
+      Pattern pattern = Pattern.compile("keyTab=[\"'](.+?)[\"']");
+      Matcher matcher = pattern.matcher(saslJaasConfig);
+      while (matcher.find()) {
+        String originalKeytabLocation = matcher.group(1);
         String newKeytabLocation = addFile(originalKeytabLocation);
         saslJaasConfig = saslJaasConfig.replace(originalKeytabLocation, newKeytabLocation);
       }
