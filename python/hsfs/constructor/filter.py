@@ -29,7 +29,7 @@ class Filter:
     IN = "IN"
     LK = "LIKE"
 
-    def __init__(self, feature, condition, value):
+    def __init__(self, feature, condition, value, **kwargs):
         self._feature = feature
         self._condition = condition
         self._value = value
@@ -91,7 +91,7 @@ class Logic:
     OR = "OR"
     SINGLE = "SINGLE"
 
-    def __init__(self, type, left_f=None, right_f=None, left_l=None, right_l=None):
+    def __init__(self, type, left_f=None, right_f=None, left_l=None, right_l=None, **kwargs):
         self._type = type
         self._left_f = left_f
         self._right_f = right_f

@@ -26,6 +26,7 @@ class TransformationFunctionAttached:
         items=None,
         count=None,
         href=None,
+        **kwargs,
     ):
         self._name = name
         self._transformation_function = (

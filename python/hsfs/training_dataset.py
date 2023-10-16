@@ -81,6 +81,7 @@ class TrainingDataset:
         train_split=None,
         time_split_size=None,
         extra_filter=None,
+        **kwargs,
     ):
         self._id = id
         self._name = name
