@@ -502,11 +502,14 @@ class FeatureViewEngine:
     def _drop_helper_columns(self, df, with_columns, columns):
         if not with_columns:
             if columns:
-                df = engine.get_instance().drop_columns(df, columns)
+                try:
+                    df = engine.get_instance().drop_columns(df, columns)
+                except KeyError:
+                    pass
         else:
             if not columns:
                 warnings.warn(
-                    "Parent feature view doesn't have provided helper columns, thus it will be ignored "
+                    "Parent feature view doesn't have helper columns, thus drop will be ignored "
                 )
         return df
 

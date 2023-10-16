@@ -698,11 +698,10 @@ class FeatureView:
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time
                 features.
             inference_helper_columns: whether to include inference helper columns or not.
-                Inference Helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself (e.g. primary keys and datetime that can be used to
-                sort dataframe and or merge to predictions back to original dataframes). When replaying a `Query`
-                during model inference, the helper columns optionally can be omitted during batch (`get_batch_data`)
-                and online inference (`get_feature_vector(s)`). Defaults to `False`, no helper columns.
+                Inference helper columns are a list of feature names in the feature view, defined during its creation,
+                that may not be used in training the model itself but can be used during batch or online inference
+                for extra information. If inference helper columns were not defined in the feature view
+                `inference_helper_columns=True` will not any effect. Defaults to `False`, no helper columns.
         # Returns
             `DataFrame`: A dataframe
         """
@@ -1029,9 +1028,11 @@ class FeatureView:
                 features.
             event_time: whether to include event time feature or not.  Defaults to `False`, no event time
                 features.
-            training_helper_columns: whether to include training helper columns or not.
-                Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
+            training_helper_columns: whether to include training helper columns or not. Training helper columns are a
+                list of feature names in the feature view, defined during its creation, that are not the part of the
+                model schema itself but can be used during training as a helper for extra information.
+                If training helper columns were not defined in the feature view then`training_helper_columns=True`
+                will not have any effect. Defaults to `False`, no training helper columns.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -1313,7 +1314,10 @@ class FeatureView:
                 features.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view
+                then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
+                columns.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -1592,7 +1596,10 @@ class FeatureView:
                 features.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view
+                then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
+                columns.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -1828,7 +1835,10 @@ class FeatureView:
                 features.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view
+                then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
+                columns.
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
         """
@@ -1988,7 +1998,10 @@ class FeatureView:
                 features.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view
+                then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
+                columns.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -2182,7 +2195,10 @@ class FeatureView:
                 features.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view
+                then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
+                columns.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2306,7 +2322,10 @@ class FeatureView:
                 features.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view or during
+                materializing training dataset in the file system then`training_helper_columns=True` will not have
+                any effect. Defaults to `False`, no training helper columns.
         # Returns
             (X, y): Tuple of dataframe of features and labels
         """
@@ -2362,7 +2381,10 @@ class FeatureView:
                 features.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view or during
+                materializing training dataset in the file system then`training_helper_columns=True` will not have
+                any effect. Defaults to `False`, no training helper columns.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -2420,7 +2442,10 @@ class FeatureView:
                 features.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
-                that may not be used in training the model itself. Defaults to `False`, no training helper columns.
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view or during
+                materializing training dataset in the file system then`training_helper_columns=True` will not have
+                any effect. Defaults to `False`, no training helper columns.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
