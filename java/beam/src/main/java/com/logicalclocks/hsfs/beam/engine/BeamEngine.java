@@ -32,6 +32,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BeamEngine extends EngineBase {
   private static BeamEngine INSTANCE = null;
@@ -91,6 +93,18 @@ public class BeamEngine extends EngineBase {
     storageConnector.setSslKeystoreLocation(addFile(storageConnector.getSslKeystoreLocation()));
 
     Map<String, String> config = storageConnector.kafkaOptions();
+    // add keytab file
+    String saslJaasConfig = config.get("sasl.jaas.config");
+    if (saslJaasConfig != null) {
+      Pattern p = Pattern.compile("keyTab=[\"'](.+?)[\"']");
+      Matcher m = p.matcher(saslJaasConfig);
+      while (m.find()) {
+        String originalKeytabLocation = m.group(1);
+        String newKeytabLocation = addFile(originalKeytabLocation);
+        saslJaasConfig = saslJaasConfig.replace(originalKeytabLocation, newKeytabLocation);
+      }
+      config.put("sasl.jaas.config", saslJaasConfig);
+    }
 
     if (writeOptions != null) {
       config.putAll(writeOptions);

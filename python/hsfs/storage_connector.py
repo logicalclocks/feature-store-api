@@ -936,6 +936,15 @@ class KafkaConnector(StorageConnector):
         self._external_kafka = external_kafka
         self._pem_files_created = False
 
+        # add keytab file
+        sasl_jaas_config = self._options.get("sasl.jaas.config")
+        if sasl_jaas_config:
+            for option in re.findall("keyTab=[\"'](.+?)[\"']", sasl_jaas_config):
+                original_keytab_location = option
+                new_keytab_location = engine.get_instance().add_file(original_keytab_location)
+                sasl_jaas_config = sasl_jaas_config.replace(original_keytab_location, new_keytab_location)
+            self._options["sasl.jaas.config"] = sasl_jaas_config
+
     @property
     def bootstrap_servers(self):
         """Bootstrap servers string."""
@@ -1046,13 +1055,16 @@ class KafkaConnector(StorageConnector):
                 config["ssl.certificate.location"] = client_cert_path
                 config["ssl.key.location"] = client_key_path
             elif key == "sasl.jaas.config":
-                groups = re.search(
-                    "(.+?) .*username=[\"'](.+?)[\"'] .*password=[\"'](.+?)[\"']",
-                    value,
-                )
+                groups = re.search("(.+) (required|requisite|sufficient|optional)(.*)", value)
+                mechanism = groups.group(1)
+                flag = groups.group(2)
+                options = groups.group(3)
+
+                option_dict = {}
+                for option in re.findall("\s(\w+)=[\"'](.+?)[\"']", options):
+                    option_dict[option[0]] = option[1]
+
                 if "sasl.mechanisms" not in config:
-                    mechanism = groups.group(1)
-                    mechanism_value = None
                     if (
                         mechanism
                         == "org.apache.kafka.common.security.plain.PlainLoginModule"
@@ -1068,9 +1080,30 @@ class KafkaConnector(StorageConnector):
                         == "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule"
                     ):
                         mechanism_value = "OAUTHBEARER"
-                config["sasl.mechanisms"] = mechanism_value
-                config["sasl.username"] = groups.group(2)
-                config["sasl.password"] = groups.group(3)
+                    else:
+                        mechanism_value = "GSSAPI"
+                    config["sasl.mechanisms"] = mechanism_value
+
+                    if mechanism_value == 'GSSAPI':
+                        service_name = option_dict.get("serviceName")
+                        if service_name:
+                            config["sasl.kerberos.service.name"] = service_name
+
+                        principal = option_dict.get("principal")
+                        if principal:
+                            config["sasl.kerberos.principal"] = principal
+
+                        key_tab = option_dict.get("keyTab")
+                        if key_tab:
+                            config["sasl.kerberos.keytab"] = key_tab
+                    else:
+                        username = option_dict.get("username")
+                        if username:
+                            config["sasl.username"] = username
+
+                        password = option_dict.get("password")
+                        if password:
+                            config["sasl.password"] = password
             elif key == "ssl.endpoint.identification.algorithm":
                 config[key] = "none" if value == "" else value
             elif key == "queued.max.requests":
