@@ -22,7 +22,15 @@ from hsfs import util
 
 class SplitStatistics:
     def __init__(
-        self, name, content, href=None, expand=None, items=None, count=None, type=None, **kwargs
+        self,
+        name,
+        content,
+        href=None,
+        expand=None,
+        items=None,
+        count=None,
+        type=None,
+        **kwargs
     ):
         self._name = name
         if not isinstance(content, dict):
