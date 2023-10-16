@@ -1063,11 +1063,11 @@ class KafkaConnector(StorageConnector):
                     "(.+) (required|requisite|sufficient|optional)(.*)", value
                 )
                 mechanism = groups.group(1)
-                flag = groups.group(2)
+                # flag = groups.group(2)
                 options = groups.group(3)
 
                 option_dict = {}
-                for option in re.findall("\s(\w+)=[\"'](.+?)[\"']", options):
+                for option in re.findall(r"\s(\w+)=[\"'](.+?)[\"']", options):
                     option_dict[option[0]] = option[1]
 
                 if "sasl.mechanisms" not in config:
