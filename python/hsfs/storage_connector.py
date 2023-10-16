@@ -941,8 +941,12 @@ class KafkaConnector(StorageConnector):
         if sasl_jaas_config:
             for option in re.findall("keyTab=[\"'](.+?)[\"']", sasl_jaas_config):
                 original_keytab_location = option
-                new_keytab_location = engine.get_instance().add_file(original_keytab_location)
-                sasl_jaas_config = sasl_jaas_config.replace(original_keytab_location, new_keytab_location)
+                new_keytab_location = engine.get_instance().add_file(
+                    original_keytab_location
+                )
+                sasl_jaas_config = sasl_jaas_config.replace(
+                    original_keytab_location, new_keytab_location
+                )
             self._options["sasl.jaas.config"] = sasl_jaas_config
 
     @property
@@ -1055,7 +1059,9 @@ class KafkaConnector(StorageConnector):
                 config["ssl.certificate.location"] = client_cert_path
                 config["ssl.key.location"] = client_key_path
             elif key == "sasl.jaas.config":
-                groups = re.search("(.+) (required|requisite|sufficient|optional)(.*)", value)
+                groups = re.search(
+                    "(.+) (required|requisite|sufficient|optional)(.*)", value
+                )
                 mechanism = groups.group(1)
                 flag = groups.group(2)
                 options = groups.group(3)
@@ -1084,7 +1090,7 @@ class KafkaConnector(StorageConnector):
                         mechanism_value = "GSSAPI"
                     config["sasl.mechanisms"] = mechanism_value
 
-                    if mechanism_value == 'GSSAPI':
+                    if mechanism_value == "GSSAPI":
                         service_name = option_dict.get("serviceName")
                         if service_name:
                             config["sasl.kerberos.service.name"] = service_name

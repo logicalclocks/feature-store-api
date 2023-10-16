@@ -714,7 +714,11 @@ class TestKafkaConnector:
     def test_kafka_options_kerberos(self, mocker, backend_fixtures):
         # Arrange
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_engine_get_instance.return_value.add_file.side_effect = [None, None, "result_from_add_file"]
+        mock_engine_get_instance.return_value.add_file.side_effect = [
+            None,
+            None,
+            "result_from_add_file",
+        ]
         mocker.patch("hsfs.client.get_instance")
         sc = storage_connector.KafkaConnector(
             1,
@@ -724,7 +728,7 @@ class TestKafkaConnector:
             options=[
                 {
                     "name": "sasl.jaas.config",
-                    "value": "com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab=\"/home/laurent/my.keytab\" storeKey=true useTicketCache=false serviceName=\"kafka\" principal=\"laurent@kafka.com\";",
+                    "value": 'com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab="/home/laurent/my.keytab" storeKey=true useTicketCache=false serviceName="kafka" principal="laurent@kafka.com";',
                 }
             ],
         )
@@ -734,16 +738,20 @@ class TestKafkaConnector:
 
         # Assert
         assert config == {
-            'bootstrap.servers': None,
-            'security.protocol': None,
-            'ssl.endpoint.identification.algorithm': None,
-            "sasl.jaas.config": "com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab=\"result_from_add_file\" storeKey=true useTicketCache=false serviceName=\"kafka\" principal=\"laurent@kafka.com\";",
+            "bootstrap.servers": None,
+            "security.protocol": None,
+            "ssl.endpoint.identification.algorithm": None,
+            "sasl.jaas.config": 'com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab="result_from_add_file" storeKey=true useTicketCache=false serviceName="kafka" principal="laurent@kafka.com";',
         }
 
     def test_spark_options_kerberos(self, mocker, backend_fixtures):
         # Arrange
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_engine_get_instance.return_value.add_file.side_effect = [None, None, "result_from_add_file"]
+        mock_engine_get_instance.return_value.add_file.side_effect = [
+            None,
+            None,
+            "result_from_add_file",
+        ]
         mocker.patch("hsfs.client.get_instance")
         sc = storage_connector.KafkaConnector(
             1,
@@ -753,7 +761,7 @@ class TestKafkaConnector:
             options=[
                 {
                     "name": "sasl.jaas.config",
-                    "value": "com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab=\"/home/laurent/my.keytab\" storeKey=true useTicketCache=false serviceName=\"kafka\" principal=\"laurent@kafka.com\";",
+                    "value": 'com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab="/home/laurent/my.keytab" storeKey=true useTicketCache=false serviceName="kafka" principal="laurent@kafka.com";',
                 }
             ],
         )
@@ -763,16 +771,20 @@ class TestKafkaConnector:
 
         # Assert
         assert config == {
-            'kafka.bootstrap.servers': None,
-            'kafka.security.protocol': None,
-            'kafka.ssl.endpoint.identification.algorithm': None,
-            "kafka.sasl.jaas.config": "com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab=\"result_from_add_file\" storeKey=true useTicketCache=false serviceName=\"kafka\" principal=\"laurent@kafka.com\";",
+            "kafka.bootstrap.servers": None,
+            "kafka.security.protocol": None,
+            "kafka.ssl.endpoint.identification.algorithm": None,
+            "kafka.sasl.jaas.config": 'com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab="result_from_add_file" storeKey=true useTicketCache=false serviceName="kafka" principal="laurent@kafka.com";',
         }
 
     def test_confluent_options_kerberos(self, mocker):
         # Arrange
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_engine_get_instance.return_value.add_file.side_effect = [None, None, "result_from_add_file"]
+        mock_engine_get_instance.return_value.add_file.side_effect = [
+            None,
+            None,
+            "result_from_add_file",
+        ]
         mocker.patch("hsfs.client.get_instance")
         sc = storage_connector.KafkaConnector(
             1,
@@ -782,7 +794,7 @@ class TestKafkaConnector:
             options=[
                 {
                     "name": "sasl.jaas.config",
-                    "value": "com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab=\"/home/laurent/my.keytab\" storeKey=true useTicketCache=false serviceName=\"kafka\" principal=\"laurent@kafka.com\";",
+                    "value": 'com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab="/home/laurent/my.keytab" storeKey=true useTicketCache=false serviceName="kafka" principal="laurent@kafka.com";',
                 }
             ],
         )
