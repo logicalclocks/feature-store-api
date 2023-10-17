@@ -35,6 +35,7 @@ class Job:
         expand=None,
         items=None,
         count=None,
+        **kwargs,
     ):
         self._id = id
         self._name = name

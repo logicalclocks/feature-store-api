@@ -59,6 +59,7 @@ class FeatureView:
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
         featurestore_name=None,
         serving_keys: Optional[List[ServingKey]] = None,
+        **kwargs,
     ):
         self._name = name
         self._id = id
