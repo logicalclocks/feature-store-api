@@ -395,11 +395,13 @@ class TestFeatureGroup:
         mock_job = mocker.Mock()
 
         mock_job_api = mocker.patch(
-            "hsfs.core.job_api.JobApi.get", side_effect=[
+            "hsfs.core.job_api.JobApi.get",
+            side_effect=[
                 RestAPIError("", mock_response_job_not_found),
                 RestAPIError("", mock_response_not_found),
                 RestAPIError("", mock_response_not_found),
-                mock_job]
+                mock_job,
+            ],
         )
 
         fg = feature_group.FeatureGroup(
@@ -417,10 +419,12 @@ class TestFeatureGroup:
         # Assert
         assert job_result is mock_job
         assert mock_job_api.call_count == 4
-        assert mock_job_api.call_args_list[0][0] == ('test_fg_2_offline_fg_materialization',)
-        assert mock_job_api.call_args_list[1][0] == ('test_fg_2_offline_fg_backfill',)
-        assert mock_job_api.call_args_list[2][0] == ('test_fg_2_offline_fg_backfill',)
-        assert mock_job_api.call_args_list[3][0] == ('test_fg_2_offline_fg_backfill',)
+        assert mock_job_api.call_args_list[0][0] == (
+            "test_fg_2_offline_fg_materialization",
+        )
+        assert mock_job_api.call_args_list[1][0] == ("test_fg_2_offline_fg_backfill",)
+        assert mock_job_api.call_args_list[2][0] == ("test_fg_2_offline_fg_backfill",)
+        assert mock_job_api.call_args_list[3][0] == ("test_fg_2_offline_fg_backfill",)
 
     def test_materialization_job_retry_fail(self, mocker):
         # Arrange
@@ -430,7 +434,8 @@ class TestFeatureGroup:
         mock_response_not_found.status_code = 404
 
         mock_job_api = mocker.patch(
-            "hsfs.core.job_api.JobApi.get", side_effect=RestAPIError("", mock_response_not_found)
+            "hsfs.core.job_api.JobApi.get",
+            side_effect=RestAPIError("", mock_response_not_found),
         )
 
         fg = feature_group.FeatureGroup(
