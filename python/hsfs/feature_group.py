@@ -2606,10 +2606,8 @@ class FeatureGroup(FeatureGroupBase):
                     except RestAPIError as e:
                         if e.response.status_code == 404:
                             if e.response.json().get("errorCode", "") == 130009:
-                                print(1111)
                                 break  # no need to retry, since no such job exists
                             else:
-                                print(2222)
                                 time.sleep(1)  # backoff and then retry
                                 continue
                         raise e
