@@ -13,7 +13,7 @@ def on_locust_init(environment, **kwargs):
     if isinstance(environment.runner, (MasterRunner, LocalRunner)):
         # create feature view
         environment.hopsworks_client = HopsworksClient(environment)
-        fg = environment.hopsworks_client.get_or_create_fg()
+        fg = environment.hopsworks_client.get_or_create_fg(pk_id=environment.hopsworks_client.primary_key)
         environment.hopsworks_client.get_or_create_fv(fg)
 
 
@@ -47,7 +47,8 @@ class FeatureVectorLookup(User):
 
     @task
     def get_feature_vector(self):
-        self._get_feature_vector({"ip": random.randint(0, self.client.rows - 1)})
+        self._get_feature_vector({self.client.primary_key: random.randint(0, self.client.rows - 1)})
+
 
     @stopwatch
     def _get_feature_vector(self, pk):
@@ -76,11 +77,11 @@ class FeatureVectorBatchLookup(User):
     @task
     def get_feature_vector_batch(self):
         pks = [
-            {"ip": random.randint(0, self.client.rows - 1)}
+            {self.client.primary_key: random.randint(0, self.client.rows - 1)}
             for i in range(self.client.batch_size)
         ]
         self._get_feature_vectors(pks)
 
     @stopwatch
     def _get_feature_vectors(self, pk):
-        self.fv.get_feature_vectors(pk)
+        return self.fv.get_feature_vectors(pk)

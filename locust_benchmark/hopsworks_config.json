@@ -6,5 +6,6 @@
     "rows": 100000,
     "schema_repetitions": 1,
     "recreate_feature_group": true,
-    "batch_size": 100
+    "batch_size": 100,
+    "primary_key": "id"
 }

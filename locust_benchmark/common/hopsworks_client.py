@@ -38,12 +38,13 @@ class HopsworksClient:
             "recreate_feature_group", False
         )
         self.batch_size = self.hopsworks_config.get("batch_size", 100)
+        self.primary_key = self.hopsworks_config.get("primary_key", "id")
 
-    def get_or_create_fg(self):
+    def get_or_create_fg(self, fg_name="locust_fg", pk_id="id"):
         locust_fg = self.fs.get_or_create_feature_group(
-            name="locust_fg",
+            name=fg_name,
             version=1,
-            primary_key=["ip"],
+            primary_key=[pk_id],
             online_enabled=True,
             stream=True,
         )
@@ -73,7 +74,7 @@ class HopsworksClient:
             self.connection.close()
 
     def generate_insert_df(self, rows, schema_repetitions):
-        data = {"ip": range(0, rows)}
+        data = {"id": range(0, rows)}
         df = pd.DataFrame.from_dict(data)
 
         for i in range(0, schema_repetitions):
