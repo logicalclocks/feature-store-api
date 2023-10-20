@@ -40,6 +40,11 @@ def get_instance():
     return _arrow_flight_instance
 
 
+def close():
+    global _arrow_flight_instance
+    _arrow_flight_instance = None
+
+
 class ArrowFlightClient:
     SUPPORTED_FORMATS = ["parquet"]
     SUPPORTED_EXTERNAL_CONNECTORS = [
