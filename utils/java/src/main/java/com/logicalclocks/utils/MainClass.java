@@ -80,7 +80,7 @@ public class MainClass {
         .build());
 
     CommandLineParser parser = new DefaultParser();
-    CommandLine commandLine = parser.parse(options, args);
+    CommandLine commandLine = parser.parse(options, args, false);
 
     String op = commandLine.getOptionValue("op");
     String path = commandLine.getOptionValue("path");
