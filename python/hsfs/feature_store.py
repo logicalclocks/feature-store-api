@@ -965,9 +965,15 @@ class FeatureStore:
     ):
         """Create a spine group metadata object.
 
-        Instead of using a feature group to save a label/prediction target, you can use a spine together with a dataframe containing the labels.
-        A Spine is essentially a metadata object similar to a feature group, however, the data is not materialized in the feature store.
-        It only containes the needed metadata such as the relevant event time column and primary key columns to perform point-in-time correct joins.
+        Instead of using a feature group to save a label/prediction target, you can use a spine together with a dataframe containing the labels and join keys for features in other feature groups.
+        A Spine is essentially a metadata object similar to a feature group, however, its data is not stored in the feature store.
+        The Spine stored in the feature store only contains the needed metadata such as the name, version, primary key column(s), and event time column. 
+        The Spine DataFrame is provided when you need to (1) create training data and (2) create batch inference data. The Spine DataFrame should also contain any join keys (primary keys to other feature groups) needed to join features included in a feature view containing the Spine group.If you don’t include the event_time in the Spine DataFrame (such as in batch inference), it will retrieve the latest feature value for that feature using the join key(s).
+
+       The main uses of a Spine Group in Hopsworks are:
+         
+         1. in model training to enable users to provide labels as a DataFrame,
+         2. in batch inference to retrieve feature values using an event_time and primary key provided by the Spine DataFrame.
 
         !!! example
             ```python
@@ -986,7 +992,7 @@ class FeatureStore:
                                 )
             ```
 
-        Note that you can inspect the dataframe in the spine group, or replace the dataframe:
+        Note that you can inspect the DataFrame in the spine group, or replace the DataFrame:
 
         ```python
         spine_group.dataframe.show()
@@ -994,22 +1000,17 @@ class FeatureStore:
         spine_group.dataframe = new_df
         ```
 
-        The spine can then be used to construct queries, with only one speciality:
-
         !!! note
             Spines can only be used on the left side of a feature join, as this is the base
             set of entities for which features are to be fetched and the left side of the join
             determines the event timestamps to compare against.
 
-        **If you want to use the query for a feature view to be used for online serving,
-        you can only select the label or target feature from the spine.**
-        For the online lookup, the label is not required, therefore it is important to only
-        select label from the left feature group, so that we don't need to provide a spine
-        for online serving.
+        !!! note
+            Spine Groups are not currently supported for online serving.
 
-        These queries can then be used to create feature views. Since the dataframe contained in the
+        These queries can then be used to create feature views. Since the DataFrame contained in the
         spine is not being materialized, every time you use a feature view created with spine to read data
-        you will have to provide a dataframe with the same structure again.
+        you will have to provide a DataFrame with the same structure again.
 
         For example, to generate training data:
 
@@ -1025,10 +1026,10 @@ class FeatureStore:
         Here you have the chance to pass a different set of entities to generate the training dataset.
 
         Sometimes it might be handy to create a feature view with a regular feature group containing
-        the label, but then at serving time to use a spine in order to fetch features for example only
+        the label, but then at batch inference time to use a spine in order to fetch features, for example, only
         for a small set of primary key values. To do this, you can pass the spine group
-        instead of a dataframe. Just make sure it contains the needed primary key, event time and
-        label column.
+        instead of a DataFrame. Just make sure it contains the needed primary key, event time and
+        label columns.
 
         ```python
         feature_view.get_batch_data(spine=spine_group)
@@ -1055,7 +1056,7 @@ class FeatureStore:
                 against the data source.
             !!!note "Event time data type restriction"
                 The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
-            dataframe: DataFrame, RDD, Ndarray, list. Spine dataframe with primary key, event time and
+            DataFrame: DataFrame, RDD, Ndarray, list. Spine DataFrame with primary key, event time and
                 label column to use for point in time join when fetching features.
 
         # Returns
