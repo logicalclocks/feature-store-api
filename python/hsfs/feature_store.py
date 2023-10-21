@@ -1056,7 +1056,7 @@ class FeatureStore:
                 against the data source.
             !!!note "Event time data type restriction"
                 The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
-            DataFrame: DataFrame, RDD, Ndarray, list. Spine DataFrame with primary key, event time and
+            dataframe: DataFrame, RDD, Ndarray, list. Spine DataFrame with primary key, event time and
                 label column to use for point in time join when fetching features.
 
         # Returns
