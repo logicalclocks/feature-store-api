@@ -39,6 +39,7 @@ class HopsworksClient:
         )
         self.batch_size = self.hopsworks_config.get("batch_size", 100)
         self.primary_key = self.hopsworks_config.get("primary_key", "id")
+        self.feature_group_name = self.hopsworks_config.get("feature_group_name","locust_fg")
 
     def get_or_create_fg(self, fg_name="locust_fg", pk_id="id"):
         locust_fg = self.fs.get_or_create_feature_group(

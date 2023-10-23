@@ -13,7 +13,8 @@ def on_locust_init(environment, **kwargs):
     if isinstance(environment.runner, (MasterRunner, LocalRunner)):
         # create feature view
         environment.hopsworks_client = HopsworksClient(environment)
-        fg = environment.hopsworks_client.get_or_create_fg(pk_id=environment.hopsworks_client.primary_key)
+        fg = environment.hopsworks_client.get_or_create_fg(fg_name=environment.hopsworks_client.feature_group_name,
+                                                           pk_id=environment.hopsworks_client.primary_key)
         environment.hopsworks_client.get_or_create_fv(fg)
 
 
