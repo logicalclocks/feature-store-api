@@ -183,8 +183,8 @@ class VectorServer:
         # get schemas for complex features once
         self._complex_features = self.get_complex_feature_schemas()
         self._valid_serving_key = set(
-            [sk.feature_name for sk in self._serving_keys] +
-            [sk.required_serving_key for sk in self._serving_keys]
+            [sk.feature_name for sk in self._serving_keys]
+            + [sk.required_serving_key for sk in self._serving_keys]
         )
 
     def _validate_serving_key(self, entry):
@@ -284,10 +284,12 @@ class VectorServer:
                     map(
                         lambda e: tuple(
                             [
-                                (e.get(sk.required_serving_key)
-                                # Check if there is any entry matched with feature name,
-                                # if the required serving key is not provided.
-                                 or e.get(sk.feature_name))
+                                (
+                                    e.get(sk.required_serving_key)
+                                    # Check if there is any entry matched with feature name,
+                                    # if the required serving key is not provided.
+                                    or e.get(sk.feature_name)
+                                )
                                 for sk in self._serving_key_by_serving_index[
                                     prepared_statement_index
                                 ]
@@ -303,7 +305,7 @@ class VectorServer:
 
                 statement_results = {}
                 serving_keys = self._serving_key_by_serving_index[
-                        prepared_statement_index
+                    prepared_statement_index
                 ]
                 # Use prefix from prepare statement because prefix from serving key is collision adjusted.
                 prefix_features = [
@@ -329,8 +331,7 @@ class VectorServer:
                 for i, entry in enumerate(entries):
                     batch_results[i].update(
                         statement_results.get(
-                            self._get_result_key_serving_key(
-                                serving_keys, entry), {}
+                            self._get_result_key_serving_key(serving_keys, entry), {}
                         )
                     )
         # apply passed features to each batch result
@@ -443,8 +444,8 @@ class VectorServer:
         result_key = []
         for sk in serving_keys:
             result_key.append(
-                result_dict.get(sk.required_serving_key) or
-                result_dict.get(sk.feature_name)
+                result_dict.get(sk.required_serving_key)
+                or result_dict.get(sk.feature_name)
             )
         return tuple(result_key)
 
