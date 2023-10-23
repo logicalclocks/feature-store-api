@@ -48,6 +48,7 @@ class VectorServer:
         self._prepared_statement_engine = None
         self._prepared_statements = None
         self._serving_keys = serving_keys
+        self._valid_serving_key = None
         self._pkname_by_serving_index = None
         self._prefix_by_serving_index = None
         self._serving_key_by_serving_index = {}
@@ -181,13 +182,17 @@ class VectorServer:
                 )
         # get schemas for complex features once
         self._complex_features = self.get_complex_feature_schemas()
+        self._valid_serving_key = set(
+            [sk.feature_name for sk in self._serving_keys] +
+            [sk.required_serving_key for sk in self._serving_keys]
+        )
 
     def _validate_serving_key(self, entry):
         for key in entry:
-            if key not in self.serving_keys:
+            if key not in self._valid_serving_key:
                 raise ValueError(
                     f"'{key}' is not a correct serving key. Expect one of the"
-                    f" followings: [{', '.join(self.serving_keys)}]"
+                    f" followings: [{', '.join(self._valid_serving_key)}]"
                 )
 
     def get_feature_vector(
@@ -212,11 +217,15 @@ class VectorServer:
                 next_statement = False
                 for sk in self._serving_key_by_serving_index[prepared_statement_index]:
                     if sk.required_serving_key not in entry.keys():
-                        # User did not provide the necessary serving keys, we expect they have
-                        # provided the necessary features as passed_features.
-                        # We are going to check later if this is true
-                        next_statement = True
-                        break
+                        # Check if there is any entry matched with feature name.
+                        if sk.feature_name in entry.keys():
+                            pk_entry[sk.feature_name] = entry[sk.feature_name]
+                        else:
+                            # User did not provide the necessary serving keys, we expect they have
+                            # provided the necessary features as passed_features.
+                            # We are going to check later if this is true
+                            next_statement = True
+                            break
                     else:
                         pk_entry[sk.feature_name] = entry[sk.required_serving_key]
                 if next_statement:
@@ -275,7 +284,10 @@ class VectorServer:
                     map(
                         lambda e: tuple(
                             [
-                                e.get(sk.required_serving_key)
+                                (e.get(sk.required_serving_key)
+                                # Check if there is any entry matched with feature name,
+                                # if the required serving key is not provided.
+                                 or e.get(sk.feature_name))
                                 for sk in self._serving_key_by_serving_index[
                                     prepared_statement_index
                                 ]
@@ -290,11 +302,8 @@ class VectorServer:
                 ).fetchall()
 
                 statement_results = {}
-                serving_keys = [
-                    sk.required_serving_key
-                    for sk in self._serving_key_by_serving_index[
+                serving_keys = self._serving_key_by_serving_index[
                         prepared_statement_index
-                    ]
                 ]
                 # Use prefix from prepare statement because prefix from serving key is collision adjusted.
                 prefix_features = [
@@ -320,7 +329,8 @@ class VectorServer:
                 for i, entry in enumerate(entries):
                     batch_results[i].update(
                         statement_results.get(
-                            self._get_result_key(serving_keys, entry), {}
+                            self._get_result_key_serving_key(
+                                serving_keys, entry), {}
                         )
                     )
         # apply passed features to each batch result
@@ -400,10 +410,13 @@ class VectorServer:
                     vector.append(None)
                 else:
                     raise Exception(
-                        f"Feature {feature_name} is missing from vector"
-                        " because there is no match in the given entry."
+                        f"Feature '{feature_name}' is missing from vector."
+                        "Possible reasons: "
+                        "1. There is no match in the given entry."
                         " Please check if the entry exists in the online feature store"
-                        " or provide the feature as passed_feature."
+                        " or provide the feature as passed_feature. "
+                        f"2. Required entries [{', '.join(self.serving_keys)}] or "
+                        f"[{', '.join(set(sk.feature_name for sk in self._serving_keys))}] are not provided."
                     )
             else:
                 vector.append(result_dict[feature_name])
@@ -423,6 +436,16 @@ class VectorServer:
         result_key = []
         for pk in primary_keys:
             result_key.append(result_dict.get(pk))
+        return tuple(result_key)
+
+    @staticmethod
+    def _get_result_key_serving_key(serving_keys, result_dict):
+        result_key = []
+        for sk in serving_keys:
+            result_key.append(
+                result_dict.get(sk.required_serving_key) or
+                result_dict.get(sk.feature_name)
+            )
         return tuple(result_key)
 
     @staticmethod
