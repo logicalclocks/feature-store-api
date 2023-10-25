@@ -54,6 +54,7 @@ class Query:
         left_feature_group_end_time=None,
         joins=None,
         filter=None,
+        **kwargs,
     ):
         self._feature_store_name = feature_store_name
         self._feature_store_id = feature_store_id

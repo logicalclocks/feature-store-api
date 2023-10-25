@@ -70,6 +70,7 @@ class FeatureStore:
         online_featurestore_name=None,
         mysql_server_endpoint=None,
         online_featurestore_size=None,
+        **kwargs,
     ):
         self._id = featurestore_id
         self._name = featurestore_name

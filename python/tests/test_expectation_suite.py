@@ -37,7 +37,7 @@ class TestExpectationSuite:
         assert es.validation_ingestion_policy == "TEST_VALIDATION_INGESTION_POLICY"
         assert len(es.expectations) == 1
         assert isinstance(es.expectations[0], ge_expectation.GeExpectation)
-        assert es.meta == {"great_expectations_version": "0.14.13", "key": "value"}
+        assert es.meta == {"great_expectations_version": "0.15.12", "key": "value"}
 
     def test_from_response_json_list(self, backend_fixtures):
         # Arrange
@@ -59,7 +59,7 @@ class TestExpectationSuite:
         assert es.validation_ingestion_policy == "TEST_VALIDATION_INGESTION_POLICY"
         assert len(es.expectations) == 1
         assert isinstance(es.expectations[0], ge_expectation.GeExpectation)
-        assert es.meta == {"great_expectations_version": "0.14.13", "key": "value"}
+        assert es.meta == {"great_expectations_version": "0.15.12", "key": "value"}
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
@@ -79,7 +79,7 @@ class TestExpectationSuite:
         assert es.validation_ingestion_policy == "ALWAYS"
         assert len(es.expectations) == 1
         assert isinstance(es.expectations[0], ge_expectation.GeExpectation)
-        assert es.meta == {"great_expectations_version": "0.14.13", "key": "value"}
+        assert es.meta == {"great_expectations_version": "0.15.12", "key": "value"}
 
     def test_from_response_json_list_empty(self, backend_fixtures):
         # Arrange

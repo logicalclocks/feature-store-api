@@ -71,6 +71,7 @@ class FeatureGroupBase:
         online_topic_name=None,
         topic_name=None,
         deprecated=False,
+        **kwargs,
     ):
         self._version = version
         self._name = name
@@ -1468,6 +1469,7 @@ class FeatureGroup(FeatureGroupBase):
         href=None,
         delta_streamer_job_conf=None,
         deprecated=False,
+        **kwargs,
     ):
         super().__init__(
             name,
@@ -2662,6 +2664,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         topic_name=None,
         spine=False,
         deprecated=False,
+        **kwargs,
     ):
         super().__init__(
             name,
@@ -3015,6 +3018,7 @@ class SpineGroup(FeatureGroupBase):
         spine=True,
         dataframe="spine",
         deprecated=False,
+        **kwargs,
     ):
         super().__init__(
             name,

@@ -31,6 +31,7 @@ class Tag:
         items=None,
         count=None,
         type=None,
+        **kwargs,
     ):
         self._name = name
         self._value = value

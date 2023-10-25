@@ -33,6 +33,7 @@ class TrainingDatasetFeature:
         inference_helper_column=False,
         training_helper_column=False,
         transformation_function=None,
+        **kwargs,
     ):
         self._name = name.lower()
         self._type = type

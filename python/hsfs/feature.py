@@ -42,6 +42,7 @@ class Feature:
         default_value=None,
         feature_group_id=None,
         feature_group=None,
+        **kwargs,
     ):
         self._name = name.lower()
         self._type = type

@@ -61,6 +61,7 @@ class FeatureView:
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
         featurestore_name=None,
         serving_keys: Optional[List[ServingKey]] = None,
+        **kwargs,
     ):
         self._name = name
         self._id = id
@@ -187,7 +188,6 @@ class FeatureView:
         self,
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
-        inference_helper_columns: Optional[bool] = False,
         options: Optional[dict] = None,
     ):
         """Initialise feature view to retrieve feature vector from online and offline feature store.
@@ -245,7 +245,7 @@ class FeatureView:
             serving_keys=self._serving_keys,
         )
         self._single_vector_server.init_serving(
-            self, False, external, inference_helper_columns, options=options
+            self, False, external, True, options=options
         )
 
         # initiate batch vector server
@@ -256,7 +256,7 @@ class FeatureView:
             serving_keys=self._serving_keys,
         )
         self._batch_vectors_server.init_serving(
-            self, True, external, inference_helper_columns, options=options
+            self, True, external, True, options=options
         )
 
     def init_batch_scoring(
@@ -405,6 +405,8 @@ class FeatureView:
         # Arguments
             entry: dictionary of feature group primary key and values provided by serving application.
                 Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
+                If the required primary keys is not provided, it will look for name
+                of the primary key in feature group in the entry.
             passed_features: dictionary of feature values provided by the application at runtime.
                 They can replace features values fetched from the feature store as well as
                 providing feature values which are not available in the feature store.
@@ -494,6 +496,8 @@ class FeatureView:
         # Arguments
             entry: a list of dictionary of feature group primary key and values provided by serving application.
                 Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
+                If the required primary keys is not provided, it will look for name
+                of the primary key in feature group in the entry.
             passed_features: a list of dictionary of feature values provided by the application at runtime.
                 They can replace features values fetched from the feature store as well as
                 providing feature values which are not available in the feature store.
@@ -562,11 +566,8 @@ class FeatureView:
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if (
-            self._single_vector_server is None
-            or self._single_vector_server._helper_column_prepared_statements is None
-        ):
-            self.init_serving(external=external, inference_helper_columns=True)
+        if self._single_vector_server is None:
+            self.init_serving(external=external)
         return self._single_vector_server.get_inference_helper(entry, return_type)
 
     def get_inference_helpers(
@@ -622,11 +623,8 @@ class FeatureView:
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if (
-            self._batch_vectors_server is None
-            or self._single_vector_server._helper_column_prepared_statements is None
-        ):
-            self.init_serving(external=external, inference_helper_columns=True)
+        if self._batch_vectors_server is None:
+            self.init_serving(external=external)
         return self._batch_vectors_server.get_inference_helpers(entry, return_type)
 
     @usage.method_logger
@@ -2876,7 +2874,12 @@ class FeatureView:
 
     @property
     def primary_keys(self):
-        """Set of primary key names that is required as keys in input dict object for `get_feature_vector(s)` method."""
+        """Set of primary key names that is required as keys in input dict object
+        for [`get_feature_vector(s)`](#get_feature_vector) method.
+        When there are duplicated primary key names and prefix is not defined in the query,
+        prefix is generated and prepended to the primary key name in this format
+        "fgId_{feature_group_id}_{join_index}" where `join_index` is the order of the join.
+        """
         _vector_server = self._single_vector_server or self._batch_vectors_server
         if _vector_server:
             return _vector_server.serving_keys

@@ -28,6 +28,7 @@ class StatisticsConfig:
         histograms=False,
         exact_uniqueness=False,
         columns=[],
+        **kwargs,
     ):
         self._enabled = enabled
         # use setters for input validation
