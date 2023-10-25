@@ -394,6 +394,8 @@ class FeatureView:
         # Arguments
             entry: dictionary of feature group primary key and values provided by serving application.
                 Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
+                If the required primary keys is not provided, it will look for name
+                of the primary key in feature group in the entry.
             passed_features: dictionary of feature values provided by the application at runtime.
                 They can replace features values fetched from the feature store as well as
                 providing feature values which are not available in the feature store.
@@ -483,6 +485,8 @@ class FeatureView:
         # Arguments
             entry: a list of dictionary of feature group primary key and values provided by serving application.
                 Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
+                If the required primary keys is not provided, it will look for name
+                of the primary key in feature group in the entry.
             passed_features: a list of dictionary of feature values provided by the application at runtime.
                 They can replace features values fetched from the feature store as well as
                 providing feature values which are not available in the feature store.
@@ -2544,7 +2548,12 @@ class FeatureView:
 
     @property
     def primary_keys(self):
-        """Set of primary key names that is required as keys in input dict object for `get_feature_vector(s)` method."""
+        """Set of primary key names that is required as keys in input dict object
+        for [`get_feature_vector(s)`](#get_feature_vector) method.
+        When there are duplicated primary key names and prefix is not defined in the query,
+        prefix is generated and prepended to the primary key name in this format
+        "fgId_{feature_group_id}_{join_index}" where `join_index` is the order of the join.
+        """
         _vector_server = self._single_vector_server or self._batch_vectors_server
         if _vector_server:
             return _vector_server.serving_keys
