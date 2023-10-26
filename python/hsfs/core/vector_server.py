@@ -342,16 +342,6 @@ class VectorServer:
             entries, self._helper_column_prepared_statements
         )
 
-        """ TODO: why do we need this?
-        # drop serving key names
-        _ = list(
-            map(
-                lambda results_dict: [results_dict.pop(x, None) for x in serving_keys],
-                batch_results,
-            )
-        )
-        """
-
         if return_type.lower() == "dict":
             return batch_results
         elif return_type.lower() == "pandas":
