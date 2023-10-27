@@ -347,7 +347,11 @@ class VectorServer:
         drop_list = serving_keys + list(feature_view_object.primary_keys)
         _ = list(
             map(
-                lambda results_dict: [results_dict.pop(x, None) for x in drop_list],
+                lambda results_dict: [
+                    results_dict.pop(x, None)
+                    for x in drop_list
+                    if x not in feature_view_object.inference_helper_columns
+                ],
                 batch_results,
             )
         )
