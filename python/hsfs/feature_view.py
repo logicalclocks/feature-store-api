@@ -625,7 +625,9 @@ class FeatureView:
         """
         if self._batch_vectors_server is None:
             self.init_serving(external=external)
-        return self._batch_vectors_server.get_inference_helpers(entry, return_type)
+        return self._batch_vectors_server.get_inference_helpers(
+            self, entry, return_type
+        )
 
     @usage.method_logger
     def get_batch_data(

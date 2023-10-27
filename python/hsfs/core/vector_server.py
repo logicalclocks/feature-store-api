@@ -334,6 +334,7 @@ class VectorServer:
 
     def get_inference_helpers(
         self,
+        feature_view_object,
         entries,
         return_type,
     ):
@@ -342,10 +343,11 @@ class VectorServer:
             entries, self._helper_column_prepared_statements
         )
 
-        # drop serving key names from the result dict
+        # drop serving and primary key names from the result dict
+        drop_list = serving_keys + list(feature_view_object.primary_keys)
         _ = list(
             map(
-                lambda results_dict: [results_dict.pop(x, None) for x in serving_keys],
+                lambda results_dict: [results_dict.pop(x, None) for x in drop_list],
                 batch_results,
             )
         )
