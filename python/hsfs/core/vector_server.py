@@ -342,6 +342,14 @@ class VectorServer:
             entries, self._helper_column_prepared_statements
         )
 
+        # drop serving key names from the result dict
+        _ = list(
+            map(
+                lambda results_dict: [results_dict.pop(x, None) for x in serving_keys],
+                batch_results,
+            )
+        )
+
         if return_type.lower() == "dict":
             return batch_results
         elif return_type.lower() == "pandas":
