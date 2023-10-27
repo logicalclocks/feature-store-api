@@ -248,7 +248,7 @@ class VectorServer:
         allow_missing=False,
     ):
         """Assembles serving vector from online feature store."""
-        _, serving_vector = self._vector_result(entry, self._prepared_statements)
+        serving_vector = self._vector_result(entry, self._prepared_statements)
 
         # Add the passed features
         serving_vector.update(passed_features)
@@ -319,14 +319,14 @@ class VectorServer:
     def get_inference_helper(self, entry, return_type):
         """Assembles serving vector from online feature store."""
 
-        result_dict, _ = self._vector_result(
+        serving_vector = self._vector_result(
             entry, self._helper_column_prepared_statements
         )
 
         if return_type.lower() == "pandas":
-            return pd.DataFrame([result_dict])
+            return pd.DataFrame([serving_vector])
         elif return_type.lower() == "dict":
-            return result_dict
+            return serving_vector
         else:
             raise Exception(
                 "Unknown return type. Supported return types are 'pandas' and 'dict'"
@@ -363,7 +363,6 @@ class VectorServer:
         self._validate_serving_key(entry)
         # Initialize the set of values
         serving_vector = {}
-        result_dict = {}
         with self._prepared_statement_engine.connect() as mysql_conn:
             for prepared_statement_index in prepared_statement_objects:
                 pk_entry = {}
@@ -397,7 +396,7 @@ class VectorServer:
                     )
                     serving_vector.update(result_dict)
 
-        return result_dict, serving_vector
+        return serving_vector
 
     def _batch_vector_results(self, entries, prepared_statement_objects):
         # create dict object that will have of order of the vector as key and values as
