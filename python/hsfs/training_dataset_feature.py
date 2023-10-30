@@ -31,6 +31,7 @@ class TrainingDatasetFeature:
         feature_group_feature_name=None,
         label=False,
         transformation_function=None,
+        **kwargs,
     ):
         self._name = name.lower()
         self._type = type

@@ -35,6 +35,7 @@ class FeatureGroupCommit:
         items=None,
         count=None,
         href=None,
+        **kwargs,
     ):
         self._commitid = commitid
         self._commit_date_string = commit_date_string

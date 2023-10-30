@@ -32,6 +32,7 @@ class FsQuery:
         expand=None,
         items=None,
         type=None,
+        **kwargs,
     ):
         self._query = query
         self._query_online = query_online

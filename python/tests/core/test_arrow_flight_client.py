@@ -21,15 +21,23 @@ from hsfs.constructor import fs_query
 from hsfs.core import arrow_flight_client
 from hsfs.engine import python
 from hsfs.feature import Feature
-from hsfs.storage_connector import HopsFSConnector
+from hsfs.storage_connector import HopsFSConnector, StorageConnector
 from hsfs import storage_connector
+
+from unittest.mock import MagicMock
+import pytest
 
 
 class TestArrowFlightClient:
+    @pytest.fixture(autouse=True)
+    def run_around_tests(self):
+        arrow_flight_client.get_instance()._is_enabled = True
+        yield
+        arrow_flight_client.get_instance()._is_enabled = False
+
     def _arrange_engine_mocks(self, mocker, backend_fixtures):
         mocker.patch("hsfs.engine.get_type", return_value="python")
         python_engine = python.Engine()
-        arrow_flight_client.get_instance()._is_enabled = True
         mocker.patch("hsfs.engine.get_instance", return_value=python_engine)
         mocker.patch("hsfs.client.get_instance")
         json_query = backend_fixtures["fs_query"]["get_basic_info"]["response"]
@@ -525,3 +533,83 @@ class TestArrowFlightClient:
         }
 
         assert str(query_object_reference) == str(query_object)
+
+    def test_supports(self, mocker, backend_fixtures):
+        # Arrange
+        connector = storage_connector.BigQueryConnector(0, "BigQueryConnector", 99)
+        external_feature_group = feature_group.ExternalFeatureGroup(
+            storage_connector=connector, primary_key=""
+        )
+
+        # Act
+        supported = arrow_flight_client.get_instance().supports(
+            [external_feature_group]
+        )
+
+        # Assert
+        assert supported
+
+    class FakeConnector(StorageConnector):
+        def __init__(self):
+            self._type = "Fake"
+
+        def spark_options(self):
+            pass
+
+    def test_supports_unsupported(self, mocker, backend_fixtures):
+        # Arrange
+        external_feature_group = feature_group.ExternalFeatureGroup(
+            storage_connector=self.FakeConnector(), primary_key=""
+        )
+
+        # Act
+        supported = arrow_flight_client.get_instance().supports(
+            [external_feature_group]
+        )
+
+        # Assert
+        assert not supported
+
+    def test_supports_mixed_featuregroups(self, mocker, backend_fixtures):
+        # Arrange
+        connector = storage_connector.BigQueryConnector(0, "BigQueryConnector", 99)
+        external_feature_group = feature_group.ExternalFeatureGroup(
+            storage_connector=connector, primary_key=""
+        )
+        mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
+
+        # Act
+        supported = arrow_flight_client.get_instance().supports(
+            [external_feature_group, mock_feature_group]
+        )
+
+        # Assert
+        assert supported
+
+    def test_supports_mixed_featuregroups_unsupported(self, mocker, backend_fixtures):
+        # Arrange
+        external_feature_group = feature_group.ExternalFeatureGroup(
+            storage_connector=self.FakeConnector(), primary_key=""
+        )
+        mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
+
+        # Act
+        supported = arrow_flight_client.get_instance().supports(
+            [external_feature_group, mock_feature_group]
+        )
+
+        # Assert
+        assert not supported
+
+    def test_supports_spine_unsupported(self, mocker, backend_fixtures):
+        # Arrange
+        mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
+        mock_sping = MagicMock(spec=feature_group.SpineGroup)
+
+        # Act
+        supported = arrow_flight_client.get_instance().supports(
+            [mock_feature_group, mock_sping]
+        )
+
+        # Assert
+        assert not supported

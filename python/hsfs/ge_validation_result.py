@@ -46,6 +46,7 @@ class ValidationResult:
         items=None,
         count=None,
         type=None,
+        **kwargs,
     ):
         self._id = id
         self._success = success

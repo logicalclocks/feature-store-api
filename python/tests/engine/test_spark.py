@@ -3359,6 +3359,7 @@ class TestSpark:
         )
         mock_pyspark_files_get = mocker.patch("pyspark.files.SparkFiles.get")
         mocker.patch("hsfs.client.get_instance")
+        mocker.patch("shutil.copy")
 
         spark_engine = spark.Engine()
 
@@ -3437,7 +3438,7 @@ class TestSpark:
                     "data_asset_name": "<YOUR_MEANGINGFUL_NAME>",
                 },
                 "expectation_suite_name": "es_name",
-                "great_expectations_version": "0.14.13",
+                "great_expectations_version": "0.15.12",
                 "run_id": {"run_name": "test_run_id", "run_time": mocker.ANY},
                 "validation_time": mocker.ANY,
             },

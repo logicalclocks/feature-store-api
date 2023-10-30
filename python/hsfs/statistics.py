@@ -34,6 +34,7 @@ class Statistics:
         items=None,
         count=None,
         type=None,
+        **kwargs,
     ):
         self._commit_time = commit_time
         self._feature_group_commit_id = feature_group_commit_id

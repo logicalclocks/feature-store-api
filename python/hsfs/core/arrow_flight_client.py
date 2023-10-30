@@ -40,6 +40,11 @@ def get_instance():
     return _arrow_flight_instance
 
 
+def close():
+    global _arrow_flight_instance
+    _arrow_flight_instance = None
+
+
 class ArrowFlightClient:
     SUPPORTED_FORMATS = ["parquet"]
     SUPPORTED_EXTERNAL_CONNECTORS = [
@@ -342,3 +347,25 @@ class ArrowFlightClient:
 
     def _info_to_ticket(self, info):
         return info.endpoints[0].ticket
+
+    def is_enabled(self):
+        return self._is_enabled
+
+    def supports(self, featuregroups):
+        if len(featuregroups) > sum(
+            1
+            for fg in featuregroups
+            if isinstance(
+                fg,
+                (feature_group.FeatureGroup, feature_group.ExternalFeatureGroup),
+            )
+        ):
+            # Contains unsupported feature group types such as a spine group
+            return False
+
+        for fg in filter(
+            lambda fg: isinstance(fg, feature_group.ExternalFeatureGroup), featuregroups
+        ):
+            if fg.storage_connector.type not in self.SUPPORTED_EXTERNAL_CONNECTORS:
+                return False
+        return True

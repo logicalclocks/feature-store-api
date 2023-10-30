@@ -36,6 +36,7 @@ class Artifact:
         meta_type,
         href=None,
         exception_cause=None,
+        **kwargs,
     ):
         self._feature_store_name = feature_store_name
         self._name = name
