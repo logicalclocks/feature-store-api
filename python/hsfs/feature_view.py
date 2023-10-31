@@ -2777,12 +2777,6 @@ class FeatureView:
                 )
                 for feature in features
             ]
-            # TODO: remove this and store feature_group_feature_name in the backend
-            query_features = query.Query.from_response_json(
-                json_decamelized["query"]).features
-            for i in range(len(features)):
-                features[i]._feature_group_feature_name = query_features[i].name
-
         fv.schema = features
         fv.labels = [feature.name for feature in features if feature.label]
         fv.inference_helper_columns = [
