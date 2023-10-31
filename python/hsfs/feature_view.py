@@ -443,7 +443,7 @@ class FeatureView:
         if self._single_vector_server is None:
             self.init_serving(external=external)
         passed_features = self._update_with_vector_db_result(
-            entry, passed_features
+            self._single_vector_server, entry, passed_features
         )
         return self._single_vector_server.get_feature_vector(
             entry, return_type, passed_features, allow_missing
@@ -540,6 +540,7 @@ class FeatureView:
         updated_passed_feature = []
         for i in range(len(entry)):
             updated_passed_feature.append(self._update_with_vector_db_result(
+                self._batch_vectors_server,
                 entry[i], passed_features[i] if passed_features else {}
             ))
         return self._batch_vectors_server.get_feature_vectors(
@@ -648,9 +649,9 @@ class FeatureView:
             self, entry, return_type
         )
 
-    def _update_with_vector_db_result(self, entry, passed_features):
+    def _update_with_vector_db_result(self, vec_server, entry, passed_features):
         for k, fg in self._vector_db_client.embedding_fg_by_join_index.items():
-            complete, fg_entry = self._batch_vectors_server.filter_entry_by_join_index(
+            complete, fg_entry = vec_server.filter_entry_by_join_index(
                 entry, k
             )
             if not complete:

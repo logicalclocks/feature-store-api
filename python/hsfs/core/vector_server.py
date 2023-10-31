@@ -640,7 +640,10 @@ class VectorServer:
         fg_entry = {}
         complete = True
         for sk in self._serving_key_by_serving_index[join_index]:
-            fg_entry[sk.feature_name] = entry.get(sk.required_serving_key)
+            fg_entry[sk.feature_name] = (
+                entry.get(sk.required_serving_key)
+                or entry.get(sk.feature_name) # fallback to use raw feature name
+            )
             if fg_entry[sk.feature_name] is None:
                 complete = False
                 break
