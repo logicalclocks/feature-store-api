@@ -16,6 +16,7 @@
 
 from hsfs.engine import spark
 from hsfs.client import exceptions
+from hsfs.core import arrow_flight_client
 
 _engine = None
 _engine_type = None
@@ -73,3 +74,4 @@ def get_type():
 def stop():
     global _engine
     _engine = None
+    arrow_flight_client.close()
