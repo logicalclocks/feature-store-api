@@ -695,8 +695,7 @@ class FeatureView:
                 be available in the spine group.
             primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
-            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
-                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             inference_helper_columns: whether to include inference helper columns or not.
                 Inference helper columns are a list of feature names in the feature view, defined during its creation,
                 that may not be used in training the model itself but can be used during batch or online inference
@@ -1026,8 +1025,7 @@ class FeatureView:
                 be available in the spine group.
             primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
-            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
-                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not. Training helper columns are a
                 list of feature names in the feature view, defined during its creation, that are not the part of the
                 model schema itself but can be used during training as a helper for extra information.
@@ -1310,8 +1308,7 @@ class FeatureView:
                 be available in the spine group.
             primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
-            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
-                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
                 that are not the part of the model schema itself but can be used during training as a helper for
@@ -1592,8 +1589,7 @@ class FeatureView:
                 be available in the spine group.
             primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
-            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
-                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
                 that are not the part of the model schema itself but can be used during training as a helper for
@@ -1831,8 +1827,7 @@ class FeatureView:
                 be available in the spine group.
             primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
-            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
-                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
                 that are not the part of the model schema itself but can be used during training as a helper for
@@ -1994,8 +1989,7 @@ class FeatureView:
                 be available in the spine group.
             primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
-            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
-                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
                 that are not the part of the model schema itself but can be used during training as a helper for
@@ -2191,8 +2185,7 @@ class FeatureView:
                 be available in the spine group.
             primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
-            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
-                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
                 that are not the part of the model schema itself but can be used during training as a helper for
@@ -2318,8 +2311,7 @@ class FeatureView:
                 Defaults to `{}`.
             primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
-            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
-                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
                 that are not the part of the model schema itself but can be used during training as a helper for
@@ -2377,8 +2369,7 @@ class FeatureView:
                 Defaults to `{}`.
             primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
-            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
-                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
                 that are not the part of the model schema itself but can be used during training as a helper for
@@ -2438,8 +2429,7 @@ class FeatureView:
                 Defaults to `{}`.
             primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
                 features.
-            event_time: whether to include event time feature or not.  Defaults to `False`, no event time
-                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
             training_helper_columns: whether to include training helper columns or not.
                 Training helper columns are a list of feature names in the feature view, defined during its creation,
                 that are not the part of the model schema itself but can be used during training as a helper for
