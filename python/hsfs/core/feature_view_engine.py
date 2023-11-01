@@ -517,7 +517,7 @@ class FeatureViewEngine:
     def compute_training_dataset(
         self,
         feature_view_obj,
-        user_write_options,
+        user_write_options={},
         training_dataset_obj=None,
         training_dataset_version=None,
         spine=None,
