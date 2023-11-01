@@ -676,7 +676,7 @@ class TestFeatureViewEngine:
 
         # Act
         fv_engine.create_training_dataset(
-            feature_view_obj=None, training_dataset_obj=None, user_write_options=None
+            feature_view_obj=None, training_dataset_obj=None, user_write_options={}
         )
 
         # Assert
@@ -1064,7 +1064,7 @@ class TestFeatureViewEngine:
         fv_engine.recreate_training_dataset(
             feature_view_obj=None,
             training_dataset_version=None,
-            user_write_options=None,
+            user_write_options={},
         )
 
         # Assert
@@ -1269,7 +1269,7 @@ class TestFeatureViewEngine:
         with pytest.raises(ValueError) as e_info:
             fv_engine.compute_training_dataset(
                 feature_view_obj=None,
-                user_write_options=None,
+                user_write_options={},
                 training_dataset_obj=None,
                 training_dataset_version=None,
             )
@@ -1315,7 +1315,7 @@ class TestFeatureViewEngine:
         # Act
         fv_engine.compute_training_dataset(
             feature_view_obj=None,
-            user_write_options=None,
+            user_write_options={},
             training_dataset_obj=td,
             training_dataset_version=None,
         )
@@ -1452,7 +1452,7 @@ class TestFeatureViewEngine:
         # Act
         fv_engine.compute_training_dataset(
             feature_view_obj=None,
-            user_write_options=None,
+            user_write_options={},
             training_dataset_obj=td,
             training_dataset_version=None,
         )
