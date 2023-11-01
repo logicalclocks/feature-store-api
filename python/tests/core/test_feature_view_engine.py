@@ -1362,7 +1362,7 @@ class TestFeatureViewEngine:
         # Act
         fv_engine.compute_training_dataset(
             feature_view_obj=None,
-            user_write_options=None,
+            user_write_options={},
             training_dataset_obj=None,
             training_dataset_version=1,
         )
