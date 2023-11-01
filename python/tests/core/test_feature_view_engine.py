@@ -1184,7 +1184,15 @@ class TestFeatureViewEngine:
 
         # Act
         fv_engine._read_dir_from_storage_connector(
-            training_data_obj=td, path="test", read_options=None
+            training_data_obj=td,
+            path="test",
+            read_options=None,
+            with_primary_keys=None,
+            primary_keys=None,
+            with_event_time=None,
+            event_time=None,
+            with_training_helper_columns=None,
+            training_helper_columns=None,
         )
 
         # Assert
@@ -1216,7 +1224,15 @@ class TestFeatureViewEngine:
         # Act
         with pytest.raises(FileNotFoundError) as e_info:
             fv_engine._read_dir_from_storage_connector(
-                training_data_obj=td, path="test", read_options=None
+                training_data_obj=td,
+                path="test",
+                read_options=None,
+                with_primary_keys=None,
+                primary_keys=None,
+                with_event_time=None,
+                event_time=None,
+                with_training_helper_columns=None,
+                training_helper_columns=None,
             )
 
         # Assert
