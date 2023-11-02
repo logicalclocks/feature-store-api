@@ -340,10 +340,13 @@ class ArrowFlightClient:
         return f"{fg_name}.{feature.name}"
 
     def _translate_to_duckdb(self, query, query_str):
-        return query_str.replace(
-            f"`{query._left_feature_group.feature_store_name}`.`",
-            f"`{query._left_feature_group._get_project_name()}.",
-        ).replace("`", '"')
+        translated = query_str
+        for fg in query.featuregroups:
+            translated = translated.replace(
+                f"`{fg.feature_store_name}`.`",
+                f"`{fg._get_project_name()}.",
+            )
+        return translated.replace("`", '"')
 
     def _info_to_ticket(self, info):
         return info.endpoints[0].ticket
