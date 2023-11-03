@@ -1616,6 +1616,8 @@ class FeatureGroup(FeatureGroupBase):
                 For python engine:
                 * key `"use_hive"` and value `True` to read feature group
                   with Hive instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
+                  For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `"pandas_types"` and value `True` to retrieve columns as
