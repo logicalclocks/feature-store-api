@@ -22,9 +22,11 @@ class KafkaApi:
         self,
         subject: str,
         version: str = "latest",
-        project_id: str = _client._project_id,
+        project_id: str = None,
     ):
         _client = client.get_instance()
+        if project_id is None:
+            project_id = _client._project_id
         path_params = [
             "project",
             project_id,
