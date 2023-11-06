@@ -706,6 +706,7 @@ class TestFeatureViewEngine:
         mock_fv_engine_compute_training_dataset_statistics = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.compute_training_dataset_statistics"
         )
+        mocker.patch("hsfs.core.vector_server.VectorServer")
 
         fv_engine = feature_view_engine.FeatureViewEngine(
             feature_store_id=feature_store_id
@@ -752,6 +753,7 @@ class TestFeatureViewEngine:
         mock_fv_engine_compute_training_dataset_statistics = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.compute_training_dataset_statistics"
         )
+        mocker.patch("hsfs.core.vector_server.VectorServer")
 
         fv_engine = feature_view_engine.FeatureViewEngine(
             feature_store_id=feature_store_id
@@ -796,6 +798,9 @@ class TestFeatureViewEngine:
             "hsfs.core.feature_view_engine.FeatureViewEngine._check_feature_group_accessibility"
         )
         mocker.patch("hsfs.core.feature_view_engine.FeatureViewEngine.get_batch_query")
+
+        mocker.patch("hsfs.core.vector_server.VectorServer")
+
         mock_fv_engine_compute_training_dataset_statistics = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.compute_training_dataset_statistics"
         )
@@ -848,7 +853,10 @@ class TestFeatureViewEngine:
         mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._check_feature_group_accessibility"
         )
+        mocker.patch("hsfs.core.vector_server.VectorServer")
+
         mocker.patch("hsfs.core.feature_view_engine.FeatureViewEngine.get_batch_query")
+
         mock_fv_engine_compute_training_dataset_statistics = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.compute_training_dataset_statistics"
         )
