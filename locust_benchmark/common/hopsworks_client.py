@@ -40,6 +40,8 @@ class HopsworksClient:
         self.batch_size = self.hopsworks_config.get("batch_size", 100)
         self.primary_key = self.hopsworks_config.get("primary_key", "id")
         self.feature_group_name = self.hopsworks_config.get("feature_group_name","locust_fg")
+        self.feature_view_name = self.hopsworks_config.get("feature_view_name", "locust_fv")
+        self.clean_fv = self.hopsworks_config.get("clean_feature_view",True)
 
     def get_or_create_fg(self, fg_name="locust_fg", pk_id="id"):
         locust_fg = self.fs.get_or_create_feature_group(
@@ -60,12 +62,12 @@ class HopsworksClient:
             locust_fg.insert(df, write_options={"internal_kafka": not self.external})
         return locust_fg
 
-    def get_or_create_fv(self, fg=None):
+    def get_or_create_fv(self, fg=None, fv_name = "locust_fv"):
         try:
-            return self.fs.get_feature_view("locust_fv", version=1)
+            return self.fs.get_feature_view(fv_name, version=1)
         except RestAPIError:
             return self.fs.create_feature_view(
-                name="locust_fv",
+                name=fv_name,
                 query=fg.select_all(),
                 version=1,
             )

@@ -1,12 +1,14 @@
 {
     "host": "localhost",
-    "port": 443,
-    "project": "test",
+    "port": 8181,
+    "project": "acme",
     "external": true,
-    "rows": 100000,
+    "rows": 10,
     "schema_repetitions": 1,
     "recreate_feature_group": true,
     "batch_size": 100,
-    "primary_key": "id",
-    "feature_group_name":"" 
+    "primary_key": "entity",
+    "feature_group_name":"my_fg",
+    "feature_view_name": "first_50a",
+    "clean_feature_view": false
 }
