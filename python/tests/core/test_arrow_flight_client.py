@@ -227,8 +227,6 @@ class TestArrowFlightClient:
             return_value=pd.DataFrame(),
         )
 
-        mocker.patch("hsfs.core.vector_server.VectorServer")
-
         # Act
         fv.get_training_data(1)
 
@@ -248,8 +246,6 @@ class TestArrowFlightClient:
         mock_read_pandas = mocker.patch(
             "hsfs.engine.python.Engine._read_pandas", return_value=pd.DataFrame()
         )
-
-        mocker.patch("hsfs.core.vector_server.VectorServer")
 
         # Act
         fv.get_training_data(1, read_options={"use_hive": True})
