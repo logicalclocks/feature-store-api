@@ -322,9 +322,12 @@ class FeatureViewEngine:
                 with_primary_keys=primary_keys,
                 primary_keys=self._get_primary_keys_from_query(feature_view_obj.query),
                 with_event_time=event_time,
-                event_time=feature_view_obj.query._left_feature_group.event_time,
+                event_time=[feature_view_obj.query._left_feature_group.event_time],
                 with_training_helper_columns=training_helper_columns,
                 training_helper_columns=feature_view_obj.training_helper_columns,
+                feature_view_features=[
+                    feature.name for feature in feature_view_obj.features
+                ],
             )
         else:
             self._check_feature_group_accessibility(feature_view_obj)
@@ -422,6 +425,7 @@ class FeatureViewEngine:
         event_time,
         with_training_helper_columns,
         training_helper_columns,
+        feature_view_features,
     ):
 
         if splits:
@@ -438,6 +442,7 @@ class FeatureViewEngine:
                     event_time,
                     with_training_helper_columns,
                     training_helper_columns,
+                    feature_view_features,
                 )
             return result
         else:
@@ -452,6 +457,7 @@ class FeatureViewEngine:
                 event_time,
                 with_training_helper_columns,
                 training_helper_columns,
+                feature_view_features,
             )
 
     def _cast_columns(self, data_format, df, schema):
@@ -473,6 +479,7 @@ class FeatureViewEngine:
         event_time,
         with_training_helper_columns,
         training_helper_columns,
+        feature_view_features,
     ):
         try:
             df = training_data_obj.storage_connector.read(
@@ -483,10 +490,17 @@ class FeatureViewEngine:
                 path=path,
             )
 
-            df = self._drop_helper_columns(df, with_primary_keys, primary_keys)
-            df = self._drop_helper_columns(df, with_event_time, event_time)
             df = self._drop_helper_columns(
-                df, with_training_helper_columns, training_helper_columns
+                df, feature_view_features, with_primary_keys, primary_keys
+            )
+            df = self._drop_helper_columns(
+                df, feature_view_features, with_event_time, event_time
+            )
+            df = self._drop_helper_columns(
+                df,
+                feature_view_features,
+                with_training_helper_columns,
+                training_helper_columns,
             )
             return df
 
@@ -499,18 +513,16 @@ class FeatureViewEngine:
             else:
                 raise e
 
-    def _drop_helper_columns(self, df, with_columns, columns):
+    def _drop_helper_columns(self, df, feature_view_features, with_columns, columns):
         if not with_columns:
-            if columns:
+            drop_cols = list(
+                set(feature_view_features).intersection(columns).difference(columns)
+            )
+            if drop_cols:
                 try:
-                    df = engine.get_instance().drop_columns(df, columns)
+                    df = engine.get_instance().drop_columns(df, drop_cols)
                 except KeyError:
                     pass
-        else:
-            if not columns:
-                warnings.warn(
-                    "Parent feature view doesn't have helper columns, thus drop will be ignored "
-                )
         return df
 
     # This method is used by hsfs_utils to launch a job for python client

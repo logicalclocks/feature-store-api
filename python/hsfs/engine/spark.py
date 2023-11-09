@@ -501,7 +501,8 @@ class Engine:
             return df, None
 
     def drop_columns(self, df, column_names):
-        return df.drop(*column_names)
+        new_df = df.drop(*column_names)
+        return new_df
 
     def write_training_dataset(
         self,
