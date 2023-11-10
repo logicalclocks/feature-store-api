@@ -705,6 +705,7 @@ class TestFeatureGroupEngine:
             partition_key=[],
             id=10,
         )
+        fg.feature_store = mocker.patch("hsfs.feature_store.FeatureStore")
 
         # Act
         fg_engine.get_subject(feature_group=fg)
