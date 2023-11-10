@@ -78,6 +78,7 @@ class VectorServer:
         self._feature_view_engine = feature_view_engine.FeatureViewEngine(
             feature_store_id
         )
+        self._transformation_functions = None
 
     def init_serving(
         self, entity, batch, external, inference_helper_columns=False, options=None

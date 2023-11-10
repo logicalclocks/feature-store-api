@@ -500,9 +500,13 @@ class Engine:
         else:
             return df, None
 
-    def drop_columns(self, df, column_names):
-        new_df = df.drop(*column_names)
-        return new_df
+    def drop_columns(self, df, with_columns, columns):
+        if not with_columns:
+            existing_cols = [field.name for field in df.schema.fields]
+            drop_cols = list(set(existing_cols).intersection(columns))
+            if drop_cols:
+                df = df.drop(*drop_cols)
+        return df
 
     def write_training_dataset(
         self,

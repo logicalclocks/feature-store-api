@@ -1107,7 +1107,6 @@ class TestFeatureViewEngine:
             event_time=None,
             with_training_helper_columns=None,
             training_helper_columns=None,
-            feature_view_features=[],
         )
 
         # Assert
@@ -1153,7 +1152,6 @@ class TestFeatureViewEngine:
             event_time=None,
             with_training_helper_columns=None,
             training_helper_columns=None,
-            feature_view_features=[],
         )
 
         # Assert
@@ -1198,7 +1196,6 @@ class TestFeatureViewEngine:
             event_time=[],
             with_training_helper_columns=False,
             training_helper_columns=[],
-            feature_view_features=[],
         )
 
         # Assert
@@ -1239,7 +1236,6 @@ class TestFeatureViewEngine:
                 event_time=[],
                 with_training_helper_columns=False,
                 training_helper_columns=[],
-                feature_view_features=[],
             )
 
         # Assert
