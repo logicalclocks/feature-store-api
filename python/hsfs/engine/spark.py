@@ -500,10 +500,11 @@ class Engine:
         else:
             return df, None
 
-    def drop_columns(self, df, with_columns, columns):
+    def drop_columns(self, df, feature_view_features, with_columns, columns):
         if not with_columns:
             existing_cols = [field.name for field in df.schema.fields]
             drop_cols = list(set(existing_cols).intersection(columns))
+            drop_cols = list(set(drop_cols).difference(feature_view_features))
             if drop_cols:
                 df = df.drop(*drop_cols)
         return df

@@ -325,6 +325,9 @@ class FeatureViewEngine:
                 event_time=[feature_view_obj.query._left_feature_group.event_time],
                 with_training_helper_columns=training_helper_columns,
                 training_helper_columns=feature_view_obj.training_helper_columns,
+                feature_view_features=[
+                    feature.name for feature in feature_view_obj.features
+                ],
             )
         else:
             self._check_feature_group_accessibility(feature_view_obj)
@@ -422,6 +425,7 @@ class FeatureViewEngine:
         event_time,
         with_training_helper_columns,
         training_helper_columns,
+        feature_view_features,
     ):
 
         if splits:
@@ -438,6 +442,7 @@ class FeatureViewEngine:
                     event_time,
                     with_training_helper_columns,
                     training_helper_columns,
+                    feature_view_features,
                 )
             return result
         else:
@@ -452,6 +457,7 @@ class FeatureViewEngine:
                 event_time,
                 with_training_helper_columns,
                 training_helper_columns,
+                feature_view_features,
             )
 
     def _cast_columns(self, data_format, df, schema):
@@ -473,6 +479,7 @@ class FeatureViewEngine:
         event_time,
         with_training_helper_columns,
         training_helper_columns,
+        feature_view_features,
     ):
         try:
             df = training_data_obj.storage_connector.read(
@@ -483,10 +490,17 @@ class FeatureViewEngine:
                 path=path,
             )
 
-            df = engine.get_instance().drop_columns(df, with_primary_keys, primary_keys)
-            df = engine.get_instance().drop_columns(df, with_event_time, event_time)
             df = engine.get_instance().drop_columns(
-                df, with_training_helper_columns, training_helper_columns
+                df, feature_view_features, with_primary_keys, primary_keys
+            )
+            df = engine.get_instance().drop_columns(
+                df, feature_view_features, with_event_time, event_time
+            )
+            df = engine.get_instance().drop_columns(
+                df,
+                feature_view_features,
+                with_training_helper_columns,
+                training_helper_columns,
             )
             return df
 
