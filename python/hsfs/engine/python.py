@@ -571,11 +571,16 @@ class Engine:
         else:
             return df, None
 
-    def drop_columns(self, df, feature_view_features, with_columns, columns):
+    def drop_columns(
+        self, df, feature_view_features, with_columns, columns, training_helper
+    ):
         if not with_columns:
             existing_cols = df.columns
+            # primary keys and event time are dropped only if they are in the query
             drop_cols = list(set(existing_cols).intersection(columns))
-            drop_cols = list(set(drop_cols).difference(feature_view_features))
+            # training helper is always in the query
+            if not training_helper:
+                drop_cols = list(set(drop_cols).difference(feature_view_features))
             if drop_cols:
                 df = df.drop(columns=drop_cols)
 

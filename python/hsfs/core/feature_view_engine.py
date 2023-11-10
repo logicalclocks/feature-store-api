@@ -491,16 +491,17 @@ class FeatureViewEngine:
             )
 
             df = engine.get_instance().drop_columns(
-                df, feature_view_features, with_primary_keys, primary_keys
+                df, feature_view_features, with_primary_keys, primary_keys, False
             )
             df = engine.get_instance().drop_columns(
-                df, feature_view_features, with_event_time, event_time
+                df, feature_view_features, with_event_time, event_time, False
             )
             df = engine.get_instance().drop_columns(
                 df,
                 feature_view_features,
                 with_training_helper_columns,
                 training_helper_columns,
+                True,
             )
             return df
 
