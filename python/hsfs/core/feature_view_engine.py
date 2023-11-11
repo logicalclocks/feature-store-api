@@ -490,13 +490,13 @@ class FeatureViewEngine:
                 path=path,
             )
 
-            df = engine.get_instance().drop_columns(
+            df = self._drop_helper_columns(
                 df, feature_view_features, with_primary_keys, primary_keys, False
             )
-            df = engine.get_instance().drop_columns(
+            df = self._drop_helper_columns(
                 df, feature_view_features, with_event_time, event_time, False
             )
-            df = engine.get_instance().drop_columns(
+            df = self._drop_helper_columns(
                 df,
                 feature_view_features,
                 with_training_helper_columns,
@@ -513,6 +513,20 @@ class FeatureViewEngine:
                 )
             else:
                 raise e
+
+    def _drop_helper_columns(
+        self, df, feature_view_features, with_columns, columns, training_helper
+    ):
+        if not with_columns:
+            existing_cols = [field.name for field in df.schema.fields]
+            # primary keys and event time are dropped only if they are in the query
+            drop_cols = list(set(existing_cols).intersection(columns))
+            # training helper is always in the query
+            if not training_helper:
+                drop_cols = list(set(drop_cols).difference(feature_view_features))
+            if drop_cols:
+                df = engine.get_instance().drop_columns(df, drop_cols)
+        return df
 
     # This method is used by hsfs_utils to launch a job for python client
     def compute_training_dataset(
