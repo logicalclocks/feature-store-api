@@ -518,7 +518,10 @@ class FeatureViewEngine:
         self, df, feature_view_features, with_columns, columns, training_helper
     ):
         if not with_columns:
-            existing_cols = [field.name for field in df.schema.fields]
+            if engine.get_type() == "spark":
+                existing_cols = [field.name for field in df.schema.fields]
+            else:
+                existing_cols = df.columns
             # primary keys and event time are dropped only if they are in the query
             drop_cols = list(set(existing_cols).intersection(columns))
             # training helper is always in the query
