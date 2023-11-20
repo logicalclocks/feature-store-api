@@ -39,6 +39,7 @@ class VectorServer:
         features=[],
         training_dataset_version=None,
         serving_keys=None,
+        skip_fg_ids=None,
     ):
         self._training_dataset_version = training_dataset_version
         self._features = features
@@ -55,6 +56,7 @@ class VectorServer:
             if features
             else []
         )
+        self._skip_fg_ids = skip_fg_ids or set()
         self._prepared_statement_engine = None
         self._prepared_statements = None
         self._helper_column_prepared_statements = None
@@ -173,6 +175,8 @@ class VectorServer:
         feature_name_order_by_psp = dict()
         prefix_by_serving_index = {}
         for prepared_statement in prepared_statements:
+            if prepared_statement.feature_group_id in self._skip_fg_ids:
+                continue
             query_online = str(prepared_statement.query_online).replace("\n", " ")
             prefix_by_serving_index[
                 prepared_statement.prepared_statement_index

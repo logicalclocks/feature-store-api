@@ -1097,10 +1097,6 @@ class Engine:
                         "projectId": str(feature_group.feature_store.project_id).encode(
                             "utf8"
                         ),
-                        "featureStoreId": str(
-                            feature_group.feature_store.id).encode(
-                            "utf8"
-                        ),
                         "featureGroupId": str(feature_group._id).encode("utf8"),
                         "subjectId": str(feature_group.subject["id"]).encode("utf8"),
                     }

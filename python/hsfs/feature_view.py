@@ -247,6 +247,7 @@ class FeatureView:
             self._features,
             training_dataset_version,
             serving_keys=self._serving_keys,
+            skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
         self._single_vector_server.init_serving(
             self, False, external, True, options=options
@@ -264,6 +265,7 @@ class FeatureView:
             self._features,
             training_dataset_version,
             serving_keys=self._serving_keys,
+            skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
         self._batch_vectors_server.init_serving(
             self, True, external, True, options=options
@@ -301,6 +303,7 @@ class FeatureView:
             self._features,
             training_dataset_version,
             serving_keys=self._serving_keys,
+            skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
         self._batch_scoring_server.init_batch_scoring(self)
 
@@ -705,6 +708,11 @@ class FeatureView:
                 " try to create a new feature view with prefix attached."
             )
         return primary_key_map
+
+    def _get_embedding_fgs(self):
+        return set(
+            [fg for fg in self.query.featuregroups if fg.embedding]
+        )
 
     @usage.method_logger
     def get_batch_data(
@@ -2968,7 +2976,9 @@ class FeatureView:
             return _vector_server.required_serving_keys
         else:
             _vector_server = vector_server.VectorServer(
-                self._featurestore_id, self._features, serving_keys=self._serving_keys
+                self._featurestore_id, self._features,
+                serving_keys=self._serving_keys,
+                skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
             )
             _vector_server.init_prepared_statement(self, False, False, False)
             return _vector_server.serving_keys

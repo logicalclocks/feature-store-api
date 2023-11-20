@@ -1,5 +1,6 @@
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor.join import Join
+from hsfs.feature import Feature
 
 class VectorDbClient:
 
@@ -19,7 +20,7 @@ class VectorDbClient:
         for fg in self._query.featuregroups:
             if fg.embedding:
                 for feat in fg.embedding.get_features():
-                    for fgf in self._query.features:
+                    for fgf in fg.features:
                         if fgf.name == feat.name and fgf.feature_group_id == fg.id:
                             self._embedding_features[fgf] = feat
         for q in [self._query] + [j.query for j in self._query.joins]:
@@ -46,6 +47,7 @@ class VectorDbClient:
             join_fg = join.query._left_feature_group
             if join_fg.embedding:
                 if join_fg.id in self._fg_vdb_col_td_col_map:
+                    # `self._fg_vdb_col_td_col_map` do not support join of same fg
                     raise FeatureStoreException(
                         "Do not support join of same fg multiple times.")
                 self._embedding_fg_by_join_index[i] = join_fg
@@ -90,7 +92,8 @@ class VectorDbClient:
                 index=index
             )
 
-    def find_neighbors(self, embedding, feature=None, index_name=None, k=10, filter=None, min_score=0):
+    def find_neighbors(self, embedding, feature: Feature = None,
+                       index_name=None, k=10, filter=None, min_score=0):
         if not feature:
             if not self._embedding_features:
                 raise ValueError("embedding col is not defined.")
