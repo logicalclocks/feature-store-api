@@ -204,8 +204,8 @@ class ArrowFlightClient:
         return decorator
 
     def _get_dataset(self, descriptor, timeout=DEFAULT_TIMEOUT):
-        info = self._connection.get_flight_info(descriptor)
         options = pyarrow.flight.FlightCallOptions(timeout=timeout)
+        info = self._connection.get_flight_info(descriptor, options)
         reader = self._connection.do_get(self._info_to_ticket(info), options)
         return reader.read_pandas()
 
