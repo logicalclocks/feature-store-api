@@ -32,6 +32,7 @@ setup(
         "markupsafe<2.1.0",  # GE issue: jinja2==2.11.3, pulls in markupsafe 2.1.0 which is not compatible with jinja2==2.11.3.
         "tzlocal",
         "fsspec",
+        "retrying",
     ],
     extras_require={
         "dev": [

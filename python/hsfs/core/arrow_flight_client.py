@@ -29,6 +29,7 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi
 from hsfs import util
 from hsfs.storage_connector import StorageConnector
+from retrying import retry
 
 _arrow_flight_instance = None
 
@@ -203,8 +204,20 @@ class ArrowFlightClient:
 
         return decorator
 
+    @staticmethod
+    def _should_retry(exception):
+        return isinstance(exception, pyarrow._flight.FlightUnavailableError)
+
+    @retry(
+        wait_exponential_multiplier=1000,
+        stop_max_attempt_number=5,
+        retry_on_exception=_should_retry,
+    )
+    def get_flight_info(self, descriptor):
+        return self._connection.get_flight_info(descriptor)
+
     def _get_dataset(self, descriptor, timeout=DEFAULT_TIMEOUT):
-        info = self._connection.get_flight_info(descriptor)
+        info = self.get_flight_info(descriptor)
         options = pyarrow.flight.FlightCallOptions(timeout=timeout)
         reader = self._connection.do_get(self._info_to_ticket(info), options)
         return reader.read_pandas()
