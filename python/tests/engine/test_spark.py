@@ -941,13 +941,12 @@ class TestSpark:
             ]
             == "test_online_topic_name"
         )
-        assert (
-            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
-                0
-            ][
-                0
-            ]
-            == self._get_spark_query_name(project_id, fg)
+        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
+            0
+        ][
+            0
+        ] == self._get_spark_query_name(
+            project_id, fg
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.return_value.start.return_value.awaitTermination.call_count
@@ -1083,9 +1082,9 @@ class TestSpark:
 
     def _get_spark_query_name(self, project_id, feature_group):
         return (
-                f"insert_stream_{project_id}_{feature_group.id}"
-                f"_{feature_group.name}_{feature_group.version}_onlinefs"
-            )
+            f"insert_stream_{project_id}_{feature_group.id}"
+            f"_{feature_group.name}_{feature_group.version}_onlinefs"
+        )
 
     def test_save_stream_dataframe_checkpoint_dir(self, mocker, backend_fixtures):
         # Arrange
@@ -1202,13 +1201,12 @@ class TestSpark:
             ]
             == "test_online_topic_name"
         )
-        assert (
-            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
-                0
-            ][
-                0
-            ]
-            == self._get_spark_query_name(project_id, fg)
+        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
+            0
+        ][
+            0
+        ] == self._get_spark_query_name(
+            project_id, fg
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.return_value.start.return_value.awaitTermination.call_count
@@ -1330,13 +1328,12 @@ class TestSpark:
             ]
             == "test_online_topic_name"
         )
-        assert (
-            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
-                0
-            ][
-                0
-            ]
-            == self._get_spark_query_name(project_id, fg)
+        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
+            0
+        ][
+            0
+        ] == self._get_spark_query_name(
+            project_id, fg
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.return_value.start.return_value.awaitTermination.call_count

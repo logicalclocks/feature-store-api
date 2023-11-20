@@ -352,7 +352,8 @@ class Engine:
                 "headers",
                 array(
                     struct(
-                        lit("projectId").alias("key"), lit(project_id.encode("utf8")).alias("value")
+                        lit("projectId").alias("key"),
+                        lit(project_id.encode("utf8")).alias("value"),
                     ),
                     struct(
                         lit("featureGroupId").alias("key"),
