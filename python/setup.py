@@ -1,11 +1,11 @@
 import os
-import imp
+from importlib.machinery import SourceFileLoader
 from setuptools import setup, find_packages
 
 
-__version__ = imp.load_source(
+__version__ = SourceFileLoader(
     "hsfs.version", os.path.join("hsfs", "version.py")
-).__version__
+).load_module().__version__
 
 
 def read(fname):
