@@ -571,6 +571,9 @@ class Engine:
         else:
             return df, None
 
+    def drop_columns(self, df, drop_cols):
+        return df.drop(columns=drop_cols)
+
     def _prepare_transform_split_df(
         self, query_obj, training_dataset_obj, feature_view_obj, read_option
     ):
