@@ -30,6 +30,8 @@ class TrainingDatasetFeature:
         featuregroup=None,
         feature_group_feature_name=None,
         label=False,
+        inference_helper_column=False,
+        training_helper_column=False,
         transformation_function=None,
         **kwargs,
     ):
@@ -43,6 +45,8 @@ class TrainingDatasetFeature:
         )
         self._feature_group_feature_name = feature_group_feature_name
         self._label = label
+        self._inference_helper_column = inference_helper_column
+        self._training_helper_column = training_helper_column
         self._transformation_function = (
             TransformationFunction.from_response_json(transformation_function)
             if isinstance(transformation_function, dict)
@@ -55,6 +59,8 @@ class TrainingDatasetFeature:
             "type": self._type,
             "index": self._index,
             "label": self._label,
+            "inferenceHelperColumn": self._inference_helper_column,
+            "trainingHelperColumn": self._training_helper_column,
             "transformationFunction": self._transformation_function,
             "featureGroupFeatureName": self._feature_group_feature_name,
             "featuregroup": self._feature_group,
@@ -99,6 +105,24 @@ class TrainingDatasetFeature:
     @label.setter
     def label(self, label):
         self._label = label
+
+    @property
+    def inference_helper_column(self):
+        """Indicator if it is feature."""
+        return self._inference_helper_column
+
+    @inference_helper_column.setter
+    def inference_helper_column(self, inference_helper_column):
+        self._inference_helper_column = inference_helper_column
+
+    @property
+    def training_helper_column(self):
+        """Indicator if it is feature."""
+        return self._training_helper_column
+
+    @training_helper_column.setter
+    def training_helper_column(self, training_helper_column):
+        self._training_helper_column = training_helper_column
 
     @property
     def transformation_function(self):
