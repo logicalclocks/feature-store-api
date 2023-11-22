@@ -85,6 +85,18 @@ class Filter:
     def __str__(self):
         return self.json()
 
+    @property
+    def feature(self):
+        return self._feature
+
+    @property
+    def condition(self):
+        return self._condition
+
+    @property
+    def value(self):
+        return self._value
+
 
 class Logic:
     AND = "AND"
@@ -166,3 +178,13 @@ class Logic:
 
     def __str__(self):
         return self.json()
+
+    @property
+    def type(self):
+        return self._type
+
+    def get_left_filter_or_logic(self):
+        return self._left_f or self._left_l
+
+    def get_right_filter_or_logic(self):
+        return self._right_f or self._right_l
