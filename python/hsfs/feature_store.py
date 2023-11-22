@@ -70,6 +70,7 @@ class FeatureStore:
         online_featurestore_name=None,
         mysql_server_endpoint=None,
         online_featurestore_size=None,
+        **kwargs,
     ):
         self._id = featurestore_id
         self._name = featurestore_name
@@ -1383,6 +1384,8 @@ class FeatureStore:
         version: Optional[int] = None,
         description: Optional[str] = "",
         labels: Optional[List[str]] = [],
+        inference_helper_columns: Optional[List[str]] = [],
+        training_helper_columns: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
         """Create a feature view metadata object and saved it to hopsworks.
@@ -1450,6 +1453,23 @@ class FeatureStore:
                 the feature view. When replaying a `Query` during model inference,
                 the label features can be omitted from the feature vector retrieval.
                 Defaults to `[]`, no label.
+            inference_helper_columns: A list of feature names that are not used in training the model itself but can be
+                used during batch or online inference for extra information. Inference helper column name(s) must be
+                part of the `Query` object. If inference helper column name(s) belong to feature group that is part
+                of a `Join` with `prefix` defined, then this prefix needs to be prepended to the original column name
+                when defining `inference_helper_columns` list. When replaying a `Query` during model inference,
+                the inference helper columns optionally can be omitted during batch (`get_batch_data`) and will be
+                omitted during online  inference (`get_feature_vector(s)`). To get inference helper column(s) during
+                online inference use `get_inference_helper(s)` method. Defaults to `[], no helper columns.
+            training_helper_columns: A list of feature names that are not the part of the model schema itself but can be
+                used during training as a helper for extra information. Training helper column name(s) must be
+                part of the `Query` object. If training helper column name(s) belong to feature group that is part
+                of a `Join` with `prefix` defined, then this prefix needs to prepended to the original column name when
+                defining `training_helper_columns` list. When replaying a `Query` during model inference,
+                the training helper columns will be omitted during both batch and online inference.
+                Training helper columns can be optionally fetched with training data. For more details see
+                documentation for feature view's get training data methods.  Defaults to `[], no training helper
+                columns.
             transformation_functions: A dictionary mapping tansformation functions to
                 to the features they should be applied to before writing out the
                 vector and at inference time. Defaults to `{}`, no
@@ -1465,6 +1485,8 @@ class FeatureStore:
             version=version,
             description=description,
             labels=labels,
+            inference_helper_columns=inference_helper_columns,
+            training_helper_columns=training_helper_columns,
             transformation_functions=transformation_functions,
         )
         return self._feature_view_engine.save(feat_view)
@@ -1477,6 +1499,8 @@ class FeatureStore:
         version: int,
         description: Optional[str] = "",
         labels: Optional[List[str]] = [],
+        inference_helper_columns: Optional[List[str]] = [],
+        training_helper_columns: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
     ):
         """Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
@@ -1506,6 +1530,23 @@ class FeatureStore:
                 the feature view. When replaying a `Query` during model inference,
                 the label features can be omitted from the feature vector retrieval.
                 Defaults to `[]`, no label.
+            inference_helper_columns: A list of feature names that are not used in training the model itself but can be
+                used during batch or online inference for extra information. Inference helper column name(s) must be
+                part of the `Query` object. If inference helper column name(s) belong to feature group that is part
+                of a `Join` with `prefix` defined, then this prefix needs to be prepended to the original column name
+                when defining `inference_helper_columns` list. When replaying a `Query` during model inference,
+                the inference helper columns optionally can be omitted during batch (`get_batch_data`) and will be
+                omitted during online  inference (`get_feature_vector(s)`). To get inference helper column(s) during
+                online inference use `get_inference_helper(s)` method. Defaults to `[], no helper columns.
+            training_helper_columns: A list of feature names that are not the part of the model schema itself but can be
+                used during training as a helper for extra information. Training helper column name(s) must be
+                part of the `Query` object. If training helper column name(s) belong to feature group that is part
+                of a `Join` with `prefix` defined, then this prefix needs to prepended to the original column name when
+                defining `training_helper_columns` list. When replaying a `Query` during model inference,
+                the training helper columns will be omitted during both batch and online inference.
+                Training helper columns can be optionally fetched with training data. For more details see
+                documentation for feature view's get training data methods.  Defaults to `[], no training helper
+                columns.
             transformation_functions: A dictionary mapping tansformation functions to
                 to the features they should be applied to before writing out the
                 vector and at inference time. Defaults to `{}`, no
@@ -1527,6 +1568,8 @@ class FeatureStore:
                     version=version,
                     description=description,
                     labels=labels,
+                    inference_helper_columns=inference_helper_columns,
+                    training_helper_columns=training_helper_columns,
                     transformation_functions=transformation_functions,
                 )
             else:

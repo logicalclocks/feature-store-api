@@ -29,6 +29,7 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi
 from hsfs import util
 from hsfs.storage_connector import StorageConnector
+from retrying import retry
 
 _arrow_flight_instance = None
 
@@ -40,6 +41,11 @@ def get_instance():
     return _arrow_flight_instance
 
 
+def close():
+    global _arrow_flight_instance
+    _arrow_flight_instance = None
+
+
 class ArrowFlightClient:
     SUPPORTED_FORMATS = ["parquet"]
     SUPPORTED_EXTERNAL_CONNECTORS = [
@@ -49,6 +55,7 @@ class ArrowFlightClient:
     FILTER_NUMERIC_TYPES = ["bigint", "tinyint", "smallint", "int", "float", "double"]
     READ_ERROR = 'Could not read data using ArrowFlight. If the issue persists, use read_options={"use_hive": True} instead.'
     WRITE_ERROR = 'Could not write data using ArrowFlight. If the issue persists, use write_options={"use_spark": True} instead.'
+    DEFAULT_TIMEOUT = 900
 
     def __init__(self):
         try:
@@ -197,25 +204,43 @@ class ArrowFlightClient:
 
         return decorator
 
-    def _get_dataset(self, descriptor):
-        info = self._connection.get_flight_info(descriptor)
-        reader = self._connection.do_get(self._info_to_ticket(info))
+    @staticmethod
+    def _should_retry(exception):
+        return isinstance(exception, pyarrow._flight.FlightUnavailableError)
+
+    @retry(
+        wait_exponential_multiplier=1000,
+        stop_max_attempt_number=5,
+        retry_on_exception=_should_retry,
+    )
+    def get_flight_info(self, descriptor):
+        return self._connection.get_flight_info(descriptor)
+
+    def _get_dataset(self, descriptor, timeout=DEFAULT_TIMEOUT):
+        info = self.get_flight_info(descriptor)
+        options = pyarrow.flight.FlightCallOptions(timeout=timeout)
+        reader = self._connection.do_get(self._info_to_ticket(info), options)
         return reader.read_pandas()
 
     @_handle_afs_exception(user_message=READ_ERROR)
-    def read_query(self, query_object):
+    def read_query(self, query_object, arrow_flight_config):
         query_encoded = json.dumps(query_object).encode("ascii")
         descriptor = pyarrow.flight.FlightDescriptor.for_command(query_encoded)
-        return self._get_dataset(descriptor)
+        return self._get_dataset(
+            descriptor,
+            arrow_flight_config.get("timeout")
+            if arrow_flight_config
+            else self.DEFAULT_TIMEOUT,
+        )
 
     @_handle_afs_exception(user_message=READ_ERROR)
-    def read_path(self, path):
+    def read_path(self, path, arrow_flight_config):
         descriptor = pyarrow.flight.FlightDescriptor.for_path(path)
-        return self._get_dataset(descriptor)
+        return self._get_dataset(descriptor, arrow_flight_config)
 
     @_handle_afs_exception(user_message=WRITE_ERROR)
     def create_training_dataset(
-        self, feature_view_obj, training_dataset_obj, query_obj
+        self, feature_view_obj, training_dataset_obj, query_obj, arrow_flight_config
     ):
         training_dataset = {}
         training_dataset["fs_name"] = util.strip_feature_store_suffix(
@@ -232,7 +257,13 @@ class ArrowFlightClient:
             action = pyarrow.flight.Action(
                 "create-training-dataset", training_dataset_buf
             )
-            for result in self._connection.do_action(action):
+            timeout = (
+                arrow_flight_config.get("timeout", self.DEFAULT_TIMEOUT)
+                if arrow_flight_config
+                else self.DEFAULT_TIMEOUT
+            )
+            options = pyarrow.flight.FlightCallOptions(timeout=timeout)
+            for result in self._connection.do_action(action, options):
                 return result.body.to_pybytes()
         except pyarrow.lib.ArrowIOError as e:
             print("Error calling action:", e)
@@ -335,10 +366,13 @@ class ArrowFlightClient:
         return f"{fg_name}.{feature.name}"
 
     def _translate_to_duckdb(self, query, query_str):
-        return query_str.replace(
-            f"`{query._left_feature_group.feature_store_name}`.`",
-            f"`{query._left_feature_group._get_project_name()}.",
-        ).replace("`", '"')
+        translated = query_str
+        for fg in query.featuregroups:
+            translated = translated.replace(
+                f"`{fg.feature_store_name}`.`",
+                f"`{fg._get_project_name()}.",
+            )
+        return translated.replace("`", '"')
 
     def _info_to_ticket(self, info):
         return info.endpoints[0].ticket

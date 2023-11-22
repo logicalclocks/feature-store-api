@@ -676,7 +676,7 @@ class TestFeatureViewEngine:
 
         # Act
         fv_engine.create_training_dataset(
-            feature_view_obj=None, training_dataset_obj=None, user_write_options=None
+            feature_view_obj=None, training_dataset_obj=None, user_write_options={}
         )
 
         # Assert
@@ -796,6 +796,7 @@ class TestFeatureViewEngine:
             "hsfs.core.feature_view_engine.FeatureViewEngine._check_feature_group_accessibility"
         )
         mocker.patch("hsfs.core.feature_view_engine.FeatureViewEngine.get_batch_query")
+
         mock_fv_engine_compute_training_dataset_statistics = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.compute_training_dataset_statistics"
         )
@@ -848,7 +849,9 @@ class TestFeatureViewEngine:
         mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._check_feature_group_accessibility"
         )
+
         mocker.patch("hsfs.core.feature_view_engine.FeatureViewEngine.get_batch_query")
+
         mock_fv_engine_compute_training_dataset_statistics = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.compute_training_dataset_statistics"
         )
@@ -1064,7 +1067,7 @@ class TestFeatureViewEngine:
         fv_engine.recreate_training_dataset(
             feature_view_obj=None,
             training_dataset_version=None,
-            user_write_options=None,
+            user_write_options={},
         )
 
         # Assert
@@ -1095,7 +1098,16 @@ class TestFeatureViewEngine:
 
         # Act
         fv_engine._read_from_storage_connector(
-            training_data_obj=td, splits=None, read_options=None
+            training_data_obj=td,
+            splits=None,
+            read_options=None,
+            with_primary_keys=None,
+            primary_keys=None,
+            with_event_time=None,
+            event_time=None,
+            with_training_helper_columns=None,
+            training_helper_columns=None,
+            feature_view_features=[],
         )
 
         # Assert
@@ -1132,7 +1144,16 @@ class TestFeatureViewEngine:
 
         # Act
         fv_engine._read_from_storage_connector(
-            training_data_obj=td, splits=splits, read_options=None
+            training_data_obj=td,
+            splits=splits,
+            read_options=None,
+            with_primary_keys=None,
+            primary_keys=None,
+            with_event_time=None,
+            event_time=None,
+            with_training_helper_columns=None,
+            training_helper_columns=None,
+            feature_view_features=[],
         )
 
         # Assert
@@ -1168,7 +1189,16 @@ class TestFeatureViewEngine:
 
         # Act
         fv_engine._read_dir_from_storage_connector(
-            training_data_obj=td, path="test", read_options=None
+            training_data_obj=td,
+            path="test",
+            read_options=None,
+            with_primary_keys=False,
+            primary_keys=[],
+            with_event_time=False,
+            event_time=[],
+            with_training_helper_columns=False,
+            training_helper_columns=[],
+            feature_view_features=[],
         )
 
         # Assert
@@ -1200,7 +1230,16 @@ class TestFeatureViewEngine:
         # Act
         with pytest.raises(FileNotFoundError) as e_info:
             fv_engine._read_dir_from_storage_connector(
-                training_data_obj=td, path="test", read_options=None
+                training_data_obj=td,
+                path="test",
+                read_options=None,
+                with_primary_keys=None,
+                primary_keys=None,
+                with_event_time=None,
+                event_time=None,
+                with_training_helper_columns=None,
+                training_helper_columns=None,
+                feature_view_features=[],
             )
 
         # Assert
@@ -1237,7 +1276,7 @@ class TestFeatureViewEngine:
         with pytest.raises(ValueError) as e_info:
             fv_engine.compute_training_dataset(
                 feature_view_obj=None,
-                user_write_options=None,
+                user_write_options={},
                 training_dataset_obj=None,
                 training_dataset_version=None,
             )
@@ -1283,7 +1322,7 @@ class TestFeatureViewEngine:
         # Act
         fv_engine.compute_training_dataset(
             feature_view_obj=None,
-            user_write_options=None,
+            user_write_options={},
             training_dataset_obj=td,
             training_dataset_version=None,
         )
@@ -1330,7 +1369,7 @@ class TestFeatureViewEngine:
         # Act
         fv_engine.compute_training_dataset(
             feature_view_obj=None,
-            user_write_options=None,
+            user_write_options={},
             training_dataset_obj=None,
             training_dataset_version=1,
         )
@@ -1375,7 +1414,7 @@ class TestFeatureViewEngine:
         # Act
         fv_engine.compute_training_dataset(
             feature_view_obj=None,
-            user_write_options=None,
+            user_write_options={},
             training_dataset_obj=td,
             training_dataset_version=None,
         )
@@ -1420,7 +1459,7 @@ class TestFeatureViewEngine:
         # Act
         fv_engine.compute_training_dataset(
             feature_view_obj=None,
-            user_write_options=None,
+            user_write_options={},
             training_dataset_obj=td,
             training_dataset_version=None,
         )

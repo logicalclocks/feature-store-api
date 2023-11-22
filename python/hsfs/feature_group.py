@@ -15,6 +15,8 @@
 #
 
 import copy
+import time
+
 from hsfs.ge_validation_result import ValidationResult
 import humps
 import json
@@ -71,6 +73,7 @@ class FeatureGroupBase:
         online_topic_name=None,
         topic_name=None,
         deprecated=False,
+        **kwargs,
     ):
         self._version = version
         self._name = name
@@ -1468,6 +1471,7 @@ class FeatureGroup(FeatureGroupBase):
         href=None,
         delta_streamer_job_conf=None,
         deprecated=False,
+        **kwargs,
     ):
         super().__init__(
             name,
@@ -1612,6 +1616,8 @@ class FeatureGroup(FeatureGroupBase):
                 For python engine:
                 * key `"use_hive"` and value `True` to read feature group
                   with Hive instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
+                  For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `"pandas_types"` and value `True` to retrieve columns as
@@ -2588,23 +2594,26 @@ class FeatureGroup(FeatureGroupBase):
     def materialization_job(self):
         """Get the Job object reference for the materialization job for this
         Feature Group."""
-        if self._materialization_job is None:
-            try:
-                job_name = "{fg_name}_{version}_offline_fg_materialization".format(
-                    fg_name=self._name, version=self._version
-                )
-                self._materialization_job = job_api.JobApi().get(job_name)
-            except RestAPIError as e:
-                if (
-                    e.response.json().get("errorCode", "") == 130009
-                    and e.response.status_code == 404
-                ):
-                    job_name = "{fg_name}_{version}_offline_fg_backfill".format(
-                        fg_name=self._name, version=self._version
-                    )
-                    self._materialization_job = job_api.JobApi().get(job_name)
-
-        return self._materialization_job
+        if self._materialization_job is not None:
+            return self._materialization_job
+        else:
+            feature_group_name = util.feature_group_name(self)
+            job_suffix_list = ["materialization", "backfill"]
+            for job_suffix in job_suffix_list:
+                job_name = "{}_offline_fg_{}".format(feature_group_name, job_suffix)
+                for _ in range(3):  # retry starting job
+                    try:
+                        self._materialization_job = job_api.JobApi().get(job_name)
+                        return self._materialization_job
+                    except RestAPIError as e:
+                        if e.response.status_code == 404:
+                            if e.response.json().get("errorCode", "") == 130009:
+                                break  # no need to retry, since no such job exists
+                            else:
+                                time.sleep(1)  # backoff and then retry
+                                continue
+                        raise e
+            raise FeatureStoreException("No materialization job was found")
 
     @description.setter
     def description(self, new_description):
@@ -2662,6 +2671,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         topic_name=None,
         spine=False,
         deprecated=False,
+        **kwargs,
     ):
         super().__init__(
             name,
@@ -3015,6 +3025,7 @@ class SpineGroup(FeatureGroupBase):
         spine=True,
         dataframe="spine",
         deprecated=False,
+        **kwargs,
     ):
         super().__init__(
             name,

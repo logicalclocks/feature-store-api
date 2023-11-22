@@ -27,7 +27,7 @@
         <lombok.version>1.18.10</lombok.version>
         <fasterxml.jackson.databind.version>2.10.0</fasterxml.jackson.databind.version>
         <deequ.version>1.1.0.6-SNAPSHOT</deequ.version>
-        <hudi.version>0.10.0.3</hudi.version>
+        <hudi.version>0.12.3.0</hudi.version>
         <awssdk.version>2.10.40</awssdk.version>
         <scala.version>2.12.10</scala.version>
         <scala-short.version>2.12</scala-short.version>
@@ -38,6 +38,8 @@
         <surefire-plugin.version>2.22.0</surefire-plugin.version>
         <mockito.version>4.3.1</mockito.version>
         <avro.version>1.8.2</avro.version>
+
+        <artifact.spark.version>spark3.1</artifact.spark.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <delombok.output>${project.basedir}/delombok</delombok.output>
@@ -271,6 +273,17 @@
             </testResource>
         </testResources>
     </build>
+
+    <profiles>
+        <profile>
+            <id>spark-3.3</id>
+            <properties>
+                <deequ.version>2.0.4.0-spark-3.3</deequ.version>
+                <artifact.spark.version>spark3.3</artifact.spark.version>
+            </properties>
+        </profile>
+    </profiles>
+
     <repositories>
         <repository>
             <id>Hops</id>

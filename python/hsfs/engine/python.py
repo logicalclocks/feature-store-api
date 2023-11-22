@@ -109,6 +109,9 @@ class Engine:
                 dataframe_type,
                 schema,
                 hive_config=read_options.get("hive_config") if read_options else None,
+                arrow_flight_config=read_options.get("arrow_flight_config", {})
+                if read_options
+                else {},
             )
         else:
             return self._jdbc(
@@ -127,12 +130,14 @@ class Engine:
         dataframe_type,
         schema=None,
         hive_config=None,
+        arrow_flight_config={},
     ):
         if arrow_flight_client.get_instance().is_flyingduck_query_object(sql_query):
             result_df = util.run_with_loading_animation(
                 "Reading data from Hopsworks, using ArrowFlight",
                 arrow_flight_client.get_instance().read_query,
                 sql_query,
+                arrow_flight_config,
             )
         else:
             with self._create_hive_connection(
@@ -239,7 +244,10 @@ class Engine:
                     if arrow_flight_client.get_instance().is_data_format_supported(
                         data_format, read_options
                     ):
-                        df = arrow_flight_client.get_instance().read_path(inode.path)
+                        arrow_flight_config = read_options.get("arrow_flight_config")
+                        df = arrow_flight_client.get_instance().read_path(
+                            inode.path, arrow_flight_config
+                        )
                     else:
                         content_stream = self._dataset_api.read_content(inode.path)
                         df = self._read_pandas(
@@ -563,6 +571,9 @@ class Engine:
         else:
             return df, None
 
+    def drop_columns(self, df, drop_cols):
+        return df.drop(columns=drop_cols)
+
     def _prepare_transform_split_df(
         self, query_obj, training_dataset_obj, feature_view_obj, read_option
     ):
@@ -688,6 +699,7 @@ class Engine:
                 feature_view_obj,
                 training_dataset,
                 query_obj,
+                user_write_options.get("arrow_flight_config", {}),
             )
 
             return response

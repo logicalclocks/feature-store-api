@@ -28,7 +28,7 @@ class Join:
     LEFT_SEMI_JOIN = "LEFT_SEMI_JOIN"
     COMMA = "COMMA"
 
-    def __init__(self, query, on, left_on, right_on, join_type, prefix):
+    def __init__(self, query, on, left_on, right_on, join_type, prefix, **kwargs):
         self._query = query
         self._on = util.parse_features(on)
         self._left_on = util.parse_features(left_on)

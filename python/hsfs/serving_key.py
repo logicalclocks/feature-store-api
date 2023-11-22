@@ -29,6 +29,7 @@ class ServingKey:
         prefix="",
         join_on=None,
         ignore_prefix=False,
+        **kwargs,
     ):
         self._feature_name = feature_name
         self._feature_group = feature_group
