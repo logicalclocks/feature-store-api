@@ -3,9 +3,11 @@ from importlib.machinery import SourceFileLoader
 from setuptools import setup, find_packages
 
 
-__version__ = SourceFileLoader(
-    "hsfs.version", os.path.join("hsfs", "version.py")
-).load_module().__version__
+__version__ = (
+    SourceFileLoader("hsfs.version", os.path.join("hsfs", "version.py"))
+    .load_module()
+    .__version__
+)
 
 
 def read(fname):
