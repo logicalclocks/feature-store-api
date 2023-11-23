@@ -1,6 +1,8 @@
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor.join import Join
 from hsfs.feature import Feature
+from hsfs import client
+from hsfs.client.external import Client
 
 class VectorDbClient:
 
@@ -60,6 +62,7 @@ class VectorDbClient:
                 self._fg_vdb_col_td_col_map[
                     join_fg.id] = vdb_col_td_col_map
 
+    # TODO: opensearch client should be singleton
     def _setup_opensearch_client(self):
         if not self._opensearch_client:
             try:
@@ -69,9 +72,17 @@ class VectorDbClient:
                 raise ModuleNotFoundError(
                     "hopsworks or opensearchpy is not installed"
                 )
-            conn = hopsworks.connection(host="localhost", port="38181", project="test_ken",
-                    api_key_file="apikey.dev3")
-            opensearch_api = conn.get_project().get_opensearch_api()
+            if not hopsworks._connected_project:
+                if isinstance(client.get_instance(), Client):
+                    hopsworks.login(
+                        host=client.get_instance().host,
+                        port=client.get_instance()._port,
+                        project=client.get_instance()._project_name,
+                        api_key_value=client.get_instance()._auth._token,
+                    )
+                else:
+                    hopsworks.login()
+            opensearch_api = hopsworks._connected_project.get_opensearch_api()
             self._opensearch_client = OpenSearch(**opensearch_api.get_default_py_config())
 
     def _refresh_opensearch_connection(self):
