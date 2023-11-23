@@ -59,4 +59,4 @@ jobs:
       - name: mike deploy docs
         run: |
           mike deploy ${{ env.RELEASE_VERSION }} ${{ env.MAJOR_VERSION }} -u --push
-          mike alias ${{ env.RELEASE_VERSION }} latest -u --push
+          mike alias ${{ env.RELEASE_VERSION }} -u --push
