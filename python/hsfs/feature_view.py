@@ -669,9 +669,7 @@ class FeatureView:
                 vector_db_features = vector_db_features[0]  # get the first result
                 if passed_features and vector_db_features:
                     vector_db_features.update(passed_features)
-                    passed_features = vector_db_features
-                else:
-                    passed_features = vector_db_features
+                passed_features = vector_db_features
         return passed_features
 
     def find_neighbors(self, embedding, feature=None, k=10, filter=None, min_score=0):
