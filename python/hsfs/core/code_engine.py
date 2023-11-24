@@ -15,11 +15,9 @@
 #
 
 import datetime
-import importlib.util
 
 from hsfs import code
 from hsfs.core import code_api
-import json
 import os
 
 
@@ -32,12 +30,6 @@ class CodeEngine:
     # JOB
     JOB_ENV = "HOPSWORKS_JOB_NAME"
 
-    # DATABRICKS
-    DATABRICKS_EXTRA_CONTEXT = "extraContext"
-    DATABRICKS_NOTEBOOK_PATH = "notebook_path"
-    DATABRICKS_TAGS = "tags"
-    DATABRICKS_BROWSER_HOST_NAME = "browserHostName"
-
     def __init__(self, feature_store_id, entity_type):
         self._code_api = code_api.CodeApi(feature_store_id, entity_type)
 
@@ -48,11 +40,6 @@ class CodeEngine:
         kernel_id = os.environ.get(CodeEngine.KERNEL_ENV)
         # JOB
         job_name = os.environ.get(CodeEngine.JOB_ENV)
-        # DATABRICKS
-        try:
-            databricks = importlib.util.find_spec("pyspark.dbutils")
-        except ModuleNotFoundError:
-            databricks = False
 
         web_proxy = os.environ.get(CodeEngine.WEB_PROXY_ENV)
         code_entity = code.Code(
@@ -74,32 +61,8 @@ class CodeEngine:
                 entity_id=job_name,
                 code_type=RunType.JOB,
             )
-        elif databricks:
-            from pyspark.dbutils import DBUtils
-
-            dbuts = DBUtils()
-
-            context = json.loads(
-                dbuts.notebook.entry_point.getDbutils().notebook().getContext().toJson()
-            )
-            notebook_path = context[CodeEngine.DATABRICKS_EXTRA_CONTEXT].get(
-                CodeEngine.DATABRICKS_NOTEBOOK_PATH
-            )
-            browser_host_name = context[CodeEngine.DATABRICKS_TAGS].get(
-                CodeEngine.DATABRICKS_BROWSER_HOST_NAME
-            )
-
-            # Save HTML
-            self._code_api.post(
-                metadata_instance=metadata_instance,
-                code=code_entity,
-                entity_id=notebook_path,
-                code_type=RunType.DATABRICKS,
-                databricks_cluster_id=browser_host_name,
-            )
 
 
 class RunType:
     JUPYTER = "JUPYTER"
     JOB = "JOB"
-    DATABRICKS = "DATABRICKS"
