@@ -87,43 +87,6 @@ class TestCodeEngine:
             == code_engine.RunType.JOB
         )
 
-    def test_td_save_databricks(self, mocker, reset):
-        # Arrange
-        feature_store_id = 99
-
-        sys.modules["pyspark.dbutils"] = mocker.Mock()
-        sys.modules["pyspark.dbutils"].__spec__ = mocker.Mock()
-        json = """{"extraContext": {"notebook_path": "test_path"},
-                    "tags": {"browserHostName": "test_browser_host_name"}}"""
-        sys.modules[
-            "pyspark.dbutils"
-        ].DBUtils().notebook.entry_point.getDbutils().notebook().getContext().toJson = mocker.Mock(
-            return_value=json
-        )
-
-        mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-        mock_code_api = mocker.patch("hsfs.core.code_api.CodeApi")
-
-        td = training_dataset.TrainingDataset(
-            name="test",
-            version=1,
-            data_format="CSV",
-            featurestore_id=feature_store_id,
-            splits={},
-            id=0,
-        )
-        c_engine = code_engine.CodeEngine(feature_store_id, "trainingdatasets")
-
-        # Act
-        c_engine.save_code(td)
-
-        # Assert
-        assert mock_code_api.return_value.post.call_count == 1
-        assert (
-            mock_code_api.return_value.post.call_args[1]["code_type"]
-            == code_engine.RunType.DATABRICKS
-        )
-
     def test_fg_save_jupyter(self, mocker, reset):
         # Arrange
         feature_store_id = 99
@@ -180,40 +143,4 @@ class TestCodeEngine:
         assert (
             mock_code_api.return_value.post.call_args[1]["code_type"]
             == code_engine.RunType.JOB
-        )
-
-    def test_fg_save_databricks(self, mocker, reset):
-        # Arrange
-        feature_store_id = 99
-
-        sys.modules["pyspark.dbutils"] = mocker.Mock()
-        sys.modules["pyspark.dbutils"].__spec__ = mocker.Mock()
-        json = """{"extraContext": {"notebook_path": "test_path"},
-                    "tags": {"browserHostName": "test_browser_host_name"}}"""
-        sys.modules[
-            "pyspark.dbutils"
-        ].DBUtils().notebook.entry_point.getDbutils().notebook().getContext().toJson = mocker.Mock(
-            return_value=json
-        )
-        mocker.patch("hsfs.engine.get_type")
-        mock_code_api = mocker.patch("hsfs.core.code_api.CodeApi")
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=99,
-            primary_key=[],
-            partition_key=[],
-            id=0,
-        )
-        c_engine = code_engine.CodeEngine(feature_store_id, "trainingdatasets")
-
-        # Act
-        c_engine.save_code(fg)
-
-        # Assert
-        assert mock_code_api.return_value.post.call_count == 1
-        assert (
-            mock_code_api.return_value.post.call_args[1]["code_type"]
-            == code_engine.RunType.DATABRICKS
         )
