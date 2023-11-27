@@ -493,7 +493,11 @@ class VectorServer:
     def get_complex_feature_schemas(self):
         return {
             f.name: avro.io.DatumReader(
-                avro.schema.parse(f._feature_group._get_feature_avro_schema(f.feature_group_feature_name))
+                avro.schema.parse(
+                    f._feature_group._get_feature_avro_schema(
+                        f.feature_group_feature_name
+                    )
+                )
             )
             for f in self._features
             if f.is_complex()
@@ -644,10 +648,9 @@ class VectorServer:
         fg_entry = {}
         complete = True
         for sk in self._serving_key_by_serving_index[join_index]:
-            fg_entry[sk.feature_name] = (
-                entry.get(sk.required_serving_key)
-                or entry.get(sk.feature_name) # fallback to use raw feature name
-            )
+            fg_entry[sk.feature_name] = entry.get(sk.required_serving_key) or entry.get(
+                sk.feature_name
+            )  # fallback to use raw feature name
             if fg_entry[sk.feature_name] is None:
                 complete = False
                 break

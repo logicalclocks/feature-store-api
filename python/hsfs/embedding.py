@@ -24,10 +24,12 @@ from hsfs import (
     util,
 )
 
+
 class SimilarityFunctionType:
     L2 = "l2_norm"
     COSINE = "cosine"
     DOT_PRODUCT = "dot_product"
+
 
 @dataclass
 class EmbeddingFeature:
@@ -43,7 +45,7 @@ class EmbeddingFeature:
         return cls(
             name=json_decamelized.get("name"),
             dimension=json_decamelized.get("dimension"),
-            similarity_function_type=json_decamelized.get("similarity_function_type")
+            similarity_function_type=json_decamelized.get("similarity_function_type"),
         )
 
     def json(self):
@@ -53,11 +55,11 @@ class EmbeddingFeature:
         return {
             "name": self.name,
             "dimension": self.dimension,
-            "similarityFunctionType": self.similarity_function_type
+            "similarityFunctionType": self.similarity_function_type,
         }
 
-class EmbeddingIndex:
 
+class EmbeddingIndex:
     def __init__(self, index_name=None, features=None, col_prefix=None):
         self._index_name = index_name
         if features is None:
@@ -67,8 +69,12 @@ class EmbeddingIndex:
         self._feature_group = None
         self._col_prefix = col_prefix
 
-    def add_embedding(self, name, dimension, similarity_function_type=SimilarityFunctionType.L2):
-        self._features.append(EmbeddingFeature(name, dimension, similarity_function_type))
+    def add_embedding(
+        self, name, dimension, similarity_function_type=SimilarityFunctionType.L2
+    ):
+        self._features.append(
+            EmbeddingFeature(name, dimension, similarity_function_type)
+        )
 
     def get_embeddings(self):
         for feat in self._features:
@@ -81,8 +87,11 @@ class EmbeddingIndex:
         json_decamelized = humps.decamelize(json_dict)
         return cls(
             index_name=json_decamelized.get("index_name"),
-            features=[EmbeddingFeature.from_json_response(f) for f in json_decamelized.get("features")],
-            col_prefix=json_decamelized.get("col_prefix")
+            features=[
+                EmbeddingFeature.from_json_response(f)
+                for f in json_decamelized.get("features")
+            ],
+            col_prefix=json_decamelized.get("col_prefix"),
         )
 
     @property
@@ -108,5 +117,5 @@ class EmbeddingIndex:
         return {
             "indexName": self._index_name,
             "features": self._features,
-            "colPrefix": self._col_prefix
+            "colPrefix": self._col_prefix,
         }

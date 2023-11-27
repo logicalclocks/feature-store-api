@@ -254,10 +254,11 @@ class FeatureView:
         )
 
         self._prefix_serving_key_map = dict(
-                [(f"{sk.prefix}{sk.feature_name}",
-                  sk)
-                 for sk in self._single_vector_server.serving_keys]
-            )
+            [
+                (f"{sk.prefix}{sk.feature_name}", sk)
+                for sk in self._single_vector_server.serving_keys
+            ]
+        )
 
         # initiate batch vector server
         self._batch_vectors_server = vector_server.VectorServer(
@@ -543,10 +544,13 @@ class FeatureView:
             self.init_serving(external=external)
         updated_passed_feature = []
         for i in range(len(entry)):
-            updated_passed_feature.append(self._update_with_vector_db_result(
-                self._batch_vectors_server,
-                entry[i], passed_features[i] if passed_features else {}
-            ))
+            updated_passed_feature.append(
+                self._update_with_vector_db_result(
+                    self._batch_vectors_server,
+                    entry[i],
+                    passed_features[i] if passed_features else {},
+                )
+            )
         return self._batch_vectors_server.get_feature_vectors(
             entry, return_type, updated_passed_feature, allow_missing
         )
@@ -655,9 +659,7 @@ class FeatureView:
 
     def _update_with_vector_db_result(self, vec_server, entry, passed_features):
         for k, fg in self._vector_db_client.embedding_fg_by_join_index.items():
-            complete, fg_entry = vec_server.filter_entry_by_join_index(
-                entry, k
-            )
+            complete, fg_entry = vec_server.filter_entry_by_join_index(entry, k)
             if not complete:
                 # Not retrieving from vector db if entry is not completed
                 continue
@@ -677,8 +679,11 @@ class FeatureView:
         if self._vector_db_client is None:
             self.init_serving()
         results = self._vector_db_client.find_neighbors(
-            embedding, feature=(feature if feature else None),
-            k=k, filter=filter, min_score=min_score
+            embedding,
+            feature=(feature if feature else None),
+            k=k,
+            filter=filter,
+            min_score=min_score,
         )
         if len(results) == 0:
             return []
@@ -690,7 +695,7 @@ class FeatureView:
             [self._extract_primary_key(res[1]) for res in results],
             passed_features=passed_features,
             external=True,
-            allow_missing=True
+            allow_missing=True,
         )
 
     def _extract_primary_key(self, result_key):
@@ -698,7 +703,7 @@ class FeatureView:
         for prefix_sk, sk in self._prefix_serving_key_map.items():
             if prefix_sk in result_key:
                 primary_key_map[sk.required_serving_key] = result_key[prefix_sk]
-            elif sk.feature_name in result_key: # fall back to use raw feature name
+            elif sk.feature_name in result_key:  # fall back to use raw feature name
                 primary_key_map[sk.required_serving_key] = result_key[sk.feature_name]
         if len(self._single_vector_server.required_serving_keys) > len(primary_key_map):
             raise FeatureStoreException(
@@ -709,9 +714,7 @@ class FeatureView:
         return primary_key_map
 
     def _get_embedding_fgs(self):
-        return set(
-            [fg for fg in self.query.featuregroups if fg.embedding_index]
-        )
+        return set([fg for fg in self.query.featuregroups if fg.embedding_index])
 
     @usage.method_logger
     def get_batch_data(
@@ -2975,7 +2978,8 @@ class FeatureView:
             return _vector_server.required_serving_keys
         else:
             _vector_server = vector_server.VectorServer(
-                self._featurestore_id, self._features,
+                self._featurestore_id,
+                self._features,
                 serving_keys=self._serving_keys,
                 skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
             )

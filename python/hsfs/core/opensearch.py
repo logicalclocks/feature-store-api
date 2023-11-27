@@ -19,6 +19,7 @@ from hsfs.client.external import Client
 from hsfs.client.exceptions import FeatureStoreException
 import logging
 
+
 class OpenSearchClientSingleton:
     _instance = None
 
@@ -52,7 +53,9 @@ class OpenSearchClientSingleton:
                 else:
                     hopsworks.login()
             opensearch_api = hopsworks._connected_project.get_opensearch_api()
-            self._opensearch_client = OpenSearch(**opensearch_api.get_default_py_config())
+            self._opensearch_client = OpenSearch(
+                **opensearch_api.get_default_py_config()
+            )
 
     def _refresh_opensearch_connection(self):
         self._opensearch_client.close()

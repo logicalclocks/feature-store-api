@@ -1141,13 +1141,9 @@ class FeatureGroupBase:
             feature_group_json["type"] == "onDemandFeaturegroupDTO"
             and feature_group_json["spine"]
         ):
-            feature_group_obj = SpineGroup.from_response_json(
-                feature_group_json
-            )
+            feature_group_obj = SpineGroup.from_response_json(feature_group_json)
         else:
-            feature_group_obj = FeatureGroup.from_response_json(
-                feature_group_json
-            )
+            feature_group_obj = FeatureGroup.from_response_json(feature_group_json)
         return feature_group_obj
 
     def __getattr__(self, name):
@@ -1743,10 +1739,14 @@ class FeatureGroup(FeatureGroupBase):
         results = self._vector_db_client.find_neighbors(
             embedding,
             feature=(self.__getattr__(col) if col else None),
-            k=k, filter=filter, min_score=min_score
+            k=k,
+            filter=filter,
+            min_score=min_score,
         )
-        return [(result[0], [result[1][f.name] for f in self.features])
-                for result in results]
+        return [
+            (result[0], [result[1][f.name] for f in self.features])
+            for result in results
+        ]
 
     def show(self, n: int, online: Optional[bool] = False):
         """Show the first `n` rows of the feature group.
@@ -1782,7 +1782,7 @@ class FeatureGroup(FeatureGroupBase):
                 {},
                 pk=self.embedding_index.col_prefix + self.primary_key[0],
                 index_name=self.embedding_index.index_name,
-                n=n
+                n=n,
             )
             return [[result[f.name] for f in self.features] for result in results]
         return self.select_all().show(n, online)
@@ -2535,7 +2535,9 @@ class FeatureGroup(FeatureGroupBase):
             _ = json_decamelized.pop("type", None)
             json_decamelized.pop("validation_type", None)
             if "embedding_index" in json_decamelized:
-                json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(json_decamelized["embedding_index"])
+                json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+                    json_decamelized["embedding_index"]
+                )
             return cls(**json_decamelized)
         for fg in json_decamelized:
             if "type" in fg:
@@ -2543,7 +2545,9 @@ class FeatureGroup(FeatureGroupBase):
             _ = fg.pop("type", None)
             fg.pop("validation_type", None)
             if "embedding_index" in fg:
-                fg["embedding_index"] = EmbeddingIndex.from_json_response(fg["embedding_index"])
+                fg["embedding_index"] = EmbeddingIndex.from_json_response(
+                    fg["embedding_index"]
+                )
         return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):
@@ -2552,7 +2556,8 @@ class FeatureGroup(FeatureGroupBase):
         _ = json_decamelized.pop("type")
         if "embedding_index" in json_decamelized:
             json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
-                json_decamelized["embedding_index"])
+                json_decamelized["embedding_index"]
+            )
         self.__init__(**json_decamelized)
         return self
 

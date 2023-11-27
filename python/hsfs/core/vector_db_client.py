@@ -19,8 +19,8 @@ from hsfs.constructor.join import Join
 from hsfs.feature import Feature
 from hsfs.core.opensearch import OpenSearchClientSingleton
 
-class VectorDbClient:
 
+class VectorDbClient:
     def __init__(self, query):
         self._opensearch_client = None
         self._query = query
@@ -51,15 +51,16 @@ class VectorDbClient:
                     fg_col_vdb_col_map[f.name] = fg.embedding_index.col_prefix + f.name
                 # add primary key to the map in case it is not selected as feature
                 for pk in q._left_feature_group.primary_key:
-                    vdb_col_fg_col_map[fg.embedding_index.col_prefix + pk] = q._left_feature_group[pk]
+                    vdb_col_fg_col_map[
+                        fg.embedding_index.col_prefix + pk
+                    ] = q._left_feature_group[pk]
                     fg_col_vdb_col_map[pk] = fg.embedding_index.col_prefix + pk
                 self._fg_vdb_col_fg_col_map[fg.id] = vdb_col_fg_col_map
                 self._fg_fg_col_vdb_col_map[fg.id] = fg_col_vdb_col_map
                 self._fg_embedding_map[fg.id] = fg.embedding_index
 
         # create a join for the left fg so that the dict can be constructed in one loop
-        fg_joins = [Join(self._query, None, None, None, None, "")
-                    ] + self._query.joins
+        fg_joins = [Join(self._query, None, None, None, None, "")] + self._query.joins
         # join in dex start from 0, 0 means left fg
         for i, join in enumerate(fg_joins):
             join_fg = join.query._left_feature_group
@@ -67,25 +68,32 @@ class VectorDbClient:
                 if join_fg.id in self._fg_vdb_col_td_col_map:
                     # `self._fg_vdb_col_td_col_map` do not support join of same fg
                     raise FeatureStoreException(
-                        "Do not support join of same fg multiple times.")
+                        "Do not support join of same fg multiple times."
+                    )
                 self._embedding_fg_by_join_index[i] = join_fg
                 vdb_col_td_col_map = {}
                 for feat in join_fg.features:
                     vdb_col_td_col_map[
-                        join_fg.embedding_index.col_prefix + feat.name] = (
-                        (join.prefix or "") + feat.name
-                    ) # join.prefix can be None
-                self._fg_vdb_col_td_col_map[
-                    join_fg.id] = vdb_col_td_col_map
+                        join_fg.embedding_index.col_prefix + feat.name
+                    ] = (
+                        join.prefix or ""
+                    ) + feat.name  # join.prefix can be None
+                self._fg_vdb_col_td_col_map[join_fg.id] = vdb_col_td_col_map
 
-    def find_neighbors(self, embedding, feature: Feature = None,
-                       index_name=None, k=10, filter=None, min_score=0):
+    def find_neighbors(
+        self,
+        embedding,
+        feature: Feature = None,
+        index_name=None,
+        k=10,
+        filter=None,
+        min_score=0,
+    ):
         if not feature:
             if not self._embedding_features:
                 raise ValueError("embedding col is not defined.")
             if len(self._embedding_features) > 1:
-                raise ValueError(
-                    "More than 1 embedding columns but col is not defined")
+                raise ValueError("More than 1 embedding columns but col is not defined")
             embedding_feature = list(self._embedding_features.values())[0]
         else:
             embedding_feature = self._embedding_features.get(feature, None)
@@ -93,52 +101,40 @@ class VectorDbClient:
                 raise ValueError(
                     f"feature: {feature.name} is not an embedding feature."
                 )
-        col_name = (
-            embedding_feature.embedding_index.col_prefix +
-            embedding_feature.name
-        )
+        col_name = embedding_feature.embedding_index.col_prefix + embedding_feature.name
         query = {
             "size": k,
             "query": {
-
                 "bool": {
                     "must": [
-                        {"knn": {
-                                   col_name: {
-                                       "vector": embedding,
-                                       "k": k
-                                   }
-                               }
-                        },
-                        {
-                            "exists": {
-                                "field": col_name
-                            }
-                        }
+                        {"knn": {col_name: {"vector": embedding, "k": k}}},
+                        {"exists": {"field": col_name}},
                     ]
-        }
-
+                }
             },
-            "_source": list(self._fg_vdb_col_fg_col_map.get(
-                embedding_feature.feature_group.id).keys())
+            "_source": list(
+                self._fg_vdb_col_fg_col_map.get(
+                    embedding_feature.feature_group.id
+                ).keys()
+            ),
         }
 
         if not index_name:
             index_name = embedding_feature.embedding_index.index_name
 
-        results = self._opensearch_client.search(
-            body=query,
-            index=index_name
-        )
+        results = self._opensearch_client.search(body=query, index=index_name)
 
         # https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
         return [
-            (1/item['_score'] - 1,
-             self._rewrite_result_key(
-                 item['_source'],
-                 self._fg_vdb_col_td_col_map[embedding_feature.feature_group.id]
-             )
-             ) for item in results['hits']['hits']]
+            (
+                1 / item["_score"] - 1,
+                self._rewrite_result_key(
+                    item["_source"],
+                    self._fg_vdb_col_td_col_map[embedding_feature.feature_group.id],
+                ),
+            )
+            for item in results["hits"]["hits"]
+        ]
 
     def _rewrite_result_key(self, result_map, key_map):
         new_map = {}
@@ -158,33 +154,29 @@ class VectorDbClient:
             index_name = self._get_vector_db_index_name(fg_id)
         if keys:
             query = {
-                    "query": {
-                        "match": self._rewrite_result_key(keys, self._fg_fg_col_vdb_col_map[fg_id])
-                    },
-                }
+                "query": {
+                    "match": self._rewrite_result_key(
+                        keys, self._fg_fg_col_vdb_col_map[fg_id]
+                    )
+                },
+            }
         else:
             if not pk:
                 raise FeatureStoreException("No pk provided.")
             query = {
-                "query": {
-                    "bool": {
-                        "must": {
-                            "exists": {
-                                "field": pk
-                            }
-                        }
-                    }
-                },
+                "query": {"bool": {"must": {"exists": {"field": pk}}}},
                 "size": n,
             }
 
         query["_source"] = list(self._fg_vdb_col_fg_col_map.get(fg_id).keys())
-        results = self._opensearch_client.search(
-            body=query,
-            index=index_name
-        )
+        results = self._opensearch_client.search(body=query, index=index_name)
         # https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
-        return [self._rewrite_result_key(item['_source'], self._fg_vdb_col_td_col_map[fg_id]) for item in results['hits']['hits']]
+        return [
+            self._rewrite_result_key(
+                item["_source"], self._fg_vdb_col_td_col_map[fg_id]
+            )
+            for item in results["hits"]["hits"]
+        ]
 
     def _get_vector_db_index_name(self, fg_id):
         embedding = self._fg_embedding_map.get(fg_id)
