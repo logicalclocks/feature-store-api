@@ -17,8 +17,7 @@
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor.join import Join
 from hsfs.feature import Feature
-from hsfs import client
-from hsfs.client.external import Client
+from hsfs.core.opensearch import OpenSearchClientSingleton
 
 class VectorDbClient:
 
@@ -31,10 +30,11 @@ class VectorDbClient:
         self._fg_fg_col_vdb_col_map = {}
         self._fg_embedding_map = {}
         self._embedding_fg_by_join_index = {}
+        self._opensearch_client = None
         self.init()
 
     def init(self):
-        self._setup_opensearch_client()
+        self._opensearch_client = OpenSearchClientSingleton()
         for fg in self._query.featuregroups:
             if fg.embedding:
                 for feat in fg.embedding.get_features():
@@ -77,47 +77,6 @@ class VectorDbClient:
                     ) # join.prefix can be None
                 self._fg_vdb_col_td_col_map[
                     join_fg.id] = vdb_col_td_col_map
-
-    # TODO: opensearch client should be singleton
-    def _setup_opensearch_client(self):
-        if not self._opensearch_client:
-            try:
-                import hopsworks
-                from opensearchpy import OpenSearch
-            except:
-                raise ModuleNotFoundError(
-                    "hopsworks or opensearchpy is not installed"
-                )
-            if not hopsworks._connected_project:
-                if isinstance(client.get_instance(), Client):
-                    hopsworks.login(
-                        host=client.get_instance().host,
-                        port=client.get_instance()._port,
-                        project=client.get_instance()._project_name,
-                        api_key_value=client.get_instance()._auth._token,
-                    )
-                else:
-                    hopsworks.login()
-            opensearch_api = hopsworks._connected_project.get_opensearch_api()
-            self._opensearch_client = OpenSearch(**opensearch_api.get_default_py_config())
-
-    def _refresh_opensearch_connection(self):
-        self._opensearch_client.close()
-        self._opensearch_client = None
-        self._setup_opensearch_client()
-
-    def _search_opensearch(self, index=None, body=None):
-        try:
-            return self._opensearch_client.search(
-                body=body,
-                index=index
-            )
-        except:
-            self._refresh_opensearch_connection()
-            return self._opensearch_client.search(
-                body=body,
-                index=index
-            )
 
     def find_neighbors(self, embedding, feature: Feature = None,
                        index_name=None, k=10, filter=None, min_score=0):
@@ -166,7 +125,7 @@ class VectorDbClient:
         if not index_name:
             index_name = embedding_feature.embedding.index_name
 
-        results = self._search_opensearch(
+        results = self._opensearch_client.search(
             body=query,
             index=index_name
         )
@@ -219,7 +178,7 @@ class VectorDbClient:
             }
 
         query["_source"] = list(self._fg_vdb_col_fg_col_map.get(fg_id).keys())
-        results = self._search_opensearch(
+        results = self._opensearch_client.search(
             body=query,
             index=index_name
         )

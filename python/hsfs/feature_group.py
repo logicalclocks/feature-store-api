@@ -1738,7 +1738,7 @@ class FeatureGroup(FeatureGroupBase):
         )
 
     def find_neighbors(self, embedding, col=None, k=10, filter=None, min_score=0):
-        if self._vector_db_client is None:
+        if self._vector_db_client is None and self._embedding:
             self._vector_db_client = VectorDbClient(self.select_all())
         results = self._vector_db_client.find_neighbors(
             embedding,

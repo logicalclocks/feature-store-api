@@ -270,7 +270,8 @@ class FeatureView:
         self._batch_vectors_server.init_serving(
             self, True, external, True, options=options
         )
-        self._vector_db_client = VectorDbClient(self.query)
+        if len(self._get_embedding_fgs()) > 0:
+            self._vector_db_client = VectorDbClient(self.query)
 
     def init_batch_scoring(
         self,
