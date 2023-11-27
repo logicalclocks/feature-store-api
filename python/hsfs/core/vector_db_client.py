@@ -36,26 +36,26 @@ class VectorDbClient:
     def init(self):
         self._opensearch_client = OpenSearchClientSingleton()
         for fg in self._query.featuregroups:
-            if fg.embedding:
-                for feat in fg.embedding.get_features():
+            if fg.embedding_index:
+                for feat in fg.embedding_index.get_embeddings():
                     for fgf in fg.features:
                         if fgf.name == feat.name and fgf.feature_group_id == fg.id:
                             self._embedding_features[fgf] = feat
         for q in [self._query] + [j.query for j in self._query.joins]:
             fg = q._left_feature_group
-            if fg.embedding:
+            if fg.embedding_index:
                 vdb_col_fg_col_map = {}
                 fg_col_vdb_col_map = {}
                 for f in q._left_features:
-                    vdb_col_fg_col_map[fg.embedding.col_prefix + f.name] = f
-                    fg_col_vdb_col_map[f.name] = fg.embedding.col_prefix + f.name
+                    vdb_col_fg_col_map[fg.embedding_index.col_prefix + f.name] = f
+                    fg_col_vdb_col_map[f.name] = fg.embedding_index.col_prefix + f.name
                 # add primary key to the map in case it is not selected as feature
                 for pk in q._left_feature_group.primary_key:
-                    vdb_col_fg_col_map[fg.embedding.col_prefix + pk] = q._left_feature_group[pk]
-                    fg_col_vdb_col_map[pk] = fg.embedding.col_prefix + pk
+                    vdb_col_fg_col_map[fg.embedding_index.col_prefix + pk] = q._left_feature_group[pk]
+                    fg_col_vdb_col_map[pk] = fg.embedding_index.col_prefix + pk
                 self._fg_vdb_col_fg_col_map[fg.id] = vdb_col_fg_col_map
                 self._fg_fg_col_vdb_col_map[fg.id] = fg_col_vdb_col_map
-                self._fg_embedding_map[fg.id] = fg.embedding
+                self._fg_embedding_map[fg.id] = fg.embedding_index
 
         # create a join for the left fg so that the dict can be constructed in one loop
         fg_joins = [Join(self._query, None, None, None, None, "")
@@ -63,7 +63,7 @@ class VectorDbClient:
         # join in dex start from 0, 0 means left fg
         for i, join in enumerate(fg_joins):
             join_fg = join.query._left_feature_group
-            if join_fg.embedding:
+            if join_fg.embedding_index:
                 if join_fg.id in self._fg_vdb_col_td_col_map:
                     # `self._fg_vdb_col_td_col_map` do not support join of same fg
                     raise FeatureStoreException(
@@ -72,7 +72,7 @@ class VectorDbClient:
                 vdb_col_td_col_map = {}
                 for feat in join_fg.features:
                     vdb_col_td_col_map[
-                        join_fg.embedding.col_prefix + feat.name] = (
+                        join_fg.embedding_index.col_prefix + feat.name] = (
                         (join.prefix or "") + feat.name
                     ) # join.prefix can be None
                 self._fg_vdb_col_td_col_map[
@@ -94,7 +94,8 @@ class VectorDbClient:
                     f"feature: {feature.name} is not an embedding feature."
                 )
         col_name = (
-            embedding_feature.embedding.col_prefix + embedding_feature.name
+            embedding_feature.embedding_index.col_prefix +
+            embedding_feature.name
         )
         query = {
             "size": k,
@@ -123,7 +124,7 @@ class VectorDbClient:
         }
 
         if not index_name:
-            index_name = embedding_feature.embedding.index_name
+            index_name = embedding_feature.embedding_index.index_name
 
         results = self._opensearch_client.search(
             body=query,

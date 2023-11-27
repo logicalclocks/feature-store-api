@@ -662,7 +662,7 @@ class FeatureView:
                 # Not retrieving from vector db if entry is not completed
                 continue
             vector_db_features = self._vector_db_client.read(
-                fg.id, keys=fg_entry, index_name=fg.embedding.index_name
+                fg.id, keys=fg_entry, index_name=fg.embedding_index.index_name
             )
 
             # if result is not empty
@@ -710,7 +710,7 @@ class FeatureView:
 
     def _get_embedding_fgs(self):
         return set(
-            [fg for fg in self.query.featuregroups if fg.embedding]
+            [fg for fg in self.query.featuregroups if fg.embedding_index]
         )
 
     @usage.method_logger

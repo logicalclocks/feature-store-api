@@ -476,7 +476,7 @@ class Query:
 
     def _check_read_supported(self):
         for fg in self.featuregroups:
-            if fg.embedding:
+            if fg.embedding_index:
                 raise FeatureStoreException(
                     "Reading from query containing embedding is not supported."
                     " Use `feature_view.get_feature_vector(s) instead."

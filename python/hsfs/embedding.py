@@ -35,7 +35,7 @@ class EmbeddingFeature:
     dimension: int
     similarity_function_type: SimilarityFunctionType = SimilarityFunctionType.L2
     feature_group = None
-    embedding = None
+    embedding_index = None
 
     @classmethod
     def from_json_response(cls, json_dict):
@@ -56,7 +56,7 @@ class EmbeddingFeature:
             "similarityFunctionType": self.similarity_function_type
         }
 
-class Embedding:
+class EmbeddingIndex:
 
     def __init__(self, index_name=None, features=None, col_prefix=None):
         self._index_name = index_name
@@ -67,13 +67,13 @@ class Embedding:
         self._feature_group = None
         self._col_prefix = col_prefix
 
-    def add_feature(self, name, dimension, similarity_function_type=SimilarityFunctionType.L2):
+    def add_embedding(self, name, dimension, similarity_function_type=SimilarityFunctionType.L2):
         self._features.append(EmbeddingFeature(name, dimension, similarity_function_type))
 
-    def get_features(self):
+    def get_embeddings(self):
         for feat in self._features:
             feat.feature_group = self._feature_group
-            feat.embedding = self
+            feat.embedding_index = self
         return self._features
 
     @classmethod

@@ -17,7 +17,7 @@
 import copy
 import time
 
-from hsfs.embedding import Embedding
+from hsfs.embedding import EmbeddingIndex
 from hsfs.ge_validation_result import ValidationResult
 import humps
 import json
@@ -71,7 +71,7 @@ class FeatureGroupBase:
         event_time=None,
         online_enabled=False,
         id=None,
-        embedding=None,
+        embedding_index=None,
         expectation_suite=None,
         online_topic_name=None,
         topic_name=None,
@@ -123,7 +123,7 @@ class FeatureGroupBase:
         self._variable_api = VariableApi()
         self._feature_group_engine = None
         self._multi_part_insert = False
-        self._embedding = embedding
+        self._embedding_index = embedding_index
 
         self.check_deprecated()
 
@@ -1310,14 +1310,14 @@ class FeatureGroupBase:
             )
 
     @property
-    def embedding(self):
-        if self._embedding:
-            self._embedding.feature_group = self
-        return self._embedding
+    def embedding_index(self):
+        if self._embedding_index:
+            self._embedding_index.feature_group = self
+        return self._embedding_index
 
-    @embedding.setter
-    def embedding(self, embedding):
-        self._embedding = embedding
+    @embedding_index.setter
+    def embedding_index(self, embedding_index):
+        self._embedding_index = embedding_index
 
     @property
     def event_time(self):
@@ -1490,7 +1490,7 @@ class FeatureGroup(FeatureGroupBase):
         primary_key=None,
         hudi_precombine_key=None,
         featurestore_name=None,
-        embedding=None,
+        embedding_index=None,
         created=None,
         creator=None,
         id=None,
@@ -1517,7 +1517,7 @@ class FeatureGroup(FeatureGroupBase):
             location,
             event_time=event_time,
             online_enabled=online_enabled,
-            embedding=embedding,
+            embedding_index=embedding_index,
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
@@ -1738,7 +1738,7 @@ class FeatureGroup(FeatureGroupBase):
         )
 
     def find_neighbors(self, embedding, col=None, k=10, filter=None, min_score=0):
-        if self._vector_db_client is None and self._embedding:
+        if self._vector_db_client is None and self._embedding_index:
             self._vector_db_client = VectorDbClient(self.select_all())
         results = self._vector_db_client.find_neighbors(
             embedding,
@@ -1774,14 +1774,14 @@ class FeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        if self.embedding:
+        if self.embedding_index:
             if self._vector_db_client is None:
                 self._vector_db_client = VectorDbClient(self.select_all())
             results = self._vector_db_client.read(
                 self.id,
                 {},
-                pk=self.embedding.col_prefix + self.primary_key[0],
-                index_name=self.embedding.index_name,
+                pk=self.embedding_index.col_prefix + self.primary_key[0],
+                index_name=self.embedding_index.index_name,
                 n=n
             )
             return [[result[f.name] for f in self.features] for result in results]
@@ -2534,25 +2534,25 @@ class FeatureGroup(FeatureGroupBase):
                 )
             _ = json_decamelized.pop("type", None)
             json_decamelized.pop("validation_type", None)
-            if "embedding" in json_decamelized:
-                json_decamelized["embedding"] = Embedding.from_json_response(json_decamelized["embedding"])
+            if "embedding_index" in json_decamelized:
+                json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(json_decamelized["embedding_index"])
             return cls(**json_decamelized)
         for fg in json_decamelized:
             if "type" in fg:
                 fg["stream"] = fg["type"] == "streamFeatureGroupDTO"
             _ = fg.pop("type", None)
             fg.pop("validation_type", None)
-            if "embedding" in fg:
-                fg["embedding"] = Embedding.from_json_response(fg["embedding"])
+            if "embedding_index" in fg:
+                fg["embedding_index"] = EmbeddingIndex.from_json_response(fg["embedding_index"])
         return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         json_decamelized["stream"] = json_decamelized["type"] == "streamFeatureGroupDTO"
         _ = json_decamelized.pop("type")
-        if "embedding" in json_decamelized:
-            json_decamelized["embedding"] = Embedding.from_json_response(
-                json_decamelized["embedding"])
+        if "embedding_index" in json_decamelized:
+            json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+                json_decamelized["embedding_index"])
         self.__init__(**json_decamelized)
         return self
 
@@ -2599,8 +2599,8 @@ class FeatureGroup(FeatureGroupBase):
             "topicName": self.topic_name,
             "deprecated": self.deprecated,
         }
-        if self.embedding:
-            fg_meta_dict["embedding"] = self.embedding
+        if self.embedding_index:
+            fg_meta_dict["embeddingIndex"] = self.embedding_index
         if self._stream:
             fg_meta_dict["deltaStreamerJobConf"] = self._deltastreamer_jobconf
         return fg_meta_dict
