@@ -425,6 +425,7 @@ class VectorServer:
         batch_results = [{} for _ in range(len(entries))]
         # for each prepare statement, do a batch look up
         # then concatenate the results
+        serving_keys_all_fg = []
         with self._prepared_statement_engine.connect() as mysql_conn:
             for prepared_statement_index in prepared_statement_objects:
                 # prepared_statement_index include fg with label only
@@ -461,6 +462,7 @@ class VectorServer:
                 serving_keys = self._serving_key_by_serving_index[
                     prepared_statement_index
                 ]
+                serving_keys_all_fg += serving_keys
                 # Use prefix from prepare statement because prefix from serving key is collision adjusted.
                 prefix_features = [
                     (self._prefix_by_serving_index[prepared_statement_index] or "")
@@ -488,7 +490,7 @@ class VectorServer:
                             self._get_result_key_serving_key(serving_keys, entry), {}
                         )
                     )
-            return batch_results, serving_keys
+            return batch_results, serving_keys_all_fg
 
     def get_complex_feature_schemas(self):
         return {
