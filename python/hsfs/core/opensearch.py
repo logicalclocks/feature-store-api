@@ -35,7 +35,10 @@ class OpenSearchClientSingleton:
             try:
                 import hopsworks
                 from opensearchpy import OpenSearch
-                from opensearchpy.exceptions import ConnectionError as OpenSearchConnectionError
+                from opensearchpy.exceptions import (
+                    ConnectionError as OpenSearchConnectionError,
+                )
+
                 self.OpenSearchConnectionError = OpenSearchConnectionError
             except ModuleNotFoundError:
                 raise FeatureStoreException(
