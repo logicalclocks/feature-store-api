@@ -22,7 +22,8 @@ class FeatureStoreApi:
     def __init__(self):
         pass
 
-    def get(self, identifier):
+    @staticmethod
+    def get(identifier):
         """Get feature store with specific id or name.
 
         :param identifier: id or name of the feature store

@@ -2805,7 +2805,7 @@ class FeatureView:
                 )
                 fs_cache[feature.feature_group.feature_store_id] = fs_cache.get(
                     feature.feature_group.feature_store_id,
-                    FeatureStoreApi().get(feature.feature_group.feature_store_id),
+                    FeatureStoreApi.get(feature.feature_group.feature_store_id),
                 )
                 # feature store object is needed in FeatureGroupBaseEngine::get_subject
                 feature.feature_group.feature_store = fs_cache[
