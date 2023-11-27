@@ -35,6 +35,8 @@ class OpenSearchClientSingleton:
             try:
                 import hopsworks
                 from opensearchpy import OpenSearch
+                from opensearchpy.exceptions import ConnectionError as OpenSearchConnectionError
+                self.OpenSearchConnectionError = OpenSearchConnectionError
             except ModuleNotFoundError:
                 raise FeatureStoreException(
                     "hopsworks or opensearchpy is requried for embedding similarity search"
@@ -65,7 +67,7 @@ class OpenSearchClientSingleton:
     def search(self, index=None, body=None):
         try:
             return self._opensearch_client.search(body=body, index=index)
-        except:
+        except self.OpenSearchConnectionError:
             self._refresh_opensearch_connection()
             return self._opensearch_client.search(body=body, index=index)
 

@@ -2792,13 +2792,21 @@ class FeatureView:
             serving_keys=serving_keys,
         )
         features = json_decamelized.get("features", [])
+        fs_cache = {}
+        # failed to import from module level
+        from hsfs.core.feature_store_api import FeatureStoreApi
         if features:
-            features = [
-                training_dataset_feature.TrainingDatasetFeature.from_response_json(
-                    feature
-                )
-                for feature in features
-            ]
+            for i in range(len(features)):
+                feature = training_dataset_feature.TrainingDatasetFeature.from_response_json(
+                        features[i]
+                    )
+                fs_cache[feature.feature_group.feature_store_id] = fs_cache.get(feature.feature_group.feature_store_id,
+                             FeatureStoreApi().get(
+                    feature.feature_group.feature_store_id
+                ))
+                # feature store object is needed in FeatureGroupBaseEngine::get_subject
+                feature.feature_group.feature_store = fs_cache[feature.feature_group.feature_store_id]
+                features[i] = feature
         fv.schema = features
         fv.labels = [feature.name for feature in features if feature.label]
         fv.inference_helper_columns = [
