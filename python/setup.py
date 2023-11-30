@@ -1,11 +1,13 @@
 import os
-import imp
+from importlib.machinery import SourceFileLoader
 from setuptools import setup, find_packages
 
 
-__version__ = imp.load_source(
-    "hsfs.version", os.path.join("hsfs", "version.py")
-).__version__
+__version__ = (
+    SourceFileLoader("hsfs.version", os.path.join("hsfs", "version.py"))
+    .load_module()
+    .__version__
+)
 
 
 def read(fname):
@@ -15,7 +17,7 @@ def read(fname):
 setup(
     name="hsfs",
     version=__version__,
-    python_requires=">=3.7,<3.12",
+    python_requires=">=3.8,<3.13",
     install_requires=[
         "pyhumps==1.6.1",
         "requests",
@@ -69,13 +71,13 @@ setup(
         "hive": [
             "pyhopshive[thrift]",
             "pyarrow>=10.0",
-            "confluent-kafka<=2.1.1",
+            "confluent-kafka<=2.3.0",
             "fastavro>=1.4.11,<=1.8.2",
         ],
         "python": [
             "pyhopshive[thrift]",
             "pyarrow>=10.0",
-            "confluent-kafka<=2.1.1",
+            "confluent-kafka<=2.3.0",
             "fastavro>=1.4.11,<=1.8.2",
             "tqdm",
         ],
@@ -99,6 +101,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Intended Audience :: Developers",
     ],
 )
