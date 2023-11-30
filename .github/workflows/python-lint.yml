@@ -55,6 +55,8 @@ jobs:
         run: python --version
 
       - name: Run Pytest suite
+        env:
+          ENABLE_HOPSWORKS_USAGE: "false"
         run: pytest python/tests
 
   unit_tests_ubuntu_pandas:
@@ -82,6 +84,8 @@ jobs:
         run: python --version
 
       - name: Run Pytest suite
+        env:
+          ENABLE_HOPSWORKS_USAGE: "false"
         run: pytest python/tests
 
   unit_tests_ubuntu_local:
@@ -109,6 +113,8 @@ jobs:
         run: python --version
 
       - name: Run Pytest suite
+        env:
+          ENABLE_HOPSWORKS_USAGE: "false"
         run: pytest python/tests
 
   unit_tests_windows_utc:
@@ -136,6 +142,8 @@ jobs:
         run: python --version
 
       - name: Run Pytest suite
+        env:
+          ENABLE_HOPSWORKS_USAGE: "false"
         run: pytest python/tests
 
 
@@ -164,4 +172,6 @@ jobs:
         run: python --version
 
       - name: Run Pytest suite
+        env:
+          ENABLE_HOPSWORKS_USAGE: "false"
         run: pytest python/tests
