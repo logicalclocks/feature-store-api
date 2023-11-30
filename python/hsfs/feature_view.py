@@ -658,8 +658,10 @@ class FeatureView:
         )
 
     def _update_with_vector_db_result(self, vec_server, entry, passed_features):
-        for k, fg in self._vector_db_client.embedding_fg_by_join_index.items():
-            complete, fg_entry = vec_server.filter_entry_by_join_index(entry, k)
+        for join_index, fg in self._vector_db_client.embedding_fg_by_join_index.items():
+            complete, fg_entry = vec_server.filter_entry_by_join_index(
+                entry, join_index
+            )
             if not complete:
                 # Not retrieving from vector db if entry is not completed
                 continue
@@ -688,9 +690,7 @@ class FeatureView:
         if len(results) == 0:
             return []
 
-        passed_features = []
-        for res in results:
-            passed_features.append(res[1])
+        passed_features = [result[1] for result in results]
         return self.get_feature_vectors(
             [self._extract_primary_key(res[1]) for res in results],
             passed_features=passed_features,
@@ -2797,10 +2797,10 @@ class FeatureView:
         from hsfs.core.feature_store_api import FeatureStoreApi
 
         if features:
-            for i in range(len(features)):
+            for feature_index in range(len(features)):
                 feature = (
                     training_dataset_feature.TrainingDatasetFeature.from_response_json(
-                        features[i]
+                        features[feature_index]
                     )
                 )
                 fs_cache[feature.feature_group.feature_store_id] = fs_cache.get(
@@ -2811,7 +2811,7 @@ class FeatureView:
                 feature.feature_group.feature_store = fs_cache[
                     feature.feature_group.feature_store_id
                 ]
-                features[i] = feature
+                features[feature_index] = feature
         fv.schema = features
         fv.labels = [feature.name for feature in features if feature.label]
         fv.inference_helper_columns = [

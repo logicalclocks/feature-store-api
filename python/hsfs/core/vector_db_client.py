@@ -138,13 +138,13 @@ class VectorDbClient:
 
     def _rewrite_result_key(self, result_map, key_map):
         new_map = {}
-        for key in result_map.keys():
+        for key, value in result_map.items():
             new_key = key_map.get(key)
             if new_key is None:
                 raise FeatureStoreException(
                     f"Feature '{key}' from embedding feature group is not found in the query"
                 )
-            new_map[new_key] = result_map[key]
+            new_map[new_key] = value
         return new_map
 
     def read(self, fg_id, keys=None, pk=None, index_name=None, n=10):

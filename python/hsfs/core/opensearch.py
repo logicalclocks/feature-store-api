@@ -42,7 +42,7 @@ class OpenSearchClientSingleton:
                 self.OpenSearchConnectionError = OpenSearchConnectionError
             except ModuleNotFoundError:
                 raise FeatureStoreException(
-                    "hopsworks or opensearchpy is requried for embedding similarity search"
+                    "hopsworks and opensearchpy are required for embedding similarity search"
                 )
             # query log is at INFO level
             # 2023-11-24 15:10:49,470 INFO: POST https://localhost:9200/index/_search [status:200 request:0.041s]
