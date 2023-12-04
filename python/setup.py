@@ -22,7 +22,7 @@ setup(
         "furl",
         "boto3",
         "pandas<2.1.0",
-        "numpy",
+        "numpy<2",
         "pyjks",
         "mock",
         "avro==1.11.3",
