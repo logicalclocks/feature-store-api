@@ -1774,7 +1774,7 @@ class FeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        if self.embedding_index:
+        if online and self.embedding_index:
             if self._vector_db_client is None:
                 self._vector_db_client = VectorDbClient(self.select_all())
             results = self._vector_db_client.read(

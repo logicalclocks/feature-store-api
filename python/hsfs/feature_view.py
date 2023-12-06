@@ -658,6 +658,8 @@ class FeatureView:
         )
 
     def _update_with_vector_db_result(self, vec_server, entry, passed_features):
+        if not self._vector_db_client:
+            return passed_features
         for join_index, fg in self._vector_db_client.embedding_fg_by_join_index.items():
             complete, fg_entry = vec_server.filter_entry_by_join_index(
                 entry, join_index
@@ -677,9 +679,11 @@ class FeatureView:
                 passed_features = vector_db_features
         return passed_features
 
-    def find_neighbors(self, embedding, feature=None, k=10, filter=None, min_score=0):
+    def find_neighbors(self, embedding, feature=None, k=10,
+                       filter=None, min_score=0,
+                       external: Optional[bool] = None):
         if self._vector_db_client is None:
-            self.init_serving()
+            self.init_serving(external=external)
         results = self._vector_db_client.find_neighbors(
             embedding,
             feature=(feature if feature else None),
@@ -694,7 +698,7 @@ class FeatureView:
         return self.get_feature_vectors(
             [self._extract_primary_key(res[1]) for res in results],
             passed_features=passed_features,
-            external=True,
+            external=external,
             allow_missing=True,
         )
 
