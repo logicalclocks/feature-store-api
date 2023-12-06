@@ -71,7 +71,7 @@ class ServingKey:
             "join_on": self._join_on,
         }
 
-    def __str__(self):
+    def __repr__(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     @property

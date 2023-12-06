@@ -3001,7 +3001,7 @@ class FeatureView:
                 skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
             )
             _vector_server.init_prepared_statement(self, False, False, False)
-            return _vector_server.serving_keys
+            return _vector_server.required_serving_keys
 
     @property
     def serving_keys(self):
