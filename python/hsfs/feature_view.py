@@ -2799,7 +2799,7 @@ class FeatureView:
         fs_cache = {}
         # failed to import from module level
         from hsfs.core.feature_store_api import FeatureStoreApi
-
+        fs_api = FeatureStoreApi()
         if features:
             for feature_index in range(len(features)):
                 feature = (
@@ -2809,7 +2809,7 @@ class FeatureView:
                 )
                 fs_cache[feature.feature_group.feature_store_id] = fs_cache.get(
                     feature.feature_group.feature_store_id,
-                    FeatureStoreApi.get(feature.feature_group.feature_store_id),
+                    fs_api.get(feature.feature_group.feature_store_id),
                 )
                 # feature store object is needed in FeatureGroupBaseEngine::get_subject
                 feature.feature_group.feature_store = fs_cache[
