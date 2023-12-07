@@ -476,7 +476,9 @@ class Query:
         )
 
     def _check_read_supported(self, online):
-        for fg in self.featuregroups and online:
+        if not online:
+            return
+        for fg in self.featuregroups:
             if fg.embedding_index:
                 raise FeatureStoreException(
                     "Reading from query containing embedding is not supported."
