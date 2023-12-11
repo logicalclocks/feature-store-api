@@ -427,7 +427,6 @@ class FeatureViewEngine:
         training_helper_columns,
         feature_view_features,
     ):
-
         if splits:
             result = {}
             for split in splits:
