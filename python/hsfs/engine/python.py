@@ -1216,6 +1216,8 @@ class Engine:
             return "double"
         elif dtype == np.dtype("datetime64[ns]"):
             return "timestamp"
+        elif dtype == np.dtype("datetime64[us]"):
+            return "timestamp"
         elif dtype == np.dtype("bool"):
             return "boolean"
         elif dtype == "category":
