@@ -679,9 +679,15 @@ class FeatureView:
                 passed_features = vector_db_features
         return passed_features
 
-    def find_neighbors(self, embedding, feature=None, k=10,
-                       filter=None, min_score=0,
-                       external: Optional[bool] = None):
+    def find_neighbors(
+        self,
+        embedding,
+        feature=None,
+        k=10,
+        filter=None,
+        min_score=0,
+        external: Optional[bool] = None,
+    ):
         if self._vector_db_client is None:
             self.init_serving(external=external)
         results = self._vector_db_client.find_neighbors(
@@ -2799,6 +2805,7 @@ class FeatureView:
         fs_cache = {}
         # failed to import from module level
         from hsfs.core.feature_store_api import FeatureStoreApi
+
         fs_api = FeatureStoreApi()
         if features:
             for feature_index in range(len(features)):
