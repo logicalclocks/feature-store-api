@@ -14,10 +14,10 @@
 #   limitations under the License.
 #
 
-from hsfs import client
-from hsfs.client.external import Client
 from hsfs.client.exceptions import FeatureStoreException
 import logging
+from hsfs.core.opensearch_api import OpenSearchApi
+from hsfs import client
 
 
 class OpenSearchClientSingleton:
@@ -33,12 +33,10 @@ class OpenSearchClientSingleton:
     def _setup_opensearch_client(self):
         if not self._opensearch_client:
             try:
-                import hopsworks
                 from opensearchpy import OpenSearch
                 from opensearchpy.exceptions import (
                     ConnectionError as OpenSearchConnectionError,
                 )
-
                 self.OpenSearchConnectionError = OpenSearchConnectionError
             except ModuleNotFoundError:
                 raise FeatureStoreException(
@@ -47,19 +45,11 @@ class OpenSearchClientSingleton:
             # query log is at INFO level
             # 2023-11-24 15:10:49,470 INFO: POST https://localhost:9200/index/_search [status:200 request:0.041s]
             logging.getLogger("opensearchpy").setLevel(logging.WARNING)
-            if not hopsworks._connected_project:
-                if isinstance(client.get_instance(), Client):
-                    hopsworks.login(
-                        host=client.get_instance().host,
-                        port=client.get_instance()._port,
-                        project=client.get_instance()._project_name,
-                        api_key_value=client.get_instance()._auth._token,
-                    )
-                else:
-                    hopsworks.login()
-            opensearch_api = hopsworks._connected_project.get_opensearch_api()
             self._opensearch_client = OpenSearch(
-                **opensearch_api.get_default_py_config()
+                **OpenSearchApi(
+                    client.get_instance()._project_id,
+                    client.get_instance()._project_name,
+                ).get_default_py_config()
             )
 
     def _refresh_opensearch_connection(self):
