@@ -21,6 +21,7 @@ from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi
 
+
 class OPENSEARCH_CONFIG:
     ELASTIC_ENDPOINT_ENV_VAR = "ELASTIC_ENDPOINT"
     SSL_CONFIG = "es.net.ssl"
@@ -40,8 +41,8 @@ class OPENSEARCH_CONFIG:
     SSL_ASSERT_HOSTNAME = "ssl_assert_hostname"
     CA_CERTS = "ca_certs"
 
-class OpenSearchApi:
 
+class OpenSearchApi:
     def __init__(
         self,
         project_id,
@@ -65,7 +66,9 @@ class OpenSearchApi:
                     )
                 return f"https://{external_domain}:9200"
             else:
-                service_discovery_domain = self._variable_api.get_service_discovery_domain()
+                service_discovery_domain = (
+                    self._variable_api.get_service_discovery_domain()
+                )
                 if service_discovery_domain == "":
                     raise FeatureStoreException(
                         "Client could not locate service_discovery_domain "

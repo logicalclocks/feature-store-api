@@ -37,6 +37,7 @@ class OpenSearchClientSingleton:
                 from opensearchpy.exceptions import (
                     ConnectionError as OpenSearchConnectionError,
                 )
+
                 self.OpenSearchConnectionError = OpenSearchConnectionError
             except ModuleNotFoundError:
                 raise FeatureStoreException(
