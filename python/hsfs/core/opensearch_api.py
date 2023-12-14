@@ -74,7 +74,7 @@ class OpenSearchApi:
                         "Client could not locate service_discovery_domain "
                         "in cluster configuration or variable is empty."
                     )
-                return f"https://{service_discovery_domain}:9200"
+                return f"https://elastic.service.{service_discovery_domain}:9200"
 
     def get_project_index(self, index):
         """
