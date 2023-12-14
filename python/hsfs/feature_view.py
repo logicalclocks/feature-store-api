@@ -1656,7 +1656,7 @@ class FeatureView:
     def recreate_training_dataset(
         self,
         training_dataset_version: int,
-        write_options: Optional[Dict[Any, Any]] = None,
+        write_options: Optional[Dict[Any, Any]] = {},
         spine: Optional[
             Union[
                 pd.DataFrame,
