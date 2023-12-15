@@ -685,6 +685,11 @@ class VectorServer:
         return complete, fg_entry
 
     def _batch_vector_results_parallel(self, entries, prepared_statement_objects):
+        """Execute prepared statements in parallel using aiomysql engine.
+        This function uses the same code as method _ batch_vector_results except that
+        the prepared statements are executed parallely and not in single iterations.
+        TODO: merge with _ batch_vector_results after testing
+        """
         # create dict object that will have of order of the vector as key and values as
         # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
         # expect that backend will return correctly ordered vectors.
@@ -782,34 +787,16 @@ class VectorServer:
             await cursor.close()
             return resultset
 
-    # Define a function that runs a query for a given primary key
-    async def _query_async_string(self, pool, stmt, params):
-        # Get a connection from the pool
-        query = stmt.text.replace(":batch_ids", "(%s)")
-        print(query)
-        p = list(params.values())
-        print(p[0])
-        # query = stmt.bindparams(batch_ids=values)
-        async with pool.acquire() as conn:
-            # Execute the prepared statement
-            # print("running sql", stmt)
-            async with conn.cursor() as cur:
-                await cur.execute(query, (p[0],))
-                # Fetch the result
-                resultset = await cur.fetchall()
-            # results_as_dict = [dict(i) for i in resultset]
-        return resultset
-
     async def _run_prepared_statements(
         self, engine, prepared_statements, all_bind_values
     ):
         tasks = []
         # iterate over the list of prepared statements and bind the values from index wise for each prep statement
         # create a list of tasks
-        for count, query in enumerate(prepared_statements):
+        for index, query in enumerate(prepared_statements):
             tasks.append(
                 asyncio.ensure_future(
-                    self._query_async_sql(engine, query, all_bind_values[count])
+                    self._query_async_sql(engine, query, all_bind_values[index])
                 )
             )
 
@@ -822,17 +809,23 @@ class VectorServer:
     ):
         """
         prepared_statements: list of prepared statements,
-        all_values_list: list of dict of bind params for the respective prepared statements .e.g [{"batch_ids":(1,2,3)},{"batch_ids": (3,4,5)}]
-
+        all_values_list: list of dict of bind params for the respective prepared statements.
+        e.g [{"batch_ids":(1,2,3)},{"batch_ids": (3,4,5)}]
         we run the prepared statements in parallel and bind the params in the list index wise.
         """
-        # TODO: init the cool in init serving if possible
-        engine = await self._set_aiomysql_connection()
-        results = await (
-            self._run_prepared_statements(engine, prepared_statements, all_values_list)
-        )
-        engine.close()
-        await engine.wait_closed()  # this is needed otherwise it throws Event loop is closed
+        # TODO: initialize separately if possible
+
+        try:
+            engine = await self._set_aiomysql_connection()
+            results = await (
+                self._run_prepared_statements(
+                    engine, prepared_statements, all_values_list
+                )
+            )
+        finally:
+            if engine:
+                engine.close()
+                await engine.wait_closed()  # this is needed otherwise it throws Event loop is closed
         return results
 
     @property
