@@ -14,7 +14,6 @@
 #   limitations under the License.
 #
 
-import os
 from furl import furl
 
 from hsfs import client
