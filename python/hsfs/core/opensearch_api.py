@@ -53,28 +53,24 @@ class OpenSearchApi:
         self._variable_api = VariableApi()
 
     def _get_opensearch_url(self):
-        url = os.environ.get(OPENSEARCH_CONFIG.ELASTIC_ENDPOINT_ENV_VAR)
-        if url:
-            return url
-        else:
-            if isinstance(client.get_instance(), client.external.Client):
-                external_domain = self._variable_api.get_loadbalancer_external_domain()
-                if external_domain == "":
-                    raise FeatureStoreException(
-                        "External client could not locate loadbalancer_external_domain "
-                        "in cluster configuration or variable is empty."
-                    )
-                return f"https://{external_domain}:9200"
-            else:
-                service_discovery_domain = (
-                    self._variable_api.get_service_discovery_domain()
+        if isinstance(client.get_instance(), client.external.Client):
+            external_domain = self._variable_api.get_loadbalancer_external_domain()
+            if external_domain == "":
+                raise FeatureStoreException(
+                    "External client could not locate loadbalancer_external_domain "
+                    "in cluster configuration or variable is empty."
                 )
-                if service_discovery_domain == "":
-                    raise FeatureStoreException(
-                        "Client could not locate service_discovery_domain "
-                        "in cluster configuration or variable is empty."
-                    )
-                return f"https://elastic.service.{service_discovery_domain}:9200"
+            return f"https://{external_domain}:9200"
+        else:
+            service_discovery_domain = (
+                self._variable_api.get_service_discovery_domain()
+            )
+            if service_discovery_domain == "":
+                raise FeatureStoreException(
+                    "Client could not locate service_discovery_domain "
+                    "in cluster configuration or variable is empty."
+                )
+            return f"https://rest.elastic.service.{service_discovery_domain}:9200"
 
     def get_project_index(self, index):
         """
