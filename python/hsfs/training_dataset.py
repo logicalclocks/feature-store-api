@@ -979,14 +979,14 @@ class TrainingDataset:
 
     def serving_keys(self):
         """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
-        if self._vector_server.serving_keys:
-            return self._vector_server.serving_keys
+        if self._vector_server.required_serving_keys:
+            return self._vector_server.required_serving_keys
         else:
             _vector_server = vector_server.VectorServer(
                 self._feature_store_id, self._features
             )
             _vector_server.init_prepared_statement(self, False, False)
-            return _vector_server.serving_keys
+            return _vector_server.required_serving_keys
 
     @property
     def extra_filter(self):

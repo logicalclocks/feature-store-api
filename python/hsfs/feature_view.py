@@ -31,6 +31,7 @@ from hsfs import (
     training_dataset,
     usage,
 )
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import query, filter
 from hsfs.core import (
     feature_view_engine,
@@ -42,6 +43,7 @@ from hsfs.statistics_config import StatisticsConfig
 from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.serving_key import ServingKey
+from hsfs.core.vector_db_client import VectorDbClient
 
 
 class FeatureView:
@@ -92,6 +94,8 @@ class FeatureView:
         self._batch_vectors_server = None
         self._batch_scoring_server = None
         self._serving_keys = serving_keys
+        self._prefix_serving_key_map = {}
+        self._vector_db_client = None
 
     def delete(self):
         """Delete current feature view, all associated metadata and training data.
@@ -244,9 +248,17 @@ class FeatureView:
             self._features,
             training_dataset_version,
             serving_keys=self._serving_keys,
+            skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
         self._single_vector_server.init_serving(
             self, False, external, True, options=options
+        )
+
+        self._prefix_serving_key_map = dict(
+            [
+                (f"{sk.prefix}{sk.feature_name}", sk)
+                for sk in self._single_vector_server.serving_keys
+            ]
         )
 
         # initiate batch vector server
@@ -255,10 +267,13 @@ class FeatureView:
             self._features,
             training_dataset_version,
             serving_keys=self._serving_keys,
+            skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
         self._batch_vectors_server.init_serving(
             self, True, external, True, options=options, parellel=parellel
         )
+        if len(self._get_embedding_fgs()) > 0:
+            self._vector_db_client = VectorDbClient(self.query)
 
     def init_batch_scoring(
         self,
@@ -291,6 +306,7 @@ class FeatureView:
             self._features,
             training_dataset_version,
             serving_keys=self._serving_keys,
+            skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
         self._batch_scoring_server.init_batch_scoring(self)
 
@@ -432,6 +448,9 @@ class FeatureView:
         """
         if self._single_vector_server is None:
             self.init_serving(external=external)
+        passed_features = self._update_with_vector_db_result(
+            self._single_vector_server, entry, passed_features
+        )
         return self._single_vector_server.get_feature_vector(
             entry, return_type, passed_features, allow_missing
         )
@@ -439,7 +458,7 @@ class FeatureView:
     def get_feature_vectors(
         self,
         entry: List[Dict[str, Any]],
-        passed_features: Optional[List[Dict[str, Any]]] = {},
+        passed_features: Optional[List[Dict[str, Any]]] = [],
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
@@ -525,8 +544,17 @@ class FeatureView:
         """
         if self._batch_vectors_server is None:
             self.init_serving(external=external, parallel=parallel)
+        updated_passed_feature = []
+        for i in range(len(entry)):
+            updated_passed_feature.append(
+                self._update_with_vector_db_result(
+                    self._batch_vectors_server,
+                    entry[i],
+                    passed_features[i] if passed_features else {},
+                )
+            )
         return self._batch_vectors_server.get_feature_vectors(
-            entry, return_type, passed_features, allow_missing, parallel=parallel
+            entry, return_type, updated_passed_feature, allow_missing, parallel=parallel
         )
 
     def get_inference_helper(
@@ -630,6 +658,75 @@ class FeatureView:
         return self._batch_vectors_server.get_inference_helpers(
             self, entry, return_type
         )
+
+    def _update_with_vector_db_result(self, vec_server, entry, passed_features):
+        if not self._vector_db_client:
+            return passed_features
+        for join_index, fg in self._vector_db_client.embedding_fg_by_join_index.items():
+            complete, fg_entry = vec_server.filter_entry_by_join_index(
+                entry, join_index
+            )
+            if not complete:
+                # Not retrieving from vector db if entry is not completed
+                continue
+            vector_db_features = self._vector_db_client.read(
+                fg.id, keys=fg_entry, index_name=fg.embedding_index.index_name
+            )
+
+            # if result is not empty
+            if vector_db_features:
+                vector_db_features = vector_db_features[0]  # get the first result
+                if passed_features and vector_db_features:
+                    vector_db_features.update(passed_features)
+                passed_features = vector_db_features
+        return passed_features
+
+    def find_neighbors(
+        self,
+        embedding,
+        feature=None,
+        k=10,
+        filter=None,
+        min_score=0,
+        external: Optional[bool] = None,
+    ):
+        if self._vector_db_client is None:
+            self.init_serving(external=external)
+        results = self._vector_db_client.find_neighbors(
+            embedding,
+            feature=(feature if feature else None),
+            k=k,
+            filter=filter,
+            min_score=min_score,
+        )
+        if len(results) == 0:
+            return []
+
+        passed_features = [result[1] for result in results]
+        return self.get_feature_vectors(
+            [self._extract_primary_key(res[1]) for res in results],
+            passed_features=passed_features,
+            external=external,
+            allow_missing=True,
+        )
+
+    def _extract_primary_key(self, result_key):
+        primary_key_map = {}
+        for prefix_sk, sk in self._prefix_serving_key_map.items():
+            if prefix_sk in result_key:
+                primary_key_map[sk.required_serving_key] = result_key[prefix_sk]
+            elif sk.feature_name in result_key:  # fall back to use raw feature name
+                primary_key_map[sk.required_serving_key] = result_key[sk.feature_name]
+        if len(self._single_vector_server.required_serving_keys) > len(primary_key_map):
+            raise FeatureStoreException(
+                f"Failed to get feature vector because required primary key [{', '.join([k for k in set([sk.required_serving_key for sk in self._prefix_serving_key_map.values()]) - primary_key_map.keys()])}] are not present in vector db."
+                "If the join of the embedding feature group in the query does not have a prefix,"
+                " try to create a new feature view with prefix attached."
+            )
+        return primary_key_map
+
+    def _get_embedding_fgs(self):
+        return set([fg for fg in self.query.featuregroups if fg.embedding_index])
 
     @usage.method_logger
     def get_batch_data(
@@ -1658,7 +1755,7 @@ class FeatureView:
     def recreate_training_dataset(
         self,
         training_dataset_version: int,
-        write_options: Optional[Dict[Any, Any]] = None,
+        write_options: Optional[Dict[Any, Any]] = {},
         spine: Optional[
             Union[
                 pd.DataFrame,
@@ -2707,13 +2804,27 @@ class FeatureView:
             serving_keys=serving_keys,
         )
         features = json_decamelized.get("features", [])
+        fs_cache = {}
+        # failed to import from module level
+        from hsfs.core.feature_store_api import FeatureStoreApi
+
+        fs_api = FeatureStoreApi()
         if features:
-            features = [
-                training_dataset_feature.TrainingDatasetFeature.from_response_json(
-                    feature
+            for feature_index in range(len(features)):
+                feature = (
+                    training_dataset_feature.TrainingDatasetFeature.from_response_json(
+                        features[feature_index]
+                    )
                 )
-                for feature in features
-            ]
+                fs_cache[feature.feature_group.feature_store_id] = fs_cache.get(
+                    feature.feature_group.feature_store_id,
+                    fs_api.get(feature.feature_group.feature_store_id),
+                )
+                # feature store object is needed in FeatureGroupBaseEngine::get_subject
+                feature.feature_group.feature_store = fs_cache[
+                    feature.feature_group.feature_store_id
+                ]
+                features[feature_index] = feature
         fv.schema = features
         fv.labels = [feature.name for feature in features if feature.label]
         fv.inference_helper_columns = [
@@ -2890,13 +3001,16 @@ class FeatureView:
         """
         _vector_server = self._single_vector_server or self._batch_vectors_server
         if _vector_server:
-            return _vector_server.serving_keys
+            return _vector_server.required_serving_keys
         else:
             _vector_server = vector_server.VectorServer(
-                self._featurestore_id, self._features, serving_keys=self._serving_keys
+                self._featurestore_id,
+                self._features,
+                serving_keys=self._serving_keys,
+                skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
             )
             _vector_server.init_prepared_statement(self, False, False, False)
-            return _vector_server.serving_keys
+            return _vector_server.required_serving_keys
 
     @property
     def serving_keys(self):

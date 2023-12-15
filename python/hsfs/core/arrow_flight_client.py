@@ -204,7 +204,6 @@ class ArrowFlightClient:
 
         return decorator
 
-    @staticmethod
     def _should_retry(exception):
         return isinstance(exception, pyarrow._flight.FlightUnavailableError)
 

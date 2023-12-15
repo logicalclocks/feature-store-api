@@ -138,7 +138,7 @@ class Query:
         """
         if not read_options:
             read_options = {}
-
+        self._check_read_supported(online)
         sql_query, online_conn = self._prep_read(online, read_options)
 
         schema = None
@@ -179,6 +179,7 @@ class Query:
             n: Number of rows to show.
             online: Show from online storage. Defaults to `False`.
         """
+        self._check_read_supported(online)
         read_options = {}
         sql_query, online_conn = self._prep_read(online, read_options)
 
@@ -473,6 +474,16 @@ class Query:
             ],
             filter=json_decamelized.get("filter", None),
         )
+
+    def _check_read_supported(self, online):
+        if not online:
+            return
+        for fg in self.featuregroups:
+            if fg.embedding_index:
+                raise FeatureStoreException(
+                    "Reading from query containing embedding is not supported."
+                    " Use `feature_view.get_feature_vector(s) instead."
+                )
 
     @classmethod
     def _hopsworks_json(cls, json_dict):

@@ -17,13 +17,20 @@ import warnings
 
 from hsfs import feature_view, training_dataset_feature, transformation_function
 from hsfs.constructor import query, fs_query
+from hsfs.feature_store import FeatureStore
 
 
 class TestFeatureView:
     def test_from_response_json(self, mocker, backend_fixtures):
         # Arrange
-        mocker.patch("hsfs.engine.get_type")
+        mocker.patch.object(
+            FeatureStore,
+            "project_id",
+            return_value=99,
+        )
         mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.core.feature_store_api.FeatureStoreApi.get")
         json = backend_fixtures["feature_view"]["get"]["response"]
 
         # Act
