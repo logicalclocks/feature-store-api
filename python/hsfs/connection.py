@@ -217,6 +217,11 @@ class Connection:
                 self._engine = "python"
             elif self._engine is not None and self._engine.lower() == "training":
                 self._engine = "training"
+            elif (
+                self._engine is not None
+                and self._engine.lower() == "spark-no-metastore"
+            ):
+                self._engine = "spark-no-metastore"
             else:
                 raise ConnectionError(
                     "Engine you are trying to initialize is unknown. "
