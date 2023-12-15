@@ -189,6 +189,7 @@ class FeatureView:
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
         options: Optional[dict] = None,
+        parellel=False,
     ):
         """Initialise feature view to retrieve feature vector from online and offline feature store.
 
@@ -256,7 +257,7 @@ class FeatureView:
             serving_keys=self._serving_keys,
         )
         self._batch_vectors_server.init_serving(
-            self, True, external, True, options=options
+            self, True, external, True, options=options, parellel=parellel
         )
 
     def init_batch_scoring(
@@ -442,6 +443,7 @@ class FeatureView:
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
+        parallel=False,
     ):
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -522,9 +524,9 @@ class FeatureView:
                 feature view.
         """
         if self._batch_vectors_server is None:
-            self.init_serving(external=external)
+            self.init_serving(external=external, parallel=parallel)
         return self._batch_vectors_server.get_feature_vectors(
-            entry, return_type, passed_features, allow_missing
+            entry, return_type, passed_features, allow_missing, parallel=parallel
         )
 
     def get_inference_helper(

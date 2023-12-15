@@ -26,13 +26,14 @@ setup(
         "pyjks",
         "mock",
         "avro==1.11.3",
-        "sqlalchemy",
+        "sqlalchemy<=1.4.48",
         "PyMySQL[rsa]",
         "great_expectations==0.15.12",
         "markupsafe<2.1.0",  # GE issue: jinja2==2.11.3, pulls in markupsafe 2.1.0 which is not compatible with jinja2==2.11.3.
         "tzlocal",
         "fsspec",
         "retrying",
+        "aiomysql"
     ],
     extras_require={
         "dev": [

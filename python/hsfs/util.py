@@ -29,6 +29,9 @@ from sqlalchemy import create_engine
 from hsfs import client, feature
 from hsfs.client import exceptions
 from hsfs.core import variable_api
+from aiomysql.sa import create_engine as async_create_engine
+import asyncio
+from sqlalchemy.engine.url import make_url
 
 FEATURE_STORE_NAME_SUFFIX = "_featurestore"
 
@@ -90,12 +93,7 @@ def create_mysql_engine(online_conn, external, options=None):
     if external:
         # This only works with external clients.
         # Hopsworks clients should use the storage connector
-        host = variable_api.VariableApi().get_loadbalancer_external_domain()
-        if host == "":
-            # If the load balancer is not configured, then fall back to
-            # use the MySQL node on the head node
-            host = client.get_instance().host
-
+        host = get_host_name()
         online_options["url"] = re.sub(
             "/[0-9.]+:",
             "/{}:".format(host),
@@ -124,6 +122,37 @@ def create_mysql_engine(online_conn, external, options=None):
     # default connection pool size kept by engine is 5
     sql_alchemy_engine = create_engine(sql_alchemy_conn_str, **options)
     return sql_alchemy_engine
+
+
+def get_host_name():
+    # This only works with external clients.
+    # Hopsworks clients should use the storage connector
+    host = variable_api.VariableApi().get_loadbalancer_external_domain()
+    if host == "":
+        # If the load balancer is not configured, then fall back to
+        # use the MySQL node on the head node
+        host = client.get_instance().host
+
+    return host
+
+
+async def create_async_engine(online_conn, external: bool):
+    online_options = online_conn.spark_options()
+    # create a aiomysql connection pool
+    # read the keys user, password from online_conn as use them while creating the connection pool
+    # TODO: parameterized min and max size of pool
+    print("Using aiomysql engine!")
+    pool = await async_create_engine(
+        host=get_host_name(),
+        port=3306,
+        user=online_options["user"],
+        password=online_options["password"],
+        db=make_url(online_options["url"].replace("jdbc:", "")).database,
+        loop=asyncio.get_running_loop(),
+        maxsize=10,
+        minsize=2,
+    )
+    return pool
 
 
 def check_timestamp_format_from_date_string(input_date):

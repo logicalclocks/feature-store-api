@@ -31,6 +31,8 @@ from hsfs.core import (
     feature_view_engine,
 )
 
+import asyncio
+
 
 class VectorServer:
     def __init__(
@@ -81,7 +83,13 @@ class VectorServer:
         self._transformation_functions = None
 
     def init_serving(
-        self, entity, batch, external, inference_helper_columns=False, options=None
+        self,
+        entity,
+        batch,
+        external,
+        inference_helper_columns=False,
+        options=None,
+        parellel=False,
     ):
         if external is None:
             external = isinstance(client.get_instance(), client.external.Client)
@@ -89,7 +97,12 @@ class VectorServer:
         # has to be done successfully before it is able to fetch feature vectors.
         self.init_transformation(entity)
         self.init_prepared_statement(
-            entity, batch, external, inference_helper_columns, options=options
+            entity,
+            batch,
+            external,
+            inference_helper_columns,
+            options=options,
+            parallel=parellel,
         )
 
     def init_batch_scoring(self, entity):
@@ -100,7 +113,13 @@ class VectorServer:
         self._transformation_functions = self._get_transformation_fns(entity)
 
     def init_prepared_statement(
-        self, entity, batch, external, inference_helper_columns, options=None
+        self,
+        entity,
+        batch,
+        external,
+        inference_helper_columns,
+        options=None,
+        parallel=False,
     ):
         if isinstance(entity, feature_view.FeatureView):
             if inference_helper_columns:
@@ -125,8 +144,8 @@ class VectorServer:
         self._prepared_statements = None
         self._helper_column_prepared_statements = None
         self._external = external
-
-        self._set_mysql_connection(options=options)
+        if not parallel:
+            self._set_mysql_connection(options=options)
 
         (
             self._prepared_statements,
@@ -278,11 +297,18 @@ class VectorServer:
         return_type=None,
         passed_features=[],
         allow_missing=False,
+        parallel=False,
     ):
         """Assembles serving vector from online feature store."""
-        batch_results, _ = self._batch_vector_results(
-            entries, self._prepared_statements
-        )
+        """run using aiomysql if parallel processing requires"""
+        if parallel:
+            batch_results, _ = self._batch_vector_results_parallel(
+                entries, self._prepared_statements
+            )
+        else:
+            batch_results, _ = self._batch_vector_results(
+                entries, self._prepared_statements
+            )
 
         # apply passed features to each batch result
         for vector_index, pf in enumerate(passed_features):
@@ -634,6 +660,157 @@ class VectorServer:
             )
         )
         return transformation_fns
+
+    def _batch_vector_results_parallel(self, entries, prepared_statement_objects):
+        # create dict object that will have of order of the vector as key and values as
+        # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
+        # expect that backend will return correctly ordered vectors.
+        batch_results = [{} for _ in range(len(entries))]
+        entry_values = []
+        # construct the list of entry values for binding to query
+        for prepared_statement_index in prepared_statement_objects:
+            # prepared_statement_index include fg with label only
+            # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
+            if prepared_statement_index not in self._serving_key_by_serving_index:
+                continue
+
+            entry_values_tuples = list(
+                map(
+                    lambda e: tuple(
+                        [
+                            (
+                                e.get(sk.required_serving_key)
+                                # Check if there is any entry matched with feature name,
+                                # if the required serving key is not provided.
+                                or e.get(sk.feature_name)
+                            )
+                            for sk in self._serving_key_by_serving_index[
+                                prepared_statement_index
+                            ]
+                        ]
+                    ),
+                    entries,
+                )
+            )
+            bind_params = {"batch_ids": entry_values_tuples}
+            entry_values.append(bind_params)
+
+        # run all the prepared statements in parallel using aiomysql engine
+        loop = asyncio.get_event_loop()
+        parallel_results = loop.run_until_complete(
+            self._launch_async_read(
+                list(prepared_statement_objects.values()), entry_values
+            )
+        )
+
+        # construct the results; same as before
+        for count, prepared_statement_index in enumerate(prepared_statement_objects):
+            # prepared_statement_index include fg with label only
+            # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
+            if prepared_statement_index not in self._serving_key_by_serving_index:
+                continue
+
+            statement_results = {}
+            serving_keys = self._serving_key_by_serving_index[prepared_statement_index]
+            # Use prefix from prepare statement because prefix from serving key is collision adjusted.
+            prefix_features = [
+                (self._prefix_by_serving_index[prepared_statement_index] or "")
+                + sk.feature_name
+                for sk in self._serving_key_by_serving_index[prepared_statement_index]
+            ]
+            # iterate over results by index of the prepared statement
+            for row in parallel_results[count]:
+                row_dict = dict(row)
+                # can primary key be complex feature?
+                result_dict = self.deserialize_complex_features(
+                    self._complex_features, row_dict
+                )
+                # note: should used serialized value
+                # as it is from users' input
+                statement_results[
+                    self._get_result_key(prefix_features, row_dict)
+                ] = result_dict
+
+            # add partial results to the global results
+            for i, entry in enumerate(entries):
+                batch_results[i].update(
+                    statement_results.get(
+                        self._get_result_key_serving_key(serving_keys, entry), {}
+                    )
+                )
+        return batch_results, serving_keys
+
+    async def _set_aiomysql_connection(self):
+        online_connector = self._storage_connector_api.get_online_connector(
+            self._feature_store_id
+        )
+        return await util.create_async_engine(online_connector, self._external)
+
+    # Define a function that runs a query for a given primary key
+    async def _query_async_sql(self, pool, stmt, values):
+        # Get a connection from the pool
+        async with pool.acquire() as conn:
+            # Execute the prepared statement
+            # print("running sql", stmt)
+            cursor = await conn.execute(stmt, values)
+            # Fetch the result
+            resultset = await cursor.fetchall()
+            # results_as_dict = [dict(i) for i in resultset]
+            await cursor.close()
+            return resultset
+
+    # Define a function that runs a query for a given primary key
+    async def _query_async_string(self, pool, stmt, params):
+        # Get a connection from the pool
+        query = stmt.text.replace(":batch_ids", "(%s)")
+        print(query)
+        p = list(params.values())
+        print(p[0])
+        # query = stmt.bindparams(batch_ids=values)
+        async with pool.acquire() as conn:
+            # Execute the prepared statement
+            # print("running sql", stmt)
+            async with conn.cursor() as cur:
+                await cur.execute(query, (p[0],))
+                # Fetch the result
+                resultset = await cur.fetchall()
+            # results_as_dict = [dict(i) for i in resultset]
+        return resultset
+
+    async def _run_prepared_statements(
+        self, engine, prepared_statements, all_bind_values
+    ):
+        tasks = []
+        # iterate over the list of prepared statements and bind the values from index wise for each prep statement
+        # create a list of tasks
+        for count, query in enumerate(prepared_statements):
+            tasks.append(
+                asyncio.ensure_future(
+                    self._query_async_sql(engine, query, all_bind_values[count])
+                )
+            )
+
+        # Run the queries in parallel using asyncio.gather
+        results = await asyncio.gather(*tasks)
+        return results
+
+    async def _launch_async_read(
+        self, prepared_statements: list, all_values_list: list
+    ):
+        """
+        prepared_statements: list of prepared statements,
+        all_values_list: list of dict of bind params for the respective prepared statements .e.g [{"batch_ids":(1,2,3)},{"batch_ids": (3,4,5)}]
+
+        we run the prepared statements in parallel and bind the params in the list index wise.
+        """
+        # TODO: init the cool in init serving if possible
+        engine = await self._set_aiomysql_connection()
+        results = await (
+            self._run_prepared_statements(engine, prepared_statements, all_values_list)
+        )
+        engine.close()
+        await engine.wait_closed()  # this is needed otherwise it throws Event loop is closed
+        return results
 
     @property
     def prepared_statement_engine(self):
