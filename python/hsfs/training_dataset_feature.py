@@ -137,5 +137,9 @@ class TrainingDatasetFeature:
     def feature_group(self):
         return self._feature_group
 
+    @property
+    def feature_group_feature_name(self):
+        return self._feature_group_feature_name
+
     def __repr__(self):
         return f"Training Dataset Feature({self._name!r}, {self._type!r}, {self._index!r}, {self._label}, {self._transformation_function}, {self._feature_group_feature_name}, {self._feature_group.id!r})"
