@@ -62,9 +62,7 @@ class OpenSearchApi:
                 )
             return f"https://{external_domain}:9200"
         else:
-            service_discovery_domain = (
-                self._variable_api.get_service_discovery_domain()
-            )
+            service_discovery_domain = self._variable_api.get_service_discovery_domain()
             if service_discovery_domain == "":
                 raise FeatureStoreException(
                     "Client could not locate service_discovery_domain "
