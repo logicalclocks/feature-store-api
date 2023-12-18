@@ -165,10 +165,43 @@
       "features": [
         {
           "name": "intt",
-          "label": "t"
+          "label": "t",
+          "featuregroup": {
+              "type": "featuregroupDTO",
+              "featurestoreId": 67,
+              "version": 1,
+              "name": "fg_test",
+              "id": 15,
+              "statisticsConfig": {
+                  "enabled": true,
+                  "histograms": false,
+                  "correlations": false,
+                  "exactUniqueness": false,
+                  "columns": []
+              },
+              "onlineEnabled": false,
+              "deprecated": false
+          }
         },
         {
-          "name": "stringt"
+          "name": "stringt",
+          "featurestoreId":	67,
+          "featuregroup": {
+              "type": "featuregroupDTO",
+              "featurestoreId": 67,
+              "version": 1,
+              "name": "fg_test",
+              "id": 15,
+              "statisticsConfig": {
+                  "enabled": true,
+                  "histograms": false,
+                  "correlations": false,
+                  "exactUniqueness": false,
+                  "columns": []
+              },
+              "onlineEnabled": false,
+              "deprecated": false
+          }
         }
       ]
     }

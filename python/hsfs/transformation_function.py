@@ -37,6 +37,7 @@ class TransformationFunction:
         items=None,
         count=None,
         href=None,
+        **kwargs,
     ):
         self._id = id
         self._featurestore_id = featurestore_id

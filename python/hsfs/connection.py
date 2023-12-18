@@ -20,6 +20,7 @@ import importlib.util
 from requests.exceptions import ConnectionError
 
 from hsfs.decorators import connected, not_connected
+from hsfs.core.opensearch import OpenSearchClientSingleton
 from hsfs import engine, client, util, usage
 from hsfs.core import (
     feature_store_api,
@@ -216,6 +217,11 @@ class Connection:
                 self._engine = "python"
             elif self._engine is not None and self._engine.lower() == "training":
                 self._engine = "training"
+            elif (
+                self._engine is not None
+                and self._engine.lower() == "spark-no-metastore"
+            ):
+                self._engine = "spark-no-metastore"
             else:
                 raise ConnectionError(
                     "Engine you are trying to initialize is unknown. "
@@ -271,6 +277,7 @@ class Connection:
             conn.close()
             ```
         """
+        OpenSearchClientSingleton().close()
         client.stop()
         self._feature_store_api = None
         engine.stop()

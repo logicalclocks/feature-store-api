@@ -45,6 +45,7 @@ class ValidationReport:
         type=None,
         validation_time=None,
         ingestion_result="UNKNOWN",
+        **kwargs,
     ):
         self._id = id
         self._success = success

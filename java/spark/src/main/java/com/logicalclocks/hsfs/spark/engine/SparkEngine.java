@@ -577,6 +577,7 @@ public class SparkEngine extends EngineBase {
     byte[] featureGroupId = String.valueOf(featureGroupBase.getId()).getBytes(StandardCharsets.UTF_8);
     byte[] subjectId = String.valueOf(featureGroupBase.getSubject().getId()).getBytes(StandardCharsets.UTF_8);
 
+    queryName = makeQueryName(queryName, featureGroupBase);
     DataStreamWriter<Row> writer =
         onlineFeatureGroupToAvro(featureGroupBase, encodeComplexFeatures(featureGroupBase, dataset))
             .withColumn("headers", array(
@@ -596,8 +597,9 @@ public class SparkEngine extends EngineBase {
             .writeStream()
             .format(Constants.KAFKA_FORMAT)
             .outputMode(outputMode)
+            .queryName(queryName)
             .option("checkpointLocation", checkpointLocation == null
-                ? checkpointDirPath(queryName, featureGroupBase.getOnlineTopicName())
+                ? checkpointDirPath(queryName)
                 : checkpointLocation)
             .options(writeOptions)
             .option("topic", featureGroupBase.getOnlineTopicName());
@@ -1082,12 +1084,21 @@ public class SparkEngine extends EngineBase {
         + "/Resources/" + queryName + "-checkpoint";
   }
 
-  public String checkpointDirPath(String queryName, String onlineTopicName) throws FeatureStoreException {
-    if (Strings.isNullOrEmpty(queryName)) {
-      queryName = "insert_stream_" + onlineTopicName;
-    }
+  private String checkpointDirPath(String queryName) throws FeatureStoreException {
     return "/Projects/" + HopsworksClient.getInstance().getProject().getProjectName()
         + "/Resources/" + queryName + "-checkpoint";
+  }
+
+  protected String makeQueryName(String queryName, FeatureGroupBase featureGroup) {
+    if (Strings.isNullOrEmpty(queryName)) {
+      queryName = String.format("insert_stream_%d_%d_%s_%d_onlinefs",
+              featureGroup.getFeatureStore().getProjectId(),
+              featureGroup.getId(),
+              featureGroup.getName(),
+              featureGroup.getVersion()
+      );
+    }
+    return queryName;
   }
 
 }

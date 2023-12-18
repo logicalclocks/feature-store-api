@@ -857,6 +857,8 @@ class TestSpark:
             online_topic_name="test_online_topic_name",
         )
         fg.feature_store = mocker.Mock()
+        project_id = 1
+        fg.feature_store.project_id = project_id
 
         mock_client_get_instance.return_value._project_name = "test_project_name"
 
@@ -907,7 +909,7 @@ class TestSpark:
             ][
                 1
             ]
-            == "/Projects/test_project_name/Resources/insert_stream_test_online_topic_name-checkpoint"
+            == f"/Projects/test_project_name/Resources/{self._get_spark_query_name(project_id, fg)}-checkpoint"
         )
         assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
             1
@@ -939,13 +941,12 @@ class TestSpark:
             ]
             == "test_online_topic_name"
         )
-        assert (
-            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
-                0
-            ][
-                0
-            ]
-            == "insert_stream_test_online_topic_name"
+        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
+            0
+        ][
+            0
+        ] == self._get_spark_query_name(
+            project_id, fg
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.return_value.start.return_value.awaitTermination.call_count
@@ -1079,6 +1080,12 @@ class TestSpark:
             == 0
         )
 
+    def _get_spark_query_name(self, project_id, feature_group):
+        return (
+            f"insert_stream_{project_id}_{feature_group.id}"
+            f"_{feature_group.name}_{feature_group.version}_onlinefs"
+        )
+
     def test_save_stream_dataframe_checkpoint_dir(self, mocker, backend_fixtures):
         # Arrange
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
@@ -1111,7 +1118,8 @@ class TestSpark:
             online_topic_name="test_online_topic_name",
         )
         fg.feature_store = mocker.Mock()
-
+        project_id = 1
+        fg.feature_store.project_id = project_id
         mock_client_get_instance.return_value._project_name = "test_project_name"
 
         # Act
@@ -1193,13 +1201,12 @@ class TestSpark:
             ]
             == "test_online_topic_name"
         )
-        assert (
-            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
-                0
-            ][
-                0
-            ]
-            == "insert_stream_test_online_topic_name"
+        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
+            0
+        ][
+            0
+        ] == self._get_spark_query_name(
+            project_id, fg
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.return_value.start.return_value.awaitTermination.call_count
@@ -1238,7 +1245,8 @@ class TestSpark:
             online_topic_name="test_online_topic_name",
         )
         fg.feature_store = mocker.Mock()
-
+        project_id = 1
+        fg.feature_store.project_id = project_id
         mock_client_get_instance.return_value._project_name = "test_project_name"
 
         # Act
@@ -1288,7 +1296,7 @@ class TestSpark:
             ][
                 1
             ]
-            == "/Projects/test_project_name/Resources/insert_stream_test_online_topic_name-checkpoint"
+            == f"/Projects/test_project_name/Resources/{self._get_spark_query_name(project_id, fg)}-checkpoint"
         )
         assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
             1
@@ -1320,13 +1328,12 @@ class TestSpark:
             ]
             == "test_online_topic_name"
         )
-        assert (
-            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
-                0
-            ][
-                0
-            ]
-            == "insert_stream_test_online_topic_name"
+        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
+            0
+        ][
+            0
+        ] == self._get_spark_query_name(
+            project_id, fg
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.return_value.start.return_value.awaitTermination.call_count
@@ -3438,7 +3445,7 @@ class TestSpark:
                     "data_asset_name": "<YOUR_MEANGINGFUL_NAME>",
                 },
                 "expectation_suite_name": "es_name",
-                "great_expectations_version": "0.14.13",
+                "great_expectations_version": "0.15.12",
                 "run_id": {"run_name": "test_run_id", "run_time": mocker.ANY},
                 "validation_time": mocker.ANY,
             },
