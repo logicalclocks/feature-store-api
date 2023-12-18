@@ -783,45 +783,40 @@ class VectorServer:
             online_connector, self._external
         )
 
-    # Define a function that runs a query for a given primary key
-    async def _query_async_sql(self, pool, stmt, values):
+    async def _query_async_sql(self, pool, stmt, bind_params):
+        """Query prepared statement together with bind params using aiomysql connection pool"""
         # Get a connection from the pool
         async with pool.acquire() as conn:
             # Execute the prepared statement
-            cursor = await conn.execute(stmt, values)
+            cursor = await conn.execute(stmt, bind_params)
             # Fetch the result
             resultset = await cursor.fetchall()
-            # results_as_dict = [dict(i) for i in resultset]
             await cursor.close()
             return resultset
 
-    async def _run_prepared_statements(
-        self, engine, prepared_statements, all_bind_values
-    ):
+    async def _run_prepared_statements(self, engine, prepared_statements, entries_list):
+        """Iterate over prepared statements to create async tasks and gather all tasks results."""
 
         tasks = [
-            asyncio.ensure_future(
-                self._query_async_sql(engine, query, all_bind_values[i])
-            )
+            asyncio.ensure_future(self._query_async_sql(engine, query, entries_list[i]))
             for i, query in enumerate(prepared_statements)
         ]
         # Run the queries in parallel using asyncio.gather
         results = await asyncio.gather(*tasks)
         return results
 
-    async def _launch_async_read(
-        self, prepared_statements: list, all_values_list: list
-    ):
+    async def _launch_async_read(self, prepared_statements: list, entries_list: list):
         """
+        Launch async process to run the prepared statements in parallel with the bind the params.
+
         prepared_statements: list of prepared statements,
-        all_values_list: list of dict of bind params for the respective prepared statements.
+        entries_list: list of dicts of entry values as bind params.
         e.g [{"batch_ids":(1,2,3)},{"batch_ids": (3,4,5)}]
-        we run the prepared statements in parallel and bind the params in the list index wise.
         """
         try:
             results = await (
                 self._run_prepared_statements(
-                    self._async_pool, prepared_statements, all_values_list
+                    self._async_pool, prepared_statements, entries_list
                 )
             )
         finally:
