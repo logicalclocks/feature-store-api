@@ -814,10 +814,8 @@ class VectorServer:
         e.g [{"batch_ids":(1,2,3)},{"batch_ids": (3,4,5)}]
         """
         try:
-            results = await (
-                self._run_prepared_statements(
-                    self._async_pool, prepared_statements, entries_list
-                )
+            results = await self._run_prepared_statements(
+                self._async_pool, prepared_statements, entries_list
             )
         finally:
             if self._async_pool:
