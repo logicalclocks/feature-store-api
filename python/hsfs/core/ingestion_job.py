@@ -28,6 +28,7 @@ class IngestionJob:
         items=None,
         count=None,
         type=None,
+        **kwargs,
     ):
         self._data_path = data_path
         self._job = Job.from_response_json(job)

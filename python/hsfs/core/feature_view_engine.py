@@ -28,6 +28,7 @@ from hsfs.core import (
     statistics_engine,
     training_dataset_engine,
     query_constructor_api,
+    arrow_flight_client,
 )
 
 
@@ -78,6 +79,36 @@ class FeatureViewEngine:
                         featuregroup=featuregroup,
                     )
                 )
+        if feature_view_obj.inference_helper_columns:
+            for helper_column_name in feature_view_obj.inference_helper_columns:
+                (
+                    feature,
+                    prefix,
+                    featuregroup,
+                ) = feature_view_obj.query._get_feature_by_name(helper_column_name)
+                feature_view_obj._features.append(
+                    training_dataset_feature.TrainingDatasetFeature(
+                        name=feature.name,
+                        inference_helper_column=True,
+                        featuregroup=featuregroup,
+                    )
+                )
+
+        if feature_view_obj.training_helper_columns:
+            for helper_column_name in feature_view_obj.training_helper_columns:
+                (
+                    feature,
+                    prefix,
+                    featuregroup,
+                ) = feature_view_obj.query._get_feature_by_name(helper_column_name)
+                feature_view_obj._features.append(
+                    training_dataset_feature.TrainingDatasetFeature(
+                        name=feature.name,
+                        training_helper_column=True,
+                        featuregroup=featuregroup,
+                    )
+                )
+
         self._transformation_function_engine.attach_transformation_fn(feature_view_obj)
         updated_fv = self._feature_view_api.post(feature_view_obj)
         self.attach_transformation_function(updated_fv)
@@ -123,6 +154,10 @@ class FeatureViewEngine:
         start_time,
         end_time,
         with_label=False,
+        primary_keys=False,
+        event_time=False,
+        inference_helper_columns=False,
+        training_helper_columns=False,
         training_dataset_version=None,
         spine=None,
     ):
@@ -135,6 +170,10 @@ class FeatureViewEngine:
                 training_dataset_version=training_dataset_version,
                 is_python_engine=engine.get_type() == "python",
                 with_label=with_label,
+                primary_keys=primary_keys,
+                event_time=event_time,
+                inference_helper_columns=inference_helper_columns,
+                training_helper_columns=training_helper_columns,
             )
             # verify whatever is passed 1. spine group with dataframe contained, or 2. dataframe
             # the schema has to be consistent
@@ -213,7 +252,14 @@ class FeatureViewEngine:
         return transformation_functions_dict
 
     def create_training_dataset(
-        self, feature_view_obj, training_dataset_obj, user_write_options, spine=None
+        self,
+        feature_view_obj,
+        training_dataset_obj,
+        user_write_options,
+        spine=None,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         self._set_event_time(feature_view_obj, training_dataset_obj)
         updated_instance = self._create_training_data_metadata(
@@ -224,6 +270,9 @@ class FeatureViewEngine:
             user_write_options,
             training_dataset_obj=training_dataset_obj,
             spine=spine,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         return updated_instance, td_job
 
@@ -235,6 +284,9 @@ class FeatureViewEngine:
         training_dataset_obj=None,
         training_dataset_version=None,
         spine=None,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         # check if provided td version has already existed.
         if training_dataset_version:
@@ -264,7 +316,18 @@ class FeatureViewEngine:
 
         if td_updated.training_dataset_type != td_updated.IN_MEMORY:
             split_df = self._read_from_storage_connector(
-                td_updated, td_updated.splits, read_options, feature_view_obj.schema
+                td_updated,
+                td_updated.splits,
+                read_options,
+                with_primary_keys=primary_keys,
+                primary_keys=self._get_primary_keys_from_query(feature_view_obj.query),
+                with_event_time=event_time,
+                event_time=[feature_view_obj.query._left_feature_group.event_time],
+                with_training_helper_columns=training_helper_columns,
+                training_helper_columns=feature_view_obj.training_helper_columns,
+                feature_view_features=[
+                    feature.name for feature in feature_view_obj.features
+                ],
             )
         else:
             self._check_feature_group_accessibility(feature_view_obj)
@@ -274,6 +337,10 @@ class FeatureViewEngine:
                 start_time=td_updated.event_start_time,
                 end_time=td_updated.event_end_time,
                 with_label=True,
+                inference_helper_columns=False,
+                primary_keys=primary_keys,
+                event_time=event_time,
+                training_helper_columns=training_helper_columns,
                 spine=spine,
             )
             split_df = engine.get_instance().get_training_data(
@@ -348,20 +415,48 @@ class FeatureViewEngine:
         return training_dataset_obj, td_job
 
     def _read_from_storage_connector(
-        self, training_data_obj, splits, read_options, schema=None
+        self,
+        training_data_obj,
+        splits,
+        read_options,
+        with_primary_keys,
+        primary_keys,
+        with_event_time,
+        event_time,
+        with_training_helper_columns,
+        training_helper_columns,
+        feature_view_features,
     ):
         if splits:
             result = {}
             for split in splits:
                 path = training_data_obj.location + "/" + str(split.name)
                 result[split.name] = self._read_dir_from_storage_connector(
-                    training_data_obj, path, read_options
+                    training_data_obj,
+                    path,
+                    read_options,
+                    with_primary_keys,
+                    primary_keys,
+                    with_event_time,
+                    event_time,
+                    with_training_helper_columns,
+                    training_helper_columns,
+                    feature_view_features,
                 )
             return result
         else:
             path = training_data_obj.location + "/" + training_data_obj.name
             return self._read_dir_from_storage_connector(
-                training_data_obj, path, read_options
+                training_data_obj,
+                path,
+                read_options,
+                with_primary_keys,
+                primary_keys,
+                with_event_time,
+                event_time,
+                with_training_helper_columns,
+                training_helper_columns,
+                feature_view_features,
             )
 
     def _cast_columns(self, data_format, df, schema):
@@ -372,15 +467,43 @@ class FeatureViewEngine:
         else:
             return df
 
-    def _read_dir_from_storage_connector(self, training_data_obj, path, read_options):
+    def _read_dir_from_storage_connector(
+        self,
+        training_data_obj,
+        path,
+        read_options,
+        with_primary_keys,
+        primary_keys,
+        with_event_time,
+        event_time,
+        with_training_helper_columns,
+        training_helper_columns,
+        feature_view_features,
+    ):
         try:
-            return training_data_obj.storage_connector.read(
+            df = training_data_obj.storage_connector.read(
                 # always read from materialized dataset, not query object
                 query=None,
                 data_format=training_data_obj.data_format,
                 options=read_options,
                 path=path,
             )
+
+            df = self._drop_helper_columns(
+                df, feature_view_features, with_primary_keys, primary_keys, False
+            )
+            df = self._drop_helper_columns(
+                df, feature_view_features, with_event_time, event_time, False
+            )
+            df = self._drop_helper_columns(
+                df,
+                feature_view_features,
+                with_training_helper_columns,
+                training_helper_columns,
+                True,
+            )
+            return df
+
         except Exception as e:
             if isinstance(e, FileNotFoundError):
                 raise FileNotFoundError(
@@ -390,6 +513,23 @@ class FeatureViewEngine:
             else:
                 raise e
 
+    def _drop_helper_columns(
+        self, df, feature_view_features, with_columns, columns, training_helper
+    ):
+        if not with_columns:
+            if engine.get_type() == "spark":
+                existing_cols = [field.name for field in df.schema.fields]
+            else:
+                existing_cols = df.columns
+            # primary keys and event time are dropped only if they are in the query
+            drop_cols = list(set(existing_cols).intersection(columns))
+            # training helper is always in the query
+            if not training_helper:
+                drop_cols = list(set(drop_cols).difference(feature_view_features))
+            if drop_cols:
+                df = engine.get_instance().drop_columns(df, drop_cols)
+        return df
+
     # This method is used by hsfs_utils to launch a job for python client
     def compute_training_dataset(
         self,
@@ -398,6 +538,9 @@ class FeatureViewEngine:
         training_dataset_obj=None,
         training_dataset_version=None,
         spine=None,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         if training_dataset_obj:
             pass
@@ -413,9 +556,19 @@ class FeatureViewEngine:
             training_dataset_obj.event_start_time,
             training_dataset_obj.event_end_time,
             with_label=True,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            inference_helper_columns=False,
+            training_helper_columns=training_helper_columns,
             training_dataset_version=training_dataset_obj.version,
             spine=spine,
         )
+
+        # for spark job
+        user_write_options["training_helper_columns"] = training_helper_columns
+        user_write_options["primary_keys"] = primary_keys
+        user_write_options["event_time"] = event_time
+
         td_job = engine.get_instance().write_training_dataset(
             training_dataset_obj,
             batch_query,
@@ -522,6 +675,9 @@ class FeatureViewEngine:
         transformation_functions,
         read_options=None,
         spine=None,
+        primary_keys=False,
+        event_time=False,
+        inference_helper_columns=False,
     ):
         self._check_feature_group_accessibility(feature_view_obj)
 
@@ -530,6 +686,10 @@ class FeatureViewEngine:
             start_time,
             end_time,
             with_label=False,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            inference_helper_columns=inference_helper_columns,
+            training_helper_columns=False,
             training_dataset_version=training_dataset_version,
             spine=spine,
         ).read(read_options=read_options)
@@ -583,15 +743,25 @@ class FeatureViewEngine:
         )
 
     def _check_feature_group_accessibility(self, feature_view_obj):
-        if (
-            engine.get_type() == "python" or engine.get_type() == "hive"
-        ) and not feature_view_obj.query.is_cache_feature_group_only():
-            raise NotImplementedError(
-                "Python kernel can only read from cached feature groups."
-                " When using external feature groups please use "
-                "`feature_view.create_training_data` instead. "
-                "If you are using spines, use a Spark Kernel."
-            )
+        if engine.get_type() in ["python", "hive"]:
+            if arrow_flight_client.get_instance().is_enabled():
+                if not arrow_flight_client.get_instance().supports(
+                    feature_view_obj.query.featuregroups
+                ):
+                    raise NotImplementedError(
+                        "ArrowFlightServer can only read from cached feature groups"
+                        " and external feature groups on BigQuery and Snowflake."
+                        " When using other external feature groups please use "
+                        "`feature_view.create_training_data` instead. "
+                        "If you are using spines, use a Spark Kernel."
+                    )
+            elif not feature_view_obj.query.is_cache_feature_group_only():
+                raise NotImplementedError(
+                    "Python kernel can only read from cached feature groups."
+                    " When using external feature groups please use "
+                    "`feature_view.create_training_data` instead. "
+                    "If you are using spines, use a Spark Kernel."
+                )
 
     def _get_feature_view_url(self, feature_view):
         path = (
@@ -605,3 +775,22 @@ class FeatureViewEngine:
             + str(feature_view.version)
         )
         return util.get_hostname_replaced_url(path)
+
+    def _get_primary_keys_from_query(self, fv_query_obj):
+        fv_pks = set(
+            [
+                feature.name
+                for feature in fv_query_obj._left_feature_group.features
+                if feature.primary
+            ]
+        )
+        for _join in fv_query_obj._joins:
+            fv_pks.update(
+                [
+                    feature.name
+                    for feature in _join.query._left_feature_group.features
+                    if feature.primary
+                ]
+            )
+
+        return list(fv_pks)

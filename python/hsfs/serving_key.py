@@ -29,6 +29,7 @@ class ServingKey:
         prefix="",
         join_on=None,
         ignore_prefix=False,
+        **kwargs,
     ):
         self._feature_name = feature_name
         self._feature_group = feature_group
@@ -40,13 +41,18 @@ class ServingKey:
 
     @classmethod
     def from_response_json(cls, json_dict):
+        # late import, otherwise will result circular import
+        from hsfs.feature_group import FeatureGroupBase
+
         if json_dict is None:
             return None
         json_decamelized = humps.decamelize(json_dict)
         serving_key = cls(
             feature_name=json_decamelized.get("feature_name", None),
             join_index=json_decamelized.get("join_index", None),
-            feature_group=json_decamelized.get("feature_group", None),
+            feature_group=FeatureGroupBase.from_response_json(
+                json_decamelized.get("feature_group", None)
+            ),
             required=json_decamelized.get("required", True),
             prefix=json_decamelized.get("prefix", ""),
             join_on=json_decamelized.get("join_on", None),
@@ -65,7 +71,7 @@ class ServingKey:
             "join_on": self._join_on,
         }
 
-    def __str__(self):
+    def __repr__(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     @property

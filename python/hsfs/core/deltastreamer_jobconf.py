@@ -20,7 +20,7 @@ from hsfs import util
 
 
 class DeltaStreamerJobConf:
-    def __init__(self, options, spark_options):
+    def __init__(self, options, spark_options, **kwargs):
         self._options = options
         self._spark_options = spark_options
 

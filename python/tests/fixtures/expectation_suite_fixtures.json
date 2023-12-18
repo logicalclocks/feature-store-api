@@ -10,7 +10,7 @@
           "id": 32
         }
       ],
-      "meta": "{ \"great_expectations_version\": \"0.14.13\", \"key\": \"value\" }",
+      "meta": "{ \"great_expectations_version\": \"0.15.12\", \"key\": \"value\" }",
       "id": 21,
       "data_asset_type": "test_data_asset_type",
       "ge_cloud_id": "test_ge_cloud_id",
@@ -39,7 +39,7 @@
               "id": "4"
             }
           ],
-          "meta": "{\"great_expectations_version\": \"0.14.13\",\"key\": \"value\"}",
+          "meta": "{\"great_expectations_version\": \"0.15.12\",\"key\": \"value\"}",
           "id": 21,
           "data_asset_type": "test_data_asset_type",
           "ge_cloud_id": "test_ge_cloud_id",
@@ -67,7 +67,7 @@
           "id": 32
         }
       ],
-      "meta": "{\"great_expectations_version\": \"0.14.13\",\"key\": \"value\"}"
+      "meta": "{\"great_expectations_version\": \"0.15.12\",\"key\": \"value\"}"
     }
   },
   "get_list_empty": {

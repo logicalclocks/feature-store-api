@@ -28,6 +28,10 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import fs_query
 from hsfs.core import feature_view_engine
 from hsfs.constructor.query import Query
+from hsfs.core import arrow_flight_client
+from hsfs.storage_connector import BigQueryConnector, StorageConnector
+
+from unittest.mock import MagicMock
 
 engine.init("python")
 fg1 = feature_group.FeatureGroup(
@@ -672,7 +676,7 @@ class TestFeatureViewEngine:
 
         # Act
         fv_engine.create_training_dataset(
-            feature_view_obj=None, training_dataset_obj=None, user_write_options=None
+            feature_view_obj=None, training_dataset_obj=None, user_write_options={}
         )
 
         # Assert
@@ -792,6 +796,7 @@ class TestFeatureViewEngine:
             "hsfs.core.feature_view_engine.FeatureViewEngine._check_feature_group_accessibility"
         )
         mocker.patch("hsfs.core.feature_view_engine.FeatureViewEngine.get_batch_query")
+
         mock_fv_engine_compute_training_dataset_statistics = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.compute_training_dataset_statistics"
         )
@@ -844,7 +849,9 @@ class TestFeatureViewEngine:
         mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine._check_feature_group_accessibility"
         )
+
         mocker.patch("hsfs.core.feature_view_engine.FeatureViewEngine.get_batch_query")
+
         mock_fv_engine_compute_training_dataset_statistics = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.compute_training_dataset_statistics"
         )
@@ -1060,7 +1067,7 @@ class TestFeatureViewEngine:
         fv_engine.recreate_training_dataset(
             feature_view_obj=None,
             training_dataset_version=None,
-            user_write_options=None,
+            user_write_options={},
         )
 
         # Assert
@@ -1091,7 +1098,16 @@ class TestFeatureViewEngine:
 
         # Act
         fv_engine._read_from_storage_connector(
-            training_data_obj=td, splits=None, read_options=None
+            training_data_obj=td,
+            splits=None,
+            read_options=None,
+            with_primary_keys=None,
+            primary_keys=None,
+            with_event_time=None,
+            event_time=None,
+            with_training_helper_columns=None,
+            training_helper_columns=None,
+            feature_view_features=[],
         )
 
         # Assert
@@ -1128,7 +1144,16 @@ class TestFeatureViewEngine:
 
         # Act
         fv_engine._read_from_storage_connector(
-            training_data_obj=td, splits=splits, read_options=None
+            training_data_obj=td,
+            splits=splits,
+            read_options=None,
+            with_primary_keys=None,
+            primary_keys=None,
+            with_event_time=None,
+            event_time=None,
+            with_training_helper_columns=None,
+            training_helper_columns=None,
+            feature_view_features=[],
         )
 
         # Assert
@@ -1164,7 +1189,16 @@ class TestFeatureViewEngine:
 
         # Act
         fv_engine._read_dir_from_storage_connector(
-            training_data_obj=td, path="test", read_options=None
+            training_data_obj=td,
+            path="test",
+            read_options=None,
+            with_primary_keys=False,
+            primary_keys=[],
+            with_event_time=False,
+            event_time=[],
+            with_training_helper_columns=False,
+            training_helper_columns=[],
+            feature_view_features=[],
         )
 
         # Assert
@@ -1196,7 +1230,16 @@ class TestFeatureViewEngine:
         # Act
         with pytest.raises(FileNotFoundError) as e_info:
             fv_engine._read_dir_from_storage_connector(
-                training_data_obj=td, path="test", read_options=None
+                training_data_obj=td,
+                path="test",
+                read_options=None,
+                with_primary_keys=None,
+                primary_keys=None,
+                with_event_time=None,
+                event_time=None,
+                with_training_helper_columns=None,
+                training_helper_columns=None,
+                feature_view_features=[],
             )
 
         # Assert
@@ -1233,7 +1276,7 @@ class TestFeatureViewEngine:
         with pytest.raises(ValueError) as e_info:
             fv_engine.compute_training_dataset(
                 feature_view_obj=None,
-                user_write_options=None,
+                user_write_options={},
                 training_dataset_obj=None,
                 training_dataset_version=None,
             )
@@ -1279,7 +1322,7 @@ class TestFeatureViewEngine:
         # Act
         fv_engine.compute_training_dataset(
             feature_view_obj=None,
-            user_write_options=None,
+            user_write_options={},
             training_dataset_obj=td,
             training_dataset_version=None,
         )
@@ -1326,7 +1369,7 @@ class TestFeatureViewEngine:
         # Act
         fv_engine.compute_training_dataset(
             feature_view_obj=None,
-            user_write_options=None,
+            user_write_options={},
             training_dataset_obj=None,
             training_dataset_version=1,
         )
@@ -1371,7 +1414,7 @@ class TestFeatureViewEngine:
         # Act
         fv_engine.compute_training_dataset(
             feature_view_obj=None,
-            user_write_options=None,
+            user_write_options={},
             training_dataset_obj=td,
             training_dataset_version=None,
         )
@@ -1416,7 +1459,7 @@ class TestFeatureViewEngine:
         # Act
         fv_engine.compute_training_dataset(
             feature_view_obj=None,
-            user_write_options=None,
+            user_write_options={},
             training_dataset_obj=td,
             training_dataset_version=None,
         )
@@ -1920,7 +1963,7 @@ class TestFeatureViewEngine:
         fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
 
         # Assert
-        assert mock_engine_get_type.call_count == 2
+        assert mock_engine_get_type.call_count == 1
 
     def test_check_feature_group_accessibility_cache_feature_group(self, mocker):
         # Arrange
@@ -1948,7 +1991,7 @@ class TestFeatureViewEngine:
         fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
 
         # Assert
-        assert mock_engine_get_type.call_count == 2
+        assert mock_engine_get_type.call_count == 1
 
     def test_check_feature_group_accessibility_get_type_python(self, mocker):
         # Arrange
@@ -2016,7 +2059,96 @@ class TestFeatureViewEngine:
             str(e_info.value)
             == "Python kernel can only read from cached feature groups. When using external feature groups please use `feature_view.create_training_data` instead. If you are using spines, use a Spark Kernel."
         )
-        assert mock_engine_get_type.call_count == 2
+        assert mock_engine_get_type.call_count == 1
+
+    def test_check_feature_group_accessibility_arrow_flight(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mock_engine_get_type = mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_type.return_value = "python"
+
+        afc = arrow_flight_client.get_instance()
+        afc._is_enabled = True
+
+        mock_constructor_query = mocker.patch("hsfs.constructor.query.Query")
+        connector = BigQueryConnector(0, "BigQueryConnector", 99)
+        mock_external_feature_group = feature_group.ExternalFeatureGroup(
+            storage_connector=connector, primary_key=""
+        )
+        mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
+        mock_constructor_query.featuregroups = [
+            mock_feature_group,
+            mock_external_feature_group,
+        ]
+
+        fv_engine = feature_view_engine.FeatureViewEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            version=1,
+            query=mock_constructor_query,
+            featurestore_id=feature_store_id,
+            labels=[],
+        )
+
+        assert arrow_flight_client.get_instance().is_enabled()
+        assert arrow_flight_client.get_instance().supports(
+            mock_constructor_query.featuregroups
+        )
+
+        # Act
+        # All good if we don't get an exception
+        fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
+
+    def test_check_feature_group_accessibility_arrow_flight_unsupported(self, mocker):
+        # Arrange
+        feature_store_id = 99
+
+        mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mock_engine_get_type = mocker.patch("hsfs.engine.get_type")
+        mock_engine_get_type.return_value = "python"
+
+        afc = arrow_flight_client.get_instance()
+        afc._is_enabled = True
+
+        mock_constructor_query = mocker.patch("hsfs.constructor.query.Query")
+
+        class FakeConnector(StorageConnector):
+            def __init__(self):
+                self._type = "Fake"
+
+            def spark_options(self):
+                pass
+
+        connector = FakeConnector()
+        mock_external_feature_group = feature_group.ExternalFeatureGroup(
+            storage_connector=connector, primary_key=""
+        )
+        mock_feature_group = MagicMock(spec=feature_group.FeatureGroup)
+        mock_constructor_query.featuregroups = [
+            mock_feature_group,
+            mock_external_feature_group,
+        ]
+
+        fv_engine = feature_view_engine.FeatureViewEngine(
+            feature_store_id=feature_store_id
+        )
+
+        fv = feature_view.FeatureView(
+            name="fv_name",
+            version=1,
+            query=mock_constructor_query,
+            featurestore_id=feature_store_id,
+            labels=[],
+        )
+
+        # Act
+        with pytest.raises(NotImplementedError):
+            fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
 
     def test_check_feature_group_accessibility_cache_feature_group_get_type_python(
         self, mocker
@@ -2078,7 +2210,7 @@ class TestFeatureViewEngine:
         fv_engine._check_feature_group_accessibility(feature_view_obj=fv)
 
         # Assert
-        assert mock_engine_get_type.call_count == 2
+        assert mock_engine_get_type.call_count == 1
 
     def test_get_feature_view_url(self, mocker):
         # Arrange

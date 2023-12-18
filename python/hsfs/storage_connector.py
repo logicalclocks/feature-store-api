@@ -37,7 +37,7 @@ class StorageConnector(ABC):
     GCS = "GCS"
     BIGQUERY = "BIGQUERY"
 
-    def __init__(self, id, name, description, featurestore_id):
+    def __init__(self, id, name, description, featurestore_id, **kwargs):
         self._id = id
         self._name = name
         self._description = description
@@ -152,6 +152,7 @@ class HopsFSConnector(StorageConnector):
         # members specific to type of connector
         hopsfs_path=None,
         dataset_name=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -187,6 +188,7 @@ class S3Connector(StorageConnector):
         session_token=None,
         iam_role=None,
         arguments=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -334,6 +336,7 @@ class RedshiftConnector(StorageConnector):
         iam_role=None,
         arguments=None,
         expiration=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -510,6 +513,7 @@ class AdlsConnector(StorageConnector):
         account_name=None,
         container_name=None,
         spark_options=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -645,6 +649,7 @@ class SnowflakeConnector(StorageConnector):
         warehouse=None,
         application=None,
         sf_options=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -827,6 +832,7 @@ class JdbcConnector(StorageConnector):
         # members specific to type of connector
         connection_string=None,
         arguments=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -911,6 +917,7 @@ class KafkaConnector(StorageConnector):
         ssl_endpoint_identification_algorithm=None,
         options=None,
         external_kafka=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -1211,6 +1218,7 @@ class GcsConnector(StorageConnector):
         algorithm=None,
         encryption_key=None,
         encryption_key_hash=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -1352,6 +1360,7 @@ class BigQueryConnector(StorageConnector):
         query_project=None,
         materialization_dataset=None,
         arguments=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
         self._key_path = key_path

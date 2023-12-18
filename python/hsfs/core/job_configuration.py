@@ -32,6 +32,7 @@ class JobConfiguration:
         dynamic_allocation=True,
         dynamic_min_executors=1,
         dynamic_max_executors=2,
+        **kwargs,
     ):
         self._am_memory = am_memory
         self._am_cores = am_cores

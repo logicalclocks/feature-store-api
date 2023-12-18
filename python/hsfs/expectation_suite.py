@@ -52,6 +52,7 @@ class ExpectationSuite:
         count=None,
         type=None,
         created=None,
+        **kwargs,
     ):
         self._id = id
         self._expectation_suite_name = expectation_suite_name

@@ -54,6 +54,7 @@ class Query:
         left_feature_group_end_time=None,
         joins=None,
         filter=None,
+        **kwargs,
     ):
         self._feature_store_name = feature_store_name
         self._feature_store_id = feature_store_id
@@ -126,6 +127,8 @@ class Query:
                 Only for python engine:
                 * key `"use_hive"` and value `True` to read query with Hive instead of
                   [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
+                  For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key "hive_config" to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
@@ -135,7 +138,7 @@ class Query:
         """
         if not read_options:
             read_options = {}
-
+        self._check_read_supported(online)
         sql_query, online_conn = self._prep_read(online, read_options)
 
         schema = None
@@ -176,6 +179,7 @@ class Query:
             n: Number of rows to show.
             online: Show from online storage. Defaults to `False`.
         """
+        self._check_read_supported(online)
         read_options = {}
         sql_query, online_conn = self._prep_read(online, read_options)
 
@@ -214,7 +218,7 @@ class Query:
 
             query = fg1.select_all()
                     .join(fg2.select_all(), on=["date", "location_id"])
-                    .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
+                    .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], join_type="left")
             ```
 
         # Arguments
@@ -379,7 +383,7 @@ class Query:
 
             query = fg1.select_all()
                 .join(fg2.select_all(), on=["date", "location_id"])
-                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
+                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], join_type="left")
                 .filter((fg1.location_id == 10) | (fg1.location_id == 20))
             ```
 
@@ -391,7 +395,7 @@ class Query:
 
             query = fg1.select_all()
                 .join(fg2.select_all().filter(fg2.avg_temp >= 22), on=["date", "location_id"])
-                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], how="left")
+                .join(fg3.select_all(), left_on=["location_id"], right_on=["id"], join_type="left")
                 .filter(fg1.location_id == 10)
             ```
 
@@ -470,6 +474,16 @@ class Query:
             ],
             filter=json_decamelized.get("filter", None),
         )
+
+    def _check_read_supported(self, online):
+        if not online:
+            return
+        for fg in self.featuregroups:
+            if fg.embedding_index:
+                raise FeatureStoreException(
+                    "Reading from query containing embedding is not supported."
+                    " Use `feature_view.get_feature_vector(s) instead."
+                )
 
     @classmethod
     def _hopsworks_json(cls, json_dict):
