@@ -1833,6 +1833,9 @@ class FeatureGroup(FeatureGroupBase):
                 * key `start_offline_materialization` and value `True` or `False` to configure
                   whether or not to start the materialization job to write data to the offline
                   storage. By default the materialization job gets started immediately.
+                * key `kafka_producer_config` and value an object of type [properties](https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.htmln)
+                  used to configure the Kafka client. To optimize for throughput in high latency connection, consider
+                  changing the [producer properties](https://docs.confluent.io/cloud/current/client-apps/optimizing/throughput.html#producer).
                 * key `internal_kafka` and value `True` or `False` in case you established
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
@@ -2015,6 +2018,9 @@ class FeatureGroup(FeatureGroupBase):
                 * key `start_offline_materialization` and value `True` or `False` to configure
                   whether or not to start the materialization job to write data to the offline
                   storage. By default the materialization job gets started immediately.
+                * key `kafka_producer_config` and value an object of type [properties](https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.htmln)
+                  used to configure the Kafka client. To optimize for throughput in high latency connection consider
+                  changing [producer properties](https://docs.confluent.io/cloud/current/client-apps/optimizing/throughput.html#producer).
                 * key `internal_kafka` and value `True` or `False` in case you established
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
@@ -2170,6 +2176,9 @@ class FeatureGroup(FeatureGroupBase):
                   whether or not to start the materialization job to write data to the offline
                   storage. By default the materialization job does not get started automatically
                   for multi part inserts.
+                * key `kafka_producer_config` and value an object of type [properties](https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.htmln)
+                  used to configure the Kafka client. To optimize for throughput in high latency connection consider
+                  changing [producer properties](https://docs.confluent.io/cloud/current/client-apps/optimizing/throughput.html#producer).
                 * key `internal_kafka` and value `True` or `False` in case you established
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
