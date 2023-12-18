@@ -488,7 +488,11 @@ class VectorServer:
     def get_complex_feature_schemas(self):
         return {
             f.name: avro.io.DatumReader(
-                avro.schema.parse(f._feature_group._get_feature_avro_schema(f.name))
+                avro.schema.parse(
+                    f._feature_group._get_feature_avro_schema(
+                        f.feature_group_feature_name
+                    )
+                )
             )
             for f in self._features
             if f.is_complex()
