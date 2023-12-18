@@ -1,5 +1,5 @@
 #
-#   Copyright 2020 Logical Clocks AB
+#   Copyright 2023 Hopsworks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -14,4 +14,19 @@
 #   limitations under the License.
 #
 
-__version__ = "3.7.0.dev1"
+
+try:
+    from pyspark.sql import SparkSession
+except ImportError:
+    pass
+
+from hsfs.engine import spark
+
+
+class Engine(spark.Engine):
+    def __init__(self):
+        self._spark_session = SparkSession.builder.getOrCreate()
+        self._spark_context = self._spark_session.sparkContext
+        self._jvm = self._spark_context._jvm
+
+        super().__init__()

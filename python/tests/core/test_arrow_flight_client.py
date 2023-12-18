@@ -23,6 +23,7 @@ from hsfs.engine import python
 from hsfs.feature import Feature
 from hsfs.storage_connector import HopsFSConnector, StorageConnector
 from hsfs import storage_connector
+from hsfs.feature_store import FeatureStore
 
 from unittest.mock import MagicMock
 import pytest
@@ -55,6 +56,12 @@ class TestArrowFlightClient:
 
     def _arrange_featureview_mocks(self, mocker, backend_fixtures):
         json_fv = backend_fixtures["feature_view"]["get"]["response"]
+        mocker.patch.object(
+            FeatureStore,
+            "project_id",
+            return_value=99,
+        )
+        mocker.patch("hsfs.core.feature_store_api.FeatureStoreApi.get")
         fv = feature_view.FeatureView.from_response_json(json_fv)
         json_td = backend_fixtures["training_dataset"]["get_basic_info"]["response"]
         td = training_dataset.TrainingDataset.from_response_json(json_td)[0]

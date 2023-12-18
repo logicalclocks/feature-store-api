@@ -15,6 +15,9 @@
 #
 
 import copy
+import time
+
+from hsfs.embedding import EmbeddingIndex
 from hsfs.ge_validation_result import ValidationResult
 import humps
 import json
@@ -55,6 +58,7 @@ from hsfs.client.exceptions import FeatureStoreException, RestAPIError
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core import great_expectation_engine
+from hsfs.core.vector_db_client import VectorDbClient
 
 
 class FeatureGroupBase:
@@ -67,6 +71,7 @@ class FeatureGroupBase:
         event_time=None,
         online_enabled=False,
         id=None,
+        embedding_index=None,
         expectation_suite=None,
         online_topic_name=None,
         topic_name=None,
@@ -118,6 +123,7 @@ class FeatureGroupBase:
         self._variable_api = VariableApi()
         self._feature_group_engine = None
         self._multi_part_insert = False
+        self._embedding_index = embedding_index
 
         self.check_deprecated()
 
@@ -1122,6 +1128,24 @@ class FeatureGroupBase:
             ge_type=ge_type,
         )
 
+    @classmethod
+    def from_response_json(cls, feature_group_json):
+        if (
+            feature_group_json["type"] == "onDemandFeaturegroupDTO"
+            and not feature_group_json["spine"]
+        ):
+            feature_group_obj = ExternalFeatureGroup.from_response_json(
+                feature_group_json
+            )
+        elif (
+            feature_group_json["type"] == "onDemandFeaturegroupDTO"
+            and feature_group_json["spine"]
+        ):
+            feature_group_obj = SpineGroup.from_response_json(feature_group_json)
+        else:
+            feature_group_obj = FeatureGroup.from_response_json(feature_group_json)
+        return feature_group_obj
+
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
@@ -1280,6 +1304,16 @@ class FeatureGroupBase:
                 ).format(self._name, self._version),
                 util.StorageWarning,
             )
+
+    @property
+    def embedding_index(self):
+        if self._embedding_index:
+            self._embedding_index.feature_group = self
+        return self._embedding_index
+
+    @embedding_index.setter
+    def embedding_index(self, embedding_index):
+        self._embedding_index = embedding_index
 
     @property
     def event_time(self):
@@ -1452,6 +1486,7 @@ class FeatureGroup(FeatureGroupBase):
         primary_key=None,
         hudi_precombine_key=None,
         featurestore_name=None,
+        embedding_index=None,
         created=None,
         creator=None,
         id=None,
@@ -1478,13 +1513,13 @@ class FeatureGroup(FeatureGroupBase):
             location,
             event_time=event_time,
             online_enabled=online_enabled,
+            embedding_index=embedding_index,
             id=id,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
             deprecated=deprecated,
         )
-
         self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
@@ -1560,6 +1595,7 @@ class FeatureGroup(FeatureGroupBase):
         self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
             featurestore_id
         )
+        self._vector_db_client = None
         self._href = href
 
         # cache for optimized writes
@@ -1614,6 +1650,8 @@ class FeatureGroup(FeatureGroupBase):
                 For python engine:
                 * key `"use_hive"` and value `True` to read feature group
                   with Hive instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
+                  For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `"pandas_types"` and value `True` to retrieve columns as
@@ -1695,6 +1733,21 @@ class FeatureGroup(FeatureGroupBase):
             .read(False, "default", read_options)
         )
 
+    def find_neighbors(self, embedding, col=None, k=10, filter=None, min_score=0):
+        if self._vector_db_client is None and self._embedding_index:
+            self._vector_db_client = VectorDbClient(self.select_all())
+        results = self._vector_db_client.find_neighbors(
+            embedding,
+            feature=(self.__getattr__(col) if col else None),
+            k=k,
+            filter=filter,
+            min_score=min_score,
+        )
+        return [
+            (result[0], [result[1][f.name] for f in self.features])
+            for result in results
+        ]
+
     def show(self, n: int, online: Optional[bool] = False):
         """Show the first `n` rows of the feature group.
 
@@ -1721,6 +1774,17 @@ class FeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
+        if online and self.embedding_index:
+            if self._vector_db_client is None:
+                self._vector_db_client = VectorDbClient(self.select_all())
+            results = self._vector_db_client.read(
+                self.id,
+                {},
+                pk=self.embedding_index.col_prefix + self.primary_key[0],
+                index_name=self.embedding_index.index_name,
+                n=n,
+            )
+            return [[result[f.name] for f in self.features] for result in results]
         return self.select_all().show(n, online)
 
     def save(
@@ -2470,18 +2534,30 @@ class FeatureGroup(FeatureGroupBase):
                 )
             _ = json_decamelized.pop("type", None)
             json_decamelized.pop("validation_type", None)
+            if "embedding_index" in json_decamelized:
+                json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+                    json_decamelized["embedding_index"]
+                )
             return cls(**json_decamelized)
         for fg in json_decamelized:
             if "type" in fg:
                 fg["stream"] = fg["type"] == "streamFeatureGroupDTO"
             _ = fg.pop("type", None)
             fg.pop("validation_type", None)
+            if "embedding_index" in fg:
+                fg["embedding_index"] = EmbeddingIndex.from_json_response(
+                    fg["embedding_index"]
+                )
         return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         json_decamelized["stream"] = json_decamelized["type"] == "streamFeatureGroupDTO"
         _ = json_decamelized.pop("type")
+        if "embedding_index" in json_decamelized:
+            json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+                json_decamelized["embedding_index"]
+            )
         self.__init__(**json_decamelized)
         return self
 
@@ -2528,6 +2604,8 @@ class FeatureGroup(FeatureGroupBase):
             "topicName": self.topic_name,
             "deprecated": self.deprecated,
         }
+        if self.embedding_index:
+            fg_meta_dict["embeddingIndex"] = self.embedding_index
         if self._stream:
             fg_meta_dict["deltaStreamerJobConf"] = self._deltastreamer_jobconf
         return fg_meta_dict
@@ -2590,23 +2668,26 @@ class FeatureGroup(FeatureGroupBase):
     def materialization_job(self):
         """Get the Job object reference for the materialization job for this
         Feature Group."""
-        if self._materialization_job is None:
-            try:
-                job_name = "{fg_name}_{version}_offline_fg_materialization".format(
-                    fg_name=self._name, version=self._version
-                )
-                self._materialization_job = job_api.JobApi().get(job_name)
-            except RestAPIError as e:
-                if (
-                    e.response.json().get("errorCode", "") == 130009
-                    and e.response.status_code == 404
-                ):
-                    job_name = "{fg_name}_{version}_offline_fg_backfill".format(
-                        fg_name=self._name, version=self._version
-                    )
-                    self._materialization_job = job_api.JobApi().get(job_name)
-
-        return self._materialization_job
+        if self._materialization_job is not None:
+            return self._materialization_job
+        else:
+            feature_group_name = util.feature_group_name(self)
+            job_suffix_list = ["materialization", "backfill"]
+            for job_suffix in job_suffix_list:
+                job_name = "{}_offline_fg_{}".format(feature_group_name, job_suffix)
+                for _ in range(3):  # retry starting job
+                    try:
+                        self._materialization_job = job_api.JobApi().get(job_name)
+                        return self._materialization_job
+                    except RestAPIError as e:
+                        if e.response.status_code == 404:
+                            if e.response.json().get("errorCode", "") == 130009:
+                                break  # no need to retry, since no such job exists
+                            else:
+                                time.sleep(1)  # backoff and then retry
+                                continue
+                        raise e
+            raise FeatureStoreException("No materialization job was found")
 
     @description.setter
     def description(self, new_description):
