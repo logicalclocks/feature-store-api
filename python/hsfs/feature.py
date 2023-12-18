@@ -42,6 +42,7 @@ class Feature:
         default_value=None,
         feature_group_id=None,
         feature_group=None,
+        **kwargs,
     ):
         self._name = name.lower()
         self._type = type
@@ -230,3 +231,6 @@ class Feature:
 
     def __repr__(self):
         return f"Feature({self._name!r}, {self._type!r}, {self._description!r}, {self._primary}, {self._partition}, {self._online_type!r}, {self._default_value!r}, {self._feature_group_id!r})"
+
+    def __hash__(self):
+        return hash(f"{self.feature_group_id}_{self.name}")

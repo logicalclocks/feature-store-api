@@ -39,6 +39,7 @@ class User:
         user_account_type=None,
         num_active_projects=None,
         num_remaining_projects=None,
+        **kwargs,
     ):
         self._username = username
         self._email = email

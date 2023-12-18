@@ -79,6 +79,14 @@ public class MainClass {
         .hasArg()
         .build());
 
+    // This option here is used, however it's here to make the deltastreamer job
+    // working with the Hopsworks scheduler which adds the `start_time` option
+    options.addOption(Option.builder("start_time")
+        .argName("start_time")
+        .required(false)
+        .hasArg()
+        .build());
+
     CommandLineParser parser = new DefaultParser();
     CommandLine commandLine = parser.parse(options, args);
 

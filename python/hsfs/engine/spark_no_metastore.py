@@ -1,4 +1,5 @@
-#   Copyright 2020 Logical Clocks AB
+#
+#   Copyright 2023 Hopsworks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -13,20 +14,19 @@
 #   limitations under the License.
 #
 
-import humps
+
+try:
+    from pyspark.sql import SparkSession
+except ImportError:
+    pass
+
+from hsfs.engine import spark
 
 
-class Inode:
-    def __init__(self, href=None, attributes=None, zip_state=None, tags=None, **kwargs):
-        self._path = attributes["path"]
+class Engine(spark.Engine):
+    def __init__(self):
+        self._spark_session = SparkSession.builder.getOrCreate()
+        self._spark_context = self._spark_session.sparkContext
+        self._jvm = self._spark_context._jvm
 
-    @classmethod
-    def from_response_json(cls, json_dict):
-        json_decamelized = humps.decamelize(json_dict)["items"]
-        for inode in json_decamelized:
-            _ = inode.pop("type", None)
-        return [cls(**inode) for inode in json_decamelized]
-
-    @property
-    def path(self):
-        return self._path
+        super().__init__()

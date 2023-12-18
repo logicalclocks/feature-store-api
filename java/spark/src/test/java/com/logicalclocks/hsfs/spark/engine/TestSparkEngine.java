@@ -28,9 +28,7 @@ import com.logicalclocks.hsfs.metadata.Option;
 import com.logicalclocks.hsfs.metadata.StorageConnectorApi;
 import com.logicalclocks.hsfs.spark.FeatureGroup;
 import com.logicalclocks.hsfs.spark.FeatureStore;
-import org.apache.spark.SparkContext;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
@@ -255,5 +253,33 @@ public class TestSparkEngine {
 
         // Assert
         Assertions.assertEquals("com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab=\"result_from_add_file\" storeKey=true useTicketCache=false serviceName=\"kafka\" principal=\"laurent@kafka.com\";", result.get("kafka.sasl.jaas.config"));
+    }
+
+    @Test
+    public void testMakeQueryName() {
+        SparkEngine sparkEngine = SparkEngine.getInstance();
+        FeatureGroup featureGroup = new FeatureGroup();
+        Integer fgId = 1;
+        String fgName = "test_fg";
+        Integer fgVersion = 1;
+        Integer projectId = 99;
+        featureGroup.setId(fgId);
+        featureGroup.setName(fgName);
+        featureGroup.setVersion(fgVersion);
+        FeatureStore featureStore = (new FeatureStore());
+        featureStore.setProjectId(projectId);
+        featureGroup.setFeatureStore(featureStore);
+        String queryName = String.format("insert_stream_%d_%d_%s_%d_onlinefs",
+                featureGroup.getFeatureStore().getProjectId(),
+                featureGroup.getId(),
+                featureGroup.getName(),
+                featureGroup.getVersion()
+        );
+        // query name is null
+        Assertions.assertEquals(queryName, sparkEngine.makeQueryName(null, featureGroup));
+        // query name is empty
+        Assertions.assertEquals(queryName, sparkEngine.makeQueryName("", featureGroup));
+        // query name is not empty
+        Assertions.assertEquals("test_qn", sparkEngine.makeQueryName("test_qn", featureGroup));
     }
 }

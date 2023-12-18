@@ -337,23 +337,27 @@ class Engine:
             feature_group, self._encode_complex_features(feature_group, dataframe)
         )
 
-        if query_name is None:
-            query_name = "insert_stream_" + feature_group._online_topic_name
-
-        project_id = str(feature_group.feature_store.project_id).encode("utf8")
-        feature_group_id = str(feature_group._id).encode("utf8")
+        project_id = str(feature_group.feature_store.project_id)
+        feature_group_id = str(feature_group._id)
         subject_id = str(feature_group.subject["id"]).encode("utf8")
+
+        if query_name is None:
+            query_name = (
+                f"insert_stream_{project_id}_{feature_group_id}"
+                f"_{feature_group.name}_{feature_group.version}_onlinefs"
+            )
 
         query = (
             serialized_df.withColumn(
                 "headers",
                 array(
                     struct(
-                        lit("projectId").alias("key"), lit(project_id).alias("value")
+                        lit("projectId").alias("key"),
+                        lit(project_id.encode("utf8")).alias("value"),
                     ),
                     struct(
                         lit("featureGroupId").alias("key"),
-                        lit(feature_group_id).alias("value"),
+                        lit(feature_group_id.encode("utf8")).alias("value"),
                     ),
                     struct(
                         lit("subjectId").alias("key"), lit(subject_id).alias("value")
@@ -499,6 +503,9 @@ class Engine:
             return df_new, labels_df
         else:
             return df, None
+
+    def drop_columns(self, df, drop_cols):
+        return df.drop(*drop_cols)
 
     def write_training_dataset(
         self,
