@@ -84,6 +84,7 @@ class VectorServer:
         )
         self._transformation_functions = None
         self._required_serving_keys = None
+        self._async_pool = None
 
     def init_serving(
         self,
@@ -92,7 +93,7 @@ class VectorServer:
         external,
         inference_helper_columns=False,
         options=None,
-        parellel=False,
+        parallel=False,
     ):
         if external is None:
             external = isinstance(client.get_instance(), client.external.Client)
@@ -105,7 +106,7 @@ class VectorServer:
             external,
             inference_helper_columns,
             options=options,
-            parallel=parellel,
+            parallel=parallel,
         )
 
     def init_batch_scoring(self, entity):
@@ -148,7 +149,12 @@ class VectorServer:
         self._helper_column_prepared_statements = None
         self._external = external
         if not parallel:
+            # create sqlalchemy engine
             self._set_mysql_connection(options=options)
+        else:
+            # create aiomysql engine
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(self._set_aiomysql_connection())
 
         (
             self._prepared_statements,
@@ -310,6 +316,7 @@ class VectorServer:
             batch_results, _ = self._batch_vector_results_parallel(
                 entries, self._prepared_statements
             )
+
         else:
             batch_results, _ = self._batch_vector_results(
                 entries, self._prepared_statements
@@ -772,14 +779,15 @@ class VectorServer:
         online_connector = self._storage_connector_api.get_online_connector(
             self._feature_store_id
         )
-        return await util.create_async_engine(online_connector, self._external)
+        self._async_pool = await util.create_async_engine(
+            online_connector, self._external
+        )
 
     # Define a function that runs a query for a given primary key
     async def _query_async_sql(self, pool, stmt, values):
         # Get a connection from the pool
         async with pool.acquire() as conn:
             # Execute the prepared statement
-            # print("running sql", stmt)
             cursor = await conn.execute(stmt, values)
             # Fetch the result
             resultset = await cursor.fetchall()
@@ -790,16 +798,13 @@ class VectorServer:
     async def _run_prepared_statements(
         self, engine, prepared_statements, all_bind_values
     ):
-        tasks = []
-        # iterate over the list of prepared statements and bind the values from index wise for each prep statement
-        # create a list of tasks
-        for index, query in enumerate(prepared_statements):
-            tasks.append(
-                asyncio.ensure_future(
-                    self._query_async_sql(engine, query, all_bind_values[index])
-                )
-            )
 
+        tasks = [
+            asyncio.ensure_future(
+                self._query_async_sql(engine, query, all_bind_values[i])
+            )
+            for i, query in enumerate(prepared_statements)
+        ]
         # Run the queries in parallel using asyncio.gather
         results = await asyncio.gather(*tasks)
         return results
@@ -813,19 +818,16 @@ class VectorServer:
         e.g [{"batch_ids":(1,2,3)},{"batch_ids": (3,4,5)}]
         we run the prepared statements in parallel and bind the params in the list index wise.
         """
-        # TODO: initialize separately if possible
-
         try:
-            engine = await self._set_aiomysql_connection()
             results = await (
                 self._run_prepared_statements(
-                    engine, prepared_statements, all_values_list
+                    self._async_pool, prepared_statements, all_values_list
                 )
             )
         finally:
-            if engine:
-                engine.close()
-                await engine.wait_closed()  # this is needed otherwise it throws Event loop is closed
+            if self._async_pool:
+                self._async_pool.close()
+                await self._async_pool.wait_closed()  # this is needed otherwise it throws Event loop is closed
         return results
 
     @property

@@ -132,7 +132,6 @@ def get_host_name():
         # If the load balancer is not configured, then fall back to
         # use the MySQL node on the head node
         host = client.get_instance().host
-
     return host
 
 
@@ -141,7 +140,6 @@ async def create_async_engine(online_conn, external: bool):
     # create a aiomysql connection pool
     # read the keys user, password from online_conn as use them while creating the connection pool
     # TODO: parameterized min and max size of pool
-    print("Using aiomysql engine!")
     pool = await async_create_engine(
         host=get_host_name(),
         port=3306,
@@ -150,7 +148,7 @@ async def create_async_engine(online_conn, external: bool):
         db=make_url(online_options["url"].replace("jdbc:", "")).database,
         loop=asyncio.get_running_loop(),
         maxsize=10,
-        minsize=2,
+        minsize=5,
     )
     return pool
 

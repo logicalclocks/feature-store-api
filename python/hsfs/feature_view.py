@@ -193,7 +193,7 @@ class FeatureView:
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
         options: Optional[dict] = None,
-        parellel=False,
+        parallel=False,
     ):
         """Initialise feature view to retrieve feature vector from online and offline feature store.
 
@@ -270,7 +270,7 @@ class FeatureView:
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
         self._batch_vectors_server.init_serving(
-            self, True, external, True, options=options, parellel=parellel
+            self, True, external, True, options=options, parallel=parallel
         )
         if len(self._get_embedding_fgs()) > 0:
             self._vector_db_client = VectorDbClient(self.query)
