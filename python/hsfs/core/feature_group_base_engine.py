@@ -152,7 +152,4 @@ class FeatureGroupBaseEngine:
             )
 
     def get_subject(self, feature_group):
-        return self._kafka_api.get_subject(
-            feature_group.get_fg_name(),
-            project_id=feature_group.feature_store.project_id,
-        )
+        return self._kafka_api.get_subject(feature_group.get_fg_name())
