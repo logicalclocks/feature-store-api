@@ -125,8 +125,6 @@ def create_mysql_engine(online_conn, external, options=None):
 
 
 def get_host_name():
-    # This only works with external clients.
-    # Hopsworks clients should use the storage connector
     host = variable_api.VariableApi().get_loadbalancer_external_domain()
     if host == "":
         # If the load balancer is not configured, then fall back to
@@ -135,20 +133,25 @@ def get_host_name():
     return host
 
 
-async def create_async_engine(online_conn, external: bool):
+async def create_async_engine(online_conn, external: bool, options: dict = None):
     online_options = online_conn.spark_options()
     # create a aiomysql connection pool
     # read the keys user, password from online_conn as use them while creating the connection pool
-    # TODO: parameterized min and max size of pool
+    url = make_url(online_options["url"].replace("jdbc:", ""))
+    if external:
+        hostname = get_host_name()
+    else:
+        hostname = url.host
+
     pool = await async_create_engine(
-        host=get_host_name(),
+        host=hostname,
         port=3306,
         user=online_options["user"],
         password=online_options["password"],
-        db=make_url(online_options["url"].replace("jdbc:", "")).database,
+        db=url.database,
         loop=asyncio.get_running_loop(),
-        maxsize=10,
-        minsize=5,
+        minsize=(options.get("minsize", 2) if options else 2),
+        maxsize=(options.get("maxsize", 5) if options else 5),
     )
     return pool
 

@@ -251,7 +251,7 @@ class FeatureView:
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
         self._single_vector_server.init_serving(
-            self, False, external, True, options=options
+            self, False, external, True, options=options, parallel=parallel
         )
 
         self._prefix_serving_key_map = dict(
@@ -462,7 +462,6 @@ class FeatureView:
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
-        parallel=False,
     ):
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -543,7 +542,7 @@ class FeatureView:
                 feature view.
         """
         if self._batch_vectors_server is None:
-            self.init_serving(external=external, parallel=parallel)
+            self.init_serving(external=external)
         updated_passed_feature = []
         for i in range(len(entry)):
             updated_passed_feature.append(
@@ -554,7 +553,7 @@ class FeatureView:
                 )
             )
         return self._batch_vectors_server.get_feature_vectors(
-            entry, return_type, updated_passed_feature, allow_missing, parallel=parallel
+            entry, return_type, updated_passed_feature, allow_missing
         )
 
     def get_inference_helper(

@@ -154,7 +154,7 @@ class VectorServer:
         else:
             # create aiomysql engine
             loop = asyncio.get_event_loop()
-            loop.run_until_complete(self._set_aiomysql_connection())
+            loop.run_until_complete(self._set_aiomysql_connection(options=options))
 
         (
             self._prepared_statements,
@@ -279,7 +279,14 @@ class VectorServer:
         allow_missing=False,
     ):
         """Assembles serving vector from online feature store."""
-        serving_vector = self._vector_result(entry, self._prepared_statements)
+
+        if not self._async_pool:
+            serving_vector = self._vector_result(entry, self._prepared_statements)
+        else:
+            # run using aiomysql engine
+            serving_vector = self._vector_result_parallel(
+                entry, self._prepared_statements
+            )
 
         # Add the passed features
         serving_vector.update(passed_features)
@@ -308,17 +315,16 @@ class VectorServer:
         return_type=None,
         passed_features=[],
         allow_missing=False,
-        parallel=False,
     ):
         """Assembles serving vector from online feature store."""
-        """run using aiomysql if parallel processing requires"""
-        if parallel:
-            batch_results, _ = self._batch_vector_results_parallel(
+
+        if not self._async_pool:
+            batch_results, _ = self._batch_vector_results(
                 entries, self._prepared_statements
             )
-
         else:
-            batch_results, _ = self._batch_vector_results(
+            # run using aiomysql engine
+            batch_results, _ = self._batch_vector_results_parallel(
                 entries, self._prepared_statements
             )
 
@@ -691,12 +697,60 @@ class VectorServer:
                 break
         return complete, fg_entry
 
+    def _vector_result_parallel(self, entry, prepared_statement_objects):
+        """Retrieve results for single in parallel using aiomysql engine."""
+        # TODO: deprecate _vector_results
+
+        if all([isinstance(val, list) for val in entry.values()]):
+            raise ValueError(
+                "Entry is expected to be single value per primary key. "
+                "If you have already initialised prepared statements for single vector and now want to retrieve "
+                "batch vector please reinitialise prepared statements with  "
+                "`training_dataset.init_prepared_statement()` "
+                "or `feature_view.init_serving()`"
+            )
+        self._validate_serving_key(entry)
+        # Initialize the set of values
+        serving_vector = {}
+
+        for prepared_statement_index in prepared_statement_objects:
+            pk_entry = {}
+            next_statement = False
+            for sk in self._serving_key_by_serving_index[prepared_statement_index]:
+                if sk.required_serving_key not in entry.keys():
+                    # Check if there is any entry matched with feature name.
+                    if sk.feature_name in entry.keys():
+                        pk_entry[sk.feature_name] = entry[sk.feature_name]
+                    else:
+                        # User did not provide the necessary serving keys, we expect they have
+                        # provided the necessary features as passed_features.
+                        # We are going to check later if this is true
+                        next_statement = True
+                        break
+                else:
+                    pk_entry[sk.feature_name] = entry[sk.required_serving_key]
+            if next_statement:
+                continue
+
+        # run all the prepared statements in parallel using aiomysql engine
+        loop = asyncio.get_event_loop()
+        results = loop.run_until_complete(
+            self._launch_async_read(list(prepared_statement_objects.values()), pk_entry)
+        )
+
+        for i in results:
+            for row in i:
+                result_dict = self.deserialize_complex_features(
+                    self._complex_features, dict(row)
+                )
+                serving_vector.update(result_dict)
+
+        return serving_vector
+
     def _batch_vector_results_parallel(self, entries, prepared_statement_objects):
-        """Execute prepared statements in parallel using aiomysql engine.
-        This function uses the same code as method _ batch_vector_results except that
-        the prepared statements are executed parallely and not in single iterations.
-        TODO: merge with _ batch_vector_results after testing
-        """
+        """Execute prepared statements in parallel using aiomysql engine."""
+        # TODO: deprecate _batch_vector_results
+
         # create dict object that will have of order of the vector as key and values as
         # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
         # expect that backend will return correctly ordered vectors.
@@ -775,12 +829,12 @@ class VectorServer:
                 )
         return batch_results, serving_keys
 
-    async def _set_aiomysql_connection(self):
+    async def _set_aiomysql_connection(self, options):
         online_connector = self._storage_connector_api.get_online_connector(
             self._feature_store_id
         )
         self._async_pool = await util.create_async_engine(
-            online_connector, self._external
+            online_connector, self._external, options=options
         )
 
     async def _query_async_sql(self, pool, stmt, bind_params):
@@ -794,8 +848,10 @@ class VectorServer:
             await cursor.close()
             return resultset
 
-    async def _run_prepared_statements(self, engine, prepared_statements, entries_list):
-        """Iterate over prepared statements to create async tasks and gather all tasks results."""
+    async def _query_batch_entries(
+        self, engine, prepared_statements, entries_list: list
+    ):
+        """Iterate over prepared statements to create async tasks and gather all tasks results for a list of entries."""
 
         tasks = [
             asyncio.ensure_future(self._query_async_sql(engine, query, entries_list[i]))
@@ -805,7 +861,18 @@ class VectorServer:
         results = await asyncio.gather(*tasks)
         return results
 
-    async def _launch_async_read(self, prepared_statements: list, entries_list: list):
+    async def _query_single_entry(self, engine, prepared_statements, entry: dict):
+        """Iterate over prepared statements to create async tasks and gather all tasks results for a single bind entry."""
+
+        tasks = [
+            asyncio.ensure_future(self._query_async_sql(engine, query, entry))
+            for query in prepared_statements
+        ]
+        # Run the queries in parallel using asyncio.gather
+        results = await asyncio.gather(*tasks)
+        return results
+
+    async def _launch_async_read(self, prepared_statements: list, entries):
         """
         Launch async process to run the prepared statements in parallel with the bind the params.
 
@@ -814,9 +881,14 @@ class VectorServer:
         e.g [{"batch_ids":(1,2,3)},{"batch_ids": (3,4,5)}]
         """
         try:
-            results = await self._run_prepared_statements(
-                self._async_pool, prepared_statements, entries_list
-            )
+            if isinstance(entries, list):
+                results = await self._query_batch_entries(
+                    self._async_pool, prepared_statements, entries
+                )
+            else:
+                results = await self._query_single_entry(
+                    self._async_pool, prepared_statements, entries
+                )
         finally:
             if self._async_pool:
                 self._async_pool.close()
