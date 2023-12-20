@@ -429,7 +429,7 @@ class VectorServer:
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
         results = loop.run_until_complete(
-            self._launch_async_read(
+            self._execute_prep_statements(
                 list(prepared_statement_objects.values()), bind_entries
             )
         )
@@ -482,7 +482,7 @@ class VectorServer:
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
         parallel_results = loop.run_until_complete(
-            self._launch_async_read(
+            self._execute_prep_statements(
                 list(prepared_statement_objects.values()), entry_values
             )
         )
@@ -711,7 +711,8 @@ class VectorServer:
         return resultset
 
     async def _execute_prep_statements(self, prepared_statements, entries_list: list):
-        """Iterate over prepared statements to create async tasks and gather all tasks results for a list of entries."""
+        """Iterate over prepared statements to create async tasks
+        and gather all tasks results for a given list of entries."""
 
         tasks = [
             asyncio.ensure_future(self._query_async_sql(query, entries_list[i]))
@@ -719,17 +720,6 @@ class VectorServer:
         ]
         # Run the queries in parallel using asyncio.gather
         results = await asyncio.gather(*tasks)
-        return results
-
-    async def _launch_async_read(self, prepared_statements: list, entries):
-        """
-        Launch async process to run the prepared statements in parallel with the bind the params.
-
-        prepared_statements: list of prepared statements,
-        entries_list: list of dicts of entry values as bind params.
-        e.g [{"batch_ids":(1,2,3)},{"batch_ids": (3,4,5)}]
-        """
-        results = await self._execute_prep_statements(prepared_statements, entries)
         # TODO: close connection? closing connection pool here will make un-acquirable for future connections
         # unless init_serving is explicitly called before get_feature_vector(s).
         return results
