@@ -731,7 +731,7 @@ class VectorServer:
                         break
                 else:
                     pk_entry[sk.feature_name] = entry[sk.required_serving_key]
-                bind_entries.append(pk_entry)
+            bind_entries.append(pk_entry)
             if next_statement:
                 continue
 
