@@ -714,7 +714,7 @@ class VectorServer:
         self._validate_serving_key(entry)
         # Initialize the set of values
         serving_vector = {}
-
+        bind_entries = []
         for prepared_statement_index in prepared_statement_objects:
             pk_entry = {}
             next_statement = False
@@ -731,13 +731,16 @@ class VectorServer:
                         break
                 else:
                     pk_entry[sk.feature_name] = entry[sk.required_serving_key]
+                bind_entries.append(pk_entry)
             if next_statement:
                 continue
 
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
         results = loop.run_until_complete(
-            self._launch_async_read(list(prepared_statement_objects.values()), pk_entry)
+            self._launch_async_read(
+                list(prepared_statement_objects.values()), bind_entries
+            )
         )
 
         for i in results:
@@ -851,23 +854,12 @@ class VectorServer:
 
         return resultset
 
-    async def _query_batch_entries(self, prepared_statements, entries_list: list):
+    async def _execute_prep_statements(self, prepared_statements, entries_list: list):
         """Iterate over prepared statements to create async tasks and gather all tasks results for a list of entries."""
 
         tasks = [
             asyncio.ensure_future(self._query_async_sql(query, entries_list[i]))
             for i, query in enumerate(prepared_statements)
-        ]
-        # Run the queries in parallel using asyncio.gather
-        results = await asyncio.gather(*tasks)
-        return results
-
-    async def _query_single_entry(self, prepared_statements, entry: dict):
-        """Iterate over prepared statements to create async tasks and gather all tasks results for a single bind entry."""
-
-        tasks = [
-            asyncio.ensure_future(self._query_async_sql(query, entry))
-            for query in prepared_statements
         ]
         # Run the queries in parallel using asyncio.gather
         results = await asyncio.gather(*tasks)
@@ -881,10 +873,7 @@ class VectorServer:
         entries_list: list of dicts of entry values as bind params.
         e.g [{"batch_ids":(1,2,3)},{"batch_ids": (3,4,5)}]
         """
-        if isinstance(entries, list):
-            results = await self._query_batch_entries(prepared_statements, entries)
-        else:
-            results = await self._query_single_entry(prepared_statements, entries)
+        results = await self._execute_prep_statements(prepared_statements, entries)
         # TODO: close connection? closing connection pool here will make un-acquirable for future connections
         # unless init_serving is explicitly called before get_feature_vector(s).
         return results
