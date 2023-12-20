@@ -193,7 +193,6 @@ class FeatureView:
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
         options: Optional[dict] = None,
-        parallel=True,
     ):
         """Initialise feature view to retrieve feature vector from online and offline feature store.
 
@@ -251,7 +250,7 @@ class FeatureView:
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
         self._single_vector_server.init_serving(
-            self, False, external, True, options=options, parallel=parallel
+            self, False, external, True, options=options
         )
 
         self._prefix_serving_key_map = dict(
@@ -270,7 +269,7 @@ class FeatureView:
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
         self._batch_vectors_server.init_serving(
-            self, True, external, True, options=options, parallel=parallel
+            self, True, external, True, options=options
         )
         if len(self._get_embedding_fgs()) > 0:
             self._vector_db_client = VectorDbClient(self.query)
