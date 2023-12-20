@@ -133,7 +133,9 @@ def get_host_name():
     return host
 
 
-async def create_async_engine(online_conn, external: bool, options: dict = None):
+async def create_async_engine(
+    online_conn, external: bool, default_min_size: int, options: dict = None
+):
     online_options = online_conn.spark_options()
     # create a aiomysql connection pool
     # read the keys user, password from online_conn as use them while creating the connection pool
@@ -150,8 +152,13 @@ async def create_async_engine(online_conn, external: bool, options: dict = None)
         password=online_options["password"],
         db=url.database,
         loop=asyncio.get_running_loop(),
-        minsize=(options.get("minsize", 2) if options else 2),
-        maxsize=(options.get("maxsize", 5) if options else 5),
+        minsize=(
+            options.get("minsize", default_min_size) if options else default_min_size
+        ),
+        maxsize=(
+            options.get("maxsize", default_min_size) if options else default_min_size
+        ),
+        pool_recycle=(options.get("pool_recycle", -1) if options else -1),
     )
     return pool
 

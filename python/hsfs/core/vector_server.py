@@ -93,7 +93,7 @@ class VectorServer:
         external,
         inference_helper_columns=False,
         options=None,
-        parallel=False,
+        parallel=True,
     ):
         if external is None:
             external = isinstance(client.get_instance(), client.external.Client)
@@ -123,7 +123,7 @@ class VectorServer:
         external,
         inference_helper_columns,
         options=None,
-        parallel=False,
+        parallel=True,
     ):
         if isinstance(entity, feature_view.FeatureView):
             if inference_helper_columns:
@@ -154,7 +154,9 @@ class VectorServer:
         else:
             # create aiomysql engine
             loop = asyncio.get_event_loop()
-            loop.run_until_complete(self._set_aiomysql_connection(options=options))
+            loop.run_until_complete(
+                self._set_aiomysql_connection(len(prepared_statements), options=options)
+            )
 
         (
             self._prepared_statements,
@@ -829,43 +831,42 @@ class VectorServer:
                 )
         return batch_results, serving_keys
 
-    async def _set_aiomysql_connection(self, options):
+    async def _set_aiomysql_connection(self, default_min_size: int, options=None):
         online_connector = self._storage_connector_api.get_online_connector(
             self._feature_store_id
         )
         self._async_pool = await util.create_async_engine(
-            online_connector, self._external, options=options
+            online_connector, self._external, default_min_size, options=options
         )
 
-    async def _query_async_sql(self, pool, stmt, bind_params):
+    async def _query_async_sql(self, stmt, bind_params):
         """Query prepared statement together with bind params using aiomysql connection pool"""
         # Get a connection from the pool
-        async with pool.acquire() as conn:
+        async with self._async_pool.acquire() as conn:
             # Execute the prepared statement
             cursor = await conn.execute(stmt, bind_params)
             # Fetch the result
             resultset = await cursor.fetchall()
             await cursor.close()
-            return resultset
 
-    async def _query_batch_entries(
-        self, engine, prepared_statements, entries_list: list
-    ):
+        return resultset
+
+    async def _query_batch_entries(self, prepared_statements, entries_list: list):
         """Iterate over prepared statements to create async tasks and gather all tasks results for a list of entries."""
 
         tasks = [
-            asyncio.ensure_future(self._query_async_sql(engine, query, entries_list[i]))
+            asyncio.ensure_future(self._query_async_sql(query, entries_list[i]))
             for i, query in enumerate(prepared_statements)
         ]
         # Run the queries in parallel using asyncio.gather
         results = await asyncio.gather(*tasks)
         return results
 
-    async def _query_single_entry(self, engine, prepared_statements, entry: dict):
+    async def _query_single_entry(self, prepared_statements, entry: dict):
         """Iterate over prepared statements to create async tasks and gather all tasks results for a single bind entry."""
 
         tasks = [
-            asyncio.ensure_future(self._query_async_sql(engine, query, entry))
+            asyncio.ensure_future(self._query_async_sql(query, entry))
             for query in prepared_statements
         ]
         # Run the queries in parallel using asyncio.gather
@@ -880,19 +881,12 @@ class VectorServer:
         entries_list: list of dicts of entry values as bind params.
         e.g [{"batch_ids":(1,2,3)},{"batch_ids": (3,4,5)}]
         """
-        try:
-            if isinstance(entries, list):
-                results = await self._query_batch_entries(
-                    self._async_pool, prepared_statements, entries
-                )
-            else:
-                results = await self._query_single_entry(
-                    self._async_pool, prepared_statements, entries
-                )
-        finally:
-            if self._async_pool:
-                self._async_pool.close()
-                await self._async_pool.wait_closed()  # this is needed otherwise it throws Event loop is closed
+        if isinstance(entries, list):
+            results = await self._query_batch_entries(prepared_statements, entries)
+        else:
+            results = await self._query_single_entry(prepared_statements, entries)
+        # TODO: close connection? closing connection pool here will make un-acquirable for future connections
+        # unless init_serving is explicitly called before get_feature_vector(s).
         return results
 
     @property

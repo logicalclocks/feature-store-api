@@ -193,7 +193,7 @@ class FeatureView:
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
         options: Optional[dict] = None,
-        parallel=False,
+        parallel=True,
     ):
         """Initialise feature view to retrieve feature vector from online and offline feature store.
 
