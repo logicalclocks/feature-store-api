@@ -32,12 +32,15 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.kafka.common.errors.SerializationException;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +51,7 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
   private static final Logger LOGGER = LoggerFactory.getLogger(DeltaStreamerAvroDeserializer.class);
 
   private final ObjectMapper objectMapper = new ObjectMapper();
+  private String subjectId;
   private Schema schema;
   private Schema encodedSchema;
   private final BinaryDecoder binaryDecoder = DecoderFactory.get().binaryDecoder(new byte[0], null);
@@ -69,6 +73,8 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
     String encodedFeatureGroupSchema = configs.get(HudiEngine.FEATURE_GROUP_ENCODED_SCHEMA).toString()
         .replace("\"type\":[\"bytes\",\"null\"]", "\"type\":[\"null\",\"bytes\"]");
     String complexFeatureString = (String) configs.get(HudiEngine.FEATURE_GROUP_COMPLEX_FEATURES);
+    this.subjectId = (String) configs.get(HudiEngine.SUBJECT_ID);
+
     try {
       String[] stringArray = objectMapper.readValue(complexFeatureString, String[].class);
       this.complexFeatures = Arrays.asList(stringArray);
@@ -92,6 +98,14 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
       complexFeatureSchemas.put(complexFeature, featureSchema);
       complexFeaturesDatumReaders.put(complexFeature, new GenericDatumReader<>(featureSchema));
     }
+  }
+
+  @Override
+  public GenericRecord deserialize(String topic, Headers headers, byte[] data) {
+    if (!subjectId.equals(getHeader(headers, "subjectId"))) {
+      return null; // this job doesn't care about this entry, no point in deserializing
+    }
+    return deserialize(topic, data);
   }
 
   @Override
@@ -135,6 +149,14 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
       }
     }
     return finalResult;
+  }
+
+  private static String getHeader(Headers headers, String headerKey) {
+    Header header = headers.lastHeader(headerKey);
+    if (header != null) {
+      return new String(header.value(), StandardCharsets.UTF_8);
+    }
+    return null;
   }
 
   @Override
