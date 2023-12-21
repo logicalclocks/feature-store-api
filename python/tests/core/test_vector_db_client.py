@@ -28,7 +28,9 @@ class TestVectorDbClient:
     @pytest.fixture(autouse=True)
     def setup_mocks(self, mocker):
         mocker.patch("hsfs.engine.get_type", return_value="python")
-        mocker.patch("hsfs.core.opensearch.OpenSearchClientSingleton._setup_opensearch_client")
+        mocker.patch(
+            "hsfs.core.opensearch.OpenSearchClientSingleton._setup_opensearch_client"
+        )
 
         self.query = self.fg.select_all()
         self.target = vector_db_client.VectorDbClient(self.query)

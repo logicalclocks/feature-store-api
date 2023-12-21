@@ -120,7 +120,9 @@ class VectorDbClient:
                         {"knn": {col_name: {"vector": embedding, "k": k}}},
                         {"exists": {"field": col_name}},
                     ]
-                    + self._get_query_filter(filter, embedding_feature.embedding_index.col_prefix)
+                    + self._get_query_filter(
+                        filter, embedding_feature.embedding_index.col_prefix
+                    )
                 }
             },
             "_source": list(
@@ -152,13 +154,13 @@ class VectorDbClient:
         if isinstance(filter, Filter):
             if filter.feature.feature_group_id != fg.id:
                 raise FeatureStoreException(
-                    f"filter feature should be from feature group '{fg.name}' version '{fg.version}'")
+                    f"filter feature should be from feature group '{fg.name}' version '{fg.version}'"
+                )
         elif isinstance(filter, Logic):
             self._check_filter(filter.get_right_filter_or_logic(), fg)
             self._check_filter(filter.get_left_filter_or_logic(), fg)
         else:
-            raise FeatureStoreException(
-                "filter should be of type `Filter` or `Logic`")
+            raise FeatureStoreException("filter should be of type `Filter` or `Logic`")
 
     def _get_query_filter(self, filter, col_prefix=None):
         if not filter:
@@ -169,8 +171,9 @@ class VectorDbClient:
             if filter.type == Logic.SINGLE:
                 return self._get_query_filter(
                     filter.get_left_filter_or_logic()
-                ) or self._get_query_filter(filter.get_right_filter_or_logic(),
-                                            col_prefix)
+                ) or self._get_query_filter(
+                    filter.get_right_filter_or_logic(), col_prefix
+                )
             elif filter.type == Logic.AND:
                 return [
                     {
