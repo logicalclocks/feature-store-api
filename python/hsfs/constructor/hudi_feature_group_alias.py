@@ -26,6 +26,7 @@ class HudiFeatureGroupAlias:
         alias,
         left_feature_group_end_timestamp=None,
         left_feature_group_start_timestamp=None,
+        **kwargs,
     ):
         self._feature_group = feature_group_module.FeatureGroup.from_response_json(
             feature_group

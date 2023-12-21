@@ -37,6 +37,7 @@ class Execution:
         monitoring=None,
         type=None,
         href=None,
+        **kwargs,
     ):
         self._id = id
         self._final_status = final_status

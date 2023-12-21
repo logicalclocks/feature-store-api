@@ -14,8 +14,9 @@
 #   limitations under the License.
 #
 
-from hsfs.engine import spark
+from hsfs.engine import spark, spark_no_metastore
 from hsfs.client import exceptions
+from hsfs.core import arrow_flight_client
 
 _engine = None
 _engine_type = None
@@ -28,6 +29,9 @@ def init(engine_type):
         if engine_type == "spark":
             _engine_type = "spark"
             _engine = spark.Engine()
+        elif engine_type == "spark-no-metastore":
+            _engine_type = "spark-no-metastore"
+            _engine = spark_no_metastore.Engine()
         elif engine_type in ["hive", "python", "training"]:
             try:
                 from hsfs.engine import python
@@ -73,3 +77,4 @@ def get_type():
 def stop():
     global _engine
     _engine = None
+    arrow_flight_client.close()

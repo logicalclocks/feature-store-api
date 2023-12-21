@@ -32,6 +32,7 @@ class ServingPreparedStatement:
         items=None,
         count=None,
         href=None,
+        **kwargs,
     ):
         self._feature_group_id = feature_group_id
         self._prepared_statement_index = prepared_statement_index

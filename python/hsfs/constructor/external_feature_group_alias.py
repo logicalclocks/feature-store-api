@@ -20,7 +20,7 @@ from hsfs import feature_group
 
 
 class ExternalFeatureGroupAlias:
-    def __init__(self, on_demand_feature_group, alias):
+    def __init__(self, on_demand_feature_group, alias, **kwargs):
         if not on_demand_feature_group["spine"]:
             self._on_demand_feature_group = (
                 feature_group.ExternalFeatureGroup.from_response_json(

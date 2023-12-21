@@ -20,7 +20,7 @@ from hsfs import util
 
 
 class PreparedStatementParameter:
-    def __init__(self, name=None, index=None, type=None, href=None):
+    def __init__(self, name=None, index=None, type=None, href=None, **kwargs):
         self._name = name
         self._index = index
 
