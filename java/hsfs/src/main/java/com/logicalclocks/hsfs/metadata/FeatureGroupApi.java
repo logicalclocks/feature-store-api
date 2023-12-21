@@ -60,7 +60,7 @@ public class FeatureGroupApi {
         + FEATURE_GROUP_PATH;
 
     UriTemplate uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStoreBase.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featureStoreBase.getId())
         .set("fgName", fgName);
 
