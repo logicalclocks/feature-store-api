@@ -120,7 +120,7 @@ class VectorDbClient:
                         {"knn": {col_name: {"vector": embedding, "k": k}}},
                         {"exists": {"field": col_name}},
                     ]
-                    + self._get_query_filter(filter, embedding_feature.embedding.col_prefix)
+                    + self._get_query_filter(filter, embedding_feature.embedding_index.col_prefix)
                 }
             },
             "_source": list(
