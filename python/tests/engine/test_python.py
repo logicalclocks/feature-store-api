@@ -1572,6 +1572,346 @@ class TestPython:
             == "struct<user0:array<struct<value:array<double>>>,user1:array<struct<value:array<double>>>>"
         )
 
+    def test_infer_type_pandas_pyarrow_int8(self):
+        # Arrange
+        pdf = pd.DataFrame({"data": pd.Series([1, 5], dtype="int8[pyarrow]")})
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "int"
+
+    def test_infer_type_pandas_pyarrow_int16(self):
+        # Arrange
+        pdf = pd.DataFrame({"data": pd.Series([1, 5], dtype="int16[pyarrow]")})
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "int"
+
+    def test_infer_type_pandas_pyarrow_int32(self):
+        # Arrange
+        pdf = pd.DataFrame({"data": pd.Series([1, 5], dtype="int32[pyarrow]")})
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "int"
+
+    def test_infer_type_pandas_pyarrow_int64(self):
+        # Arrange
+        pdf = pd.DataFrame({"data": pd.Series([1, 5], dtype="int64[pyarrow]")})
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "bigint"
+
+    def test_infer_type_pandas_pyarrow_uint8(self):
+        # Arrange
+        pdf = pd.DataFrame({"data": pd.Series([1, 5], dtype="uint8[pyarrow]")})
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "int"
+
+    def test_infer_type_pandas_pyarrow_uint16(self):
+        # Arrange
+        pdf = pd.DataFrame({"data": pd.Series([1, 5], dtype="uint16[pyarrow]")})
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "int"
+
+    def test_infer_type_pandas_pyarrow_uint32(self):
+        # Arrange
+        pdf = pd.DataFrame({"data": pd.Series([1, 5], dtype="uint32[pyarrow]")})
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "bigint"
+
+    def test_infer_type_pandas_pyarrow_float32(self):
+        # Arrange
+        pdf = pd.DataFrame({"data": pd.Series([1, 5], dtype="float32[pyarrow]")})
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "float"
+
+    def test_infer_type_pandas_pyarrow_float64(self):
+        # Arrange
+        pdf = pd.DataFrame({"data": pd.Series([1, 5], dtype="float64[pyarrow]")})
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "double"
+
+    def test_infer_type_pandas_pyarrow_datetime_ns(self):
+        # Arrange
+        pdf = pd.DataFrame(
+            {
+                "data": pd.Series(
+                    [datetime(2016, 3, 21), datetime(2012, 1, 1)],
+                    dtype=pd.ArrowDtype(pa.timestamp("ns")),
+                )
+            }
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "timestamp"
+
+    def test_infer_type_pandas_pyarrow_datetime_ns_tz(self):
+        # Arrange
+        pdf = pd.DataFrame(
+            {
+                "data": pd.Series(
+                    [datetime(2006, 12, 12), datetime(2011, 11, 11)],
+                    dtype=pd.ArrowDtype(pa.timestamp("ns", tz="UTC")),
+                )
+            }
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "timestamp"
+
+    def test_infer_type_pandas_pyarrow_date32(self):
+        # Arrange
+        pdf = pd.DataFrame(
+            {
+                "data": pd.Series(
+                    [date(year=2001, month=1, day=1), date(year=2002, month=2, day=2)],
+                    dtype=pd.ArrowDtype(pa.date32()),
+                )
+            }
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "date"
+
+    def test_infer_type_pandas_pyarrow_date64(self):
+        # Arrange
+        pdf = pd.DataFrame(
+            {
+                "data": pd.Series(
+                    [date(year=2001, month=1, day=1), date(year=2002, month=2, day=2)],
+                    dtype=pd.ArrowDtype(pa.date64()),
+                )
+            }
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "date"
+
+    def test_infer_type_pandas_pyarrow_binary(self):
+        # Arrange
+        pdf = pd.DataFrame(
+            {"data": pd.Series(["Test1 ", "Test2 longer"], dtype="binary[pyarrow]")}
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "binary"
+
+    def test_infer_type_pandas_pyarrow_string(self):
+        # Arrange
+        pdf = pd.DataFrame(
+            {
+                "data": pd.Series(
+                    ["Test1 ", "Test2 longer"], dtype=pd.ArrowDtype(pa.string())
+                )
+            }
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "string"
+
+    def test_infer_type_pandas_pyarrow_utf8(self):
+        # Arrange
+        pdf = pd.DataFrame(
+            {"data": pd.Series(["Test1 ", "Test2 longer"], dtype="utf8[pyarrow]")}
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "string"
+
+    def test_infer_type_pandas_pyarrow_list(self):
+        # Arrange
+        pdf = pd.DataFrame(
+            {
+                "data": pd.Series(
+                    [["l1", "l2", "l3", "l4"], ["l5", "l6", "l7", "l8"]],
+                    dtype=pd.ArrowDtype(pa.list_(pa.string())),
+                )
+            }
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "array<string>"
+
+    def test_infer_type_pandas_pyarrow_struct(self):
+        # Arrange
+        pdf = pd.DataFrame(
+            {
+                "data": pd.Series(
+                    [{"x": 0, "y": "test1"}, {"x": 99, "y": "test99"}],
+                    dtype=pd.ArrowDtype(pa.struct({"x": pa.int32(), "y": pa.string()})),
+                )
+            }
+        )
+        arrow_schema = pa.Schema.from_pandas(pdf)
+
+        python_engine = python.Engine()
+
+        # Act
+        arrow_type = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_schema.field("data").type
+        )
+        print(arrow_type)
+
+        # Assert
+        assert arrow_type == "struct<x:int,y:string>"
+
     def test_save_dataframe(self, mocker):
         # Arrange
         mock_python_engine_write_dataframe_kafka = mocker.patch(
