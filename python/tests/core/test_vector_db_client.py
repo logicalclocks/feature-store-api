@@ -28,11 +28,7 @@ class TestVectorDbClient:
     @pytest.fixture(autouse=True)
     def setup_mocks(self, mocker):
         mocker.patch("hsfs.engine.get_type", return_value="python")
-        mocker.patch.object(
-            vector_db_client.VectorDbClient,
-            "_setup_opensearch_client",
-            return_value=None,
-        )
+        mocker.patch("hsfs.core.opensearch.OpenSearchClientSingleton._setup_opensearch_client")
 
         self.query = self.fg.select_all()
         self.target = vector_db_client.VectorDbClient(self.query)
@@ -52,9 +48,8 @@ class TestVectorDbClient:
         ],
     )
     def test_get_query_filter(self, filter_expression, expected_result):
-        query = self.fg.select_all()
-        filter_obj = query.filter(filter_expression(self.f1))._filter
-        assert self.target._get_query_filter(filter_obj) == expected_result
+        filter = filter_expression(self.f1)
+        assert self.target._get_query_filter(filter) == expected_result
 
     @pytest.mark.parametrize(
         "filter_expression_nested, expected_result",
@@ -174,6 +169,5 @@ class TestVectorDbClient:
         ],
     )
     def test_get_query_filter_logic(self, filter_expression_nested, expected_result):
-        query = self.fg.select_all()
-        filter_obj = query.filter(filter_expression_nested(self.f1, self.f2))._filter
-        assert self.target._get_query_filter(filter_obj) == expected_result
+        filter = filter_expression_nested(self.f1, self.f2)
+        assert self.target._get_query_filter(filter) == expected_result
