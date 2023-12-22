@@ -28,6 +28,7 @@ import numpy as np
 from hsfs.transformation_function import TransformationFunction
 from hsfs.client import exceptions
 from hsfs.core import transformation_function_engine
+from hsfs.embedding import EmbeddingIndex
 
 from hsfs import (
     training_dataset,
@@ -459,7 +460,7 @@ class FeatureStore:
         time_travel_format: Optional[str] = "HUDI",
         partition_key: Optional[List[str]] = [],
         primary_key: Optional[List[str]] = [],
-        embedding_index: Optional[List[dict]] = [],
+        embedding_index: Optional[EmbeddingIndex] = None,
         hudi_precombine_key: Optional[str] = None,
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
@@ -514,6 +515,10 @@ class FeatureStore:
                 feature group. This primary key can be a composite key of multiple
                 features and will be used as joining key, if not specified otherwise.
                 Defaults to empty list `[]`, and the feature group won't have any primary key.
+            embedding_index: [`EmbeddingIndex`](./embedding_index_api.md). If an embedding index is provided,
+                vector database is used as online feature store. This enables similarity search by
+                using [`find_neighbors`](./feature_group_api.md#find_neighbors).
+                default to `None`
             hudi_precombine_key: A feature name to be used as a precombine key for the `"HUDI"`
                 feature group. Defaults to `None`. If feature group has time travel format
                 `"HUDI"` and hudi precombine key was not specified then the first primary key of
@@ -586,7 +591,7 @@ class FeatureStore:
         time_travel_format: Optional[str] = "HUDI",
         partition_key: Optional[List[str]] = [],
         primary_key: Optional[List[str]] = [],
-        embedding_index: Optional[List[dict]] = [],
+        embedding_index: Optional[EmbeddingIndex] = None,
         hudi_precombine_key: Optional[str] = None,
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
@@ -639,6 +644,10 @@ class FeatureStore:
                 feature group. This primary key can be a composite key of multiple
                 features and will be used as joining key, if not specified otherwise.
                 Defaults to empty list `[]`, and the feature group won't have any primary key.
+            embedding_index: [`EmbeddingIndex`](./embedding_index_api.md). If an embedding index is provided,
+                vector database is used as online feature store. This enables similarity search by
+                using [`find_neighbors`](./feature_group_api.md#find_neighbors).
+                default to `None`
             hudi_precombine_key: A feature name to be used as a precombine key for the `"HUDI"`
                 feature group. Defaults to `None`. If feature group has time travel format
                 `"HUDI"` and hudi precombine key was not specified then the first primary key of

@@ -33,6 +33,7 @@ from hsfs import (
 )
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import query, filter
+from hsfs.constructor.filter import Filter, Logic
 from hsfs.core import (
     feature_view_engine,
     transformation_function_engine,
@@ -46,6 +47,7 @@ from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.serving_key import ServingKey
 from hsfs.core.vector_db_client import VectorDbClient
+from hsfs.feature import Feature
 
 
 class FeatureView:
@@ -690,13 +692,53 @@ class FeatureView:
 
     def find_neighbors(
         self,
-        embedding,
-        feature=None,
-        k=10,
-        filter=None,
-        min_score=0,
+        embedding: List[Union[int, float]],
+        feature: Optional[Feature] = None,
+        k: Optional[int] = 10,
+        filter: Optional[Union[Filter, Logic]] = None,
+        min_score: Optional[float] = 0,
         external: Optional[bool] = None,
-    ):
+    ) -> List[List[Any]]:
+        """
+        Finds the nearest neighbors for a given embedding in the vector database.
+
+        # Arguments
+            embedding: The target embedding for which neighbors are to be found.
+            feature: The feature used to compute similarity score. Required only if there
+            are multiple embeddings (optional).
+            k: The number of nearest neighbors to retrieve (default is 10).
+            filter: A filter expression to restrict the search space (optional).
+            min_score: The minimum similarity score for neighbors to be considered (default is 0).
+
+        # Returns
+            A list of feature values
+
+        !!! Example
+            ```
+            embedding_index = EmbeddingIndex()
+            embedding_index.add_embedding(name="user_vector", dimension=3)
+            fg = fs.create_feature_group(
+                        name='air_quality',
+                        embedding_index=embedding_index,
+                        version=1,
+                        primary_key=['id1'],
+                        online_enabled=True,
+                    )
+            fg.insert(data)
+            fv = fs.create_feature_view("air_quality", fg.select_all())
+            fv.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+            )
+
+            # apply filter
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+                filter=(fg.id1 > 10) & (fg.id1 < 30)
+            )
+            ```
+        """
         if self._vector_db_client is None:
             self.init_serving(external=external)
         results = self._vector_db_client.find_neighbors(
