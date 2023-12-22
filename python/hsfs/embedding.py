@@ -37,12 +37,13 @@ class EmbeddingFeature:
     Represents an embedding feature.
 
     # Arguments
-        - name: The name of the embedding feature.
-        - dimension: The dimensionality of the embedding feature.
-        - similarity_function_type: The type of similarity function used for the embedding feature
+        name: The name of the embedding feature.
+        dimension: The dimensionality of the embedding feature.
+        similarity_function_type: The type of similarity function used for the embedding feature.
+          Available functions are `L2`, `COSINE`, and `DOT_PRODUCT`.
           (default is SimilarityFunctionType.L2).
-        - feature_group: The feature group associated with the embedding feature.
-        - embedding_index: The embedding index to which the feature belongs.
+        feature_group: The feature group object that contains the embedding feature.
+        embedding_index: The name of the index in the vector database that will store the embedding feature.
     """
 
     name: str
@@ -80,7 +81,8 @@ class EmbeddingIndex:
 
     # Arguments
         index_name: The name of the embedding index.
-        features: A list of EmbeddingFeature objects representing features associated with the embeddings.
+        features: A list of EmbeddingFeature objects for the features that
+            contain embeddings that should be indexed for similarity search.
         col_prefix: The prefix to be added to column names.
 
     !!! Example

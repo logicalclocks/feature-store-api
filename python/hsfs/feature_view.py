@@ -735,6 +735,7 @@ class FeatureView:
             fg.find_neighbors(
                 [0.1, 0.2, 0.3],
                 k=5,
+                feature=fg.user_vector,  # optional
                 filter=(fg.id1 > 10) & (fg.id1 < 30)
             )
             ```
