@@ -44,6 +44,7 @@ class EmbeddingFeature:
         - feature_group: The feature group associated with the embedding feature.
         - embedding_index: The embedding index to which the feature belongs.
     """
+
     name: str
     dimension: int
     similarity_function_type: SimilarityFunctionType = SimilarityFunctionType.L2
@@ -108,7 +109,9 @@ class EmbeddingIndex:
         self,
         name: str,
         dimension: int,
-        similarity_function_type: Optional[SimilarityFunctionType] = SimilarityFunctionType.L2
+        similarity_function_type: Optional[
+            SimilarityFunctionType
+        ] = SimilarityFunctionType.L2,
     ):
         """
         Adds a new embedding feature to the index.

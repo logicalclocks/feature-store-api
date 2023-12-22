@@ -1881,7 +1881,7 @@ class FeatureGroup(FeatureGroupBase):
         col: Optional[str] = None,
         k: Optional[int] = 10,
         filter: Optional[Union[Filter, Logic]] = None,
-        min_score: Optional[float] = 0
+        min_score: Optional[float] = 0,
     ) -> List[Tuple[float, List[Any]]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
