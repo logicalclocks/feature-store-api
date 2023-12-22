@@ -32,6 +32,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.io.IOException;
@@ -75,6 +77,8 @@ public abstract class StorageConnector {
   protected Integer featurestoreId;
 
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
+
+  protected static final Logger LOGGER = LoggerFactory.getLogger(StorageConnector.class);
 
   public StorageConnector refetch() throws FeatureStoreException, IOException {
     return  storageConnectorApi.get(getFeaturestoreId(), getName(), StorageConnector.class);
@@ -447,6 +451,11 @@ public abstract class StorageConnector {
       }
       if (sslKeyPassword != null) {
         config.put(Constants.KAFKA_SSL_KEY_PASSWORD, sslKeyPassword);
+      }
+
+      if (externalKafka) {
+        LOGGER.info("Getting connection details to externally managed Kafka cluster. "
+            + "Make sure that the topic being used exists.");
       }
 
       return config;

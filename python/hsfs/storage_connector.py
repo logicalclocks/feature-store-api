@@ -20,6 +20,7 @@ from typing import Optional
 
 import humps
 import base64
+import warnings
 
 from hsfs import engine, client
 from hsfs.core import storage_connector_api
@@ -1016,6 +1017,12 @@ class KafkaConnector(StorageConnector):
             config["ssl.keystore.password"] = self._ssl_keystore_password
         if self._ssl_key_password is not None:
             config["ssl.key.password"] = self._ssl_key_password
+
+        if self._external_kafka:
+            warnings.warn(
+                "Getting connection details to externally managed Kafka cluster. "
+                "Make sure that the topic being used exists."
+            )
 
         return config
 

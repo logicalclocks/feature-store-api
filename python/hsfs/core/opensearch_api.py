@@ -55,10 +55,8 @@ class OpenSearchApi:
         if isinstance(client.get_instance(), client.external.Client):
             external_domain = self._variable_api.get_loadbalancer_external_domain()
             if external_domain == "":
-                raise FeatureStoreException(
-                    "External client could not locate loadbalancer_external_domain "
-                    "in cluster configuration or variable is empty."
-                )
+                # fallback to use hostname of head node
+                external_domain = client.get_instance().host
             return f"https://{external_domain}:9200"
         else:
             service_discovery_domain = self._variable_api.get_service_discovery_domain()
