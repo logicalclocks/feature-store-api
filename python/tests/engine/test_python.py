@@ -1190,6 +1190,18 @@ class TestPython:
         # Assert
         assert result == "timestamp"
 
+    def test_convert_simple_pandas_type_datetime64tz(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="ns", tz="UTC")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
     def test_convert_simple_pandas_type_bool(self):
         # Arrange
         python_engine = python.Engine()
@@ -1243,7 +1255,7 @@ class TestPython:
         # Assert
         assert str(e_info.value) == "dtype 'other' not supported"
 
-    def test_infer_type_pyarrow_list(self, mocker):
+    def test_infer_type_pyarrow_list(self):
         # Arrange
 
         python_engine = python.Engine()
@@ -1256,19 +1268,19 @@ class TestPython:
         # Assert
         assert result == "array<int>"
 
-    def test_infer_type_pyarrow_struct(self, mocker):
+    def test_infer_type_pyarrow_struct(self):
         # Arrange
         python_engine = python.Engine()
 
         # Act
         result = python_engine._convert_pandas_object_type_to_offline_type(
-            arrow_type=pa.struct({})
+            arrow_type=pa.struct([pa.field("f1", pa.int32())])
         )
 
         # Assert
-        assert result == "struct<>"
+        assert result == "struct<f1:int>"
 
-    def test_infer_type_pyarrow_date(self, mocker):
+    def test_infer_type_pyarrow_date32(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -1280,7 +1292,19 @@ class TestPython:
         # Assert
         assert result == "date"
 
-    def test_infer_type_pyarrow_binary(self, mocker):
+    def test_infer_type_pyarrow_date64(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.date64()
+        )
+
+        # Assert
+        assert result == "date"
+
+    def test_infer_type_pyarrow_binary(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -1292,7 +1316,7 @@ class TestPython:
         # Assert
         assert result == "binary"
 
-    def test_infer_type_pyarrow_string(self, mocker):
+    def test_infer_type_pyarrow_string(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -1304,7 +1328,7 @@ class TestPython:
         # Assert
         assert result == "string"
 
-    def test_infer_type_pyarrow_utf8(self, mocker):
+    def test_infer_type_pyarrow_utf8(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -1316,7 +1340,7 @@ class TestPython:
         # Assert
         assert result == "string"
 
-    def test_infer_type_pyarrow_other(self, mocker):
+    def test_infer_type_pyarrow_other(self):
         # Arrange
         python_engine = python.Engine()
 
