@@ -1058,45 +1058,6 @@ class TestPython:
             == "Training dataset creation from Dataframes is not supported in Python environment. Use HSFS Query object instead."
         )
 
-    def test_convert_pandas_type(self, mocker):
-        # Arrange
-        mock_python_engine_infer_type_pyarrow = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_object_type_to_offline_type"
-        )
-        mock_python_engine_convert_simple_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_simple_pandas_dtype_to_offline_type"
-        )
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine._convert_pandas_dtype_to_offline_type(arrow_type=pa.int64())
-
-        # Assert
-        assert mock_python_engine_infer_type_pyarrow.call_count == 0
-        assert mock_python_engine_convert_simple_pandas_type.call_count == 1
-
-    def test_convert_pandas_type_object(self, mocker):
-        # Arrange
-        mock_python_engine_infer_type_pyarrow = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_object_type_to_offline_type"
-        )
-        mock_python_engine_convert_simple_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_simple_pandas_dtype_to_offline_type"
-        )
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine._convert_pandas_dtype_to_offline_type(arrow_type=pa.struct({}))
-        python_engine._convert_pandas_dtype_to_offline_type(
-            arrow_type=pa.list_(pa.int32())
-        )
-
-        # Assert
-        assert mock_python_engine_infer_type_pyarrow.call_count == 2
-        assert mock_python_engine_convert_simple_pandas_type.call_count == 0
-
     def test_convert_simple_pandas_type_uint8(self):
         # Arrange
         python_engine = python.Engine()
@@ -1284,13 +1245,8 @@ class TestPython:
 
     def test_infer_type_pyarrow_list(self, mocker):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
 
         python_engine = python.Engine()
-
-        mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
         result = python_engine._convert_pandas_object_type_to_offline_type(
@@ -1298,17 +1254,11 @@ class TestPython:
         )
 
         # Assert
-        assert result == "array<test>"
+        assert result == "array<int>"
 
     def test_infer_type_pyarrow_struct(self, mocker):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
-
         python_engine = python.Engine()
-
-        mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
         result = python_engine._convert_pandas_object_type_to_offline_type(
@@ -1320,13 +1270,7 @@ class TestPython:
 
     def test_infer_type_pyarrow_date(self, mocker):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
-
         python_engine = python.Engine()
-
-        mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
@@ -1338,13 +1282,7 @@ class TestPython:
 
     def test_infer_type_pyarrow_binary(self, mocker):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
-
         python_engine = python.Engine()
-
-        mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
@@ -1356,13 +1294,7 @@ class TestPython:
 
     def test_infer_type_pyarrow_string(self, mocker):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
-
         python_engine = python.Engine()
-
-        mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
@@ -1374,13 +1306,7 @@ class TestPython:
 
     def test_infer_type_pyarrow_utf8(self, mocker):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
-
         python_engine = python.Engine()
-
-        mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
@@ -1392,13 +1318,7 @@ class TestPython:
 
     def test_infer_type_pyarrow_other(self, mocker):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
-
         python_engine = python.Engine()
-
-        mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
         with pytest.raises(ValueError) as e_info:
