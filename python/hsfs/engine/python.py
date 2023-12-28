@@ -83,6 +83,31 @@ try:
 except ImportError:
     pass
 
+# Decimal types are currently not supported
+PYARROW_HOPSWORKS_DTYPE_MAPPING = {
+    **dict.fromkeys(
+        [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()], "int"
+    ),
+    **dict.fromkeys([pa.uint32(), pa.int64()], "bigint"),
+    **dict.fromkeys([pa.float16(), pa.float32()], "float"),
+    **dict.fromkeys([pa.float64()], "double"),
+    **dict.fromkeys(
+        [pa.timestamp("ns")] + [pa.timestamp("ns", tz=tz) for tz in pytz.all_timezones],
+        "timestamp",
+    ),
+    **dict.fromkeys([pa.bool_()], "boolean"),
+    **dict.fromkeys(
+        [
+            pa.string(),
+            pa.dictionary(value_type=pa.string(), index_type=pa.int8(), ordered=True),
+            pa.dictionary(value_type=pa.string(), index_type=pa.int8(), ordered=False),
+        ],
+        "string",
+    ),  # Category type in pandas stored as dictinoary in pyarrow
+    **dict.fromkeys([pa.date32(), pa.date64()], "date"),
+    **dict.fromkeys([pa.binary()], "binary"),
+}
+
 
 class Engine:
     def __init__(self):
@@ -469,7 +494,7 @@ class Engine:
     def parse_schema_feature_group(self, dataframe, time_travel_format=None):
         arrow_schema = pa.Schema.from_pandas(dataframe)
         features = []
-        for feat_name, _ in dataframe.dtypes.items():
+        for feat_name in arrow_schema.names:
             name = feat_name.lower()
             try:
                 converted_type = self._convert_pandas_dtype_to_offline_type(
@@ -1200,28 +1225,8 @@ class Engine:
 
     @staticmethod
     def _convert_simple_pandas_dtype_to_offline_type(arrow_type):
-        arrow_type = str(arrow_type).lower()
-        # Decimal types are currently not supported
-        pyarrow_hopswork_dtype_mapping = {
-            **dict.fromkeys(["uint8", "uint16", "int8", "int16", "int32"], "int"),
-            **dict.fromkeys(["uint32", "int64"], "bigint"),
-            **dict.fromkeys(
-                ["float", "halffloat"], "float"
-            ),  # float16 is represented as halffloat in pyarrow type
-            **dict.fromkeys(["double"], "double"),
-            **dict.fromkeys(
-                ["timestamp[ns]"]
-                + [f"timestamp[ns, tz={tz}]".lower() for tz in pytz.all_timezones],
-                "timestamp",
-            ),  # datetime64[ns] represented as timestamp[ns] in pyarrow type
-            **dict.fromkeys(["bool"], "boolean"),
-            **dict.fromkeys(["string", "category"], "string"),
-            **dict.fromkeys(["date32[day]", "date64[ms]"], "date"),
-            **dict.fromkeys(["binary"], "binary"),
-        }
-
         try:
-            return pyarrow_hopswork_dtype_mapping[arrow_type]
+            return PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type]
         except KeyError:
             raise ValueError(f"dtype '{arrow_type}' not supported")
 
