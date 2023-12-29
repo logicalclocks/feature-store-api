@@ -72,8 +72,7 @@ public class BeamEngine extends EngineBase {
     }
     String targetPath = System.getProperty("java.io.tmpdir") + filePath.substring(filePath.lastIndexOf("/"));
     try (FileOutputStream outputStream = new FileOutputStream(targetPath)) {
-      outputStream.write(DatasetApi.readContent(HopsworksClient.getInstance().getProject().getProjectId(),
-          filePath, "HIVEDB"));
+      outputStream.write(DatasetApi.readContent(filePath, "HIVEDB"));
     }
     return targetPath;
   }

@@ -45,7 +45,7 @@ public class KafkaApi {
         + KAFKA_PATH + SUBJECT_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStoreBase.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("subject", subjectName)
         .set("version", subjectVersion)
         .expand();
