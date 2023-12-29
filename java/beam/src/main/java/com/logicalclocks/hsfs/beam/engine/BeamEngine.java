@@ -24,7 +24,6 @@ import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.DatasetApi;
 import com.logicalclocks.hsfs.engine.EngineBase;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import org.apache.avro.Schema;
 
