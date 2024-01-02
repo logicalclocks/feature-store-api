@@ -92,7 +92,10 @@ PYARROW_HOPSWORKS_DTYPE_MAPPING = {
     **dict.fromkeys([pa.float16(), pa.float32()], "float"),
     **dict.fromkeys([pa.float64()], "double"),
     **dict.fromkeys(
-        [pa.timestamp("ns")] + [pa.timestamp("ns", tz=tz) for tz in pytz.all_timezones],
+        [pa.timestamp("ns")] + [pa.timestamp("ns", tz=tz) for tz in pytz.all_timezones] +
+        [pa.timestamp("us")] + [pa.timestamp("us", tz=tz) for tz in pytz.all_timezones] +
+        [pa.timestamp("ms")] + [pa.timestamp("ms", tz=tz) for tz in pytz.all_timezones] +
+        [pa.timestamp("s")] + [pa.timestamp("s", tz=tz) for tz in pytz.all_timezones],
         "timestamp",
     ),
     **dict.fromkeys([pa.bool_()], "boolean"),
