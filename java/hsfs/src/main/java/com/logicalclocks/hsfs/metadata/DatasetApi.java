@@ -34,7 +34,7 @@ public class DatasetApi {
   public DatasetApi()  {
   }
 
-  public static byte[] readContent(Integer projectId, String path, String datasetType) throws FeatureStoreException,
+  public static byte[] readContent(String path, String datasetType) throws FeatureStoreException,
       IOException {
     if (Strings.isNullOrEmpty(datasetType)) {
       datasetType = "DATASET";
@@ -45,13 +45,14 @@ public class DatasetApi {
         .append("{/path}")
         .append("{?type}");
 
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     UriTemplate uri = UriTemplate.fromTemplate(pathBuilder.toString())
-        .set("projectId", projectId)
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("path",path)
         .set("type",datasetType);
     String uriString = uri.expand();
 
-    return HopsworksClient.getInstance().handleRequest(new HttpGet(uriString),
+    return hopsworksClient.handleRequest(new HttpGet(uriString),
         response -> EntityUtils.toByteArray(response.getEntity()));
   }
 }
