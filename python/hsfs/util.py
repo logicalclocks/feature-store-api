@@ -59,7 +59,9 @@ def parse_features(feature_names):
     elif isinstance(feature_names, list) and len(feature_names) > 0:
         return [validate_feature(feat) for feat in feature_names]
     else:
-        return []
+        raise exceptions.FeatureStoreException(
+            "No features were specified."
+        )
 
 
 def feature_group_name(feature_group):
