@@ -79,8 +79,11 @@ public abstract class QueryBase<T extends QueryBase<T, T2, T3>, T2 extends Featu
   protected StorageConnectorApi storageConnectorApi = new StorageConnectorApi();
   private FeatureGroupUtils utils = new FeatureGroupUtils();
 
-  protected QueryBase(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
+  protected QueryBase(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) throws FeatureStoreException {
     setLeftBaseFeatureGroup(leftFeatureGroup);
+    if (leftFeatures == null || leftFeatures.isEmpty()) {
+      throw new FeatureStoreException("Query must have features, but none were specified.");
+    }
     this.leftFeatures = addFeatureGroupToFeatures(leftFeatureGroup, leftFeatures);
   }
 

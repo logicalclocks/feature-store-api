@@ -17,9 +17,15 @@
 import pytest
 
 from hsfs.client import exceptions
-from hsfs import training_dataset, feature_group, feature_view, statistics_config
+from hsfs import (
+    training_dataset,
+    feature_group,
+    feature_view,
+    statistics_config,
+    feature,
+    engine,
+)
 from hsfs.core import statistics_engine
-from hsfs import engine
 
 engine._engine_type = "python"
 fg = feature_group.FeatureGroup(
@@ -30,6 +36,12 @@ fg = feature_group.FeatureGroup(
     partition_key=[],
     id=10,
     stream=False,
+    features=[
+        feature.Feature("pk", primary=True),
+        feature.Feature("ts", primary=False),
+        feature.Feature("f1", primary=False),
+        feature.Feature("f2", primary=False),
+    ],
 )
 query = fg.select_all()
 

@@ -1940,7 +1940,7 @@ class TestSpark:
             splits={},
         )
 
-        q = query.Query(left_feature_group=None, left_features=None)
+        q = query.Query(left_feature_group=None, left_features=["f"])
 
         # Act
         spark_engine.write_training_dataset(
@@ -1992,7 +1992,7 @@ class TestSpark:
             coalesce=True,
         )
 
-        q = query.Query(left_feature_group=None, left_features=None)
+        q = query.Query(left_feature_group=None, left_features=["f"])
 
         # Act
         spark_engine.write_training_dataset(
@@ -2043,7 +2043,7 @@ class TestSpark:
             splits={"name": "value"},
         )
 
-        q = query.Query(left_feature_group=None, left_features=None)
+        q = query.Query(left_feature_group=None, left_features=["f"])
 
         m = mocker.Mock()
 
@@ -2100,7 +2100,7 @@ class TestSpark:
             coalesce=True,
         )
 
-        q = query.Query(left_feature_group=None, left_features=None)
+        q = query.Query(left_feature_group=None, left_features=["f"])
 
         m = mocker.Mock()
 
@@ -2158,7 +2158,7 @@ class TestSpark:
             event_time="event_time",
         )
 
-        q = query.Query(left_feature_group=fg, left_features=None)
+        q = query.Query(left_feature_group=fg, left_features=["f"])
 
         # Act
         spark_engine._split_df(
@@ -2211,7 +2211,7 @@ class TestSpark:
             features=[f, f1, f2],
         )
 
-        q = query.Query(left_feature_group=fg, left_features=None)
+        q = query.Query(left_feature_group=fg, left_features=["f"])
 
         # Act
         spark_engine._split_df(

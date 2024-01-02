@@ -198,6 +198,16 @@ class TestQuery:
             f"Feature Group `{q._left_feature_group.name}`, version `{q._left_feature_group.version}` is deprecated"
         )
 
+    def test_new_query_witout_features(self, mocker, backend_fixtures):
+        # Arrange
+
+        # Act
+        with pytest.raises(FeatureStoreException) as e_info:
+            q = query.Query(None, None)
+
+        # Assert
+        assert str(e_info.value) == "Query must have features, but none were specified."
+
     def test_as_of(self, mocker, backend_fixtures):
         mocker.patch("hsfs.engine.get_type", return_value="python")
         q = query.Query.from_response_json(backend_fixtures["query"]["get"]["response"])

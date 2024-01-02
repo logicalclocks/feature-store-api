@@ -40,7 +40,7 @@ public class Query extends QueryBase<Query, StreamFeatureGroup, Dataset<Row>> {
 
   private final StorageConnectorUtils storageConnectorUtils = new StorageConnectorUtils();
 
-  public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) {
+  public Query(FeatureGroupBase leftFeatureGroup, List<Feature> leftFeatures) throws FeatureStoreException {
     super(leftFeatureGroup, leftFeatures);
   }
 

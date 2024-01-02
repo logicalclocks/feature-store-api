@@ -90,7 +90,7 @@ class TestTrainingDatasetEngine:
 
         td_engine = training_dataset_engine.TrainingDatasetEngine(feature_store_id)
 
-        q = query.Query(left_feature_group=None, left_features=None)
+        q = query.Query(left_feature_group=None, left_features=["f"])
 
         # Act
         td_engine.save(training_dataset=td, features=q, user_write_options=None)

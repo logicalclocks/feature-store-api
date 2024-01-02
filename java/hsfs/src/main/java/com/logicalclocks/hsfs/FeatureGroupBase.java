@@ -322,15 +322,15 @@ public abstract class FeatureGroupBase<T> {
   public abstract Map<Long, Map<String, String>> commitDetails(String wallclockTime, Integer limit)
       throws IOException, FeatureStoreException, ParseException;
 
-  public abstract QueryBase selectFeatures(List<Feature> features);
+  public abstract QueryBase selectFeatures(List<Feature> features) throws FeatureStoreException;
 
-  public abstract QueryBase select(List<String> features);
+  public abstract QueryBase select(List<String> features) throws FeatureStoreException;
 
-  public abstract QueryBase selectAll();
+  public abstract QueryBase selectAll() throws FeatureStoreException;
 
-  public abstract QueryBase selectExceptFeatures(List<Feature> features);
+  public abstract QueryBase selectExceptFeatures(List<Feature> features) throws FeatureStoreException;
 
-  public abstract QueryBase selectExcept(List<String> features);
+  public abstract QueryBase selectExcept(List<String> features) throws FeatureStoreException;
 
   public abstract Object insertStream(T featureData) throws Exception;
 

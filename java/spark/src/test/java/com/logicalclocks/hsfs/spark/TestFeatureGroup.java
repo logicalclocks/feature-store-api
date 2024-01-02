@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
 public class TestFeatureGroup {
 
   @Test
-  public void testSelect_fgId_set() {
+  public void testSelect_fgId_set() throws FeatureStoreException {
     FeatureGroup featureGroup = new FeatureGroup(null, 1);
     List<String> selectFeatures = Arrays.asList("ft1", "ft2");
 

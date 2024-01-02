@@ -42,7 +42,7 @@ class TestFeatureViewEngine {
   String label = "label";
 
   @BeforeEach
-  public void before() {
+  public void before() throws FeatureStoreException {
     setFeatureGroup(fg1, 1);
     setFeatureGroup(fg2, 2);
     setFeatureGroup(fg3, 3);

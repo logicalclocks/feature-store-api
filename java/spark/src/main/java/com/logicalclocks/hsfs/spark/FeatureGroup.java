@@ -1075,9 +1075,10 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * joins of feature groups or create a feature view with a subset of features of the feature group.
    * @param features List of Feature meta data objects.
    * @return Query object.
+   * @throws FeatureStoreException
    */
   @Override
-  public Query selectFeatures(List<Feature> features) {
+  public Query selectFeatures(List<Feature> features) throws FeatureStoreException {
     return new Query(this, features);
   }
 
@@ -1086,9 +1087,10 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * joins of feature groups or create a feature view with a subset of features of the feature group.
    * @param features List of Feature names.
    * @return Query object.
+   * @throws FeatureStoreException
    */
   @Override
-  public Query select(List<String> features) {
+  public Query select(List<String> features) throws FeatureStoreException {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
     List<Feature> featureObjList = features.stream().map(Feature::new).collect(Collectors.toList());
@@ -1099,9 +1101,10 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * Select all features of the feature group and return a query object. The query can be used to construct
    * joins of feature groups or create a feature view with a subset of features of the feature group.
    * @return Query object.
+   * @throws FeatureStoreException
    */
   @Override
-  public Query selectAll() {
+  public Query selectAll() throws FeatureStoreException {
     return new Query(this, getFeatures());
   }
 
@@ -1113,9 +1116,10 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * the feature group.
    * @param features List of Feature meta data objects.
    * @return Query object.
+   * @throws FeatureStoreException
    */
   @Override
-  public Query selectExceptFeatures(List<Feature> features) {
+  public Query selectExceptFeatures(List<Feature> features) throws FeatureStoreException {
     List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
     return selectExcept(exceptFeatures);
   }
@@ -1127,9 +1131,10 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
    * the feature group.
    * @param features List of Feature names.
    * @return Query object.
+   * @throws FeatureStoreException
    */
   @Override
-  public Query selectExcept(List<String> features) {
+  public Query selectExcept(List<String> features) throws FeatureStoreException {
     return new Query(this,
         getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));
   }

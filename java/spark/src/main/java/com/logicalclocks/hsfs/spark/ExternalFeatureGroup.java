@@ -336,12 +336,12 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   }
 
   @Override
-  public Query selectFeatures(List<Feature> features) {
+  public Query selectFeatures(List<Feature> features) throws FeatureStoreException {
     return new Query(this, features);
   }
 
   @Override
-  public Query select(List<String> features) {
+  public Query select(List<String> features) throws FeatureStoreException {
     // Create a feature object for each string feature given by the user.
     // For the query building each feature need only the name set.
     List<Feature> featureObjList = features.stream().map(Feature::new).collect(Collectors.toList());
@@ -349,18 +349,18 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
   }
 
   @Override
-  public Query selectAll() {
+  public Query selectAll() throws FeatureStoreException {
     return new Query(this, getFeatures());
   }
 
   @Override
-  public Query selectExceptFeatures(List<Feature> features) {
+  public Query selectExceptFeatures(List<Feature> features) throws FeatureStoreException {
     List<String> exceptFeatures = features.stream().map(Feature::getName).collect(Collectors.toList());
     return selectExcept(exceptFeatures);
   }
 
   @Override
-  public Query selectExcept(List<String> features) {
+  public Query selectExcept(List<String> features) throws FeatureStoreException {
     return new Query(this,
         getFeatures().stream().filter(f -> !features.contains(f.getName())).collect(Collectors.toList()));
   }

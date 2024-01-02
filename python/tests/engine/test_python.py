@@ -1795,7 +1795,7 @@ class TestPython:
             id=10,
         )
 
-        q = query.Query(left_feature_group=None, left_features=None)
+        q = query.Query(left_feature_group=None, left_features=["f"])
 
         mock_python_engine_random_split.return_value = {
             "train": df.loc[df["col1"] == 1],
@@ -1860,7 +1860,7 @@ class TestPython:
             features=[f, f1, f2],
         )
 
-        q = query.Query(left_feature_group=fg, left_features=[])
+        q = query.Query(left_feature_group=fg, left_features=["f"])
 
         mock_python_engine_time_series_split.return_value = {
             "train": df.loc[df["col1"] == 1],
@@ -2271,7 +2271,7 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        q = query.Query(None, None)
+        q = query.Query(None, ["f"])
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -2311,7 +2311,7 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        q = query.Query(None, None)
+        q = query.Query(None, ["f"])
 
         td = training_dataset.TrainingDataset(
             name="test",

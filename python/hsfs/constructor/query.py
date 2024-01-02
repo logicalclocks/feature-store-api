@@ -60,6 +60,10 @@ class Query:
         self._feature_store_id = feature_store_id
         self._left_feature_group = left_feature_group
         self._left_features = util.parse_features(left_features)
+        if not self._left_features:
+            raise FeatureStoreException(
+                "Query must have features, but none were specified."
+            )
         self._left_feature_group_start_time = left_feature_group_start_time
         self._left_feature_group_end_time = left_feature_group_end_time
         self._joins = joins or []
