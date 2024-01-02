@@ -203,7 +203,7 @@ class TestQuery:
 
         # Act
         with pytest.raises(FeatureStoreException) as e_info:
-            q = query.Query(None, None)
+            query.Query(None, None)
 
         # Assert
         assert str(e_info.value) == "Query must have features, but none were specified."
