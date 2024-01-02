@@ -147,7 +147,7 @@ public class TestFeatureGroup {
     HopsworksClient hopsworksClient = Mockito.mock(HopsworksClient.class);
     Mockito.when(hopsworksClient.getProject()).thenReturn(new Project(1));
     HopsworksClient.setInstance(hopsworksClient);
-    
+
     FeatureStore featureStore = Mockito.mock(FeatureStore.class);
     FeatureGroupApi featureGroupApi = Mockito.mock(FeatureGroupApi.class);
     FeatureGroupEngine featureGroupEngine = Mockito.mock(FeatureGroupEngine.class);
