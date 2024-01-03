@@ -68,7 +68,7 @@ public class StorageConnectorApi {
         + ONLINE_CONNECTOR_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStoreBase.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featureStoreBase.getId())
         .expand();
 
@@ -84,7 +84,7 @@ public class StorageConnectorApi {
             + KAFKA_CONNECTOR_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-            .set("projectId", featureStoreBase.getProjectId())
+            .set("projectId", hopsworksClient.getProject().getProjectId())
             .set("fsId", featureStoreBase.getId())
             .set("external", external)
             .expand();
