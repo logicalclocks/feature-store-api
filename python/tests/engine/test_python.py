@@ -1178,7 +1178,7 @@ class TestPython:
         # Assert
         assert result == "double"
 
-    def test_convert_simple_pandas_type_datetime64(self):
+    def test_convert_simple_pandas_type_datetime64ns(self):
         # Arrange
         python_engine = python.Engine()
 
@@ -1190,13 +1190,85 @@ class TestPython:
         # Assert
         assert result == "timestamp"
 
-    def test_convert_simple_pandas_type_datetime64tz(self):
+    def test_convert_simple_pandas_type_datetime64nstz(self):
         # Arrange
         python_engine = python.Engine()
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.timestamp(unit="ns", tz="UTC")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64us(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="us")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64ustz(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="us", tz="UTC")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64ms(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="ms")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64mstz(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="ms", tz="UTC")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64s(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="s")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64stz(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="s", tz="UTC")
         )
 
         # Assert
