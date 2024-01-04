@@ -65,7 +65,6 @@ public class KafkaApi {
           .set("version", subjectVersion)
           .expand();
     }
-    LOGGER.error("Sending metadata request: " + uri);
     LOGGER.info("Sending metadata request: " + uri);
     return hopsworksClient.handleRequest(new HttpGet(uri), Subject.class);
   }

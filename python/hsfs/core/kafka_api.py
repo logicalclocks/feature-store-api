@@ -20,7 +20,6 @@ from hsfs import client
 class KafkaApi:
     def get_subject(
         self,
-        feature_store_id: str,
         subject: str,
         feature_store_id: str = None,
         version: str = "latest",
@@ -47,6 +46,5 @@ class KafkaApi:
         ]
 
         print(path_params)
-
         headers = {"content-type": "application/json"}
         return _client._send_request("GET", path_params, headers=headers)
