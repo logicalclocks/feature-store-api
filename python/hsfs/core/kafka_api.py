@@ -20,21 +20,32 @@ from hsfs import client
 class KafkaApi:
     def get_subject(
         self,
-        feature_store_id: str,
         subject: str,
+        feature_store_id: str = None,
         version: str = "latest",
     ):
         _client = client.get_instance()
         path_params = [
             "project",
             _client._project_id,
-            "featurestores",
-            feature_store_id,
+        ]
+
+        if feature_store_id:
+            # for backwards compatibility avoid calling feature stores endpoint when possible
+            path_params += [
+                "featurestores",
+                feature_store_id,
+            ]
+
+        path_params += [
             "kafka",
             "subjects",
             subject,
             "versions",
             version,
         ]
+
+        print(path_params)
+
         headers = {"content-type": "application/json"}
         return _client._send_request("GET", path_params, headers=headers)

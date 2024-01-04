@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+from hsfs import client
 from hsfs.core import feature_group_api, storage_connector_api, tags_api, kafka_api
 from hsfs.client.exceptions import FeatureStoreException
 
@@ -152,7 +153,13 @@ class FeatureGroupBaseEngine:
             )
 
     def get_subject(self, feature_group):
+        _client = client.get_instance()
+
+        feature_store_id= None
+        if feature_group._get_project_name() == _client._project_name:
+            feature_store_id=feature_group._feature_store_id
+
         return self._kafka_api.get_subject(
-            feature_group._feature_store_id,
             feature_group.get_fg_name(),
+            feature_store_id=feature_store_id,
         )

@@ -41,17 +41,31 @@ public class KafkaApi {
   public Subject getSubject(FeatureStoreBase featureStoreBase, String subjectName, String subjectVersion)
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
-    String pathTemplate = HopsworksClient.PROJECT_PATH
-        + FeatureStoreApi.FEATURE_STORE_PATH
-        + KAFKA_PATH + SUBJECT_PATH;
 
-    String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", hopsworksClient.getProject().getProjectId())
-        .set("fsId", featureStoreBase.getId())
-        .set("subject", subjectName)
-        .set("version", subjectVersion)
-        .expand();
+    String uri;
+    if (featureStoreBase.getProjectId().equals(hopsworksClient.getProject().getProjectId())) {
+      // for backwards compatibility avoid calling feature stores endpoint when possible
+      String pathTemplate = HopsworksClient.PROJECT_PATH
+          + KAFKA_PATH + SUBJECT_PATH;
 
+      uri = UriTemplate.fromTemplate(pathTemplate)
+          .set("projectId", hopsworksClient.getProject().getProjectId())
+          .set("subject", subjectName)
+          .set("version", subjectVersion)
+          .expand();
+    } else {
+      String pathTemplate = HopsworksClient.PROJECT_PATH
+          + FeatureStoreApi.FEATURE_STORE_PATH
+          + KAFKA_PATH + SUBJECT_PATH;
+
+      uri = UriTemplate.fromTemplate(pathTemplate)
+          .set("projectId", hopsworksClient.getProject().getProjectId())
+          .set("fsId", featureStoreBase.getId())
+          .set("subject", subjectName)
+          .set("version", subjectVersion)
+          .expand();
+    }
+    LOGGER.error("Sending metadata request: " + uri);
     LOGGER.info("Sending metadata request: " + uri);
     return hopsworksClient.handleRequest(new HttpGet(uri), Subject.class);
   }
