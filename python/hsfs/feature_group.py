@@ -68,6 +68,7 @@ class FeatureGroupBase:
         version,
         featurestore_id,
         location,
+        featurestore_name=None,
         event_time=None,
         online_enabled=False,
         id=None,
@@ -89,6 +90,7 @@ class FeatureGroupBase:
         self._topic_name = topic_name
         self._deprecated = deprecated
         self._feature_store_id = featurestore_id
+        self._feature_store_name = featurestore_name
         # use setter for correct conversion
         self.expectation_suite = expectation_suite
         self._statistics_engine = statistics_engine.StatisticsEngine(
@@ -1511,6 +1513,7 @@ class FeatureGroup(FeatureGroupBase):
             version,
             featurestore_id,
             location,
+            featurestore_name=featurestore_name,
             event_time=event_time,
             online_enabled=online_enabled,
             embedding_index=embedding_index,
@@ -1520,7 +1523,6 @@ class FeatureGroup(FeatureGroupBase):
             topic_name=topic_name,
             deprecated=deprecated,
         )
-        self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
         self._creator = user.User.from_response_json(creator)
@@ -2761,6 +2763,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             version,
             featurestore_id,
             location,
+            featurestore_name=featurestore_name,
             event_time=event_time,
             online_enabled=online_enabled,
             id=id,
@@ -2770,7 +2773,6 @@ class ExternalFeatureGroup(FeatureGroupBase):
             deprecated=deprecated,
         )
 
-        self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
         self._creator = user.User.from_response_json(creator)
@@ -3115,6 +3117,7 @@ class SpineGroup(FeatureGroupBase):
             version,
             featurestore_id,
             location,
+            featurestore_name=featurestore_name,
             event_time=event_time,
             online_enabled=online_enabled,
             id=id,
@@ -3124,7 +3127,6 @@ class SpineGroup(FeatureGroupBase):
             deprecated=deprecated,
         )
 
-        self._feature_store_name = featurestore_name
         self._description = description
         self._created = created
         self._creator = user.User.from_response_json(creator)

@@ -156,7 +156,7 @@ class FeatureGroupBaseEngine:
         _client = client.get_instance()
 
         feature_store_id = None
-        if feature_group.feature_store.project_id != int(_client._project_id):
+        if feature_group._get_project_name() != _client._project_name:
             feature_store_id = feature_group._feature_store_id
 
         return self._kafka_api.get_subject(

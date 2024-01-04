@@ -75,7 +75,7 @@ def append_feature_store_suffix(name):
 
 
 def strip_feature_store_suffix(name):
-    name = name.lower()
+    name = str(name or '').lower()
     if name.endswith(FEATURE_STORE_NAME_SUFFIX):
         return name[: -1 * len(FEATURE_STORE_NAME_SUFFIX)]
     else:
