@@ -689,7 +689,7 @@ class TestFeatureGroupEngine:
     def test_get_subject(self, mocker):
         # Arrange
         feature_store_id = 99
-
+        mocker.patch("hsfs.client.get_instance")
         mocker.patch("hsfs.engine.get_type")
         mock_kafka_api = mocker.patch("hsfs.core.kafka_api.KafkaApi")
 
