@@ -45,6 +45,5 @@ class KafkaApi:
             version,
         ]
 
-        print(path_params)
         headers = {"content-type": "application/json"}
         return _client._send_request("GET", path_params, headers=headers)
