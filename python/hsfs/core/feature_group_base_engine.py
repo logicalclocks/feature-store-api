@@ -155,9 +155,9 @@ class FeatureGroupBaseEngine:
     def get_subject(self, feature_group):
         _client = client.get_instance()
 
-        feature_store_id= None
+        feature_store_id = None
         if feature_group._get_project_name() == _client._project_name:
-            feature_store_id=feature_group._feature_store_id
+            feature_store_id = feature_group._feature_store_id
 
         return self._kafka_api.get_subject(
             feature_group.get_fg_name(),
