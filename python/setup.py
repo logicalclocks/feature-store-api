@@ -31,7 +31,6 @@ setup(
         "sqlalchemy<=1.4.48",  # aiomysql does not support v2 yet https://github.com/aio-libs/aiomysql/discussions/908
         "PyMySQL[rsa]",
         "great_expectations==0.15.12",
-        "markupsafe<2.1.0",  # GE issue: jinja2==2.11.3, pulls in markupsafe 2.1.0 which is not compatible with jinja2==2.11.3.
         "tzlocal",
         "fsspec",
         "retrying",
@@ -39,16 +38,16 @@ setup(
     ],
     extras_require={
         "dev": [
-            "pytest==7.1.2",
-            "pytest-mock==3.8.2",
+            "pytest==7.4.4",
+            "pytest-mock==3.12.0",
             "flake8",
             "black",
             "pyspark==3.1.1",
             "moto[s3]",
         ],
         "dev-pandas1": [
-            "pytest==7.1.2",
-            "pytest-mock==3.8.2",
+            "pytest==7.4.4",
+            "pytest-mock==3.12.0",
             "flake8",
             "black",
             "pyspark==3.1.1",
@@ -73,13 +72,13 @@ setup(
             "pyhopshive[thrift]",
             "pyarrow>=10.0",
             "confluent-kafka<=2.3.0",
-            "fastavro>=1.4.11,<=1.8.2",
+            "fastavro>=1.4.11,<=1.8.4",
         ],
         "python": [
             "pyhopshive[thrift]",
             "pyarrow>=10.0",
             "confluent-kafka<=2.3.0",
-            "fastavro>=1.4.11,<=1.8.2",
+            "fastavro>=1.4.11,<=1.8.4",
             "tqdm",
         ],
     },
