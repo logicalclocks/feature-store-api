@@ -237,7 +237,7 @@ class FeatureGroupBase:
         else:
             return self.select_except(self.primary_key + [self.event_time])
 
-    def select(self, features: Optional[List[Union[str, feature.Feature]]] = []):
+    def select(self, features: Optional[List[Union[str, feature.Feature]]]):
         """Select a subset of features of the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
@@ -269,7 +269,7 @@ class FeatureGroupBase:
 
         # Arguments
             features: A list of `Feature` objects or feature names as
-                strings to be selected, defaults to [].
+                strings to be selected.
 
         # Returns
             `Query`: A query object with the selected features of the feature group.
