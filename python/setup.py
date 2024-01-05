@@ -38,16 +38,16 @@ setup(
     ],
     extras_require={
         "dev": [
-            "pytest==7.1.2",
-            "pytest-mock==3.8.2",
+            "pytest==7.4.4",
+            "pytest-mock==3.12.0",
             "flake8",
             "black",
             "pyspark==3.1.1",
             "moto[s3]",
         ],
         "dev-pandas1": [
-            "pytest==7.1.2",
-            "pytest-mock==3.8.2",
+            "pytest==7.4.4",
+            "pytest-mock==3.12.0",
             "flake8",
             "black",
             "pyspark==3.1.1",
