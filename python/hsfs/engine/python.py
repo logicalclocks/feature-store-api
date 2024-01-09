@@ -499,7 +499,7 @@ class Engine:
         )
 
     def parse_schema_feature_group(self, dataframe, time_travel_format=None):
-        arrow_schema = pa.Schema.from_pandas(dataframe)
+        arrow_schema = pa.Schema.from_pandas(dataframe, preserve_index=False)
         features = []
         for feat_name in arrow_schema.names:
             name = feat_name.lower()
