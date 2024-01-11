@@ -290,7 +290,7 @@ class FeatureViewEngine:
     ):
         # check if provided td version has already existed.
         if training_dataset_version:
-            td_updated = self._get_training_data_metadata(
+            td_updated = self._get_training_dataset_metadata(
                 feature_view_obj, training_dataset_version
             )
         else:
@@ -403,7 +403,7 @@ class FeatureViewEngine:
     def recreate_training_dataset(
         self, feature_view_obj, training_dataset_version, user_write_options, spine=None
     ):
-        training_dataset_obj = self._get_training_data_metadata(
+        training_dataset_obj = self._get_training_dataset_metadata(
             feature_view_obj, training_dataset_version
         )
         td_job = self.compute_training_dataset(
@@ -545,7 +545,7 @@ class FeatureViewEngine:
         if training_dataset_obj:
             pass
         elif training_dataset_version:
-            training_dataset_obj = self._get_training_data_metadata(
+            training_dataset_obj = self._get_training_dataset_metadata(
                 feature_view_obj, training_dataset_version
             )
         else:
@@ -627,7 +627,9 @@ class FeatureViewEngine:
                     feature_view_obj=feature_view_obj,
                 )
 
-    def _get_training_data_metadata(self, feature_view_obj, training_dataset_version):
+    def _get_training_dataset_metadata(
+        self, feature_view_obj, training_dataset_version
+    ):
         td = self._feature_view_api.get_training_dataset_by_version(
             feature_view_obj.name, feature_view_obj.version, training_dataset_version
         )
@@ -635,6 +637,22 @@ class FeatureViewEngine:
         td.schema = feature_view_obj.schema
         td.transformation_functions = feature_view_obj.transformation_functions
         return td
+
+    def _get_training_datasets_metadata(self, feature_view_obj):
+        tds = self._feature_view_api.get_training_datasets(
+            feature_view_obj.name, feature_view_obj.version
+        )
+        # schema and transformation functions need to be set for writing training data or feature serving
+        for td in tds:
+            td.schema = feature_view_obj.schema
+            td.transformation_functions = feature_view_obj.transformation_functions
+        return tds
+
+    def get_training_datasets(self, feature_view_obj):
+        tds = self._get_training_datasets_metadata(feature_view_obj)
+        # this is the only place we expose training dataset metadata
+        # we return training dataset base classes with metadata only
+        return [super(td.__class__, td) for td in tds]
 
     def _create_training_data_metadata(self, feature_view_obj, training_dataset_obj):
         td = self._feature_view_api.create_training_dataset(

@@ -198,6 +198,12 @@ class FeatureViewApi:
             self._client._send_request("GET", path)
         )
 
+    def get_training_datasets(self, name, version):
+        path = self.get_training_data_base_path(name, version)
+        return training_dataset.TrainingDataset.from_response_json(
+            self._client._send_request("GET", path)
+        )
+
     def compute_training_dataset(
         self, name, version, training_dataset_version, td_app_conf
     ):
