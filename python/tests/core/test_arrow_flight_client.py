@@ -91,7 +91,7 @@ class TestArrowFlightClient:
         td_hopsfs.storage_connector = HopsFSConnector(0, "", "")
         td_hopsfs.data_format = data_format
         mocker.patch(
-            "hsfs.core.feature_view_engine.FeatureViewEngine._get_training_data_metadata",
+            "hsfs.core.feature_view_engine.FeatureViewEngine._get_training_dataset_metadata",
             return_value=td_hopsfs,
         )
         mocker.patch("hsfs.storage_connector.StorageConnector.refetch")
