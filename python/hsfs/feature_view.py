@@ -2331,7 +2331,7 @@ class FeatureView:
         # Returns
             (X, y): Tuple of dataframe of features and labels
         """
-        td, df = self._feature_view_engine.get_training_data(
+        _, df = self._feature_view_engine.get_training_data(
             self,
             read_options,
             training_dataset_version=training_dataset_version,
@@ -2468,6 +2468,30 @@ class FeatureView:
             training_helper_columns=training_helper_columns,
         )
         return df
+
+    @usage.method_logger
+    def get_training_datasets(self):
+        """Returns the metadata of all training datasets created with this feature view.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get all training dataset metadata
+            list_tds_meta = feature_view.get_training_datasets()
+            ```
+
+        # Returns
+            `List[TrainingDatasetBase]` List of training datasets metadata.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the training datasets metadata.
+        """
+        return self._feature_view_engine.get_training_datasets(self)
 
     @usage.method_logger
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
