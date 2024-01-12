@@ -62,7 +62,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 feature_group,
                 feature_dataframe,
                 hudi_engine.HudiEngine.HUDI_BULK_INSERT
-                if feature_group.time_travel_format == "HUDI"
+                if feature_group.time_travel_format in ["HUDI", "DELTA"]
                 else None,
                 feature_group.online_enabled,
                 None,

@@ -81,6 +81,7 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.client import hopsworks
 from hsfs.core import (
     hudi_engine,
+    delta_engine,
     transformation_function_engine,
     storage_connector_api,
     dataset_api,
@@ -406,6 +407,17 @@ class Engine:
 
             hudi_engine_instance.save_hudi_fg(
                 dataframe, self.APPEND, operation, write_options, validation_id
+            )
+        elif feature_group.time_travel_format == "DELTA":
+            delta_engine_instance = delta_engine.DeltaEngine(
+                feature_group.feature_store_id,
+                feature_group.feature_store_name,
+                feature_group,
+                self._spark_session,
+                self._spark_context,
+            )
+            delta_engine_instance.save_delta_fg(
+                dataframe, operation, write_options, validation_id
             )
         else:
             dataframe.write.format(self.HIVE_FORMAT).mode(self.APPEND).options(

@@ -1,5 +1,5 @@
 #
-#   Copyright 2020 Logical Clocks AB
+#   Copyright 2024 Hopsworks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -17,61 +17,20 @@
 from hsfs import feature_group_commit, util
 from hsfs.core import feature_group_api
 
+from delta.tables import DeltaTable
 
-class HudiEngine:
-    HUDI_SPARK_FORMAT = "org.apache.hudi"
-    HUDI_TABLE_NAME = "hoodie.table.name"
-    HUDI_TABLE_STORAGE_TYPE = "hoodie.datasource.write.storage.type"
-    HUDI_TABLE_OPERATION = "hoodie.datasource.write.operation"
-    HUDI_RECORD_KEY = "hoodie.datasource.write.recordkey.field"
-    HUDI_PARTITION_FIELD = "hoodie.datasource.write.partitionpath.field"
-    HUDI_PRECOMBINE_FIELD = "hoodie.datasource.write.precombine.field"
 
-    HUDI_HIVE_SYNC_ENABLE = "hoodie.datasource.hive_sync.enable"
-    HUDI_HIVE_SYNC_TABLE = "hoodie.datasource.hive_sync.table"
-    HUDI_HIVE_SYNC_DB = "hoodie.datasource.hive_sync.database"
-    HUDI_HIVE_SYNC_MODE = "hoodie.datasource.hive_sync.mode"
-    HUDI_HIVE_SYNC_MODE_VAL = "hms"  # Connect directly with the Hive Metastore
-    HUDI_HIVE_SYNC_PARTITION_FIELDS = "hoodie.datasource.hive_sync.partition_fields"
-    HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP = "hoodie.datasource.hive_sync.support_timestamp"
-
-    HUDI_KEY_GENERATOR_OPT_KEY = "hoodie.datasource.write.keygenerator.class"
-    HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL = "org.apache.hudi.keygen.CustomKeyGenerator"
-    HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY = (
-        "hoodie.datasource.hive_sync.partition_extractor_class"
-    )
-    DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL = (
-        "org.apache.hudi.hive.MultiPartKeysValueExtractor"
-    )
-    HIVE_NON_PARTITION_EXTRACTOR_CLASS_OPT_VAL = (
-        "org.apache.hudi.hive.NonPartitionedExtractor"
-    )
-    HUDI_COPY_ON_WRITE = "COPY_ON_WRITE"
-    HUDI_BULK_INSERT = "bulk_insert"
-    HUDI_INSERT = "insert"
-    HUDI_UPSERT = "upsert"
-    HUDI_QUERY_TYPE_OPT_KEY = "hoodie.datasource.query.type"
-    HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL = "snapshot"
-    HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL = "incremental"
-    HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL = "snapshot"
-    HUDI_QUERY_TIME_TRAVEL_AS_OF_INSTANT = "as.of.instant"
-    HUDI_BEGIN_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.begin.instanttime"
-    HUDI_END_INSTANTTIME_OPT_KEY = "hoodie.datasource.read.end.instanttime"
-    PAYLOAD_CLASS_OPT_KEY = "hoodie.datasource.write.payload.class"
-    PAYLOAD_CLASS_OPT_VAL = "org.apache.hudi.common.model.EmptyHoodieRecordPayload"
-    HUDI_DEFAULT_PARALLELISM = {
-        "hoodie.bulkinsert.shuffle.parallelism": "5",
-        "hoodie.insert.shuffle.parallelism": "5",
-        "hoodie.upsert.shuffle.parallelism": "5",
-    }
+class DeltaEngine:
+    DELTA_SPARK_FORMAT = "delta"
+    DELTA_QUERY_TIME_TRAVEL_AS_OF_INSTANT = "timestampAsOf"
 
     def __init__(
         self,
         feature_store_id,
         feature_store_name,
         feature_group,
-        spark_context,
         spark_session,
+        spark_context,
     ):
         self._feature_group = feature_group
         self._spark_context = spark_context
@@ -81,194 +40,128 @@ class HudiEngine:
 
         self._feature_group_api = feature_group_api.FeatureGroupApi()
 
-    def save_hudi_fg(
-        self, dataset, save_mode, operation, write_options, validation_id=None
-    ):
-        fg_commit = self._write_hudi_dataset(
-            dataset, save_mode, operation, write_options
-        )
+    def save_delta_fg(self, dataset, operation, write_options, validation_id=None):
+        fg_commit = self._write_delta_dataset(dataset, operation, write_options)
         fg_commit.validation_id = validation_id
         return self._feature_group_api.commit(self._feature_group, fg_commit)
 
-    def delete_record(self, delete_df, write_options):
-        write_options[self.PAYLOAD_CLASS_OPT_KEY] = self.PAYLOAD_CLASS_OPT_VAL
-
-        fg_commit = self._write_hudi_dataset(
-            delete_df, "append", self.HUDI_UPSERT, write_options
-        )
-        return self._feature_group_api.commit(self._feature_group, fg_commit)
-
-    def register_temporary_table(self, hudi_fg_alias, read_options):
-        hudi_options = self._setup_hudi_read_opts(hudi_fg_alias, read_options)
-        self._spark_session.read.format(self.HUDI_SPARK_FORMAT).options(
-            **hudi_options
+    def register_temporary_table(self, delta_fg_alias, read_options):
+        delta_options = self._setup_delta_read_opts(delta_fg_alias, read_options)
+        self._spark_session.read.format(self.DELTA_SPARK_FORMAT).options(
+            **delta_options
         ).load(self._feature_group.location).createOrReplaceTempView(
-            hudi_fg_alias.alias
+            delta_fg_alias.alias
         )
 
-    def _write_hudi_dataset(self, dataset, save_mode, operation, write_options):
-        hudi_options = self._setup_hudi_write_opts(operation, write_options)
-        dataset.write.format(HudiEngine.HUDI_SPARK_FORMAT).options(**hudi_options).mode(
-            save_mode
-        ).save(self._feature_group.location)
-
-        feature_group_commit = self._get_last_commit_metadata(
-            self._spark_context, self._feature_group.location
-        )
-
-        return feature_group_commit
-
-    def _setup_hudi_write_opts(self, operation, write_options):
-        table_name = self._feature_group.get_fg_name()
-
-        primary_key = ",".join(self._feature_group.primary_key)
-
-        # add event time to primary key for upserts
-        if self._feature_group.event_time is not None:
-            primary_key = primary_key + "," + self._feature_group.event_time
-
-        partition_key = (
-            ",".join(self._feature_group.partition_key)
-            if len(self._feature_group.partition_key) >= 1
-            else ""
-        )
-        partition_path = (
-            ":SIMPLE,".join(self._feature_group.partition_key) + ":SIMPLE"
-            if len(self._feature_group.partition_key) >= 1
-            else ""
-        )
-        pre_combine_key = (
-            self._feature_group.hudi_precombine_key
-            if self._feature_group.hudi_precombine_key
-            else self._feature_group.primary_key[0]
-        )
-
-        hudi_options = {
-            self.HUDI_KEY_GENERATOR_OPT_KEY: self.HUDI_COMPLEX_KEY_GENERATOR_OPT_VAL,
-            self.HUDI_PRECOMBINE_FIELD: pre_combine_key,
-            self.HUDI_RECORD_KEY: primary_key,
-            self.HUDI_PARTITION_FIELD: partition_path,
-            self.HUDI_TABLE_NAME: table_name,
-            self.HIVE_PARTITION_EXTRACTOR_CLASS_OPT_KEY: self.DEFAULT_HIVE_PARTITION_EXTRACTOR_CLASS_OPT_VAL
-            if len(partition_key) >= 1
-            else self.HIVE_NON_PARTITION_EXTRACTOR_CLASS_OPT_VAL,
-            self.HUDI_HIVE_SYNC_ENABLE: "true",
-            self.HUDI_HIVE_SYNC_MODE: self.HUDI_HIVE_SYNC_MODE_VAL,
-            self.HUDI_HIVE_SYNC_DB: self._feature_store_name,
-            self.HUDI_HIVE_SYNC_TABLE: table_name,
-            self.HUDI_HIVE_SYNC_PARTITION_FIELDS: partition_key,
-            self.HUDI_TABLE_OPERATION: operation,
-            self.HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP: "true",
-        }
-        hudi_options.update(HudiEngine.HUDI_DEFAULT_PARALLELISM)
-
-        if write_options:
-            hudi_options.update(write_options)
-
-        return hudi_options
-
-    def _setup_hudi_read_opts(self, hudi_fg_alias, read_options):
-        if hudi_fg_alias.left_feature_group_end_timestamp is None and (
-            hudi_fg_alias.left_feature_group_start_timestamp is None
-            or hudi_fg_alias.left_feature_group_start_timestamp == 0
+    def _setup_delta_read_opts(self, delta_fg_alias, read_options):
+        delta_options = {}
+        if delta_fg_alias.left_feature_group_end_timestamp is None and (
+            delta_fg_alias.left_feature_group_start_timestamp is None
+            or delta_fg_alias.left_feature_group_start_timestamp == 0
         ):
             # snapshot query latest state
-            hudi_options = {
-                self.HUDI_QUERY_TYPE_OPT_KEY: self.HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL,
-            }
+            delta_options = {}
         elif (
-            hudi_fg_alias.left_feature_group_end_timestamp is not None
-            and hudi_fg_alias.left_feature_group_start_timestamp is None
+            delta_fg_alias.left_feature_group_end_timestamp is not None
+            and delta_fg_alias.left_feature_group_start_timestamp is None
         ):
             # snapshot query with end time
-            _hudi_commit_end_time = util.get_hudi_datestr_from_timestamp(
-                hudi_fg_alias.left_feature_group_end_timestamp
+            _delta_commit_end_time = util.get_hudi_datestr_from_timestamp(
+                delta_fg_alias.left_feature_group_end_timestamp
             )
 
-            hudi_options = {
-                self.HUDI_QUERY_TYPE_OPT_KEY: self.HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL,
-                self.HUDI_QUERY_TIME_TRAVEL_AS_OF_INSTANT: _hudi_commit_end_time,
-            }
-        elif (
-            hudi_fg_alias.left_feature_group_end_timestamp is None
-            and hudi_fg_alias.left_feature_group_start_timestamp is not None
-        ):
-            # incremental query with start time until now
-            _hudi_commit_start_time = util.get_hudi_datestr_from_timestamp(
-                hudi_fg_alias.left_feature_group_start_timestamp
-            )
-
-            hudi_options = {
-                self.HUDI_QUERY_TYPE_OPT_KEY: self.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL,
-                self.HUDI_BEGIN_INSTANTTIME_OPT_KEY: _hudi_commit_start_time,
-            }
-        else:
-            # incremental query with start and end time
-            _hudi_commit_start_time = util.get_hudi_datestr_from_timestamp(
-                hudi_fg_alias.left_feature_group_start_timestamp
-            )
-            _hudi_commit_end_time = util.get_hudi_datestr_from_timestamp(
-                hudi_fg_alias.left_feature_group_end_timestamp
-            )
-
-            hudi_options = {
-                self.HUDI_QUERY_TYPE_OPT_KEY: self.HUDI_QUERY_TYPE_INCREMENTAL_OPT_VAL,
-                self.HUDI_BEGIN_INSTANTTIME_OPT_KEY: _hudi_commit_start_time,
-                self.HUDI_END_INSTANTTIME_OPT_KEY: _hudi_commit_end_time,
+            delta_options = {
+                self.DELTA_QUERY_TIME_TRAVEL_AS_OF_INSTANT: _delta_commit_end_time,
             }
 
         if read_options:
-            hudi_options.update(read_options)
+            delta_options.update(read_options)
 
-        return hudi_options
+        return delta_options
 
-    def reconcile_hudi_schema(
-        self, save_empty_dataframe_callback, hudi_fg_alias, read_options
-    ):
-        fg_table_name = hudi_fg_alias.feature_group._get_table_name()
-        if sorted(self._spark_session.table(hudi_fg_alias.alias).columns) != sorted(
-            self._spark_session.table(fg_table_name).columns
+    def delete_record(self, delete_df, write_options):
+        pass
+
+    def _write_delta_dataset(self, dataset, operation, write_options):
+
+        if write_options is None:
+            write_options = {}
+
+        if (
+            not DeltaTable.isDeltaTable(
+                self._spark_session, self._feature_group.location
+            )
+            or operation == "bulk_insert"
         ):
-            full_fg = self._feature_group_api.get(
-                hudi_fg_alias.feature_group._feature_store_id,
-                hudi_fg_alias.feature_group.name,
-                hudi_fg_alias.feature_group.version,
-                feature_group_api.FeatureGroupApi.CACHED,
+            (
+                dataset.write.format(DeltaEngine.DELTA_SPARK_FORMAT)
+                .options(**write_options)
+                .partitionBy(
+                    self._feature_group.partition_key
+                    if self._feature_group.partition_key
+                    else []
+                )
+                .mode("append")
+                .save(self._feature_group.location)
+            )
+        else:
+            fg_source_table = DeltaTable.forPath(
+                self._spark_session, self._feature_group.location
             )
 
-            save_empty_dataframe_callback(full_fg)
-
-            self.register_temporary_table(
-                hudi_fg_alias,
-                read_options,
+            source_alias = (
+                f"{self._feature_group.name}_{self._feature_group.version}_source"
             )
+            updates_alias = (
+                f"{self._feature_group.name}_{self._feature_group.version}_updates"
+            )
+            merge_query_str = self._generate_merge_query(source_alias, updates_alias)
+
+            fg_source_table.alias(source_alias).merge(
+                dataset.alias(updates_alias), merge_query_str
+            ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+
+        return self._get_last_commit_metadata(
+            self._spark_session, self._feature_group.location
+        )
+
+    def _generate_merge_query(self, source_alias, updates_alias):
+        merge_query_list = []
+        for pk in self._feature_group.primary_key:
+            merge_query_list.append(f"{source_alias}.{pk} == {updates_alias}.{pk}")
+        megrge_query_str = " AND ".join(merge_query_list)
+        return megrge_query_str
 
     @staticmethod
     def _get_last_commit_metadata(spark_context, base_path):
-        hopsfs_conf = spark_context._jvm.org.apache.hadoop.fs.FileSystem.get(
-            spark_context._jsc.hadoopConfiguration()
+        fg_source_table = DeltaTable.forPath(spark_context, base_path)
+        last_commit = fg_source_table.history(1).first().asDict()
+        version = last_commit["version"]
+        commit_timestamp = util.convert_event_time_to_timestamp(
+            last_commit["timestamp"]
         )
-        commit_timeline = spark_context._jvm.org.apache.hudi.HoodieDataSourceHelpers.allCompletedCommitsCompactions(
-            hopsfs_conf, base_path
-        )
+        commit_date_string = util.get_hudi_datestr_from_timestamp(commit_timestamp)
+        operation_metrics = last_commit["operationMetrics"]
 
-        commits_to_return = commit_timeline.getInstantDetails(
-            commit_timeline.lastInstant().get()
-        ).get()
-        commit_metadata = spark_context._jvm.org.apache.hudi.common.model.HoodieCommitMetadata.fromBytes(
-            commits_to_return,
-            spark_context._jvm.org.apache.hudi.common.model.HoodieCommitMetadata().getClass(),
-        )
-        return feature_group_commit.FeatureGroupCommit(
-            commitid=None,
-            commit_date_string=commit_timeline.lastInstant().get().getTimestamp(),
-            commit_time=util.get_timestamp_from_date_string(
-                commit_timeline.lastInstant().get().getTimestamp()
-            ),
-            rows_inserted=commit_metadata.fetchTotalInsertRecordsWritten(),
-            rows_updated=commit_metadata.fetchTotalUpdateRecordsWritten(),
-            rows_deleted=commit_metadata.getTotalRecordsDeleted(),
-            last_active_commit_time=util.get_timestamp_from_date_string(
-                commit_timeline.firstInstant().get().getTimestamp()
-            ),
-        )
+        if version == 0:
+            fg_commit = feature_group_commit.FeatureGroupCommit(
+                commitid=None,
+                commit_date_string=commit_date_string,
+                commit_time=commit_timestamp,
+                rows_inserted=operation_metrics["numOutputRows"],
+                rows_updated=0,
+                rows_deleted=0,
+                last_active_commit_time=commit_timestamp,
+            )
+        else:
+            fg_commit = feature_group_commit.FeatureGroupCommit(
+                commitid=None,
+                commit_date_string=commit_date_string,
+                commit_time=commit_timestamp,
+                rows_inserted=operation_metrics["numTargetRowsInserted"],
+                rows_updated=operation_metrics["numTargetRowsUpdated"],
+                rows_deleted=operation_metrics["numTargetRowsDeleted"],
+                last_active_commit_time=commit_timestamp,
+            )
+
+        return fg_commit
