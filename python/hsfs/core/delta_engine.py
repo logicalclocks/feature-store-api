@@ -40,8 +40,8 @@ class DeltaEngine:
 
         self._feature_group_api = feature_group_api.FeatureGroupApi()
 
-    def save_delta_fg(self, dataset, operation, write_options, validation_id=None):
-        fg_commit = self._write_delta_dataset(dataset, operation, write_options)
+    def save_delta_fg(self, dataset, write_options, validation_id=None):
+        fg_commit = self._write_delta_dataset(dataset, write_options)
         fg_commit.validation_id = validation_id
         return self._feature_group_api.commit(self._feature_group, fg_commit)
 
@@ -82,16 +82,13 @@ class DeltaEngine:
     def delete_record(self, delete_df, write_options):
         pass
 
-    def _write_delta_dataset(self, dataset, operation, write_options):
+    def _write_delta_dataset(self, dataset, write_options):
 
         if write_options is None:
             write_options = {}
 
-        if (
-            not DeltaTable.isDeltaTable(
-                self._spark_session, self._feature_group.location
-            )
-            or operation == "bulk_insert"
+        if not DeltaTable.isDeltaTable(
+            self._spark_session, self._feature_group.location
         ):
             (
                 dataset.write.format(DeltaEngine.DELTA_SPARK_FORMAT)
