@@ -654,16 +654,16 @@ class VectorServer:
         else:
             # if there are any built-in transformation functions get related statistics and
             # populate with relevant arguments
-            # there should be only one statistics object with for_transformation=true
+            # there should be only one statistics object with before_transformation=true
             if is_feat_view and self._training_dataset_version is None:
                 raise ValueError(
                     "Training data version is required for transformation. Call `feature_view.init_serving(version)` "
                     "or `feature_view.init_batch_scoring(version)` to pass the training dataset version."
                     "Training data can be created by `feature_view.create_training_data` or `feature_view.get_training_data`."
                 )
-            td_tffn_stats = self._feature_view_engine._statistics_engine.get_last(
+            td_tffn_stats = self._feature_view_engine._statistics_engine.get(
                 entity,
-                for_transformation=True,
+                before_transformation=True,
                 training_dataset_version=self._training_dataset_version,
             )
 
@@ -675,7 +675,9 @@ class VectorServer:
         transformation_fns = (
             self._transformation_function_engine.populate_builtin_attached_fns(
                 transformation_functions,
-                td_tffn_stats.content if td_tffn_stats is not None else None,
+                td_tffn_stats.feature_descriptive_statistics
+                if td_tffn_stats is not None
+                else None,
             )
         )
         return transformation_fns
