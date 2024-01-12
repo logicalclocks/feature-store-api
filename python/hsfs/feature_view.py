@@ -136,7 +136,9 @@ class FeatureView:
         !!! example
             ```python
             # delete a feature view and all associated metadata
-            feature_view.clean(
+            from hsfs.feature_view import FeatureView
+
+            FeatureView.clean(
                 feature_store_id=1,
                 feature_view_name='feature_view_name',
                 feature_view_version=1
