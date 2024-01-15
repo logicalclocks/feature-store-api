@@ -80,6 +80,7 @@ setup(
             "confluent-kafka<=2.3.0",
             "fastavro>=1.4.11,<=1.8.4",
             "tqdm",
+            "opensearch-py>=1.1.0,<=2.4.2",
         ],
     },
     author="Hopsworks AB",
