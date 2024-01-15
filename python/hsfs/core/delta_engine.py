@@ -66,10 +66,9 @@ class DeltaEngine:
             and delta_fg_alias.left_feature_group_start_timestamp is None
         ):
             # snapshot query with end time
-            _delta_commit_end_time = util.get_hudi_datestr_from_timestamp(
+            _delta_commit_end_time = util.get_delta_datestr_from_timestamp(
                 delta_fg_alias.left_feature_group_end_timestamp
             )
-
             delta_options = {
                 self.DELTA_QUERY_TIME_TRAVEL_AS_OF_INSTANT: _delta_commit_end_time,
             }

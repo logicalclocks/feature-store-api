@@ -187,6 +187,23 @@ class Engine:
             self.save_empty_dataframe, hudi_fg_alias, read_options
         )
 
+    def register_delta_temporary_table(
+        self, delta_fg_alias, feature_store_id, feature_store_name, read_options
+    ):
+
+        delta_engine_instance = delta_engine.DeltaEngine(
+            feature_store_id,
+            feature_store_name,
+            delta_fg_alias.feature_group,
+            self._spark_session,
+            self._spark_context,
+        )
+
+        delta_engine_instance.register_temporary_table(
+            delta_fg_alias,
+            read_options,
+        )
+
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "spark"]:
             return dataframe
