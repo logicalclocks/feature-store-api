@@ -452,6 +452,8 @@ class VectorServer:
         batch_results = [{} for _ in range(len(entries))]
         entry_values = []
         serving_keys_all_fg = []
+        # query_entries = {} # {prepared_statement_index: bind_params}
+        prepared_stmts_execute = {}  # {prepared_statement_index: prep statements}
         # construct the list of entry values for binding to query
         for prepared_statement_index in prepared_statement_objects:
             # prepared_statement_index include fg with label only
@@ -459,6 +461,9 @@ class VectorServer:
             if prepared_statement_index not in self._serving_key_by_serving_index:
                 continue
 
+            prepared_stmts_execute[
+                prepared_statement_index
+            ] = prepared_statement_objects[prepared_statement_index]
             entry_values_tuples = list(
                 map(
                     lambda e: tuple(
@@ -484,16 +489,12 @@ class VectorServer:
         loop = asyncio.get_event_loop()
         parallel_results = loop.run_until_complete(
             self._execute_prep_statements(
-                list(prepared_statement_objects.values()), entry_values
+                list(prepared_stmts_execute.values()), entry_values
             )
         )
 
         # construct the results
-        for count, prepared_statement_index in enumerate(prepared_statement_objects):
-            # prepared_statement_index include fg with label only
-            # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
-            if prepared_statement_index not in self._serving_key_by_serving_index:
-                continue
+        for count, prepared_statement_index in enumerate(prepared_stmts_execute):
 
             statement_results = {}
             serving_keys = self._serving_key_by_serving_index[prepared_statement_index]
