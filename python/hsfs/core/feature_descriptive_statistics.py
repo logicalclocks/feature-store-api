@@ -62,6 +62,7 @@ class FeatureDescriptiveStatistics:
         exact_num_distinct_values: Optional[int] = None,
         extended_statistics: Optional[Union[dict, str]] = None,
         id: Optional[int] = None,
+        **kwargs,
     ):
         self._id = id
         self._feature_name = feature_name
