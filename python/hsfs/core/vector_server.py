@@ -451,6 +451,7 @@ class VectorServer:
         serving_keys_all_fg = []
         entry_values = {}
         prepared_stmts_to_execute = {}
+        serving_keys_all_fg = []
         # construct the list of entry values for binding to query
         for prepared_statement_index in prepared_statement_objects:
             # prepared_statement_index include fg with label only
@@ -491,6 +492,7 @@ class VectorServer:
         for count, prepared_statement_index in enumerate(prepared_stmts_to_execute):
             statement_results = {}
             serving_keys = self._serving_key_by_serving_index[prepared_statement_index]
+            serving_keys_all_fg += serving_keys
             serving_keys_all_fg += serving_keys
             # Use prefix from prepare statement because prefix from serving key is collision adjusted.
             prefix_features = [
