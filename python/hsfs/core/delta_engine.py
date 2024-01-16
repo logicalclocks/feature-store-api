@@ -123,7 +123,17 @@ class DeltaEngine:
 
     def _generate_merge_query(self, source_alias, updates_alias):
         merge_query_list = []
-        for pk in self._feature_group.primary_key:
+        primary_key = self._feature_group.primary_key
+
+        # add event time to primary key for upserts
+        if self._feature_group.event_time is not None:
+            primary_key.append(self._feature_group.event_time)
+
+        # add partition key for upserts
+        if self._feature_group.partition_key:
+            primary_key = primary_key + self._feature_group.partition_key
+
+        for pk in primary_key:
             merge_query_list.append(f"{source_alias}.{pk} == {updates_alias}.{pk}")
         megrge_query_str = " AND ".join(merge_query_list)
         return megrge_query_str
