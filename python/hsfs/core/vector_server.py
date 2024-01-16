@@ -429,9 +429,7 @@ class VectorServer:
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
         results = loop.run_until_complete(
-            self._execute_prep_statements(
-                prepared_statement_objects.values(), bind_entries
-            )
+            self._execute_prep_statements(prepared_statement_objects, bind_entries)
         )
 
         for i in results:
