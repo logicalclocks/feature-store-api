@@ -451,8 +451,8 @@ class VectorServer:
         # expect that backend will return correctly ordered vectors.
         batch_results = [{} for _ in range(len(entries))]
         serving_keys_all_fg = []
-        query_entries = {}  # {prepared_statement_index: bind_params}
-        prepared_stmts_execute = {}  # {prepared_statement_index: prep statements}
+        entry_values = {}
+        prepared_stmts_to_execute = {}
         # construct the list of entry values for binding to query
         for prepared_statement_index in prepared_statement_objects:
             # prepared_statement_index include fg with label only
@@ -460,7 +460,7 @@ class VectorServer:
             if prepared_statement_index not in self._serving_key_by_serving_index:
                 continue
 
-            prepared_stmts_execute[
+            prepared_stmts_to_execute[
                 prepared_statement_index
             ] = prepared_statement_objects[prepared_statement_index]
             entry_values_tuples = list(
@@ -481,19 +481,16 @@ class VectorServer:
                     entries,
                 )
             )
-            bind_params = {"batch_ids": entry_values_tuples}
-            # entry_values.append(bind_params)
-            query_entries[prepared_statement_index] = bind_params
+            entry_values[prepared_statement_index] = {"batch_ids": entry_values_tuples}
 
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
         parallel_results = loop.run_until_complete(
-            self._execute_prep_statements(prepared_stmts_execute, query_entries)
+            self._execute_prep_statements(prepared_stmts_to_execute, entry_values)
         )
 
         # construct the results
-        for count, prepared_statement_index in enumerate(prepared_stmts_execute):
-
+        for count, prepared_statement_index in enumerate(prepared_stmts_to_execute):
             statement_results = {}
             serving_keys = self._serving_key_by_serving_index[prepared_statement_index]
             serving_keys_all_fg += serving_keys
