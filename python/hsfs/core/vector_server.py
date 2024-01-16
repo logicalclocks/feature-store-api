@@ -450,9 +450,8 @@ class VectorServer:
         # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
         # expect that backend will return correctly ordered vectors.
         batch_results = [{} for _ in range(len(entries))]
-        entry_values = []
         serving_keys_all_fg = []
-        # query_entries = {} # {prepared_statement_index: bind_params}
+        query_entries = {}  # {prepared_statement_index: bind_params}
         prepared_stmts_execute = {}  # {prepared_statement_index: prep statements}
         # construct the list of entry values for binding to query
         for prepared_statement_index in prepared_statement_objects:
@@ -483,14 +482,13 @@ class VectorServer:
                 )
             )
             bind_params = {"batch_ids": entry_values_tuples}
-            entry_values.append(bind_params)
+            # entry_values.append(bind_params)
+            query_entries[prepared_statement_index] = bind_params
 
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
         parallel_results = loop.run_until_complete(
-            self._execute_prep_statements(
-                list(prepared_stmts_execute.values()), entry_values
-            )
+            self._execute_prep_statements(prepared_stmts_execute, query_entries)
         )
 
         # construct the results
@@ -713,13 +711,17 @@ class VectorServer:
 
         return resultset
 
-    async def _execute_prep_statements(self, prepared_statements, entries_list: list):
+    async def _execute_prep_statements(
+        self, prepared_statements: dict, entries_list: dict
+    ):
         """Iterate over prepared statements to create async tasks
         and gather all tasks results for a given list of entries."""
 
         tasks = [
-            asyncio.ensure_future(self._query_async_sql(query, entries_list[i]))
-            for i, query in enumerate(prepared_statements)
+            asyncio.ensure_future(
+                self._query_async_sql(prepared_statements[key], entries_list[key])
+            )
+            for key in prepared_statements
         ]
         # Run the queries in parallel using asyncio.gather
         results = await asyncio.gather(*tasks)
