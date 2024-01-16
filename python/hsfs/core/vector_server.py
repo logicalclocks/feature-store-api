@@ -405,7 +405,7 @@ class VectorServer:
         self._validate_serving_key(entry)
         # Initialize the set of values
         serving_vector = {}
-        bind_entries = []
+        bind_entries = {}
         for prepared_statement_index in prepared_statement_objects:
             pk_entry = {}
             next_statement = False
@@ -422,7 +422,7 @@ class VectorServer:
                         break
                 else:
                     pk_entry[sk.feature_name] = entry[sk.required_serving_key]
-            bind_entries.append(pk_entry)
+            bind_entries[prepared_statement_index] = pk_entry
             if next_statement:
                 continue
 
@@ -430,7 +430,7 @@ class VectorServer:
         loop = asyncio.get_event_loop()
         results = loop.run_until_complete(
             self._execute_prep_statements(
-                list(prepared_statement_objects.values()), bind_entries
+                prepared_statement_objects.values(), bind_entries
             )
         )
 
