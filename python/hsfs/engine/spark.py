@@ -996,16 +996,8 @@ class Engine:
         return False
 
     def save_empty_dataframe(self, feature_group):
-        if feature_group.time_travel_format == "DELTA":
-            dataframe = (
-                self._spark_session.read.format("delta")
-                .load(feature_group.location)
-                .limit(0)
-            )
-        else:
-            dataframe = self._spark_session.table(
-                feature_group._get_table_name()
-            ).limit(0)
+        fg_table_name = feature_group._get_table_name()
+        dataframe = self._spark_session.table(fg_table_name).limit(0)
 
         self.save_dataframe(
             feature_group,
