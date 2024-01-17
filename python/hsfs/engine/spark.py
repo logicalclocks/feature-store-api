@@ -1017,6 +1017,26 @@ class Engine:
             {},
         )
 
+    def add_cols_to_delta_table(self, feature_group, new_features):
+        new_features_map = {}
+        if isinstance(new_features, list):
+            for new_feature in new_features:
+                new_features_map[new_feature.name] = lit("").cast(new_feature.type)
+        else:
+            new_features_map[new_features.name] = lit("").cast(new_features.type)
+
+        self._spark_session.read.format("delta").load(
+            feature_group.location
+        ).withColumns(new_features_map).limit(0).write.format("delta").mode(
+            "append"
+        ).option(
+            "mergeSchema", "true"
+        ).option(
+            "spark.databricks.delta.schema.autoMerge.enabled", "true"
+        ).save(
+            feature_group.location
+        )
+
     def _apply_transformation_function(self, transformation_functions, dataset):
         # generate transformation function expressions
         transformed_feature_names = []

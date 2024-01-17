@@ -17,7 +17,10 @@
 from hsfs import feature_group_commit, util
 from hsfs.core import feature_group_api
 
-from delta.tables import DeltaTable
+try:
+    from delta.tables import DeltaTable
+except ImportError:
+    pass
 
 
 class DeltaEngine:
