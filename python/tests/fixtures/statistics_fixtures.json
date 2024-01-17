@@ -1,31 +1,243 @@
 {
+  "get_with_no_items": {
+    "response": {
+      "count": 0,
+      "items": [],
+      "type": "statisticsDTO"
+    }
+  },
+  "get_with_no_filtered_items": {
+    "response": {
+      "count": 4,
+      "items": [],
+      "type": "statisticsDTO"
+    }
+  },
+  "get_without_items_field": {
+    "response": {
+      "computation_time": "test_computation_time",
+      "window_end_commit_time": 11,
+      "feature_descriptive_statistics": [
+        {
+          "id": 52,
+          "featureType": "Fractional",
+          "featureName": "amount",
+          "count": 4,
+          "completeness": 1,
+          "numNonNullValues": 7,
+          "numNullValues": 8,
+          "approxNumDistinctValues": 9,
+          "min": 1,
+          "max": 2,
+          "sum": 3,
+          "mean": 5.1,
+          "stddev": 6.1,
+          "percentiles": {
+            "25%": 0.4,
+            "50%": 0.6,
+            "75%": 0.86
+          },
+          "distinctness": 0.9,
+          "entropy": 0.8,
+          "uniqueness": 0.7,
+          "exactNumDistinctValues": 10
+        }
+      ],
+      "row_percentage": 1.0
+    }
+  },
   "get": {
     "response": {
       "count": 1,
       "items": [
         {
-          "commit_time": "test_commit_time",
-          "content": {"key": "value"},
-          "feature_group_commit_id": 11,
+          "computation_time": "test_computation_time",
+          "window_end_commit_time": 11,
+          "feature_descriptive_statistics": [
+            {
+              "id": 52,
+              "featureType": "Fractional",
+              "featureName": "amount",
+              "count": 4,
+              "completeness": 1,
+              "numNonNullValues": 7,
+              "numNullValues": 8,
+              "approxNumDistinctValues": 9,
+              "min": 1,
+              "max": 2,
+              "sum": 3,
+              "mean": 5.1,
+              "stddev": 6.1,
+              "percentiles": {
+                "25%": 0.4,
+                "50%": 0.6,
+                "75%": 0.86
+              },
+              "distinctness": 0.9,
+              "entropy": 0.8,
+              "uniqueness": 0.7,
+              "exactNumDistinctValues": 10
+            }
+          ],
+          "row_percentage": 1.0
+        }
+      ],
+      "type": "statisticsDTO"
+    }
+  },
+  "get_multiple": {
+    "response": {
+      "count": 2,
+      "items": [
+        {
+          "computation_time": "test_computation_time",
+          "window_end_commit_time": 11,
+          "feature_descriptive_statistics": [
+            {
+              "id": 52,
+              "featureType": "Fractional",
+              "featureName": "amount",
+              "count": 4,
+              "completeness": 1,
+              "numNonNullValues": 7,
+              "numNullValues": 8,
+              "approxNumDistinctValues": 9,
+              "min": 1,
+              "max": 2,
+              "sum": 3,
+              "mean": 5.1,
+              "stddev": 6.1,
+              "percentiles": {
+                "25%": 0.4,
+                "50%": 0.6,
+                "75%": 0.86
+              },
+              "distinctness": 0.9,
+              "entropy": 0.8,
+              "uniqueness": 0.7,
+              "exactNumDistinctValues": 10
+            }
+          ],
+          "row_percentage": 1.0
+        },
+        {
+          "computation_time": "test_computation_time",
+          "window_end_commit_time": 11,
+          "feature_descriptive_statistics": [
+            {
+              "id": 53,
+              "featureType": "Fractional",
+              "featureName": "amount",
+              "count": 4,
+              "completeness": 1,
+              "numNonNullValues": 7,
+              "numNullValues": 8,
+              "approxNumDistinctValues": 9,
+              "min": 1,
+              "max": 2,
+              "sum": 3,
+              "mean": 5.1,
+              "stddev": 6.1,
+              "percentiles": {
+                "25%": 0.4,
+                "50%": 0.6,
+                "75%": 0.86
+              },
+              "distinctness": 0.9,
+              "entropy": 0.8,
+              "uniqueness": 0.7,
+              "exactNumDistinctValues": 10
+            }
+          ],
+          "row_percentage": 1.0
+        }
+      ],
+      "type": "statisticsDTO"
+    }
+  },
+  "get_with_split_statistics": {
+    "response": {
+      "count": 1,
+      "items": [
+        {
+          "computation_time": "test_computation_time",
+          "window_end_commit_time": 11,
           "split_statistics": [
             {
               "name": "test_name",
-              "content": {"key":  "value"},
-              "href": "test_href",
-              "expand": "test_expand",
-              "items": [],
-              "count": 0,
-              "type": "test_type"
+              "feature_descriptive_statistics": [
+                {
+                  "id": 52,
+                  "featureType": "Fractional",
+                  "featureName": "amount",
+                  "count": 4,
+                  "completeness": 1,
+                  "numNonNullValues": 7,
+                  "numNullValues": 8,
+                  "approxNumDistinctValues": 9,
+                  "min": 1,
+                  "max": 2,
+                  "sum": 3,
+                  "mean": 5.1,
+                  "stddev": 6.1,
+                  "percentiles": {
+                    "25%": 0.4,
+                    "50%": 0.6,
+                    "75%": 0.86
+                  },
+                  "distinctness": 0.9,
+                  "entropy": 0.8,
+                  "uniqueness": 0.7,
+                  "exactNumDistinctValues": 10
+                }
+              ]
             }
           ],
-          "for_transformation": true,
-          "href": "test_href",
-          "expand": "test_expand",
-          "items": [],
-          "count": 0,
-          "type": "statisticsDTO"
+          "row_percentage": 1.0
         }
-      ]
+      ],
+      "type": "statisticsDTO"
+    }
+  },
+  "get_before_transformation_functions": {
+    "response": {
+      "count": 1,
+      "items": [
+        {
+          "computation_time": "test_computation_time",
+          "feature_descriptive_statistics": [
+            {
+              "id": 52,
+              "featureName": "amount",
+              "count": null,
+              "extended_statistics": { "unique_values": [1, 2, 3] }
+            }
+          ],
+          "before_transformation": true,
+          "row_percentage": 1.0
+        }
+      ],
+      "type": "statisticsDTO"
+    }
+  },
+  "get_with_empty_data": {
+    "response": {
+      "count": 1,
+      "items": [
+        {
+          "computation_time": "test_computation_time",
+          "feature_descriptive_statistics": [
+            {
+              "id": 52,
+              "featureName": "amount",
+              "count": 0
+            }
+          ],
+          "before_transformation": false,
+          "row_percentage": 1.0
+        }
+      ],
+      "type": "statisticsDTO"
     }
   },
   "get_basic_info": {
@@ -33,10 +245,37 @@
       "count": 1,
       "items": [
         {
-          "commit_time": "test_commit_time",
-          "content": "{}"
+          "computation_time": "test_computation_time",
+          "feature_descriptive_statistics": [
+            {
+              "id": 52,
+              "featureType": "Fractional",
+              "featureName": "amount",
+              "count": 4,
+              "completeness": 1,
+              "numNonNullValues": 7,
+              "numNullValues": 8,
+              "approxNumDistinctValues": 9,
+              "min": 1,
+              "max": 2,
+              "sum": 3,
+              "mean": 5.1,
+              "stddev": 6.1,
+              "percentiles": {
+                "25%": 0.4,
+                "50%": 0.6,
+                "75%": 0.86
+              },
+              "distinctness": 0.9,
+              "entropy": 0.8,
+              "uniqueness": 0.7,
+              "exactNumDistinctValues": 10
+            }
+          ],
+          "row_percentage": 1.0
         }
-      ]
+      ],
+      "type": "statisticsDTO"
     }
   },
   "get_empty": {

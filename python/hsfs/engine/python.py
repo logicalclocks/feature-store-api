@@ -388,6 +388,7 @@ class Engine:
         )
 
         self.wait_for_job(job)
+        return job
 
     def profile(
         self,
@@ -399,35 +400,47 @@ class Engine:
     ):
         # TODO: add statistics for correlations, histograms and exact_uniqueness
         if not relevant_columns:
-            stats = df.describe()
+            stats = df.describe().to_dict()
+            relevant_columns = df.columns
         else:
             target_cols = [col for col in df.columns if col in relevant_columns]
-            stats = df[target_cols].describe()
+            stats = df[target_cols].describe().to_dict()
+
+        # df.describe() does not compute stats for all col types (e.g., string)
+        # we need to compute stats for the rest of the cols iteratively
+        missing_cols = list(set(relevant_columns) - set(stats.keys()))
+        for col in missing_cols:
+            stats[col] = df[col].describe().to_dict()
+
         final_stats = []
-        for col in stats.columns:
-            stats_dict = json.loads(stats[col].to_json())
+        for col in stats.keys():
+            stats_dict = stats[col]
             stat = self._convert_pandas_statistics(stats_dict)
-            stat["dataType"] = (
-                "Fractional"
-                if isinstance(stats[col].dtype, type(np.dtype(np.float64)))
-                else "Integral"
-            )
+            if isinstance(df.dtypes[col], type(np.dtype(np.float64))):
+                stat["dataType"] = "Fractional"
+            elif isinstance(df.dtypes[col], type(np.dtype(object))):
+                stat["dataType"] = "String"
+            else:
+                stat["dataType"] = "Integral"
             stat["isDataTypeInferred"] = "false"
             stat["column"] = col.split(".")[-1]
             stat["completeness"] = 1
             final_stats.append(stat)
+
         return json.dumps({"columns": final_stats})
 
     def _convert_pandas_statistics(self, stat):
         # For now transformation only need 25th, 50th, 75th percentiles
         # TODO: calculate properly all percentiles
         content_dict = {}
-        percentiles = []
         if "25%" in stat:
             percentiles = [0] * 100
             percentiles[24] = stat["25%"]
             percentiles[49] = stat["50%"]
             percentiles[74] = stat["75%"]
+            content_dict["approxPercentiles"] = percentiles
+        if "count" in stat:
+            content_dict["count"] = stat["count"]
         if "mean" in stat:
             content_dict["mean"] = stat["mean"]
         if "mean" in stat and "count" in stat:
@@ -439,8 +452,7 @@ class Engine:
             content_dict["stdDev"] = stat["std"]
         if "min" in stat:
             content_dict["minimum"] = stat["min"]
-        if percentiles:
-            content_dict["approxPercentiles"] = percentiles
+
         return content_dict
 
     def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):

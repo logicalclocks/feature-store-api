@@ -120,7 +120,7 @@ public class StatisticsApi {
         .set("fsId", featurestoreId)
         .set("entityType", entityType.getValue())
         .set("entityId", entityId)
-        .set("filter_by", "commit_time_eq:" + commitTime)
+        .set("filter_by", "computation_time_eq:" + commitTime)
         .set("fields", "content")
         .expand();
 
@@ -157,7 +157,7 @@ public class StatisticsApi {
         .set("fsId", featurestoreId)
         .set("entityType", entityType.getValue())
         .set("entityId", entityId)
-        .set("sort_by", "commit_time:desc")
+        .set("sort_by", "computation_time:desc")
         .set("offset", 0)
         .set("limit", 1)
         .set("fields", "content")
