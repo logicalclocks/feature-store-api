@@ -290,7 +290,7 @@ class FeatureViewEngine:
     ):
         # check if provided td version has already existed.
         if training_dataset_version:
-            td_updated = self._get_training_data_metadata(
+            td_updated = self._get_training_dataset_metadata(
                 feature_view_obj, training_dataset_version
             )
         else:
@@ -347,7 +347,7 @@ class FeatureViewEngine:
                 td_updated, feature_view_obj, query, read_options
             )
             self.compute_training_dataset_statistics(
-                feature_view_obj, td_updated, split_df, calc_stat=True
+                feature_view_obj, td_updated, split_df
             )
 
         # split df into features and labels df
@@ -401,11 +401,23 @@ class FeatureViewEngine:
         return int(float(datetime.datetime.now().timestamp()) * 1000)
 
     def recreate_training_dataset(
-        self, feature_view_obj, training_dataset_version, user_write_options, spine=None
+        self,
+        feature_view_obj,
+        training_dataset_version,
+        statistics_config,
+        user_write_options,
+        spine=None,
     ):
-        training_dataset_obj = self._get_training_data_metadata(
+        training_dataset_obj = self._get_training_dataset_metadata(
             feature_view_obj, training_dataset_version
         )
+
+        if statistics_config is not None:
+            # update statistics config if provided. This is currently the only way to update TD statistics config.
+            # recreating a training dataset may result in different statistics if the FGs data in the FV query have been update.
+            training_dataset_obj.statistics_config = statistics_config
+            training_dataset_obj.update_statistics_config()
+
         td_job = self.compute_training_dataset(
             feature_view_obj,
             user_write_options,
@@ -545,7 +557,7 @@ class FeatureViewEngine:
         if training_dataset_obj:
             pass
         elif training_dataset_version:
-            training_dataset_obj = self._get_training_data_metadata(
+            training_dataset_obj = self._get_training_dataset_metadata(
                 feature_view_obj, training_dataset_version
             )
         else:
@@ -577,7 +589,9 @@ class FeatureViewEngine:
             feature_view_obj=feature_view_obj,
         )
         self._td_code_engine.save_code(training_dataset_obj)
+
         if engine.get_type() == "spark":
+            # if spark engine, read td and compute stats
             if training_dataset_obj.splits:
                 td_df = dict(
                     [
@@ -594,40 +608,37 @@ class FeatureViewEngine:
                 td_df = self._training_dataset_engine.read(
                     training_dataset_obj, None, {}
                 )
-        else:
-            td_df = None
+            self.compute_training_dataset_statistics(
+                feature_view_obj, training_dataset_obj, td_df
+            )
 
-        self.compute_training_dataset_statistics(
-            feature_view_obj,
-            training_dataset_obj,
-            td_df,
-            calc_stat=engine.get_type() == "spark",
-        )
         return td_job
 
     def compute_training_dataset_statistics(
-        self, feature_view_obj, training_dataset_obj, td_df, calc_stat=False
+        self, feature_view_obj, training_dataset_obj, td_df
     ):
-        if training_dataset_obj.statistics_config.enabled and calc_stat:
+        if training_dataset_obj.statistics_config.enabled:
             if training_dataset_obj.splits:
                 if not isinstance(td_df, dict):
                     raise ValueError(
                         "Provided dataframes should be in dict format "
                         "'split': dataframe"
                     )
-                return self._statistics_engine.register_split_statistics(
+                return self._statistics_engine.compute_and_save_split_statistics(
                     training_dataset_obj,
                     feature_dataframes=td_df,
                     feature_view_obj=feature_view_obj,
                 )
             else:
-                return self._statistics_engine.compute_statistics(
+                return self._statistics_engine.compute_and_save_statistics(
                     training_dataset_obj,
                     feature_dataframe=td_df,
                     feature_view_obj=feature_view_obj,
                 )
 
-    def _get_training_data_metadata(self, feature_view_obj, training_dataset_version):
+    def _get_training_dataset_metadata(
+        self, feature_view_obj, training_dataset_version
+    ):
         td = self._feature_view_api.get_training_dataset_by_version(
             feature_view_obj.name, feature_view_obj.version, training_dataset_version
         )
@@ -635,6 +646,22 @@ class FeatureViewEngine:
         td.schema = feature_view_obj.schema
         td.transformation_functions = feature_view_obj.transformation_functions
         return td
+
+    def _get_training_datasets_metadata(self, feature_view_obj):
+        tds = self._feature_view_api.get_training_datasets(
+            feature_view_obj.name, feature_view_obj.version
+        )
+        # schema and transformation functions need to be set for writing training data or feature serving
+        for td in tds:
+            td.schema = feature_view_obj.schema
+            td.transformation_functions = feature_view_obj.transformation_functions
+        return tds
+
+    def get_training_datasets(self, feature_view_obj):
+        tds = self._get_training_datasets_metadata(feature_view_obj)
+        # this is the only place we expose training dataset metadata
+        # we return training dataset base classes with metadata only
+        return [super(td.__class__, td) for td in tds]
 
     def _create_training_data_metadata(self, feature_view_obj, training_dataset_obj):
         td = self._feature_view_api.create_training_dataset(

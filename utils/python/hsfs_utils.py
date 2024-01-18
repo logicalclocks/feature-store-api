@@ -133,7 +133,7 @@ def compute_stats(job_conf: Dict[Any, Any]) -> None:
         )
     else:
         fv = fs.get_feature_view(job_conf["name"], version=job_conf["version"])
-        entity = fv._feature_view_engine._get_training_data_metadata(
+        entity = fv._feature_view_engine._get_training_dataset_metadata(
             feature_view_obj=fv,
             training_dataset_version=job_conf["td_version"],
         )
