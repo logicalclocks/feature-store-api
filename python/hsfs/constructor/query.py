@@ -92,12 +92,19 @@ class Query:
                 else:
                     fs_query.register_external()
 
-                # Register on hudi feature groups as temporary tables
-                fs_query.register_hudi_tables(
-                    self._feature_store_id,
-                    self._feature_store_name,
-                    read_options,
-                )
+                # Register on hudi/delta feature groups as temporary tables
+                if self._left_feature_group.time_travel_format == "DELTA":
+                    fs_query.register_delta_tables(
+                        self._feature_store_id,
+                        self._feature_store_name,
+                        read_options,
+                    )
+                else:
+                    fs_query.register_hudi_tables(
+                        self._feature_store_id,
+                        self._feature_store_name,
+                        read_options,
+                    )
 
         return sql_query, online_conn
 
