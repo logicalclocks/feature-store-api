@@ -81,6 +81,7 @@ from hsfs.client.exceptions import FeatureStoreException
 from hsfs.client import hopsworks
 from hsfs.core import (
     hudi_engine,
+    delta_engine,
     transformation_function_engine,
     storage_connector_api,
     dataset_api,
@@ -184,6 +185,23 @@ class Engine:
         )
         hudi_engine_instance.reconcile_hudi_schema(
             self.save_empty_dataframe, hudi_fg_alias, read_options
+        )
+
+    def register_delta_temporary_table(
+        self, delta_fg_alias, feature_store_id, feature_store_name, read_options
+    ):
+
+        delta_engine_instance = delta_engine.DeltaEngine(
+            feature_store_id,
+            feature_store_name,
+            delta_fg_alias.feature_group,
+            self._spark_session,
+            self._spark_context,
+        )
+
+        delta_engine_instance.register_temporary_table(
+            delta_fg_alias,
+            read_options,
         )
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
@@ -407,6 +425,15 @@ class Engine:
             hudi_engine_instance.save_hudi_fg(
                 dataframe, self.APPEND, operation, write_options, validation_id
             )
+        elif feature_group.time_travel_format == "DELTA":
+            delta_engine_instance = delta_engine.DeltaEngine(
+                feature_group.feature_store_id,
+                feature_group.feature_store_name,
+                feature_group,
+                self._spark_session,
+                self._spark_context,
+            )
+            delta_engine_instance.save_delta_fg(dataframe, write_options, validation_id)
         else:
             dataframe.write.format(self.HIVE_FORMAT).mode(self.APPEND).options(
                 **write_options
@@ -980,6 +1007,26 @@ class Engine:
             "offline",
             {},
             {},
+        )
+
+    def add_cols_to_delta_table(self, feature_group, new_features):
+        new_features_map = {}
+        if isinstance(new_features, list):
+            for new_feature in new_features:
+                new_features_map[new_feature.name] = lit("").cast(new_feature.type)
+        else:
+            new_features_map[new_features.name] = lit("").cast(new_features.type)
+
+        self._spark_session.read.format("delta").load(
+            feature_group.location
+        ).withColumns(new_features_map).limit(0).write.format("delta").mode(
+            "append"
+        ).option(
+            "mergeSchema", "true"
+        ).option(
+            "spark.databricks.delta.schema.autoMerge.enabled", "true"
+        ).save(
+            feature_group.location
         )
 
     def _apply_transformation_function(self, transformation_functions, dataset):
