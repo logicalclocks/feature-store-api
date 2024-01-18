@@ -14,4 +14,4 @@
 #   limitations under the License.
 #
 
-__version__ = "3.5.0-delta-rc5"
+__version__ = "3.5.1rc1"
