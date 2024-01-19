@@ -36,7 +36,7 @@ class VectorDbClient:
         self._embedding_features = {}
         self._fg_vdb_col_fg_col_map = {}
         self._fg_vdb_col_td_col_map = {}
-        self._fg_fg_col_vdb_col_map = {}
+        self._fg_col_vdb_col_map = {}
         self._fg_embedding_map = {}
         self._embedding_fg_by_join_index = {}
         self._opensearch_client = None
@@ -65,7 +65,7 @@ class VectorDbClient:
                     ] = q._left_feature_group[pk]
                     fg_col_vdb_col_map[pk] = fg.embedding_index.col_prefix + pk
                 self._fg_vdb_col_fg_col_map[fg.id] = vdb_col_fg_col_map
-                self._fg_fg_col_vdb_col_map[fg.id] = fg_col_vdb_col_map
+                self._fg_col_vdb_col_map[fg.id] = fg_col_vdb_col_map
                 self._fg_embedding_map[fg.id] = fg.embedding_index
 
         # create a join for the left fg so that the dict can be constructed in one loop
@@ -249,9 +249,11 @@ class VectorDbClient:
         if keys:
             query = {
                 "query": {
-                    "match": self._rewrite_result_key(
-                        keys, self._fg_fg_col_vdb_col_map[fg_id]
-                    )
+                    "bool": {
+                        "must": [{"match", entry}
+                                 for entry in self._rewrite_result_key(
+                                keys, self._fg_col_vdb_col_map[fg_id])]
+                    }
                 },
             }
         else:
