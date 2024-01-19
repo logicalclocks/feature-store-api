@@ -250,9 +250,9 @@ class VectorDbClient:
             query = {
                 "query": {
                     "bool": {
-                        "must": [{"match": entry}
+                        "must": [{"match": dict(entry)}
                                  for entry in self._rewrite_result_key(
-                                keys, self._fg_col_vdb_col_map[fg_id])]
+                                keys, self._fg_col_vdb_col_map[fg_id]).items()]
                     }
                 },
             }
