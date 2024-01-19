@@ -1832,7 +1832,7 @@ class FeatureGroup(FeatureGroupBase):
         if ge_report is None or ge_report.ingestion_result == "INGESTED":
             self._code_engine.save_code(self)
 
-        if self.statistics_config.enabled and engine.get_type() == "spark":
+        if self.statistics_config.enabled and engine.get_type().startswith("spark"):
             # Only compute statistics if the engine is Spark.
             # For Python engine, the computation happens in the Hopsworks application
             self._statistics_engine.compute_statistics(self, feature_dataframe)
@@ -2001,7 +2001,7 @@ class FeatureGroup(FeatureGroupBase):
         ):
             self._code_engine.save_code(self)
 
-        if engine.get_type() == "spark":
+        if engine.get_type().startswith("spark"):
             # Only compute statistics if the engine is Spark,
             # if Python, the statistics are computed by the application doing the insert
             self.compute_statistics()

@@ -638,7 +638,7 @@ class TrainingDataset(TrainingDatasetBase):
         # currently we do not save the training dataset statistics config for training datasets
         self.statistics_config = user_stats_config
         self._code_engine.save_code(self)
-        if self.statistics_config.enabled and engine.get_type() == "spark":
+        if self.statistics_config.enabled and engine.get_type().startswith("spark"):
             self.compute_statistics()
         if user_version is None:
             warnings.warn(
@@ -729,7 +729,7 @@ class TrainingDataset(TrainingDatasetBase):
         """Recompute the statistics for the training dataset and save them to the
         feature store.
         """
-        if self.statistics_config.enabled and engine.get_type() == "spark":
+        if self.statistics_config.enabled and engine.get_type().startswith("spark"):
             if self.splits:
                 return self._statistics_engine.register_split_statistics(self)
             else:
