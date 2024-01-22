@@ -85,7 +85,6 @@ class DeltaEngine:
         pass
 
     def _write_delta_dataset(self, dataset, write_options):
-
         if write_options is None:
             write_options = {}
 

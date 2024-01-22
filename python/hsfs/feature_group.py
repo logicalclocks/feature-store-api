@@ -1993,7 +1993,7 @@ class FeatureGroup(FeatureGroupBase):
         if ge_report is None or ge_report.ingestion_result == "INGESTED":
             self._code_engine.save_code(self)
 
-        if self.statistics_config.enabled and engine.get_type() == "spark":
+        if self.statistics_config.enabled and engine.get_type().startswith("spark"):
             # Only compute statistics if the engine is Spark.
             # For Python engine, the computation happens in the Hopsworks application
             self._statistics_engine.compute_and_save_statistics(self, feature_dataframe)
@@ -2165,7 +2165,7 @@ class FeatureGroup(FeatureGroupBase):
         ):
             self._code_engine.save_code(self)
 
-        if engine.get_type() == "spark" and not self.stream:
+        if engine.get_type().startswith("spark") and not self.stream:
             # Also, only compute statistics if stream is False.
             # if True, the backfill job has not been triggered and the data has not been inserted (it's in Kafka)
             self.compute_statistics()

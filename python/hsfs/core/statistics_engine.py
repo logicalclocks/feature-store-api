@@ -49,7 +49,7 @@ class StatisticsEngine:
             Union[Statistics, Job]. If running on Spark, statistics metadata containing a list of single feature descriptive statistics.
                                     Otherwise, Spark job metadata used to compute the statistics.
         """
-        if engine.get_type() == "spark" or feature_view_obj is not None:
+        if engine.get_type().startswith("spark") or feature_view_obj is not None:
             # If the feature dataframe is None, then trigger a read on the metadata instance
             # We do it here to avoid making a useless request when using the Python engine
             # and calling compute_and_save_statistics
@@ -309,7 +309,7 @@ class StatisticsEngine:
         self, feature_dataframe, columns, label_encoder_features
     ) -> str:
         if (
-            engine.get_type() == "spark"
+            engine.get_type().startswith("spark")
             and len(feature_dataframe.select(*columns).head(1)) == 0
         ) or (
             (engine.get_type() == "hive" or engine.get_type() == "python")
