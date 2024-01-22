@@ -399,6 +399,12 @@ class Engine:
         exact_uniqueness=True,
     ):
         # TODO: add statistics for correlations, histograms and exact_uniqueness
+
+        # parse timestamp columns to string columns
+        for col, dtype in df.dtypes.items():
+            if isinstance(dtype, type(np.dtype(np.datetime64))):
+                df[col] = df[col].astype(str)
+
         if not relevant_columns:
             stats = df.describe().to_dict()
             relevant_columns = df.columns
@@ -414,20 +420,33 @@ class Engine:
 
         final_stats = []
         for col in stats.keys():
-            stats_dict = stats[col]
-            stat = self._convert_pandas_statistics(stats_dict)
-            if isinstance(df.dtypes[col], type(np.dtype(np.float64))):
-                stat["dataType"] = "Fractional"
-            elif isinstance(df.dtypes[col], type(np.dtype(object))):
-                stat["dataType"] = "String"
-            else:
-                stat["dataType"] = "Integral"
+            stat = self._convert_pandas_statistics(stats[col])
             stat["isDataTypeInferred"] = "false"
             stat["column"] = col.split(".")[-1]
             stat["completeness"] = 1
+
+            # set data type
+            if isinstance(df.dtypes[col], type(np.dtype(np.float64))):
+                stat["dataType"] = "Fractional"
+            elif isinstance(df.dtypes[col], type(np.dtype(np.int64))):
+                stat["dataType"] = "Integral"
+            elif isinstance(df.dtypes[col], type(np.dtype(np.bool_))):
+                stat["dataType"] = "Boolean"
+            elif isinstance(df.dtypes[col], type(np.dtype(object))):
+                stat["dataType"] = "String"
+            else:
+                print(
+                    "Data type could not be inferred for column '"
+                    + stat["column"]
+                    + "'. Defaulting to 'String'"
+                )
+                stat["dataType"] = "String"
+
             final_stats.append(stat)
 
-        return json.dumps({"columns": final_stats})
+        return json.dumps(
+            {"columns": final_stats},
+        )
 
     def _convert_pandas_statistics(self, stat):
         # For now transformation only need 25th, 50th, 75th percentiles

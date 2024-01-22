@@ -801,12 +801,13 @@ class TestPython:
 
         # Assert
         assert (
-            result == '{"columns": [{"test_key": "test_value", "dataType": "Integral", '
-            '"isDataTypeInferred": "false", "column": "col1", "completeness": 1}, '
-            '{"test_key": "test_value", "dataType": "Fractional", "isDataTypeInferred": '
-            '"false", "column": "col2", "completeness": 1}, '
-            '{"test_key": "test_value", "dataType": "String", "isDataTypeInferred": '
-            '"false", "column": "col3", "completeness": 1}]}'
+            result
+            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1, "dataType": "Integral"}, '
+            '{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col2", "completeness": 1, "dataType": "Fractional"}, '
+            '{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1, "dataType": "String"}]}'
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 3
 
@@ -836,8 +837,9 @@ class TestPython:
 
         # Assert
         assert (
-            result == '{"columns": [{"test_key": "test_value", "dataType": "Integral", '
-            '"isDataTypeInferred": "false", "column": "col1", "completeness": 1}]}'
+            result
+            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1, "dataType": "Integral"}]}'
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 1
 
@@ -868,10 +870,11 @@ class TestPython:
 
         # Assert
         assert (
-            result == '{"columns": [{"test_key": "test_value", "dataType": "Integral", '
-            '"isDataTypeInferred": "false", "column": "col1", "completeness": 1}, '
-            '{"test_key": "test_value", "dataType": "String", "isDataTypeInferred": '
-            '"false", "column": "col3", "completeness": 1}]}'
+            result
+            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1, "dataType": "Integral"}, '
+            '{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1, "dataType": "String"}]}'
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 2
 
