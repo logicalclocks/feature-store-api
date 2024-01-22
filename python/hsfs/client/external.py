@@ -106,7 +106,7 @@ class Client(base.Client):
             with open(os.path.join(self._cert_folder, "material_passwd"), "w") as f:
                 f.write(str(credentials["password"]))
 
-        elif engine == "spark" or engine == "spark-no-metastore":
+        elif engine.startswith("spark"):
             _spark_session = SparkSession.builder.getOrCreate()
 
             self.validate_spark_configuration(

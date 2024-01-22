@@ -529,7 +529,7 @@ class FeatureViewEngine:
         self, df, feature_view_features, with_columns, columns, training_helper
     ):
         if not with_columns:
-            if engine.get_type() == "spark":
+            if engine.get_type().startswith("spark"):
                 existing_cols = [field.name for field in df.schema.fields]
             else:
                 existing_cols = df.columns
@@ -590,7 +590,7 @@ class FeatureViewEngine:
         )
         self._td_code_engine.save_code(training_dataset_obj)
 
-        if engine.get_type() == "spark":
+        if engine.get_type().startswith("spark"):
             # if spark engine, read td and compute stats
             if training_dataset_obj.splits:
                 td_df = dict(
