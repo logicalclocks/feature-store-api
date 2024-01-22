@@ -309,7 +309,7 @@ class StatisticsEngine:
         self, feature_dataframe, columns, label_encoder_features
     ) -> str:
         if (
-            engine.get_type().startswith("spark")
+            engine.get_type() == "spark"
             and len(feature_dataframe.select(*columns).head(1)) == 0
         ) or (
             (engine.get_type() == "hive" or engine.get_type() == "python")

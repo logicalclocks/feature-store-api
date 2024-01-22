@@ -41,7 +41,7 @@ class TestStatisticsEngine:
         feature_store_id = 99
 
         mocker.patch("hsfs.client.get_instance")
-        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.engine.get_type", return_value="python")
         mocker.patch("hsfs.util.get_hudi_datestr_from_timestamp")
         mock_statistics_engine_profile_statistics = mocker.patch(
             "hsfs.core.statistics_engine.StatisticsEngine.profile_statistics",
@@ -466,32 +466,6 @@ class TestStatisticsEngine:
             mock_engine_get_instance.return_value.profile.call_args[0][4]
             == sc.exact_uniqueness
         )
-
-    def test_profile_transformation_fn_statistics(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mocker.patch("hsfs.engine.get_type")
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        mock_statistics_engine_profile_unique_values = mocker.patch(
-            "hsfs.core.statistics_engine.StatisticsEngine._profile_unique_values"
-        )
-
-        s_engine = statistics_engine.StatisticsEngine(feature_store_id, "featuregroup")
-
-        feature_dataframe = mocker.Mock()
-        feature_dataframe.head.return_value = []
-
-        # Act
-        s_engine._profile_transformation_fn_statistics(
-            feature_dataframe=feature_dataframe,
-            columns=[],
-            label_encoder_features=None,
-        )
-
-        # Assert
-        assert mock_engine_get_instance.return_value.profile.call_count == 1
-        assert mock_statistics_engine_profile_unique_values.call_count == 1
 
     def test_profile_transformation_fn_statistics_get_type_python(self, mocker):
         # Arrange
