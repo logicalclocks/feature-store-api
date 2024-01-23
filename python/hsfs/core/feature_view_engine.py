@@ -322,7 +322,7 @@ class FeatureViewEngine:
                 with_primary_keys=primary_keys,
                 primary_keys=self._get_primary_keys_from_query(feature_view_obj.query),
                 with_event_time=event_time,
-                event_time=[feature_view_obj.query._left_feature_group.event_time],
+                event_time=self._get_eventtimes_from_query(feature_view_obj.query),
                 with_training_helper_columns=training_helper_columns,
                 training_helper_columns=feature_view_obj.training_helper_columns,
                 feature_view_features=[
@@ -815,8 +815,23 @@ class FeatureViewEngine:
             fv_pks.update(
                 [
                     feature.name
+                    if _join.prefix is None
+                    else _join.prefix + feature.name
                     for feature in _join.query._left_feature_group.features
                     if feature.primary
+                ]
+            )
+
+        return list(fv_pks)
+
+    def _get_eventtimes_from_query(self, fv_query_obj):
+        fv_pks = {fv_query_obj._left_feature_group.event_time}
+        for _join in fv_query_obj._joins:
+            fv_pks.update(
+                [
+                    _join.query._left_feature_group.event_time
+                    if _join.prefix is None
+                    else _join.prefix + _join.query._left_feature_group.event_time
                 ]
             )
 
