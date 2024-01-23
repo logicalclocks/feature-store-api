@@ -182,12 +182,10 @@ class TestVectorDbClient:
 
     def test_check_filter_when_filter_is_logic_with_wrong_feature_group(self):
         with pytest.raises(FeatureStoreException):
-            self.target._check_filter(
-                (self.fg.f1 > 10) & (self.fg.f1 < 30), self.fg2)
+            self.target._check_filter((self.fg.f1 > 10) & (self.fg.f1 < 30), self.fg2)
 
     def test_check_filter_when_filter_is_logic_with_correct_feature_group(self):
-        self.target._check_filter(
-            (self.fg.f1 > 10) & (self.fg.f1 < 30), self.fg)
+        self.target._check_filter((self.fg.f1 > 10) & (self.fg.f1 < 30), self.fg)
 
     def test_check_filter_when_filter_is_filter_with_wrong_feature_group(self):
         with pytest.raises(FeatureStoreException):
