@@ -31,6 +31,7 @@ import decimal
 import numbers
 import math
 import os
+import sys
 import pytz
 from datetime import datetime, timezone
 
@@ -438,7 +439,8 @@ class Engine:
                 print(
                     "Data type could not be inferred for column '"
                     + stat["column"]
-                    + "'. Defaulting to 'String'"
+                    + "'. Defaulting to 'String'",
+                    file=sys.stderr,
                 )
                 stat["dataType"] = "String"
 
