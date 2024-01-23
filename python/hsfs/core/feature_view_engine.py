@@ -825,14 +825,17 @@ class FeatureViewEngine:
         return list(fv_pks)
 
     def _get_eventtimes_from_query(self, fv_query_obj):
-        fv_pks = {fv_query_obj._left_feature_group.event_time}
+        fv_events = set()
+        if fv_query_obj._left_feature_group.event_time:
+            fv_events.update([fv_query_obj._left_feature_group.event_time])
         for _join in fv_query_obj._joins:
-            fv_pks.update(
-                [
-                    _join.query._left_feature_group.event_time
-                    if _join.prefix is None
-                    else _join.prefix + _join.query._left_feature_group.event_time
-                ]
-            )
+            if _join.query._left_feature_group.event_time:
+                fv_events.update(
+                    [
+                        _join.query._left_feature_group.event_time
+                        if _join.prefix is None
+                        else _join.prefix + _join.query._left_feature_group.event_time
+                    ]
+                )
 
-        return list(fv_pks)
+        return list(fv_events)
