@@ -116,6 +116,10 @@ public abstract class FeatureGroupBase<T> {
 
   @Getter
   @Setter
+  protected String notificationTopicName;
+
+  @Getter
+  @Setter
   protected List<String> statisticColumns;
 
   @Setter

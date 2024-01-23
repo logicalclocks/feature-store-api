@@ -76,6 +76,7 @@ class FeatureGroupBase:
         expectation_suite=None,
         online_topic_name=None,
         topic_name=None,
+        notification_topic_name=None,
         deprecated=False,
         **kwargs,
     ):
@@ -88,6 +89,7 @@ class FeatureGroupBase:
         self._subject = None
         self._online_topic_name = online_topic_name
         self._topic_name = topic_name
+        self._notification_topic_name = notification_topic_name
         self._deprecated = deprecated
         self._feature_store_id = featurestore_id
         # use setter for correct conversion
@@ -1462,6 +1464,15 @@ class FeatureGroupBase:
         self._topic_name = topic_name
 
     @property
+    def notification_topic_name(self):
+        """The topic used for feature group notifications."""
+        return self._notification_topic_name
+
+    @notification_topic_name.setter
+    def notification_topic_name(self, notification_topic_name):
+        self._notification_topic_name = notification_topic_name
+
+    @property
     def deprecated(self):
         """Setting if the feature group is deprecated."""
         return self._deprecated
@@ -1595,6 +1606,7 @@ class FeatureGroup(FeatureGroupBase):
         statistics_config=None,
         online_topic_name=None,
         topic_name=None,
+        notification_topic_name=None,
         event_time=None,
         stream=False,
         expectation_suite=None,
@@ -1616,6 +1628,7 @@ class FeatureGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
             deprecated=deprecated,
         )
         self._feature_store_name = featurestore_name
@@ -2751,6 +2764,7 @@ class FeatureGroup(FeatureGroupBase):
             "expectationSuite": self._expectation_suite,
             "parents": self._parents,
             "topicName": self.topic_name,
+            "notificationTopicName": self.notification_topic_name,
             "deprecated": self.deprecated,
         }
         if self.embedding_index:
@@ -2912,6 +2926,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         href=None,
         online_topic_name=None,
         topic_name=None,
+        notification_topic_name=None,
         spine=False,
         deprecated=False,
         **kwargs,
@@ -2927,6 +2942,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
             deprecated=deprecated,
         )
 
@@ -3187,6 +3203,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "onlineEnabled": self._online_enabled,
             "spine": False,
             "topicName": self.topic_name,
+            "notificationTopicName": self.notification_topic_name,
             "deprecated": self.deprecated,
         }
 
@@ -3265,6 +3282,7 @@ class SpineGroup(FeatureGroupBase):
         href=None,
         online_topic_name=None,
         topic_name=None,
+        notification_topic_name=None,
         spine=True,
         dataframe="spine",
         deprecated=False,
@@ -3281,6 +3299,7 @@ class SpineGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
             deprecated=deprecated,
         )
 
@@ -3407,5 +3426,6 @@ class SpineGroup(FeatureGroupBase):
             "eventTime": self._event_time,
             "spine": True,
             "topicName": self.topic_name,
+            "notificationTopicName": self.notification_topic_name,
             "deprecated": self.deprecated,
         }
