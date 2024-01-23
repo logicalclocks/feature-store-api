@@ -1,5 +1,5 @@
 #
-#   Copyright 2023 Hopsworks AB
+#   Copyright 2024 Hopsworks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ import pytest
 from hsfs.core import vector_db_client
 from hsfs.feature_group import FeatureGroup
 from hsfs.feature import Feature
+from hsfs.client.exceptions import FeatureStoreException
 
 
 class TestVectorDbClient:
@@ -24,6 +25,8 @@ class TestVectorDbClient:
     f1 = Feature("f1", feature_group=fg)
     f2 = Feature("f2", feature_group=fg)
     fg.features = [f1, f2]
+    fg2 = FeatureGroup("test_fg", 1, 99, id=2)
+    fg2.features = [f1, f2]
 
     @pytest.fixture(autouse=True)
     def setup_mocks(self, mocker):
@@ -173,3 +176,26 @@ class TestVectorDbClient:
     def test_get_query_filter_logic(self, filter_expression_nested, expected_result):
         filter = filter_expression_nested(self.f1, self.f2)
         assert self.target._get_query_filter(filter) == expected_result
+
+    def test_check_filter_when_filter_is_None(self):
+        self.target._check_filter(None, self.fg2)
+
+    def test_check_filter_when_filter_is_logic_with_wrong_feature_group(self):
+        with pytest.raises(FeatureStoreException):
+            self.target._check_filter(
+                (self.fg.f1 > 10) & (self.fg.f1 < 30), self.fg2)
+
+    def test_check_filter_when_filter_is_logic_with_correct_feature_group(self):
+        self.target._check_filter(
+            (self.fg.f1 > 10) & (self.fg.f1 < 30), self.fg)
+
+    def test_check_filter_when_filter_is_filter_with_wrong_feature_group(self):
+        with pytest.raises(FeatureStoreException):
+            self.target._check_filter((self.fg.f1 < 30), self.fg2)
+
+    def test_check_filter_when_filter_is_filter_with_correct_feature_group(self):
+        self.target._check_filter((self.fg.f1 < 30), self.fg)
+
+    def test_check_filter_when_filter_is_not_logic_or_filter(self):
+        with pytest.raises(FeatureStoreException):
+            self.target._check_filter("f1 > 20", self.fg2)
