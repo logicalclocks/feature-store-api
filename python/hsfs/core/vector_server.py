@@ -707,7 +707,7 @@ class VectorServer:
         return resultset
 
     async def _execute_prep_statements(
-        self, prepared_statements: dict, entries_list: dict
+        self, prepared_statements: dict, entries: dict
     ):
         """Iterate over prepared statements to create async tasks
         and gather all tasks results for a given list of entries."""
