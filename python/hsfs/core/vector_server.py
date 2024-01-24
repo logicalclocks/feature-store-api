@@ -488,7 +488,7 @@ class VectorServer:
         )
 
         # construct the results
-        for count, prepared_statement_index in enumerate(prepared_stmts_to_execute):
+        for prepared_statement_index in prepared_stmts_to_execute:
             statement_results = {}
             serving_keys = self._serving_key_by_serving_index[prepared_statement_index]
             serving_keys_all_fg += serving_keys
@@ -499,7 +499,7 @@ class VectorServer:
                 for sk in self._serving_key_by_serving_index[prepared_statement_index]
             ]
             # iterate over results by index of the prepared statement
-            for row in parallel_results[count]:
+            for row in parallel_results[prepared_statement_index]:
                 row_dict = dict(row)
                 # can primary key be complex feature?
                 result_dict = self.deserialize_complex_features(
@@ -706,23 +706,25 @@ class VectorServer:
 
         return resultset
 
-    async def _execute_prep_statements(
-        self, prepared_statements: dict, entries: dict
-    ):
+    async def _execute_prep_statements(self, prepared_statements: dict, entries: dict):
         """Iterate over prepared statements to create async tasks
         and gather all tasks results for a given list of entries."""
 
         tasks = [
             asyncio.ensure_future(
-                self._query_async_sql(prepared_statements[key], entries_list[key])
+                self._query_async_sql(prepared_statements[key], entries[key])
             )
             for key in prepared_statements
         ]
         # Run the queries in parallel using asyncio.gather
         results = await asyncio.gather(*tasks)
+        results_dict = {}
+        # Create a dict of results with the prepared statement index as key
+        for i, key in enumerate(prepared_statements):
+            results_dict[key] = results[i]
         # TODO: close connection? closing connection pool here will make un-acquirable for future connections
         # unless init_serving is explicitly called before get_feature_vector(s).
-        return results
+        return results_dict
 
     @property
     def prepared_statement_engine(self):
