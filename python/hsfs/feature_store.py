@@ -667,7 +667,7 @@ class FeatureStore:
                 origin where the data is coming from.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
-            notification_topic_name: Optionally, define the name of the topic used for sending notifications. 
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications.
                 If left undefined no notifications are sent.
 
         # Returns
