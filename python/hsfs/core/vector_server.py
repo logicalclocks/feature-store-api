@@ -422,9 +422,9 @@ class VectorServer:
                         break
                 else:
                     pk_entry[sk.feature_name] = entry[sk.required_serving_key]
-            bind_entries[prepared_statement_index] = pk_entry
             if next_statement:
                 continue
+            bind_entries[prepared_statement_index] = pk_entry
 
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
