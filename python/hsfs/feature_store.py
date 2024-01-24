@@ -593,6 +593,7 @@ class FeatureStore:
         stream: Optional[bool] = False,
         parents: Optional[List[feature_group.FeatureGroup]] = [],
         topic_name: Optional[str] = None,
+        notification_topic_name: Optional[str] = None,
     ):
         """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
 
@@ -666,6 +667,8 @@ class FeatureStore:
                 origin where the data is coming from.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications. 
+                If left undefined no notifications are sent.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
