@@ -103,3 +103,9 @@ class FsQuery:
             engine.get_instance().register_hudi_temporary_table(
                 hudi_fg, feature_store_id, feature_store_name, read_options
             )
+
+    def register_delta_tables(self, feature_store_id, feature_store_name, read_options):
+        for hudi_fg in self._hudi_cached_feature_groups:
+            engine.get_instance().register_delta_temporary_table(
+                hudi_fg, feature_store_id, feature_store_name, read_options
+            )

@@ -18,7 +18,7 @@ import numpy
 import datetime
 from functools import partial
 
-from hsfs import training_dataset, training_dataset_feature
+from hsfs import training_dataset, training_dataset_feature, statistics
 from hsfs.core import transformation_function_api, statistics_api
 from hsfs.core.builtin_transformation_function import BuiltInTransformationFunction
 from hsfs import util
@@ -132,11 +132,11 @@ class TransformationFunctionEngine:
 
     @staticmethod
     def populate_builtin_fn_arguments(
-        feature_name, transformation_function_instance, stat_content
+        feature_name, transformation_function_instance, feature_descriptive_stats
     ):
         if transformation_function_instance.name == "min_max_scaler":
             min_value, max_value = BuiltInTransformationFunction.min_max_scaler_stats(
-                stat_content, feature_name
+                feature_descriptive_stats, feature_name
             )
             transformation_function_instance.transformation_fn = partial(
                 transformation_function_instance.transformation_fn,
@@ -145,7 +145,7 @@ class TransformationFunctionEngine:
             )
         elif transformation_function_instance.name == "standard_scaler":
             mean, std_dev = BuiltInTransformationFunction.standard_scaler_stats(
-                stat_content, feature_name
+                feature_descriptive_stats, feature_name
             )
             transformation_function_instance.transformation_fn = partial(
                 transformation_function_instance.transformation_fn,
@@ -154,7 +154,7 @@ class TransformationFunctionEngine:
             )
         elif transformation_function_instance.name == "robust_scaler":
             robust_scaler_stats = BuiltInTransformationFunction.robust_scaler_stats(
-                stat_content, feature_name
+                feature_descriptive_stats, feature_name
             )
             transformation_function_instance.transformation_fn = partial(
                 transformation_function_instance.transformation_fn,
@@ -164,7 +164,7 @@ class TransformationFunctionEngine:
             )
         elif transformation_function_instance.name == "label_encoder":
             value_to_index = BuiltInTransformationFunction.encoder_stats(
-                stat_content, feature_name
+                feature_descriptive_stats, feature_name
             )
             transformation_function_instance.transformation_fn = partial(
                 transformation_function_instance.transformation_fn,
@@ -175,12 +175,16 @@ class TransformationFunctionEngine:
 
         return transformation_function_instance
 
-    def populate_builtin_attached_fns(self, attached_transformation_fns, stat_content):
+    def populate_builtin_attached_fns(
+        self, attached_transformation_fns, feature_descriptive_stats
+    ):
         for ft_name in attached_transformation_fns:
             if self.is_builtin(attached_transformation_fns[ft_name]):
                 # check if its built-in transformation function and populated with statistics arguments
                 transformation_fn = self.populate_builtin_fn_arguments(
-                    ft_name, attached_transformation_fns[ft_name], stat_content
+                    ft_name,
+                    attached_transformation_fns[ft_name],
+                    feature_descriptive_stats,
                 )
                 attached_transformation_fns[ft_name] = transformation_fn
         return attached_transformation_fns
@@ -232,11 +236,11 @@ class TransformationFunctionEngine:
         label_encoder_features,
         feature_dataframe,
         feature_view_obj,
-    ):
+    ) -> statistics.Statistics:
         return training_dataset_obj._statistics_engine.compute_transformation_fn_statistics(
             td_metadata_instance=training_dataset_obj,
-            columns=builtin_tffn_features,
-            label_encoder_features=label_encoder_features,
+            columns=builtin_tffn_features,  # excluding label encoded features
+            label_encoder_features=label_encoder_features,  # label encoded features only
             feature_dataframe=feature_dataframe,
             feature_view_obj=feature_view_obj,
         )
@@ -290,5 +294,6 @@ class TransformationFunctionEngine:
                 )
             # Populate builtin transformations (if any) with respective arguments
             return training_dataset._transformation_function_engine.populate_builtin_attached_fns(
-                training_dataset.transformation_functions, stats.content
+                training_dataset.transformation_functions,
+                stats.feature_descriptive_statistics,
             )

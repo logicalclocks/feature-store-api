@@ -21,8 +21,6 @@ import humps
 import pandas as pd
 import numpy as np
 
-from datetime import datetime, date
-
 from hsfs import util, engine, training_dataset_feature, client
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.statistics_config import StatisticsConfig
@@ -36,9 +34,13 @@ from hsfs.core import (
     vector_server,
 )
 from hsfs.constructor import query, filter
+from hsfs.client.exceptions import RestAPIError
 
 
-class TrainingDataset:
+class TrainingDatasetBase:
+    # NOTE: This class is exposed to users with the only purpose of providing information about a Training Dataset
+    # and, therefore, it should not implement any functionality and remain with as minimal as possible
+
     HOPSFS = "HOPSFS_TRAINING_DATASET"
     EXTERNAL = "EXTERNAL_TRAINING_DATASET"
     IN_MEMORY = "IN_MEMORY_TRAINING_DATASET"
@@ -49,7 +51,6 @@ class TrainingDataset:
         name,
         version,
         data_format,
-        featurestore_id,
         location="",
         event_start_time=None,
         event_end_time=None,
@@ -70,20 +71,13 @@ class TrainingDataset:
         creator=None,
         features=None,
         statistics_config=None,
-        featurestore_name=None,
-        id=None,
-        inode_id=None,
         training_dataset_type=None,
-        from_query=None,
-        querydto=None,
         label=None,
-        transformation_functions=None,
         train_split=None,
         time_split_size=None,
         extra_filter=None,
         **kwargs,
     ):
-        self._id = id
         self._name = name
         self._version = version
         self._description = description
@@ -99,29 +93,8 @@ class TrainingDataset:
         self._coalesce = coalesce
         self._seed = seed
         self._location = location
-        self._from_query = from_query
-        self._querydto = querydto
-        self._feature_store_id = featurestore_id
-        self._feature_store_name = featurestore_name
-        self._transformation_functions = transformation_functions
         self._train_split = train_split
-        self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
-            featurestore_id
-        )
 
-        self._training_dataset_engine = training_dataset_engine.TrainingDatasetEngine(
-            featurestore_id
-        )
-
-        self._statistics_engine = statistics_engine.StatisticsEngine(
-            featurestore_id, self.ENTITY_TYPE
-        )
-
-        self._code_engine = code_engine.CodeEngine(featurestore_id, self.ENTITY_TYPE)
-
-        self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(featurestore_id)
-        )
         if training_dataset_type:
             self.training_dataset_type = training_dataset_type
         else:
@@ -182,9 +155,6 @@ class TrainingDataset:
             )
             self._label = [feat.name.lower() for feat in self._features if feat.label]
             self._extra_filter = filter.Logic.from_response_json(extra_filter)
-        self._vector_server = vector_server.VectorServer(
-            featurestore_id, features=self._features
-        )
 
     def _set_time_splits(
         self,
@@ -245,6 +215,377 @@ class TrainingDataset:
                 )
             )
 
+    def _infer_training_dataset_type(self, connector_type):
+        if connector_type == StorageConnector.HOPSFS or connector_type is None:
+            return self.HOPSFS
+        elif (
+            connector_type == StorageConnector.S3
+            or connector_type == StorageConnector.ADLS
+            or connector_type == StorageConnector.GCS
+        ):
+            return self.EXTERNAL
+        else:
+            raise TypeError(
+                "Storage connectors of type {} are currently not supported for training datasets.".format(
+                    connector_type
+                )
+            )
+
+    def to_dict(self):
+        return {
+            "name": self._name,
+            "version": self._version,
+            "description": self._description,
+            "dataFormat": self._data_format,
+            "coalesce": self._coalesce,
+            "storageConnector": self._storage_connector,
+            "location": self._location,
+            "trainingDatasetType": self._training_dataset_type,
+            "splits": self._splits,
+            "seed": self._seed,
+            "statisticsConfig": self._statistics_config,
+            "trainSplit": self._train_split,
+            "eventStartTime": self._start_time,
+            "eventEndTime": self._end_time,
+            "extraFilter": self._extra_filter,
+        }
+
+    @property
+    def name(self):
+        """Name of the training dataset."""
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    @property
+    def version(self):
+        """Version number of the training dataset."""
+        return self._version
+
+    @version.setter
+    def version(self, version):
+        self._version = version
+
+    @property
+    def description(self):
+        return self._description
+
+    @description.setter
+    def description(self, description):
+        """Description of the training dataset contents."""
+        self._description = description
+
+    @property
+    def data_format(self):
+        """File format of the training dataset."""
+        return self._data_format
+
+    @data_format.setter
+    def data_format(self, data_format):
+        self._data_format = data_format
+
+    @property
+    def coalesce(self):
+        """If true the training dataset data will be coalesced into
+        a single partition before writing. The resulting training dataset
+        will be a single file per split"""
+        return self._coalesce
+
+    @coalesce.setter
+    def coalesce(self, coalesce):
+        self._coalesce = coalesce
+
+    @property
+    def storage_connector(self):
+        """Storage connector."""
+        return self._storage_connector
+
+    @storage_connector.setter
+    def storage_connector(self, storage_connector):
+        if isinstance(storage_connector, StorageConnector):
+            self._storage_connector = storage_connector
+        elif storage_connector is None:
+            # init empty connector, otherwise will have to handle it at serialization time
+            self._storage_connector = HopsFSConnector(
+                None, None, None, None, None, None
+            )
+        else:
+            raise TypeError(
+                "The argument `storage_connector` has to be `None` or of type `StorageConnector`, is of type: {}".format(
+                    type(storage_connector)
+                )
+            )
+        if self.training_dataset_type != self.IN_MEMORY:
+            self._training_dataset_type = self._infer_training_dataset_type(
+                self._storage_connector.type
+            )
+
+    @property
+    def splits(self):
+        """Training dataset splits. `train`, `test` or `eval` and corresponding percentages."""
+        return self._splits
+
+    @splits.setter
+    def splits(self, splits):
+        # user api differs from how the backend expects the splits to be represented
+        self._splits = [
+            TrainingDatasetSplit(
+                name=k, split_type=TrainingDatasetSplit.RANDOM_SPLIT, percentage=v
+            )
+            for k, v in splits.items()
+            if v is not None
+        ]
+
+    @property
+    def location(self):
+        """Path to the training dataset location."""
+        return self._location
+
+    @location.setter
+    def location(self, location):
+        self._location = location
+
+    @property
+    def seed(self):
+        """Seed."""
+        return self._seed
+
+    @seed.setter
+    def seed(self, seed):
+        self._seed = seed
+
+    @property
+    def statistics_config(self):
+        """Statistics configuration object defining the settings for statistics
+        computation of the training dataset."""
+        return self._statistics_config
+
+    @statistics_config.setter
+    def statistics_config(self, statistics_config):
+        if isinstance(statistics_config, StatisticsConfig):
+            self._statistics_config = statistics_config
+        elif isinstance(statistics_config, dict):
+            self._statistics_config = StatisticsConfig(**statistics_config)
+        elif isinstance(statistics_config, bool):
+            self._statistics_config = StatisticsConfig(statistics_config)
+        elif statistics_config is None:
+            self._statistics_config = StatisticsConfig()
+        else:
+            raise TypeError(
+                "The argument `statistics_config` has to be `None` of type `StatisticsConfig, `bool` or `dict`, but is of type: `{}`".format(
+                    type(statistics_config)
+                )
+            )
+
+    @property
+    def train_split(self):
+        """Set name of training dataset split that is used for training."""
+        return self._train_split
+
+    @train_split.setter
+    def train_split(self, train_split):
+        self._train_split = train_split
+
+    @property
+    def event_start_time(self):
+        return self._start_time
+
+    @event_start_time.setter
+    def event_start_time(self, start_time):
+        self._start_time = start_time
+
+    @property
+    def event_end_time(self):
+        return self._end_time
+
+    @event_end_time.setter
+    def event_end_time(self, end_time):
+        self._end_time = end_time
+
+    @property
+    def training_dataset_type(self):
+        return self._training_dataset_type
+
+    @training_dataset_type.setter
+    def training_dataset_type(self, training_dataset_type):
+        valid_type = [self.IN_MEMORY, self.HOPSFS, self.EXTERNAL]
+        if training_dataset_type not in valid_type:
+            raise ValueError(
+                "Training dataset type should be one of " ", ".join(valid_type)
+            )
+        else:
+            self._training_dataset_type = training_dataset_type
+
+    @property
+    def validation_size(self):
+        return self._validation_size
+
+    @validation_size.setter
+    def validation_size(self, validation_size):
+        self._validation_size = validation_size
+
+    @property
+    def test_size(self):
+        return self._test_size
+
+    @test_size.setter
+    def test_size(self, test_size):
+        self._test_size = test_size
+
+    @property
+    def train_start(self):
+        return self._train_start
+
+    @train_start.setter
+    def train_start(self, train_start):
+        self._train_start = train_start
+
+    @property
+    def train_end(self):
+        return self._train_end
+
+    @train_end.setter
+    def train_end(self, train_end):
+        self._train_end = train_end
+
+    @property
+    def validation_start(self):
+        return self._validation_start
+
+    @validation_start.setter
+    def validation_start(self, validation_start):
+        self._validation_start = validation_start
+
+    @property
+    def validation_end(self):
+        return self._validation_end
+
+    @validation_end.setter
+    def validation_end(self, validation_end):
+        self._validation_end = validation_end
+
+    @property
+    def test_start(self):
+        return self._test_start
+
+    @test_start.setter
+    def test_start(self, test_start):
+        self._test_start = test_start
+
+    @property
+    def test_end(self):
+        return self._test_end
+
+    @test_end.setter
+    def test_end(self, test_end):
+        self._test_end = test_end
+
+    @property
+    def extra_filter(self):
+        return self._extra_filter
+
+    @extra_filter.setter
+    def extra_filter(self, extra_filter):
+        self._extra_filter = extra_filter
+
+
+class TrainingDataset(TrainingDatasetBase):
+    def __init__(
+        self,
+        name,
+        version,
+        data_format,
+        featurestore_id,
+        location="",
+        event_start_time=None,
+        event_end_time=None,
+        coalesce=False,
+        description=None,
+        storage_connector=None,
+        splits=None,
+        validation_size=None,
+        test_size=None,
+        train_start=None,
+        train_end=None,
+        validation_start=None,
+        validation_end=None,
+        test_start=None,
+        test_end=None,
+        seed=None,
+        created=None,
+        creator=None,
+        features=None,
+        statistics_config=None,
+        featurestore_name=None,
+        id=None,
+        inode_id=None,
+        training_dataset_type=None,
+        from_query=None,
+        querydto=None,
+        label=None,
+        transformation_functions=None,
+        train_split=None,
+        time_split_size=None,
+        extra_filter=None,
+        **kwargs,
+    ):
+        super().__init__(
+            name,
+            version,
+            data_format,
+            location=location,
+            event_start_time=event_start_time,
+            event_end_time=event_end_time,
+            coalesce=coalesce,
+            description=description,
+            storage_connector=storage_connector,
+            splits=splits,
+            validation_size=validation_size,
+            test_size=test_size,
+            train_start=train_start,
+            train_end=train_end,
+            validation_start=validation_start,
+            validation_end=validation_end,
+            test_start=test_start,
+            test_end=test_end,
+            seed=seed,
+            created=created,
+            creator=creator,
+            features=features,
+            statistics_config=statistics_config,
+            training_dataset_type=training_dataset_type,
+            label=label,
+            train_split=train_split,
+            time_split_size=time_split_size,
+            extra_filter=extra_filter,
+        )
+
+        self._id = id
+        self._from_query = from_query
+        self._querydto = querydto
+        self._feature_store_id = featurestore_id
+        self._feature_store_name = featurestore_name
+        self._transformation_functions = transformation_functions
+
+        self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
+            featurestore_id
+        )
+        self._training_dataset_engine = training_dataset_engine.TrainingDatasetEngine(
+            featurestore_id
+        )
+        self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
+        )
+        self._code_engine = code_engine.CodeEngine(featurestore_id, self.ENTITY_TYPE)
+        self._transformation_function_engine = (
+            transformation_function_engine.TransformationFunctionEngine(featurestore_id)
+        )
+        self._vector_server = vector_server.VectorServer(
+            featurestore_id, features=self._features
+        )
+
     def save(
         self,
         features: Union[
@@ -296,7 +637,7 @@ class TrainingDataset:
         # currently we do not save the training dataset statistics config for training datasets
         self.statistics_config = user_stats_config
         self._code_engine.save_code(self)
-        if self.statistics_config.enabled and engine.get_type() == "spark":
+        if self.statistics_config.enabled and engine.get_type().startswith("spark"):
             self.compute_statistics()
         if user_version is None:
             warnings.warn(
@@ -384,14 +725,27 @@ class TrainingDataset:
         return self._training_dataset_engine.read(self, split, read_options)
 
     def compute_statistics(self):
-        """Recompute the statistics for the training dataset and save them to the
+        """Compute the statistics for the training dataset and save them to the
         feature store.
         """
-        if self.statistics_config.enabled and engine.get_type() == "spark":
+        if self.statistics_config.enabled and engine.get_type().startswith("spark"):
+            try:
+                registered_stats = self._statistics_engine.get(self)
+            except RestAPIError as e:
+                if (
+                    e.response.json().get("errorCode", "") == 270226
+                    and e.response.status_code == 404
+                ):
+                    registered_stats = None
+                raise e
+            if registered_stats is not None:
+                return registered_stats
             if self.splits:
-                return self._statistics_engine.register_split_statistics(self)
+                return self._statistics_engine.compute_and_save_split_statistics(self)
             else:
-                return self._statistics_engine.compute_statistics(self, self.read())
+                return self._statistics_engine.compute_and_save_statistics(
+                    self, self.read()
+                )
 
     def show(self, n: int, split: str = None):
         """Show the first `n` rows of the training dataset.
@@ -498,10 +852,21 @@ class TrainingDataset:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
-        for td in json_decamelized:
-            _ = td.pop("type")
-            cls._rewrite_location(td)
-        return [cls(**td) for td in json_decamelized]
+        if "count" in json_decamelized:
+            if json_decamelized["count"] == 0:
+                return []
+            tds = []
+            for td in json_decamelized["items"]:
+                td.pop("type")
+                td.pop("href")
+                cls._rewrite_location(td)
+                tds.append(cls(**td))
+            return tds
+        else:  # backwards compatibility
+            for td in json_decamelized:
+                _ = td.pop("type")
+                cls._rewrite_location(td)
+            return [cls(**td) for td in json_decamelized]
 
     @classmethod
     def from_response_json_single(cls, json_dict):
@@ -531,22 +896,6 @@ class TrainingDataset:
                 td_json[
                     "location"
                 ] = f"{td_json['location']}/{td_json['name']}_{td_json['version']}"
-
-    def _infer_training_dataset_type(self, connector_type):
-        if connector_type == StorageConnector.HOPSFS or connector_type is None:
-            return self.HOPSFS
-        elif (
-            connector_type == StorageConnector.S3
-            or connector_type == StorageConnector.ADLS
-            or connector_type == StorageConnector.GCS
-        ):
-            return self.EXTERNAL
-        else:
-            raise TypeError(
-                "Storage connectors of type {} are currently not supported for training datasets.".format(
-                    connector_type
-                )
-            )
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
@@ -583,53 +932,6 @@ class TrainingDataset:
         self._id = id
 
     @property
-    def name(self):
-        """Name of the training dataset."""
-        return self._name
-
-    @name.setter
-    def name(self, name):
-        self._name = name
-
-    @property
-    def version(self):
-        """Version number of the training dataset."""
-        return self._version
-
-    @version.setter
-    def version(self, version):
-        self._version = version
-
-    @property
-    def description(self):
-        return self._description
-
-    @description.setter
-    def description(self, description):
-        """Description of the training dataset contents."""
-        self._description = description
-
-    @property
-    def data_format(self):
-        """File format of the training dataset."""
-        return self._data_format
-
-    @data_format.setter
-    def data_format(self, data_format):
-        self._data_format = data_format
-
-    @property
-    def coalesce(self):
-        """If true the training dataset data will be coalesced into
-        a single partition before writing. The resulting training dataset
-        will be a single file per split"""
-        return self._coalesce
-
-    @coalesce.setter
-    def coalesce(self, coalesce):
-        self._coalesce = coalesce
-
-    @property
     def write_options(self):
         """User provided options to write training dataset."""
         return self._write_options
@@ -637,56 +939,6 @@ class TrainingDataset:
     @write_options.setter
     def write_options(self, write_options):
         self._write_options = write_options
-
-    @property
-    def storage_connector(self):
-        """Storage connector."""
-        return self._storage_connector
-
-    @storage_connector.setter
-    def storage_connector(self, storage_connector):
-        if isinstance(storage_connector, StorageConnector):
-            self._storage_connector = storage_connector
-        elif storage_connector is None:
-            # init empty connector, otherwise will have to handle it at serialization time
-            self._storage_connector = HopsFSConnector(
-                None, None, None, None, None, None
-            )
-        else:
-            raise TypeError(
-                "The argument `storage_connector` has to be `None` or of type `StorageConnector`, is of type: {}".format(
-                    type(storage_connector)
-                )
-            )
-        if self.training_dataset_type != self.IN_MEMORY:
-            self._training_dataset_type = self._infer_training_dataset_type(
-                self._storage_connector.type
-            )
-
-    @property
-    def splits(self):
-        """Training dataset splits. `train`, `test` or `eval` and corresponding percentages."""
-        return self._splits
-
-    @splits.setter
-    def splits(self, splits):
-        # user api differs from how the backend expects the splits to be represented
-        self._splits = [
-            TrainingDatasetSplit(
-                name=k, split_type=TrainingDatasetSplit.RANDOM_SPLIT, percentage=v
-            )
-            for k, v in splits.items()
-            if v is not None
-        ]
-
-    @property
-    def location(self):
-        """Path to the training dataset location."""
-        return self._location
-
-    @location.setter
-    def location(self, location):
-        self._location = location
 
     @property
     def schema(self):
@@ -699,61 +951,13 @@ class TrainingDataset:
         self._features = features
 
     @property
-    def seed(self):
-        """Seed."""
-        return self._seed
-
-    @seed.setter
-    def seed(self, seed):
-        self._seed = seed
-
-    @property
-    def statistics_config(self):
-        """Statistics configuration object defining the settings for statistics
-        computation of the training dataset."""
-        return self._statistics_config
-
-    @statistics_config.setter
-    def statistics_config(self, statistics_config):
-        if isinstance(statistics_config, StatisticsConfig):
-            self._statistics_config = statistics_config
-        elif isinstance(statistics_config, dict):
-            self._statistics_config = StatisticsConfig(**statistics_config)
-        elif isinstance(statistics_config, bool):
-            self._statistics_config = StatisticsConfig(statistics_config)
-        elif statistics_config is None:
-            self._statistics_config = StatisticsConfig()
-        else:
-            raise TypeError(
-                "The argument `statistics_config` has to be `None` of type `StatisticsConfig, `bool` or `dict`, but is of type: `{}`".format(
-                    type(statistics_config)
-                )
-            )
-
-    @property
     def statistics(self):
-        """Get the latest computed statistics for the training dataset."""
-        return self._statistics_engine.get_last(self)
-
-    def get_statistics(self, commit_time: Union[str, int, datetime, date] = None):
-        """Returns the statistics for this training dataset at a specific time.
-
-        If `commit_time` is `None`, the most recent statistics are returned.
-
-        # Arguments
-            commit_time: If specified will recompute statistics on
-                feature group as of specific point in time. If not specified then will compute statistics
-                as of most recent time of this feature group. Defaults to `None`. Strings should
-                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
-                or `%Y-%m-%d %H:%M:%S.%f`.
+        """Get computed statistics for the training dataset.
 
         # Returns
             `Statistics`. Object with statistics information.
         """
-        if commit_time is None:
-            return self.statistics
-        else:
-            return self._statistics_engine.get(self, commit_time)
+        return self._statistics_engine.get(self)
 
     @property
     def query(self):
@@ -862,15 +1066,6 @@ class TrainingDataset:
         return self._feature_store_name
 
     @property
-    def train_split(self):
-        """Set name of training dataset split that is used for training."""
-        return self._train_split
-
-    @train_split.setter
-    def train_split(self, train_split):
-        self._train_split = train_split
-
-    @property
     def transformation_functions(self):
         """Set transformation functions."""
         if self._id is not None and self._transformation_functions is None:
@@ -883,100 +1078,6 @@ class TrainingDataset:
     def transformation_functions(self, transformation_functions):
         self._transformation_functions = transformation_functions
 
-    @property
-    def event_start_time(self):
-        return self._start_time
-
-    @event_start_time.setter
-    def event_start_time(self, start_time):
-        self._start_time = start_time
-
-    @property
-    def event_end_time(self):
-        return self._end_time
-
-    @event_end_time.setter
-    def event_end_time(self, end_time):
-        self._end_time = end_time
-
-    @property
-    def training_dataset_type(self):
-        return self._training_dataset_type
-
-    @training_dataset_type.setter
-    def training_dataset_type(self, training_dataset_type):
-        valid_type = [self.IN_MEMORY, self.HOPSFS, self.EXTERNAL]
-        if training_dataset_type not in valid_type:
-            raise ValueError(
-                "Training dataset type should be one of " ", ".join(valid_type)
-            )
-        else:
-            self._training_dataset_type = training_dataset_type
-
-    @property
-    def validation_size(self):
-        return self._validation_size
-
-    @validation_size.setter
-    def validation_size(self, validation_size):
-        self._validation_size = validation_size
-
-    @property
-    def test_size(self):
-        return self._test_size
-
-    @test_size.setter
-    def test_size(self, test_size):
-        self._test_size = test_size
-
-    @property
-    def train_start(self):
-        return self._train_start
-
-    @train_start.setter
-    def train_start(self, train_start):
-        self._train_start = train_start
-
-    @property
-    def train_end(self):
-        return self._train_end
-
-    @train_end.setter
-    def train_end(self, train_end):
-        self._train_end = train_end
-
-    @property
-    def validation_start(self):
-        return self._validation_start
-
-    @validation_start.setter
-    def validation_start(self, validation_start):
-        self._validation_start = validation_start
-
-    @property
-    def validation_end(self):
-        return self._validation_end
-
-    @validation_end.setter
-    def validation_end(self, validation_end):
-        self._validation_end = validation_end
-
-    @property
-    def test_start(self):
-        return self._test_start
-
-    @test_start.setter
-    def test_start(self, test_start):
-        self._test_start = test_start
-
-    @property
-    def test_end(self):
-        return self._test_end
-
-    @test_end.setter
-    def test_end(self, test_end):
-        self._test_end = test_end
-
     def serving_keys(self):
         """Set of primary key names that is used as keys in input dict object for `get_serving_vector` method."""
         if self._vector_server.required_serving_keys:
@@ -987,11 +1088,3 @@ class TrainingDataset:
             )
             _vector_server.init_prepared_statement(self, False, False)
             return _vector_server.required_serving_keys
-
-    @property
-    def extra_filter(self):
-        return self._extra_filter
-
-    @extra_filter.setter
-    def extra_filter(self, extra_filter):
-        self._extra_filter = extra_filter

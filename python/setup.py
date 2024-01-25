@@ -23,7 +23,7 @@ setup(
         "requests",
         "furl",
         "boto3",
-        "pandas<3",
+        "pandas<2.2.0",
         "numpy<2",
         "pyjks",
         "mock",
@@ -35,6 +35,7 @@ setup(
         "fsspec",
         "retrying",
         "aiomysql",
+        "opensearch-py>=1.1.0,<=2.4.2",
     ],
     extras_require={
         "dev": [

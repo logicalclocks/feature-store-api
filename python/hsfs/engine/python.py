@@ -31,6 +31,7 @@ import decimal
 import numbers
 import math
 import os
+import sys
 import pytz
 from datetime import datetime, timezone
 
@@ -388,6 +389,7 @@ class Engine:
         )
 
         self.wait_for_job(job)
+        return job
 
     def profile(
         self,
@@ -398,36 +400,68 @@ class Engine:
         exact_uniqueness=True,
     ):
         # TODO: add statistics for correlations, histograms and exact_uniqueness
+
+        # parse timestamp columns to string columns
+        for col, dtype in df.dtypes.items():
+            if isinstance(dtype, type(np.dtype(np.datetime64))):
+                df[col] = df[col].astype(str)
+
         if not relevant_columns:
-            stats = df.describe()
+            stats = df.describe().to_dict()
+            relevant_columns = df.columns
         else:
             target_cols = [col for col in df.columns if col in relevant_columns]
-            stats = df[target_cols].describe()
+            stats = df[target_cols].describe().to_dict()
+
+        # df.describe() does not compute stats for all col types (e.g., string)
+        # we need to compute stats for the rest of the cols iteratively
+        missing_cols = list(set(relevant_columns) - set(stats.keys()))
+        for col in missing_cols:
+            stats[col] = df[col].describe().to_dict()
+
         final_stats = []
-        for col in stats.columns:
-            stats_dict = json.loads(stats[col].to_json())
-            stat = self._convert_pandas_statistics(stats_dict)
-            stat["dataType"] = (
-                "Fractional"
-                if isinstance(stats[col].dtype, type(np.dtype(np.float64)))
-                else "Integral"
-            )
+        for col in stats.keys():
+            stat = self._convert_pandas_statistics(stats[col])
             stat["isDataTypeInferred"] = "false"
             stat["column"] = col.split(".")[-1]
             stat["completeness"] = 1
+
+            # set data type
+            if isinstance(df.dtypes[col], type(np.dtype(np.float64))):
+                stat["dataType"] = "Fractional"
+            elif isinstance(df.dtypes[col], type(np.dtype(np.int64))):
+                stat["dataType"] = "Integral"
+            elif isinstance(df.dtypes[col], type(np.dtype(np.bool_))):
+                stat["dataType"] = "Boolean"
+            elif isinstance(df.dtypes[col], type(np.dtype(object))):
+                stat["dataType"] = "String"
+            else:
+                print(
+                    "Data type could not be inferred for column '"
+                    + stat["column"]
+                    + "'. Defaulting to 'String'",
+                    file=sys.stderr,
+                )
+                stat["dataType"] = "String"
+
             final_stats.append(stat)
-        return json.dumps({"columns": final_stats})
+
+        return json.dumps(
+            {"columns": final_stats},
+        )
 
     def _convert_pandas_statistics(self, stat):
         # For now transformation only need 25th, 50th, 75th percentiles
         # TODO: calculate properly all percentiles
         content_dict = {}
-        percentiles = []
         if "25%" in stat:
             percentiles = [0] * 100
             percentiles[24] = stat["25%"]
             percentiles[49] = stat["50%"]
             percentiles[74] = stat["75%"]
+            content_dict["approxPercentiles"] = percentiles
+        if "count" in stat:
+            content_dict["count"] = stat["count"]
         if "mean" in stat:
             content_dict["mean"] = stat["mean"]
         if "mean" in stat and "count" in stat:
@@ -439,8 +473,7 @@ class Engine:
             content_dict["stdDev"] = stat["std"]
         if "min" in stat:
             content_dict["minimum"] = stat["min"]
-        if percentiles:
-            content_dict["approxPercentiles"] = percentiles
+
         return content_dict
 
     def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):
@@ -499,7 +532,7 @@ class Engine:
         )
 
     def parse_schema_feature_group(self, dataframe, time_travel_format=None):
-        arrow_schema = pa.Schema.from_pandas(dataframe)
+        arrow_schema = pa.Schema.from_pandas(dataframe, preserve_index=False)
         features = []
         for feat_name in arrow_schema.names:
             name = feat_name.lower()
