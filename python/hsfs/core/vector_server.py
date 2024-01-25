@@ -428,12 +428,12 @@ class VectorServer:
 
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
-        results = loop.run_until_complete(
+        results_dict = loop.run_until_complete(
             self._execute_prep_statements(prepared_statement_objects, bind_entries)
         )
 
-        for i in results:
-            for row in i:
+        for key in results_dict:
+            for row in results_dict[key]:
                 result_dict = self.deserialize_complex_features(
                     self._complex_features, dict(row)
                 )
