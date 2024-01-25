@@ -190,7 +190,6 @@ class Engine:
     def register_delta_temporary_table(
         self, delta_fg_alias, feature_store_id, feature_store_name, read_options
     ):
-
         delta_engine_instance = delta_engine.DeltaEngine(
             feature_store_id,
             feature_store_name,
