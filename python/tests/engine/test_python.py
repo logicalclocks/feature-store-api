@@ -784,9 +784,10 @@ class TestPython:
         mock_python_engine_convert_pandas_statistics.side_effect = [
             {"test_key": "test_value"},
             {"test_key": "test_value"},
+            {"test_key": "test_value"},
         ]
 
-        d = {"col1": ["1", "2"], "col2": ["3", "4"]}
+        d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
         df = pd.DataFrame(data=d)
 
         # Act
@@ -800,12 +801,15 @@ class TestPython:
 
         # Assert
         assert (
-            result == '{"columns": [{"test_key": "test_value", "dataType": "Integral", '
-            '"isDataTypeInferred": "false", "column": "col1", "completeness": 1}, '
-            '{"test_key": "test_value", "dataType": "Integral", "isDataTypeInferred": '
-            '"false", "column": "col2", "completeness": 1}]}'
+            result
+            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1, "dataType": "Integral"}, '
+            '{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col2", "completeness": 1, "dataType": "Fractional"}, '
+            '{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1, "dataType": "String"}]}'
         )
-        assert mock_python_engine_convert_pandas_statistics.call_count == 2
+        assert mock_python_engine_convert_pandas_statistics.call_count == 3
 
     def test_profile_relevant_columns(self, mocker):
         # Arrange
@@ -819,7 +823,7 @@ class TestPython:
             "test_key": "test_value"
         }
 
-        d = {"col1": [1, 2], "col2": [3, 4]}
+        d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
         df = pd.DataFrame(data=d)
 
         # Act
@@ -834,10 +838,45 @@ class TestPython:
         # Assert
         assert (
             result
-            == '{"columns": [{"test_key": "test_value", "dataType": "Fractional", '
-            '"isDataTypeInferred": "false", "column": "col1", "completeness": 1}]}'
+            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1, "dataType": "Integral"}]}'
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 1
+
+    def test_profile_relevant_columns_diff_dtypes(self, mocker):
+        # Arrange
+        mock_python_engine_convert_pandas_statistics = mocker.patch(
+            "hsfs.engine.python.Engine._convert_pandas_statistics"
+        )
+
+        python_engine = python.Engine()
+
+        mock_python_engine_convert_pandas_statistics.side_effect = [
+            {"test_key": "test_value"},
+            {"test_key": "test_value"},
+        ]
+
+        d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result = python_engine.profile(
+            df=df,
+            relevant_columns=["col1", "col3"],
+            correlations=None,
+            histograms=None,
+            exact_uniqueness=True,
+        )
+
+        # Assert
+        assert (
+            result
+            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1, "dataType": "Integral"}, '
+            '{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1, "dataType": "String"}]}'
+        )
+        assert mock_python_engine_convert_pandas_statistics.call_count == 2
 
     def test_convert_pandas_statistics(self):
         # Arrange
@@ -966,6 +1005,7 @@ class TestPython:
             "minimum": 1,
             "stdDev": 33,
             "sum": 5000,
+            "count": 100,
         }
 
     def test_validate(self):

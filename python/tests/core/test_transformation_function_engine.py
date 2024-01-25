@@ -715,7 +715,7 @@ class TestTransformationFunctionEngine:
             tf_engine.populate_builtin_fn_arguments(
                 feature_name=None,
                 transformation_function_instance=tf,
-                stat_content=None,
+                feature_descriptive_stats=None,
             )
 
         # Assert
@@ -743,7 +743,9 @@ class TestTransformationFunctionEngine:
 
         # Act
         tf_engine.populate_builtin_fn_arguments(
-            feature_name=None, transformation_function_instance=tf, stat_content=None
+            feature_name=None,
+            transformation_function_instance=tf,
+            feature_descriptive_stats=None,
         )
 
         # Assert
@@ -772,7 +774,9 @@ class TestTransformationFunctionEngine:
 
         # Act
         tf_engine.populate_builtin_fn_arguments(
-            feature_name=None, transformation_function_instance=tf, stat_content=None
+            feature_name=None,
+            transformation_function_instance=tf,
+            feature_descriptive_stats=None,
         )
 
         # Assert
@@ -801,7 +805,9 @@ class TestTransformationFunctionEngine:
 
         # Act
         tf_engine.populate_builtin_fn_arguments(
-            feature_name=None, transformation_function_instance=tf, stat_content=None
+            feature_name=None,
+            transformation_function_instance=tf,
+            feature_descriptive_stats=None,
         )
 
         # Assert
@@ -831,7 +837,9 @@ class TestTransformationFunctionEngine:
 
         # Act
         tf_engine.populate_builtin_fn_arguments(
-            feature_name=None, transformation_function_instance=tf, stat_content=None
+            feature_name=None,
+            transformation_function_instance=tf,
+            feature_descriptive_stats=None,
         )
 
         # Assert
@@ -870,7 +878,8 @@ class TestTransformationFunctionEngine:
 
         # Act
         tf_engine.populate_builtin_attached_fns(
-            attached_transformation_fns=transformation_fn_dict, stat_content=None
+            attached_transformation_fns=transformation_fn_dict,
+            feature_descriptive_stats=None,
         )
 
         # Assert
@@ -909,7 +918,8 @@ class TestTransformationFunctionEngine:
 
         # Act
         tf_engine.populate_builtin_attached_fns(
-            attached_transformation_fns=transformation_fn_dict, stat_content=None
+            attached_transformation_fns=transformation_fn_dict,
+            feature_descriptive_stats=None,
         )
 
         # Assert
