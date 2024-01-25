@@ -36,9 +36,13 @@ class OpenSearchClientSingleton:
                 from opensearchpy import OpenSearch
                 from opensearchpy.exceptions import (
                     ConnectionError as OpenSearchConnectionError,
+                    AuthenticationException as OpenSearchAuthenticationException,
                 )
 
                 self.OpenSearchConnectionError = OpenSearchConnectionError
+                self.OpenSearchAuthenticationException = (
+                    OpenSearchAuthenticationException
+                )
             except ModuleNotFoundError:
                 raise FeatureStoreException(
                     "hopsworks and opensearchpy are required for embedding similarity search"
@@ -61,7 +65,9 @@ class OpenSearchClientSingleton:
     def search(self, index=None, body=None):
         try:
             return self._opensearch_client.search(body=body, index=index)
-        except self.OpenSearchConnectionError:
+        except (self.OpenSearchConnectionError, self.OpenSearchAuthenticationException):
+            # OpenSearchConnectionError occurs when connection is closed.
+            # OpenSearchAuthenticationException occurs when jwt is expired
             self._refresh_opensearch_connection()
             return self._opensearch_client.search(body=body, index=index)
 

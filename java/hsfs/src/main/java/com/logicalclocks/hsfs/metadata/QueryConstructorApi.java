@@ -47,7 +47,7 @@ public class QueryConstructorApi {
         + QUERY_CONSTRUCTOR_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStoreBase.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);

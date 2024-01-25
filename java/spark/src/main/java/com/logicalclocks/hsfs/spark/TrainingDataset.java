@@ -202,7 +202,7 @@ public class TrainingDataset extends TrainingDatasetBase {
   public Statistics computeStatistics() throws FeatureStoreException, IOException {
     if (statisticsConfig.getEnabled()) {
       if (this.splits != null && !this.splits.isEmpty()) {
-        return statisticsEngine.registerSplitStatistics(this);
+        return statisticsEngine.computeAndSaveSplitStatistics(this);
       } else {
         return statisticsEngine.computeStatistics(this, read());
       }

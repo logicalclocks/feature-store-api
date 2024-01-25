@@ -102,14 +102,14 @@ public class HopsworksClient {
     return hopsworksClientInstance;
   }
 
-  public Credentials getCredentials(Project project) throws FeatureStoreException, IOException,
+  public Credentials getCredentials() throws FeatureStoreException, IOException,
       KeyStoreException, CertificateException, NoSuchAlgorithmException {
     HopsworksClient hopsworksClient = getInstance();
     String pathTemplate = PROJECT_PATH
         + "/credentials";
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", project.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .expand();
 
     LOGGER.info("Sending metadata request: " + uri);
