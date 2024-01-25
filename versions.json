@@ -38,11 +38,16 @@
     "aliases": []
   },
   {
-    "version": "3.4.6",
-    "title": "3.4.6",
+    "version": "3.4.7",
+    "title": "3.4.7",
     "aliases": [
       "3.4"
     ]
+  },
+  {
+    "version": "3.4.6",
+    "title": "3.4.6",
+    "aliases": []
   },
   {
     "version": "3.4.4",
