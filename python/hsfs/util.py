@@ -29,6 +29,9 @@ from sqlalchemy import create_engine
 from hsfs import client, feature
 from hsfs.client import exceptions
 from hsfs.core import variable_api
+from aiomysql.sa import create_engine as async_create_engine
+import asyncio
+from sqlalchemy.engine.url import make_url
 
 FEATURE_STORE_NAME_SUFFIX = "_featurestore"
 
@@ -90,12 +93,7 @@ def create_mysql_engine(online_conn, external, options=None):
     if external:
         # This only works with external clients.
         # Hopsworks clients should use the storage connector
-        host = variable_api.VariableApi().get_loadbalancer_external_domain()
-        if host == "":
-            # If the load balancer is not configured, then fall back to
-            # use the MySQL node on the head node
-            host = client.get_instance().host
-
+        host = get_host_name()
         online_options["url"] = re.sub(
             "/[0-9.]+:",
             "/{}:".format(host),
@@ -124,6 +122,45 @@ def create_mysql_engine(online_conn, external, options=None):
     # default connection pool size kept by engine is 5
     sql_alchemy_engine = create_engine(sql_alchemy_conn_str, **options)
     return sql_alchemy_engine
+
+
+def get_host_name():
+    host = variable_api.VariableApi().get_loadbalancer_external_domain()
+    if host == "":
+        # If the load balancer is not configured, then fall back to
+        # use the MySQL node on the head node
+        host = client.get_instance().host
+    return host
+
+
+async def create_async_engine(
+    online_conn, external: bool, default_min_size: int, options: dict = None
+):
+    online_options = online_conn.spark_options()
+    # create a aiomysql connection pool
+    # read the keys user, password from online_conn as use them while creating the connection pool
+    url = make_url(online_options["url"].replace("jdbc:", ""))
+    if external:
+        hostname = get_host_name()
+    else:
+        hostname = url.host
+
+    pool = await async_create_engine(
+        host=hostname,
+        port=3306,
+        user=online_options["user"],
+        password=online_options["password"],
+        db=url.database,
+        loop=asyncio.get_running_loop(),
+        minsize=(
+            options.get("minsize", default_min_size) if options else default_min_size
+        ),
+        maxsize=(
+            options.get("maxsize", default_min_size) if options else default_min_size
+        ),
+        pool_recycle=(options.get("pool_recycle", -1) if options else -1),
+    )
+    return pool
 
 
 def check_timestamp_format_from_date_string(input_date):
@@ -179,6 +216,12 @@ def get_timestamp_from_date_string(input_date):
 
 def get_hudi_datestr_from_timestamp(timestamp):
     return datetime.utcfromtimestamp(timestamp / 1000).strftime("%Y%m%d%H%M%S%f")[:-3]
+
+
+def get_delta_datestr_from_timestamp(timestamp):
+    return datetime.utcfromtimestamp(timestamp / 1000).strftime("%Y-%m-%d %H:%M:%S.%f")[
+        :-3
+    ]
 
 
 def convert_event_time_to_timestamp(event_time):

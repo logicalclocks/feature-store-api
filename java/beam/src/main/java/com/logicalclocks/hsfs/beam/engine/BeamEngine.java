@@ -24,7 +24,6 @@ import com.logicalclocks.hsfs.StorageConnector;
 import com.logicalclocks.hsfs.beam.StreamFeatureGroup;
 import com.logicalclocks.hsfs.metadata.DatasetApi;
 import com.logicalclocks.hsfs.engine.EngineBase;
-import com.logicalclocks.hsfs.metadata.HopsworksClient;
 import com.logicalclocks.hsfs.metadata.HopsworksInternalClient;
 import org.apache.avro.Schema;
 
@@ -74,8 +73,7 @@ public class BeamEngine extends EngineBase {
     }
     String targetPath = System.getProperty("java.io.tmpdir") + filePath.substring(filePath.lastIndexOf("/"));
     try (FileOutputStream outputStream = new FileOutputStream(targetPath)) {
-      outputStream.write(DatasetApi.readContent(HopsworksClient.getInstance().getProject().getProjectId(),
-          filePath, "HIVEDB"));
+      outputStream.write(DatasetApi.readContent(filePath, "HIVEDB"));
     }
     return targetPath;
   }

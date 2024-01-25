@@ -935,8 +935,7 @@ public class SparkEngine extends EngineBase {
       java.nio.file.Path targetPath = Paths.get(SparkFiles.getRootDirectory(), fileName);
 
       try (FileOutputStream outputStream = new FileOutputStream(targetPath.toString())) {
-        outputStream.write(DatasetApi.readContent(HopsworksClient.getInstance().getProject().getProjectId(),
-            filePath, "HIVEDB"));
+        outputStream.write(DatasetApi.readContent(filePath, "HIVEDB"));
       } catch (IOException e) {
         throw new FeatureStoreException("Error setting up file: " + filePath, e);
       }

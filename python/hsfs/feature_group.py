@@ -51,6 +51,7 @@ from hsfs.core import (
 )
 
 from hsfs.statistics_config import StatisticsConfig
+from hsfs.statistics import Statistics
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.validation_report import ValidationReport
 from hsfs.constructor import query, filter
@@ -237,7 +238,7 @@ class FeatureGroupBase:
         else:
             return self.select_except(self.primary_key + [self.event_time])
 
-    def select(self, features: Optional[List[Union[str, feature.Feature]]] = []):
+    def select(self, features: List[Union[str, feature.Feature]]):
         """Select a subset of features of the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
@@ -269,7 +270,7 @@ class FeatureGroupBase:
 
         # Arguments
             features: A list of `Feature` objects or feature names as
-                strings to be selected, defaults to [].
+                strings to be selected.
 
         # Returns
             `Query`: A query object with the selected features of the feature group.
@@ -567,7 +568,9 @@ class FeatureGroupBase:
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
         """
+        self._check_statistics_support()  # raises an error if stats not supported
         self._feature_group_engine.update_statistics_config(self)
         return self
 
@@ -1171,11 +1174,17 @@ class FeatureGroupBase:
     @property
     def statistics_config(self):
         """Statistics configuration object defining the settings for statistics
-        computation of the feature group."""
+        computation of the feature group.
+
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+        """
+        self._check_statistics_support()  # raises an error if stats not supported
         return self._statistics_config
 
     @statistics_config.setter
     def statistics_config(self, statistics_config):
+        self._check_statistics_support()  # raises an error if stats not supported
         if isinstance(statistics_config, StatisticsConfig):
             self._statistics_config = statistics_config
         elif isinstance(statistics_config, dict):
@@ -1222,8 +1231,13 @@ class FeatureGroupBase:
 
     @property
     def statistics(self):
-        """Get the latest computed statistics for the feature group."""
-        return self._statistics_engine.get_last(self)
+        """Get the latest computed statistics for the whole feature group.
+
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+        """
+        self._check_statistics_support()  # raises an error if stats not supported
+        return self._statistics_engine.get(self)
 
     @property
     def primary_key(self):
@@ -1235,11 +1249,13 @@ class FeatureGroupBase:
         self._primary_key = [pk.lower() for pk in new_primary_key]
 
     def get_statistics(
-        self, commit_time: Optional[Union[str, int, datetime, date]] = None
-    ):
-        """Returns the statistics for this feature group at a specific time.
+        self,
+        computation_time: Optional[Union[str, int, float, datetime, date]] = None,
+        feature_names: Optional[List[str]] = None,
+    ) -> Optional[Statistics]:
+        """Returns the statistics computed at a specific time for the current feature group.
 
-        If `commit_time` is `None`, the most recent statistics are returned.
+        If `computation_time` is `None`, the most recent statistics are returned.
 
         !!! example
             ```python
@@ -1249,24 +1265,62 @@ class FeatureGroupBase:
             # get the Feature Group instance
             fg = fs.get_or_create_feature_group(...)
 
-            fg_statistics = fg.get_statistics(commit_time=None)
+            fg_statistics = fg.get_statistics(computation_time=None)
             ```
 
         # Arguments
-            commit_time: Date and time of the commit. Defaults to `None`. Strings should
+            computation_time: Date and time when statistics were computed. Defaults to `None`. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-
+            feature_names: List of feature names of which statistics are retrieved.
         # Returns
             `Statistics`. Statistics object.
 
         # Raises
-            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`
+            `hsfs.client.exceptions.FeatureStoreException`.
         """
-        if commit_time is None:
-            return self.statistics
-        else:
-            return self._statistics_engine.get(self, commit_time)
+        self._check_statistics_support()  # raises an error if stats not supported
+        return self._statistics_engine.get(
+            self, computation_time=computation_time, feature_names=feature_names
+        )
+
+    def get_all_statistics(
+        self,
+        computation_time: Optional[Union[str, int, float, datetime, date]] = None,
+        feature_names: Optional[List[str]] = None,
+    ) -> Optional[List[Statistics]]:
+        """Returns all the statistics metadata computed before a specific time for the current feature group.
+
+        If `computation_time` is `None`, all the statistics metadata are returned.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            fg_statistics = fg.get_statistics(computation_time=None)
+            ```
+
+        # Arguments
+            computation_time: Date and time when statistics were computed. Defaults to `None`. Strings should
+                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
+            feature_names: List of feature names of which statistics are retrieved.
+        # Returns
+            `Statistics`. Statistics object.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`
+            `hsfs.client.exceptions.FeatureStoreException`.
+        """
+        self._check_statistics_support()  # raises an error if stats not supported
+        return self._statistics_engine.get_all(
+            self, computation_time=computation_time, feature_names=feature_names
+        )
 
     def compute_statistics(self):
         """Recompute the statistics for the feature group and save them to the
@@ -1290,12 +1344,14 @@ class FeatureGroupBase:
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`. Unable to persist the statistics.
+            `hsfs.client.exceptions.FeatureStoreException`.
         """
+        self._check_statistics_support()  # raises an error if stats not supported
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation
             # for the Python engine. The Python engine is going to setup a Spark Job
             # to update the statistics.
-            return self._statistics_engine.compute_statistics(self)
+            self._statistics_engine.compute_and_save_statistics(self)
         else:
             warnings.warn(
                 (
@@ -1462,6 +1518,48 @@ class FeatureGroupBase:
     def features(self):
         """Schema information."""
         return self._features
+
+    def _are_statistics_missing(self, statistics: Statistics):
+        if not self.statistics_config.enabled:
+            return False
+        elif statistics is None:
+            return True
+        if (
+            self.statistics_config.histograms
+            or self.statistics_config.correlations
+            or self.statistics_config.exact_uniqueness
+        ):
+            # if statistics are missing, recompute and update statistics.
+            # We need to check for missing statistics because the statistics config can have been modified
+            for fds in statistics.feature_descriptive_statistics:
+                if fds.feature_type in ["Integral", "Fractional"]:
+                    if self.statistics_config.histograms and (
+                        fds.extended_statistics is None
+                        or "histogram" not in fds.extended_statistics
+                    ):
+                        return True
+
+                    if self.statistics_config.correlations and (
+                        fds.extended_statistics is None
+                        or "correlations" not in fds.extended_statistics
+                    ):
+                        return True
+
+                if self.statistics_config.exact_uniqueness and fds.uniqueness is None:
+                    return True
+
+        return False
+
+    def _are_statistics_supported(self):
+        """Whether statistics are supported or not for the current Feature Group type"""
+        return not isinstance(self, SpineGroup)
+
+    def _check_statistics_support(self):
+        """Check for statistics support on the current Feature Group type"""
+        if not self._are_statistics_supported():
+            raise FeatureStoreException(
+                "Statistics not supported for this Feature Group type"
+            )
 
     @features.setter
     def features(self, new_features):
@@ -1833,6 +1931,9 @@ class FeatureGroup(FeatureGroupBase):
                 * key `start_offline_materialization` and value `True` or `False` to configure
                   whether or not to start the materialization job to write data to the offline
                   storage. By default the materialization job gets started immediately.
+                * key `kafka_producer_config` and value an object of type [properties](https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.htmln)
+                  used to configure the Kafka client. To optimize for throughput in high latency connection, consider
+                  changing the [producer properties](https://docs.confluent.io/cloud/current/client-apps/optimizing/throughput.html#producer).
                 * key `internal_kafka` and value `True` or `False` in case you established
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
@@ -1892,10 +1993,10 @@ class FeatureGroup(FeatureGroupBase):
         if ge_report is None or ge_report.ingestion_result == "INGESTED":
             self._code_engine.save_code(self)
 
-        if self.statistics_config.enabled and engine.get_type() == "spark":
+        if self.statistics_config.enabled and engine.get_type().startswith("spark"):
             # Only compute statistics if the engine is Spark.
             # For Python engine, the computation happens in the Hopsworks application
-            self._statistics_engine.compute_statistics(self, feature_dataframe)
+            self._statistics_engine.compute_and_save_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(
                 "No version provided for creating feature group `{}`, incremented version to `{}`.".format(
@@ -2015,6 +2116,9 @@ class FeatureGroup(FeatureGroupBase):
                 * key `start_offline_materialization` and value `True` or `False` to configure
                   whether or not to start the materialization job to write data to the offline
                   storage. By default the materialization job gets started immediately.
+                * key `kafka_producer_config` and value an object of type [properties](https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.htmln)
+                  used to configure the Kafka client. To optimize for throughput in high latency connection consider
+                  changing [producer properties](https://docs.confluent.io/cloud/current/client-apps/optimizing/throughput.html#producer).
                 * key `internal_kafka` and value `True` or `False` in case you established
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
@@ -2061,9 +2165,9 @@ class FeatureGroup(FeatureGroupBase):
         ):
             self._code_engine.save_code(self)
 
-        if engine.get_type() == "spark":
-            # Only compute statistics if the engine is Spark,
-            # if Python, the statistics are computed by the application doing the insert
+        if engine.get_type().startswith("spark") and not self.stream:
+            # Also, only compute statistics if stream is False.
+            # if True, the backfill job has not been triggered and the data has not been inserted (it's in Kafka)
             self.compute_statistics()
 
         return (
@@ -2170,6 +2274,9 @@ class FeatureGroup(FeatureGroupBase):
                   whether or not to start the materialization job to write data to the offline
                   storage. By default the materialization job does not get started automatically
                   for multi part inserts.
+                * key `kafka_producer_config` and value an object of type [properties](https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.htmln)
+                  used to configure the Kafka client. To optimize for throughput in high latency connection consider
+                  changing [producer properties](https://docs.confluent.io/cloud/current/client-apps/optimizing/throughput.html#producer).
                 * key `internal_kafka` and value `True` or `False` in case you established
                   connectivity from you Python environment to the internal advertised
                   listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
@@ -2469,7 +2576,50 @@ class FeatureGroup(FeatureGroupBase):
         # Returns
             `Query`. The query object with the applied time travel condition.
         """
-        return self.select_all().as_of(wallclock_time, exclude_until)
+        return self.select_all().as_of(
+            wallclock_time=wallclock_time, exclude_until=exclude_until
+        )
+
+    def get_statistics_by_commit_window(
+        self,
+        from_commit_time: Optional[Union[str, int, datetime, date]] = None,
+        to_commit_time: Optional[Union[str, int, datetime, date]] = None,
+        feature_names: Optional[List[str]] = None,
+    ):
+        """Returns the statistics computed on a specific commit window for this feature group. If time travel is not enabled, it raises an exception.
+
+        If `from_commit_time` is `None`, the commit window starts from the first commit.
+        If `to_commit_time` is `None`, the commit window ends at the last commit.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+            fg_statistics = fg.get_statistics_by_commit_window(from_commit_time=None, to_commit_time=None)
+            ```
+        # Arguments
+            to_commit_time: Date and time of the last commit of the window. Defaults to `None`. Strings should
+                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
+            from_commit_time: Date and time of the first commit of the window. Defaults to `None`. Strings should
+                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
+            feature_names: List of feature names of which statistics are retrieved.
+        # Returns
+            `Statistics`. Statistics object.
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+        """
+        if not self._is_time_travel_enabled():
+            raise ValueError("Time travel is not enabled for this feature group")
+        return self._statistics_engine.get_by_time_window(
+            self,
+            start_commit_time=from_commit_time,
+            end_commit_time=to_commit_time,
+            feature_names=feature_names,
+        )
 
     def compute_statistics(
         self, wallclock_time: Optional[Union[str, int, datetime, date]] = None
@@ -2494,12 +2644,8 @@ class FeatureGroup(FeatureGroupBase):
             `hsfs.client.exceptions.RestAPIError`. Unable to persist the statistics.
         """
         if self.statistics_config.enabled:
-            # Don't read the dataframe here, to avoid triggering a read operation
-            # for the Python engine. The Python engine is going to setup a Spark Job
-            # to update the statistics.
-
-            fg_commit_id = None
-            if wallclock_time is not None:
+            if self._is_time_travel_enabled() or wallclock_time is not None:
+                wallclock_time = wallclock_time or datetime.now()
                 # Retrieve fg commit id related to this wall clock time and recompute statistics. It will throw
                 # exception if its not time travel enabled feature group.
                 fg_commit_id = [
@@ -2508,21 +2654,24 @@ class FeatureGroup(FeatureGroupBase):
                         self, wallclock_time, 1
                     ).keys()
                 ][0]
-
-            return self._statistics_engine.compute_statistics(
-                self,
-                feature_group_commit_id=fg_commit_id
-                if fg_commit_id is not None
-                else None,
-            )
-        else:
-            warnings.warn(
-                (
-                    "The statistics are not enabled of feature group `{}`, with version"
-                    " `{}`. No statistics computed."
-                ).format(self._name, self._version),
-                util.StorageWarning,
-            )
+                registered_stats = self.get_statistics_by_commit_window(
+                    to_commit_time=fg_commit_id
+                )
+                if registered_stats is not None and self._are_statistics_missing(
+                    registered_stats
+                ):
+                    registered_stats = None
+                # Don't read the dataframe here, to avoid triggering a read operation
+                # for the Python engine. The Python engine is going to setup a Spark Job
+                # to update the statistics.
+                return (
+                    registered_stats
+                    or self._statistics_engine.compute_and_save_statistics(
+                        self,
+                        feature_group_commit_id=fg_commit_id,
+                    )
+                )
+        return super().compute_statistics()
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -2613,6 +2762,13 @@ class FeatureGroup(FeatureGroupBase):
     def _get_table_name(self):
         return self.feature_store_name + "." + self.get_fg_name()
 
+    def _is_time_travel_enabled(self):
+        """Whether time-travel is enabled or not"""
+        return (
+            self._time_travel_format is not None
+            and self._time_travel_format.upper() == "HUDI"
+        )
+
     @property
     def id(self):
         """Feature group id."""
@@ -2688,6 +2844,19 @@ class FeatureGroup(FeatureGroupBase):
                                 continue
                         raise e
             raise FeatureStoreException("No materialization job was found")
+
+    @property
+    def statistics(self):
+        """Get the latest computed statistics for the whole feature group."""
+        if self._is_time_travel_enabled():
+            # retrieve the latests statistics computed on the whole Feature Group, including all the commits.
+            now = util.convert_event_time_to_timestamp(datetime.now())
+            return self._statistics_engine.get_by_time_window(
+                self,
+                start_commit_time=None,
+                end_commit_time=now,
+            )
+        return super().statistics
 
     @description.setter
     def description(self, new_description):
@@ -2841,7 +3010,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._code_engine.save_code(self)
 
         if self.statistics_config.enabled:
-            self._statistics_engine.compute_statistics(self)
+            self._statistics_engine.compute_and_save_statistics(self)
 
     def insert(
         self,

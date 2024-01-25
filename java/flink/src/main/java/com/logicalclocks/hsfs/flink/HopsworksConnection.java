@@ -83,6 +83,6 @@ public class HopsworksConnection extends HopsworksConnectionBase {
    * @throws FeatureStoreException If client is not connected to Hopsworks
    */
   public FeatureStore getFeatureStore(String name) throws IOException, FeatureStoreException {
-    return featureStoreApi.get(projectObj.getProjectId(), rewriteFeatureStoreName(name), FeatureStore.class);
+    return featureStoreApi.get(rewriteFeatureStoreName(name), FeatureStore.class);
   }
 }

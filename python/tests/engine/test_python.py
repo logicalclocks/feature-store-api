@@ -784,9 +784,10 @@ class TestPython:
         mock_python_engine_convert_pandas_statistics.side_effect = [
             {"test_key": "test_value"},
             {"test_key": "test_value"},
+            {"test_key": "test_value"},
         ]
 
-        d = {"col1": ["1", "2"], "col2": ["3", "4"]}
+        d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
         df = pd.DataFrame(data=d)
 
         # Act
@@ -800,12 +801,15 @@ class TestPython:
 
         # Assert
         assert (
-            result == '{"columns": [{"test_key": "test_value", "dataType": "Integral", '
-            '"isDataTypeInferred": "false", "column": "col1", "completeness": 1}, '
-            '{"test_key": "test_value", "dataType": "Integral", "isDataTypeInferred": '
-            '"false", "column": "col2", "completeness": 1}]}'
+            result
+            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1, "dataType": "Integral"}, '
+            '{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col2", "completeness": 1, "dataType": "Fractional"}, '
+            '{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1, "dataType": "String"}]}'
         )
-        assert mock_python_engine_convert_pandas_statistics.call_count == 2
+        assert mock_python_engine_convert_pandas_statistics.call_count == 3
 
     def test_profile_relevant_columns(self, mocker):
         # Arrange
@@ -819,7 +823,7 @@ class TestPython:
             "test_key": "test_value"
         }
 
-        d = {"col1": [1, 2], "col2": [3, 4]}
+        d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
         df = pd.DataFrame(data=d)
 
         # Act
@@ -834,10 +838,45 @@ class TestPython:
         # Assert
         assert (
             result
-            == '{"columns": [{"test_key": "test_value", "dataType": "Fractional", '
-            '"isDataTypeInferred": "false", "column": "col1", "completeness": 1}]}'
+            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1, "dataType": "Integral"}]}'
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 1
+
+    def test_profile_relevant_columns_diff_dtypes(self, mocker):
+        # Arrange
+        mock_python_engine_convert_pandas_statistics = mocker.patch(
+            "hsfs.engine.python.Engine._convert_pandas_statistics"
+        )
+
+        python_engine = python.Engine()
+
+        mock_python_engine_convert_pandas_statistics.side_effect = [
+            {"test_key": "test_value"},
+            {"test_key": "test_value"},
+        ]
+
+        d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result = python_engine.profile(
+            df=df,
+            relevant_columns=["col1", "col3"],
+            correlations=None,
+            histograms=None,
+            exact_uniqueness=True,
+        )
+
+        # Assert
+        assert (
+            result
+            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1, "dataType": "Integral"}, '
+            '{"test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1, "dataType": "String"}]}'
+        )
+        assert mock_python_engine_convert_pandas_statistics.call_count == 2
 
     def test_convert_pandas_statistics(self):
         # Arrange
@@ -966,6 +1005,7 @@ class TestPython:
             "minimum": 1,
             "stdDev": 33,
             "sum": 5000,
+            "count": 100,
         }
 
     def test_validate(self):
@@ -1058,51 +1098,13 @@ class TestPython:
             == "Training dataset creation from Dataframes is not supported in Python environment. Use HSFS Query object instead."
         )
 
-    def test_convert_pandas_type(self, mocker):
-        # Arrange
-        mock_python_engine_infer_type_pyarrow = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_object_type_to_offline_type"
-        )
-        mock_python_engine_convert_simple_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_simple_pandas_dtype_to_offline_type"
-        )
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine._convert_pandas_dtype_to_offline_type(dtype=None, arrow_type=None)
-
-        # Assert
-        assert mock_python_engine_infer_type_pyarrow.call_count == 0
-        assert mock_python_engine_convert_simple_pandas_type.call_count == 1
-
-    def test_convert_pandas_type_object(self, mocker):
-        # Arrange
-        mock_python_engine_infer_type_pyarrow = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_object_type_to_offline_type"
-        )
-        mock_python_engine_convert_simple_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_simple_pandas_dtype_to_offline_type"
-        )
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine._convert_pandas_dtype_to_offline_type(
-            dtype=np.dtype("O"), arrow_type=None
-        )
-
-        # Assert
-        assert mock_python_engine_infer_type_pyarrow.call_count == 1
-        assert mock_python_engine_convert_simple_pandas_type.call_count == 0
-
     def test_convert_simple_pandas_type_uint8(self):
         # Arrange
         python_engine = python.Engine()
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
-            dtype=np.dtype("uint8")
+            arrow_type=pa.uint8()
         )
 
         # Assert
@@ -1114,7 +1116,7 @@ class TestPython:
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
-            dtype=np.dtype("uint16")
+            arrow_type=pa.uint16()
         )
 
         # Assert
@@ -1126,7 +1128,7 @@ class TestPython:
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
-            dtype=np.dtype("int8")
+            arrow_type=pa.int8()
         )
 
         # Assert
@@ -1138,7 +1140,7 @@ class TestPython:
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
-            dtype=np.dtype("int16")
+            arrow_type=pa.int16()
         )
 
         # Assert
@@ -1150,7 +1152,7 @@ class TestPython:
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
-            dtype=np.dtype("int32")
+            arrow_type=pa.int32()
         )
 
         # Assert
@@ -1162,7 +1164,7 @@ class TestPython:
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
-            dtype=np.dtype("uint32")
+            arrow_type=pa.uint32()
         )
 
         # Assert
@@ -1174,7 +1176,7 @@ class TestPython:
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
-            dtype=np.dtype("int64")
+            arrow_type=pa.int64()
         )
 
         # Assert
@@ -1186,7 +1188,7 @@ class TestPython:
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
-            dtype=np.dtype("float16")
+            arrow_type=pa.float16()
         )
 
         # Assert
@@ -1198,7 +1200,7 @@ class TestPython:
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
-            dtype=np.dtype("float32")
+            arrow_type=pa.float32()
         )
 
         # Assert
@@ -1210,19 +1212,103 @@ class TestPython:
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
-            dtype=np.dtype("float64")
+            arrow_type=pa.float64()
         )
 
         # Assert
         assert result == "double"
 
-    def test_convert_simple_pandas_type_datetime64(self):
+    def test_convert_simple_pandas_type_datetime64ns(self):
         # Arrange
         python_engine = python.Engine()
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
-            dtype=np.dtype("datetime64[ns]")
+            arrow_type=pa.timestamp(unit="ns")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64nstz(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="ns", tz="UTC")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64us(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="us")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64ustz(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="us", tz="UTC")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64ms(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="ms")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64mstz(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="ms", tz="UTC")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64s(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="s")
+        )
+
+        # Assert
+        assert result == "timestamp"
+
+    def test_convert_simple_pandas_type_datetime64stz(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.timestamp(unit="s", tz="UTC")
         )
 
         # Assert
@@ -1234,19 +1320,35 @@ class TestPython:
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
-            dtype=np.dtype("bool")
+            arrow_type=pa.bool_()
         )
 
         # Assert
         assert result == "boolean"
 
-    def test_convert_simple_pandas_type_category(self):
+    def test_convert_simple_pandas_type_category_unordered(self):
         # Arrange
         python_engine = python.Engine()
 
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
-            dtype="category"
+            arrow_type=pa.dictionary(
+                value_type=pa.string(), index_type=pa.int8(), ordered=False
+            )
+        )
+
+        # Assert
+        assert result == "string"
+
+    def test_convert_simple_pandas_type_category_ordered(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.dictionary(
+                value_type=pa.string(), index_type=pa.int8(), ordered=True
+            )
         )
 
         # Assert
@@ -1258,20 +1360,17 @@ class TestPython:
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            python_engine._convert_simple_pandas_dtype_to_offline_type(dtype="other")
+            python_engine._convert_simple_pandas_dtype_to_offline_type(
+                arrow_type="other"
+            )
 
         # Assert
         assert str(e_info.value) == "dtype 'other' not supported"
 
-    def test_infer_type_pyarrow_list(self, mocker):
+    def test_infer_type_pyarrow_list(self):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
 
         python_engine = python.Engine()
-
-        mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
         result = python_engine._convert_pandas_object_type_to_offline_type(
@@ -1279,116 +1378,92 @@ class TestPython:
         )
 
         # Assert
-        assert result == "array<test>"
+        assert result == "array<int>"
 
-    def test_infer_type_pyarrow_struct(self, mocker):
+    def test_infer_type_pyarrow_struct(self):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
-
         python_engine = python.Engine()
-
-        mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
         result = python_engine._convert_pandas_object_type_to_offline_type(
-            arrow_type=pa.struct({})
+            arrow_type=pa.struct([pa.field("f1", pa.int32())])
         )
 
         # Assert
-        assert result == "struct<>"
+        assert result == "struct<f1:int>"
 
-    def test_infer_type_pyarrow_date(self, mocker):
+    def test_infer_type_pyarrow_date32(self):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
-
         python_engine = python.Engine()
 
-        mock_python_engine_convert_pandas_type.return_value = "test"
-
         # Act
-        result = python_engine._convert_pandas_object_type_to_offline_type(
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.date32()
         )
 
         # Assert
         assert result == "date"
 
-    def test_infer_type_pyarrow_binary(self, mocker):
+    def test_infer_type_pyarrow_date64(self):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
-
         python_engine = python.Engine()
 
-        mock_python_engine_convert_pandas_type.return_value = "test"
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.date64()
+        )
+
+        # Assert
+        assert result == "date"
+
+    def test_infer_type_pyarrow_binary(self):
+        # Arrange
+        python_engine = python.Engine()
 
         # Act
-        result = python_engine._convert_pandas_object_type_to_offline_type(
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.binary()
         )
 
         # Assert
         assert result == "binary"
 
-    def test_infer_type_pyarrow_string(self, mocker):
+    def test_infer_type_pyarrow_string(self):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
-
         python_engine = python.Engine()
 
-        mock_python_engine_convert_pandas_type.return_value = "test"
-
         # Act
-        result = python_engine._convert_pandas_object_type_to_offline_type(
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.string()
         )
 
         # Assert
         assert result == "string"
 
-    def test_infer_type_pyarrow_utf8(self, mocker):
+    def test_infer_type_pyarrow_utf8(self):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
-
         python_engine = python.Engine()
 
-        mock_python_engine_convert_pandas_type.return_value = "test"
-
         # Act
-        result = python_engine._convert_pandas_object_type_to_offline_type(
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.utf8()
         )
 
         # Assert
         assert result == "string"
 
-    def test_infer_type_pyarrow_other(self, mocker):
+    def test_infer_type_pyarrow_other(self):
         # Arrange
-        mock_python_engine_convert_pandas_type = mocker.patch(
-            "hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type"
-        )
-
         python_engine = python.Engine()
-
-        mock_python_engine_convert_pandas_type.return_value = "test"
 
         # Act
         with pytest.raises(ValueError) as e_info:
-            python_engine._convert_pandas_object_type_to_offline_type(
+            python_engine._convert_simple_pandas_dtype_to_offline_type(
                 arrow_type=pa.time32("s")
             )
 
         # Assert
-        assert str(e_info.value) == "dtype 'O' (arrow_type 'time32[s]') not supported"
+        assert str(e_info.value) == "dtype 'time32[s]' not supported"
 
     def test_infer_type_pyarrow_struct_with_decimal_fields(self):
         # Arrange
@@ -1559,7 +1634,6 @@ class TestPython:
         arrow_type = python_engine._convert_pandas_object_type_to_offline_type(
             arrow_schema.field("mapping").type
         )
-        print(arrow_type)
 
         # Assert
         assert (

@@ -57,15 +57,15 @@ public class TagsApi {
     this.entityType = entityType;
   }
 
-  private void add(Integer projectId, Integer featurestoreId, Integer entityId, String name, Object value)
+  private void add(Integer featurestoreId, Integer entityId, String name, Object value)
       throws FeatureStoreException, IOException {
-
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + TAGS_PATH;
 
     UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", projectId)
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featurestoreId)
         .set("entityType", entityType.getValue())
         .set("entityId", entityId)
@@ -86,13 +86,13 @@ public class TagsApi {
 
   public void add(FeatureGroupBase featureGroupBase, String name, Object value)
       throws FeatureStoreException, IOException {
-    add(featureGroupBase.getFeatureStore().getProjectId(), featureGroupBase.getFeatureStore().getId(),
+    add(featureGroupBase.getFeatureStore().getId(),
         featureGroupBase.getId(), name, value);
   }
 
   public void add(TrainingDatasetBase trainingDatasetBase, String name, Object value)
       throws FeatureStoreException, IOException {
-    add(trainingDatasetBase.getFeatureStore().getProjectId(), trainingDatasetBase.getFeatureStore().getId(),
+    add(trainingDatasetBase.getFeatureStore().getId(),
         trainingDatasetBase.getId(), name, value);
   }
 
@@ -106,26 +106,29 @@ public class TagsApi {
     add(getFvTdUriTemplate(featureViewBase, trainingDatasetVersion, name), value);
   }
 
-  private UriTemplate getFvUriTemplate(FeatureViewBase featureViewBase) {
+  private UriTemplate getFvUriTemplate(FeatureViewBase featureViewBase)
+      throws FeatureStoreException {
     return UriTemplate.fromTemplate(FV_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("projectId", HopsworksClient.getInstance().getProject().getProjectId())
         .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion());
   }
 
-  private UriTemplate getFvUriTemplate(FeatureViewBase featureViewBase, String tagName) {
+  private UriTemplate getFvUriTemplate(FeatureViewBase featureViewBase, String tagName)
+      throws FeatureStoreException {
     return UriTemplate.fromTemplate(FV_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("projectId", HopsworksClient.getInstance().getProject().getProjectId())
         .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
         .set("name", tagName);
   }
 
-  private UriTemplate getFvTdUriTemplate(FeatureViewBase featureViewBase, Integer trainingDatasetVersion) {
+  private UriTemplate getFvTdUriTemplate(FeatureViewBase featureViewBase, Integer trainingDatasetVersion)
+      throws FeatureStoreException {
     return UriTemplate.fromTemplate(FV_TD_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("projectId", HopsworksClient.getInstance().getProject().getProjectId())
         .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
@@ -133,9 +136,10 @@ public class TagsApi {
   }
 
   private UriTemplate getFvTdUriTemplate(FeatureViewBase featureViewBase, Integer trainingDatasetVersion,
-                                         String tagName) {
+                                         String tagName)
+      throws FeatureStoreException {
     return UriTemplate.fromTemplate(FV_TD_TAGS_PATH)
-        .set("projectId", featureViewBase.getFeatureStore().getProjectId())
+        .set("projectId", HopsworksClient.getInstance().getProject().getProjectId())
         .set("fsId", featureViewBase.getFeatureStore().getId())
         .set("fvName", featureViewBase.getName())
         .set("fvVersion", featureViewBase.getVersion())
@@ -143,14 +147,14 @@ public class TagsApi {
         .set("name", tagName);
   }
 
-  private Map<String, Object> get(Integer projectId, Integer featurestoreId, Integer entityId, Optional<String> name)
+  private Map<String, Object> get(Integer featurestoreId, Integer entityId, Optional<String> name)
       throws FeatureStoreException, IOException {
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + TAGS_PATH;
 
     UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", projectId)
+        .set("projectId", HopsworksClient.getInstance().getProject().getProjectId())
         .set("fsId", featurestoreId)
         .set("entityType", entityType.getValue())
         .set("entityId", entityId);
@@ -197,25 +201,21 @@ public class TagsApi {
   }
 
   public Object get(FeatureGroupBase featureGroupBase, String name) throws FeatureStoreException, IOException {
-    return get(featureGroupBase.getFeatureStore().getProjectId(),
-        featureGroupBase.getFeatureStore().getId(), featureGroupBase.getId(), Optional.of(name))
+    return get(featureGroupBase.getFeatureStore().getId(), featureGroupBase.getId(), Optional.of(name))
         .get(name);
   }
 
   public Object get(TrainingDatasetBase trainingDatasetBase, String name) throws FeatureStoreException, IOException {
-    return get(trainingDatasetBase.getFeatureStore().getProjectId(),
-        trainingDatasetBase.getFeatureStore().getId(), trainingDatasetBase.getId(), Optional.of(name))
+    return get(trainingDatasetBase.getFeatureStore().getId(), trainingDatasetBase.getId(), Optional.of(name))
         .get(name);
   }
 
   public Map<String, Object> get(FeatureGroupBase featureGroupBase) throws FeatureStoreException, IOException {
-    return get(featureGroupBase.getFeatureStore().getProjectId(),
-      featureGroupBase.getFeatureStore().getId(), featureGroupBase.getId(), Optional.empty());
+    return get(featureGroupBase.getFeatureStore().getId(), featureGroupBase.getId(), Optional.empty());
   }
 
   public Map<String, Object> get(TrainingDatasetBase trainingDatasetBase) throws FeatureStoreException, IOException {
-    return get(trainingDatasetBase.getFeatureStore().getProjectId(),
-      trainingDatasetBase.getFeatureStore().getId(), trainingDatasetBase.getId(), Optional.empty());
+    return get(trainingDatasetBase.getFeatureStore().getId(), trainingDatasetBase.getId(), Optional.empty());
   }
 
   public Object parseTagValue(ObjectMapper objectMapper, Object value) throws IOException {
@@ -234,14 +234,14 @@ public class TagsApi {
     }
   }
 
-  private void deleteTag(Integer projectId, Integer featurestoreId, Integer entityId, String name)
+  private void deleteTag(Integer featurestoreId, Integer entityId, String name)
       throws FeatureStoreException, IOException {
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + TAGS_PATH;
 
     UriTemplate uriTemplate = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", projectId)
+        .set("projectId", HopsworksClient.getInstance().getProject().getProjectId())
         .set("fsId", featurestoreId)
         .set("entityType", entityType.getValue())
         .set("entityId", entityId)
@@ -269,14 +269,13 @@ public class TagsApi {
   }
 
   public void deleteTag(FeatureGroupBase featureGroup, String name) throws FeatureStoreException, IOException {
-    deleteTag(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
+    deleteTag(featureGroup.getFeatureStore().getId(),
         featureGroup.getId(), name);
   }
 
   public void deleteTag(TrainingDatasetBase trainingDatasetBase, String name)
       throws FeatureStoreException, IOException {
-    deleteTag(trainingDatasetBase.getFeatureStore().getProjectId(),
-        trainingDatasetBase.getFeatureStore().getId(),
+    deleteTag(trainingDatasetBase.getFeatureStore().getId(),
         trainingDatasetBase.getId(), name);
   }
 }

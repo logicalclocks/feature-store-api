@@ -31,6 +31,8 @@ import decimal
 import numbers
 import math
 import os
+import sys
+import pytz
 from datetime import datetime, timezone
 
 import great_expectations as ge
@@ -81,6 +83,38 @@ try:
     HAS_FAST = True
 except ImportError:
     pass
+
+# Decimal types are currently not supported
+PYARROW_HOPSWORKS_DTYPE_MAPPING = {
+    **dict.fromkeys(
+        [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()], "int"
+    ),
+    **dict.fromkeys([pa.uint32(), pa.int64()], "bigint"),
+    **dict.fromkeys([pa.float16(), pa.float32()], "float"),
+    **dict.fromkeys([pa.float64()], "double"),
+    **dict.fromkeys(
+        [pa.timestamp("ns")]
+        + [pa.timestamp("ns", tz=tz) for tz in pytz.all_timezones]
+        + [pa.timestamp("us")]
+        + [pa.timestamp("us", tz=tz) for tz in pytz.all_timezones]
+        + [pa.timestamp("ms")]
+        + [pa.timestamp("ms", tz=tz) for tz in pytz.all_timezones]
+        + [pa.timestamp("s")]
+        + [pa.timestamp("s", tz=tz) for tz in pytz.all_timezones],
+        "timestamp",
+    ),
+    **dict.fromkeys([pa.bool_()], "boolean"),
+    **dict.fromkeys(
+        [
+            pa.string(),
+            pa.dictionary(value_type=pa.string(), index_type=pa.int8(), ordered=True),
+            pa.dictionary(value_type=pa.string(), index_type=pa.int8(), ordered=False),
+        ],
+        "string",
+    ),  # Category type in pandas stored as dictinoary in pyarrow
+    **dict.fromkeys([pa.date32(), pa.date64()], "date"),
+    **dict.fromkeys([pa.binary()], "binary"),
+}
 
 
 class Engine:
@@ -355,6 +389,7 @@ class Engine:
         )
 
         self.wait_for_job(job)
+        return job
 
     def profile(
         self,
@@ -365,36 +400,68 @@ class Engine:
         exact_uniqueness=True,
     ):
         # TODO: add statistics for correlations, histograms and exact_uniqueness
+
+        # parse timestamp columns to string columns
+        for col, dtype in df.dtypes.items():
+            if isinstance(dtype, type(np.dtype(np.datetime64))):
+                df[col] = df[col].astype(str)
+
         if not relevant_columns:
-            stats = df.describe()
+            stats = df.describe().to_dict()
+            relevant_columns = df.columns
         else:
             target_cols = [col for col in df.columns if col in relevant_columns]
-            stats = df[target_cols].describe()
+            stats = df[target_cols].describe().to_dict()
+
+        # df.describe() does not compute stats for all col types (e.g., string)
+        # we need to compute stats for the rest of the cols iteratively
+        missing_cols = list(set(relevant_columns) - set(stats.keys()))
+        for col in missing_cols:
+            stats[col] = df[col].describe().to_dict()
+
         final_stats = []
-        for col in stats.columns:
-            stats_dict = json.loads(stats[col].to_json())
-            stat = self._convert_pandas_statistics(stats_dict)
-            stat["dataType"] = (
-                "Fractional"
-                if isinstance(stats[col].dtype, type(np.dtype(np.float64)))
-                else "Integral"
-            )
+        for col in stats.keys():
+            stat = self._convert_pandas_statistics(stats[col])
             stat["isDataTypeInferred"] = "false"
             stat["column"] = col.split(".")[-1]
             stat["completeness"] = 1
+
+            # set data type
+            if isinstance(df.dtypes[col], type(np.dtype(np.float64))):
+                stat["dataType"] = "Fractional"
+            elif isinstance(df.dtypes[col], type(np.dtype(np.int64))):
+                stat["dataType"] = "Integral"
+            elif isinstance(df.dtypes[col], type(np.dtype(np.bool_))):
+                stat["dataType"] = "Boolean"
+            elif isinstance(df.dtypes[col], type(np.dtype(object))):
+                stat["dataType"] = "String"
+            else:
+                print(
+                    "Data type could not be inferred for column '"
+                    + stat["column"]
+                    + "'. Defaulting to 'String'",
+                    file=sys.stderr,
+                )
+                stat["dataType"] = "String"
+
             final_stats.append(stat)
-        return json.dumps({"columns": final_stats})
+
+        return json.dumps(
+            {"columns": final_stats},
+        )
 
     def _convert_pandas_statistics(self, stat):
         # For now transformation only need 25th, 50th, 75th percentiles
         # TODO: calculate properly all percentiles
         content_dict = {}
-        percentiles = []
         if "25%" in stat:
             percentiles = [0] * 100
             percentiles[24] = stat["25%"]
             percentiles[49] = stat["50%"]
             percentiles[74] = stat["75%"]
+            content_dict["approxPercentiles"] = percentiles
+        if "count" in stat:
+            content_dict["count"] = stat["count"]
         if "mean" in stat:
             content_dict["mean"] = stat["mean"]
         if "mean" in stat and "count" in stat:
@@ -406,8 +473,7 @@ class Engine:
             content_dict["stdDev"] = stat["std"]
         if "min" in stat:
             content_dict["minimum"] = stat["min"]
-        if percentiles:
-            content_dict["approxPercentiles"] = percentiles
+
         return content_dict
 
     def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):
@@ -466,13 +532,13 @@ class Engine:
         )
 
     def parse_schema_feature_group(self, dataframe, time_travel_format=None):
-        arrow_schema = pa.Schema.from_pandas(dataframe)
+        arrow_schema = pa.Schema.from_pandas(dataframe, preserve_index=False)
         features = []
-        for feat_name, feat_type in dataframe.dtypes.items():
+        for feat_name in arrow_schema.names:
             name = feat_name.lower()
             try:
                 converted_type = self._convert_pandas_dtype_to_offline_type(
-                    feat_type, arrow_schema.field(feat_name).type
+                    arrow_schema.field(feat_name).type
                 )
             except ValueError as e:
                 raise FeatureStoreException(f"Feature '{name}': {str(e)}")
@@ -1154,14 +1220,17 @@ class Engine:
         return config
 
     @staticmethod
-    def _convert_pandas_dtype_to_offline_type(dtype, arrow_type):
+    def _convert_pandas_dtype_to_offline_type(arrow_type):
         # This is a simple type conversion between pandas dtypes and pyspark (hive) types,
-        # using pyarrow types to convert "O (object)"-typed fields.
+        # using pyarrow types obatined from pandas dataframe to convert pandas typed fields,
+        # A recurisive function  "_convert_pandas_object_type_to_offline_type" is used to convert complex types like lists and structures
+        # "_convert_simple_pandas_dtype_to_offline_type" is used to convert simple types
         # In the backend, the types specified here will also be used for mapping to Avro types.
-        if dtype == np.dtype("O"):
+
+        if pa.types.is_list(arrow_type) or pa.types.is_struct(arrow_type):
             return Engine._convert_pandas_object_type_to_offline_type(arrow_type)
 
-        return Engine._convert_simple_pandas_dtype_to_offline_type(dtype)
+        return Engine._convert_simple_pandas_dtype_to_offline_type(arrow_type)
 
     @staticmethod
     def convert_spark_type_to_offline_type(spark_type_string):
@@ -1195,89 +1264,33 @@ class Engine:
             )
 
     @staticmethod
-    def _convert_simple_pandas_dtype_to_offline_type(dtype):
-        if dtype == np.dtype("uint8"):
-            return "int"
-        elif dtype == np.dtype("uint16"):
-            return "int"
-        elif dtype == np.dtype("int8"):
-            return "int"
-        elif dtype == np.dtype("int16"):
-            return "int"
-        elif dtype == np.dtype("int32"):
-            return "int"
-        elif dtype == np.dtype("uint32"):
-            return "bigint"
-        elif dtype == np.dtype("int64"):
-            return "bigint"
-        elif dtype == np.dtype("float16"):
-            return "float"
-        elif dtype == np.dtype("float32"):
-            return "float"
-        elif dtype == np.dtype("float64"):
-            return "double"
-        elif dtype == np.dtype("datetime64[ns]"):
-            return "timestamp"
-        elif dtype == np.dtype("bool"):
-            return "boolean"
-        elif dtype == "category":
-            return "string"
-        elif str(dtype) == "string":
-            return "string"
-        elif not isinstance(dtype, np.dtype):
-            if dtype == pd.Int8Dtype():
-                return "int"
-            elif dtype == pd.Int16Dtype():
-                return "int"
-            elif dtype == pd.Int32Dtype():
-                return "int"
-            elif dtype == pd.Int64Dtype():
-                return "bigint"
-
-        raise ValueError(f"dtype '{dtype}' not supported")
+    def _convert_simple_pandas_dtype_to_offline_type(arrow_type):
+        try:
+            return PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type]
+        except KeyError:
+            raise ValueError(f"dtype '{arrow_type}' not supported")
 
     @staticmethod
     def _convert_pandas_object_type_to_offline_type(arrow_type):
         if pa.types.is_list(arrow_type):
             # figure out sub type
             sub_arrow_type = arrow_type.value_type
-            try:
-                sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
-            except NotImplementedError:
-                sub_dtype = np.dtype("object")
-            subtype = Engine._convert_pandas_dtype_to_offline_type(
-                sub_dtype, sub_arrow_type
-            )
+            subtype = Engine._convert_pandas_dtype_to_offline_type(sub_arrow_type)
             return "array<{}>".format(subtype)
         if pa.types.is_struct(arrow_type):
             struct_schema = {}
             for index in range(arrow_type.num_fields):
                 sub_arrow_type = arrow_type.field(index).type
-                try:
-                    sub_dtype = np.dtype(sub_arrow_type.to_pandas_dtype())
-                except NotImplementedError:
-                    sub_dtype = np.dtype("object")
                 struct_schema[
                     arrow_type.field(index).name
                 ] = Engine._convert_pandas_dtype_to_offline_type(
-                    sub_dtype, arrow_type.field(index).type
+                    arrow_type.field(index).type
                 )
             return (
                 "struct<"
                 + ",".join([f"{key}:{value}" for key, value in struct_schema.items()])
                 + ">"
             )
-        # Currently not supported
-        # elif pa.types.is_decimal(arrow_type):
-        #    return str(arrow_type).replace("decimal128", "decimal")
-        elif pa.types.is_date(arrow_type):
-            return "date"
-        elif pa.types.is_binary(arrow_type):
-            return "binary"
-        elif pa.types.is_string(arrow_type) or pa.types.is_unicode(arrow_type):
-            return "string"
-        elif pa.types.is_boolean(arrow_type):
-            return "boolean"
 
         raise ValueError(f"dtype 'O' (arrow_type '{str(arrow_type)}') not supported")
 
