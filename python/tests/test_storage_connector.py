@@ -446,7 +446,7 @@ class TestKafkaConnector:
     def test_from_response_json(self, mocker, backend_fixtures):
         # Arrange
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
+        json = backend_fixtures["storage_connector"]["get_kafka_internal"]["response"]
 
         mock_engine_get_instance.return_value.add_file.return_value = (
             "result_from_add_file"
@@ -500,11 +500,40 @@ class TestKafkaConnector:
         assert sc.ssl_endpoint_identification_algorithm is None
         assert sc.options == {}
 
-    def test_kafka_options(self, mocker, backend_fixtures):
+    # Unit test for storage connector created by user (i.e. without the external flag)
+    def test_kafka_options_user_sc(self, mocker, backend_fixtures):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
+
+        mock_engine_get_instance.return_value.add_file.return_value = (
+            "result_from_add_file"
+        )
+
+        sc = storage_connector.StorageConnector.from_response_json(json)
+
+        # Act
+        config = sc.kafka_options()
+
+        # Assert
+        assert config == {
+            "test_option_name": "test_option_value",
+            "bootstrap.servers": "test_bootstrap_servers",
+            "security.protocol": "test_security_protocol",
+            "ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+            "ssl.truststore.location": "result_from_add_file",
+            "ssl.truststore.password": "test_ssl_truststore_password",
+            "ssl.keystore.location": "result_from_add_file",
+            "ssl.keystore.password": "test_ssl_keystore_password",
+            "ssl.key.password": "test_ssl_key_password",
+        }
+
+    def test_kafka_options_intenral(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.engine.get_instance")
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
+        json = backend_fixtures["storage_connector"]["get_kafka_internal"]["response"]
 
         mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
             "result_from_get_jks_trust_store_path"
@@ -563,7 +592,7 @@ class TestKafkaConnector:
         # Arrange
         mocker.patch("hsfs.engine.get_instance")
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
+        json = backend_fixtures["storage_connector"]["get_kafka_internal"]["response"]
 
         mock_client_get_instance.return_value._get_jks_trust_store_path.return_value = (
             "result_from_get_jks_trust_store_path"
@@ -621,7 +650,7 @@ class TestKafkaConnector:
     def test_confluent_options(self, mocker, backend_fixtures):
         # Arrange
         mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
-        json = backend_fixtures["storage_connector"]["get_kafka"]["response"]
+        json = backend_fixtures["storage_connector"]["get_kafka_internal"]["response"]
 
         mock_engine_get_instance.return_value.add_file.return_value = (
             "result_from_add_file"
