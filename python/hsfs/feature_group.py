@@ -3289,7 +3289,6 @@ class SpineGroup(FeatureGroupBase):
         href=None,
         online_topic_name=None,
         topic_name=None,
-        notification_topic_name=None,
         spine=True,
         dataframe="spine",
         deprecated=False,
@@ -3306,7 +3305,6 @@ class SpineGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
-            notification_topic_name=notification_topic_name,
             deprecated=deprecated,
         )
 
@@ -3433,6 +3431,5 @@ class SpineGroup(FeatureGroupBase):
             "eventTime": self._event_time,
             "spine": True,
             "topicName": self.topic_name,
-            "notificationTopicName": self.notification_topic_name,
             "deprecated": self.deprecated,
         }
