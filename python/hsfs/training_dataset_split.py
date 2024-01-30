@@ -27,7 +27,13 @@ class TrainingDatasetSplit:
     TEST = "test"
 
     def __init__(
-        self, name, split_type, percentage=None, start_time=None, end_time=None
+        self,
+        name,
+        split_type,
+        percentage=None,
+        start_time=None,
+        end_time=None,
+        **kwargs
     ):
         self._name = name
         self._percentage = percentage

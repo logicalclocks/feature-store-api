@@ -32,6 +32,7 @@ class FsQuery:
         expand=None,
         items=None,
         type=None,
+        **kwargs,
     ):
         self._query = query
         self._query_online = query_online
@@ -100,5 +101,11 @@ class FsQuery:
     def register_hudi_tables(self, feature_store_id, feature_store_name, read_options):
         for hudi_fg in self._hudi_cached_feature_groups:
             engine.get_instance().register_hudi_temporary_table(
+                hudi_fg, feature_store_id, feature_store_name, read_options
+            )
+
+    def register_delta_tables(self, feature_store_id, feature_store_name, read_options):
+        for hudi_fg in self._hudi_cached_feature_groups:
+            engine.get_instance().register_delta_temporary_table(
                 hudi_fg, feature_store_id, feature_store_name, read_options
             )

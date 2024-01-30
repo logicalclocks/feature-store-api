@@ -42,10 +42,12 @@ public class KafkaApi {
       throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
+        + FeatureStoreApi.FEATURE_STORE_PATH
         + KAFKA_PATH + SUBJECT_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStoreBase.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
+        .set("fsId", featureStoreBase.getId())
         .set("subject", subjectName)
         .set("version", subjectVersion)
         .expand();

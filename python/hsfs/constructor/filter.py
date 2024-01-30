@@ -29,7 +29,7 @@ class Filter:
     IN = "IN"
     LK = "LIKE"
 
-    def __init__(self, feature, condition, value):
+    def __init__(self, feature, condition, value, **kwargs):
         self._feature = feature
         self._condition = condition
         self._value = value
@@ -85,13 +85,27 @@ class Filter:
     def __str__(self):
         return self.json()
 
+    @property
+    def feature(self):
+        return self._feature
+
+    @property
+    def condition(self):
+        return self._condition
+
+    @property
+    def value(self):
+        return self._value
+
 
 class Logic:
     AND = "AND"
     OR = "OR"
     SINGLE = "SINGLE"
 
-    def __init__(self, type, left_f=None, right_f=None, left_l=None, right_l=None):
+    def __init__(
+        self, type, left_f=None, right_f=None, left_l=None, right_l=None, **kwargs
+    ):
         self._type = type
         self._left_f = left_f
         self._right_f = right_f
@@ -164,3 +178,13 @@ class Logic:
 
     def __str__(self):
         return self.json()
+
+    @property
+    def type(self):
+        return self._type
+
+    def get_left_filter_or_logic(self):
+        return self._left_f or self._left_l
+
+    def get_right_filter_or_logic(self):
+        return self._right_f or self._right_l

@@ -17,7 +17,7 @@ import humps
 
 
 class Inode:
-    def __init__(self, href=None, attributes=None, zip_state=None, tags=None):
+    def __init__(self, href=None, attributes=None, zip_state=None, tags=None, **kwargs):
         self._path = attributes["path"]
 
     @classmethod

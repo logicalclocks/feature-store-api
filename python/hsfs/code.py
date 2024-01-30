@@ -31,6 +31,7 @@ class Code:
         items=None,
         count=None,
         type=None,
+        **kwargs,
     ):
         self._commit_time = commit_time
         self._application_id = application_id

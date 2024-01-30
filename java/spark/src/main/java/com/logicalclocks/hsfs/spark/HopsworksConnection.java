@@ -86,6 +86,6 @@ public class HopsworksConnection extends HopsworksConnectionBase {
    */
   @Override
   public FeatureStore getFeatureStore(String name) throws IOException, FeatureStoreException {
-    return featureStoreApi.get(projectObj.getProjectId(), rewriteFeatureStoreName(name), FeatureStore.class);
+    return featureStoreApi.get(rewriteFeatureStoreName(name), FeatureStore.class);
   }
 }

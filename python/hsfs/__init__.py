@@ -18,6 +18,8 @@ import warnings
 
 from hsfs import util, version
 from hsfs.connection import Connection
+from hsfs import usage
+import nest_asyncio
 
 __version__ = version.__version__
 
@@ -35,4 +37,12 @@ warnings.filterwarnings(
     action="ignore", category=DeprecationWarning, module=r".*ipykernel"
 )
 
-__all__ = ["connection", "setup_databricks"]
+
+def disable_usage_logging():
+    usage.disable()
+
+
+__all__ = ["connection", "setup_databricks", "disable_usage_logging"]
+# running async code in jupyter throws "RuntimeError: This event loop is already running"
+# with tornado 6. This fixes the issue without downgrade to tornado==4.5.3
+nest_asyncio.apply()

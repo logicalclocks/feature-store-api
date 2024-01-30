@@ -56,7 +56,7 @@ public class TrainingDatasetApi {
         + TRAINING_DATASET_PATH;
 
     UriTemplate uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", featureStoreBase.getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", featureStoreBase.getId())
         .set("tdName", tdName);
 
@@ -103,7 +103,7 @@ public class TrainingDatasetApi {
         + TRAINING_DATASETS_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDatasetBase.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", trainingDatasetBase.getFeatureStore().getId())
         .expand();
 
@@ -123,7 +123,7 @@ public class TrainingDatasetApi {
         + TRAINING_QUERY_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDatasetBase.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", trainingDatasetBase.getFeatureStore().getId())
         .set("tdId", trainingDatasetBase.getId())
         .set("withLabel", withLabel)
@@ -139,19 +139,19 @@ public class TrainingDatasetApi {
   public List<ServingPreparedStatement> getServingPreparedStatement(TrainingDatasetBase trainingDatasetBase,
                                                                     boolean batch)
       throws FeatureStoreException, IOException {
+    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FeatureStoreApi.FEATURE_STORE_PATH
         + PREP_STATEMENT_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDatasetBase.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", trainingDatasetBase.getFeatureStore().getId())
         .set("tdId", trainingDatasetBase.getId())
         .set("batch", batch)
         .expand();
     HttpGet getRequest = new HttpGet(uri);
     LOGGER.info("Sending metadata request: " + uri);
-    HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     ServingPreparedStatement servingPreparedStatement = hopsworksClient.handleRequest(getRequest,
         ServingPreparedStatement.class);
     return servingPreparedStatement.getItems();
@@ -165,7 +165,7 @@ public class TrainingDatasetApi {
         + TRAINING_DATASET_ID_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDatasetBase.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", trainingDatasetBase.getFeatureStore().getId())
         .set("fgId", trainingDatasetBase.getId())
         .set(queryParameter, true)
@@ -188,7 +188,7 @@ public class TrainingDatasetApi {
         + TRAINING_DATASET_ID_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDatasetBase.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", trainingDatasetBase.getFeatureStore().getId())
         .set("fgId", trainingDatasetBase.getId())
         .expand();
@@ -207,7 +207,7 @@ public class TrainingDatasetApi {
         + TRANSFORMATION_FUNCTION_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", trainingDatasetBase.getFeatureStore().getProjectId())
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsId", trainingDatasetBase.getFeatureStore().getId())
         .set("tdId", trainingDatasetBase.getId())
         .expand();

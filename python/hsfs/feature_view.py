@@ -29,18 +29,23 @@ from hsfs import (
     training_dataset_feature,
     storage_connector,
     training_dataset,
+    usage,
 )
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import query, filter
 from hsfs.core import (
     feature_view_engine,
     transformation_function_engine,
     vector_server,
+    statistics_engine,
 )
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
+from hsfs.statistics import Statistics
 from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.serving_key import ServingKey
+from hsfs.core.vector_db_client import VectorDbClient
 
 
 class FeatureView:
@@ -55,18 +60,24 @@ class FeatureView:
         version: Optional[int] = None,
         description: Optional[str] = "",
         labels: Optional[List[str]] = [],
+        inference_helper_columns: Optional[List[str]] = [],
+        training_helper_columns: Optional[List[str]] = [],
         transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
         featurestore_name=None,
         serving_keys: Optional[List[ServingKey]] = None,
+        **kwargs,
     ):
         self._name = name
         self._id = id
         self._query = query
         self._featurestore_id = featurestore_id
+        self._feature_store_id = featurestore_id  # for consistency with feature group
         self._feature_store_name = featurestore_name
         self._version = version
         self._description = description
         self._labels = labels
+        self._inference_helper_columns = inference_helper_columns
+        self._training_helper_columns = training_helper_columns
         self._transformation_functions = (
             {
                 ft_name: copy.deepcopy(transformation_functions[ft_name])
@@ -86,6 +97,12 @@ class FeatureView:
         self._batch_vectors_server = None
         self._batch_scoring_server = None
         self._serving_keys = serving_keys
+        self._prefix_serving_key_map = {}
+        self._vector_db_client = None
+
+        self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
+        )
 
     def delete(self):
         """Delete current feature view, all associated metadata and training data.
@@ -126,7 +143,9 @@ class FeatureView:
         !!! example
             ```python
             # delete a feature view and all associated metadata
-            feature_view.clean(
+            from hsfs.feature_view import FeatureView
+
+            FeatureView.clean(
                 feature_store_id=1,
                 feature_view_name='feature_view_name',
                 feature_view_version=1
@@ -177,6 +196,7 @@ class FeatureView:
         """
         return self._feature_view_engine.update(self)
 
+    @usage.method_logger
     def init_serving(
         self,
         training_dataset_version: Optional[int] = None,
@@ -236,8 +256,18 @@ class FeatureView:
             self._features,
             training_dataset_version,
             serving_keys=self._serving_keys,
+            skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
-        self._single_vector_server.init_serving(self, False, external, options=options)
+        self._single_vector_server.init_serving(
+            self, False, external, True, options=options
+        )
+
+        self._prefix_serving_key_map = dict(
+            [
+                (f"{sk.prefix}{sk.feature_name}", sk)
+                for sk in self._single_vector_server.serving_keys
+            ]
+        )
 
         # initiate batch vector server
         self._batch_vectors_server = vector_server.VectorServer(
@@ -245,8 +275,13 @@ class FeatureView:
             self._features,
             training_dataset_version,
             serving_keys=self._serving_keys,
+            skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
-        self._batch_vectors_server.init_serving(self, True, external, options=options)
+        self._batch_vectors_server.init_serving(
+            self, True, external, True, options=options
+        )
+        if len(self._get_embedding_fgs()) > 0:
+            self._vector_db_client = VectorDbClient(self.query)
 
     def init_batch_scoring(
         self,
@@ -279,6 +314,7 @@ class FeatureView:
             self._features,
             training_dataset_version,
             serving_keys=self._serving_keys,
+            skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
         self._batch_scoring_server.init_batch_scoring(self)
 
@@ -394,6 +430,8 @@ class FeatureView:
         # Arguments
             entry: dictionary of feature group primary key and values provided by serving application.
                 Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
+                If the required primary keys is not provided, it will look for name
+                of the primary key in feature group in the entry.
             passed_features: dictionary of feature values provided by the application at runtime.
                 They can replace features values fetched from the feature store as well as
                 providing feature values which are not available in the feature store.
@@ -418,6 +456,9 @@ class FeatureView:
         """
         if self._single_vector_server is None:
             self.init_serving(external=external)
+        passed_features = self._update_with_vector_db_result(
+            self._single_vector_server, entry, passed_features
+        )
         return self._single_vector_server.get_feature_vector(
             entry, return_type, passed_features, allow_missing
         )
@@ -425,7 +466,7 @@ class FeatureView:
     def get_feature_vectors(
         self,
         entry: List[Dict[str, Any]],
-        passed_features: Optional[List[Dict[str, Any]]] = {},
+        passed_features: Optional[List[Dict[str, Any]]] = [],
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
@@ -483,6 +524,8 @@ class FeatureView:
         # Arguments
             entry: a list of dictionary of feature group primary key and values provided by serving application.
                 Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
+                If the required primary keys is not provided, it will look for name
+                of the primary key in feature group in the entry.
             passed_features: a list of dictionary of feature values provided by the application at runtime.
                 They can replace features values fetched from the feature store as well as
                 providing feature values which are not available in the feature store.
@@ -508,10 +551,191 @@ class FeatureView:
         """
         if self._batch_vectors_server is None:
             self.init_serving(external=external)
+        updated_passed_feature = []
+        for i in range(len(entry)):
+            updated_passed_feature.append(
+                self._update_with_vector_db_result(
+                    self._batch_vectors_server,
+                    entry[i],
+                    passed_features[i] if passed_features else {},
+                )
+            )
         return self._batch_vectors_server.get_feature_vectors(
-            entry, return_type, passed_features, allow_missing
+            entry, return_type, updated_passed_feature, allow_missing
         )
 
+    def get_inference_helper(
+        self,
+        entry: Dict[str, Any],
+        external: Optional[bool] = None,
+        return_type: Optional[str] = "pandas",
+    ):
+        """Returns assembled inference helper column vectors from online feature store.
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get assembled inference helper column vector
+            feature_view.get_inference_helper(
+                entry = {"pk1": 1, "pk2": 2}
+            )
+            ```
+
+        # Arguments
+            entry: dictionary of feature group primary key and values provided by serving application.
+                Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+            return_type: `"pandas"` or `"dict"`. Defaults to `"pandas"`.
+
+        # Returns
+            `pd.DataFrame` or `dict`. Defaults to `pd.DataFrame`.
+
+        # Raises
+            `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
+                feature view.
+        """
+        if self._single_vector_server is None:
+            self.init_serving(external=external)
+        return self._single_vector_server.get_inference_helper(entry, return_type)
+
+    def get_inference_helpers(
+        self,
+        entry: List[Dict[str, Any]],
+        external: Optional[bool] = None,
+        return_type: Optional[str] = "pandas",
+    ):
+        """Returns assembled inference helper column vectors in batches from online feature store.
+        !!! warning "Missing primary key entries"
+            If any of the provided primary key elements in `entry` can't be found in any
+            of the feature groups, no inference helper column vectors for that primary key value will be
+            returned.
+            If it can be found in at least one but not all feature groups used by
+            this feature view the call to this method will raise an exception.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get assembled inference helper column vectors
+            feature_view.get_inference_helpers(
+                entry = [
+                    {"pk1": 1, "pk2": 2},
+                    {"pk1": 3, "pk2": 4},
+                    {"pk1": 5, "pk2": 6}
+                ]
+            )
+            ```
+
+        # Arguments
+            entry: a list of dictionary of feature group primary key and values provided by serving application.
+                Set of required primary keys is [`feature_view.primary_keys`](#primary_keys)
+            external: boolean, optional. If set to True, the connection to the
+                online feature store is established using the same host as
+                for the `host` parameter in the [`hsfs.connection()`](connection_api.md#connection) method.
+                If set to False, the online feature store storage connector is used
+                which relies on the private IP. Defaults to True if connection to Hopsworks is established from
+                external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
+            return_type: `"pandas"` or `"dict"`. Defaults to `"dict"`.
+
+        # Returns
+            `pd.DataFrame` or `List[dict]`.  Defaults to `pd.DataFrame`.
+
+            Returned `pd.DataFrame` or `List[dict]`  contains feature values related to provided primary
+            keys, ordered according to positions of this features in the feature view query.
+
+        # Raises
+            `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
+                feature view.
+        """
+        if self._batch_vectors_server is None:
+            self.init_serving(external=external)
+        return self._batch_vectors_server.get_inference_helpers(
+            self, entry, return_type
+        )
+
+    def _update_with_vector_db_result(self, vec_server, entry, passed_features):
+        if not self._vector_db_client:
+            return passed_features
+        for join_index, fg in self._vector_db_client.embedding_fg_by_join_index.items():
+            complete, fg_entry = vec_server.filter_entry_by_join_index(
+                entry, join_index
+            )
+            if not complete:
+                # Not retrieving from vector db if entry is not completed
+                continue
+            vector_db_features = self._vector_db_client.read(
+                fg.id, keys=fg_entry, index_name=fg.embedding_index.index_name
+            )
+
+            # if result is not empty
+            if vector_db_features:
+                vector_db_features = vector_db_features[0]  # get the first result
+                if passed_features and vector_db_features:
+                    vector_db_features.update(passed_features)
+                passed_features = vector_db_features
+        return passed_features
+
+    def find_neighbors(
+        self,
+        embedding,
+        feature=None,
+        k=10,
+        filter=None,
+        min_score=0,
+        external: Optional[bool] = None,
+    ):
+        if self._vector_db_client is None:
+            self.init_serving(external=external)
+        results = self._vector_db_client.find_neighbors(
+            embedding,
+            feature=(feature if feature else None),
+            k=k,
+            filter=filter,
+            min_score=min_score,
+        )
+        if len(results) == 0:
+            return []
+
+        passed_features = [result[1] for result in results]
+        return self.get_feature_vectors(
+            [self._extract_primary_key(res[1]) for res in results],
+            passed_features=passed_features,
+            external=external,
+            allow_missing=True,
+        )
+
+    def _extract_primary_key(self, result_key):
+        primary_key_map = {}
+        for prefix_sk, sk in self._prefix_serving_key_map.items():
+            if prefix_sk in result_key:
+                primary_key_map[sk.required_serving_key] = result_key[prefix_sk]
+            elif sk.feature_name in result_key:  # fall back to use raw feature name
+                primary_key_map[sk.required_serving_key] = result_key[sk.feature_name]
+        if len(self._single_vector_server.required_serving_keys) > len(primary_key_map):
+            raise FeatureStoreException(
+                f"Failed to get feature vector because required primary key [{', '.join([k for k in set([sk.required_serving_key for sk in self._prefix_serving_key_map.values()]) - primary_key_map.keys()])}] are not present in vector db."
+                "If the join of the embedding feature group in the query does not have a prefix,"
+                " try to create a new feature view with prefix attached."
+            )
+        return primary_key_map
+
+    def _get_embedding_fgs(self):
+        return set([fg for fg in self.query.featuregroups if fg.embedding_index])
+
+    @usage.method_logger
     def get_batch_data(
         self,
         start_time: Optional[Union[str, int, datetime, date]] = None,
@@ -527,6 +751,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
+        primary_keys=False,
+        event_time=False,
+        inference_helper_columns=False,
     ):
         """Get a batch of data from an event time interval from the offline feature store.
 
@@ -566,13 +793,22 @@ class FeatureView:
                 * key `"use_hive"` and value `True` to read batch data with Hive instead of
                   [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 Defaults to `{}`.
+                * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
+                  For example: `{"arrow_flight_config": {"timeout": 900}}`
             spine: Spine dataframe with primary key, event time and
                 label column to use for point in time join when fetching features. Defaults to `None` and is only required
                 when feature view was created with spine group in the feature query.
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
+            inference_helper_columns: whether to include inference helper columns or not.
+                Inference helper columns are a list of feature names in the feature view, defined during its creation,
+                that may not be used in training the model itself but can be used during batch or online inference
+                for extra information. If inference helper columns were not defined in the feature view
+                `inference_helper_columns=True` will not any effect. Defaults to `False`, no helper columns.
         # Returns
             `DataFrame`: A dataframe
         """
@@ -588,6 +824,9 @@ class FeatureView:
             self._batch_scoring_server._transformation_functions,
             read_options,
             spine,
+            primary_keys,
+            event_time,
+            inference_helper_columns,
         )
 
     def add_tag(self, name: str, value):
@@ -702,6 +941,7 @@ class FeatureView:
         """
         return self._feature_view_engine.delete_tag(self, name)
 
+    @usage.method_logger
     def create_training_data(
         self,
         start_time: Optional[Union[str, int, datetime, date]] = "",
@@ -725,6 +965,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data can be retrieved by calling `feature_view.get_training_data`.
@@ -888,7 +1131,14 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
+            training_helper_columns: whether to include training helper columns or not. Training helper columns are a
+                list of feature names in the feature view, defined during its creation, that are not the part of the
+                model schema itself but can be used during training as a helper for extra information.
+                If training helper columns were not defined in the feature view then`training_helper_columns=True`
+                will not have any effect. Defaults to `False`, no training helper columns.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -912,7 +1162,13 @@ class FeatureView:
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
-            self, td, write_options, spine
+            self,
+            td,
+            write_options,
+            spine=spine,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -921,6 +1177,7 @@ class FeatureView:
 
         return td.version, td_job
 
+    @usage.method_logger
     def create_train_test_split(
         self,
         test_size: Optional[float] = None,
@@ -947,6 +1204,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train and test set at random or according to time ranges.
@@ -1141,6 +1401,8 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
+                * key `use_spark` and value `True` to materialize training dataset
+                  with Spark instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -1154,7 +1416,15 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
+            training_helper_columns: whether to include training helper columns or not.
+                Training helper columns are a list of feature names in the feature view, defined during its creation,
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view
+                then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
+                columns.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -1186,7 +1456,13 @@ class FeatureView:
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
-            self, td, write_options, spine
+            self,
+            td,
+            write_options,
+            spine=spine,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1195,6 +1471,7 @@ class FeatureView:
 
         return td.version, td_job
 
+    @usage.method_logger
     def create_train_validation_test_split(
         self,
         validation_size: Optional[float] = None,
@@ -1224,6 +1501,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train, validation, and test set at random or according to time range.
@@ -1404,6 +1684,8 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
+                * key `use_spark` and value `True` to materialize training dataset
+                  with Spark instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -1417,7 +1699,15 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
+            training_helper_columns: whether to include training helper columns or not.
+                Training helper columns are a list of feature names in the feature view, defined during its creation,
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view
+                then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
+                columns.
         # Returns
             (td_version, `Job`): Tuple of training dataset version and job.
                 When using the `python` engine, it returns the Hopsworks Job
@@ -1457,7 +1747,13 @@ class FeatureView:
         )
         # td_job is used only if the python engine is used
         td, td_job = self._feature_view_engine.create_training_dataset(
-            self, td, write_options, spine
+            self,
+            td,
+            write_options,
+            spine=spine,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1466,9 +1762,11 @@ class FeatureView:
 
         return td.version, td_job
 
+    @usage.method_logger
     def recreate_training_dataset(
         self,
         training_dataset_version: int,
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[
             Union[
@@ -1506,10 +1804,19 @@ class FeatureView:
 
         # Arguments
             training_dataset_version: training dataset version
-            read_options: Additional options as key/value pairs to pass to the execution engine.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this feature group, `"correlations`" to turn on feature correlation
+                computation and `"histograms"` to compute feature value frequencies. The
+                values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            write_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
+                * key `use_spark` and value `True` to materialize training dataset
+                  with Spark instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -1529,10 +1836,15 @@ class FeatureView:
                 that was launched to create the training dataset.
         """
         td, td_job = self._feature_view_engine.recreate_training_dataset(
-            self, training_dataset_version, write_options, spine
+            self,
+            training_dataset_version=training_dataset_version,
+            statistics_config=statistics_config,
+            user_write_options=write_options or {},
+            spine=spine,
         )
         return td_job
 
+    @usage.method_logger
     def training_data(
         self,
         start_time: Optional[Union[str, int, datetime, date]] = None,
@@ -1551,6 +1863,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1624,6 +1939,8 @@ class FeatureView:
                 * key `"use_hive"` and value `True` to create in-memory training dataset
                   with Hive instead of
                   [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
+                  For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
@@ -1636,7 +1953,15 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
+            training_helper_columns: whether to include training helper columns or not.
+                Training helper columns are a list of feature names in the feature view, defined during its creation,
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view
+                then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
+                columns.
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
         """
@@ -1656,7 +1981,13 @@ class FeatureView:
             extra_filter=extra_filter,
         )
         td, df = self._feature_view_engine.get_training_data(
-            self, read_options, training_dataset_obj=td, spine=spine
+            self,
+            read_options,
+            training_dataset_obj=td,
+            spine=spine,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1664,6 +1995,7 @@ class FeatureView:
         )
         return df
 
+    @usage.method_logger
     def train_test_split(
         self,
         test_size: Optional[float] = None,
@@ -1685,6 +2017,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1768,6 +2103,8 @@ class FeatureView:
                 * key `"use_hive"` and value `True` to create in-memory training dataset
                   with Hive instead of
                   [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
+                  For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
@@ -1780,7 +2117,15 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
+            training_helper_columns: whether to include training helper columns or not.
+                Training helper columns are a list of feature names in the feature view, defined during its creation,
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view
+                then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
+                columns.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -1813,6 +2158,9 @@ class FeatureView:
             training_dataset_obj=td,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
             spine=spine,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -1829,6 +2177,7 @@ class FeatureView:
                 " `test_size` should be between 0 and 1 if specified."
             )
 
+    @usage.method_logger
     def train_validation_test_split(
         self,
         validation_size: Optional[float] = None,
@@ -1853,6 +2202,9 @@ class FeatureView:
                 TypeVar("SpineGroup"),
             ]
         ] = None,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -1949,6 +2301,8 @@ class FeatureView:
                 * key `"use_hive"` and value `True` to create in-memory training dataset
                   with Hive instead of
                   [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
+                  For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 * key `spark` and value an object of type
@@ -1961,7 +2315,15 @@ class FeatureView:
                 It is possible to directly pass a spine group instead of a dataframe to overwrite the left side of the
                 feature join, however, the same features as in the original feature group that is being replaced need to
                 be available in the spine group.
-
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
+            training_helper_columns: whether to include training helper columns or not.
+                Training helper columns are a list of feature names in the feature view, defined during its creation,
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view
+                then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
+                columns.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2007,6 +2369,9 @@ class FeatureView:
                 TrainingDatasetSplit.TEST,
             ],
             spine=spine,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -2035,10 +2400,14 @@ class FeatureView:
                 "`validation_size`, `test_size` and sum of `validationSize` and `testSize` should be between 0 and 1 if specified."
             )
 
+    @usage.method_logger
     def get_training_data(
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """
         Get training data created by `feature_view.create_training_data`
@@ -2069,22 +2438,41 @@ class FeatureView:
                 * key `"use_hive"` and value `True` to read training dataset
                   with the Hopsworks API instead of
                   [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
+                  For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
+            training_helper_columns: whether to include training helper columns or not.
+                Training helper columns are a list of feature names in the feature view, defined during its creation,
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view or during
+                materializing training dataset in the file system then`training_helper_columns=True` will not have
+                any effect. Defaults to `False`, no training helper columns.
         # Returns
             (X, y): Tuple of dataframe of features and labels
         """
-        td, df = self._feature_view_engine.get_training_data(
-            self, read_options, training_dataset_version=training_dataset_version
+        _, df = self._feature_view_engine.get_training_data(
+            self,
+            read_options,
+            training_dataset_version=training_dataset_version,
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         return df
 
+    @usage.method_logger
     def get_train_test_split(
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """
         Get training data created by `feature_view.create_train_test_split`
@@ -2110,10 +2498,20 @@ class FeatureView:
                 * key `"use_hive"` and value `True` to read training dataset
                   with the Hopsworks API instead of
                   [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
+                  For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
+            training_helper_columns: whether to include training helper columns or not.
+                Training helper columns are a list of feature names in the feature view, defined during its creation,
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view or during
+                materializing training dataset in the file system then`training_helper_columns=True` will not have
+                any effect. Defaults to `False`, no training helper columns.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -2123,13 +2521,20 @@ class FeatureView:
             read_options,
             training_dataset_version=training_dataset_version,
             splits=[TrainingDatasetSplit.TRAIN, TrainingDatasetSplit.TEST],
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         return df
 
+    @usage.method_logger
     def get_train_validation_test_split(
         self,
         training_dataset_version,
         read_options: Optional[Dict[Any, Any]] = None,
+        primary_keys=False,
+        event_time=False,
+        training_helper_columns=False,
     ):
         """
         Get training data created by `feature_view.create_train_validation_test_split`
@@ -2155,10 +2560,20 @@ class FeatureView:
                 * key `"use_hive"` and value `True` to read training dataset
                   with the Hopsworks API instead of
                   [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
+                * key `"arrow_flight_config"` to pass a dictionary of arrow flight configurations.
+                  For example: `{"arrow_flight_config": {"timeout": 900}}`
                 * key `"hive_config"` to pass a dictionary of hive or tez configurations.
                   For example: `{"hive_config": {"hive.tez.cpu.vcores": 2, "tez.grouping.split-count": "3"}}`
                 Defaults to `{}`.
-
+            primary_keys: whether to include primary key features or not.  Defaults to `False`, no primary key
+                features.
+            event_time: whether to include event time feature or not.  Defaults to `False`, no event time feature.
+            training_helper_columns: whether to include training helper columns or not.
+                Training helper columns are a list of feature names in the feature view, defined during its creation,
+                that are not the part of the model schema itself but can be used during training as a helper for
+                extra information. If training helper columns were not defined in the feature view or during
+                materializing training dataset in the file system then`training_helper_columns=True` will not have
+                any effect. Defaults to `False`, no training helper columns.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2172,9 +2587,67 @@ class FeatureView:
                 TrainingDatasetSplit.VALIDATION,
                 TrainingDatasetSplit.TEST,
             ],
+            primary_keys=primary_keys,
+            event_time=event_time,
+            training_helper_columns=training_helper_columns,
         )
         return df
 
+    @usage.method_logger
+    def get_training_datasets(self):
+        """Returns the metadata of all training datasets created with this feature view.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get all training dataset metadata
+            list_tds_meta = feature_view.get_training_datasets()
+            ```
+
+        # Returns
+            `List[TrainingDatasetBase]` List of training datasets metadata.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the training datasets metadata.
+        """
+        return self._feature_view_engine.get_training_datasets(self)
+
+    @usage.method_logger
+    def get_training_dataset_statistics(
+        self, training_dataset_version, before_transformation=False
+    ) -> Statistics:
+        """
+        Get statistics of a training dataset.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get training dataset statistics
+            statistics = feature_view.get_training_dataset_statistics(training_dataset_version=1)
+            ```
+
+        # Arguments
+            training_dataset_version: training dataset version
+        # Returns
+            `Statistics`
+        """
+        return self._statistics_engine.get(
+            self,
+            training_dataset_version=training_dataset_version,
+            before_transformation=before_transformation,
+        )
+
+    @usage.method_logger
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
         """Attach a tag to a training dataset.
 
@@ -2206,6 +2679,7 @@ class FeatureView:
             self, name, value, training_dataset_version=training_dataset_version
         )
 
+    @usage.method_logger
     def get_training_dataset_tag(self, training_dataset_version: int, name: str):
         """Get the tags of a training dataset.
 
@@ -2238,6 +2712,7 @@ class FeatureView:
             self, name, training_dataset_version=training_dataset_version
         )
 
+    @usage.method_logger
     def get_training_dataset_tags(self, training_dataset_version: int):
         """Returns all tags attached to a training dataset.
 
@@ -2265,6 +2740,7 @@ class FeatureView:
             self, training_dataset_version=training_dataset_version
         )
 
+    @usage.method_logger
     def delete_training_dataset_tag(self, training_dataset_version: int, name: str):
         """Delete a tag attached to a training dataset.
 
@@ -2294,6 +2770,7 @@ class FeatureView:
             self, name, training_dataset_version=training_dataset_version
         )
 
+    @usage.method_logger
     def purge_training_data(self, training_dataset_version: int):
         """Delete a training dataset (data only).
 
@@ -2319,6 +2796,7 @@ class FeatureView:
             self, training_data_version=training_dataset_version
         )
 
+    @usage.method_logger
     def purge_all_training_data(self):
         """Delete all training datasets (data only).
 
@@ -2339,6 +2817,7 @@ class FeatureView:
         """
         self._feature_view_engine.delete_training_dataset_only(self)
 
+    @usage.method_logger
     def delete_training_dataset(self, training_dataset_version: int):
         """Delete a training dataset. This will delete both metadata and training data.
 
@@ -2366,6 +2845,7 @@ class FeatureView:
             self, training_data_version=training_dataset_version
         )
 
+    @usage.method_logger
     def delete_all_training_datasets(self):
         """Delete all training datasets. This will delete both metadata and training data.
 
@@ -2404,14 +2884,21 @@ class FeatureView:
         )
         features = json_decamelized.get("features", [])
         if features:
-            features = [
-                training_dataset_feature.TrainingDatasetFeature.from_response_json(
-                    feature
+            for feature_index in range(len(features)):
+                feature = (
+                    training_dataset_feature.TrainingDatasetFeature.from_response_json(
+                        features[feature_index]
+                    )
                 )
-                for feature in features
-            ]
+                features[feature_index] = feature
         fv.schema = features
         fv.labels = [feature.name for feature in features if feature.label]
+        fv.inference_helper_columns = [
+            feature.name for feature in features if feature.inference_helper_column
+        ]
+        fv.training_helper_columns = [
+            feature.name for feature in features if feature.training_helper_column
+        ]
         return fv
 
     def update_from_response_json(self, json_dict):
@@ -2424,6 +2911,8 @@ class FeatureView:
             "featurestore_id",
             "version",
             "labels",
+            "inference_helper_columns",
+            "training_helper_columns",
             "schema",
             "serving_keys",
         ]:
@@ -2502,6 +2991,32 @@ class FeatureView:
         self._labels = [lb.lower() for lb in labels]
 
     @property
+    def inference_helper_columns(self):
+        """The helper column sof the feature view.
+
+        Can be a composite of multiple features.
+        """
+        return self._inference_helper_columns
+
+    @inference_helper_columns.setter
+    def inference_helper_columns(self, inference_helper_columns):
+        self._inference_helper_columns = [
+            exf.lower() for exf in inference_helper_columns
+        ]
+
+    @property
+    def training_helper_columns(self):
+        """The helper column sof the feature view.
+
+        Can be a composite of multiple features.
+        """
+        return self._training_helper_columns
+
+    @training_helper_columns.setter
+    def training_helper_columns(self, training_helper_columns):
+        self._training_helper_columns = [exf.lower() for exf in training_helper_columns]
+
+    @property
     def description(self):
         """Description of the feature view."""
         return self._description
@@ -2544,16 +3059,24 @@ class FeatureView:
 
     @property
     def primary_keys(self):
-        """Set of primary key names that is required as keys in input dict object for `get_feature_vector(s)` method."""
+        """Set of primary key names that is required as keys in input dict object
+        for [`get_feature_vector(s)`](#get_feature_vector) method.
+        When there are duplicated primary key names and prefix is not defined in the query,
+        prefix is generated and prepended to the primary key name in this format
+        "fgId_{feature_group_id}_{join_index}" where `join_index` is the order of the join.
+        """
         _vector_server = self._single_vector_server or self._batch_vectors_server
         if _vector_server:
-            return _vector_server.serving_keys
+            return _vector_server.required_serving_keys
         else:
             _vector_server = vector_server.VectorServer(
-                self._featurestore_id, self._features, serving_keys=self._serving_keys
+                self._featurestore_id,
+                self._features,
+                serving_keys=self._serving_keys,
+                skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
             )
-            _vector_server.init_prepared_statement(self, False, False)
-            return _vector_server.serving_keys
+            _vector_server.init_prepared_statement(self, False, False, False)
+            return _vector_server.required_serving_keys
 
     @property
     def serving_keys(self):

@@ -31,6 +31,8 @@ from hsfs.core import (
     feature_view_engine,
 )
 
+import asyncio
+
 
 class VectorServer:
     def __init__(
@@ -39,15 +41,29 @@ class VectorServer:
         features=[],
         training_dataset_version=None,
         serving_keys=None,
+        skip_fg_ids=None,
     ):
         self._training_dataset_version = training_dataset_version
         self._features = features
         self._feature_vector_col_name = (
-            [feat.name for feat in features if not feat.label] if features else []
+            [
+                feat.name
+                for feat in features
+                if not (
+                    feat.label
+                    or feat.inference_helper_column
+                    or feat.training_helper_column
+                )
+            ]
+            if features
+            else []
         )
+        self._skip_fg_ids = skip_fg_ids or set()
         self._prepared_statement_engine = None
         self._prepared_statements = None
+        self._helper_column_prepared_statements = None
         self._serving_keys = serving_keys
+        self._valid_serving_key = None
         self._pkname_by_serving_index = None
         self._prefix_by_serving_index = None
         self._serving_key_by_serving_index = {}
@@ -66,14 +82,30 @@ class VectorServer:
         self._feature_view_engine = feature_view_engine.FeatureViewEngine(
             feature_store_id
         )
+        self._transformation_functions = None
+        self._required_serving_keys = None
+        self._async_pool = None
 
-    def init_serving(self, entity, batch, external, options=None):
+    def init_serving(
+        self,
+        entity,
+        batch,
+        external,
+        inference_helper_columns=False,
+        options=None,
+    ):
         if external is None:
             external = isinstance(client.get_instance(), client.external.Client)
         # `init_prepared_statement` should be the last because other initialisations
         # has to be done successfully before it is able to fetch feature vectors.
         self.init_transformation(entity)
-        self.init_prepared_statement(entity, batch, external, options=options)
+        self.init_prepared_statement(
+            entity,
+            batch,
+            external,
+            inference_helper_columns,
+            options=options,
+        )
 
     def init_batch_scoring(self, entity):
         self.init_transformation(entity)
@@ -82,10 +114,23 @@ class VectorServer:
         # attach transformation functions
         self._transformation_functions = self._get_transformation_fns(entity)
 
-    def init_prepared_statement(self, entity, batch, external, options=None):
+    def init_prepared_statement(
+        self,
+        entity,
+        batch,
+        external,
+        inference_helper_columns,
+        options=None,
+    ):
         if isinstance(entity, feature_view.FeatureView):
+            if inference_helper_columns:
+                helper_column_prepared_statements = (
+                    self._feature_view_api.get_serving_prepared_statement(
+                        entity.name, entity.version, batch, inference_helper_columns
+                    )
+                )
             prepared_statements = self._feature_view_api.get_serving_prepared_statement(
-                entity.name, entity.version, batch
+                entity.name, entity.version, batch, inference_helper_columns=False
             )
         elif isinstance(entity, training_dataset.TrainingDataset):
             prepared_statements = (
@@ -98,16 +143,60 @@ class VectorServer:
         # reset values to default, as user may be re-initialising with different parameters
         self._prepared_statement_engine = None
         self._prepared_statements = None
+        self._helper_column_prepared_statements = None
         self._external = external
+        # create aiomysql engine
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._set_aiomysql_connection(len(prepared_statements), options=options)
+        )
 
-        self._set_mysql_connection(options=options)
+        (
+            self._prepared_statements,
+            feature_name_order_by_psp,
+            prefix_by_serving_index,
+        ) = self._parametrize_prepared_statements(prepared_statements, batch)
 
+        if inference_helper_columns:
+            (
+                self._helper_column_prepared_statements,
+                _,
+                _,
+            ) = self._parametrize_prepared_statements(
+                helper_column_prepared_statements, batch
+            )
+
+        self._prefix_by_serving_index = prefix_by_serving_index
+        for sk in self._serving_keys:
+            self._serving_key_by_serving_index[
+                sk.join_index
+            ] = self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
+        # sort the serving by PreparedStatementParameter.index
+        for join_index in self._serving_key_by_serving_index:
+            # feature_name_order_by_psp do not include the join index when the joint feature only contains label only
+            # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
+            if join_index in feature_name_order_by_psp:
+                self._serving_key_by_serving_index[join_index] = sorted(
+                    self._serving_key_by_serving_index[join_index],
+                    key=lambda _sk: feature_name_order_by_psp[join_index].get(
+                        _sk.feature_name, 0
+                    ),
+                )
+        # get schemas for complex features once
+        self._complex_features = self.get_complex_feature_schemas()
+        self._valid_serving_key = set(
+            [sk.feature_name for sk in self._serving_keys]
+            + [sk.required_serving_key for sk in self._serving_keys]
+        )
+
+    def _parametrize_prepared_statements(self, prepared_statements, batch):
         prepared_statements_dict = {}
         serving_keys = set()
         feature_name_order_by_psp = dict()
         prefix_by_serving_index = {}
-
         for prepared_statement in prepared_statements:
+            if prepared_statement.feature_group_id in self._skip_fg_ids:
+                continue
             query_online = str(prepared_statement.query_online).replace("\n", " ")
             prefix_by_serving_index[
                 prepared_statement.prepared_statement_index
@@ -158,83 +247,38 @@ class VectorServer:
             prepared_statements_dict[
                 prepared_statement.prepared_statement_index
             ] = query_online
+
         # assign serving key if it is not provided.
         if self._serving_keys is None:
             self._serving_keys = serving_keys
 
-        self._prepared_statements = prepared_statements_dict
-        self._prefix_by_serving_index = prefix_by_serving_index
-        for sk in self._serving_keys:
-            self._serving_key_by_serving_index[
-                sk.join_index
-            ] = self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
-        # sort the serving by PreparedStatementParameter.index
-        for join_index in self._serving_key_by_serving_index:
-            # feature_name_order_by_psp do not include the join index when the joint feature only contains label only
-            # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
-            if join_index in feature_name_order_by_psp:
-                self._serving_key_by_serving_index[join_index] = sorted(
-                    self._serving_key_by_serving_index[join_index],
-                    key=lambda _sk: feature_name_order_by_psp[join_index].get(
-                        _sk.feature_name, 0
-                    ),
-                )
-        # get schemas for complex features once
-        self._complex_features = self.get_complex_feature_schemas()
+        return (
+            prepared_statements_dict,
+            feature_name_order_by_psp,
+            prefix_by_serving_index,
+        )
 
     def _validate_serving_key(self, entry):
         for key in entry:
-            if key not in self.serving_keys:
+            if key not in self._valid_serving_key:
                 raise ValueError(
                     f"'{key}' is not a correct serving key. Expect one of the"
-                    f" followings: [{', '.join(self.serving_keys)}]"
+                    f" followings: [{', '.join(self._valid_serving_key)}]"
                 )
 
     def get_feature_vector(
-        self, entry, return_type=None, passed_features=[], allow_missing=False
+        self,
+        entry,
+        return_type=None,
+        passed_features=[],
+        allow_missing=False,
     ):
         """Assembles serving vector from online feature store."""
 
-        if all([isinstance(val, list) for val in entry.values()]):
-            raise ValueError(
-                "Entry is expected to be single value per primary key. "
-                "If you have already initialised prepared statements for single vector and now want to retrieve "
-                "batch vector please reinitialise prepared statements with  "
-                "`training_dataset.init_prepared_statement()` "
-                "or `feature_view.init_serving()`"
-            )
-        self._validate_serving_key(entry)
-        # Initialize the set of values
-        serving_vector = {}
-        with self._prepared_statement_engine.connect() as mysql_conn:
-            for prepared_statement_index in self._prepared_statements:
-                pk_entry = {}
-                next_statement = False
-                for sk in self._serving_key_by_serving_index[prepared_statement_index]:
-                    if sk.required_serving_key not in entry.keys():
-                        # User did not provide the necessary serving keys, we expect they have
-                        # provided the necessary features as passed_features.
-                        # We are going to check later if this is true
-                        next_statement = True
-                        break
-                    else:
-                        pk_entry[sk.feature_name] = entry[sk.required_serving_key]
-                if next_statement:
-                    continue
-
-                # Fetch the data from the online feature store
-                prepared_statement = self._prepared_statements[prepared_statement_index]
-                result_proxy = mysql_conn.execute(
-                    prepared_statement, pk_entry
-                ).fetchall()
-                for row in result_proxy:
-                    result_dict = self.deserialize_complex_features(
-                        self._complex_features, row._asdict()
-                    )
-                    serving_vector.update(result_dict)
+        # get result row
+        serving_vector = self._vector_result(entry, self._prepared_statements)
         # Add the passed features
         serving_vector.update(passed_features)
-
         # apply transformation functions
         result_dict = self._apply_transformation(serving_vector)
 
@@ -254,75 +298,17 @@ class VectorServer:
             )
 
     def get_feature_vectors(
-        self, entries, return_type=None, passed_features=[], allow_missing=False
+        self,
+        entries,
+        return_type=None,
+        passed_features=[],
+        allow_missing=False,
     ):
         """Assembles serving vector from online feature store."""
 
-        # create dict object that will have of order of the vector as key and values as
-        # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
-        # expect that backend will return correctly ordered vectors.
-        batch_results = [{} for _ in range(len(entries))]
-        # for each prepare statement, do a batch look up
-        # then concatenate the results
-        with self._prepared_statement_engine.connect() as mysql_conn:
-            for prepared_statement_index in self._prepared_statements:
-                # prepared_statement_index include fg with label only
-                # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
-                if prepared_statement_index not in self._serving_key_by_serving_index:
-                    continue
-                prepared_statement = self._prepared_statements[prepared_statement_index]
-                entry_values_tuples = list(
-                    map(
-                        lambda e: tuple(
-                            [
-                                e.get(sk.required_serving_key)
-                                for sk in self._serving_key_by_serving_index[
-                                    prepared_statement_index
-                                ]
-                            ]
-                        ),
-                        entries,
-                    )
-                )
-                result_proxy = mysql_conn.execute(
-                    prepared_statement,
-                    {"batch_ids": entry_values_tuples},
-                ).fetchall()
-
-                statement_results = {}
-                serving_keys = [
-                    sk.required_serving_key
-                    for sk in self._serving_key_by_serving_index[
-                        prepared_statement_index
-                    ]
-                ]
-                # Use prefix from prepare statement because prefix from serving key is collision adjusted.
-                prefix_features = [
-                    (self._prefix_by_serving_index[prepared_statement_index] or "")
-                    + sk.feature_name
-                    for sk in self._serving_key_by_serving_index[
-                        prepared_statement_index
-                    ]
-                ]
-                for row in result_proxy:
-                    row_dict = row._asdict()
-                    # can primary key be complex feature?
-                    result_dict = self.deserialize_complex_features(
-                        self._complex_features, row_dict
-                    )
-                    # note: should used serialized value
-                    # as it is from users' input
-                    statement_results[
-                        self._get_result_key(prefix_features, row_dict)
-                    ] = result_dict
-
-                # add partial results to the global results
-                for i, entry in enumerate(entries):
-                    batch_results[i].update(
-                        statement_results.get(
-                            self._get_result_key(serving_keys, entry), {}
-                        )
-                    )
+        batch_results, _ = self._batch_vector_results(
+            entries, self._prepared_statements
+        )
         # apply passed features to each batch result
         for vector_index, pf in enumerate(passed_features):
             batch_results[vector_index].update(pf)
@@ -356,10 +342,198 @@ class VectorServer:
                 "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
             )
 
+    def get_inference_helper(self, entry, return_type):
+        """Assembles serving vector from online feature store."""
+
+        serving_vector = self._vector_result(
+            entry, self._helper_column_prepared_statements
+        )
+
+        if return_type.lower() == "pandas":
+            return pd.DataFrame([serving_vector])
+        elif return_type.lower() == "dict":
+            return serving_vector
+        else:
+            raise Exception(
+                "Unknown return type. Supported return types are 'pandas' and 'dict'"
+            )
+
+    def get_inference_helpers(
+        self,
+        feature_view_object,
+        entries,
+        return_type,
+    ):
+        """Assembles serving vector from online feature store."""
+        batch_results, serving_keys = self._batch_vector_results(
+            entries, self._helper_column_prepared_statements
+        )
+
+        # drop serving and primary key names from the result dict
+        drop_list = serving_keys + list(feature_view_object.primary_keys)
+        _ = list(
+            map(
+                lambda results_dict: [
+                    results_dict.pop(x, None)
+                    for x in drop_list
+                    if x not in feature_view_object.inference_helper_columns
+                ],
+                batch_results,
+            )
+        )
+
+        if return_type.lower() == "dict":
+            return batch_results
+        elif return_type.lower() == "pandas":
+            return pd.DataFrame(batch_results)
+        else:
+            raise Exception(
+                "Unknown return type. Supported return types are 'dict' and 'pandas'"
+            )
+
+    def _vector_result(self, entry, prepared_statement_objects):
+        """Retrieve single vector with parallel queries using aiomysql engine."""
+
+        if all([isinstance(val, list) for val in entry.values()]):
+            raise ValueError(
+                "Entry is expected to be single value per primary key. "
+                "If you have already initialised prepared statements for single vector and now want to retrieve "
+                "batch vector please reinitialise prepared statements with  "
+                "`training_dataset.init_prepared_statement()` "
+                "or `feature_view.init_serving()`"
+            )
+        self._validate_serving_key(entry)
+        # Initialize the set of values
+        serving_vector = {}
+        bind_entries = []
+        for prepared_statement_index in prepared_statement_objects:
+            pk_entry = {}
+            next_statement = False
+            for sk in self._serving_key_by_serving_index[prepared_statement_index]:
+                if sk.required_serving_key not in entry.keys():
+                    # Check if there is any entry matched with feature name.
+                    if sk.feature_name in entry.keys():
+                        pk_entry[sk.feature_name] = entry[sk.feature_name]
+                    else:
+                        # User did not provide the necessary serving keys, we expect they have
+                        # provided the necessary features as passed_features.
+                        # We are going to check later if this is true
+                        next_statement = True
+                        break
+                else:
+                    pk_entry[sk.feature_name] = entry[sk.required_serving_key]
+            bind_entries.append(pk_entry)
+            if next_statement:
+                continue
+
+        # run all the prepared statements in parallel using aiomysql engine
+        loop = asyncio.get_event_loop()
+        results = loop.run_until_complete(
+            self._execute_prep_statements(
+                list(prepared_statement_objects.values()), bind_entries
+            )
+        )
+
+        for i in results:
+            for row in i:
+                result_dict = self.deserialize_complex_features(
+                    self._complex_features, dict(row)
+                )
+                serving_vector.update(result_dict)
+
+        return serving_vector
+
+    def _batch_vector_results(self, entries, prepared_statement_objects):
+        """Execute prepared statements in parallel using aiomysql engine."""
+
+        # create dict object that will have of order of the vector as key and values as
+        # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
+        # expect that backend will return correctly ordered vectors.
+        batch_results = [{} for _ in range(len(entries))]
+        entry_values = []
+        serving_keys_all_fg = []
+        # construct the list of entry values for binding to query
+        for prepared_statement_index in prepared_statement_objects:
+            # prepared_statement_index include fg with label only
+            # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
+            if prepared_statement_index not in self._serving_key_by_serving_index:
+                continue
+
+            entry_values_tuples = list(
+                map(
+                    lambda e: tuple(
+                        [
+                            (
+                                e.get(sk.required_serving_key)
+                                # Check if there is any entry matched with feature name,
+                                # if the required serving key is not provided.
+                                or e.get(sk.feature_name)
+                            )
+                            for sk in self._serving_key_by_serving_index[
+                                prepared_statement_index
+                            ]
+                        ]
+                    ),
+                    entries,
+                )
+            )
+            bind_params = {"batch_ids": entry_values_tuples}
+            entry_values.append(bind_params)
+
+        # run all the prepared statements in parallel using aiomysql engine
+        loop = asyncio.get_event_loop()
+        parallel_results = loop.run_until_complete(
+            self._execute_prep_statements(
+                list(prepared_statement_objects.values()), entry_values
+            )
+        )
+
+        # construct the results
+        for count, prepared_statement_index in enumerate(prepared_statement_objects):
+            # prepared_statement_index include fg with label only
+            # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
+            if prepared_statement_index not in self._serving_key_by_serving_index:
+                continue
+
+            statement_results = {}
+            serving_keys = self._serving_key_by_serving_index[prepared_statement_index]
+            serving_keys_all_fg += serving_keys
+            # Use prefix from prepare statement because prefix from serving key is collision adjusted.
+            prefix_features = [
+                (self._prefix_by_serving_index[prepared_statement_index] or "")
+                + sk.feature_name
+                for sk in self._serving_key_by_serving_index[prepared_statement_index]
+            ]
+            # iterate over results by index of the prepared statement
+            for row in parallel_results[count]:
+                row_dict = dict(row)
+                # can primary key be complex feature?
+                result_dict = self.deserialize_complex_features(
+                    self._complex_features, row_dict
+                )
+                # note: should used serialized value
+                # as it is from users' input
+                statement_results[
+                    self._get_result_key(prefix_features, row_dict)
+                ] = result_dict
+
+            # add partial results to the global results
+            for i, entry in enumerate(entries):
+                batch_results[i].update(
+                    statement_results.get(
+                        self._get_result_key_serving_key(serving_keys, entry), {}
+                    )
+                )
+        return batch_results, serving_keys_all_fg
+
     def get_complex_feature_schemas(self):
         return {
             f.name: avro.io.DatumReader(
-                avro.schema.parse(f._feature_group._get_feature_avro_schema(f.name))
+                avro.schema.parse(
+                    f._feature_group._get_feature_avro_schema(
+                        f.feature_group_feature_name
+                    )
+                )
             )
             for f in self._features
             if f.is_complex()
@@ -400,10 +574,13 @@ class VectorServer:
                     vector.append(None)
                 else:
                     raise Exception(
-                        f"Feature {feature_name} is missing from vector"
-                        " because there is no match in the given entry."
+                        f"Feature '{feature_name}' is missing from vector."
+                        "Possible reasons: "
+                        "1. There is no match in the given entry."
                         " Please check if the entry exists in the online feature store"
-                        " or provide the feature as passed_feature."
+                        " or provide the feature as passed_feature. "
+                        f"2. Required entries [{', '.join(self.required_serving_keys)}] or "
+                        f"[{', '.join(set(sk.feature_name for sk in self._serving_keys))}] are not provided."
                     )
             else:
                 vector.append(result_dict[feature_name])
@@ -423,6 +600,16 @@ class VectorServer:
         result_key = []
         for pk in primary_keys:
             result_key.append(result_dict.get(pk))
+        return tuple(result_key)
+
+    @staticmethod
+    def _get_result_key_serving_key(serving_keys, result_dict):
+        result_key = []
+        for sk in serving_keys:
+            result_key.append(
+                result_dict.get(sk.required_serving_key)
+                or result_dict.get(sk.feature_name)
+            )
         return tuple(result_key)
 
     @staticmethod
@@ -467,16 +654,16 @@ class VectorServer:
         else:
             # if there are any built-in transformation functions get related statistics and
             # populate with relevant arguments
-            # there should be only one statistics object with for_transformation=true
+            # there should be only one statistics object with before_transformation=true
             if is_feat_view and self._training_dataset_version is None:
                 raise ValueError(
                     "Training data version is required for transformation. Call `feature_view.init_serving(version)` "
                     "or `feature_view.init_batch_scoring(version)` to pass the training dataset version."
                     "Training data can be created by `feature_view.create_training_data` or `feature_view.get_training_data`."
                 )
-            td_tffn_stats = self._feature_view_engine._statistics_engine.get_last(
+            td_tffn_stats = self._feature_view_engine._statistics_engine.get(
                 entity,
-                for_transformation=True,
+                before_transformation=True,
                 training_dataset_version=self._training_dataset_version,
             )
 
@@ -488,10 +675,58 @@ class VectorServer:
         transformation_fns = (
             self._transformation_function_engine.populate_builtin_attached_fns(
                 transformation_functions,
-                td_tffn_stats.content if td_tffn_stats is not None else None,
+                td_tffn_stats.feature_descriptive_statistics
+                if td_tffn_stats is not None
+                else None,
             )
         )
         return transformation_fns
+
+    def filter_entry_by_join_index(self, entry, join_index):
+        fg_entry = {}
+        complete = True
+        for sk in self._serving_key_by_serving_index[join_index]:
+            fg_entry[sk.feature_name] = entry.get(sk.required_serving_key) or entry.get(
+                sk.feature_name
+            )  # fallback to use raw feature name
+            if fg_entry[sk.feature_name] is None:
+                complete = False
+                break
+        return complete, fg_entry
+
+    async def _set_aiomysql_connection(self, default_min_size: int, options=None):
+        online_connector = self._storage_connector_api.get_online_connector(
+            self._feature_store_id
+        )
+        self._async_pool = await util.create_async_engine(
+            online_connector, self._external, default_min_size, options=options
+        )
+
+    async def _query_async_sql(self, stmt, bind_params):
+        """Query prepared statement together with bind params using aiomysql connection pool"""
+        # Get a connection from the pool
+        async with self._async_pool.acquire() as conn:
+            # Execute the prepared statement
+            cursor = await conn.execute(stmt, bind_params)
+            # Fetch the result
+            resultset = await cursor.fetchall()
+            await cursor.close()
+
+        return resultset
+
+    async def _execute_prep_statements(self, prepared_statements, entries_list: list):
+        """Iterate over prepared statements to create async tasks
+        and gather all tasks results for a given list of entries."""
+
+        tasks = [
+            asyncio.ensure_future(self._query_async_sql(query, entries_list[i]))
+            for i, query in enumerate(prepared_statements)
+        ]
+        # Run the queries in parallel using asyncio.gather
+        results = await asyncio.gather(*tasks)
+        # TODO: close connection? closing connection pool here will make un-acquirable for future connections
+        # unless init_serving is explicitly called before get_feature_vector(s).
+        return results
 
     @property
     def prepared_statement_engine(self):
@@ -514,12 +749,21 @@ class VectorServer:
         self._prepared_statements = prepared_statements
 
     @property
-    def serving_keys(self):
+    def required_serving_keys(self):
         """Set of primary key names that is used as keys in input dict object for `get_feature_vector` method."""
+        if self._required_serving_keys is not None:
+            return self._required_serving_keys
         if self._serving_keys is not None:
-            return set([key.required_serving_key for key in self._serving_keys])
+            self._required_serving_keys = set(
+                [key.required_serving_key for key in self._serving_keys]
+            )
         else:
-            return set()
+            self._required_serving_keys = set()
+        return self._required_serving_keys
+
+    @property
+    def serving_keys(self):
+        return self._serving_keys
 
     @serving_keys.setter
     def serving_keys(self, serving_vector_keys):

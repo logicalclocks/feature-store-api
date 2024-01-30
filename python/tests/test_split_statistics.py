@@ -16,6 +16,7 @@
 
 
 from hsfs import split_statistics
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 
 class TestSplitStatistics:
@@ -23,20 +24,40 @@ class TestSplitStatistics:
         # Arrange
         json = backend_fixtures["split_statistics"]["get"]["response"]
 
+        statistics = FeatureDescriptiveStatistics.from_response_json(
+            backend_fixtures["feature_descriptive_statistics"][
+                "get_fractional_feature_statistics"
+            ]["response"]
+        )
+
         # Act
         ss = split_statistics.SplitStatistics.from_response_json(json)
 
         # Assert
         assert ss.name == "test_name"
-        assert ss.content == {"key": "value"}
+        assert len(ss.feature_descriptive_statistics) == 1
+        assert isinstance(
+            ss.feature_descriptive_statistics[0], FeatureDescriptiveStatistics
+        )
+        assert ss.feature_descriptive_statistics[0].id == statistics.id
 
     def test_from_response_json_basic_info(self, backend_fixtures):
         # Arrange
         json = backend_fixtures["split_statistics"]["get_basic_info"]["response"]
 
+        statistics = FeatureDescriptiveStatistics.from_response_json(
+            backend_fixtures["feature_descriptive_statistics"][
+                "get_fractional_feature_statistics"
+            ]["response"]
+        )
+
         # Act
         ss = split_statistics.SplitStatistics.from_response_json(json)
 
         # Assert
         assert ss.name == "test_name"
-        assert ss.content == {"key": "value"}
+        assert len(ss.feature_descriptive_statistics) == 1
+        assert isinstance(
+            ss.feature_descriptive_statistics[0], FeatureDescriptiveStatistics
+        )
+        assert ss.feature_descriptive_statistics[0].id == statistics.id

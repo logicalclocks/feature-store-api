@@ -20,6 +20,7 @@ from typing import Optional
 
 import humps
 import base64
+import warnings
 
 from hsfs import engine, client
 from hsfs.core import storage_connector_api
@@ -36,7 +37,7 @@ class StorageConnector(ABC):
     GCS = "GCS"
     BIGQUERY = "BIGQUERY"
 
-    def __init__(self, id, name, description, featurestore_id):
+    def __init__(self, id, name, description, featurestore_id, **kwargs):
         self._id = id
         self._name = name
         self._description = description
@@ -151,6 +152,7 @@ class HopsFSConnector(StorageConnector):
         # members specific to type of connector
         hopsfs_path=None,
         dataset_name=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -186,6 +188,7 @@ class S3Connector(StorageConnector):
         session_token=None,
         iam_role=None,
         arguments=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -333,6 +336,7 @@ class RedshiftConnector(StorageConnector):
         iam_role=None,
         arguments=None,
         expiration=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -509,6 +513,7 @@ class AdlsConnector(StorageConnector):
         account_name=None,
         container_name=None,
         spark_options=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -644,6 +649,7 @@ class SnowflakeConnector(StorageConnector):
         warehouse=None,
         application=None,
         sf_options=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -826,6 +832,7 @@ class JdbcConnector(StorageConnector):
         # members specific to type of connector
         connection_string=None,
         arguments=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -910,6 +917,7 @@ class KafkaConnector(StorageConnector):
         ssl_endpoint_identification_algorithm=None,
         options=None,
         external_kafka=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -988,7 +996,10 @@ class KafkaConnector(StorageConnector):
             "ssl.endpoint.identification.algorithm"
         ] = self._ssl_endpoint_identification_algorithm
 
-        if not self._external_kafka:
+        # Here we cannot use `not self._external_kafka` as for normal kafka connectors
+        # this option is not set and so the `not self._external_kafka` would return true
+        # overwriting the user specified certificates
+        if self._external_kafka is False:
             self._ssl_truststore_location = (
                 client.get_instance()._get_jks_trust_store_path()
             )
@@ -999,7 +1010,7 @@ class KafkaConnector(StorageConnector):
             self._ssl_keystore_password = client.get_instance()._cert_key
             self._ssl_key_password = client.get_instance()._cert_key
 
-        if self.ssl_truststore_location is not None:
+        if self._ssl_truststore_location is not None:
             config["ssl.truststore.location"] = self._ssl_truststore_location
         if self._ssl_truststore_password is not None:
             config["ssl.truststore.password"] = self._ssl_truststore_password
@@ -1009,6 +1020,12 @@ class KafkaConnector(StorageConnector):
             config["ssl.keystore.password"] = self._ssl_keystore_password
         if self._ssl_key_password is not None:
             config["ssl.key.password"] = self._ssl_key_password
+
+        if self._external_kafka:
+            warnings.warn(
+                "Getting connection details to externally managed Kafka cluster. "
+                "Make sure that the topic being used exists."
+            )
 
         return config
 
@@ -1204,6 +1221,7 @@ class GcsConnector(StorageConnector):
         algorithm=None,
         encryption_key=None,
         encryption_key_hash=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
 
@@ -1345,6 +1363,7 @@ class BigQueryConnector(StorageConnector):
         query_project=None,
         materialization_dataset=None,
         arguments=None,
+        **kwargs,
     ):
         super().__init__(id, name, description, featurestore_id)
         self._key_path = key_path

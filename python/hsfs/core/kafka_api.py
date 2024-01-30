@@ -18,11 +18,18 @@ from hsfs import client
 
 
 class KafkaApi:
-    def get_subject(self, subject: str, version: str = "latest"):
+    def get_subject(
+        self,
+        feature_store_id: str,
+        subject: str,
+        version: str = "latest",
+    ):
         _client = client.get_instance()
         path_params = [
             "project",
             _client._project_id,
+            "featurestores",
+            feature_store_id,
             "kafka",
             "subjects",
             subject,

@@ -264,7 +264,9 @@ public class HudiEngine {
     hudiArgs.put(HUDI_HIVE_SYNC_DB, featureGroup.getFeatureStore().getName());
     hudiArgs.put(HIVE_AUTO_CREATE_DATABASE_OPT_KEY, HIVE_AUTO_CREATE_DATABASE_OPT_VAL);
     hudiArgs.put(HUDI_HIVE_SYNC_SUPPORT_TIMESTAMP, "true");
-    hudiArgs.put(HUDI_TABLE_OPERATION, operation.getValue());
+    if (operation != null) {
+      hudiArgs.put(HUDI_TABLE_OPERATION, operation.getValue());
+    }
     hudiArgs.putAll(HUDI_DEFAULT_PARALLELISM);
 
     // Overwrite with user provided options if any
@@ -281,7 +283,7 @@ public class HudiEngine {
     if (endTimestamp == null && (startTimestamp == null || startTimestamp == 0)) {
       // snapshot query latest state
       hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL);
-    } else if (endTimestamp != null && startTimestamp == null) {
+    } else if (endTimestamp != null && (startTimestamp == null || startTimestamp == 0)) {
       // snapshot query with end time
       hudiArgs.put(HUDI_QUERY_TYPE_OPT_KEY, HUDI_QUERY_TYPE_SNAPSHOT_OPT_VAL);
       hudiArgs.put(HUDI_QUERY_TIME_TRAVEL_AS_OF_INSTANT, utils.timeStampToHudiFormat(endTimestamp));
@@ -307,8 +309,7 @@ public class HudiEngine {
       throws IOException, FeatureStoreException {
     Configuration configuration = sparkSession.sparkContext().hadoopConfiguration();
     Properties properties = new Properties();
-    properties.putAll(setupHudiWriteOpts(streamFeatureGroup,
-        HudiOperationType.BULK_INSERT, null));
+    properties.putAll(setupHudiWriteOpts(streamFeatureGroup, null, null));
     HoodieTableMetaClient.initTableAndGetMetaClient(configuration, streamFeatureGroup.getLocation(), properties);
   }
 

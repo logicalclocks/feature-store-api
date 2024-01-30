@@ -128,6 +128,10 @@ class FeatureViewApi:
         end_time,
         training_dataset_version=None,
         with_label=False,
+        primary_keys=False,
+        event_time=False,
+        inference_helper_columns=False,
+        training_helper_columns=False,
         is_python_engine=False,
     ):
         path = self._base_path + [
@@ -145,13 +149,19 @@ class FeatureViewApi:
                     "start_time": start_time,
                     "end_time": end_time,
                     "with_label": with_label,
+                    "with_primary_keys": primary_keys,
+                    "with_event_time": event_time,
+                    "inference_helper_columns": inference_helper_columns,
+                    "training_helper_columns": training_helper_columns,
                     "is_hive_engine": is_python_engine,
                     "td_version": training_dataset_version,
                 },
             )
         )
 
-    def get_serving_prepared_statement(self, name, version, batch):
+    def get_serving_prepared_statement(
+        self, name, version, batch, inference_helper_columns
+    ):
         path = self._base_path + [
             name,
             self._VERSION,
@@ -159,7 +169,10 @@ class FeatureViewApi:
             self._PREPARED_STATEMENT,
         ]
         headers = {"content-type": "application/json"}
-        query_params = {"batch": batch}
+        query_params = {
+            "batch": batch,
+            "inference_helper_columns": inference_helper_columns,
+        }
         return serving_prepared_statement.ServingPreparedStatement.from_response_json(
             self._client._send_request("GET", path, query_params, headers=headers)
         )
@@ -182,6 +195,12 @@ class FeatureViewApi:
     def get_training_dataset_by_version(self, name, version, training_dataset_version):
         path = self.get_training_data_base_path(name, version, training_dataset_version)
         return training_dataset.TrainingDataset.from_response_json_single(
+            self._client._send_request("GET", path)
+        )
+
+    def get_training_datasets(self, name, version):
+        path = self.get_training_data_base_path(name, version)
+        return training_dataset.TrainingDataset.from_response_json(
             self._client._send_request("GET", path)
         )
 

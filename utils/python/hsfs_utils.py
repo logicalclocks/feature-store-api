@@ -100,9 +100,17 @@ def create_fv_td(job_conf: Dict[Any, Any]) -> None:
     fv = fs.get_feature_view(name=job_conf["name"], version=job_conf["version"])
     fv_engine = feature_view_engine.FeatureViewEngine(fv.featurestore_id)
 
+    user_write_options = job_conf.pop("write_options", {}) or {}
+
+    training_helper_columns = user_write_options.get("training_helper_columns")
+    primary_keys = user_write_options.get("primary_keys")
+    event_time = user_write_options.get("event_time")
     fv_engine.compute_training_dataset(
-        fv,
-        job_conf.pop("write_options", {}) or {},
+        feature_view_obj=fv,
+        user_write_options=user_write_options,
+        primary_keys=primary_keys,
+        event_time=event_time,
+        training_helper_columns=training_helper_columns,
         training_dataset_version=job_conf["td_version"],
     )
 
@@ -125,7 +133,7 @@ def compute_stats(job_conf: Dict[Any, Any]) -> None:
         )
     else:
         fv = fs.get_feature_view(job_conf["name"], version=job_conf["version"])
-        entity = fv._feature_view_engine._get_training_data_metadata(
+        entity = fv._feature_view_engine._get_training_dataset_metadata(
             feature_view_obj=fv,
             training_dataset_version=job_conf["td_version"],
         )

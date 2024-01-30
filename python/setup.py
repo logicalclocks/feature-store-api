@@ -1,11 +1,13 @@
 import os
-import imp
+from importlib.machinery import SourceFileLoader
 from setuptools import setup, find_packages
 
 
-__version__ = imp.load_source(
-    "hsfs.version", os.path.join("hsfs", "version.py")
-).__version__
+__version__ = (
+    SourceFileLoader("hsfs.version", os.path.join("hsfs", "version.py"))
+    .load_module()
+    .__version__
+)
 
 
 def read(fname):
@@ -15,40 +17,42 @@ def read(fname):
 setup(
     name="hsfs",
     version=__version__,
-    python_requires=">=3.7,<3.12",
+    python_requires=">=3.8,<3.13",
     install_requires=[
         "pyhumps==1.6.1",
         "requests",
         "furl",
         "boto3",
-        "pandas<2.1.0",
-        "numpy",
+        "pandas<2.2.0",
+        "numpy<2",
         "pyjks",
         "mock",
-        "avro==1.11.0",
-        "sqlalchemy",
+        "avro==1.11.3",
+        "sqlalchemy<=1.4.48",  # aiomysql does not support v2 yet https://github.com/aio-libs/aiomysql/discussions/908
         "PyMySQL[rsa]",
-        "great_expectations==0.14.13",
-        "markupsafe<2.1.0",  # GE issue 1: jinja2==2.11.3, pulls in markupsafe 2.1.0 which is not compatible with jinja2==2.11.3.
+        "great_expectations==0.15.12",
         "tzlocal",
         "fsspec",
+        "retrying",
+        "aiomysql",
+        "opensearch-py>=1.1.0,<=2.4.2",
     ],
     extras_require={
         "dev": [
-            "pytest==7.1.2",
-            "pytest-mock==3.8.2",
+            "pytest==7.4.4",
+            "pytest-mock==3.12.0",
             "flake8",
             "black",
             "pyspark==3.1.1",
-            "moto[s3]",
+            "moto[s3]==5.0.0",
         ],
         "dev-pandas1": [
-            "pytest==7.1.2",
-            "pytest-mock==3.8.2",
+            "pytest==7.4.4",
+            "pytest-mock==3.12.0",
             "flake8",
             "black",
             "pyspark==3.1.1",
-            "moto[s3]",
+            "moto[s3]==5.0.0",
             "pandas<=1.5.3",
             "sqlalchemy<=1.4.48",
         ],
@@ -68,14 +72,14 @@ setup(
         "hive": [
             "pyhopshive[thrift]",
             "pyarrow>=10.0",
-            "confluent-kafka<=2.1.1",
-            "fastavro>=1.4.11,<=1.8.2",
+            "confluent-kafka<=2.3.0",
+            "fastavro>=1.4.11,<=1.8.4",
         ],
         "python": [
             "pyhopshive[thrift]",
             "pyarrow>=10.0",
-            "confluent-kafka<=2.1.1",
-            "fastavro>=1.4.11,<=1.8.2",
+            "confluent-kafka<=2.3.0",
+            "fastavro>=1.4.11,<=1.8.4",
             "tqdm",
         ],
     },
@@ -98,6 +102,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Intended Audience :: Developers",
     ],
 )
