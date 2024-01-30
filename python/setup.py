@@ -42,7 +42,7 @@ setup(
             "flake8",
             "black",
             "pyspark==3.1.1",
-            "moto[s3]",
+            "moto[s3]==5.0.0",
         ],
         "dev-pandas1": [
             "pytest==7.1.2",
@@ -50,7 +50,7 @@ setup(
             "flake8",
             "black",
             "pyspark==3.1.1",
-            "moto[s3]",
+            "moto[s3]==5.0.0",
             "pandas<=1.5.3",
             "sqlalchemy<=1.4.48",
         ],
