@@ -16,11 +16,20 @@
 
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor.join import Join
+from hsfs.constructor.filter import Filter, Logic
 from hsfs.feature import Feature
 from hsfs.core.opensearch import OpenSearchClientSingleton
+from typing import Union
 
 
 class VectorDbClient:
+    _filter_map = {
+        Filter.GT: "gt",
+        Filter.GE: "gte",
+        Filter.LT: "lt",
+        Filter.LE: "lte",
+    }
+
     def __init__(self, query):
         self._opensearch_client = None
         self._query = query
@@ -86,7 +95,7 @@ class VectorDbClient:
         feature: Feature = None,
         index_name=None,
         k=10,
-        filter=None,
+        filter: Union[Filter, Logic] = None,
         min_score=0,
     ):
         if not feature:
@@ -101,6 +110,7 @@ class VectorDbClient:
                 raise ValueError(
                     f"feature: {feature.name} is not an embedding feature."
                 )
+        self._check_filter(filter, embedding_feature.feature_group)
         col_name = embedding_feature.embedding_index.col_prefix + embedding_feature.name
         query = {
             "size": k,
@@ -110,6 +120,9 @@ class VectorDbClient:
                         {"knn": {col_name: {"vector": embedding, "k": k}}},
                         {"exists": {"field": col_name}},
                     ]
+                    + self._get_query_filter(
+                        filter, embedding_feature.embedding_index.col_prefix
+                    )
                 }
             },
             "_source": list(
@@ -118,7 +131,6 @@ class VectorDbClient:
                 ).keys()
             ),
         }
-
         if not index_name:
             index_name = embedding_feature.embedding_index.index_name
 
@@ -135,6 +147,88 @@ class VectorDbClient:
             )
             for item in results["hits"]["hits"]
         ]
+
+    def _check_filter(self, filter, fg):
+        if not filter:
+            return
+        if isinstance(filter, Filter):
+            if filter.feature.feature_group_id != fg.id:
+                raise FeatureStoreException(
+                    f"filter feature should be from feature group '{fg.name}' version '{fg.version}'"
+                )
+        elif isinstance(filter, Logic):
+            self._check_filter(filter.get_right_filter_or_logic(), fg)
+            self._check_filter(filter.get_left_filter_or_logic(), fg)
+        else:
+            raise FeatureStoreException("filter should be of type `Filter` or `Logic`")
+
+    def _get_query_filter(self, filter, col_prefix=None):
+        if not filter:
+            return []
+        if isinstance(filter, Filter):
+            return [self._convert_filter(filter, col_prefix)]
+        elif isinstance(filter, Logic):
+            if filter.type == Logic.SINGLE:
+                return self._get_query_filter(
+                    filter.get_left_filter_or_logic()
+                ) or self._get_query_filter(
+                    filter.get_right_filter_or_logic(), col_prefix
+                )
+            elif filter.type == Logic.AND:
+                return [
+                    {
+                        "bool": {
+                            "must": (
+                                self._get_query_filter(
+                                    filter.get_left_filter_or_logic(), col_prefix
+                                )
+                                + self._get_query_filter(
+                                    filter.get_right_filter_or_logic(), col_prefix
+                                )
+                            )
+                        }
+                    }
+                ]
+            elif filter.type == Logic.OR:
+                return [
+                    {
+                        "bool": {
+                            "should": (
+                                self._get_query_filter(
+                                    filter.get_left_filter_or_logic(), col_prefix
+                                )
+                                + self._get_query_filter(
+                                    filter.get_right_filter_or_logic(), col_prefix
+                                )
+                            ),
+                            "minimum_should_match": 1,
+                        }
+                    }
+                ]
+            else:
+                raise FeatureStoreException(f"filter type {filter.type} not defined.")
+
+        raise FeatureStoreException("filter should be of type `Filter` or `Logic`")
+
+    def _convert_filter(self, filter, col_prefix=None):
+        condition = filter.condition
+        if col_prefix:
+            feature_name = col_prefix + filter.feature.name
+        else:
+            feature_name = filter.feature.name
+        if condition == Filter.EQ:
+            return {"term": {feature_name: filter.value}}
+        elif condition == filter.NE:
+            return {"bool": {"must_not": [{"term": {feature_name: filter.value}}]}}
+        elif condition == filter.IN:
+            return {"terms": {feature_name: filter.value}}
+        elif condition == filter.LK:
+            return {"wildcard": {feature_name: {"value": "*" + filter.value + "*"}}}
+        elif condition in self._filter_map:
+            return {
+                "range": {feature_name: {self._filter_map[condition]: filter.value}}
+            }
+        raise FeatureStoreException("Filter condition not defined.")
 
     def _rewrite_result_key(self, result_map, key_map):
         new_map = {}
