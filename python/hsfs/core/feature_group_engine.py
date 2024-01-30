@@ -221,7 +221,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
         )
-    
+
     def update_notification_topic_name(self, feature_group, notification_topic_name):
         """Updates the notification_topic_name of a feature group."""
         copy_feature_group = fg.FeatureGroup.from_response_json(feature_group.to_dict())

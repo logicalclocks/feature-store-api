@@ -602,7 +602,7 @@ class FeatureGroupBase:
         """
         self._feature_group_engine.update_description(self, description)
         return self
-    
+
     def update_notification_topic_name(self, notification_topic_name: str):
         """Update the notification topic name of the feature group.
 
@@ -628,7 +628,9 @@ class FeatureGroupBase:
         # Returns
             `FeatureGroup`. The updated feature group object.
         """
-        self._feature_group_engine.update_notification_topic_name(self, notification_topic_name)
+        self._feature_group_engine.update_notification_topic_name(
+            self, notification_topic_name
+        )
         return self
 
     def update_deprecated(self, deprecate: bool = True):
