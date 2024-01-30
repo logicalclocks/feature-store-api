@@ -116,6 +116,10 @@ public abstract class FeatureGroupBase<T> {
 
   @Getter
   @Setter
+  protected String notificationTopicName;
+
+  @Getter
+  @Setter
   protected List<String> statisticColumns;
 
   @Setter
@@ -214,6 +218,17 @@ public abstract class FeatureGroupBase<T> {
    */
   public void updateDescription(String description) throws FeatureStoreException, IOException {
     featureGroupEngineBase.updateDescription(this, description, this.getClass());
+  }
+
+  /**
+   * Update the notification topic name of the feature group.
+   *
+   * @param notificationTopicName feature group notification topic name.
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   */
+  public void updateNotificationTopicName(String notificationTopicName) throws FeatureStoreException, IOException {
+    featureGroupEngineBase.updateNotificationTopicName(this, notificationTopicName, this.getClass());
   }
 
   /**
