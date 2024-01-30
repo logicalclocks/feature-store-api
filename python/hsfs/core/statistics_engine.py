@@ -83,6 +83,58 @@ class StatisticsEngine:
             # Python engine
             return engine.get_instance().profile_by_spark(metadata_instance)
 
+    def compute_and_save_monitoring_statistics(
+        self,
+        metadata_instance,
+        feature_dataframe,
+        window_start_commit_time,
+        window_end_commit_time,
+        row_percentage,
+        feature_name=None,
+    ) -> statistics.Statistics:
+        """Compute statistics for one or more features and send the result to Hopsworks.
+        Args:
+            metadata_instance: Union[FeatureGroup, TrainingDataset]. Metadata of the entity containing the data.
+            feature_dataframe: Spark or Pandas DataFrame to compute the statistics on.
+            window_start_commit_time: int. Window start commit time
+            window_end_commit_time: int. Window end commit time
+            row_percentage: float. Percentage of rows to include.
+            feature_name: Optional[Union[str, List[str]]]. Feature name or list of names to compute the statistics on. If not set, statistics are computed on all features.
+        Returns:
+            Statistics. Statistics metadata containing a list of single feature descriptive statistics.
+        """
+        feature_names = []
+        if feature_name is None:
+            feature_names = feature_dataframe.columns
+        elif isinstance(feature_name, str):
+            feature_names = [feature_name]
+        elif isinstance(feature_name, list):
+            feature_names = feature_name
+
+        if engine.get_type() == "spark":
+            commit_time = int(float(datetime.now().timestamp()) * 1000)
+            stats_str = self.profile_statistics(
+                feature_dataframe, feature_names, False, False, False
+            )
+            desc_stats = self._parse_deequ_statistics(stats_str)
+
+            stats = statistics.Statistics(
+                computation_time=commit_time,
+                row_percentage=row_percentage,
+                feature_descriptive_statistics=desc_stats,
+                window_end_commit_time=window_end_commit_time,
+                window_start_commit_time=window_start_commit_time,
+            )
+            return self._save_statistics(stats, metadata_instance, None)
+        else:
+            # TODO: Only compute statistics with Spark at the moment. This method is expected to be called
+            # only through run_feature_monitoring(), which is the entrypoint of the feature monitoring job.
+            # Pending work for next sprint is to compute statistics on the Python client as well, as part of
+            # the deequ replacement work.
+            raise exceptions.FeatureStoreException(
+                "Descriptive statistics for feature monitoring cannot be computed with the Python engine."
+            )
+
     @staticmethod
     def profile_statistics_with_config(feature_dataframe, statistics_config) -> str:
         """Compute statistics on a feature DataFrame based on a given configuration.
@@ -227,7 +279,8 @@ class StatisticsEngine:
         except exceptions.RestAPIError as e:
             if (
                 # statistics not found
-                e.response.json().get("errorCode", "") == 270226
+                e.response.json().get("errorCode", "")
+                == exceptions.RestAPIError.FeatureStoreErrorCode.STATISTICS_NOT_FOUND
                 and e.response.status_code == 404
             ):
                 return None
@@ -261,7 +314,8 @@ class StatisticsEngine:
         except exceptions.RestAPIError as e:
             if (
                 # statistics not found
-                e.response.json().get("errorCode", "") == 270226
+                e.response.json().get("errorCode", "")
+                == exceptions.RestAPIError.FeatureStoreErrorCode.STATISTICS_NOT_FOUND
                 and e.response.status_code == 404
             ):
                 return None
@@ -273,6 +327,7 @@ class StatisticsEngine:
         start_commit_time: Optional[Union[str, int, datetime, date]] = None,
         end_commit_time: Optional[Union[str, int, datetime, date]] = None,
         feature_names: Optional[List[str]] = None,
+        row_percentage: Optional[float] = None,
     ) -> Union[statistics.Statistics, List[statistics.Statistics], None]:
         """Get the statistics of an entity based on a commit time window.
         Args:
@@ -280,6 +335,7 @@ class StatisticsEngine:
             start_commit_time: int: Window start commit time
             end_commit_time: int: Window end commit time
             feature_names: List[str]. List of feature names of which statistics are retrieved.
+            row_percentage: float. Percentage of feature values used during statistics computation
         Returns:
             Statistics:  Statistics metadata containing a list of single feature descriptive statistics.
         """
@@ -291,15 +347,18 @@ class StatisticsEngine:
                 start_commit_time=start_commit_time,
                 end_commit_time=end_commit_time,
                 feature_names=feature_names,
+                row_percentage=row_percentage,
             )
         except exceptions.RestAPIError as e:
             if (
                 # statistics not found
-                e.response.json().get("errorCode", "") == 270226
+                e.response.json().get("errorCode", "")
+                == exceptions.RestAPIError.FeatureStoreErrorCode.STATISTICS_NOT_FOUND
                 and e.response.status_code == 404
             ) or (
                 # commits not found
-                e.response.json().get("errorCode", "") == 270225
+                e.response.json().get("errorCode", "")
+                == exceptions.RestAPIError.FeatureStoreErrorCode.FEATURE_GROUP_COMMIT_NOT_FOUND
                 and e.response.status_code == 400
             ):
                 return None
