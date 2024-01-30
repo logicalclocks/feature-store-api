@@ -34,7 +34,7 @@ public class HopsworksConnection extends HopsworksConnectionBase {
     this.projectObj = getProject();
     HopsworksClient.getInstance().setProject(this.projectObj);
     if (!System.getProperties().containsKey(HopsworksInternalClient.REST_ENDPOINT_SYS)) {
-      Credentials credentials = HopsworksClient.getInstance().getCredentials(this.projectObj);
+      Credentials credentials = HopsworksClient.getInstance().getCredentials();
       HopsworksHttpClient hopsworksHttpClient =  HopsworksClient.getInstance().getHopsworksHttpClient();
       hopsworksHttpClient.setTrustStorePath(credentials.gettStore());
       hopsworksHttpClient.setKeyStorePath(credentials.getkStore());
@@ -64,6 +64,6 @@ public class HopsworksConnection extends HopsworksConnectionBase {
    * @throws FeatureStoreException If client is not connected to Hopsworks
    */
   public FeatureStore getFeatureStore(String name) throws IOException, FeatureStoreException {
-    return featureStoreApi.get(projectObj.getProjectId(), rewriteFeatureStoreName(name), FeatureStore.class);
+    return featureStoreApi.get(rewriteFeatureStoreName(name), FeatureStore.class);
   }
 }
