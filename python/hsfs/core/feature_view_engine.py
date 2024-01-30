@@ -850,7 +850,7 @@ class FeatureViewEngine:
 
     def _check_if_exists(self, f_name, f_set):
         if f_name in f_set:
-            raise ValueError(
+            raise FeatureStoreException(
                 f"Provided feature {f_name} is ambiguous and exists in more than one feature groups."
                 "To avoid this error specify prefix in the join."
             )
