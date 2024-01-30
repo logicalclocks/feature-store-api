@@ -460,6 +460,7 @@ class FeatureStore:
         ] = None,
         parents: Optional[List[feature_group.FeatureGroup]] = [],
         topic_name: Optional[str] = None,
+        notification_topic_name: Optional[str] = None,
     ):
         """Create a feature group metadata object.
 
@@ -535,6 +536,8 @@ class FeatureStore:
                 origin where the data is coming from.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If left undefined no notifications are sent.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -557,6 +560,7 @@ class FeatureStore:
             expectation_suite=expectation_suite,
             parents=parents,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
         )
         feature_group_object.feature_store = self
         return feature_group_object
@@ -580,6 +584,7 @@ class FeatureStore:
         stream: Optional[bool] = False,
         parents: Optional[List[feature_group.FeatureGroup]] = [],
         topic_name: Optional[str] = None,
+        notification_topic_name: Optional[str] = None,
     ):
         """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
 
@@ -653,6 +658,8 @@ class FeatureStore:
                 origin where the data is coming from.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If left undefined no notifications are sent.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -686,6 +693,7 @@ class FeatureStore:
                     expectation_suite=expectation_suite,
                     parents=parents,
                     topic_name=topic_name,
+                    notification_topic_name=notification_topic_name,
                 )
                 feature_group_object.feature_store = self
                 return feature_group_object
@@ -710,6 +718,7 @@ class FeatureStore:
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
         topic_name: Optional[str] = None,
+        notification_topic_name: Optional[str] = None,
     ):
         """Create a external feature group metadata object.
 
@@ -762,6 +771,8 @@ class FeatureStore:
                 the feature group can be used for point-in-time joins. Defaults to `None`.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If left undefined no notifications are sent.
 
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
@@ -790,6 +801,7 @@ class FeatureStore:
             event_time=event_time,
             expectation_suite=expectation_suite,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
         )
         feature_group_object.feature_store = self
         return feature_group_object
@@ -813,6 +825,7 @@ class FeatureStore:
         ] = None,
         online_enabled: Optional[bool] = False,
         topic_name: Optional[str] = None,
+        notification_topic_name: Optional[str] = None,
     ):
         """Create a external feature group metadata object.
 
@@ -908,6 +921,8 @@ class FeatureStore:
                 the online feature store for low latency access, defaults to `False`.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If left undefined no notifications are sent.
 
         # Returns
             `ExternalFeatureGroup`. The external feature group metadata object.
@@ -930,6 +945,7 @@ class FeatureStore:
             expectation_suite=expectation_suite,
             online_enabled=online_enabled,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
         )
         feature_group_object.feature_store = self
         return feature_group_object
