@@ -76,6 +76,7 @@ class FeatureGroupBase:
         expectation_suite=None,
         online_topic_name=None,
         topic_name=None,
+        notification_topic_name=None,
         deprecated=False,
         **kwargs,
     ):
@@ -88,6 +89,7 @@ class FeatureGroupBase:
         self._subject = None
         self._online_topic_name = online_topic_name
         self._topic_name = topic_name
+        self._notification_topic_name = notification_topic_name
         self._deprecated = deprecated
         self._feature_store_id = featurestore_id
         # use setter for correct conversion
@@ -599,6 +601,36 @@ class FeatureGroupBase:
             `FeatureGroup`. The updated feature group object.
         """
         self._feature_group_engine.update_description(self, description)
+        return self
+
+    def update_notification_topic_name(self, notification_topic_name: str):
+        """Update the notification topic name of the feature group.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            fg.update_notification_topic_name(notification_topic_name="notification_topic_name")
+            ```
+
+        !!! info "Safe update"
+            This method updates the feature group notification topic name safely. In case of failure
+            your local metadata object will keep the old notification topic name.
+
+        # Arguments
+            notification_topic_name: Name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If set to None no notifications are sent.
+
+        # Returns
+            `FeatureGroup`. The updated feature group object.
+        """
+        self._feature_group_engine.update_notification_topic_name(
+            self, notification_topic_name
+        )
         return self
 
     def update_deprecated(self, deprecate: bool = True):
@@ -1462,6 +1494,15 @@ class FeatureGroupBase:
         self._topic_name = topic_name
 
     @property
+    def notification_topic_name(self):
+        """The topic used for feature group notifications."""
+        return self._notification_topic_name
+
+    @notification_topic_name.setter
+    def notification_topic_name(self, notification_topic_name):
+        self._notification_topic_name = notification_topic_name
+
+    @property
     def deprecated(self):
         """Setting if the feature group is deprecated."""
         return self._deprecated
@@ -1595,6 +1636,7 @@ class FeatureGroup(FeatureGroupBase):
         statistics_config=None,
         online_topic_name=None,
         topic_name=None,
+        notification_topic_name=None,
         event_time=None,
         stream=False,
         expectation_suite=None,
@@ -1616,6 +1658,7 @@ class FeatureGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
             deprecated=deprecated,
         )
         self._feature_store_name = featurestore_name
@@ -2758,6 +2801,7 @@ class FeatureGroup(FeatureGroupBase):
             "expectationSuite": self._expectation_suite,
             "parents": self._parents,
             "topicName": self.topic_name,
+            "notificationTopicName": self.notification_topic_name,
             "deprecated": self.deprecated,
         }
         if self.embedding_index:
@@ -2919,6 +2963,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         href=None,
         online_topic_name=None,
         topic_name=None,
+        notification_topic_name=None,
         spine=False,
         deprecated=False,
         **kwargs,
@@ -2934,6 +2979,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
             deprecated=deprecated,
         )
 
@@ -3194,6 +3240,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "onlineEnabled": self._online_enabled,
             "spine": False,
             "topicName": self.topic_name,
+            "notificationTopicName": self.notification_topic_name,
             "deprecated": self.deprecated,
         }
 
