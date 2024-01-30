@@ -546,8 +546,8 @@ class FeatureStore:
                 origin where the data is coming from.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
-            notification_topic_name: Optionally, define the name of the topic used for sending notifications.
-                If left undefined no notifications are sent.
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If left undefined no notifications are sent.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -671,8 +671,8 @@ class FeatureStore:
                 origin where the data is coming from.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
-            notification_topic_name: Optionally, define the name of the topic used for sending notifications.
-                If left undefined no notifications are sent.
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If left undefined no notifications are sent.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -786,8 +786,8 @@ class FeatureStore:
                 the feature group can be used for point-in-time joins. Defaults to `None`.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
-            notification_topic_name: Optionally, define the name of the topic used for sending notifications.
-                If left undefined no notifications are sent.
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If left undefined no notifications are sent.
 
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
@@ -937,8 +937,8 @@ class FeatureStore:
                 the online feature store for low latency access, defaults to `False`.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
-            notification_topic_name: Optionally, define the name of the topic used for sending notifications.
-                If left undefined no notifications are sent.
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If left undefined no notifications are sent.
 
         # Returns
             `ExternalFeatureGroup`. The external feature group metadata object.

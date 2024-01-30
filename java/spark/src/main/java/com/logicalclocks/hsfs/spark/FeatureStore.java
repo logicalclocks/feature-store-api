@@ -285,8 +285,8 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    *                          setting. To fully turn off statistics computation pass `statisticsConfig=false`.
    * @param topicName Optionally, define the name of the topic used for data ingestion. If left undefined it defaults
    *                  to using project topic.
-   * @param notificationTopicName Optionally, define the name of the topic used for sending notifications. 
-   *                  If left undefined no notifications are sent.
+   * @param notificationTopicName Optionally, define the name of the topic used for sending notifications when entries
+   *                  are inserted or updated on the online feature store. If left undefined no notifications are sent.
    * @param eventTime Name of the feature containing the event time for the features in this feature group. If
    *                  eventTime is set the feature group can be used for point-in-time joins.
    *                  The supported data types for the eventTime column are: timestamp, date and bigint
