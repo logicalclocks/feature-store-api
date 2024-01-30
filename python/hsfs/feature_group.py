@@ -602,6 +602,34 @@ class FeatureGroupBase:
         """
         self._feature_group_engine.update_description(self, description)
         return self
+    
+    def update_notification_topic_name(self, notification_topic_name: str):
+        """Update the notification topic name of the feature group.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            fg.update_notification_topic_name(notification_topic_name="notification_topic_name")
+            ```
+
+        !!! info "Safe update"
+            This method updates the feature group notification topic name safely. In case of failure
+            your local metadata object will keep the old notification topic name.
+
+        # Arguments
+            notification_topic_name: Name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If set to None no notifications are sent.
+
+        # Returns
+            `FeatureGroup`. The updated feature group object.
+        """
+        self._feature_group_engine.update_notification_topic_name(self, notification_topic_name)
+        return self
 
     def update_deprecated(self, deprecate: bool = True):
         """Deprecate the feature group.

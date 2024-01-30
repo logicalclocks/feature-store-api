@@ -221,6 +221,17 @@ public abstract class FeatureGroupBase<T> {
   }
 
   /**
+   * Update the notification topic name of the feature group.
+   *
+   * @param notificationTopicName feature group notification topic name.
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   */
+  public void updateNotificationTopicName(String notificationTopicName) throws FeatureStoreException, IOException {
+    featureGroupEngineBase.updateNotificationTopicName(this, notificationTopicName, this.getClass());
+  }
+
+  /**
    * Deprecate the feature group.
    *
    * @throws FeatureStoreException FeatureStoreException
