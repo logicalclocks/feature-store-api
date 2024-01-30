@@ -59,6 +59,10 @@ PAGES = {
             "hsfs.feature_group.ExternalFeatureGroup"
         ),
     },
+    "api/embedding_index_api.md": {
+        "embedding_index": ["hsfs.embedding.EmbeddingIndex"],
+        "embedding_index_methods": keras_autodoc.get_methods("hsfs.embedding.EmbeddingIndex"),
+    },
     "api/spine_group_api.md": {
         "fg": ["hsfs.feature_group.SpineGroup"],
         "fg_create": ["hsfs.feature_store.FeatureStore.get_or_create_spine_group"],
