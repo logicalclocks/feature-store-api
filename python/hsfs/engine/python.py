@@ -15,6 +15,7 @@
 #
 
 import pandas as pd
+import polars as pl
 import numpy as np
 import boto3
 import time
@@ -40,7 +41,7 @@ import great_expectations as ge
 from io import BytesIO
 from pyhive import hive
 from urllib.parse import urlparse
-from typing import TypeVar, Optional, Dict, Any
+from typing import TypeVar, Optional, Dict, Any, Union
 from confluent_kafka import Consumer, Producer, TopicPartition, KafkaError
 from tqdm.auto import tqdm
 from botocore.response import StreamingBody
@@ -85,35 +86,50 @@ except ImportError:
     pass
 
 # Decimal types are currently not supported
+_INT_TYPES = [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()]
+_BIG_INT_TYPES = [pa.uint32(), pa.int64()]
+_FLOAT_TYPES = [pa.float16(), pa.float32()]
+_DOUBLE_TYPES = [pa.float64()]
+_TIMESTAMP_UNIT = ["ns", "us", "ms", "s"]
+_BOOLEAN_TYPES = [pa.bool_()]
+_STRING_TYPES = [pa.string(), pa.large_string()]
+_DATE_TYPES = [pa.date32(), pa.date64()]
+_BINARY_TYPES = [pa.binary(), pa.large_binary()]
+
 PYARROW_HOPSWORKS_DTYPE_MAPPING = {
-    **dict.fromkeys(
-        [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()], "int"
-    ),
-    **dict.fromkeys([pa.uint32(), pa.int64()], "bigint"),
-    **dict.fromkeys([pa.float16(), pa.float32()], "float"),
-    **dict.fromkeys([pa.float64()], "double"),
-    **dict.fromkeys(
-        [pa.timestamp("ns")]
-        + [pa.timestamp("ns", tz=tz) for tz in pytz.all_timezones]
-        + [pa.timestamp("us")]
-        + [pa.timestamp("us", tz=tz) for tz in pytz.all_timezones]
-        + [pa.timestamp("ms")]
-        + [pa.timestamp("ms", tz=tz) for tz in pytz.all_timezones]
-        + [pa.timestamp("s")]
-        + [pa.timestamp("s", tz=tz) for tz in pytz.all_timezones],
-        "timestamp",
-    ),
-    **dict.fromkeys([pa.bool_()], "boolean"),
+    **dict.fromkeys(_INT_TYPES, "int"),
+    **dict.fromkeys(_BIG_INT_TYPES, "bigint"),
+    **dict.fromkeys(_FLOAT_TYPES, "float"),
+    **dict.fromkeys(_DOUBLE_TYPES, "double"),
     **dict.fromkeys(
         [
-            pa.string(),
-            pa.dictionary(value_type=pa.string(), index_type=pa.int8(), ordered=True),
-            pa.dictionary(value_type=pa.string(), index_type=pa.int8(), ordered=False),
+            *[pa.timestamp(unit) for unit in _TIMESTAMP_UNIT],
+            *[
+                pa.timestamp(unit, tz=tz)
+                for unit in _TIMESTAMP_UNIT
+                for tz in pytz.all_timezones
+            ],
+        ],
+        "timestamp",
+    ),
+    **dict.fromkeys(_BOOLEAN_TYPES, "boolean"),
+    **dict.fromkeys(
+        [
+            *_STRING_TYPES,
+            # Category type in pandas stored as dictinoary in pyarrow
+            *[
+                pa.dictionary(
+                    value_type=value_type, index_type=index_type, ordered=ordered
+                )
+                for value_type in _STRING_TYPES
+                for index_type in _INT_TYPES + _BIG_INT_TYPES
+                for ordered in [True, False]
+            ],
         ],
         "string",
-    ),  # Category type in pandas stored as dictinoary in pyarrow
-    **dict.fromkeys([pa.date32(), pa.date64()], "date"),
-    **dict.fromkeys([pa.binary()], "binary"),
+    ),
+    **dict.fromkeys(_DATE_TYPES, "date"),
+    **dict.fromkeys(_BINARY_TYPES, "binary"),
 }
 
 
@@ -483,10 +499,14 @@ class Engine:
 
     def validate_with_great_expectations(
         self,
-        dataframe: pd.DataFrame,
+        dataframe: Union[pl.DataFrame, pd.DataFrame],
         expectation_suite: TypeVar("ge.core.ExpectationSuite"),
         ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
     ):
+        # This conversion might cause a bottleneck in performance when using polars with greater expectations.
+        # This patch is done becuase currently great_expecatations does not support polars, would need to be made proper when support added.
+        if isinstance(dataframe, pl.DataFrame):
+            dataframe = dataframe.to_pandas()
         report = ge.from_pandas(
             dataframe, expectation_suite=expectation_suite
         ).validate(**ge_validate_kwargs)
@@ -495,15 +515,20 @@ class Engine:
     def set_job_group(self, group_id, description):
         pass
 
-    def convert_to_default_dataframe(self, dataframe):
-        if isinstance(dataframe, pd.DataFrame):
+    def convert_to_default_dataframe(
+        self, dataframe: Union[pd.DataFrame, pl.DataFrame, str]
+    ):
+        if isinstance(dataframe, pd.DataFrame) or isinstance(dataframe, pl.DataFrame):
             upper_case_features = [
                 col for col in dataframe.columns if any(re.finditer("[A-Z]", col))
             ]
 
             # make shallow copy so the original df does not get changed
             # this is always needed to keep the user df unchanged
-            dataframe_copy = dataframe.copy(deep=False)
+            if isinstance(dataframe, pd.DataFrame):
+                dataframe_copy = dataframe.copy(deep=False)
+            else:
+                dataframe_copy = dataframe.clone()
 
             # making a shallow copy of the dataframe so that column names are unchanged
             if len(upper_case_features) > 0:
@@ -522,17 +547,26 @@ class Engine:
                     dataframe_copy[col].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
                     dataframe_copy[col] = dataframe_copy[col].dt.tz_convert(None)
+                elif isinstance(dataframe_copy[col].dtype, pl.Datetime):
+                    dataframe_copy = dataframe_copy.with_columns(
+                        pl.col(col).dt.replace_time_zone(None)
+                    )
             return dataframe_copy
         elif dataframe == "spine":
             return None
 
         raise TypeError(
-            "The provided dataframe type is not recognized. Supported types are: pandas dataframe. "
+            "The provided dataframe type is not recognized. Supported types are: pandas dataframe, polars dataframe. "
             + "The provided dataframe has type: {}".format(type(dataframe))
         )
 
-    def parse_schema_feature_group(self, dataframe, time_travel_format=None):
-        arrow_schema = pa.Schema.from_pandas(dataframe, preserve_index=False)
+    def parse_schema_feature_group(
+        self, dataframe: Union[pd.DataFrame, pl.DataFrame], time_travel_format=None
+    ):
+        if isinstance(dataframe, pd.DataFrame):
+            arrow_schema = pa.Schema.from_pandas(dataframe, preserve_index=False)
+        elif isinstance(dataframe, pl.DataFrame):
+            arrow_schema = dataframe.to_arrow().schema
         features = []
         for feat_name in arrow_schema.names:
             name = feat_name.lower()
@@ -1000,7 +1034,7 @@ class Engine:
     def _write_dataframe_kafka(
         self,
         feature_group: FeatureGroup,
-        dataframe: pd.DataFrame,
+        dataframe: Union[pd.DataFrame, pl.DataFrame],
         offline_write_options: dict,
     ):
         initial_check_point = ""
@@ -1049,26 +1083,32 @@ class Engine:
             if not feature_group._multi_part_insert:
                 progress_bar.update()
 
-        # loop over rows
-        for r in dataframe.itertuples(index=False):
-            # itertuples returns Python NamedTyple, to be able to serialize it using
-            # avro, create copy of row only by converting to dict, which preserves datatypes
-            row = r._asdict()
+        if isinstance(dataframe, pd.DataFrame):
+            row_iterator = dataframe.itertuples(index=False)
+        else:
+            row_iterator = dataframe.iter_rows(named=True)
 
-            # transform special data types
-            # here we might need to handle also timestamps and other complex types
-            # possible optimizaiton: make it based on type so we don't need to loop over
-            # all keys in the row
-            for k in row.keys():
-                # for avro to be able to serialize them, they need to be python data types
-                if isinstance(row[k], np.ndarray):
-                    row[k] = row[k].tolist()
-                if isinstance(row[k], pd.Timestamp):
-                    row[k] = row[k].to_pydatetime()
-                if isinstance(row[k], datetime) and row[k].tzinfo is None:
-                    row[k] = row[k].replace(tzinfo=timezone.utc)
-                if isinstance(row[k], pd._libs.missing.NAType):
-                    row[k] = None
+        # loop over rows
+        for row in row_iterator:
+            if isinstance(dataframe, pd.DataFrame):
+                # itertuples returns Python NamedTyple, to be able to serialize it using
+                # avro, create copy of row only by converting to dict, which preserves datatypes
+                row = row._asdict()
+
+                # transform special data types
+                # here we might need to handle also timestamps and other complex types
+                # possible optimizaiton: make it based on type so we don't need to loop over
+                # all keys in the row
+                for k in row.keys():
+                    # for avro to be able to serialize them, they need to be python data types
+                    if isinstance(row[k], np.ndarray):
+                        row[k] = row[k].tolist()
+                    if isinstance(row[k], pd.Timestamp):
+                        row[k] = row[k].to_pydatetime()
+                    if isinstance(row[k], datetime) and row[k].tzinfo is None:
+                        row[k] = row[k].replace(tzinfo=timezone.utc)
+                    if isinstance(row[k], pd._libs.missing.NAType):
+                        row[k] = None
 
             # encode complex features
             row = self._encode_complex_features(feature_writers, row)
@@ -1227,7 +1267,11 @@ class Engine:
         # "_convert_simple_pandas_dtype_to_offline_type" is used to convert simple types
         # In the backend, the types specified here will also be used for mapping to Avro types.
 
-        if pa.types.is_list(arrow_type) or pa.types.is_struct(arrow_type):
+        if (
+            pa.types.is_list(arrow_type)
+            or pa.types.is_large_list(arrow_type)
+            or pa.types.is_struct(arrow_type)
+        ):
             return Engine._convert_pandas_object_type_to_offline_type(arrow_type)
 
         return Engine._convert_simple_pandas_dtype_to_offline_type(arrow_type)
@@ -1272,7 +1316,7 @@ class Engine:
 
     @staticmethod
     def _convert_pandas_object_type_to_offline_type(arrow_type):
-        if pa.types.is_list(arrow_type):
+        if pa.types.is_list(arrow_type) or pa.types.is_large_list(arrow_type):
             # figure out sub type
             sub_arrow_type = arrow_type.value_type
             subtype = Engine._convert_pandas_dtype_to_offline_type(sub_arrow_type)
