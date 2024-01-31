@@ -42,6 +42,7 @@ class FeatureMonitoringResultEngine:
         feature_group_id: Optional[int] = None,
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
+        **kwargs,
     ):
         if feature_group_id is None:
             assert feature_view_name is not None

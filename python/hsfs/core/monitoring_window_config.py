@@ -74,6 +74,7 @@ class MonitoringWindowConfig:
         training_dataset_version: Optional[int] = None,
         specific_value: Optional[float] = None,
         row_percentage: Optional[float] = None,
+        **kwargs,
     ):
         """Configuration to define the slice of data to compute statistics on.
 

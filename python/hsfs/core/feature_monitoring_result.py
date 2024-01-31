@@ -47,6 +47,7 @@ class FeatureMonitoringResult:
         ] = None,
         id: Optional[int] = None,
         href: Optional[str] = None,
+        **kwargs,
     ):
         self._id = id
         self._href = href

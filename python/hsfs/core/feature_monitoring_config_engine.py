@@ -39,6 +39,7 @@ class FeatureMonitoringConfigEngine:
         feature_group_id: Optional[int] = None,
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
+        **kwargs,
     ):
         """Business logic for feature monitoring configuration.
 

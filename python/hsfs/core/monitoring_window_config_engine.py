@@ -29,7 +29,7 @@ from hsfs.util import convert_event_time_to_timestamp
 class MonitoringWindowConfigEngine:
     _MAX_TIME_RANGE_LENGTH = 12
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         # No need to initialize anything
         pass
 

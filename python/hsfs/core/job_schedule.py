@@ -29,7 +29,7 @@ class JobSchedule:
         next_execution_date_time=None,
         id=None,
         end_date_time=None,
-        **kwargs
+        **kwargs,
     ):
         self._id = id
         self._start_date_time = (

@@ -96,6 +96,7 @@ class FeatureMonitoringConfig:
         feature_view_name: Optional[str] = None,
         feature_view_version: Optional[int] = None,
         href: Optional[str] = None,
+        **kwargs,
     ):
         self.name = name
         self._id = id
