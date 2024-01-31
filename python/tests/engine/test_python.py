@@ -17,6 +17,8 @@ import decimal
 
 import pytest
 import pandas as pd
+import polars as pl
+from polars.testing import assert_frame_equal as polars_assert_frame_equal
 import numpy as np
 import pyarrow as pa
 from confluent_kafka.admin import TopicMetadata, PartitionMetadata
@@ -1046,7 +1048,7 @@ class TestPython:
         # Assert
         assert result is None
 
-    def test_convert_to_default_dataframe(self, mocker):
+    def test_convert_to_default_dataframe_pandas(self, mocker):
         # Arrange
         mock_warnings = mocker.patch("warnings.warn")
 
@@ -1065,7 +1067,54 @@ class TestPython:
             == "The ingested dataframe contains upper case letters in feature names: `['Col1']`. Feature names are sanitized to lower case in the feature store."
         )
 
-    def test_parse_schema_feature_group(self, mocker):
+    def test_convert_to_default_dataframe_polars(self, mocker):
+        # Arrange
+        mock_warnings = mocker.patch("warnings.warn")
+
+        python_engine = python.Engine()
+
+        df = pl.DataFrame(
+            [
+                pl.Series("Col1", [1, 2], dtype=pl.Float32),
+                pl.Series("col2", [1, 2], dtype=pl.Int64),
+                pl.Series(
+                    "Date",
+                    [
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                    ],
+                    pl.Datetime(time_zone="Africa/Abidjan"),
+                ),
+            ]
+        )
+
+        # Resulting dataframe
+        expected_converted_df = pl.DataFrame(
+            [
+                pl.Series("col1", [1, 2], dtype=pl.Float32),
+                pl.Series("col2", [1, 2], dtype=pl.Int64),
+                pl.Series(
+                    "date",
+                    [
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                    ],
+                    pl.Datetime(time_zone=None),
+                ),
+            ]
+        )
+
+        # Act
+        result = python_engine.convert_to_default_dataframe(dataframe=df)
+
+        # Assert
+        polars_assert_frame_equal(result, expected_converted_df)
+        assert (
+            mock_warnings.call_args[0][0]
+            == "The ingested dataframe contains upper case letters in feature names: `['Col1', 'Date']`. Feature names are sanitized to lower case in the feature store."
+        )
+
+    def test_parse_schema_feature_group_pandas(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
 
@@ -1083,6 +1132,39 @@ class TestPython:
         assert len(result) == 2
         assert result[0].name == "col1"
         assert result[1].name == "col2"
+
+    def test_parse_schema_feature_group_polars(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
+
+        python_engine = python.Engine()
+
+        df = pl.DataFrame(
+            [
+                pl.Series("col1", [1, 2], dtype=pl.Float32),
+                pl.Series("col2", [1, 2], dtype=pl.Int64),
+                pl.Series(
+                    "date",
+                    [
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                    ],
+                    pl.Datetime(time_zone="Africa/Abidjan"),
+                ),
+            ]
+        )
+
+        # Act
+        result = python_engine.parse_schema_feature_group(
+            dataframe=df, time_travel_format=None
+        )
+        print(result)
+
+        # Assert
+        assert len(result) == 3
+        assert result[0].name == "col1"
+        assert result[1].name == "col2"
+        assert result[2].name == "date"
 
     def test_parse_schema_training_dataset(self):
         # Arrange
@@ -1340,6 +1422,34 @@ class TestPython:
         # Assert
         assert result == "string"
 
+    def test_convert_simple_pandas_type_large_string_category_unordered(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.dictionary(
+                value_type=pa.large_string(), index_type=pa.int64(), ordered=False
+            )
+        )
+
+        # Assert
+        assert result == "string"
+
+    def test_convert_simple_pandas_type_large_string_category_ordered(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.dictionary(
+                value_type=pa.large_string(), index_type=pa.int64(), ordered=True
+            )
+        )
+
+        # Assert
+        assert result == "string"
+
     def test_convert_simple_pandas_type_category_ordered(self):
         # Arrange
         python_engine = python.Engine()
@@ -1375,6 +1485,19 @@ class TestPython:
         # Act
         result = python_engine._convert_pandas_object_type_to_offline_type(
             arrow_type=pa.list_(pa.int8())
+        )
+
+        # Assert
+        assert result == "array<int>"
+
+    def test_infer_type_pyarrow_large_list(self):
+        # Arrange
+
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_type=pa.large_list(pa.int8())
         )
 
         # Assert
@@ -1428,6 +1551,18 @@ class TestPython:
         # Assert
         assert result == "binary"
 
+    def test_infer_type_pyarrow_large_binary(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.large_binary()
+        )
+
+        # Assert
+        assert result == "binary"
+
     def test_infer_type_pyarrow_string(self):
         # Arrange
         python_engine = python.Engine()
@@ -1435,6 +1570,18 @@ class TestPython:
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.string()
+        )
+
+        # Assert
+        assert result == "string"
+
+    def test_infer_type_pyarrow_large_string(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.large_string()
         )
 
         # Assert
