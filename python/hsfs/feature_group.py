@@ -3079,7 +3079,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             )
         else:
             self._storage_connector = storage_connector
-
+        self._vector_db_client = None
         self._href = href
 
     def save(self):
