@@ -3007,6 +3007,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         notification_topic_name=None,
         spine=False,
         deprecated=False,
+        embedding_index=None,
         **kwargs,
     ):
         super().__init__(
@@ -3017,6 +3018,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             event_time=event_time,
             online_enabled=online_enabled,
             id=id,
+            embedding_index=embedding_index,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
@@ -3217,8 +3219,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
         )
         return self.select_all().read(dataframe_type=dataframe_type, online=online)
 
-    def show(self, n):
-        """Show the first n rows of the feature group.
+    def show(self, n: int, online: Optional[bool] = False):
+        """Show the first `n` rows of the feature group.
 
         !!! example
             ```python
@@ -3228,8 +3230,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
             # get the Feature Group instance
             fg = fs.get_or_create_feature_group(...)
 
-            fg.show(5)
+            # make a query and show top 5 rows
+            fg.select(['date','weekly_sales','is_holiday']).show(5)
             ```
+
+        # Arguments
+            n: int. Number of rows to show.
+            online: bool, optional. If `True` read from online feature store, defaults
+                to `False`.
         """
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -3237,7 +3245,18 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().show(n)
+        if online and self.embedding_index:
+            if self._vector_db_client is None:
+                self._vector_db_client = VectorDbClient(self.select_all())
+            results = self._vector_db_client.read(
+                self.id,
+                {},
+                pk=self.embedding_index.col_prefix + self.primary_key[0],
+                index_name=self.embedding_index.index_name,
+                n=n,
+            )
+            return [[result[f.name] for f in self.features] for result in results]
+        return self.select_all().show(n, online)
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -3260,7 +3279,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
-        return {
+        fg_meta_dict = {
             "id": self._id,
             "name": self._name,
             "description": self._description,
@@ -3284,6 +3303,9 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "notificationTopicName": self.notification_topic_name,
             "deprecated": self.deprecated,
         }
+        if self.embedding_index:
+            fg_meta_dict["embeddingIndex"] = self.embedding_index
+        return fg_meta_dict
 
     @property
     def id(self):
