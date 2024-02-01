@@ -3258,6 +3258,68 @@ class ExternalFeatureGroup(FeatureGroupBase):
             return [[result[f.name] for f in self.features] for result in results]
         return self.select_all().show(n, online)
 
+    def find_neighbors(
+        self,
+        embedding: List[Union[int, float]],
+        col: Optional[str] = None,
+        k: Optional[int] = 10,
+        filter: Optional[Union[Filter, Logic]] = None,
+        min_score: Optional[float] = 0,
+    ) -> List[Tuple[float, List[Any]]]:
+        """
+        Finds the nearest neighbors for a given embedding in the vector database.
+
+        # Arguments
+            embedding: The target embedding for which neighbors are to be found.
+            col: The column name used to compute similarity score. Required only if there
+            are multiple embeddings (optional).
+            k: The number of nearest neighbors to retrieve (default is 10).
+            filter: A filter expression to restrict the search space (optional).
+            min_score: The minimum similarity score for neighbors to be considered (default is 0).
+
+        # Returns
+            A list of tuples representing the nearest neighbors.
+            Each tuple contains: `(The similarity score, A list of feature values)`
+
+        !!! Example
+            ```
+            embedding_index = EmbeddingIndex()
+            embedding_index.add_embedding(name="user_vector", dimension=3)
+            fg = fs.create_feature_group(
+                        name='air_quality',
+                        embedding_index = embedding_index,
+                        version=1,
+                        primary_key=['id1'],
+                        online_enabled=True,
+                    )
+            fg.insert(data)
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+            )
+
+            # apply filter
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+                filter=(fg.id1 > 10) & (fg.id1 < 30)
+            )
+            ```
+        """
+        if self._vector_db_client is None and self._embedding_index:
+            self._vector_db_client = VectorDbClient(self.select_all())
+        results = self._vector_db_client.find_neighbors(
+            embedding,
+            feature=(self.__getattr__(col) if col else None),
+            k=k,
+            filter=filter,
+            min_score=min_score,
+        )
+        return [
+            (result[0], [result[1][f.name] for f in self.features])
+            for result in results
+        ]
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
