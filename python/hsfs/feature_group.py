@@ -3156,7 +3156,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         )
 
     def read(
-        self, dataframe_type: Optional[str] = "default", online: Optional[bool] = False
+        self, dataframe_type: Optional[str] = "default", online: Optional[bool] = False, read_options: Optional[dict] = {}
     ):
         """Get the feature group as a DataFrame.
 
