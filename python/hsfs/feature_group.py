@@ -3156,7 +3156,10 @@ class ExternalFeatureGroup(FeatureGroupBase):
         )
 
     def read(
-        self, dataframe_type: Optional[str] = "default", online: Optional[bool] = False, read_options: Optional[dict] = {}
+        self,
+        dataframe_type: Optional[str] = "default",
+        online: Optional[bool] = False,
+        read_options: Optional[dict] = {},
     ):
         """Get the feature group as a DataFrame.
 
@@ -3326,8 +3329,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         if isinstance(json_decamelized, dict):
             _ = json_decamelized.pop("type", None)
             if "embedding_index" in json_decamelized:
-                json_decamelized[
-                    "embedding_index"] = EmbeddingIndex.from_json_response(
+                json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
                     json_decamelized["embedding_index"]
                 )
             return cls(**json_decamelized)
