@@ -182,7 +182,7 @@ class MonitoringWindowConfig:
         return self.json()
 
     def __repr__(self):
-        return json.dumps(humps.decamelize(self.to_dict()), indent=2)
+        return f"MonitoringWindowConfig({self._window_config_type!r})"
 
     @property
     def id(self) -> Optional[int]:

@@ -211,7 +211,7 @@ class FeatureMonitoringConfig:
         return self.json()
 
     def __repr__(self):
-        return json.dumps(humps.decamelize(self.to_dict()), indent=2)
+        return f"FeatureMonitoringConfig({self._name!r}, {self._feature_monitoring_type!r})"
 
     def with_detection_window(
         self,
@@ -253,9 +253,11 @@ class FeatureMonitoringConfig:
         """
         # Setter is using the engine class to perform input validation.
         self.detection_window_config = {
-            "window_config_type": "ROLLING_TIME"
-            if time_offset or window_length
-            else "ALL_TIME",
+            "window_config_type": (
+                mwc.WindowConfigType.ROLLING_TIME
+                if time_offset or window_length
+                else mwc.WindowConfigType.ALL_TIME
+            ),
             "time_offset": time_offset,
             "window_length": window_length,
             "row_percentage": row_percentage,
@@ -295,7 +297,7 @@ class FeatureMonitoringConfig:
         # Setter is using the engine class to perform input validation and build monitoring window config object.
         if self.detection_window_config is None:
             self.detection_window_config = {
-                "window_config_type": "ALL_TIME",
+                "window_config_type": mwc.WindowConfigType.ALL_TIME,
                 "row_percentage": 1.0,
             }
         self.reference_window_config = {

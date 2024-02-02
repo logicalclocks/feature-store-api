@@ -21,7 +21,7 @@ class TestMonitoringWindowConfig:
     def test_window_based_on_training_dataset_version(self):
         # Arrange
         window_config = mwc.MonitoringWindowConfig(
-            window_config_type="TRAINING_DATASET",
+            window_config_type=mwc.WindowConfigType.TRAINING_DATASET,
             training_dataset_version=1,
         )
 
@@ -47,7 +47,7 @@ class TestMonitoringWindowConfig:
     def test_window_based_on_rolling_time(self):
         # Arrange
         window_config = mwc.MonitoringWindowConfig(
-            window_config_type="ROLLING_TIME",
+            window_config_type=mwc.WindowConfigType.ROLLING_TIME,
             time_offset="1d",
             window_length="1h",
             row_percentage=0.2,
@@ -71,7 +71,7 @@ class TestMonitoringWindowConfig:
     def test_window_based_on_all_time(self):
         # Arrange
         window_config = mwc.MonitoringWindowConfig(
-            window_config_type="ALL_TIME",
+            window_config_type=mwc.WindowConfigType.ALL_TIME,
             row_percentage=0.2,
         )
 
@@ -97,7 +97,7 @@ class TestMonitoringWindowConfig:
     def test_window_based_on_specific_value(self):
         # Arrange
         window_config = mwc.MonitoringWindowConfig(
-            window_config_type="SPECIFIC_VALUE",
+            window_config_type=mwc.WindowConfigType.SPECIFIC_VALUE,
             specific_value=0.2,
         )
 
