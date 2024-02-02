@@ -61,13 +61,6 @@ class FeatureMonitoringConfigEngine:
         self._feature_view_name = feature_view_name
         self._feature_view_version = feature_view_version
 
-        # if feature_group_id is None:
-        #     assert feature_view_name is not None
-        #     assert feature_view_version is not None
-        #     entity_type = "featureview"
-        # else:
-        #     entity_type = "featuregroups"
-
         self._feature_monitoring_config_api = (
             feature_monitoring_config_api.FeatureMonitoringConfigApi(
                 feature_store_id=feature_store_id,
@@ -154,7 +147,7 @@ class FeatureMonitoringConfigEngine:
                 "metric must be a string value. "
                 "Check the documentation for a list of supported metrics."
             )
-        # TODO: Add more validation logic based on detection and reference window config.
+        # TODO: [FSTORE-1205] Add more validation logic based on detection and reference window config.
         if (
             metric.lower() not in self._VALID_CATEGORICAL_METRICS
             and metric.lower() not in self._VALID_FRACTIONAL_METRICS
@@ -371,7 +364,7 @@ class FeatureMonitoringConfigEngine:
 
         assert config is not None, "Feature monitoring config not found."
 
-        # TODO: Future work. Parallelize both single_window_monitoring calls and wait
+        # TODO: [FSTORE-1206] Parallelize both single_window_monitoring calls and wait
         detection_statistics = (
             self._monitoring_window_config_engine.run_single_window_monitoring(
                 entity=entity,
