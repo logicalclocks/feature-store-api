@@ -18,13 +18,19 @@ from hsfs.core import vector_db_client
 from hsfs.feature_group import FeatureGroup
 from hsfs.feature import Feature
 from hsfs.client.exceptions import FeatureStoreException
+from unittest.mock import MagicMock
+from hsfs.embedding import EmbeddingIndex
 
 
 class TestVectorDbClient:
-    fg = FeatureGroup("test_fg", 1, 99, id=1)
-    f1 = Feature("f1", feature_group=fg)
-    f2 = Feature("f2", feature_group=fg)
-    fg.features = [f1, f2]
+    embedding_index = EmbeddingIndex("2249__embedding_default_embedding")
+    embedding_index.add_embedding("f2", 3)
+    embedding_index._col_prefix = ""
+    fg = FeatureGroup("test_fg", 1, 99, id=1, embedding_index=embedding_index)
+    f1 = Feature("f1", feature_group=fg, primary=True)
+    f2 = Feature("f2", feature_group=fg, primary=True)
+    f3 = Feature("f3", feature_group=fg)
+    fg.features = [f1, f2, f3]
     fg2 = FeatureGroup("test_fg", 1, 99, id=2)
     fg2.features = [f1, f2]
 
@@ -37,6 +43,20 @@ class TestVectorDbClient:
 
         self.query = self.fg.select_all()
         self.target = vector_db_client.VectorDbClient(self.query)
+        self.target._opensearch_client = MagicMock()
+        self.target._opensearch_client.search.return_value = {
+            "hits": {
+                "hits": [
+                    {
+                        "_index": "2249__embedding_default_embedding",
+                        "_type": "_doc",
+                        "_id": "2389|4",
+                        "_score": 1.0,
+                        "_source": {"f1": 4, "f2": [9, 4, 4]},
+                    }
+                ]
+            }
+        }
 
     @pytest.mark.parametrize(
         "filter_expression, expected_result",
@@ -197,3 +217,34 @@ class TestVectorDbClient:
     def test_check_filter_when_filter_is_not_logic_or_filter(self):
         with pytest.raises(FeatureStoreException):
             self.target._check_filter("f1 > 20", self.fg2)
+
+    def test_read_with_keys(self):
+        actual = self.target.read(self.fg.id, keys={"f1": 10, "f2": 20})
+
+        expected_query = {
+            "query": {"bool": {"must": [{"match": {"f1": 10}}, {"match": {"f2": 20}}]}},
+            "_source": ["f1", "f2", "f3"],
+        }
+        self.target._opensearch_client.search.assert_called_once_with(
+            body=expected_query, index="2249__embedding_default_embedding"
+        )
+        expected = [{"f1": 4, "f2": [9, 4, 4]}]
+        assert actual == expected
+
+    def test_read_with_pk(self):
+        actual = self.target.read(self.fg.id, pk="f1")
+
+        expected_query = {
+            "query": {"bool": {"must": {"exists": {"field": "f1"}}}},
+            "size": 10,
+            "_source": ["f1", "f2", "f3"],
+        }
+        self.target._opensearch_client.search.assert_called_once_with(
+            body=expected_query, index="2249__embedding_default_embedding"
+        )
+        expected = [{"f1": 4, "f2": [9, 4, 4]}]
+        assert actual == expected
+
+    def test_read_without_pk_or_keys(self):
+        with pytest.raises(FeatureStoreException):
+            self.target.read(self.fg.id)

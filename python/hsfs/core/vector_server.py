@@ -405,7 +405,7 @@ class VectorServer:
         self._validate_serving_key(entry)
         # Initialize the set of values
         serving_vector = {}
-        bind_entries = []
+        bind_entries = {}
         for prepared_statement_index in prepared_statement_objects:
             pk_entry = {}
             next_statement = False
@@ -422,20 +422,18 @@ class VectorServer:
                         break
                 else:
                     pk_entry[sk.feature_name] = entry[sk.required_serving_key]
-            bind_entries.append(pk_entry)
             if next_statement:
                 continue
+            bind_entries[prepared_statement_index] = pk_entry
 
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
-        results = loop.run_until_complete(
-            self._execute_prep_statements(
-                list(prepared_statement_objects.values()), bind_entries
-            )
+        results_dict = loop.run_until_complete(
+            self._execute_prep_statements(prepared_statement_objects, bind_entries)
         )
 
-        for i in results:
-            for row in i:
+        for key in results_dict:
+            for row in results_dict[key]:
                 result_dict = self.deserialize_complex_features(
                     self._complex_features, dict(row)
                 )
@@ -450,8 +448,9 @@ class VectorServer:
         # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
         # expect that backend will return correctly ordered vectors.
         batch_results = [{} for _ in range(len(entries))]
-        entry_values = []
+        entry_values = {}
         serving_keys_all_fg = []
+        prepared_stmts_to_execute = {}
         # construct the list of entry values for binding to query
         for prepared_statement_index in prepared_statement_objects:
             # prepared_statement_index include fg with label only
@@ -459,6 +458,9 @@ class VectorServer:
             if prepared_statement_index not in self._serving_key_by_serving_index:
                 continue
 
+            prepared_stmts_to_execute[
+                prepared_statement_index
+            ] = prepared_statement_objects[prepared_statement_index]
             entry_values_tuples = list(
                 map(
                     lambda e: tuple(
@@ -477,24 +479,16 @@ class VectorServer:
                     entries,
                 )
             )
-            bind_params = {"batch_ids": entry_values_tuples}
-            entry_values.append(bind_params)
+            entry_values[prepared_statement_index] = {"batch_ids": entry_values_tuples}
 
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
         parallel_results = loop.run_until_complete(
-            self._execute_prep_statements(
-                list(prepared_statement_objects.values()), entry_values
-            )
+            self._execute_prep_statements(prepared_stmts_to_execute, entry_values)
         )
 
         # construct the results
-        for count, prepared_statement_index in enumerate(prepared_statement_objects):
-            # prepared_statement_index include fg with label only
-            # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
-            if prepared_statement_index not in self._serving_key_by_serving_index:
-                continue
-
+        for prepared_statement_index in prepared_stmts_to_execute:
             statement_results = {}
             serving_keys = self._serving_key_by_serving_index[prepared_statement_index]
             serving_keys_all_fg += serving_keys
@@ -505,7 +499,7 @@ class VectorServer:
                 for sk in self._serving_key_by_serving_index[prepared_statement_index]
             ]
             # iterate over results by index of the prepared statement
-            for row in parallel_results[count]:
+            for row in parallel_results[prepared_statement_index]:
                 row_dict = dict(row)
                 # can primary key be complex feature?
                 result_dict = self.deserialize_complex_features(
@@ -714,19 +708,25 @@ class VectorServer:
 
         return resultset
 
-    async def _execute_prep_statements(self, prepared_statements, entries_list: list):
+    async def _execute_prep_statements(self, prepared_statements: dict, entries: dict):
         """Iterate over prepared statements to create async tasks
         and gather all tasks results for a given list of entries."""
 
         tasks = [
-            asyncio.ensure_future(self._query_async_sql(query, entries_list[i]))
-            for i, query in enumerate(prepared_statements)
+            asyncio.ensure_future(
+                self._query_async_sql(prepared_statements[key], entries[key])
+            )
+            for key in prepared_statements
         ]
         # Run the queries in parallel using asyncio.gather
         results = await asyncio.gather(*tasks)
+        results_dict = {}
+        # Create a dict of results with the prepared statement index as key
+        for i, key in enumerate(prepared_statements):
+            results_dict[key] = results[i]
         # TODO: close connection? closing connection pool here will make un-acquirable for future connections
         # unless init_serving is explicitly called before get_feature_vector(s).
-        return results
+        return results_dict
 
     @property
     def prepared_statement_engine(self):
