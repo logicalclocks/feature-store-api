@@ -93,7 +93,10 @@ class Query:
                     fs_query.register_external()
 
                 # Register on hudi/delta feature groups as temporary tables
-                if self._left_feature_group.time_travel_format == "DELTA":
+                if (
+                    hasattr(self._left_feature_group, "_time_travel_format")
+                    and self._left_feature_group.time_travel_format == "DELTA"
+                ):
                     fs_query.register_delta_tables(
                         self._feature_store_id,
                         self._feature_store_name,
