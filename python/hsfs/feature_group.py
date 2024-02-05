@@ -1787,7 +1787,7 @@ class FeatureGroup(FeatureGroupBase):
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
             dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
@@ -1806,6 +1806,7 @@ class FeatureGroup(FeatureGroupBase):
             `DataFrame`: The spark dataframe containing the feature data.
             `pyspark.DataFrame`. A Spark DataFrame.
             `pandas.DataFrame`. A Pandas DataFrame.
+            `polars.DataFrame`. A Polars DataFrame.
             `numpy.ndarray`. A two-dimensional Numpy array.
             `list`. A two-dimensional Python list.
 

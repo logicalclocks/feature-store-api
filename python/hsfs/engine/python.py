@@ -188,6 +188,7 @@ class Engine:
                 arrow_flight_client.get_instance().read_query,
                 sql_query,
                 arrow_flight_config,
+                dataframe_type,
             )
         else:
             with self._create_hive_connection(
@@ -196,13 +197,20 @@ class Engine:
                 # Suppress SQLAlchemy pandas warning
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", UserWarning)
-                    result_df = util.run_with_loading_animation(
-                        "Reading data from Hopsworks, using Hive",
-                        pd.read_sql,
-                        sql_query,
-                        hive_conn,
-                    )
-
+                    if dataframe_type.lower() == "polars":
+                        result_df = util.run_with_loading_animation(
+                            "Reading data from Hopsworks, using Hive",
+                            pl.read_database,
+                            sql_query,
+                            hive_conn,
+                        )
+                    else:
+                        result_df = util.run_with_loading_animation(
+                            "Reading data from Hopsworks, using Hive",
+                            pd.read_sql,
+                            sql_query,
+                            hive_conn,
+                        )
         if schema:
             result_df = Engine.cast_columns(result_df, schema)
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -220,7 +228,10 @@ class Engine:
         with self._mysql_online_fs_engine.connect() as mysql_conn:
             if "sqlalchemy" in str(type(mysql_conn)):
                 sql_query = sql.text(sql_query)
-            result_df = pd.read_sql(sql_query, mysql_conn)
+            if dataframe_type.lower() == "polars":
+                result_df = pd.read_database(sql_query, mysql_conn)
+            else:
+                result_df = pd.read_sql(sql_query, mysql_conn)
             if schema:
                 result_df = Engine.cast_columns(result_df, schema, online=True)
         return self._return_dataframe_type(result_df, dataframe_type)
@@ -588,7 +599,7 @@ class Engine:
     def save_dataframe(
         self,
         feature_group: FeatureGroup,
-        dataframe: pd.DataFrame,
+        dataframe: Union[pd.DataFrame, pl.DataFrame],
         operation: str,
         online_enabled: bool,
         storage: str,
@@ -872,7 +883,7 @@ class Engine:
                 )
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
-        if dataframe_type.lower() in ["default", "pandas"]:
+        if dataframe_type.lower() in ["default", "pandas", "polars"]:
             return dataframe
         if dataframe_type.lower() == "numpy":
             return dataframe.values
