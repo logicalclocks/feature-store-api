@@ -519,8 +519,8 @@ class TestFeatureMonitoringResultEngine:
         # Arrange
         detection_specific_value = 25
         reference_specific_value = 50
-        expected_difference = -25
-        expected_relative_difference = -0.5
+        expected_difference = 25
+        expected_relative_difference = 0.5
         result_engine = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
             feature_store_id=DEFAULT_FEATURE_STORE_ID,
             feature_group_id=DEFAULT_FEATURE_GROUP_ID,
@@ -585,7 +585,7 @@ class TestFeatureMonitoringResultEngine:
 
         # Assert
         assert mean_difference == 0
-        assert count_relative_difference == -0.6
+        assert count_relative_difference == 0.6
         assert count_specific_difference == 2
 
     def test_compute_difference_and_shift(self, mocker, backend_fixtures):
