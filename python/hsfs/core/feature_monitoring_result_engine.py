@@ -506,13 +506,14 @@ class FeatureMonitoringResultEngine:
             `float`. The difference between the reference and detection values.
         """
 
+        diff = abs(detection_value - reference_value)
         if relative:
             if reference_value == 0:
                 return float("inf")
             else:
-                return (detection_value - reference_value) / reference_value
+                return diff / reference_value
         else:
-            return detection_value - reference_value
+            return diff
 
     def get_monitoring_job_execution_id(
         self,
