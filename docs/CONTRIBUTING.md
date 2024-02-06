@@ -182,8 +182,7 @@ To add new documentation for APIs, you need to add information about the method/
 ```python
 PAGES = {
     "connection.md": [
-        "hsfs.connection.Connection.connection",
-        "hsfs.connection.Connection.setup_databricks",
+        "hsfs.connection.Connection.connection"
     ]
     "new_template.md": [
             "module",
