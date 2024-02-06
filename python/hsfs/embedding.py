@@ -79,6 +79,7 @@ class HsmlModel:
             "modelVersion": self.model_version,
         }
 
+
 @dataclass
 class EmbeddingFeature:
     """
