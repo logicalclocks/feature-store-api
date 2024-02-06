@@ -7,7 +7,7 @@
     <groupId>com.logicalclocks</groupId>
     <artifactId>hsfs-parent</artifactId>
     <packaging>pom</packaging>
-    <version>3.7.0-SNAPSHOT</version>
+    <version>3.7.0-RC0</version>
     <modules>
         <module>hsfs</module>
         <module>spark</module>
