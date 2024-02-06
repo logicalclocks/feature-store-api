@@ -1,10 +1,16 @@
 [
   {
+    "version": "3.7.0-RC1",
+    "title": "3.7.0-RC1",
+    "aliases": [
+      "3.7"
+    ]
+  },
+  {
     "version": "3.7.0-RC0",
     "title": "3.7.0-RC0",
     "aliases": [
-      "latest",
-      "3.7"
+      "latest"
     ]
   },
   {
