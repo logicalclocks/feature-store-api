@@ -99,12 +99,28 @@ class TestPython:
 
         # Act
         python_engine._sql_offline(
-            sql_query="", feature_store=None, dataframe_type=None
+            sql_query="", feature_store=None, dataframe_type="default"
         )
 
         # Assert
         assert mock_python_engine_create_hive_connection.call_count == 1
         assert mock_python_engine_return_dataframe_type.call_count == 1
+
+    def test_sql_offline_dataframe_type_none(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.engine.python.Engine._create_hive_connection")
+
+        python_engine = python.Engine()
+
+        with pytest.raises(exceptions.FeatureStoreException) as fstore_except:
+            # Act
+            python_engine._sql_offline(
+                sql_query="", feature_store=None, dataframe_type=None
+            )
+        assert (
+            str(fstore_except.value)
+            == 'dataframe_type : None not supported. Possible values are "default", "spark", "pandas", "polars", "numpy" or "python"'
+        )
 
     def test_jdbc(self, mocker):
         # Arrange
@@ -119,12 +135,32 @@ class TestPython:
 
         # Act
         python_engine._jdbc(
-            sql_query=query, connector=None, dataframe_type=None, read_options={}
+            sql_query=query, connector=None, dataframe_type="default", read_options={}
         )
 
         # Assert
         assert mock_util_create_mysql_engine.call_count == 1
         assert mock_python_engine_return_dataframe_type.call_count == 1
+
+    def test_jdbc_dataframe_type_none(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.util.create_mysql_engine")
+        mocker.patch("hsfs.client.get_instance")
+        query = "SELECT * FROM TABLE"
+
+        python_engine = python.Engine()
+
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as fstore_except:
+            python_engine._jdbc(
+                sql_query=query, connector=None, dataframe_type=None, read_options={}
+            )
+
+        # Assert
+        assert (
+            str(fstore_except.value)
+            == 'dataframe_type : None not supported. Possible values are "default", "spark", "pandas", "polars", "numpy" or "python"'
+        )
 
     def test_jdbc_read_options(self, mocker):
         # Arrange
@@ -141,7 +177,7 @@ class TestPython:
         python_engine._jdbc(
             sql_query=query,
             connector=None,
-            dataframe_type=None,
+            dataframe_type="default",
             read_options={"external": ""},
         )
 

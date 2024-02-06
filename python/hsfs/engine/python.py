@@ -182,6 +182,17 @@ class Engine:
         hive_config=None,
         arrow_flight_config={},
     ):
+        if not isinstance(dataframe_type, str) or dataframe_type.lower() not in [
+            "pandas",
+            "polars",
+            "numpy",
+            "python",
+            "default",
+        ]:
+            raise FeatureStoreException(
+                f'dataframe_type : {dataframe_type} not supported. Possible values are "default", "spark", "pandas", "polars", "numpy" or "python"'
+            )
+
         if arrow_flight_client.get_instance().is_flyingduck_query_object(sql_query):
             result_df = util.run_with_loading_animation(
                 "Reading data from Hopsworks, using ArrowFlight",
@@ -216,6 +227,17 @@ class Engine:
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def _jdbc(self, sql_query, connector, dataframe_type, read_options, schema=None):
+        if not isinstance(dataframe_type, str) or dataframe_type.lower() not in [
+            "pandas",
+            "polars",
+            "numpy",
+            "python",
+            "default",
+        ]:
+            raise FeatureStoreException(
+                f'dataframe_type : {dataframe_type} not supported. Possible values are "default", "spark", "pandas", "polars", "numpy" or "python"'
+            )
+
         if self._mysql_online_fs_engine is None:
             self._mysql_online_fs_engine = util.create_mysql_engine(
                 connector,
