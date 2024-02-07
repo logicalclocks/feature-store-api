@@ -2110,8 +2110,8 @@ class FeatureGroup(FeatureGroupBase):
                     `as_of(end_wallclock_time, exclude_until=start_wallclock_time).read(read_options=read_options)`
                     instead.
 
-        !!! warning "Not available in Spark"
-            `read_changes` method is available in Python but not in Spark.
+        !!! warning "Not available in Python"
+            `read_changes` method is available in Spark but not in Python.
 
         This function only works on feature groups with `HUDI` time travel format.
 
