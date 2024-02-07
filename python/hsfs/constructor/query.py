@@ -260,8 +260,8 @@ class Query:
     ):
         """Perform time travel on the given Query.
 
-        !!! warning "Not available in Python"
-            `as_of` method is available in Spark but not in Python.
+        !!! warning "Available only using Pyspark/Spark"
+            HUDI supports Time Travel and Incremental Query via Spark context, exclusively in PySpark/Spark
 
         This method returns a new Query object at the specified point in time. Optionally, commits before a
         specified point in time can be excluded from the query. The Query can then either be read into a Dataframe

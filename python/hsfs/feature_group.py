@@ -2110,8 +2110,8 @@ class FeatureGroup(FeatureGroupBase):
                     `as_of(end_wallclock_time, exclude_until=start_wallclock_time).read(read_options=read_options)`
                     instead.
 
-        !!! warning "Not available in Python"
-            `read_changes` method is available in Spark but not in Python.
+        !!! warning "Available only using Pyspark/Spark"
+            HUDI supports Time Travel and Incremental Query via Spark context, exclusively in PySpark/Spark
 
         This function only works on feature groups with `HUDI` time travel format.
 
@@ -2850,8 +2850,8 @@ class FeatureGroup(FeatureGroupBase):
     ):
         """Get Query object to retrieve all features of the group at a point in the past.
 
-        !!! warning "Not available in Python"
-            `as_of` method is available in Spark but not in Python.
+        !!! warning "Available only using Pyspark/Spark"
+            HUDI supports Time Travel and Incremental Query via Spark context, exclusively in PySpark/Spark
 
         This method selects all features in the feature group and returns a Query object
         at the specified point in time. Optionally, commits before a specified point in time can be
