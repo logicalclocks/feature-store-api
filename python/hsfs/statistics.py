@@ -81,9 +81,11 @@ class Statistics:
             ]
         elif isinstance(desc_statistics, list):
             return [
-                fds
-                if isinstance(fds, FeatureDescriptiveStatistics)
-                else FeatureDescriptiveStatistics.from_response_json(fds)
+                (
+                    fds
+                    if isinstance(fds, FeatureDescriptiveStatistics)
+                    else FeatureDescriptiveStatistics.from_response_json(fds)
+                )
                 for fds in desc_statistics
             ]
         else:
@@ -98,9 +100,11 @@ class Statistics:
         if split_statistics is None:
             return None
         return [
-            SplitStatistics.from_response_json(split)
-            if isinstance(split, dict)
-            else split
+            (
+                SplitStatistics.from_response_json(split)
+                if isinstance(split, dict)
+                else split
+            )
             for split in split_statistics
         ]
 
@@ -143,7 +147,7 @@ class Statistics:
         return self.json()
 
     def __repr__(self):
-        return json.dumps(humps.decamelize(self.to_dict()), indent=2)
+        return f"Statistics({self._computation_time!r})"
 
     @property
     def computation_time(self):

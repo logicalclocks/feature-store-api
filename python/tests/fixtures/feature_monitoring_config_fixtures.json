@@ -1,0 +1,310 @@
+{
+    "get_via_feature_group": {
+      "detection_insert_reference_snapshot": {
+        "response": {
+          "id": 32,
+          "featureName": "monitored_feature",
+          "featureGroupId": 13,
+          "featureStoreId": 67,
+          "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+          "name": "unit_test_config",
+          "description": "I am a unit test fixture",
+          "featureMonitoringType": "STATISTICS_COMPARISON",
+          "detectionWindowConfig": {
+            "windowConfigType": "ROLLING_TIME",
+            "timeOffset": "1w",
+            "windowLength": "1d",
+            "rowPercentage": 0.5
+          },
+          "referenceWindowConfig": {
+            "windowConfigType": "ROLLING_TIME",
+            "timeOffset": "1w",
+            "rowPercentage": 0.5
+          },
+          "statisticsComparisonConfig": {
+            "threshold": 1,
+            "relative": false,
+            "strict": true,
+            "metric": "MEAN"
+          },
+          "jobSchedule": {
+            "id": 222,
+            "cronExpression": "0 0 12 ? * * *",
+            "startDateTime": 1676457000000,
+            "enabled": true
+          },
+          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
+        }
+      },
+      "detection_insert_reference_specific_value": {
+        "response": {
+          "id": 32,
+          "featureName": "monitored_feature",
+          "featureGroupId": 13,
+          "featureStoreId": 67,
+          "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+          "name": "unit_test_config",
+          "description": "I am a unit test fixture",
+          "featureMonitoringType": "STATISTICS_COMPARISON",
+          "detectionWindowConfig": {
+            "windowConfigType": "ROLLING_TIME",
+            "timeOffset": "1w",
+            "windowLength": "1d",
+            "rowPercentage": 0.5
+          },
+          "referenceWindowConfig": {
+            "windowConfigType": "SPECIFIC_VALUE",
+            "specific_value": 6.6
+          },
+          "statisticsComparisonConfig": {
+            "threshold": 1,
+            "relative": false,
+            "strict": true,
+            "metric": "MEAN"
+          },
+          "jobSchedule": {
+            "id": 222,
+            "cronExpression": "0 0 12 ? * * *",
+            "startDateTime": 1676457000000,
+            "enabled": true
+          },
+          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
+        }
+      },
+      "detection_insert_scheduled_stats_only": {
+        "response": {
+          "id": 32,
+          "featureName": "monitored_feature",
+          "featureGroupId": 13,
+          "featureStoreId": 67,
+          "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+          "name": "unit_test_config",
+          "description": "I am a unit test fixture",
+          "featureMonitoringType": "STATISTICS_COMPUTATION",
+          "detectionWindowConfig": {
+            "windowConfigType": "ROLLING_TIME",
+            "timeOffset": "1w",
+            "windowLength": "1d",
+            "rowPercentage": 1.0
+          },
+          "jobSchedule": {
+            "id": 222,
+            "cronExpression": "0 0 * ? * * *",
+            "startDateTime": 1676457000000,
+            "enabled": false
+          },
+          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
+        }
+      }
+    },
+    "get_via_feature_view": {
+      "detection_insert_reference_snapshot": {
+        "response": {
+          "id": 32,
+          "featureName": "monitored_feature",
+          "featureViewName": "test_feature_view",
+          "featureViewVersion": 1,
+          "featureStoreId": 67,
+          "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+          "name": "unit_test_config",
+          "description": "I am a unit test fixture",
+          "featureMonitoringType": "STATISTICS_COMPARISON",
+          "detectionWindowConfig": {
+            "windowConfigType": "ROLLING_TIME",
+            "timeOffset": "1w",
+            "windowLength": "1d",
+            "rowPercentage": 0.5
+          },
+          "referenceWindowConfig": {
+            "windowConfigType": "TRAINING_DATASET",
+            "trainingDatasetVersion": 33
+          },
+          "statisticsComparisonConfig": {
+            "threshold": 1,
+            "relative": false,
+            "strict": true,
+            "metric": "MEAN"
+          },
+          "jobSchedule": {
+            "id": 222,
+            "cronExpression": "0 0 12 ? * * *",
+            "startDateTime": 1676457000000,
+            "enabled": true
+          },
+          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
+        }
+      },
+      "detection_insert_reference_specific_value": {
+        "response": {
+          "id": 32,
+          "featureName": "monitored_feature",
+          "featureViewName": "test_feature_view",
+          "featureViewVersion": 1,
+          "featureStoreId": 67,
+          "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+          "name": "unit_test_config",
+          "description": "I am a unit test fixture",
+          "featureMonitoringType": "STATISTICS_COMPARISON",
+          "detectionWindowConfig": {
+            "windowConfigType": "ROLLING_TIME",
+            "timeOffset": "1w",
+            "windowLength": "1d",
+            "rowPercentage": 0.5
+          },
+          "referenceWindowConfig": {
+            "windowConfigType": "TRAINING_DATASET",
+            "trainingDatasetVersion": 33
+          },
+          "statisticsComparisonConfig": {
+            "threshold": 1,
+            "relative": false,
+            "strict": true,
+            "metric": "MEAN"
+          },
+          "jobSchedule": {
+            "id": 222,
+            "cronExpression": "0 0 12 ? * * *",
+            "startDateTime": 1676457000000,
+            "enabled": true
+          },
+          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
+        }
+      },
+      "detection_insert_scheduled_stats_only": {
+        "response": {
+          "id": 32,
+          "featureName": "monitored_feature",
+          "featureViewName": "test_feature_view",
+          "featureViewVersion": 1,
+          "featureStoreId": 67,
+          "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+          "name": "unit_test_config",
+          "description": "I am a unit test fixture",
+          "featureMonitoringType": "STATISTICS_COMPUTATION",
+          "detectionWindowConfig": {
+            "windowConfigType": "ROLLING_TIME",
+            "timeOffset": "1w",
+            "windowLength": "1d",
+            "rowPercentage": 1.0
+          },
+          "jobSchedule": {
+            "id": 222,
+            "cronExpression": "0 0 * ? * * *",
+            "startDateTime": 1676457000000,
+            "enabled": false
+          },
+          "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
+        }
+      }
+    },
+    "get_scheduled_stats_only_via_feature_group": {
+      "response": {
+        "id": 32,
+        "feature_name": "monitored_feature",
+        "feature_group_id": 13,
+        "feature_store_id": 67,
+        "job_name": "test_job_name",
+        "name": "unit_test_config",
+        "description": "I am a unit test fixture",
+        "feature_monitoring_type": "STATISTICS_COMPUTATION",
+        "detection_window_config": {
+          "window_config_type": "INSERT",
+          "time_offset": "1w",
+          "window_length": "1d",
+          "row_percentage": 1.0
+        },
+        "job_schedule": "0 0 12 ? * * *",
+        "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featuregroup/13/featuremonitoring/config/32"
+      }
+    },
+    "get_scheduled_stats_only_via_feature_view": {
+      "response": {
+        "id": 32,
+        "feature_name": "monitored_feature",
+        "feature_store_id": 67,
+        "job_name": "test_job_name",
+        "name": "unit_test_config",
+        "description": "I am a unit test fixture",
+        "enabled": true,
+        "feature_monitoring_type": "STATISTICS_COMPUTATION",
+        "detection_window_config": {
+          "window_config_type": "ROLLING_TIME",
+          "time_offset": "1w",
+          "window_length": "1d",
+          "row_percentage": 1.0
+        },
+        "job_schedule": "0 0 12 ? * * *",
+        "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
+      }
+    },
+    "get_list": {
+      "response": {
+        "count": 1,
+        "items": [
+          {
+            "id": 32,
+            "featureName": "monitored_feature",
+            "featureViewName": "test_feature_view",
+            "featureViewVersion": 1,
+            "featureStoreId": 67,
+            "jobName": "fg_or_fv_name_version_fm_config_name_run_feature_monitoring",
+            "name": "unit_test_config",
+            "description": "I am a unit test fixture",
+            "featureMonitoringType": "STATISTICS_COMPARISON",
+            "detectionWindowConfig": {
+              "windowConfigType": "ROLLING_TIME",
+              "timeOffset": "1w",
+              "windowLength": "1d",
+              "rowPercentage": 0.5
+            },
+            "referenceWindowConfig": {
+              "windowConfigType": "TRAINING_DATASET",
+              "trainingDatasetVersion": 33
+            },
+            "statisticsComparisonConfig": {
+              "threshold": 1,
+              "relative": false,
+              "strict": true,
+              "metric": "MEAN"
+            },
+            "jobSchedule": {
+              "id": 222,
+              "cronExpression": "0 0 * ? * * *",
+              "startDateTime": 1676457000000,
+              "enabled": false
+            },
+            "href": "https://www.hopsworks.ai/hopsworks-api/api/project/119/featurestore/67/featureview/fvname/version/1/featuremonitoring/config/32"
+          }
+        ]
+      }
+    },
+    "get_list_empty": {
+      "response": {
+        "count": 0,
+        "items": []
+      }
+    },
+    "default_statistics_monitoring_config": {
+      "id": null,
+      "featureStoreId": 67,
+      "featureGroupId": 13,
+      "featureName": null,
+      "name": "test_monitoring_config",
+      "description": null,
+      "jobName": null,
+      "featureMonitoringType": "STATISTICS_COMPUTATION",
+      "jobSchedule": {
+        "id": null,
+        "startDateTime": 1,
+        "cronExpression": "0 0 12 ? * * *",
+        "enabled": true
+      },
+      "detectionWindowConfig": {
+        "id": null,
+        "windowConfigType": "ALL_TIME",
+        "timeOffset": null,
+        "windowLength": null,
+        "rowPercentage": 1.0
+      }
+    }
+  }
