@@ -88,17 +88,23 @@ class TestUtil:
         assert timestamp == 1668765153099
 
     def test_get_dataset_type_HIVEDB(self):
-        db_type = util.get_dataset_type("/apps/hive/warehouse/temp_featurestore.db/storage_connector_resources/kafka__tstore.jks")
+        db_type = util.get_dataset_type(
+            "/apps/hive/warehouse/temp_featurestore.db/storage_connector_resources/kafka__tstore.jks"
+        )
         assert db_type == "HIVEDB"
 
     def test_get_dataset_type_HIVEDB_with_dfs(self):
-        db_type = util.get_dataset_type("dfs:///apps/hive/warehouse/temp_featurestore.db/storage_connector_resources/kafka__tstore.jks")
+        db_type = util.get_dataset_type(
+            "dfs:///apps/hive/warehouse/temp_featurestore.db/storage_connector_resources/kafka__tstore.jks"
+        )
         assert db_type == "HIVEDB"
-    
+
     def test_get_dataset_type_DATASET(self):
         db_type = util.get_dataset_type("/Projects/temp/Resources/kafka__tstore.jks")
         assert db_type == "DATASET"
 
     def test_get_dataset_type_DATASET_with_dfs(self):
-        db_type = util.get_dataset_type("dfs:///Projects/temp/Resources/kafka__tstore.jks")
+        db_type = util.get_dataset_type(
+            "dfs:///Projects/temp/Resources/kafka__tstore.jks"
+        )
         assert db_type == "DATASET"
