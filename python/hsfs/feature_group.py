@@ -2850,6 +2850,9 @@ class FeatureGroup(FeatureGroupBase):
     ):
         """Get Query object to retrieve all features of the group at a point in the past.
 
+        !!! warning "Not available in Python"
+            `as_of` method is available in Spark but not in Python.
+
         This method selects all features in the feature group and returns a Query object
         at the specified point in time. Optionally, commits before a specified point in time can be
         excluded from the query. The Query can then either be read into a Dataframe
