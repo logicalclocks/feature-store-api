@@ -134,7 +134,7 @@ def get_host_name():
 
 
 def get_dataset_type(path: str):
-    if re.match(r"^(?:dfs://|)/apps/hive/warehouse", path):
+    if re.match(r"^(?:dfs://|)/apps/hive/warehouse/*", path):
         return "HIVEDB"
     else:
         return "DATASET"

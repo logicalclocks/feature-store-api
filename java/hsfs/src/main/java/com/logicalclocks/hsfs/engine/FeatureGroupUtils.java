@@ -242,7 +242,7 @@ public class FeatureGroupUtils {
   }
 
   public String getDatasetType(String path) {
-    if (Pattern.compile("^(hdfs://)?/apps/hive/warehouse").matcher(path).matches()) {
+    if (Pattern.compile("^(?:dfs://|)/apps/hive/warehouse/*").matcher(path).find()) {
       return "HIVEDB";
     }
     return "DATASET";
