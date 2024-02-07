@@ -2111,7 +2111,7 @@ class FeatureGroup(FeatureGroupBase):
                     instead.
 
         !!! warning "Not available in Spark"
-            `read_changes` method is available only in Python, not in Spark.
+            `read_changes` method is available in Python but not in Spark.
 
         This function only works on feature groups with `HUDI` time travel format.
 

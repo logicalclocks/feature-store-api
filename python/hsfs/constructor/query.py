@@ -253,7 +253,7 @@ class Query:
 
         return self
 
-    def (
+    def as_of(
         self,
         wallclock_time: Optional[Union[str, int, datetime, date]] = None,
         exclude_until: Optional[Union[str, int, datetime, date]] = None,
@@ -261,7 +261,7 @@ class Query:
         """Perform time travel on the given Query.
 
         !!! warning "Not available in Spark"
-            `as_of` method is available only in Python, not in Spark.
+            `as_of` method is available in Python but not in Spark.
 
         This method returns a new Query object at the specified point in time. Optionally, commits before a
         specified point in time can be excluded from the query. The Query can then either be read into a Dataframe
