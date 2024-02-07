@@ -31,7 +31,7 @@ class SimilarityFunctionType:
     COSINE = "cosine"
     DOT_PRODUCT = "dot_product"
 
-
+@dataclass
 class HsmlModel:
     model_registry_id: int
     model_name: str
