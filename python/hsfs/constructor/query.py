@@ -260,8 +260,8 @@ class Query:
     ):
         """Perform time travel on the given Query.
 
-        !!! warning
-            HUDI supports Time Travel and Incremental Query via Spark context, exclusively in PySpark/Spark
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
 
         This method returns a new Query object at the specified point in time. Optionally, commits before a
         specified point in time can be excluded from the query. The Query can then either be read into a Dataframe
@@ -317,6 +317,9 @@ class Query:
             .join(query2.as_of(..., ...))  # as_of is not applied
             .as_of(..., ...)
         ```
+
+        !!! warning
+            This function only works for queries on feature groups with time_travel_format='HUDI'.
 
         !!! warning
             Excluding commits via exclude_until is only possible within the range of the Hudi active timeline.

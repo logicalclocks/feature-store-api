@@ -2110,8 +2110,11 @@ class FeatureGroup(FeatureGroupBase):
                     `as_of(end_wallclock_time, exclude_until=start_wallclock_time).read(read_options=read_options)`
                     instead.
 
-        !!! warning "Warning"
-            HUDI supports Time Travel and Incremental Query via Spark context, exclusively in PySpark/Spark
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
+
+        !!! warning
+            This function only works for feature groups with time_travel_format='HUDI'.
 
         # Arguments
             start_wallclock_time: Start time of the time travel query. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
@@ -2848,8 +2851,8 @@ class FeatureGroup(FeatureGroupBase):
     ):
         """Get Query object to retrieve all features of the group at a point in the past.
 
-        !!! warning
-            HUDI supports Time Travel and Incremental Query via Spark context, exclusively in PySpark/Spark
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
 
         This method selects all features in the feature group and returns a Query object
         at the specified point in time. Optionally, commits before a specified point in time can be
@@ -2914,6 +2917,9 @@ class FeatureGroup(FeatureGroupBase):
                 .join(fg2.select_all().as_of("2020-10-20", exclude_until="2020-10-15"))  # as_of is not applied
                 .as_of("2020-10-20", exclude_until="2020-10-19")
             ```
+
+        !!! warning
+            This function only works for feature groups with time_travel_format='HUDI'.
 
         !!! warning
             Excluding commits via exclude_until is only possible within the range of the Hudi active timeline.
