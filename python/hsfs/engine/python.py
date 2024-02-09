@@ -922,7 +922,7 @@ class Engine:
                 )
             elif execution.final_status.lower() == "killed":
                 raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
-            elif execution.state.lower() == "framework_failure"
+            elif execution.state.lower() == "framework_failure":
                 raise exceptions.FeatureStoreException("The Hopsworks Job monitoring failed, could not determine the final status")
 
             time.sleep(3)
