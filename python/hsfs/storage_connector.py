@@ -103,6 +103,7 @@ class StorageConnector(ABC):
         data_format: str = None,
         options: dict = {},
         path: str = None,
+        dataframe_type: Optional[str] = "default",
     ):
         """Reads a query or a path into a dataframe using the storage connector.
 
@@ -118,11 +119,13 @@ class StorageConnector(ABC):
             options: Any additional key/value options to be passed to the connector.
             path: Path to be read from within the bucket of the storage connector. Not relevant
                 for JDBC or database based connectors such as Snowflake, JDBC or Redshift.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
 
         # Returns
             `DataFrame`.
         """
-        return engine.get_instance().read(self, data_format, options, path)
+        return engine.get_instance().read(self, data_format, options, path, dataframe_type)
 
     def refetch(self):
         """
@@ -277,6 +280,7 @@ class S3Connector(StorageConnector):
         data_format: str = None,
         options: dict = {},
         path: str = "",
+        dataframe_type: Optional[str] = "default",
     ):
         """Reads a query or a path into a dataframe using the storage connector.
 
@@ -288,6 +292,8 @@ class S3Connector(StorageConnector):
             data_format: The file format of the files to be read, e.g. `csv`, `parquet`.
             options: Any additional key/value options to be passed to the S3 connector.
             path: Path within the bucket to be read.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
 
         # Returns
             `DataFrame`.
@@ -306,7 +312,7 @@ class S3Connector(StorageConnector):
                 )
             )
 
-        return engine.get_instance().read(self, data_format, options, path)
+        return engine.get_instance().read(self, data_format, options, path, dataframe_type)
 
     def _get_path(self, sub_path: str):
         return os.path.join(self.path, sub_path)
@@ -461,6 +467,7 @@ class RedshiftConnector(StorageConnector):
         data_format: str = None,
         options: dict = {},
         path: str = None,
+        dataframe_type: Optional[str] = "default",
     ):
         """Reads a table or query into a dataframe using the storage connector.
 
@@ -471,6 +478,8 @@ class RedshiftConnector(StorageConnector):
             data_format: Not relevant for JDBC based connectors such as Redshift.
             options: Any additional key/value options to be passed to the JDBC connector.
             path: Not relevant for JDBC based connectors such as Redshift.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
 
         # Returns
             `DataFrame`.
@@ -487,7 +496,7 @@ class RedshiftConnector(StorageConnector):
             # if table also specified we override to use query
             options.pop("dbtable", None)
 
-        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
+        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None, dataframe_type)
 
     def refetch(self):
         """
@@ -603,6 +612,7 @@ class AdlsConnector(StorageConnector):
         data_format: str = None,
         options: dict = {},
         path: str = "",
+        dataframe_type: Optional[str] = "default",
     ):
         """Reads a path into a dataframe using the storage connector.
         # Arguments
@@ -611,6 +621,8 @@ class AdlsConnector(StorageConnector):
             options: Any additional key/value options to be passed to the ADLS connector.
             path: Path within the bucket to be read. For example, path=`path` will read directly from the container specified on connector by constructing the URI as 'abfss://[container-name]@[account_name].dfs.core.windows.net/[path]'.
             If no path is specified default container path will be used from connector.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
 
         # Returns
             `DataFrame`.
@@ -624,7 +636,7 @@ class AdlsConnector(StorageConnector):
                 )
             )
 
-        return engine.get_instance().read(self, data_format, options, path)
+        return engine.get_instance().read(self, data_format, options, path, dataframe_type)
 
 
 class SnowflakeConnector(StorageConnector):
@@ -792,6 +804,7 @@ class SnowflakeConnector(StorageConnector):
         data_format: str = None,
         options: dict = {},
         path: str = None,
+        dataframe_type: Optional[str] = "default",
     ):
         """Reads a table or query into a dataframe using the storage connector.
 
@@ -802,6 +815,8 @@ class SnowflakeConnector(StorageConnector):
             data_format: Not relevant for Snowflake connectors.
             options: Any additional key/value options to be passed to the engine.
             path: Not relevant for Snowflake connectors.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
 
         # Returns
             `DataFrame`.
@@ -816,7 +831,7 @@ class SnowflakeConnector(StorageConnector):
             # if table also specified we override to use query
             options.pop("dbtable", None)
 
-        return engine.get_instance().read(self, self.SNOWFLAKE_FORMAT, options, None)
+        return engine.get_instance().read(self, self.SNOWFLAKE_FORMAT, options, None, dataframe_type)
 
 
 class JdbcConnector(StorageConnector):
@@ -872,6 +887,7 @@ class JdbcConnector(StorageConnector):
         data_format: str = None,
         options: dict = {},
         path: str = None,
+        dataframe_type: Optional[str] = "default",
     ):
         """Reads a query into a dataframe using the storage connector.
 
@@ -880,6 +896,8 @@ class JdbcConnector(StorageConnector):
             data_format: Not relevant for JDBC based connectors.
             options: Any additional key/value options to be passed to the JDBC connector.
             path: Not relevant for JDBC based connectors.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
 
         # Returns
             `DataFrame`.
@@ -893,7 +911,7 @@ class JdbcConnector(StorageConnector):
         if query:
             options["query"] = query
 
-        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None)
+        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None, dataframe_type)
 
 
 class KafkaConnector(StorageConnector):
@@ -1140,6 +1158,7 @@ class KafkaConnector(StorageConnector):
         data_format: str = None,
         options: dict = {},
         path: str = None,
+        dataframe_type: Optional[str] = "default",
     ):
         """NOT SUPPORTED."""
         raise NotImplementedError(
@@ -1279,6 +1298,7 @@ class GcsConnector(StorageConnector):
         data_format: str = None,
         options: dict = {},
         path: str = "",
+        dataframe_type: Optional[str] = "default",
     ):
         """Reads GCS path into a dataframe using the storage connector.
 
@@ -1300,6 +1320,8 @@ class GcsConnector(StorageConnector):
             data_format: Spark data format. Defaults to `None`.
             options: Spark options. Defaults to `None`.
             path: GCS path. Defaults to `None`.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
         # Raises
             `ValueError`: Malformed arguments.
 
@@ -1321,7 +1343,7 @@ class GcsConnector(StorageConnector):
                 )
             )
 
-        return engine.get_instance().read(self, data_format, options, path)
+        return engine.get_instance().read(self, data_format, options, path, dataframe_type)
 
     def prepare_spark(self, path: Optional[str] = None):
         """Prepare Spark to use this Storage Connector.
@@ -1451,6 +1473,7 @@ class BigQueryConnector(StorageConnector):
         data_format: str = None,
         options: dict = {},
         path: str = None,
+        dataframe_type: Optional[str] = "default",
     ):
         """Reads results from BigQuery into a spark dataframe using the storage connector.
 
@@ -1479,6 +1502,8 @@ class BigQueryConnector(StorageConnector):
             data_format: Spark data format. Defaults to `None`.
             options: Spark options. Defaults to `None`.
             path: BigQuery table path. Defaults to `None`.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
 
         # Raises
             `ValueError`: Malformed arguments.
@@ -1518,4 +1543,4 @@ class BigQueryConnector(StorageConnector):
                 "or Query Project,Dataset and Table should be set"
             )
 
-        return engine.get_instance().read(self, self.BIGQUERY_FORMAT, options, path)
+        return engine.get_instance().read(self, self.BIGQUERY_FORMAT, options, path, dataframe_type)

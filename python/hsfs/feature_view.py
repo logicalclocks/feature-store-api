@@ -443,13 +443,13 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
+            return_type: `"list"`, `"pandas"`, `"polars"` or `"numpy"`. Defaults to `"list"`.
             allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
-            `list`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"` or `"numpy"`
+            `list`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"`, `"polars"` or `"numpy"`
             respectively. Defaults to `list`.
-            Returned `list`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary keys,
+            Returned `list`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` contains feature values related to provided primary keys,
             ordered according to positions of this features in the feature view query.
 
         # Raises
@@ -537,14 +537,14 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
+            return_type: `"list"`, `"pandas"`, `"polars"` or `"numpy"`. Defaults to `"list"`.
             allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
-            `List[list]`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"` or `"numpy"`
+            `List[list]`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"`,`"polars"` or `"numpy"`
             respectively. Defaults to `List[list]`.
 
-            Returned `List[list]`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary
+            Returned `List[list]`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` contains feature values related to provided primary
             keys, ordered according to positions of this features in the feature view query.
 
         # Raises
@@ -596,10 +596,10 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"pandas"` or `"dict"`. Defaults to `"pandas"`.
+            return_type: `"pandas"`, `"polars"` or `"dict"`. Defaults to `"pandas"`.
 
         # Returns
-            `pd.DataFrame` or `dict`. Defaults to `pd.DataFrame`.
+            `pd.DataFrame`, `polars.DataFrame` or `dict`. Defaults to `pd.DataFrame`.
 
         # Raises
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
@@ -650,10 +650,10 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"pandas"` or `"dict"`. Defaults to `"dict"`.
+            return_type: `"pandas"`, `"polars"` or `"dict"`. Defaults to `"dict"`.
 
         # Returns
-            `pd.DataFrame` or `List[dict]`.  Defaults to `pd.DataFrame`.
+            `pd.DataFrame`, `polars.DataFrame` or `List[dict]`.  Defaults to `pd.DataFrame`.
 
             Returned `pd.DataFrame` or `List[dict]`  contains feature values related to provided primary
             keys, ordered according to positions of this features in the feature view query.
@@ -797,6 +797,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         inference_helper_columns=False,
+        dataframe_type: Optional[str] = "default"
     ):
         """Get a batch of data from an event time interval from the offline feature store.
 
@@ -852,8 +853,15 @@ class FeatureView:
                 that may not be used in training the model itself but can be used during batch or online inference
                 for extra information. If inference helper columns were not defined in the feature view
                 `inference_helper_columns=True` will not any effect. Defaults to `False`, no helper columns.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
         # Returns
-            `DataFrame`: A dataframe
+            `DataFrame`: The spark dataframe containing the feature data.
+            `pyspark.DataFrame`. A Spark DataFrame.
+            `pandas.DataFrame`. A Pandas DataFrame.
+            `polars.DataFrame`. A Polars DataFrame.
+            `numpy.ndarray`. A two-dimensional Numpy array.
+            `list`. A two-dimensional Python list.
         """
 
         if self._batch_scoring_server is None:
@@ -870,6 +878,7 @@ class FeatureView:
             primary_keys,
             event_time,
             inference_helper_columns,
+            dataframe_type
         )
 
     def add_tag(self, name: str, value):
@@ -1909,6 +1918,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
+        dataframe_type: Optional[str] = "default",
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -2005,6 +2015,8 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view
                 then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
                 columns.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
         """
@@ -2031,6 +2043,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -2063,6 +2076,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
+        dataframe_type: Optional[str] = "default",
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -2169,6 +2183,8 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view
                 then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
                 columns.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -2204,6 +2220,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -2248,6 +2265,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
+        dataframe_type: Optional[str] = "default",
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -2367,6 +2385,8 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view
                 then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
                 columns.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2415,6 +2435,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -2451,6 +2472,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
+        dataframe_type: Optional[str] = "default"
     ):
         """
         Get training data created by `feature_view.create_training_data`
@@ -2495,6 +2517,8 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view or during
                 materializing training dataset in the file system then`training_helper_columns=True` will not have
                 any effect. Defaults to `False`, no training helper columns.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
         # Returns
             (X, y): Tuple of dataframe of features and labels
         """
@@ -2505,6 +2529,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type
         )
         return df
 
@@ -2516,6 +2541,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
+        dataframe_type: Optional[str] = "default"
     ):
         """
         Get training data created by `feature_view.create_train_test_split`
@@ -2555,6 +2581,8 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view or during
                 materializing training dataset in the file system then`training_helper_columns=True` will not have
                 any effect. Defaults to `False`, no training helper columns.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -2567,6 +2595,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type
         )
         return df
 
@@ -2578,6 +2607,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
+        dataframe_type: Optional[str] = "default"
     ):
         """
         Get training data created by `feature_view.create_train_validation_test_split`
@@ -2617,6 +2647,8 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view or during
                 materializing training dataset in the file system then`training_helper_columns=True` will not have
                 any effect. Defaults to `False`, no training helper columns.
+            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
+                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2633,6 +2665,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type
         )
         return df
 

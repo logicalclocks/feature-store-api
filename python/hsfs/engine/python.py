@@ -258,21 +258,24 @@ class Engine:
                 result_df = Engine.cast_columns(result_df, schema, online=True)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def read(self, storage_connector, data_format, read_options, location):
+    def read(self, storage_connector, data_format, read_options, location, dataframe_type):
         if not data_format:
             raise FeatureStoreException("data_format is not specified")
 
         if storage_connector.type == storage_connector.HOPSFS:
-            df_list = self._read_hopsfs(location, data_format, read_options)
+            df_list = self._read_hopsfs(location, data_format, read_options, dataframe_type)
         elif storage_connector.type == storage_connector.S3:
-            df_list = self._read_s3(storage_connector, location, data_format)
+            df_list = self._read_s3(storage_connector, location, data_format, dataframe_type)
         else:
             raise NotImplementedError(
                 "{} Storage Connectors for training datasets are not supported yet for external environments.".format(
                     storage_connector.type
                 )
             )
-        return pd.concat(df_list, ignore_index=True)
+        if dataframe_type.lower() == "polars":
+            return self._return_dataframe_type(pl.concat(df_list), dataframe_type=dataframe_type)
+        else:
+            return self._return_dataframe_type(pd.concat(df_list, ignore_index=True), dataframe_type=dataframe_type)
 
     def _read_pandas(self, data_format, obj):
         if data_format.lower() == "csv":
@@ -289,8 +292,24 @@ class Engine:
                     data_format
                 )
             )
+        
+    def _read_polars(self, data_format, obj):
+        if data_format.lower() == "csv":
+            return pl.read_csv(obj)
+        elif data_format.lower() == "tsv":
+            return pl.read_csv(obj, separator="\t")
+        elif data_format.lower() == "parquet" and isinstance(obj, StreamingBody):
+            return pl.read_parquet(BytesIO(obj.read()), use_pyarrow = True)
+        elif data_format.lower() == "parquet":
+            return pl.read_parquet(obj, use_pyarrow=True)
+        else:
+            raise TypeError(
+                "{} training dataset format is not supported to read as polars dataframe.".format(
+                    data_format
+                )
+            )
 
-    def _read_hopsfs(self, location, data_format, read_options={}):
+    def _read_hopsfs(self, location, data_format, read_options={}, dataframe_type="default"):
         # providing more informative error
         try:
             from pydoop import hdfs
@@ -306,7 +325,10 @@ class Engine:
                 and not path.endswith("_SUCCESS")
                 and hdfs.path.getsize(path) > 0
             ):
-                df_list.append(self._read_pandas(data_format, path))
+                if dataframe_type.lower() == "polars":
+                    df_list.append(self._read_polars(data_format, path))
+                else:
+                    df_list.append(self._read_pandas(data_format, path))
         return df_list
 
     # This is a version of the read method that uses the Hopsworks REST APIs or Flyginduck Server
@@ -342,7 +364,7 @@ class Engine:
 
         return df_list
 
-    def _read_s3(self, storage_connector, location, data_format):
+    def _read_s3(self, storage_connector, location, data_format, dataframe_type="default"):
         # get key prefix
         path_parts = location.replace("s3://", "").split("/")
         _ = path_parts.pop(0)  # pop first element -> bucket
@@ -386,7 +408,10 @@ class Engine:
                         Bucket=storage_connector.bucket,
                         Key=obj["Key"],
                     )
-                    df_list.append(self._read_pandas(data_format, obj["Body"]))
+                    if dataframe_type.lower() == "polars":
+                        df_list.append(self._read_polars(data_format, obj["Body"]))
+                    else:
+                        df_list.append(self._read_pandas(data_format, obj["Body"]))
         return df_list
 
     def read_options(self, data_format, provided_options):
@@ -449,12 +474,19 @@ class Engine:
         exact_uniqueness=True,
     ):
         # TODO: add statistics for correlations, histograms and exact_uniqueness
+        if isinstance(df, pl.DataFrame):
+            arrow_schema = df.to_arrow().schema
+        else:
+            arrow_schema = pa.Schema.from_pandas(df, preserve_index=False)
 
         # parse timestamp columns to string columns
-        for col, dtype in df.dtypes.items():
-            if isinstance(dtype, type(np.dtype(np.datetime64))):
-                df[col] = df[col].astype(str)
-
+        for field in arrow_schema:
+            if not (pa.types.is_list(field.type) or pa.types.is_large_list(field.type) or pa.types.is_struct(field.type)) and PYARROW_HOPSWORKS_DTYPE_MAPPING[field.type] in ["timestamp", "date"]:
+                if isinstance(df, pl.DataFrame):
+                    df = df.with_columns(pl.col(field.name).cast(pl.String))
+                else:
+                    df[field.name] = df[field.name].astype(str)
+                    
         if not relevant_columns:
             stats = df.describe().to_dict()
             relevant_columns = df.columns
@@ -469,21 +501,21 @@ class Engine:
             stats[col] = df[col].describe().to_dict()
 
         final_stats = []
-        for col in stats.keys():
-            stat = self._convert_pandas_statistics(stats[col])
-            stat["isDataTypeInferred"] = "false"
-            stat["column"] = col.split(".")[-1]
-            stat["completeness"] = 1
+        for col in relevant_columns:
+
+            if isinstance(df, pl.DataFrame):
+                stats[col] = dict(zip(stats["statistic"], stats[col]))
 
             # set data type
-            if isinstance(df.dtypes[col], type(np.dtype(np.float64))):
-                stat["dataType"] = "Fractional"
-            elif isinstance(df.dtypes[col], type(np.dtype(np.int64))):
-                stat["dataType"] = "Integral"
-            elif isinstance(df.dtypes[col], type(np.dtype(np.bool_))):
-                stat["dataType"] = "Boolean"
-            elif isinstance(df.dtypes[col], type(np.dtype(object))):
-                stat["dataType"] = "String"
+            arrow_type = arrow_schema.field(col).type
+            if pa.types.is_list(arrow_type) or pa.types.is_large_list(arrow_type) or pa.types.is_struct(arrow_type) or PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type] in ["timestamp", "date", "binary", "string"]:
+                dataType = "String"
+            elif PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type] in ["float", "double"]:
+                dataType = "Fractional"
+            elif PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type] in ["int", "bigint"]:
+                dataType = "Integral"
+            elif PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type] == "boolean":
+                dataType = "Boolean"
             else:
                 print(
                     "Data type could not be inferred for column '"
@@ -491,7 +523,13 @@ class Engine:
                     + "'. Defaulting to 'String'",
                     file=sys.stderr,
                 )
-                stat["dataType"] = "String"
+                dataType = "String"
+
+            stat = self._convert_pandas_statistics(stats[col], dataType)
+            stat["isDataTypeInferred"] = "false"
+            stat["column"] = col.split(".")[-1]
+            stat["completeness"] = 1
+            
 
             final_stats.append(stat)
 
@@ -499,31 +537,35 @@ class Engine:
             {"columns": final_stats},
         )
 
-    def _convert_pandas_statistics(self, stat):
+    def _convert_pandas_statistics(self, stat, dataType):
         # For now transformation only need 25th, 50th, 75th percentiles
         # TODO: calculate properly all percentiles
-        content_dict = {}
-        if "25%" in stat:
-            percentiles = [0] * 100
-            percentiles[24] = stat["25%"]
-            percentiles[49] = stat["50%"]
-            percentiles[74] = stat["75%"]
-            content_dict["approxPercentiles"] = percentiles
+
+        # TODO : Add proper conditions 
+        content_dict = {"dataType":dataType}
         if "count" in stat:
             content_dict["count"] = stat["count"]
-        if "mean" in stat:
-            content_dict["mean"] = stat["mean"]
-        if "mean" in stat and "count" in stat:
-            if isinstance(stat["mean"], numbers.Number):
-                content_dict["sum"] = stat["mean"] * stat["count"]
-        if "max" in stat:
-            content_dict["maximum"] = stat["max"]
-        if "std" in stat:
-            content_dict["stdDev"] = stat["std"]
-        if "min" in stat:
-            content_dict["minimum"] = stat["min"]
+        if not dataType == "String":
+            if "25%" in stat:
+                percentiles = [0] * 100
+                percentiles[24] = stat["25%"]
+                percentiles[49] = stat["50%"]
+                percentiles[74] = stat["75%"]
+                content_dict["approxPercentiles"] = percentiles
+            if "mean" in stat:
+                content_dict["mean"] = stat["mean"]
+            if "mean" in stat and "count" in stat:
+                if isinstance(stat["mean"], numbers.Number):
+                    content_dict["sum"] = stat["mean"] * stat["count"]
+            if "max" in stat:
+                content_dict["maximum"] = stat["max"]
+            if "std" in stat and not pd.isna(stat["std"]):
+                content_dict["stdDev"] = stat["std"]
+            if "min" in stat:
+                content_dict["minimum"] = stat["min"]
 
         return content_dict
+
 
     def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):
         raise NotImplementedError(
@@ -681,14 +723,19 @@ class Engine:
         return ingestion_job.job
 
     def get_training_data(
-        self, training_dataset_obj, feature_view_obj, query_obj, read_options
+        self, training_dataset_obj, feature_view_obj, query_obj, read_options, dataframe_type
     ):
+        # dataframe_type of list and numpy are prevented here because statistics needs to be computed from the returned dataframe. 
+        # The daframe is converted into required types in the function split_labels
+        if dataframe_type.lower() not in ["default", "polars", "pandas"]:
+            dataframe_type = "default"
+
         if training_dataset_obj.splits:
             return self._prepare_transform_split_df(
-                query_obj, training_dataset_obj, feature_view_obj, read_options
+                query_obj, training_dataset_obj, feature_view_obj, read_options, dataframe_type
             )
         else:
-            df = query_obj.read(read_options=read_options)
+            df = query_obj.read(read_options=read_options, dataframe_type=dataframe_type)
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, df
             )
@@ -696,19 +743,19 @@ class Engine:
                 training_dataset_obj.transformation_functions, df
             )
 
-    def split_labels(self, df, labels):
+    def split_labels(self, df, labels, dataframe_type):
         if labels:
             labels_df = df[labels]
             df_new = df.drop(columns=labels)
-            return df_new, labels_df
+            return self._return_dataframe_type(df_new, dataframe_type), self._return_dataframe_type(labels_df, dataframe_type)
         else:
-            return df, None
+            return self._return_dataframe_type(df, dataframe_type), None
 
     def drop_columns(self, df, drop_cols):
         return df.drop(columns=drop_cols)
 
     def _prepare_transform_split_df(
-        self, query_obj, training_dataset_obj, feature_view_obj, read_option
+        self, query_obj, training_dataset_obj, feature_view_obj, read_option, dataframe_type
     ):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
@@ -724,20 +771,20 @@ class Engine:
                     query_obj._left_feature_group.__getattr__(event_time)
                 )
                 result_dfs = self._time_series_split(
-                    query_obj.read(read_options=read_option),
+                    query_obj.read(read_options=read_option, dataframe_type=dataframe_type),
                     training_dataset_obj,
                     event_time,
                     drop_event_time=True,
                 )
             else:
                 result_dfs = self._time_series_split(
-                    query_obj.read(read_options=read_option),
+                    query_obj.read(read_options=read_option, dataframe_type=dataframe_type),
                     training_dataset_obj,
                     event_time,
                 )
         else:
             result_dfs = self._random_split(
-                query_obj.read(read_options=read_option), training_dataset_obj
+                query_obj.read(read_options=read_option, dataframe_type=dataframe_type), training_dataset_obj
             )
 
         # apply transformations
@@ -755,6 +802,7 @@ class Engine:
         return result_dfs
 
     def _random_split(self, df, training_dataset_obj):
+        # TODO : Clean up this function
         split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
         result_dfs = {}
         splits = training_dataset_obj.splits
@@ -775,9 +823,15 @@ class Engine:
             groups += [i] * int(df_size * split.percentage)
         groups += [len(splits) - 1] * (df_size - len(groups))
         random.shuffle(groups)
-        df[split_column] = groups
+        if isinstance(df, pl.DataFrame):
+            df = df.with_columns(pl.Series(name=split_column, values=groups))
+        else:
+            df[split_column] = groups
         for i, split in enumerate(splits):
-            split_df = df[df[split_column] == i].drop(split_column, axis=1)
+            if isinstance(df, pl.DataFrame):
+                split_df = df.filter(pl.col(split_column) == i).drop(split_column)
+            else:
+                split_df = df[df[split_column] == i].drop(split_column, axis=1)
             result_dfs[split.name] = split_df
         return result_dfs
 
