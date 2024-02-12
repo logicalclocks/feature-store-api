@@ -198,6 +198,7 @@ class TestPython:
                 data_format=None,
                 read_options=None,
                 location=None,
+                dataframe_type="default"
             )
 
         # Assert
@@ -216,6 +217,7 @@ class TestPython:
                 data_format="",
                 read_options=None,
                 location=None,
+                dataframe_type="default"
             )
 
         # Assert
@@ -241,6 +243,7 @@ class TestPython:
             data_format="csv",
             read_options=None,
             location=None,
+            dataframe_type="default"
         )
 
         # Assert
@@ -267,6 +270,7 @@ class TestPython:
             data_format="csv",
             read_options=None,
             location=None,
+            dataframe_type="default"
         )
 
         # Assert
@@ -293,6 +297,7 @@ class TestPython:
                 data_format="csv",
                 read_options=None,
                 location=None,
+            dataframe_type="default"
             )
 
         # Assert
@@ -932,7 +937,7 @@ class TestPython:
         }
 
         # Act
-        result = python_engine._convert_pandas_statistics(stat=stat)
+        result = python_engine._convert_pandas_statistics(stat=stat, dataType="Integer")
 
         # Assert
         assert result == {
@@ -1959,6 +1964,7 @@ class TestPython:
             feature_view_obj=None,
             query_obj=mocker.Mock(),
             read_options=None,
+            dataframe_type="default"
         )
 
         # Assert
@@ -1992,6 +1998,7 @@ class TestPython:
             feature_view_obj=None,
             query_obj=mocker.Mock(),
             read_options=None,
+            dataframe_type="default"
         )
 
         # Assert
@@ -2005,7 +2012,7 @@ class TestPython:
         df = pd.DataFrame(data=d)
 
         # Act
-        result_df, result_df_split = python_engine.split_labels(df=df, labels=None)
+        result_df, result_df_split = python_engine.split_labels(df=df, dataframe_type="default", labels=None)
 
         # Assert
         assert str(result_df) == "   Col1  col2\n0     1     3\n1     2     4"
@@ -2019,7 +2026,7 @@ class TestPython:
         df = pd.DataFrame(data=d)
 
         # Act
-        result_df, result_df_split = python_engine.split_labels(df=df, labels="col1")
+        result_df, result_df_split = python_engine.split_labels(df=df, dataframe_type="default", labels="col1")
 
         # Assert
         assert str(result_df) == "   col2\n0     3\n1     4"
@@ -2065,6 +2072,7 @@ class TestPython:
             training_dataset_obj=td,
             feature_view_obj=None,
             read_option=None,
+            dataframe_type="default"
         )
 
         # Assert
@@ -2130,6 +2138,7 @@ class TestPython:
             training_dataset_obj=td,
             feature_view_obj=None,
             read_option=None,
+            dataframe_type="default"
         )
 
         # Assert
@@ -2194,6 +2203,7 @@ class TestPython:
             training_dataset_obj=td,
             feature_view_obj=None,
             read_option=None,
+            dataframe_type="default"
         )
 
         # Assert
