@@ -385,13 +385,15 @@ class Engine:
             .format(self.KAFKA_FORMAT)
             .option(
                 "checkpointLocation",
-                "/Projects/"
-                + client.get_instance()._project_name
-                + "/Resources/"
-                + query_name
-                + "-checkpoint"
-                if checkpoint_dir is None
-                else checkpoint_dir,
+                (
+                    "/Projects/"
+                    + client.get_instance()._project_name
+                    + "/Resources/"
+                    + query_name
+                    + "-checkpoint"
+                    if checkpoint_dir is None
+                    else checkpoint_dir
+                ),
             )
             .options(**write_options)
             .option("topic", feature_group._online_topic_name)
@@ -473,11 +475,14 @@ class Engine:
         """Encodes all complex type features to binary using their avro type as schema."""
         return dataframe.select(
             [
-                field["name"]
-                if field["name"] not in feature_group.get_complex_features()
-                else to_avro(
-                    field["name"], feature_group._get_feature_avro_schema(field["name"])
-                ).alias(field["name"])
+                (
+                    field["name"]
+                    if field["name"] not in feature_group.get_complex_features()
+                    else to_avro(
+                        field["name"],
+                        feature_group._get_feature_avro_schema(field["name"]),
+                    ).alias(field["name"])
+                )
                 for field in json.loads(feature_group.avro_schema)["fields"]
             ]
         )
@@ -510,7 +515,12 @@ class Engine:
         )
 
     def get_training_data(
-        self, training_dataset, feature_view_obj, query_obj, read_options, dataframe_type
+        self,
+        training_dataset,
+        feature_view_obj,
+        query_obj,
+        read_options,
+        dataframe_type,
     ):
         return self.write_training_dataset(
             training_dataset,
@@ -526,7 +536,9 @@ class Engine:
         if labels:
             labels_df = df.select(*labels)
             df_new = df.drop(*labels)
-            return self._return_dataframe_type(df_new, dataframe_type), self._return_dataframe_type(labels_df, dataframe_type)
+            return self._return_dataframe_type(
+                df_new, dataframe_type
+            ), self._return_dataframe_type(labels_df, dataframe_type)
         else:
             return self._return_dataframe_type(df, dataframe_type), None
 
@@ -693,7 +705,9 @@ class Engine:
 
         feature_dataframe.unpersist()
 
-    def read(self, storage_connector, data_format, read_options, location, dataframe_type):
+    def read(
+        self, storage_connector, data_format, read_options, location, dataframe_type
+    ):
         if not data_format:
             raise FeatureStoreException("data_format is not specified")
 
@@ -717,7 +731,8 @@ class Engine:
         return self._return_dataframe_type(
             self._spark_session.read.format(data_format)
             .options(**(read_options if read_options else {}))
-            .load(path), dataframe_type=dataframe_type
+            .load(path),
+            dataframe_type=dataframe_type,
         )
 
     def read_stream(

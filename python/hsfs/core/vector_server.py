@@ -169,9 +169,9 @@ class VectorServer:
 
         self._prefix_by_serving_index = prefix_by_serving_index
         for sk in self._serving_keys:
-            self._serving_key_by_serving_index[
-                sk.join_index
-            ] = self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
+            self._serving_key_by_serving_index[sk.join_index] = (
+                self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
+            )
         # sort the serving by PreparedStatementParameter.index
         for join_index in self._serving_key_by_serving_index:
             # feature_name_order_by_psp do not include the join index when the joint feature only contains label only
@@ -199,9 +199,9 @@ class VectorServer:
             if prepared_statement.feature_group_id in self._skip_fg_ids:
                 continue
             query_online = str(prepared_statement.query_online).replace("\n", " ")
-            prefix_by_serving_index[
-                prepared_statement.prepared_statement_index
-            ] = prepared_statement.prefix
+            prefix_by_serving_index[prepared_statement.prepared_statement_index] = (
+                prepared_statement.prefix
+            )
 
             # In java prepared statement `?` is used for parametrization.
             # In sqlalchemy `:feature_name` is used instead of `?`
@@ -212,13 +212,13 @@ class VectorServer:
                     key=lambda psp: psp.index,
                 )
             ]
-            feature_name_order_by_psp[
-                prepared_statement.prepared_statement_index
-            ] = dict(
-                [
-                    (psp.name, psp.index)
-                    for psp in prepared_statement.prepared_statement_parameters
-                ]
+            feature_name_order_by_psp[prepared_statement.prepared_statement_index] = (
+                dict(
+                    [
+                        (psp.name, psp.index)
+                        for psp in prepared_statement.prepared_statement_parameters
+                    ]
+                )
             )
             # construct serving key if it is not provided.
             if self._serving_keys is None:
@@ -245,9 +245,9 @@ class VectorServer:
                     batch_ids=bindparam("batch_ids", expanding=True)
                 )
 
-            prepared_statements_dict[
-                prepared_statement.prepared_statement_index
-            ] = query_online
+            prepared_statements_dict[prepared_statement.prepared_statement_index] = (
+                query_online
+            )
 
         # assign serving key if it is not provided.
         if self._serving_keys is None:
@@ -294,8 +294,10 @@ class VectorServer:
             pandas_df.columns = self._feature_vector_col_name
             return pandas_df
         elif return_type.lower() == "polars":
-            # Polar considers one dimensional list as a single columns so passed vector as 2d list 
-            polars_df = pl.DataFrame([vector], schema=self._feature_vector_col_name, orient="row") 
+            # Polar considers one dimensional list as a single columns so passed vector as 2d list
+            polars_df = pl.DataFrame(
+                [vector], schema=self._feature_vector_col_name, orient="row"
+            )
             return polars_df
         else:
             raise Exception(
@@ -343,7 +345,9 @@ class VectorServer:
             pandas_df.columns = self._feature_vector_col_name
             return pandas_df
         elif return_type.lower() == "polars":
-            polars_df = pl.DataFrame(vectors, schema=self._feature_vector_col_name, orient="row")
+            polars_df = pl.DataFrame(
+                vectors, schema=self._feature_vector_col_name, orient="row"
+            )
             return polars_df
         else:
             raise Exception(
@@ -362,8 +366,10 @@ class VectorServer:
         elif return_type.lower() == "dict":
             return serving_vector
         elif return_type.lower() == "polars":
-            # Polar considers one dimensional list as a single columns so passed vector as 2d list 
-            polars_df = pl.DataFrame([serving_vector], schema=self._feature_vector_col_name, orient="row") 
+            # Polar considers one dimensional list as a single columns so passed vector as 2d list
+            polars_df = pl.DataFrame(
+                [serving_vector], schema=self._feature_vector_col_name, orient="row"
+            )
             return polars_df
         else:
             raise Exception(
@@ -399,7 +405,9 @@ class VectorServer:
         elif return_type.lower() == "pandas":
             return pd.DataFrame(batch_results)
         elif return_type.lower() == "polars":
-            polars_df = pl.DataFrame(batch_results, schema=self._feature_vector_col_name, orient="row")
+            polars_df = pl.DataFrame(
+                batch_results, schema=self._feature_vector_col_name, orient="row"
+            )
             return polars_df
         else:
             raise Exception(
@@ -473,9 +481,9 @@ class VectorServer:
             if prepared_statement_index not in self._serving_key_by_serving_index:
                 continue
 
-            prepared_stmts_to_execute[
-                prepared_statement_index
-            ] = prepared_statement_objects[prepared_statement_index]
+            prepared_stmts_to_execute[prepared_statement_index] = (
+                prepared_statement_objects[prepared_statement_index]
+            )
             entry_values_tuples = list(
                 map(
                     lambda e: tuple(
@@ -522,9 +530,9 @@ class VectorServer:
                 )
                 # note: should used serialized value
                 # as it is from users' input
-                statement_results[
-                    self._get_result_key(prefix_features, row_dict)
-                ] = result_dict
+                statement_results[self._get_result_key(prefix_features, row_dict)] = (
+                    result_dict
+                )
 
             # add partial results to the global results
             for i, entry in enumerate(entries):
@@ -684,9 +692,11 @@ class VectorServer:
         transformation_fns = (
             self._transformation_function_engine.populate_builtin_attached_fns(
                 transformation_functions,
-                td_tffn_stats.feature_descriptive_statistics
-                if td_tffn_stats is not None
-                else None,
+                (
+                    td_tffn_stats.feature_descriptive_statistics
+                    if td_tffn_stats is not None
+                    else None
+                ),
             )
         )
         return transformation_fns

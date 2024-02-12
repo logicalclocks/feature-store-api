@@ -797,7 +797,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         inference_helper_columns=False,
-        dataframe_type: Optional[str] = "default"
+        dataframe_type: Optional[str] = "default",
     ):
         """Get a batch of data from an event time interval from the offline feature store.
 
@@ -878,7 +878,7 @@ class FeatureView:
             primary_keys,
             event_time,
             inference_helper_columns,
-            dataframe_type
+            dataframe_type,
         )
 
     def add_tag(self, name: str, value):
@@ -2043,7 +2043,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
-            dataframe_type=dataframe_type
+            dataframe_type=dataframe_type,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -2220,7 +2220,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
-            dataframe_type=dataframe_type
+            dataframe_type=dataframe_type,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -2435,7 +2435,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
-            dataframe_type=dataframe_type
+            dataframe_type=dataframe_type,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
@@ -2472,7 +2472,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
-        dataframe_type: Optional[str] = "default"
+        dataframe_type: Optional[str] = "default",
     ):
         """
         Get training data created by `feature_view.create_training_data`
@@ -2529,7 +2529,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
-            dataframe_type=dataframe_type
+            dataframe_type=dataframe_type,
         )
         return df
 
@@ -2541,7 +2541,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
-        dataframe_type: Optional[str] = "default"
+        dataframe_type: Optional[str] = "default",
     ):
         """
         Get training data created by `feature_view.create_train_test_split`
@@ -2595,7 +2595,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
-            dataframe_type=dataframe_type
+            dataframe_type=dataframe_type,
         )
         return df
 
@@ -2607,7 +2607,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
-        dataframe_type: Optional[str] = "default"
+        dataframe_type: Optional[str] = "default",
     ):
         """
         Get training data created by `feature_view.create_train_validation_test_split`
@@ -2665,7 +2665,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
-            dataframe_type=dataframe_type
+            dataframe_type=dataframe_type,
         )
         return df
 

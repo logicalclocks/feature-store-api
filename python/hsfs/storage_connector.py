@@ -125,7 +125,9 @@ class StorageConnector(ABC):
         # Returns
             `DataFrame`.
         """
-        return engine.get_instance().read(self, data_format, options, path, dataframe_type)
+        return engine.get_instance().read(
+            self, data_format, options, path, dataframe_type
+        )
 
     def refetch(self):
         """
@@ -312,7 +314,9 @@ class S3Connector(StorageConnector):
                 )
             )
 
-        return engine.get_instance().read(self, data_format, options, path, dataframe_type)
+        return engine.get_instance().read(
+            self, data_format, options, path, dataframe_type
+        )
 
     def _get_path(self, sub_path: str):
         return os.path.join(self.path, sub_path)
@@ -496,7 +500,9 @@ class RedshiftConnector(StorageConnector):
             # if table also specified we override to use query
             options.pop("dbtable", None)
 
-        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None, dataframe_type)
+        return engine.get_instance().read(
+            self, self.JDBC_FORMAT, options, None, dataframe_type
+        )
 
     def refetch(self):
         """
@@ -636,7 +642,9 @@ class AdlsConnector(StorageConnector):
                 )
             )
 
-        return engine.get_instance().read(self, data_format, options, path, dataframe_type)
+        return engine.get_instance().read(
+            self, data_format, options, path, dataframe_type
+        )
 
 
 class SnowflakeConnector(StorageConnector):
@@ -831,7 +839,9 @@ class SnowflakeConnector(StorageConnector):
             # if table also specified we override to use query
             options.pop("dbtable", None)
 
-        return engine.get_instance().read(self, self.SNOWFLAKE_FORMAT, options, None, dataframe_type)
+        return engine.get_instance().read(
+            self, self.SNOWFLAKE_FORMAT, options, None, dataframe_type
+        )
 
 
 class JdbcConnector(StorageConnector):
@@ -911,7 +921,9 @@ class JdbcConnector(StorageConnector):
         if query:
             options["query"] = query
 
-        return engine.get_instance().read(self, self.JDBC_FORMAT, options, None, dataframe_type)
+        return engine.get_instance().read(
+            self, self.JDBC_FORMAT, options, None, dataframe_type
+        )
 
 
 class KafkaConnector(StorageConnector):
@@ -1010,9 +1022,9 @@ class KafkaConnector(StorageConnector):
         )
 
         # set ssl
-        config[
-            "ssl.endpoint.identification.algorithm"
-        ] = self._ssl_endpoint_identification_algorithm
+        config["ssl.endpoint.identification.algorithm"] = (
+            self._ssl_endpoint_identification_algorithm
+        )
 
         # Here we cannot use `not self._external_kafka` as for normal kafka connectors
         # this option is not set and so the `not self._external_kafka` would return true
@@ -1343,7 +1355,9 @@ class GcsConnector(StorageConnector):
                 )
             )
 
-        return engine.get_instance().read(self, data_format, options, path, dataframe_type)
+        return engine.get_instance().read(
+            self, data_format, options, path, dataframe_type
+        )
 
     def prepare_spark(self, path: Optional[str] = None):
         """Prepare Spark to use this Storage Connector.
@@ -1543,4 +1557,6 @@ class BigQueryConnector(StorageConnector):
                 "or Query Project,Dataset and Table should be set"
             )
 
-        return engine.get_instance().read(self, self.BIGQUERY_FORMAT, options, path, dataframe_type)
+        return engine.get_instance().read(
+            self, self.BIGQUERY_FORMAT, options, path, dataframe_type
+        )

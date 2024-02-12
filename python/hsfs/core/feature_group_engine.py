@@ -61,9 +61,11 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             engine.get_instance().save_dataframe(
                 feature_group,
                 feature_dataframe,
-                hudi_engine.HudiEngine.HUDI_BULK_INSERT
-                if feature_group.time_travel_format in ["HUDI", "DELTA"]
-                else None,
+                (
+                    hudi_engine.HudiEngine.HUDI_BULK_INSERT
+                    if feature_group.time_travel_format in ["HUDI", "DELTA"]
+                    else None
+                ),
                 feature_group.online_enabled,
                 None,
                 offline_write_options,
@@ -271,9 +273,11 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 engine.get_instance().save_dataframe(
                     feature_group,
                     engine.get_instance().create_empty_df(dataframe),
-                    hudi_engine.HudiEngine.HUDI_BULK_INSERT
-                    if feature_group.time_travel_format == "HUDI"
-                    else None,
+                    (
+                        hudi_engine.HudiEngine.HUDI_BULK_INSERT
+                        if feature_group.time_travel_format == "HUDI"
+                        else None
+                    ),
                     feature_group.online_enabled,
                     None,
                     offline_write_options,

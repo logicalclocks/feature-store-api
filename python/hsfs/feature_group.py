@@ -2839,9 +2839,9 @@ class FeatureGroup(FeatureGroupBase):
             "timeTravelFormat": self._time_travel_format,
             "features": self._features,
             "featurestoreId": self._feature_store_id,
-            "type": "cachedFeaturegroupDTO"
-            if not self._stream
-            else "streamFeatureGroupDTO",
+            "type": (
+                "cachedFeaturegroupDTO" if not self._stream else "streamFeatureGroupDTO"
+            ),
             "statisticsConfig": self._statistics_config,
             "eventTime": self.event_time,
             "expectationSuite": self._expectation_suite,
@@ -3050,9 +3050,11 @@ class ExternalFeatureGroup(FeatureGroupBase):
             # Got from Hopsworks, deserialize features and storage connector
             self._features = (
                 [
-                    feature.Feature.from_response_json(feat)
-                    if isinstance(feat, dict)
-                    else feat
+                    (
+                        feature.Feature.from_response_json(feat)
+                        if isinstance(feat, dict)
+                        else feat
+                    )
                     for feat in features
                 ]
                 if features
@@ -3275,9 +3277,11 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "query": self._query,
             "dataFormat": self._data_format,
             "path": self._path,
-            "options": [{"name": k, "value": v} for k, v in self._options.items()]
-            if self._options
-            else None,
+            "options": (
+                [{"name": k, "value": v} for k, v in self._options.items()]
+                if self._options
+                else None
+            ),
             "storageConnector": self._storage_connector.to_dict(),
             "type": "onDemandFeaturegroupDTO",
             "statisticsConfig": self._statistics_config,
@@ -3402,9 +3406,11 @@ class SpineGroup(FeatureGroupBase):
             # Got from Hopsworks, deserialize features and storage connector
             self._features = (
                 [
-                    feature.Feature.from_response_json(feat)
-                    if isinstance(feat, dict)
-                    else feat
+                    (
+                        feature.Feature.from_response_json(feat)
+                        if isinstance(feat, dict)
+                        else feat
+                    )
                     for feat in features
                 ]
                 if features

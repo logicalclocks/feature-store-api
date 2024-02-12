@@ -159,9 +159,9 @@ class Engine:
                 dataframe_type,
                 schema,
                 hive_config=read_options.get("hive_config") if read_options else None,
-                arrow_flight_config=read_options.get("arrow_flight_config", {})
-                if read_options
-                else {},
+                arrow_flight_config=(
+                    read_options.get("arrow_flight_config", {}) if read_options else {}
+                ),
             )
         else:
             return self._jdbc(
@@ -258,14 +258,20 @@ class Engine:
                 result_df = Engine.cast_columns(result_df, schema, online=True)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def read(self, storage_connector, data_format, read_options, location, dataframe_type):
+    def read(
+        self, storage_connector, data_format, read_options, location, dataframe_type
+    ):
         if not data_format:
             raise FeatureStoreException("data_format is not specified")
 
         if storage_connector.type == storage_connector.HOPSFS:
-            df_list = self._read_hopsfs(location, data_format, read_options, dataframe_type)
+            df_list = self._read_hopsfs(
+                location, data_format, read_options, dataframe_type
+            )
         elif storage_connector.type == storage_connector.S3:
-            df_list = self._read_s3(storage_connector, location, data_format, dataframe_type)
+            df_list = self._read_s3(
+                storage_connector, location, data_format, dataframe_type
+            )
         else:
             raise NotImplementedError(
                 "{} Storage Connectors for training datasets are not supported yet for external environments.".format(
@@ -273,9 +279,13 @@ class Engine:
                 )
             )
         if dataframe_type.lower() == "polars":
-            return self._return_dataframe_type(pl.concat(df_list), dataframe_type=dataframe_type)
+            return self._return_dataframe_type(
+                pl.concat(df_list), dataframe_type=dataframe_type
+            )
         else:
-            return self._return_dataframe_type(pd.concat(df_list, ignore_index=True), dataframe_type=dataframe_type)
+            return self._return_dataframe_type(
+                pd.concat(df_list, ignore_index=True), dataframe_type=dataframe_type
+            )
 
     def _read_pandas(self, data_format, obj):
         if data_format.lower() == "csv":
@@ -292,14 +302,14 @@ class Engine:
                     data_format
                 )
             )
-        
+
     def _read_polars(self, data_format, obj):
         if data_format.lower() == "csv":
             return pl.read_csv(obj)
         elif data_format.lower() == "tsv":
             return pl.read_csv(obj, separator="\t")
         elif data_format.lower() == "parquet" and isinstance(obj, StreamingBody):
-            return pl.read_parquet(BytesIO(obj.read()), use_pyarrow = True)
+            return pl.read_parquet(BytesIO(obj.read()), use_pyarrow=True)
         elif data_format.lower() == "parquet":
             return pl.read_parquet(obj, use_pyarrow=True)
         else:
@@ -309,7 +319,9 @@ class Engine:
                 )
             )
 
-    def _read_hopsfs(self, location, data_format, read_options={}, dataframe_type="default"):
+    def _read_hopsfs(
+        self, location, data_format, read_options={}, dataframe_type="default"
+    ):
         # providing more informative error
         try:
             from pydoop import hdfs
@@ -364,7 +376,9 @@ class Engine:
 
         return df_list
 
-    def _read_s3(self, storage_connector, location, data_format, dataframe_type="default"):
+    def _read_s3(
+        self, storage_connector, location, data_format, dataframe_type="default"
+    ):
         # get key prefix
         path_parts = location.replace("s3://", "").split("/")
         _ = path_parts.pop(0)  # pop first element -> bucket
@@ -481,12 +495,16 @@ class Engine:
 
         # parse timestamp columns to string columns
         for field in arrow_schema:
-            if not (pa.types.is_list(field.type) or pa.types.is_large_list(field.type) or pa.types.is_struct(field.type)) and PYARROW_HOPSWORKS_DTYPE_MAPPING[field.type] in ["timestamp", "date"]:
+            if not (
+                pa.types.is_list(field.type)
+                or pa.types.is_large_list(field.type)
+                or pa.types.is_struct(field.type)
+            ) and PYARROW_HOPSWORKS_DTYPE_MAPPING[field.type] in ["timestamp", "date"]:
                 if isinstance(df, pl.DataFrame):
                     df = df.with_columns(pl.col(field.name).cast(pl.String))
                 else:
                     df[field.name] = df[field.name].astype(str)
-                    
+
         if not relevant_columns:
             stats = df.describe().to_dict()
             relevant_columns = df.columns
@@ -508,7 +526,13 @@ class Engine:
 
             # set data type
             arrow_type = arrow_schema.field(col).type
-            if pa.types.is_list(arrow_type) or pa.types.is_large_list(arrow_type) or pa.types.is_struct(arrow_type) or PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type] in ["timestamp", "date", "binary", "string"]:
+            if (
+                pa.types.is_list(arrow_type)
+                or pa.types.is_large_list(arrow_type)
+                or pa.types.is_struct(arrow_type)
+                or PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type]
+                in ["timestamp", "date", "binary", "string"]
+            ):
                 dataType = "String"
             elif PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type] in ["float", "double"]:
                 dataType = "Fractional"
@@ -529,7 +553,6 @@ class Engine:
             stat["isDataTypeInferred"] = "false"
             stat["column"] = col.split(".")[-1]
             stat["completeness"] = 1
-            
 
             final_stats.append(stat)
 
@@ -541,8 +564,8 @@ class Engine:
         # For now transformation only need 25th, 50th, 75th percentiles
         # TODO: calculate properly all percentiles
 
-        # TODO : Add proper conditions 
-        content_dict = {"dataType":dataType}
+        # TODO : Add proper conditions
+        content_dict = {"dataType": dataType}
         if "count" in stat:
             content_dict["count"] = stat["count"]
         if not dataType == "String":
@@ -565,7 +588,6 @@ class Engine:
                 content_dict["minimum"] = stat["min"]
 
         return content_dict
-
 
     def validate(self, dataframe: pd.DataFrame, expectations, log_activity=True):
         raise NotImplementedError(
@@ -723,19 +745,30 @@ class Engine:
         return ingestion_job.job
 
     def get_training_data(
-        self, training_dataset_obj, feature_view_obj, query_obj, read_options, dataframe_type
+        self,
+        training_dataset_obj,
+        feature_view_obj,
+        query_obj,
+        read_options,
+        dataframe_type,
     ):
-        # dataframe_type of list and numpy are prevented here because statistics needs to be computed from the returned dataframe. 
+        # dataframe_type of list and numpy are prevented here because statistics needs to be computed from the returned dataframe.
         # The daframe is converted into required types in the function split_labels
         if dataframe_type.lower() not in ["default", "polars", "pandas"]:
             dataframe_type = "default"
 
         if training_dataset_obj.splits:
             return self._prepare_transform_split_df(
-                query_obj, training_dataset_obj, feature_view_obj, read_options, dataframe_type
+                query_obj,
+                training_dataset_obj,
+                feature_view_obj,
+                read_options,
+                dataframe_type,
             )
         else:
-            df = query_obj.read(read_options=read_options, dataframe_type=dataframe_type)
+            df = query_obj.read(
+                read_options=read_options, dataframe_type=dataframe_type
+            )
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, df
             )
@@ -747,7 +780,9 @@ class Engine:
         if labels:
             labels_df = df[labels]
             df_new = df.drop(columns=labels)
-            return self._return_dataframe_type(df_new, dataframe_type), self._return_dataframe_type(labels_df, dataframe_type)
+            return self._return_dataframe_type(
+                df_new, dataframe_type
+            ), self._return_dataframe_type(labels_df, dataframe_type)
         else:
             return self._return_dataframe_type(df, dataframe_type), None
 
@@ -755,7 +790,12 @@ class Engine:
         return df.drop(columns=drop_cols)
 
     def _prepare_transform_split_df(
-        self, query_obj, training_dataset_obj, feature_view_obj, read_option, dataframe_type
+        self,
+        query_obj,
+        training_dataset_obj,
+        feature_view_obj,
+        read_option,
+        dataframe_type,
     ):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
@@ -771,20 +811,25 @@ class Engine:
                     query_obj._left_feature_group.__getattr__(event_time)
                 )
                 result_dfs = self._time_series_split(
-                    query_obj.read(read_options=read_option, dataframe_type=dataframe_type),
+                    query_obj.read(
+                        read_options=read_option, dataframe_type=dataframe_type
+                    ),
                     training_dataset_obj,
                     event_time,
                     drop_event_time=True,
                 )
             else:
                 result_dfs = self._time_series_split(
-                    query_obj.read(read_options=read_option, dataframe_type=dataframe_type),
+                    query_obj.read(
+                        read_options=read_option, dataframe_type=dataframe_type
+                    ),
                     training_dataset_obj,
                     event_time,
                 )
         else:
             result_dfs = self._random_split(
-                query_obj.read(read_options=read_option, dataframe_type=dataframe_type), training_dataset_obj
+                query_obj.read(read_options=read_option, dataframe_type=dataframe_type),
+                training_dataset_obj,
             )
 
         # apply transformations
@@ -1412,10 +1457,10 @@ class Engine:
             struct_schema = {}
             for index in range(arrow_type.num_fields):
                 sub_arrow_type = arrow_type.field(index).type
-                struct_schema[
-                    arrow_type.field(index).name
-                ] = Engine._convert_pandas_dtype_to_offline_type(
-                    arrow_type.field(index).type
+                struct_schema[arrow_type.field(index).name] = (
+                    Engine._convert_pandas_dtype_to_offline_type(
+                        arrow_type.field(index).type
+                    )
                 )
             return (
                 "struct<"
@@ -1435,15 +1480,19 @@ class Engine:
             return pd.to_datetime(feature_column, utc=True).dt.date
         elif offline_type.startswith("array<") or offline_type.startswith("struct<"):
             return feature_column.apply(
-                lambda x: (ast.literal_eval(x) if type(x) is str else x)
-                if (x is not None and x != "")
-                else None
+                lambda x: (
+                    (ast.literal_eval(x) if type(x) is str else x)
+                    if (x is not None and x != "")
+                    else None
+                )
             )
         elif offline_type == "boolean":
             return feature_column.apply(
-                lambda x: (ast.literal_eval(x) if type(x) is str else x)
-                if (x is not None and x != "")
-                else None
+                lambda x: (
+                    (ast.literal_eval(x) if type(x) is str else x)
+                    if (x is not None and x != "")
+                    else None
+                )
             )
         elif offline_type == "string":
             return feature_column.apply(lambda x: str(x) if x is not None else None)
@@ -1480,9 +1529,11 @@ class Engine:
             return feature_column.apply(lambda x: str(x) if x is not None else None)
         elif online_type == "boolean":
             return feature_column.apply(
-                lambda x: (ast.literal_eval(x) if type(x) is str else x)
-                if (x is not None and x != "")
-                else None
+                lambda x: (
+                    (ast.literal_eval(x) if type(x) is str else x)
+                    if (x is not None and x != "")
+                    else None
+                )
             )
         elif online_type.startswith("decimal"):
             return feature_column.apply(

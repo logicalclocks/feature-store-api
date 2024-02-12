@@ -233,9 +233,11 @@ class ArrowFlightClient:
         descriptor = pyarrow.flight.FlightDescriptor.for_command(query_encoded)
         return self._get_dataset(
             descriptor,
-            arrow_flight_config.get("timeout")
-            if arrow_flight_config
-            else self.DEFAULT_TIMEOUT,
+            (
+                arrow_flight_config.get("timeout")
+                if arrow_flight_config
+                else self.DEFAULT_TIMEOUT
+            ),
             dataframe_type,
         )
 

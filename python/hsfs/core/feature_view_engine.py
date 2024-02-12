@@ -287,7 +287,7 @@ class FeatureViewEngine:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
-        dataframe_type="default"
+        dataframe_type="default",
     ):
         # check if provided td version has already existed.
         if training_dataset_version:
@@ -329,7 +329,11 @@ class FeatureViewEngine:
                 feature_view_features=[
                     feature.name for feature in feature_view_obj.features
                 ],
-                dataframe_type="default" if  dataframe_type.lower() in ["numpy", "python"] else dataframe_type# forcing dataframe type to default here since dataframe operations are required for training data split. 
+                dataframe_type=(
+                    "default"
+                    if dataframe_type.lower() in ["numpy", "python"]
+                    else dataframe_type
+                ),  # forcing dataframe type to default here since dataframe operations are required for training data split.
             )
         else:
             self._check_feature_group_accessibility(feature_view_obj)
@@ -345,7 +349,7 @@ class FeatureViewEngine:
                 training_helper_columns=training_helper_columns,
                 spine=spine,
             )
-            # Forcing dataframe type as default for 
+            # Forcing dataframe type as default for
             split_df = engine.get_instance().get_training_data(
                 td_updated, feature_view_obj, query, read_options, dataframe_type
             )
@@ -441,7 +445,7 @@ class FeatureViewEngine:
         with_training_helper_columns,
         training_helper_columns,
         feature_view_features,
-        dataframe_type
+        dataframe_type,
     ):
         if splits:
             result = {}
@@ -458,7 +462,7 @@ class FeatureViewEngine:
                     with_training_helper_columns,
                     training_helper_columns,
                     feature_view_features,
-                    dataframe_type
+                    dataframe_type,
                 )
             return result
         else:
@@ -474,7 +478,7 @@ class FeatureViewEngine:
                 with_training_helper_columns,
                 training_helper_columns,
                 feature_view_features,
-                dataframe_type
+                dataframe_type,
             )
 
     def _cast_columns(self, data_format, df, schema):
@@ -497,7 +501,7 @@ class FeatureViewEngine:
         with_training_helper_columns,
         training_helper_columns,
         feature_view_features,
-        dataframe_type
+        dataframe_type,
     ):
         try:
             df = training_data_obj.storage_connector.read(
@@ -506,7 +510,7 @@ class FeatureViewEngine:
                 data_format=training_data_obj.data_format,
                 options=read_options,
                 path=path,
-                dataframe_type=dataframe_type
+                dataframe_type=dataframe_type,
             )
 
             df = self._drop_helper_columns(
@@ -713,7 +717,7 @@ class FeatureViewEngine:
         primary_keys=False,
         event_time=False,
         inference_helper_columns=False,
-        dataframe_type="default"
+        dataframe_type="default",
     ):
         self._check_feature_group_accessibility(feature_view_obj)
 
