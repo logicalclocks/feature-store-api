@@ -510,7 +510,12 @@ class Engine:
         )
 
     def get_training_data(
-        self, training_dataset, feature_view_obj, query_obj, read_options
+        self,
+        training_dataset,
+        feature_view_obj,
+        query_obj,
+        read_options,
+        dataframe_type,
     ):
         return self.write_training_dataset(
             training_dataset,
@@ -522,13 +527,15 @@ class Engine:
             feature_view_obj=feature_view_obj,
         )
 
-    def split_labels(self, df, labels):
+    def split_labels(self, df, labels, dataframe_type):
         if labels:
             labels_df = df.select(*labels)
             df_new = df.drop(*labels)
-            return df_new, labels_df
+            return self._return_dataframe_type(
+                df_new, dataframe_type
+            ), self._return_dataframe_type(labels_df, dataframe_type)
         else:
-            return df, None
+            return self._return_dataframe_type(df, dataframe_type), None
 
     def drop_columns(self, df, drop_cols):
         return df.drop(*drop_cols)
@@ -693,7 +700,9 @@ class Engine:
 
         feature_dataframe.unpersist()
 
-    def read(self, storage_connector, data_format, read_options, location):
+    def read(
+        self, storage_connector, data_format, read_options, location, dataframe_type
+    ):
         if not data_format:
             raise FeatureStoreException("data_format is not specified")
 
@@ -714,10 +723,11 @@ class Engine:
 
         path = self.setup_storage_connector(storage_connector, path)
 
-        return (
+        return self._return_dataframe_type(
             self._spark_session.read.format(data_format)
             .options(**(read_options if read_options else {}))
-            .load(path)
+            .load(path),
+            dataframe_type=dataframe_type,
         )
 
     def read_stream(
