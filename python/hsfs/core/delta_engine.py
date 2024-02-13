@@ -106,6 +106,10 @@ class DeltaEngine:
                 delete_df.alias(updates_alias), merge_query_str
             ).whenMatchedDelete().execute()
 
+        return self._get_last_commit_metadata(
+            self._spark_session, self._feature_group.location
+        )
+
     def _write_delta_dataset(self, dataset, write_options):
         if write_options is None:
             write_options = {}
