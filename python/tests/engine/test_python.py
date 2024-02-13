@@ -2136,7 +2136,7 @@ class TestPython:
         )
 
         # Assert
-        assert isinstance(result_df, pd.DataFrame) 
+        assert isinstance(result_df, pd.DataFrame)
         assert result_df_split == None
 
     def test_split_labels_dataframe_type_pandas(self):
@@ -2152,7 +2152,7 @@ class TestPython:
         )
 
         # Assert
-        assert isinstance(result_df, pd.DataFrame) 
+        assert isinstance(result_df, pd.DataFrame)
         assert result_df_split == None
 
     def test_split_labels_dataframe_type_polars(self):
@@ -2167,7 +2167,7 @@ class TestPython:
         )
 
         # Assert
-        assert isinstance(result_df, pl.DataFrame) 
+        assert isinstance(result_df, pl.DataFrame)
         assert result_df_split == None
 
     def test_split_labels_dataframe_type_python(self):
@@ -2182,7 +2182,7 @@ class TestPython:
         )
 
         # Assert
-        assert isinstance(result_df, list) 
+        assert isinstance(result_df, list)
         assert result_df_split == None
 
     def test_split_labels_dataframe_type_numpy(self):
@@ -2197,8 +2197,8 @@ class TestPython:
         )
 
         # Assert
-        assert isinstance(result_df, np.ndarray) 
-        assert result_df_split == None   
+        assert isinstance(result_df, np.ndarray)
+        assert result_df_split == None
 
     def test_split_labels_labels(self):
         # Arrange
@@ -2229,8 +2229,8 @@ class TestPython:
         )
 
         # Assert
-        assert isinstance(result_df, pd.DataFrame) 
-        assert isinstance(result_df_split, pd.Series) 
+        assert isinstance(result_df, pd.DataFrame)
+        assert isinstance(result_df_split, pd.Series)
 
     def test_split_labels_labels_dataframe_type_pandas(self):
         # Arrange
@@ -2245,8 +2245,8 @@ class TestPython:
         )
 
         # Assert
-        assert isinstance(result_df, pd.DataFrame) 
-        assert isinstance(result_df_split, pd.Series) 
+        assert isinstance(result_df, pd.DataFrame)
+        assert isinstance(result_df_split, pd.Series)
 
     def test_split_labels_labels_dataframe_type_polars(self):
         # Arrange
@@ -2261,8 +2261,8 @@ class TestPython:
         )
         print(type(result_df_split))
         # Assert
-        assert isinstance(result_df, pl.DataFrame) 
-        assert isinstance(result_df_split, pl.Series) 
+        assert isinstance(result_df, pl.DataFrame)
+        assert isinstance(result_df_split, pl.Series)
 
     def test_split_labels_labels_dataframe_type_python(self):
         # Arrange
@@ -2275,10 +2275,10 @@ class TestPython:
         result_df, result_df_split = python_engine.split_labels(
             df=df, dataframe_type="python", labels="col1"
         )
-    
+
         # Assert
-        assert isinstance(result_df, list) 
-        assert isinstance(result_df_split, list) 
+        assert isinstance(result_df, list)
+        assert isinstance(result_df_split, list)
 
     def test_split_labels_labels_dataframe_type_numpy(self):
         # Arrange
@@ -2293,8 +2293,8 @@ class TestPython:
         )
 
         # Assert
-        assert isinstance(result_df, np.ndarray) 
-        assert isinstance(result_df_split, np.ndarray) 
+        assert isinstance(result_df, np.ndarray)
+        assert isinstance(result_df_split, np.ndarray)
 
     def test_prepare_transform_split_df_random_split(self, mocker):
         # Arrange
@@ -2968,7 +2968,7 @@ class TestPython:
 
         # Assert
         assert str(result) == "   col1  col2\n0     1     3\n1     2     4"
-    
+
     def test_return_dataframe_type_polars(self):
         # Arrange
         python_engine = python.Engine()
