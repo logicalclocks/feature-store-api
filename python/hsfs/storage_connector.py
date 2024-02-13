@@ -1022,9 +1022,9 @@ class KafkaConnector(StorageConnector):
         )
 
         # set ssl
-        config["ssl.endpoint.identification.algorithm"] = (
-            self._ssl_endpoint_identification_algorithm
-        )
+        config[
+            "ssl.endpoint.identification.algorithm"
+        ] = self._ssl_endpoint_identification_algorithm
 
         # Here we cannot use `not self._external_kafka` as for normal kafka connectors
         # this option is not set and so the `not self._external_kafka` would return true

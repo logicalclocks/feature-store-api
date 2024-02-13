@@ -531,9 +531,10 @@ class Engine:
         if labels:
             labels_df = df.select(*labels)
             df_new = df.drop(*labels)
-            return self._return_dataframe_type(
-                df_new, dataframe_type
-            ), self._return_dataframe_type(labels_df, dataframe_type)
+            return (
+                self._return_dataframe_type(df_new, dataframe_type),
+                self._return_dataframe_type(labels_df, dataframe_type),
+            )
         else:
             return self._return_dataframe_type(df, dataframe_type), None
 

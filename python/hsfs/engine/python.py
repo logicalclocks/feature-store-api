@@ -561,7 +561,7 @@ class Engine:
 
     def _convert_pandas_statistics(self, stat, dataType):
         # For now transformation only need 25th, 50th, 75th percentiles
-        # TODO: calculate properly all percentiles    
+        # TODO: calculate properly all percentiles
         content_dict = {"dataType": dataType}
         if "count" in stat:
             content_dict["count"] = stat["count"]
@@ -777,9 +777,10 @@ class Engine:
         if labels:
             labels_df = df[labels]
             df_new = df.drop(columns=labels)
-            return self._return_dataframe_type(
-                df_new, dataframe_type
-            ), self._return_dataframe_type(labels_df, dataframe_type)
+            return (
+                self._return_dataframe_type(df_new, dataframe_type),
+                self._return_dataframe_type(labels_df, dataframe_type),
+            )
         else:
             return self._return_dataframe_type(df, dataframe_type), None
 
@@ -1416,10 +1417,10 @@ class Engine:
             struct_schema = {}
             for index in range(arrow_type.num_fields):
                 sub_arrow_type = arrow_type.field(index).type
-                struct_schema[arrow_type.field(index).name] = (
-                    Engine._convert_pandas_dtype_to_offline_type(
-                        arrow_type.field(index).type
-                    )
+                struct_schema[
+                    arrow_type.field(index).name
+                ] = Engine._convert_pandas_dtype_to_offline_type(
+                    arrow_type.field(index).type
                 )
             return (
                 "struct<"

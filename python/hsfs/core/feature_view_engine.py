@@ -338,7 +338,9 @@ class FeatureViewEngine:
                     feature.name for feature in feature_view_obj.features
                 ],
                 # forcing dataframe type to default here since dataframe operations are required for training data split.
-                dataframe_type="default" if dataframe_type.lower() in ["numpy", "python"] else dataframe_type  # forcing dataframe type to default here since dataframe operations are required for training data split.
+                dataframe_type="default"
+                if dataframe_type.lower() in ["numpy", "python"]
+                else dataframe_type,  # forcing dataframe type to default here since dataframe operations are required for training data split.
             )
         else:
             self._check_feature_group_accessibility(feature_view_obj)
