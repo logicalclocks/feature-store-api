@@ -561,9 +561,7 @@ class Engine:
 
     def _convert_pandas_statistics(self, stat, dataType):
         # For now transformation only need 25th, 50th, 75th percentiles
-        # TODO: calculate properly all percentiles
-
-        # TODO : Add proper conditions
+        # TODO: calculate properly all percentiles    
         content_dict = {"dataType": dataType}
         if "count" in stat:
             content_dict["count"] = stat["count"]
@@ -846,7 +844,6 @@ class Engine:
         return result_dfs
 
     def _random_split(self, df, training_dataset_obj):
-        # TODO : Clean up this function
         split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
         result_dfs = {}
         splits = training_dataset_obj.splits
