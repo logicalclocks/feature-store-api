@@ -1732,8 +1732,7 @@ class TestSpark:
 
         # Act
         df_new, labels_df = spark_engine.split_labels(
-            df=spark_df,
-            labels=["col_0"],
+            df=spark_df, labels=["col_0"], dataframe_type="default"
         )
 
         # Assert
