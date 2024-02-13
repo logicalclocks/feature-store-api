@@ -15,6 +15,7 @@
 #
 
 import pandas as pd
+import polars as pl
 import numpy as np
 import boto3
 import re
@@ -38,7 +39,8 @@ import great_expectations as ge
 
 from io import BytesIO
 from pyhive import hive
-from typing import TypeVar, Optional, Dict, Any
+from urllib.parse import urlparse
+from typing import TypeVar, Optional, Dict, Any, Union
 from confluent_kafka import Consumer, Producer, TopicPartition, KafkaError
 from tqdm.auto import tqdm
 from botocore.response import StreamingBody
@@ -83,35 +85,50 @@ except ImportError:
     pass
 
 # Decimal types are currently not supported
+_INT_TYPES = [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()]
+_BIG_INT_TYPES = [pa.uint32(), pa.int64()]
+_FLOAT_TYPES = [pa.float16(), pa.float32()]
+_DOUBLE_TYPES = [pa.float64()]
+_TIMESTAMP_UNIT = ["ns", "us", "ms", "s"]
+_BOOLEAN_TYPES = [pa.bool_()]
+_STRING_TYPES = [pa.string(), pa.large_string()]
+_DATE_TYPES = [pa.date32(), pa.date64()]
+_BINARY_TYPES = [pa.binary(), pa.large_binary()]
+
 PYARROW_HOPSWORKS_DTYPE_MAPPING = {
-    **dict.fromkeys(
-        [pa.uint8(), pa.uint16(), pa.int8(), pa.int16(), pa.int32()], "int"
-    ),
-    **dict.fromkeys([pa.uint32(), pa.int64()], "bigint"),
-    **dict.fromkeys([pa.float16(), pa.float32()], "float"),
-    **dict.fromkeys([pa.float64()], "double"),
-    **dict.fromkeys(
-        [pa.timestamp("ns")]
-        + [pa.timestamp("ns", tz=tz) for tz in pytz.all_timezones]
-        + [pa.timestamp("us")]
-        + [pa.timestamp("us", tz=tz) for tz in pytz.all_timezones]
-        + [pa.timestamp("ms")]
-        + [pa.timestamp("ms", tz=tz) for tz in pytz.all_timezones]
-        + [pa.timestamp("s")]
-        + [pa.timestamp("s", tz=tz) for tz in pytz.all_timezones],
-        "timestamp",
-    ),
-    **dict.fromkeys([pa.bool_()], "boolean"),
+    **dict.fromkeys(_INT_TYPES, "int"),
+    **dict.fromkeys(_BIG_INT_TYPES, "bigint"),
+    **dict.fromkeys(_FLOAT_TYPES, "float"),
+    **dict.fromkeys(_DOUBLE_TYPES, "double"),
     **dict.fromkeys(
         [
-            pa.string(),
-            pa.dictionary(value_type=pa.string(), index_type=pa.int8(), ordered=True),
-            pa.dictionary(value_type=pa.string(), index_type=pa.int8(), ordered=False),
+            *[pa.timestamp(unit) for unit in _TIMESTAMP_UNIT],
+            *[
+                pa.timestamp(unit, tz=tz)
+                for unit in _TIMESTAMP_UNIT
+                for tz in pytz.all_timezones
+            ],
+        ],
+        "timestamp",
+    ),
+    **dict.fromkeys(_BOOLEAN_TYPES, "boolean"),
+    **dict.fromkeys(
+        [
+            *_STRING_TYPES,
+            # Category type in pandas stored as dictinoary in pyarrow
+            *[
+                pa.dictionary(
+                    value_type=value_type, index_type=index_type, ordered=ordered
+                )
+                for value_type in _STRING_TYPES
+                for index_type in _INT_TYPES + _BIG_INT_TYPES
+                for ordered in [True, False]
+            ],
         ],
         "string",
-    ),  # Category type in pandas stored as dictinoary in pyarrow
-    **dict.fromkeys([pa.date32(), pa.date64()], "date"),
-    **dict.fromkeys([pa.binary()], "binary"),
+    ),
+    **dict.fromkeys(_DATE_TYPES, "date"),
+    **dict.fromkeys(_BINARY_TYPES, "binary"),
 }
 
 
@@ -164,12 +181,24 @@ class Engine:
         hive_config=None,
         arrow_flight_config={},
     ):
+        if not isinstance(dataframe_type, str) or dataframe_type.lower() not in [
+            "pandas",
+            "polars",
+            "numpy",
+            "python",
+            "default",
+        ]:
+            raise FeatureStoreException(
+                f'dataframe_type : {dataframe_type} not supported. Possible values are "default", "pandas", "polars", "numpy" or "python"'
+            )
+
         if arrow_flight_client.get_instance().is_flyingduck_query_object(sql_query):
             result_df = util.run_with_loading_animation(
                 "Reading data from Hopsworks, using ArrowFlight",
                 arrow_flight_client.get_instance().read_query,
                 sql_query,
                 arrow_flight_config,
+                dataframe_type,
             )
         else:
             with self._create_hive_connection(
@@ -178,18 +207,36 @@ class Engine:
                 # Suppress SQLAlchemy pandas warning
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", UserWarning)
-                    result_df = util.run_with_loading_animation(
-                        "Reading data from Hopsworks, using Hive",
-                        pd.read_sql,
-                        sql_query,
-                        hive_conn,
-                    )
-
+                    if dataframe_type.lower() == "polars":
+                        result_df = util.run_with_loading_animation(
+                            "Reading data from Hopsworks, using Hive",
+                            pl.read_database,
+                            sql_query,
+                            hive_conn,
+                        )
+                    else:
+                        result_df = util.run_with_loading_animation(
+                            "Reading data from Hopsworks, using Hive",
+                            pd.read_sql,
+                            sql_query,
+                            hive_conn,
+                        )
         if schema:
             result_df = Engine.cast_columns(result_df, schema)
         return self._return_dataframe_type(result_df, dataframe_type)
 
     def _jdbc(self, sql_query, connector, dataframe_type, read_options, schema=None):
+        if not isinstance(dataframe_type, str) or dataframe_type.lower() not in [
+            "pandas",
+            "polars",
+            "numpy",
+            "python",
+            "default",
+        ]:
+            raise FeatureStoreException(
+                f'dataframe_type : {dataframe_type} not supported. Possible values are "default", "pandas", "polars", "numpy" or "python"'
+            )
+
         if self._mysql_online_fs_engine is None:
             self._mysql_online_fs_engine = util.create_mysql_engine(
                 connector,
@@ -202,26 +249,42 @@ class Engine:
         with self._mysql_online_fs_engine.connect() as mysql_conn:
             if "sqlalchemy" in str(type(mysql_conn)):
                 sql_query = sql.text(sql_query)
-            result_df = pd.read_sql(sql_query, mysql_conn)
+            if dataframe_type.lower() == "polars":
+                result_df = pd.read_database(sql_query, mysql_conn)
+            else:
+                result_df = pd.read_sql(sql_query, mysql_conn)
             if schema:
                 result_df = Engine.cast_columns(result_df, schema, online=True)
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def read(self, storage_connector, data_format, read_options, location):
+    def read(
+        self, storage_connector, data_format, read_options, location, dataframe_type
+    ):
         if not data_format:
             raise FeatureStoreException("data_format is not specified")
 
         if storage_connector.type == storage_connector.HOPSFS:
-            df_list = self._read_hopsfs(location, data_format, read_options)
+            df_list = self._read_hopsfs(
+                location, data_format, read_options, dataframe_type
+            )
         elif storage_connector.type == storage_connector.S3:
-            df_list = self._read_s3(storage_connector, location, data_format)
+            df_list = self._read_s3(
+                storage_connector, location, data_format, dataframe_type
+            )
         else:
             raise NotImplementedError(
                 "{} Storage Connectors for training datasets are not supported yet for external environments.".format(
                     storage_connector.type
                 )
             )
-        return pd.concat(df_list, ignore_index=True)
+        if dataframe_type.lower() == "polars":
+            return self._return_dataframe_type(
+                pl.concat(df_list), dataframe_type=dataframe_type
+            )
+        else:
+            return self._return_dataframe_type(
+                pd.concat(df_list, ignore_index=True), dataframe_type=dataframe_type
+            )
 
     def _read_pandas(self, data_format, obj):
         if data_format.lower() == "csv":
@@ -239,7 +302,25 @@ class Engine:
                 )
             )
 
-    def _read_hopsfs(self, location, data_format, read_options={}):
+    def _read_polars(self, data_format, obj):
+        if data_format.lower() == "csv":
+            return pl.read_csv(obj)
+        elif data_format.lower() == "tsv":
+            return pl.read_csv(obj, separator="\t")
+        elif data_format.lower() == "parquet" and isinstance(obj, StreamingBody):
+            return pl.read_parquet(BytesIO(obj.read()), use_pyarrow=True)
+        elif data_format.lower() == "parquet":
+            return pl.read_parquet(obj, use_pyarrow=True)
+        else:
+            raise TypeError(
+                "{} training dataset format is not supported to read as polars dataframe.".format(
+                    data_format
+                )
+            )
+
+    def _read_hopsfs(
+        self, location, data_format, read_options={}, dataframe_type="default"
+    ):
         # providing more informative error
         try:
             from pydoop import hdfs
@@ -255,7 +336,10 @@ class Engine:
                 and not path.endswith("_SUCCESS")
                 and hdfs.path.getsize(path) > 0
             ):
-                df_list.append(self._read_pandas(data_format, path))
+                if dataframe_type.lower() == "polars":
+                    df_list.append(self._read_polars(data_format, path))
+                else:
+                    df_list.append(self._read_pandas(data_format, path))
         return df_list
 
     # This is a version of the read method that uses the Hopsworks REST APIs or Flyginduck Server
@@ -291,7 +375,9 @@ class Engine:
 
         return df_list
 
-    def _read_s3(self, storage_connector, location, data_format):
+    def _read_s3(
+        self, storage_connector, location, data_format, dataframe_type="default"
+    ):
         # get key prefix
         path_parts = location.replace("s3://", "").split("/")
         _ = path_parts.pop(0)  # pop first element -> bucket
@@ -335,7 +421,10 @@ class Engine:
                         Bucket=storage_connector.bucket,
                         Key=obj["Key"],
                     )
-                    df_list.append(self._read_pandas(data_format, obj["Body"]))
+                    if dataframe_type.lower() == "polars":
+                        df_list.append(self._read_polars(data_format, obj["Body"]))
+                    else:
+                        df_list.append(self._read_pandas(data_format, obj["Body"]))
         return df_list
 
     def read_options(self, data_format, provided_options):
@@ -398,7 +487,10 @@ class Engine:
         exact_uniqueness=True,
     ):
         # TODO: add statistics for correlations, histograms and exact_uniqueness
-        arrow_schema = pa.Schema.from_pandas(df, preserve_index=False)
+        if isinstance(df, pl.DataFrame):
+            arrow_schema = df.to_arrow().schema
+        else:
+            arrow_schema = pa.Schema.from_pandas(df, preserve_index=False)
 
         # parse timestamp columns to string columns
         for field in arrow_schema:
@@ -407,7 +499,10 @@ class Engine:
                 or pa.types.is_large_list(field.type)
                 or pa.types.is_struct(field.type)
             ) and PYARROW_HOPSWORKS_DTYPE_MAPPING[field.type] in ["timestamp", "date"]:
-                df[field.name] = df[field.name].astype(str)
+                if isinstance(df, pl.DataFrame):
+                    df = df.with_columns(pl.col(field.name).cast(pl.String))
+                else:
+                    df[field.name] = df[field.name].astype(str)
 
         if not relevant_columns:
             stats = df.describe().to_dict()
@@ -423,11 +518,10 @@ class Engine:
             stats[col] = df[col].describe().to_dict()
 
         final_stats = []
-        for col in stats.keys():
-            stat = self._convert_pandas_statistics(stats[col])
-            stat["isDataTypeInferred"] = "false"
-            stat["column"] = col.split(".")[-1]
-            stat["completeness"] = 1
+        for col in relevant_columns:
+
+            if isinstance(df, pl.DataFrame):
+                stats[col] = dict(zip(stats["statistic"], stats[col]))
 
             # set data type
             arrow_type = arrow_schema.field(col).type
@@ -438,13 +532,13 @@ class Engine:
                 or PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type]
                 in ["timestamp", "date", "binary", "string"]
             ):
-                stat["dataType"] = "String"
+                dataType = "String"
             elif PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type] in ["float", "double"]:
-                stat["dataType"] = "Fractional"
+                dataType = "Fractional"
             elif PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type] in ["int", "bigint"]:
-                stat["dataType"] = "Integral"
+                dataType = "Integral"
             elif PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type] == "boolean":
-                stat["dataType"] = "Boolean"
+                dataType = "Boolean"
             else:
                 print(
                     "Data type could not be inferred for column '"
@@ -452,7 +546,12 @@ class Engine:
                     + "'. Defaulting to 'String'",
                     file=sys.stderr,
                 )
-                stat["dataType"] = "String"
+                dataType = "String"
+
+            stat = self._convert_pandas_statistics(stats[col], dataType)
+            stat["isDataTypeInferred"] = "false"
+            stat["column"] = col.split(".")[-1]
+            stat["completeness"] = 1
 
             final_stats.append(stat)
 
@@ -460,29 +559,32 @@ class Engine:
             {"columns": final_stats},
         )
 
-    def _convert_pandas_statistics(self, stat):
+    def _convert_pandas_statistics(self, stat, dataType):
         # For now transformation only need 25th, 50th, 75th percentiles
         # TODO: calculate properly all percentiles
-        content_dict = {}
-        if "25%" in stat:
-            percentiles = [0] * 100
-            percentiles[24] = stat["25%"]
-            percentiles[49] = stat["50%"]
-            percentiles[74] = stat["75%"]
-            content_dict["approxPercentiles"] = percentiles
+
+        # TODO : Add proper conditions
+        content_dict = {"dataType": dataType}
         if "count" in stat:
             content_dict["count"] = stat["count"]
-        if "mean" in stat:
-            content_dict["mean"] = stat["mean"]
-        if "mean" in stat and "count" in stat:
-            if isinstance(stat["mean"], numbers.Number):
-                content_dict["sum"] = stat["mean"] * stat["count"]
-        if "max" in stat:
-            content_dict["maximum"] = stat["max"]
-        if "std" in stat:
-            content_dict["stdDev"] = stat["std"]
-        if "min" in stat:
-            content_dict["minimum"] = stat["min"]
+        if not dataType == "String":
+            if "25%" in stat:
+                percentiles = [0] * 100
+                percentiles[24] = stat["25%"]
+                percentiles[49] = stat["50%"]
+                percentiles[74] = stat["75%"]
+                content_dict["approxPercentiles"] = percentiles
+            if "mean" in stat:
+                content_dict["mean"] = stat["mean"]
+            if "mean" in stat and "count" in stat:
+                if isinstance(stat["mean"], numbers.Number):
+                    content_dict["sum"] = stat["mean"] * stat["count"]
+            if "max" in stat:
+                content_dict["maximum"] = stat["max"]
+            if "std" in stat and not pd.isna(stat["std"]):
+                content_dict["stdDev"] = stat["std"]
+            if "min" in stat:
+                content_dict["minimum"] = stat["min"]
 
         return content_dict
 
@@ -493,10 +595,14 @@ class Engine:
 
     def validate_with_great_expectations(
         self,
-        dataframe: pd.DataFrame,
+        dataframe: Union[pl.DataFrame, pd.DataFrame],
         expectation_suite: TypeVar("ge.core.ExpectationSuite"),
         ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
     ):
+        # This conversion might cause a bottleneck in performance when using polars with greater expectations.
+        # This patch is done becuase currently great_expecatations does not support polars, would need to be made proper when support added.
+        if isinstance(dataframe, pl.DataFrame):
+            dataframe = dataframe.to_pandas()
         report = ge.from_pandas(
             dataframe, expectation_suite=expectation_suite
         ).validate(**ge_validate_kwargs)
@@ -505,15 +611,20 @@ class Engine:
     def set_job_group(self, group_id, description):
         pass
 
-    def convert_to_default_dataframe(self, dataframe):
-        if isinstance(dataframe, pd.DataFrame):
+    def convert_to_default_dataframe(
+        self, dataframe: Union[pd.DataFrame, pl.DataFrame, str]
+    ):
+        if isinstance(dataframe, pd.DataFrame) or isinstance(dataframe, pl.DataFrame):
             upper_case_features = [
                 col for col in dataframe.columns if any(re.finditer("[A-Z]", col))
             ]
 
             # make shallow copy so the original df does not get changed
             # this is always needed to keep the user df unchanged
-            dataframe_copy = dataframe.copy(deep=False)
+            if isinstance(dataframe, pd.DataFrame):
+                dataframe_copy = dataframe.copy(deep=False)
+            else:
+                dataframe_copy = dataframe.clone()
 
             # making a shallow copy of the dataframe so that column names are unchanged
             if len(upper_case_features) > 0:
@@ -532,17 +643,26 @@ class Engine:
                     dataframe_copy[col].dtype, pd.core.dtypes.dtypes.DatetimeTZDtype
                 ):
                     dataframe_copy[col] = dataframe_copy[col].dt.tz_convert(None)
+                elif isinstance(dataframe_copy[col].dtype, pl.Datetime):
+                    dataframe_copy = dataframe_copy.with_columns(
+                        pl.col(col).dt.replace_time_zone(None)
+                    )
             return dataframe_copy
         elif dataframe == "spine":
             return None
 
         raise TypeError(
-            "The provided dataframe type is not recognized. Supported types are: pandas dataframe. "
+            "The provided dataframe type is not recognized. Supported types are: pandas dataframe, polars dataframe. "
             + "The provided dataframe has type: {}".format(type(dataframe))
         )
 
-    def parse_schema_feature_group(self, dataframe, time_travel_format=None):
-        arrow_schema = pa.Schema.from_pandas(dataframe, preserve_index=False)
+    def parse_schema_feature_group(
+        self, dataframe: Union[pd.DataFrame, pl.DataFrame], time_travel_format=None
+    ):
+        if isinstance(dataframe, pd.DataFrame):
+            arrow_schema = pa.Schema.from_pandas(dataframe, preserve_index=False)
+        elif isinstance(dataframe, pl.DataFrame):
+            arrow_schema = dataframe.to_arrow().schema
         features = []
         for feat_name in arrow_schema.names:
             name = feat_name.lower()
@@ -564,7 +684,7 @@ class Engine:
     def save_dataframe(
         self,
         feature_group: FeatureGroup,
-        dataframe: pd.DataFrame,
+        dataframe: Union[pd.DataFrame, pl.DataFrame],
         operation: str,
         online_enabled: bool,
         storage: str,
@@ -624,14 +744,30 @@ class Engine:
         return ingestion_job.job
 
     def get_training_data(
-        self, training_dataset_obj, feature_view_obj, query_obj, read_options
+        self,
+        training_dataset_obj,
+        feature_view_obj,
+        query_obj,
+        read_options,
+        dataframe_type,
     ):
+        # dataframe_type of list and numpy are prevented here because statistics needs to be computed from the returned dataframe.
+        # The daframe is converted into required types in the function split_labels
+        if dataframe_type.lower() not in ["default", "polars", "pandas"]:
+            dataframe_type = "default"
+
         if training_dataset_obj.splits:
             return self._prepare_transform_split_df(
-                query_obj, training_dataset_obj, feature_view_obj, read_options
+                query_obj,
+                training_dataset_obj,
+                feature_view_obj,
+                read_options,
+                dataframe_type,
             )
         else:
-            df = query_obj.read(read_options=read_options)
+            df = query_obj.read(
+                read_options=read_options, dataframe_type=dataframe_type
+            )
             transformation_function_engine.TransformationFunctionEngine.populate_builtin_transformation_functions(
                 training_dataset_obj, feature_view_obj, df
             )
@@ -639,19 +775,26 @@ class Engine:
                 training_dataset_obj.transformation_functions, df
             )
 
-    def split_labels(self, df, labels):
+    def split_labels(self, df, labels, dataframe_type):
         if labels:
             labels_df = df[labels]
             df_new = df.drop(columns=labels)
-            return df_new, labels_df
+            return self._return_dataframe_type(
+                df_new, dataframe_type
+            ), self._return_dataframe_type(labels_df, dataframe_type)
         else:
-            return df, None
+            return self._return_dataframe_type(df, dataframe_type), None
 
     def drop_columns(self, df, drop_cols):
         return df.drop(columns=drop_cols)
 
     def _prepare_transform_split_df(
-        self, query_obj, training_dataset_obj, feature_view_obj, read_option
+        self,
+        query_obj,
+        training_dataset_obj,
+        feature_view_obj,
+        read_option,
+        dataframe_type,
     ):
         """
         Split a df into slices defined by `splits`. `splits` is a `dict(str, int)` which keys are name of split
@@ -667,20 +810,25 @@ class Engine:
                     query_obj._left_feature_group.__getattr__(event_time)
                 )
                 result_dfs = self._time_series_split(
-                    query_obj.read(read_options=read_option),
+                    query_obj.read(
+                        read_options=read_option, dataframe_type=dataframe_type
+                    ),
                     training_dataset_obj,
                     event_time,
                     drop_event_time=True,
                 )
             else:
                 result_dfs = self._time_series_split(
-                    query_obj.read(read_options=read_option),
+                    query_obj.read(
+                        read_options=read_option, dataframe_type=dataframe_type
+                    ),
                     training_dataset_obj,
                     event_time,
                 )
         else:
             result_dfs = self._random_split(
-                query_obj.read(read_options=read_option), training_dataset_obj
+                query_obj.read(read_options=read_option, dataframe_type=dataframe_type),
+                training_dataset_obj,
             )
 
         # apply transformations
@@ -698,6 +846,7 @@ class Engine:
         return result_dfs
 
     def _random_split(self, df, training_dataset_obj):
+        # TODO : Clean up this function
         split_column = f"_SPLIT_INDEX_{uuid.uuid1()}"
         result_dfs = {}
         splits = training_dataset_obj.splits
@@ -718,9 +867,15 @@ class Engine:
             groups += [i] * int(df_size * split.percentage)
         groups += [len(splits) - 1] * (df_size - len(groups))
         random.shuffle(groups)
-        df[split_column] = groups
+        if isinstance(df, pl.DataFrame):
+            df = df.with_columns(pl.Series(name=split_column, values=groups))
+        else:
+            df[split_column] = groups
         for i, split in enumerate(splits):
-            split_df = df[df[split_column] == i].drop(split_column, axis=1)
+            if isinstance(df, pl.DataFrame):
+                split_df = df.filter(pl.col(split_column) == i).drop(split_column)
+            else:
+                split_df = df[df[split_column] == i].drop(split_column, axis=1)
             result_dfs[split.name] = split_df
         return result_dfs
 
@@ -846,7 +1001,7 @@ class Engine:
                 )
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
-        if dataframe_type.lower() in ["default", "pandas"]:
+        if dataframe_type.lower() in ["default", "pandas", "polars"]:
             return dataframe
         if dataframe_type.lower() == "numpy":
             return dataframe.values
@@ -973,7 +1128,7 @@ class Engine:
     def _write_dataframe_kafka(
         self,
         feature_group: FeatureGroup,
-        dataframe: pd.DataFrame,
+        dataframe: Union[pd.DataFrame, pl.DataFrame],
         offline_write_options: dict,
     ):
         initial_check_point = ""
@@ -1022,26 +1177,32 @@ class Engine:
             if not feature_group._multi_part_insert:
                 progress_bar.update()
 
-        # loop over rows
-        for r in dataframe.itertuples(index=False):
-            # itertuples returns Python NamedTyple, to be able to serialize it using
-            # avro, create copy of row only by converting to dict, which preserves datatypes
-            row = r._asdict()
+        if isinstance(dataframe, pd.DataFrame):
+            row_iterator = dataframe.itertuples(index=False)
+        else:
+            row_iterator = dataframe.iter_rows(named=True)
 
-            # transform special data types
-            # here we might need to handle also timestamps and other complex types
-            # possible optimizaiton: make it based on type so we don't need to loop over
-            # all keys in the row
-            for k in row.keys():
-                # for avro to be able to serialize them, they need to be python data types
-                if isinstance(row[k], np.ndarray):
-                    row[k] = row[k].tolist()
-                if isinstance(row[k], pd.Timestamp):
-                    row[k] = row[k].to_pydatetime()
-                if isinstance(row[k], datetime) and row[k].tzinfo is None:
-                    row[k] = row[k].replace(tzinfo=timezone.utc)
-                if isinstance(row[k], pd._libs.missing.NAType):
-                    row[k] = None
+        # loop over rows
+        for row in row_iterator:
+            if isinstance(dataframe, pd.DataFrame):
+                # itertuples returns Python NamedTyple, to be able to serialize it using
+                # avro, create copy of row only by converting to dict, which preserves datatypes
+                row = row._asdict()
+
+                # transform special data types
+                # here we might need to handle also timestamps and other complex types
+                # possible optimizaiton: make it based on type so we don't need to loop over
+                # all keys in the row
+                for k in row.keys():
+                    # for avro to be able to serialize them, they need to be python data types
+                    if isinstance(row[k], np.ndarray):
+                        row[k] = row[k].tolist()
+                    if isinstance(row[k], pd.Timestamp):
+                        row[k] = row[k].to_pydatetime()
+                    if isinstance(row[k], datetime) and row[k].tzinfo is None:
+                        row[k] = row[k].replace(tzinfo=timezone.utc)
+                    if isinstance(row[k], pd._libs.missing.NAType):
+                        row[k] = None
 
             # encode complex features
             row = self._encode_complex_features(feature_writers, row)
@@ -1200,7 +1361,11 @@ class Engine:
         # "_convert_simple_pandas_dtype_to_offline_type" is used to convert simple types
         # In the backend, the types specified here will also be used for mapping to Avro types.
 
-        if pa.types.is_list(arrow_type) or pa.types.is_struct(arrow_type):
+        if (
+            pa.types.is_list(arrow_type)
+            or pa.types.is_large_list(arrow_type)
+            or pa.types.is_struct(arrow_type)
+        ):
             return Engine._convert_pandas_object_type_to_offline_type(arrow_type)
 
         return Engine._convert_simple_pandas_dtype_to_offline_type(arrow_type)
@@ -1245,7 +1410,7 @@ class Engine:
 
     @staticmethod
     def _convert_pandas_object_type_to_offline_type(arrow_type):
-        if pa.types.is_list(arrow_type):
+        if pa.types.is_list(arrow_type) or pa.types.is_large_list(arrow_type):
             # figure out sub type
             sub_arrow_type = arrow_type.value_type
             subtype = Engine._convert_pandas_dtype_to_offline_type(sub_arrow_type)
@@ -1254,10 +1419,10 @@ class Engine:
             struct_schema = {}
             for index in range(arrow_type.num_fields):
                 sub_arrow_type = arrow_type.field(index).type
-                struct_schema[
-                    arrow_type.field(index).name
-                ] = Engine._convert_pandas_dtype_to_offline_type(
-                    arrow_type.field(index).type
+                struct_schema[arrow_type.field(index).name] = (
+                    Engine._convert_pandas_dtype_to_offline_type(
+                        arrow_type.field(index).type
+                    )
                 )
             return (
                 "struct<"
