@@ -17,6 +17,8 @@ import decimal
 
 import pytest
 import pandas as pd
+import polars as pl
+from polars.testing import assert_frame_equal as polars_assert_frame_equal
 import numpy as np
 import pyarrow as pa
 from confluent_kafka.admin import TopicMetadata, PartitionMetadata
@@ -97,12 +99,28 @@ class TestPython:
 
         # Act
         python_engine._sql_offline(
-            sql_query="", feature_store=None, dataframe_type=None
+            sql_query="", feature_store=None, dataframe_type="default"
         )
 
         # Assert
         assert mock_python_engine_create_hive_connection.call_count == 1
         assert mock_python_engine_return_dataframe_type.call_count == 1
+
+    def test_sql_offline_dataframe_type_none(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.engine.python.Engine._create_hive_connection")
+
+        python_engine = python.Engine()
+
+        with pytest.raises(exceptions.FeatureStoreException) as fstore_except:
+            # Act
+            python_engine._sql_offline(
+                sql_query="", feature_store=None, dataframe_type=None
+            )
+        assert (
+            str(fstore_except.value)
+            == 'dataframe_type : None not supported. Possible values are "default", "pandas", "polars", "numpy" or "python"'
+        )
 
     def test_jdbc(self, mocker):
         # Arrange
@@ -117,12 +135,32 @@ class TestPython:
 
         # Act
         python_engine._jdbc(
-            sql_query=query, connector=None, dataframe_type=None, read_options={}
+            sql_query=query, connector=None, dataframe_type="default", read_options={}
         )
 
         # Assert
         assert mock_util_create_mysql_engine.call_count == 1
         assert mock_python_engine_return_dataframe_type.call_count == 1
+
+    def test_jdbc_dataframe_type_none(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.util.create_mysql_engine")
+        mocker.patch("hsfs.client.get_instance")
+        query = "SELECT * FROM TABLE"
+
+        python_engine = python.Engine()
+
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as fstore_except:
+            python_engine._jdbc(
+                sql_query=query, connector=None, dataframe_type=None, read_options={}
+            )
+
+        # Assert
+        assert (
+            str(fstore_except.value)
+            == 'dataframe_type : None not supported. Possible values are "default", "pandas", "polars", "numpy" or "python"'
+        )
 
     def test_jdbc_read_options(self, mocker):
         # Arrange
@@ -139,7 +177,7 @@ class TestPython:
         python_engine._jdbc(
             sql_query=query,
             connector=None,
-            dataframe_type=None,
+            dataframe_type="default",
             read_options={"external": ""},
         )
 
@@ -160,6 +198,7 @@ class TestPython:
                 data_format=None,
                 read_options=None,
                 location=None,
+                dataframe_type="default"
             )
 
         # Assert
@@ -178,6 +217,7 @@ class TestPython:
                 data_format="",
                 read_options=None,
                 location=None,
+                dataframe_type="default"
             )
 
         # Assert
@@ -203,6 +243,7 @@ class TestPython:
             data_format="csv",
             read_options=None,
             location=None,
+            dataframe_type="default"
         )
 
         # Assert
@@ -229,6 +270,7 @@ class TestPython:
             data_format="csv",
             read_options=None,
             location=None,
+            dataframe_type="default"
         )
 
         # Assert
@@ -255,6 +297,7 @@ class TestPython:
                 data_format="csv",
                 read_options=None,
                 location=None,
+            dataframe_type="default"
             )
 
         # Assert
@@ -782,9 +825,9 @@ class TestPython:
         python_engine = python.Engine()
 
         mock_python_engine_convert_pandas_statistics.side_effect = [
-            {"test_key": "test_value"},
-            {"test_key": "test_value"},
-            {"test_key": "test_value"},
+            {"dataType": "Integral", "test_key": "test_value"},
+            {"dataType": "Fractional", "test_key": "test_value"},
+            {"dataType": "String", "test_key": "test_value"},
         ]
 
         d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
@@ -802,12 +845,12 @@ class TestPython:
         # Assert
         assert (
             result
-            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
-            '"column": "col1", "completeness": 1, "dataType": "Integral"}, '
-            '{"test_key": "test_value", "isDataTypeInferred": "false", '
-            '"column": "col2", "completeness": 1, "dataType": "Fractional"}, '
-            '{"test_key": "test_value", "isDataTypeInferred": "false", '
-            '"column": "col3", "completeness": 1, "dataType": "String"}]}'
+            == '{"columns": [{"dataType": "Integral", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1}, '
+            '{"dataType": "Fractional", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col2", "completeness": 1}, '
+            '{"dataType": "String", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1}]}'
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 3
 
@@ -820,7 +863,7 @@ class TestPython:
         python_engine = python.Engine()
 
         mock_python_engine_convert_pandas_statistics.return_value = {
-            "test_key": "test_value"
+            "dataType": "Integral", "test_key": "test_value"
         }
 
         d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
@@ -838,8 +881,8 @@ class TestPython:
         # Assert
         assert (
             result
-            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
-            '"column": "col1", "completeness": 1, "dataType": "Integral"}]}'
+            == '{"columns": [{"dataType": "Integral", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1}]}'
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 1
 
@@ -852,8 +895,8 @@ class TestPython:
         python_engine = python.Engine()
 
         mock_python_engine_convert_pandas_statistics.side_effect = [
-            {"test_key": "test_value"},
-            {"test_key": "test_value"},
+            {"dataType": "Integral", "test_key": "test_value"},
+            {"dataType": "String", "test_key": "test_value"},
         ]
 
         d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
@@ -871,10 +914,10 @@ class TestPython:
         # Assert
         assert (
             result
-            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
-            '"column": "col1", "completeness": 1, "dataType": "Integral"}, '
-            '{"test_key": "test_value", "isDataTypeInferred": "false", '
-            '"column": "col3", "completeness": 1, "dataType": "String"}]}'
+            == '{"columns": [{"dataType": "Integral", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1}, '
+            '{"dataType": "String", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1}]}'
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 2
 
@@ -894,10 +937,11 @@ class TestPython:
         }
 
         # Act
-        result = python_engine._convert_pandas_statistics(stat=stat)
+        result = python_engine._convert_pandas_statistics(stat=stat, dataType="Integer")
 
         # Assert
         assert result == {
+            "dataType": "Integer",
             "approxPercentiles": [
                 0,
                 0,
@@ -1005,7 +1049,7 @@ class TestPython:
             "minimum": 1,
             "stdDev": 33,
             "sum": 5000,
-            "count": 100,
+            "count": 100
         }
 
     def test_validate(self):
@@ -1046,7 +1090,7 @@ class TestPython:
         # Assert
         assert result is None
 
-    def test_convert_to_default_dataframe(self, mocker):
+    def test_convert_to_default_dataframe_pandas(self, mocker):
         # Arrange
         mock_warnings = mocker.patch("warnings.warn")
 
@@ -1065,7 +1109,54 @@ class TestPython:
             == "The ingested dataframe contains upper case letters in feature names: `['Col1']`. Feature names are sanitized to lower case in the feature store."
         )
 
-    def test_parse_schema_feature_group(self, mocker):
+    def test_convert_to_default_dataframe_polars(self, mocker):
+        # Arrange
+        mock_warnings = mocker.patch("warnings.warn")
+
+        python_engine = python.Engine()
+
+        df = pl.DataFrame(
+            [
+                pl.Series("Col1", [1, 2], dtype=pl.Float32),
+                pl.Series("col2", [1, 2], dtype=pl.Int64),
+                pl.Series(
+                    "Date",
+                    [
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                    ],
+                    pl.Datetime(time_zone="Africa/Abidjan"),
+                ),
+            ]
+        )
+
+        # Resulting dataframe
+        expected_converted_df = pl.DataFrame(
+            [
+                pl.Series("col1", [1, 2], dtype=pl.Float32),
+                pl.Series("col2", [1, 2], dtype=pl.Int64),
+                pl.Series(
+                    "date",
+                    [
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                    ],
+                    pl.Datetime(time_zone=None),
+                ),
+            ]
+        )
+
+        # Act
+        result = python_engine.convert_to_default_dataframe(dataframe=df)
+
+        # Assert
+        polars_assert_frame_equal(result, expected_converted_df)
+        assert (
+            mock_warnings.call_args[0][0]
+            == "The ingested dataframe contains upper case letters in feature names: `['Col1', 'Date']`. Feature names are sanitized to lower case in the feature store."
+        )
+
+    def test_parse_schema_feature_group_pandas(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
 
@@ -1083,6 +1174,39 @@ class TestPython:
         assert len(result) == 2
         assert result[0].name == "col1"
         assert result[1].name == "col2"
+
+    def test_parse_schema_feature_group_polars(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
+
+        python_engine = python.Engine()
+
+        df = pl.DataFrame(
+            [
+                pl.Series("col1", [1, 2], dtype=pl.Float32),
+                pl.Series("col2", [1, 2], dtype=pl.Int64),
+                pl.Series(
+                    "date",
+                    [
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                    ],
+                    pl.Datetime(time_zone="Africa/Abidjan"),
+                ),
+            ]
+        )
+
+        # Act
+        result = python_engine.parse_schema_feature_group(
+            dataframe=df, time_travel_format=None
+        )
+        print(result)
+
+        # Assert
+        assert len(result) == 3
+        assert result[0].name == "col1"
+        assert result[1].name == "col2"
+        assert result[2].name == "date"
 
     def test_parse_schema_training_dataset(self):
         # Arrange
@@ -1340,6 +1464,34 @@ class TestPython:
         # Assert
         assert result == "string"
 
+    def test_convert_simple_pandas_type_large_string_category_unordered(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.dictionary(
+                value_type=pa.large_string(), index_type=pa.int64(), ordered=False
+            )
+        )
+
+        # Assert
+        assert result == "string"
+
+    def test_convert_simple_pandas_type_large_string_category_ordered(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.dictionary(
+                value_type=pa.large_string(), index_type=pa.int64(), ordered=True
+            )
+        )
+
+        # Assert
+        assert result == "string"
+
     def test_convert_simple_pandas_type_category_ordered(self):
         # Arrange
         python_engine = python.Engine()
@@ -1375,6 +1527,19 @@ class TestPython:
         # Act
         result = python_engine._convert_pandas_object_type_to_offline_type(
             arrow_type=pa.list_(pa.int8())
+        )
+
+        # Assert
+        assert result == "array<int>"
+
+    def test_infer_type_pyarrow_large_list(self):
+        # Arrange
+
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_type=pa.large_list(pa.int8())
         )
 
         # Assert
@@ -1428,6 +1593,18 @@ class TestPython:
         # Assert
         assert result == "binary"
 
+    def test_infer_type_pyarrow_large_binary(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.large_binary()
+        )
+
+        # Assert
+        assert result == "binary"
+
     def test_infer_type_pyarrow_string(self):
         # Arrange
         python_engine = python.Engine()
@@ -1435,6 +1612,18 @@ class TestPython:
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.string()
+        )
+
+        # Assert
+        assert result == "string"
+
+    def test_infer_type_pyarrow_large_string(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.large_string()
         )
 
         # Assert
@@ -1775,6 +1964,7 @@ class TestPython:
             feature_view_obj=None,
             query_obj=mocker.Mock(),
             read_options=None,
+            dataframe_type="default"
         )
 
         # Assert
@@ -1808,6 +1998,7 @@ class TestPython:
             feature_view_obj=None,
             query_obj=mocker.Mock(),
             read_options=None,
+            dataframe_type="default"
         )
 
         # Assert
@@ -1821,7 +2012,7 @@ class TestPython:
         df = pd.DataFrame(data=d)
 
         # Act
-        result_df, result_df_split = python_engine.split_labels(df=df, labels=None)
+        result_df, result_df_split = python_engine.split_labels(df=df, dataframe_type="default", labels=None)
 
         # Assert
         assert str(result_df) == "   Col1  col2\n0     1     3\n1     2     4"
@@ -1835,7 +2026,7 @@ class TestPython:
         df = pd.DataFrame(data=d)
 
         # Act
-        result_df, result_df_split = python_engine.split_labels(df=df, labels="col1")
+        result_df, result_df_split = python_engine.split_labels(df=df, dataframe_type="default", labels="col1")
 
         # Assert
         assert str(result_df) == "   col2\n0     3\n1     4"
@@ -1881,6 +2072,7 @@ class TestPython:
             training_dataset_obj=td,
             feature_view_obj=None,
             read_option=None,
+            dataframe_type="default"
         )
 
         # Assert
@@ -1946,6 +2138,7 @@ class TestPython:
             training_dataset_obj=td,
             feature_view_obj=None,
             read_option=None,
+            dataframe_type="default"
         )
 
         # Assert
@@ -2010,6 +2203,7 @@ class TestPython:
             training_dataset_obj=td,
             feature_view_obj=None,
             read_option=None,
+            dataframe_type="default"
         )
 
         # Assert
