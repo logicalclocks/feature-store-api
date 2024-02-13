@@ -198,7 +198,7 @@ class TestPython:
                 data_format=None,
                 read_options=None,
                 location=None,
-                dataframe_type="default"
+                dataframe_type="default",
             )
 
         # Assert
@@ -217,7 +217,7 @@ class TestPython:
                 data_format="",
                 read_options=None,
                 location=None,
-                dataframe_type="default"
+                dataframe_type="default",
             )
 
         # Assert
@@ -243,7 +243,7 @@ class TestPython:
             data_format="csv",
             read_options=None,
             location=None,
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -270,7 +270,7 @@ class TestPython:
             data_format="csv",
             read_options=None,
             location=None,
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -297,7 +297,7 @@ class TestPython:
                 data_format="csv",
                 read_options=None,
                 location=None,
-            dataframe_type="default"
+                dataframe_type="default",
             )
 
         # Assert
@@ -863,7 +863,8 @@ class TestPython:
         python_engine = python.Engine()
 
         mock_python_engine_convert_pandas_statistics.return_value = {
-            "dataType": "Integral", "test_key": "test_value"
+            "dataType": "Integral",
+            "test_key": "test_value",
         }
 
         d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
@@ -1049,7 +1050,7 @@ class TestPython:
             "minimum": 1,
             "stdDev": 33,
             "sum": 5000,
-            "count": 100
+            "count": 100,
         }
 
     def test_validate(self):
@@ -1964,7 +1965,7 @@ class TestPython:
             feature_view_obj=None,
             query_obj=mocker.Mock(),
             read_options=None,
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -1998,7 +1999,7 @@ class TestPython:
             feature_view_obj=None,
             query_obj=mocker.Mock(),
             read_options=None,
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -2012,7 +2013,9 @@ class TestPython:
         df = pd.DataFrame(data=d)
 
         # Act
-        result_df, result_df_split = python_engine.split_labels(df=df, dataframe_type="default", labels=None)
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="default", labels=None
+        )
 
         # Assert
         assert str(result_df) == "   Col1  col2\n0     1     3\n1     2     4"
@@ -2026,7 +2029,9 @@ class TestPython:
         df = pd.DataFrame(data=d)
 
         # Act
-        result_df, result_df_split = python_engine.split_labels(df=df, dataframe_type="default", labels="col1")
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="default", labels="col1"
+        )
 
         # Assert
         assert str(result_df) == "   col2\n0     3\n1     4"
@@ -2072,7 +2077,7 @@ class TestPython:
             training_dataset_obj=td,
             feature_view_obj=None,
             read_option=None,
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -2138,7 +2143,7 @@ class TestPython:
             training_dataset_obj=td,
             feature_view_obj=None,
             read_option=None,
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -2203,7 +2208,7 @@ class TestPython:
             training_dataset_obj=td,
             feature_view_obj=None,
             read_option=None,
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert

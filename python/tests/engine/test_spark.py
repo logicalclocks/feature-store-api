@@ -1699,7 +1699,7 @@ class TestSpark:
             feature_view_obj=None,
             query_obj=None,
             read_options=None,
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -1713,11 +1713,7 @@ class TestSpark:
         df = pd.DataFrame(data=d)
 
         # Act
-        result = spark_engine.split_labels(
-            df=df,
-            labels=None,
-            dataframe_type="default"
-        )
+        result = spark_engine.split_labels(df=df, labels=None, dataframe_type="default")
 
         # Assert
         assert result == (df, None)
@@ -2811,7 +2807,7 @@ class TestSpark:
                 data_format=None,
                 read_options=None,
                 location=None,
-                dataframe_type="default"
+                dataframe_type="default",
             )
 
         # Assert
@@ -2830,7 +2826,7 @@ class TestSpark:
                 data_format="",
                 read_options=None,
                 location=None,
-                dataframe_type="default"
+                dataframe_type="default",
             )
 
         # Assert
@@ -2853,7 +2849,7 @@ class TestSpark:
             data_format="csv",
             read_options={"name": "value"},
             location=None,
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -2886,7 +2882,7 @@ class TestSpark:
             data_format="delta",
             read_options=None,
             location="test_location",
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -2916,7 +2912,7 @@ class TestSpark:
             data_format="parquet",
             read_options=None,
             location="test_location",
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -2947,7 +2943,7 @@ class TestSpark:
             data_format="hudi",
             read_options=None,
             location="test_location",
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -2977,7 +2973,7 @@ class TestSpark:
             data_format="orc",
             read_options=None,
             location="test_location",
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -3007,7 +3003,7 @@ class TestSpark:
             data_format="bigquery",
             read_options=None,
             location="test_location",
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -3038,7 +3034,7 @@ class TestSpark:
             data_format="csv",
             read_options=None,
             location="test_location",
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
@@ -3069,7 +3065,7 @@ class TestSpark:
             data_format="csv",
             read_options=None,
             location="test_location",
-            dataframe_type="default"
+            dataframe_type="default",
         )
 
         # Assert
