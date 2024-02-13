@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from typings import Optional, Any, Union
+from typing import Optional, Any, Union
 
 from hsfs.core import rondb_rest_api
 
@@ -43,7 +43,7 @@ class RondbEngine:
             },
         }
 
-    def get_raw_feature_vector_via_rest(
+    def get_single_raw_feature_vector(
         self,
         feature_store_name: str,
         feature_view_name: str,
@@ -64,9 +64,9 @@ class RondbEngine:
         else:
             payload["passedFeatures"] = {}
 
-        return self._rondb_api.get_raw_feature_vector(payload=payload)
+        return self._rondb_rest_api.get_single_raw_feature_vector(payload=payload)
 
-    def get_raw_feature_vectors_via_rest(
+    def get_batch_raw_feature_vectors(
         self,
         feature_store_name: str,
         feature_view_name: str,
@@ -82,11 +82,11 @@ class RondbEngine:
             metadata_options=metadata_options,
         )
         payload["entries"] = primary_keys
-        if isinstance(passed_features, list) and len(passed_features) == len(
-            primary_keys
+        if isinstance(passed_features, list) and (
+            len(passed_features) == len(primary_keys) or len(passed_features) == 0
         ):
             payload["passedFeatures"] = passed_features
         else:
             payload["passedFeatures"] = []
 
-        return self._rondb_rest_api.get_rest_batch_raw_feature_vector(payload=payload)
+        return self._rondb_rest_api.get_batch_raw_feature_vectors(payload=payload)

@@ -33,9 +33,9 @@ def init_rondb_rest_client(optional_config: Optional[dict[str, Any]] = None):
 
     global _rondb_client
     if not _rondb_client:
-        _rondb_client = RondbRestClientSingleton(optional_config)
+        _rondb_client = RondbRestClientSingleton(optional_config=optional_config)
     else:
-        _rondb_client._refresh_rondb_connection()
+        _rondb_client.refresh_rondb_connection(optional_config=optional_config)
 
 
 def get_instance() -> "RondbRestClientSingleton":
@@ -46,7 +46,7 @@ def get_instance() -> "RondbRestClientSingleton":
 
 
 _DEFAULT_RONDB_REST_CLIENT_PORT = 4406
-_DEFAULT_RONDB_REST_CLIENT_TIMEOUT_MS = 60
+_DEFAULT_RONDB_REST_CLIENT_TIMEOUT_MS = 600
 _DEFAULT_RONDB_REST_CLIENT_VERIFY_CERTS = True
 _DEFAULT_RONDB_REST_CLIENT_USE_SSL = True
 _DEFAULT_RONDB_REST_CLIENT_SSL_ASSERT_HOSTNAME = True
@@ -180,7 +180,7 @@ class RondbRestClientSingleton:
         url.path.segments.extend(path_params)
         prepped_request = self._rest_client.prepare_request(
             requests.Request(
-                method, url.url, headers=headers, data=data, auth=self._auth
+                method, url=url.url, headers=headers, data=data, auth=self._auth
             )
         )
         response = self._rest_client.send(
@@ -188,8 +188,7 @@ class RondbRestClientSingleton:
             verify=self._current_config[self.VERIFY_CERTS],
             timeout=self._current_config[self.TIMEOUT] / 1000,
         )
-        response.raise_for_status()
-        return response.json()
+        return response
 
     def _check_hopsworks_connection(self):
         assert (
