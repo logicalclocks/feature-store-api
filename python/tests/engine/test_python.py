@@ -372,6 +372,70 @@ class TestPython:
         assert mock_pandas_read_csv.call_count == 0
         assert mock_pandas_read_parquet.call_count == 0
 
+    def test_read_polars_csv(self, mocker):
+        # Arrange
+        mock_pandas_read_csv = mocker.patch("polars.read_csv")
+        mock_pandas_read_parquet = mocker.patch("polars.read_parquet")
+
+        python_engine = python.Engine()
+
+        # Act
+        python_engine._read_polars(data_format="csv", obj=None)
+
+        # Assert
+        assert mock_pandas_read_csv.call_count == 1
+        assert mock_pandas_read_parquet.call_count == 0
+
+    def test_read_polars_tsv(self, mocker):
+        # Arrange
+        mock_pandas_read_csv = mocker.patch("polars.read_csv")
+        mock_pandas_read_parquet = mocker.patch("polars.read_parquet")
+
+        python_engine = python.Engine()
+
+        # Act
+        python_engine._read_polars(data_format="tsv", obj=None)
+
+        # Assert
+        assert mock_pandas_read_csv.call_count == 1
+        assert mock_pandas_read_parquet.call_count == 0
+
+    def test_read_polars_parquet(self, mocker):
+        # Arrange
+        mock_pandas_read_csv = mocker.patch("polars.read_csv")
+        mock_pandas_read_parquet = mocker.patch("polars.read_parquet")
+
+        python_engine = python.Engine()
+
+        mock_obj = mocker.Mock()
+        mock_obj.read.return_value = bytes()
+
+        # Act
+        python_engine._read_polars(data_format="parquet", obj=mock_obj)
+
+        # Assert
+        assert mock_pandas_read_csv.call_count == 0
+        assert mock_pandas_read_parquet.call_count == 1
+
+    def test_read_polars_other(self, mocker):
+        # Arrange
+        mock_pandas_read_csv = mocker.patch("polars.read_csv")
+        mock_pandas_read_parquet = mocker.patch("polars.read_parquet")
+
+        python_engine = python.Engine()
+
+        # Act
+        with pytest.raises(TypeError) as e_info:
+            python_engine._read_polars(data_format="ocr", obj=None)
+
+        # Assert
+        assert (
+            str(e_info.value)
+            == "ocr training dataset format is not supported to read as polars dataframe."
+        )
+        assert mock_pandas_read_csv.call_count == 0
+        assert mock_pandas_read_parquet.call_count == 0
+
     def test_read_hopsfs(self, mocker):
         # Arrange
         mock_python_engine_read_hopsfs_remote = mocker.patch(
@@ -816,7 +880,7 @@ class TestPython:
             + "environment with Spark Engine."
         )
 
-    def test_profile(self, mocker):
+    def test_profile_pandas(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_statistics = mocker.patch(
             "hsfs.engine.python.Engine._convert_pandas_statistics"
@@ -832,6 +896,44 @@ class TestPython:
 
         d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
         df = pd.DataFrame(data=d)
+
+        # Act
+        result = python_engine.profile(
+            df=df,
+            relevant_columns=None,
+            correlations=None,
+            histograms=None,
+            exact_uniqueness=True,
+        )
+
+        # Assert
+        assert (
+            result
+            == '{"columns": [{"dataType": "Integral", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1}, '
+            '{"dataType": "Fractional", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col2", "completeness": 1}, '
+            '{"dataType": "String", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1}]}'
+        )
+        assert mock_python_engine_convert_pandas_statistics.call_count == 3
+
+    def test_profile_polars(self, mocker):
+        # Arrange
+        mock_python_engine_convert_pandas_statistics = mocker.patch(
+            "hsfs.engine.python.Engine._convert_pandas_statistics"
+        )
+
+        python_engine = python.Engine()
+
+        mock_python_engine_convert_pandas_statistics.side_effect = [
+            {"dataType": "Integral", "test_key": "test_value"},
+            {"dataType": "Fractional", "test_key": "test_value"},
+            {"dataType": "String", "test_key": "test_value"},
+        ]
+
+        d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
+        df = pl.DataFrame(data=d)
 
         # Act
         result = python_engine.profile(
@@ -2021,6 +2123,83 @@ class TestPython:
         assert str(result_df) == "   Col1  col2\n0     1     3\n1     2     4"
         assert str(result_df_split) == "None"
 
+    def test_split_labels_dataframe_type_default(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"Col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="default", labels=None
+        )
+
+        # Assert
+        assert isinstance(result_df, pd.DataFrame) 
+        assert result_df_split == None
+
+    def test_split_labels_dataframe_type_pandas(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"Col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="pandas", labels=None
+        )
+
+        # Assert
+        assert isinstance(result_df, pd.DataFrame) 
+        assert result_df_split == None
+
+    def test_split_labels_dataframe_type_polars(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"Col1": [1, 2], "col2": [3, 4]}
+
+        df = pl.DataFrame(data=d)
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="polars", labels=None
+        )
+
+        # Assert
+        assert isinstance(result_df, pl.DataFrame) 
+        assert result_df_split == None
+
+    def test_split_labels_dataframe_type_python(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"Col1": [1, 2], "col2": [3, 4]}
+
+        df = pd.DataFrame(data=d)
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="python", labels=None
+        )
+
+        # Assert
+        assert isinstance(result_df, list) 
+        assert result_df_split == None
+
+    def test_split_labels_dataframe_type_numpy(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"Col1": [1, 2], "col2": [3, 4]}
+
+        df = pd.DataFrame(data=d)
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="numpy", labels=None
+        )
+
+        # Assert
+        assert isinstance(result_df, np.ndarray) 
+        assert result_df_split == None   
+
     def test_split_labels_labels(self):
         # Arrange
         python_engine = python.Engine()
@@ -2036,6 +2215,134 @@ class TestPython:
         # Assert
         assert str(result_df) == "   col2\n0     3\n1     4"
         assert str(result_df_split) == "0    1\n1    2\nName: col1, dtype: int64"
+
+    def test_split_labels_labels_dataframe_type_default(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="default", labels="col1"
+        )
+
+        # Assert
+        assert isinstance(result_df, pd.DataFrame) 
+        assert isinstance(result_df_split, pd.Series) 
+
+    def test_split_labels_labels_dataframe_type_pandas(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="pandas", labels="col1"
+        )
+
+        # Assert
+        assert isinstance(result_df, pd.DataFrame) 
+        assert isinstance(result_df_split, pd.Series) 
+
+    def test_split_labels_labels_dataframe_type_polars(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2], "col2": [3, 4]}
+        df = pl.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="polars", labels="col1"
+        )
+        print(type(result_df_split))
+        # Assert
+        assert isinstance(result_df, pl.DataFrame) 
+        assert isinstance(result_df_split, pl.Series) 
+
+    def test_split_labels_labels_dataframe_type_python(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="python", labels="col1"
+        )
+    
+        # Assert
+        assert isinstance(result_df, list) 
+        assert isinstance(result_df_split, list) 
+
+    def test_split_labels_labels_dataframe_type_numpy(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="numpy", labels="col1"
+        )
+
+        # Assert
+        assert isinstance(result_df, np.ndarray) 
+        assert isinstance(result_df_split, np.ndarray) 
+
+    def test_prepare_transform_split_df_random_split(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+        mocker.patch("hsfs.engine.get_type")
+        mocker.patch("hsfs.constructor.query.Query.read")
+        mock_python_engine_random_split = mocker.patch(
+            "hsfs.engine.python.Engine._random_split"
+        )
+        mocker.patch(
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
+        )
+
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        td = training_dataset.TrainingDataset(
+            name="test",
+            version=1,
+            data_format="CSV",
+            featurestore_id=99,
+            splits={"test_split1": 0.5, "test_split2": 0.5},
+            label=["f", "f_wrong"],
+            id=10,
+        )
+
+        q = query.Query(left_feature_group=None, left_features=None)
+
+        mock_python_engine_random_split.return_value = {
+            "train": df.loc[df["col1"] == 1],
+            "test": df.loc[df["col1"] == 2],
+        }
+
+        # Act
+        result = python_engine._prepare_transform_split_df(
+            query_obj=q,
+            training_dataset_obj=td,
+            feature_view_obj=None,
+            read_option=None,
+            dataframe_type="default",
+        )
+
+        # Assert
+        assert mock_python_engine_random_split.call_count == 1
+        assert isinstance(result["train"], pd.DataFrame)
+        assert isinstance(result["test"], pd.DataFrame)
 
     def test_prepare_transform_split_df_random_split(self, mocker):
         # Arrange
@@ -2661,6 +2968,22 @@ class TestPython:
 
         # Assert
         assert str(result) == "   col1  col2\n0     1     3\n1     2     4"
+    
+    def test_return_dataframe_type_polars(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2], "col2": [3, 4]}
+        df = pl.DataFrame(data=d)
+
+        # Act
+        result = python_engine._return_dataframe_type(
+            dataframe=df, dataframe_type="pandas"
+        )
+
+        # Assert
+        assert isinstance(result, pl.DataFrame)
+        assert df.equals(result)
 
     def test_return_dataframe_type_numpy(self):
         # Arrange
