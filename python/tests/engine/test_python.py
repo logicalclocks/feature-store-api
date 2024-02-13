@@ -2137,7 +2137,7 @@ class TestPython:
 
         # Assert
         assert isinstance(result_df, pd.DataFrame)
-        assert result_df_split == None
+        assert result_df_split is None
 
     def test_split_labels_dataframe_type_pandas(self):
         # Arrange
@@ -2153,7 +2153,7 @@ class TestPython:
 
         # Assert
         assert isinstance(result_df, pd.DataFrame)
-        assert result_df_split == None
+        assert result_df_split is None
 
     def test_split_labels_dataframe_type_polars(self):
         # Arrange
@@ -2168,7 +2168,7 @@ class TestPython:
 
         # Assert
         assert isinstance(result_df, pl.DataFrame)
-        assert result_df_split == None
+        assert result_df_split is None
 
     def test_split_labels_dataframe_type_python(self):
         # Arrange
@@ -2183,7 +2183,7 @@ class TestPython:
 
         # Assert
         assert isinstance(result_df, list)
-        assert result_df_split == None
+        assert result_df_split is None
 
     def test_split_labels_dataframe_type_numpy(self):
         # Arrange
@@ -2198,7 +2198,7 @@ class TestPython:
 
         # Assert
         assert isinstance(result_df, np.ndarray)
-        assert result_df_split == None
+        assert result_df_split is None
 
     def test_split_labels_labels(self):
         # Arrange
@@ -2295,54 +2295,6 @@ class TestPython:
         # Assert
         assert isinstance(result_df, np.ndarray)
         assert isinstance(result_df_split, np.ndarray)
-
-    def test_prepare_transform_split_df_random_split(self, mocker):
-        # Arrange
-        mocker.patch("hsfs.client.get_instance")
-        mocker.patch("hsfs.engine.get_type")
-        mocker.patch("hsfs.constructor.query.Query.read")
-        mock_python_engine_random_split = mocker.patch(
-            "hsfs.engine.python.Engine._random_split"
-        )
-        mocker.patch(
-            "hsfs.core.transformation_function_engine.TransformationFunctionEngine"
-        )
-
-        python_engine = python.Engine()
-
-        d = {"col1": [1, 2], "col2": [3, 4]}
-        df = pd.DataFrame(data=d)
-
-        td = training_dataset.TrainingDataset(
-            name="test",
-            version=1,
-            data_format="CSV",
-            featurestore_id=99,
-            splits={"test_split1": 0.5, "test_split2": 0.5},
-            label=["f", "f_wrong"],
-            id=10,
-        )
-
-        q = query.Query(left_feature_group=None, left_features=None)
-
-        mock_python_engine_random_split.return_value = {
-            "train": df.loc[df["col1"] == 1],
-            "test": df.loc[df["col1"] == 2],
-        }
-
-        # Act
-        result = python_engine._prepare_transform_split_df(
-            query_obj=q,
-            training_dataset_obj=td,
-            feature_view_obj=None,
-            read_option=None,
-            dataframe_type="default",
-        )
-
-        # Assert
-        assert mock_python_engine_random_split.call_count == 1
-        assert isinstance(result["train"], pd.DataFrame)
-        assert isinstance(result["test"], pd.DataFrame)
 
     def test_prepare_transform_split_df_random_split(self, mocker):
         # Arrange
