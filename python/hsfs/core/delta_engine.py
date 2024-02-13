@@ -16,6 +16,7 @@
 
 from hsfs import feature_group_commit, util
 from hsfs.core import feature_group_api
+from hsfs.client.exceptions import FeatureStoreException
 
 try:
     from delta.tables import DeltaTable
@@ -81,8 +82,29 @@ class DeltaEngine:
 
         return delta_options
 
-    def delete_record(self, delete_df, write_options):
-        pass
+    def delete_record(self, delete_df):
+        if not DeltaTable.isDeltaTable(
+            self._spark_session, self._feature_group.location
+        ):
+            raise FeatureStoreException(
+                f"This is no data available in Feature group {self._feature_group.name}, or it not DELTA enabled "
+            )
+        else:
+            fg_source_table = DeltaTable.forPath(
+                self._spark_session, self._feature_group.location
+            )
+
+            source_alias = (
+                f"{self._feature_group.name}_{self._feature_group.version}_source"
+            )
+            updates_alias = (
+                f"{self._feature_group.name}_{self._feature_group.version}_updates"
+            )
+            merge_query_str = self._generate_merge_query(source_alias, updates_alias)
+
+            fg_source_table.alias(source_alias).merge(
+                delete_df.alias(updates_alias), merge_query_str
+            ).whenMatched().delete().execute()
 
     def _write_delta_dataset(self, dataset, write_options):
         if write_options is None:
