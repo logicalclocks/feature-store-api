@@ -104,7 +104,7 @@ class DeltaEngine:
 
             fg_source_table.alias(source_alias).merge(
                 delete_df.alias(updates_alias), merge_query_str
-            ).whenMatched().delete().execute()
+            ).whenMatchedDelete().execute()
 
     def _write_delta_dataset(self, dataset, write_options):
         if write_options is None:
