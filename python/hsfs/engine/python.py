@@ -542,7 +542,7 @@ class Engine:
             else:
                 print(
                     "Data type could not be inferred for column '"
-                    + stat["column"]
+                    + col.split(".")[-1]
                     + "'. Defaulting to 'String'",
                     file=sys.stderr,
                 )
