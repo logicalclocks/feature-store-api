@@ -46,4 +46,4 @@ class RonDBKeyAuth(requests.auth.AuthBase):
         self._token = token.strip()
 
     def __call__(self, r):
-        r.headers["X-API-KEY"] = self
+        r.headers["X-API-KEY"] = self._token

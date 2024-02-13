@@ -54,7 +54,7 @@ _DEFAULT_RONDB_REST_CLIENT_SERVER_API_VERSION = "0.1.0"
 _DEFAULT_RONDB_REST_CLIENT_HTTP_AUTHORIZATION = "X-API-KEY"
 
 
-class RONDBRESTCLIENT_CONFIG:
+class RondbRestClientSingleton:
     HOST = "host"
     PORT = "port"
     VERIFY_CERTS = "verify_certs"
@@ -67,51 +67,68 @@ class RONDBRESTCLIENT_CONFIG:
     SERVER_API_VERSION = "server_api_version"
     API_KEY = "api_key"
 
-
-class RondbRestClientSingleton:
     def __init__(self, optional_config: dict[str, Any] = None):
         self._check_hopsworks_connection()
         self.variable_api = variable_api.VariableApi()
         self._auth = None
+        self._rest_client = None
+        self._current_config = None
+        self._setup_rest_client(
+            optional_config=optional_config, use_current_config=False
+        )
+        # self._check_rondb_connection()
 
-        default_config = self._get_default_rondb_rest_client_config()
-        if optional_config and not isinstance(optional_config, dict):
-            raise ValueError(
-                "optional_config must be a dictionary. See documentation for allowed keys and values."
-            )
-        elif optional_config:
-            default_config.update(optional_config)
-
-        self._set_auth(optional_config)
-        self._current_config = default_config
-        self._setup_rest_client(full_config=default_config)
-        self._check_rondb_connection()
-
-    def _refresh_rondb_connection(self):
+    def refresh_rondb_connection(
+        self, optional_config: Optional[dict[str, Any]] = None
+    ):
         self._check_hopsworks_connection()
         if self._rest_client is not None:
             self._rest_client.close()
         self._rest_client = None
-        self._setup_rest_client(self._current_config)
+        self._setup_rest_client(
+            optional_config=optional_config,
+            use_current_config=False if optional_config else True,
+        )
 
-    def _setup_rest_client(self, full_config: dict[str, Any]):
+    def _setup_rest_client(
+        self,
+        optional_config: Optional[dict[str, Any]] = None,
+        use_current_config: bool = True,
+    ):
+        if optional_config and not isinstance(optional_config, dict):
+            raise ValueError(
+                "optional_config must be a dictionary. See documentation for allowed keys and values."
+            )
+        if not use_current_config:
+            self._current_config = self._get_default_rondb_rest_client_config()
+        if optional_config:
+            self._current_config.update(optional_config)
+
+        self._set_auth(optional_config)
+        self._verify = self._current_config[self.VERIFY_CERTS]
         if not self._rest_client:
-            self._rest_client = requests.session.Session()
+            self._rest_client = requests.Session()
         else:
             raise ValueError(
-                "Use the _refresh_rondb_connection to reset the rondb_client_connection"
+                "Use the refresh_rondb_connection method to reset the rondb_client_connection"
             )
 
-        # Auth via Hopsworks ApiKey supported by featurestore and batch_featurestore endpoints
-        self._rest_client.auth = self._auth
-        # Both endpoints support only json payloads
-        self._rest_client.headers.update({"Content-Type": "application/json"})
-
         # Set base_url
-        scheme = "https" if full_config[RONDBRESTCLIENT_CONFIG.USE_SSL] else "http"
-        self._base_url = furl.furl(
-            f"{scheme}://{full_config[RONDBRESTCLIENT_CONFIG.HOST]}:{full_config[RONDBRESTCLIENT_CONFIG.PORT]}/{full_config[RONDBRESTCLIENT_CONFIG.SERVER_API_VERSION]}"
+        scheme = "https" if self._current_config[self.USE_SSL] else "http"
+        self._base_url = furl(
+            f"{scheme}://{self._current_config[self.HOST]}:{self._current_config[self.PORT]}/{self._current_config[self.SERVER_API_VERSION]}"
         )
+
+        assert self._rest_client is not None, "RonDB Rest Client failed to initialise."
+        assert (
+            self._auth is not None
+        ), "RonDB Rest Client Authentication failed to initialise. Check API Key."
+        assert (
+            self._base_url is not None
+        ), "RonDB Rest Client Base URL failed to initialise. Check host and port parameters."
+        assert (
+            self._current_config is not None
+        ), "RonDB Rest Client Configuration failed to initialise."
 
     def _get_default_rondb_rest_client_config(self) -> dict[str, Any]:
         default_config = self._get_default_rondb_rest_client_static_parameters_config()
@@ -122,12 +139,12 @@ class RondbRestClientSingleton:
 
     def _get_default_rondb_rest_client_static_parameters_config(self) -> dict[str, Any]:
         return {
-            RONDBRESTCLIENT_CONFIG.TIMEOUT: _DEFAULT_RONDB_REST_CLIENT_TIMEOUT_MS,
-            RONDBRESTCLIENT_CONFIG.VERIFY_CERTS: _DEFAULT_RONDB_REST_CLIENT_VERIFY_CERTS,
-            RONDBRESTCLIENT_CONFIG.USE_SSL: _DEFAULT_RONDB_REST_CLIENT_USE_SSL,
-            RONDBRESTCLIENT_CONFIG.SSL_ASSERT_HOSTNAME: _DEFAULT_RONDB_REST_CLIENT_SSL_ASSERT_HOSTNAME,
-            RONDBRESTCLIENT_CONFIG.SERVER_API_VERSION: _DEFAULT_RONDB_REST_CLIENT_SERVER_API_VERSION,
-            RONDBRESTCLIENT_CONFIG.HTTP_AUTHORIZATION: _DEFAULT_RONDB_REST_CLIENT_HTTP_AUTHORIZATION,
+            self.TIMEOUT: _DEFAULT_RONDB_REST_CLIENT_TIMEOUT_MS,
+            self.VERIFY_CERTS: _DEFAULT_RONDB_REST_CLIENT_VERIFY_CERTS,
+            self.USE_SSL: _DEFAULT_RONDB_REST_CLIENT_USE_SSL,
+            self.SSL_ASSERT_HOSTNAME: _DEFAULT_RONDB_REST_CLIENT_SSL_ASSERT_HOSTNAME,
+            self.SERVER_API_VERSION: _DEFAULT_RONDB_REST_CLIENT_SERVER_API_VERSION,
+            self.HTTP_AUTHORIZATION: _DEFAULT_RONDB_REST_CLIENT_HTTP_AUTHORIZATION,
         }
 
     def _get_default_rondb_rest_client_dynamic_parameters_config(
@@ -135,9 +152,9 @@ class RondbRestClientSingleton:
     ) -> dict[str, Any]:
         url = furl(self._get_rondb_rest_server_endpoint())
         return {
-            RONDBRESTCLIENT_CONFIG.HOST: url.host,
-            RONDBRESTCLIENT_CONFIG.PORT: url.port,
-            RONDBRESTCLIENT_CONFIG.CA_CERTS: client.get_instance()._get_ca_chain_path(),
+            self.HOST: url.host,
+            self.PORT: url.port,
+            self.CA_CERTS: client.get_instance()._get_ca_chain_path(),
         }
 
     def _get_rondb_rest_server_endpoint(self) -> str:
@@ -162,12 +179,14 @@ class RondbRestClientSingleton:
         url = self._base_url.copy()
         url.path.segments.extend(path_params)
         prepped_request = self._rest_client.prepare_request(
-            requests.Request(method, url.url, headers=headers, data=data)
+            requests.Request(
+                method, url.url, headers=headers, data=data, auth=self._auth
+            )
         )
         response = self._rest_client.send(
             prepped_request,
-            verify=self._current_config[RONDBRESTCLIENT_CONFIG.VERIFY_CERTS],
-            timeout=self._current_config[RONDBRESTCLIENT_CONFIG.TIMEOUT] / 1000,
+            verify=self._current_config[self.VERIFY_CERTS],
+            timeout=self._current_config[self.TIMEOUT] / 1000,
         )
         response.raise_for_status()
         return response.json()
@@ -184,27 +203,23 @@ class RondbRestClientSingleton:
             assert isinstance(
                 client.get_instance()._auth, client.auth.ApiKeyAuth
             ), "External client must use API Key authentication. Contact your system administrator."
-            self._auth = client.auth.RondbKeyAuth(client.get_instance()._auth._token)
+            self._auth = client.auth.RonDBKeyAuth(client.get_instance()._auth._token)
         elif isinstance(optional_config, dict) and optional_config.get(
-            RONDBRESTCLIENT_CONFIG.API_KEY, False
+            self.API_KEY, False
         ):
-            self._auth = client.auth.RondbKeyAuth(
-                optional_config[RONDBRESTCLIENT_CONFIG.API_KEY]
-            )
+            self._auth = client.auth.RonDBKeyAuth(optional_config[self.API_KEY])
         elif self._auth is not None:
             return
         else:
             raise FeatureStoreException(
                 "RonDB Rest Server uses Hopsworks Api Key to authenticate request."
-                + f"Provide a configuration with the {RONDBRESTCLIENT_CONFIG.API_KEY} key."
+                + f"Provide a configuration with the {self.API_KEY} key."
             )
 
     def _check_rondb_connection(self):
         if self._rest_client is None:
-            raise FeatureStoreException(
-                "RonDB Rest Client is not connected. Please connect to RonDB Rest Server before making requests."
-            )
+            raise FeatureStoreException("RonDB Rest Client is not initialised.")
         else:
             assert self._send_request(
                 "GET", ["ping"]
-            ), "RonDB Rest Server is not reachable. Please check the connection."
+            ), "RonDB Rest Server is not reachable."

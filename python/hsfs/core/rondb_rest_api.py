@@ -19,13 +19,22 @@ from hsfs.client import rondb_rest_client
 
 class RondbRestApi:
     def get_rest_single_raw_feature_vector(self, payload: dict[str, Any]):
-        _rondb_client = rondb_rest_client.get_instance()
-        path_params = ["feature_store"]
+        return rondb_rest_client.get_instance()._send_request(
+            "POST",
+            path_params=["feature_store"],
+            headers={"Content-Type": "application/json"},
+            data=payload,
+        )
 
-        return _rondb_client.send("POST", path_params, payload)
+    def get_rest_batch_raw_feature_vectors(self, payload: dict[str, Any]):
+        return rondb_rest_client.get_instance()._send_request(
+            "POST",
+            path_params=["batch_feature_store"],
+            headers={"Content-Type": "application/json"},
+            data=payload,
+        )
 
-    def get_rest_batch_raw_feature_vector(self, payload: dict[str, Any]):
-        _rondb_client = rondb_rest_client.get_instance()
-        path_params = ["batch_feature_store"]
-
-        return _rondb_client.send("POST", path_params, payload)
+    def ping_rondb_rest_server(self):
+        return rondb_rest_client.get_instance()._send_request(
+            "GET", path_params=["ping"]
+        )
