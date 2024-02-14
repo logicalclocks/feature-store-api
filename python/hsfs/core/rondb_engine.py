@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 from typing import Optional, Any, Union
+from datetime import datetime
 import requests
 
 from hsfs.core import rondb_rest_api
@@ -121,6 +122,10 @@ class RondbEngine:
         self, row_features: list[Any], metadatas: list[dict[str, Any]]
     ) -> dict[str, Any]:
         return {
-            metadata["featureName"]: vector_value
+            metadata["featureName"]: (
+                vector_value
+                if metadata["featureType"] != "timestamp"
+                else datetime.strptime(vector_value, "%Y-%m-%d %H:%M:%S")
+            )
             for vector_value, metadata in zip(row_features, metadatas)
         }
