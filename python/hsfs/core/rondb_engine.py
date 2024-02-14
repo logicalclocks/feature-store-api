@@ -14,11 +14,16 @@
 #   limitations under the License.
 #
 from typing import Optional, Any, Union
+import requests
 
 from hsfs.core import rondb_rest_api
 
 
 class RondbEngine:
+    RETURN_TYPE_FEATURE_VECTOR = "feature_vector_dict"
+    RETURN_TYPE_DICT_RESPONSE = "response_dict"
+    RETURN_TYPE_RESPONSE = "response"
+
     def __init__(self):
         self._rondb_rest_api = rondb_rest_api.RondbRestApi()
 
@@ -90,3 +95,31 @@ class RondbEngine:
             payload["passedFeatures"] = []
 
         return self._rondb_rest_api.get_batch_raw_feature_vectors(payload=payload)
+
+    def convert_rdrs_response_to_dict_feature_vector(
+        self, response: requests.Response
+    ) -> Union[list[dict[str, Any]], dict[str, Any]]:
+        assert (
+            response.status_code == 200
+        ), f"Invalid response status code: {response.status_code}"
+
+        json = response.json()
+        if isinstance(json["entries"], list):
+            return [
+                self.convert_json_entry_and_metadata_feature_vector(
+                    entry=entry, metadata=metadata
+                )
+                for entry, metadata in zip(json["entries"], json["metadata"])
+            ]
+        else:
+            return self.convert_json_entry_and_metadata_feature_vector(
+                entry=json["entries"], metadata=json["metadata"]
+            )
+
+    def convert_json_entry_and_metadata_feature_vector(
+        self, entry: list[Any], metadata: dict[str, Any]
+    ) -> dict[str, Any]:
+        return {
+            metadata["featureName"]: vector_value
+            for vector_value, metadata in zip(entry, metadata)
+        }
