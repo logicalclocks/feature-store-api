@@ -29,6 +29,7 @@ from hsfs.core import (
     transformation_function_engine,
     feature_view_api,
     feature_view_engine,
+    rondb_engine,
 )
 
 import asyncio
@@ -42,6 +43,10 @@ class VectorServer:
         training_dataset_version=None,
         serving_keys=None,
         skip_fg_ids=None,
+        use_rondb_rest_client: bool = False,
+        feature_store_name: str = None,
+        feature_view_name: str = None,
+        feature_view_version: int = None,
     ):
         self._training_dataset_version = training_dataset_version
         self._features = features
@@ -69,6 +74,9 @@ class VectorServer:
         self._serving_key_by_serving_index = {}
         self._external = True
         self._feature_store_id = feature_store_id
+        self._feature_store_name = feature_store_name
+        self._feature_view_name = feature_view_name
+        self._feature_view_version = feature_view_version
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
             feature_store_id
         )
@@ -86,6 +94,12 @@ class VectorServer:
         self._required_serving_keys = None
         self._async_pool = None
 
+        self._use_rondb_rest_client = use_rondb_rest_client
+        if self._use_rondb_rest_client:
+            self._rondb_engine = rondb_engine.RondbEngine()
+        else:
+            self._rondb_engine = None
+
     def init_serving(
         self,
         entity,
@@ -99,6 +113,13 @@ class VectorServer:
         # `init_prepared_statement` should be the last because other initialisations
         # has to be done successfully before it is able to fetch feature vectors.
         self.init_transformation(entity)
+        if self._use_rondb_rest_client:
+            client.rondb_rest_client.init_rondb_rest_client(
+                optional_config=None
+                if not isinstance(options, dict)
+                else options.get("rondb_rest_config", None)
+            )
+
         self.init_prepared_statement(
             entity,
             batch,
@@ -272,13 +293,30 @@ class VectorServer:
         return_type=None,
         passed_features=[],
         allow_missing=False,
+        use_rondb_rest_client: bool = False,
     ):
         """Assembles serving vector from online feature store."""
 
-        # get result row
-        serving_vector = self._vector_result(entry, self._prepared_statements)
-        # Add the passed features
-        serving_vector.update(passed_features)
+        if use_rondb_rest_client:
+            rdrs_response = self._rondb_engine.get_single_raw_feature_vector(
+                feature_store_name=self._feature_store_name,
+                feature_view_name=self._feature_view_name,
+                feature_view_version=self._feature_view_version,
+                primary_keys=entry,
+                passed_features=passed_features,
+            )
+            serving_vector = (
+                self._rondb_engine.convert_rdrs_response_to_dict_feature_vector(
+                    rdrs_response
+                )
+            )
+
+        else:  # aiomysql branch
+            # get result row
+            serving_vector = self._vector_result(entry, self._prepared_statements)
+            # Add the passed features
+            serving_vector.update(passed_features)
+
         # apply transformation functions
         result_dict = self._apply_transformation(serving_vector)
 
@@ -303,15 +341,31 @@ class VectorServer:
         return_type=None,
         passed_features=[],
         allow_missing=False,
+        # new parameter to use rondb rest client
+        use_rondb_rest_client: bool = False,
     ):
         """Assembles serving vector from online feature store."""
 
-        batch_results, _ = self._batch_vector_results(
-            entries, self._prepared_statements
-        )
-        # apply passed features to each batch result
-        for vector_index, pf in enumerate(passed_features):
-            batch_results[vector_index].update(pf)
+        if use_rondb_rest_client:
+            rdrs_response = self._rondb_engine.get_batch_raw_feature_vectors(
+                feature_store_name=self._feature_store_name,
+                feature_view_name=self._feature_view_name,
+                feature_view_version=self._feature_view_version,
+                primary_keys=entries,
+                passed_features=passed_features,
+            )
+            batch_results = (
+                self._rondb_engine.convert_rdrs_response_to_dict_feature_vector(
+                    rdrs_response
+                )
+            )
+        else:
+            batch_results, _ = self._batch_vector_results(
+                entries, self._prepared_statements
+            )
+            # apply passed features to each batch result
+            for vector_index, pf in enumerate(passed_features):
+                batch_results[vector_index].update(pf)
 
         # apply transformation functions
         batch_transformed = list(
