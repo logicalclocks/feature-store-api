@@ -211,6 +211,7 @@ class FeatureView:
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
         options: Optional[dict] = None,
+        use_rondb_rest_client: bool = False,
     ):
         """Initialise feature view to retrieve feature vector from online and offline feature store.
 
@@ -266,6 +267,12 @@ class FeatureView:
             training_dataset_version,
             serving_keys=self._serving_keys,
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
+            use_rondb_rest_client=use_rondb_rest_client,
+            feature_store_name=util.strip_feature_store_suffix(
+                self._feature_store_name
+            ),
+            feature_view_name=self.name,
+            feature_view_version=self.version,
         )
         self._single_vector_server.init_serving(
             self, False, external, True, options=options
@@ -285,6 +292,12 @@ class FeatureView:
             training_dataset_version,
             serving_keys=self._serving_keys,
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
+            use_rondb_rest_client=use_rondb_rest_client,
+            feature_store_name=util.strip_feature_store_suffix(
+                self._feature_store_name
+            ),
+            feature_view_name=self.name,
+            feature_view_version=self.version,
         )
         self._batch_vectors_server.init_serving(
             self, True, external, True, options=options
@@ -383,6 +396,7 @@ class FeatureView:
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
+        use_rondb_rest_client: bool = False,
     ):
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -464,12 +478,18 @@ class FeatureView:
                 feature view.
         """
         if self._single_vector_server is None:
-            self.init_serving(external=external)
+            self.init_serving(
+                external=external, use_rondb_rest_client=use_rondb_rest_client
+            )
         passed_features = self._update_with_vector_db_result(
             self._single_vector_server, entry, passed_features
         )
         return self._single_vector_server.get_feature_vector(
-            entry, return_type, passed_features, allow_missing
+            entry,
+            return_type,
+            passed_features,
+            allow_missing,
+            use_rondb_rest_client=use_rondb_rest_client,
         )
 
     def get_feature_vectors(
@@ -479,6 +499,7 @@ class FeatureView:
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
+        use_rondb_rest_client: bool = False,
     ):
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
@@ -559,7 +580,9 @@ class FeatureView:
                 feature view.
         """
         if self._batch_vectors_server is None:
-            self.init_serving(external=external)
+            self.init_serving(
+                external=external, use_rondb_rest_client=use_rondb_rest_client
+            )
         updated_passed_feature = []
         for i in range(len(entry)):
             updated_passed_feature.append(
@@ -570,7 +593,11 @@ class FeatureView:
                 )
             )
         return self._batch_vectors_server.get_feature_vectors(
-            entry, return_type, updated_passed_feature, allow_missing
+            entry,
+            return_type,
+            updated_passed_feature,
+            allow_missing,
+            use_rondb_rest_client=use_rondb_rest_client,
         )
 
     def get_inference_helper(

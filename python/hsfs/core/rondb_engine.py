@@ -97,29 +97,30 @@ class RondbEngine:
         return self._rondb_rest_api.get_batch_raw_feature_vectors(payload=payload)
 
     def convert_rdrs_response_to_dict_feature_vector(
-        self, response: requests.Response
+        self,
+        response: requests.Response,
     ) -> Union[list[dict[str, Any]], dict[str, Any]]:
         assert (
             response.status_code == 200
         ), f"Invalid response status code: {response.status_code}"
 
         json = response.json()
-        if isinstance(json["entries"], list):
+        if isinstance(json["status"], list):
             return [
                 self.convert_json_entry_and_metadata_feature_vector(
-                    entry=entry, metadata=metadata
+                    row_features=row, metadatas=json["metadata"]
                 )
-                for entry, metadata in zip(json["entries"], json["metadata"])
+                for row in json["features"]
             ]
         else:
             return self.convert_json_entry_and_metadata_feature_vector(
-                entry=json["entries"], metadata=json["metadata"]
+                row_features=json["features"], metadatas=json["metadata"]
             )
 
     def convert_json_entry_and_metadata_feature_vector(
-        self, entry: list[Any], metadata: dict[str, Any]
+        self, row_features: list[Any], metadatas: list[dict[str, Any]]
     ) -> dict[str, Any]:
         return {
             metadata["featureName"]: vector_value
-            for vector_value, metadata in zip(entry, metadata)
+            for vector_value, metadata in zip(row_features, metadatas)
         }
