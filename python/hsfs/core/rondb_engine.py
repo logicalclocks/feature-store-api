@@ -15,16 +15,11 @@
 #
 from typing import Optional, Any, Union
 from datetime import datetime
-import requests
 
 from hsfs.core import rondb_rest_api
 
 
 class RondbEngine:
-    RETURN_TYPE_FEATURE_VECTOR = "feature_vector_dict"
-    RETURN_TYPE_DICT_RESPONSE = "response_dict"
-    RETURN_TYPE_RESPONSE = "response"
-
     def __init__(self):
         self._rondb_rest_api = rondb_rest_api.RondbRestApi()
 
@@ -99,27 +94,22 @@ class RondbEngine:
 
     def convert_rdrs_response_to_dict_feature_vector(
         self,
-        response: requests.Response,
+        response: dict[str, Any],
     ) -> Union[list[dict[str, Any]], dict[str, Any]]:
-        assert (
-            response.status_code == 200
-        ), f"Invalid response status code: {response.status_code}"
-
-        json = response.json()
-        if isinstance(json["status"], list):
+        if isinstance(response["status"], list):
             return [
                 self.convert_json_entry_and_metadata_feature_vector(
-                    row_features=row, metadatas=json["metadata"]
+                    row_feature_values=row, metadatas=response["metadata"]
                 )
-                for row in json["features"]
+                for row in response["features"]
             ]
         else:
             return self.convert_json_entry_and_metadata_feature_vector(
-                row_features=json["features"], metadatas=json["metadata"]
+                row_feature_values=response["features"], metadatas=response["metadata"]
             )
 
     def convert_json_entry_and_metadata_feature_vector(
-        self, row_features: list[Any], metadatas: list[dict[str, Any]]
+        self, row_feature_values: list[Any], metadatas: list[dict[str, str]]
     ) -> dict[str, Any]:
         return {
             metadata["featureName"]: (
@@ -127,5 +117,5 @@ class RondbEngine:
                 if metadata["featureType"] != "timestamp"
                 else datetime.strptime(vector_value, "%Y-%m-%d %H:%M:%S")
             )
-            for vector_value, metadata in zip(row_features, metadatas)
+            for vector_value, metadata in zip(row_feature_values, metadatas)
         }
