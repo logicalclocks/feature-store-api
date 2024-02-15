@@ -541,6 +541,7 @@ class FeatureStore:
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
+
             stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
                 Stream enabled Feature Groups have unified single API for writing streaming features transparently
                 to both online and offline store.
@@ -673,6 +674,7 @@ class FeatureStore:
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
+
             stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
                 Stream enabled Feature Groups have unified single API for writing streaming features transparently
                 to both online and offline store.
@@ -800,6 +802,7 @@ class FeatureStore:
 
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
 
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
@@ -937,8 +940,11 @@ class FeatureStore:
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
-            !!! note "Event time data type restriction"
-                The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+                !!! note "Event time data type restriction"
+                    The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
@@ -1082,8 +1088,11 @@ class FeatureStore:
                 list of `Feature` objects. Defaults to empty list `[]` and will use the
                 schema information of the DataFrame resulting by executing the provided query
                 against the data source.
-            !!!note "Event time data type restriction"
-                The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+                !!!note "Event time data type restriction"
+                    The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+
             dataframe: DataFrame, RDD, Ndarray, list. Spine dataframe with primary key, event time and
                 label column to use for point in time join when fetching features.
 

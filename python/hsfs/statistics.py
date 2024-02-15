@@ -150,11 +150,13 @@ class Statistics:
         return f"Statistics({self._computation_time!r})"
 
     @property
-    def computation_time(self):
+    def computation_time(self) -> int:
+        """Time at which the statistics were computed."""
         return self._computation_time
 
     @property
-    def row_percentage(self) -> Optional[float]:
+    def row_percentage(self) -> float:
+        """Percentage of data on which statistics were computed."""
         return self._row_percentage
 
     @row_percentage.setter
@@ -170,37 +172,48 @@ class Statistics:
             raise TypeError("Row percentage must be a float between 0 and 1.")
 
     @property
-    def feature_descriptive_statistics(self):
+    def feature_descriptive_statistics(
+        self,
+    ) -> Optional[List[FeatureDescriptiveStatistics]]:
+        """List of feature descriptive statistics."""
         return self._feature_descriptive_statistics
 
     @property
-    def feature_group_id(self):
+    def feature_group_id(self) -> Optional[int]:
+        """Id of the feature group on whose data the statistics were computed."""
         return self._feature_group_id
 
     @property
-    def feature_view_name(self):
+    def feature_view_name(self) -> Optional[str]:
+        """Name of the feature view whose query was used to retrieve the data on which the statistics were computed."""
         return self._feature_view_name
 
     @property
-    def feature_view_version(self):
+    def feature_view_version(self) -> Optional[int]:
+        """Id of the feature view whose query was used to retrieve the data on which the statistics were computed."""
         return self._feature_view_version
 
     @property
     def window_start_commit_time(self):
+        """Start time of the window of data on which statistics were computed."""
         return self._window_start_commit_time
 
     @property
     def window_end_commit_time(self):
+        """End time of the window of data on which statistics were computed."""
         return self._window_end_commit_time
 
     @property
-    def training_dataset_version(self):
+    def training_dataset_version(self) -> Optional[int]:
+        """Version of the training dataset on which statistics were computed."""
         return self._training_dataset_version
 
     @property
-    def split_statistics(self):
+    def split_statistics(self) -> Optional[List[SplitStatistics]]:
+        """List of statistics computed on each split of a training dataset."""
         return self._split_statistics
 
     @property
-    def before_transformation(self):
+    def before_transformation(self) -> bool:
+        """Whether or not the statistics were computed on feature values before applying model-dependent transformations."""
         return self._before_transformation

@@ -6,7 +6,7 @@
 
 {{validation_report_validate}}
 
-## Fetch Validation Reports
+## Retrieval
 
 {{validation_report_get}}
 

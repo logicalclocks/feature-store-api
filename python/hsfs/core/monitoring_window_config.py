@@ -186,10 +186,12 @@ class MonitoringWindowConfig:
 
     @property
     def id(self) -> Optional[int]:
+        """Id of the window configuration."""
         return self._id
 
     @property
     def window_config_type(self) -> WindowConfigType:
+        """Type of the window. It can be one of `ALL_TIME`, `ROLLING_TIME`, `TRAINING_DATASET` or `SPECIFIC_VALUE`."""
         return self._window_config_type
 
     @window_config_type.setter
@@ -217,10 +219,12 @@ class MonitoringWindowConfig:
 
     @property
     def time_offset(self) -> Optional[str]:
+        """The time offset from the current time to the start of the time window. Only used for windows of type `ROLLING_TIME`."""
         return self._time_offset
 
     @property
     def window_length(self) -> Optional[str]:
+        """The length of the time window. Only used for windows of type `ROLLING_TIME`."""
         return self._window_length
 
     @window_length.setter
@@ -239,8 +243,7 @@ class MonitoringWindowConfig:
 
     @property
     def training_dataset_version(self) -> Optional[int]:
-        """The version of the training dataset to use as reference. Only used for
-        TRAINING_DATASET window config type."""
+        """The version of the training dataset to use as reference. Only used for windows of type `TRAINING_DATASET`."""
         return self._training_dataset_version
 
     @training_dataset_version.setter
@@ -256,6 +259,7 @@ class MonitoringWindowConfig:
 
     @property
     def specific_value(self) -> Optional[float]:
+        """The specific value to use as reference. Only used for windows of type `SPECIFIC_VALUE`."""
         return self._specific_value
 
     @specific_value.setter
@@ -271,7 +275,7 @@ class MonitoringWindowConfig:
 
     @property
     def row_percentage(self) -> Optional[float]:
-        """The percentage of rows to fetch and compute the statistics on. Only used for ROLLING_TIME and ALL_TIME."""
+        """The percentage of rows to fetch and compute the statistics on. Only used for windows of type `ROLLING_TIME` and `ALL_TIME`."""
         return self._row_percentage
 
     @row_percentage.setter
