@@ -773,6 +773,10 @@
         
           
         
+          
+        
+          
+        
       
       
         <label class="md-nav__link" for="__nav_8_1">
@@ -1398,6 +1402,172 @@
 
             
           
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_1_16" type="checkbox" id="__nav_8_1_16" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_1_16">
+          Statistics
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Statistics" data-md-level="3">
+        <label class="md-nav__title" for="__nav_8_1_16">
+          <span class="md-nav__icon md-icon"></span>
+          Statistics
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../statistics_api/" class="md-nav__link">
+        Statistics
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../split_statistics_api/" class="md-nav__link">
+        Split Statistics
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_descriptive_statistics_api/" class="md-nav__link">
+        Feature descriptive statistics
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_1_17" type="checkbox" id="__nav_8_1_17" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_1_17">
+          Feature Monitoring
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Feature Monitoring" data-md-level="3">
+        <label class="md-nav__title" for="__nav_8_1_17">
+          <span class="md-nav__icon md-icon"></span>
+          Feature Monitoring
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_monitoring_config_api/" class="md-nav__link">
+        Configuration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_monitoring_result_api/" class="md-nav__link">
+        Result
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_monitoring_window_config_api/" class="md-nav__link">
+        Window
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -1882,7 +2052,7 @@
 </code></pre></div>
 <hr />
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L978">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L984">[source]</a></span></p>
 <h3 id="get_or_create_spine_group">get_or_create_spine_group<a class="headerlink" href="#get_or_create_spine_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_or_create_spine_group</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="p">[],</span> <span class="n">event_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="p">[],</span> <span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span>
@@ -1959,24 +2129,27 @@ label column.</p>
 <li><strong>event_time</strong> <code>Optional[str]</code>: Optionally, provide the name of the feature containing the event
     time for the features in this spine group. If event_time is set
     the spine group can be used for point-in-time joins. Defaults to <code>None</code>.</li>
-<li><strong>features</strong> <code>Optional[List[hsfs.feature.Feature]]</code>: Optionally, define the schema of the spine group manually as a
+<li>
+<p><strong>features</strong> <code>Optional[List[hsfs.feature.Feature]]</code>: Optionally, define the schema of the spine group manually as a
     list of <code>Feature</code> objects. Defaults to empty list <code>[]</code> and will use the
     schema information of the DataFrame resulting by executing the provided query
-    against the data source.</li>
-</ul>
+    against the data source.</p>
 <div class="admonition note">
 <p class="admonition-title">Event time data type restriction</p>
 <p>The supported data types for the event time column are: <code>timestamp</code>, <code>date</code> and <code>bigint</code>.</p>
 </div>
-<ul>
-<li><strong>dataframe</strong> <code>Union[pandas.DataFrame, pyspark.sql.DataFrame, pyspark.RDD, numpy.ndarray, List[list]]</code>: DataFrame, RDD, Ndarray, list. Spine dataframe with primary key, event time and
-    label column to use for point in time join when fetching features.</li>
+</li>
+<li>
+<p><strong>
+dataframe</strong>: DataFrame, RDD, Ndarray, list. Spine dataframe with primary key, event time and
+    label column to use for point in time join when fetching features.</p>
+</li>
 </ul>
 <p><strong>Returns</strong></p>
 <p><code>SpineGroup</code>. The spine group metadata object.</p>
 <hr />
 <h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L978">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L984">[source]</a></span></p>
 <h3 id="get_or_create_spine_group_1">get_or_create_spine_group<a class="headerlink" href="#get_or_create_spine_group_1" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_or_create_spine_group</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="p">[],</span> <span class="n">event_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="p">[],</span> <span class="n">dataframe</span><span class="o">=</span><span class="kc">None</span>
@@ -2053,18 +2226,21 @@ label column.</p>
 <li><strong>event_time</strong> <code>Optional[str]</code>: Optionally, provide the name of the feature containing the event
     time for the features in this spine group. If event_time is set
     the spine group can be used for point-in-time joins. Defaults to <code>None</code>.</li>
-<li><strong>features</strong> <code>Optional[List[hsfs.feature.Feature]]</code>: Optionally, define the schema of the spine group manually as a
+<li>
+<p><strong>features</strong> <code>Optional[List[hsfs.feature.Feature]]</code>: Optionally, define the schema of the spine group manually as a
     list of <code>Feature</code> objects. Defaults to empty list <code>[]</code> and will use the
     schema information of the DataFrame resulting by executing the provided query
-    against the data source.</li>
-</ul>
+    against the data source.</p>
 <div class="admonition note">
 <p class="admonition-title">Event time data type restriction</p>
 <p>The supported data types for the event time column are: <code>timestamp</code>, <code>date</code> and <code>bigint</code>.</p>
 </div>
-<ul>
-<li><strong>dataframe</strong> <code>Union[pandas.DataFrame, pyspark.sql.DataFrame, pyspark.RDD, numpy.ndarray, List[list]]</code>: DataFrame, RDD, Ndarray, list. Spine dataframe with primary key, event time and
-    label column to use for point in time join when fetching features.</li>
+</li>
+<li>
+<p><strong>
+dataframe</strong>: DataFrame, RDD, Ndarray, list. Spine dataframe with primary key, event time and
+    label column to use for point in time join when fetching features.</p>
+</li>
 </ul>
 <p><strong>Returns</strong></p>
 <p><code>SpineGroup</code>. The spine group metadata object.</p>

@@ -773,6 +773,10 @@
         
           
         
+          
+        
+          
+        
       
       
         <label class="md-nav__link" for="__nav_8_1">
@@ -1706,6 +1710,172 @@
 
             
           
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_1_16" type="checkbox" id="__nav_8_1_16" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_1_16">
+          Statistics
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Statistics" data-md-level="3">
+        <label class="md-nav__title" for="__nav_8_1_16">
+          <span class="md-nav__icon md-icon"></span>
+          Statistics
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../statistics_api/" class="md-nav__link">
+        Statistics
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../split_statistics_api/" class="md-nav__link">
+        Split Statistics
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_descriptive_statistics_api/" class="md-nav__link">
+        Feature descriptive statistics
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_1_17" type="checkbox" id="__nav_8_1_17" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_1_17">
+          Feature Monitoring
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Feature Monitoring" data-md-level="3">
+        <label class="md-nav__title" for="__nav_8_1_17">
+          <span class="md-nav__icon md-icon"></span>
+          Feature Monitoring
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_monitoring_config_api/" class="md-nav__link">
+        Configuration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_monitoring_result_api/" class="md-nav__link">
+        Result
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_monitoring_window_config_api/" class="md-nav__link">
+        Window
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -2591,27 +2761,27 @@ DataFrame.</p>
 <p class="admonition-title">Event time data type restriction</p>
 <p>The supported data types for the event time column are: <code>timestamp</code>, <code>date</code> and <code>bigint</code>.</p>
 </div>
-<ul>
-<li><strong>
-stream</strong>: Optionally, Define whether the feature group should support real time stream writing capabilities.
-Stream enabled Feature Groups have unified single API for writing streaming features transparently
-to both online and offline store.</li>
-<li><strong>expectation_suite</strong> <code>Optional[Union[hsfs.expectation_suite.ExpectationSuite, great_expectations.core.expectation_suite.ExpectationSuite]]</code>: Optionally, attach an expectation suite to the feature
-group which dataframes should be validated against upon insertion.
-Defaults to <code>None</code>.</li>
-<li><strong>parents</strong> <code>Optional[List[hsfs.feature_group.FeatureGroup]]</code>: Optionally, Define the parents of this feature group as the
-origin where the data is coming from.</li>
-<li><strong>topic_name</strong> <code>Optional[str]</code>: Optionally, define the name of the topic used for data ingestion. If left undefined it
-defaults to using project topic.</li>
-<li><strong>notification_topic_name</strong> <code>Optional[str]</code>: Optionally, define the name of the topic used for sending notifications when entries
-are inserted or updated on the online feature store. If left undefined no notifications are sent.</li>
-</ul>
 </li>
+<li>
+<p><strong>
+stream</strong>: Optionally, Define whether the feature group should support real time stream writing capabilities.
+    Stream enabled Feature Groups have unified single API for writing streaming features transparently
+    to both online and offline store.</p>
+</li>
+<li><strong>expectation_suite</strong> <code>Optional[Union[hsfs.expectation_suite.ExpectationSuite, great_expectations.core.expectation_suite.ExpectationSuite]]</code>: Optionally, attach an expectation suite to the feature
+    group which dataframes should be validated against upon insertion.
+    Defaults to <code>None</code>.</li>
+<li><strong>parents</strong> <code>Optional[List[hsfs.feature_group.FeatureGroup]]</code>: Optionally, Define the parents of this feature group as the
+    origin where the data is coming from.</li>
+<li><strong>topic_name</strong> <code>Optional[str]</code>: Optionally, define the name of the topic used for data ingestion. If left undefined it
+    defaults to using project topic.</li>
+<li><strong>notification_topic_name</strong> <code>Optional[str]</code>: Optionally, define the name of the topic used for sending notifications when entries
+    are inserted or updated on the online feature store. If left undefined no notifications are sent.</li>
 </ul>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroup</code>. The feature group metadata object.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L584">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L585">[source]</a></span></p>
 <h3 id="get_or_create_feature_group">get_or_create_feature_group<a class="headerlink" href="#get_or_create_feature_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_or_create_feature_group</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -2704,19 +2874,19 @@ DataFrame.</p>
 <p class="admonition-title">Event time data type restriction</p>
 <p>The supported data types for the event time column are: <code>timestamp</code>, <code>date</code> and <code>bigint</code>.</p>
 </div>
-<ul>
-<li><strong>
-stream</strong>: Optionally, Define whether the feature group should support real time stream writing capabilities.
-Stream enabled Feature Groups have unified single API for writing streaming features transparently
-to both online and offline store.</li>
-<li><strong>parents</strong> <code>Optional[List[hsfs.feature_group.FeatureGroup]]</code>: Optionally, Define the parents of this feature group as the
-origin where the data is coming from.</li>
-<li><strong>topic_name</strong> <code>Optional[str]</code>: Optionally, define the name of the topic used for data ingestion. If left undefined it
-defaults to using project topic.</li>
-<li><strong>notification_topic_name</strong> <code>Optional[str]</code>: Optionally, define the name of the topic used for sending notifications when entries
-are inserted or updated on the online feature store. If left undefined no notifications are sent.</li>
-</ul>
 </li>
+<li>
+<p><strong>
+stream</strong>: Optionally, Define whether the feature group should support real time stream writing capabilities.
+    Stream enabled Feature Groups have unified single API for writing streaming features transparently
+    to both online and offline store.</p>
+</li>
+<li><strong>parents</strong> <code>Optional[List[hsfs.feature_group.FeatureGroup]]</code>: Optionally, Define the parents of this feature group as the
+    origin where the data is coming from.</li>
+<li><strong>topic_name</strong> <code>Optional[str]</code>: Optionally, define the name of the topic used for data ingestion. If left undefined it
+    defaults to using project topic.</li>
+<li><strong>notification_topic_name</strong> <code>Optional[str]</code>: Optionally, define the name of the topic used for sending notifications when entries
+    are inserted or updated on the online feature store. If left undefined no notifications are sent.</li>
 </ul>
 <p><strong>Returns</strong></p>
 <p><code>FeatureGroup</code>. The feature group metadata object.</p>

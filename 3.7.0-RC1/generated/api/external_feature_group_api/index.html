@@ -773,6 +773,10 @@
         
           
         
+          
+        
+          
+        
       
       
         <label class="md-nav__link" for="__nav_8_1">
@@ -1622,6 +1626,172 @@
 
             
           
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_1_16" type="checkbox" id="__nav_8_1_16" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_1_16">
+          Statistics
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Statistics" data-md-level="3">
+        <label class="md-nav__title" for="__nav_8_1_16">
+          <span class="md-nav__icon md-icon"></span>
+          Statistics
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../statistics_api/" class="md-nav__link">
+        Statistics
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../split_statistics_api/" class="md-nav__link">
+        Split Statistics
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_descriptive_statistics_api/" class="md-nav__link">
+        Feature descriptive statistics
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_1_17" type="checkbox" id="__nav_8_1_17" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_1_17">
+          Feature Monitoring
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Feature Monitoring" data-md-level="3">
+        <label class="md-nav__title" for="__nav_8_1_17">
+          <span class="md-nav__icon md-icon"></span>
+          Feature Monitoring
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_monitoring_config_api/" class="md-nav__link">
+        Configuration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_monitoring_result_api/" class="md-nav__link">
+        Result
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_monitoring_window_config_api/" class="md-nav__link">
+        Window
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -2330,7 +2500,7 @@
 </code></pre></div>
 <hr />
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L833">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/blob/master/python/hsfs/feature_store.py#L836">[source]</a></span></p>
 <h3 id="create_external_feature_group">create_external_feature_group<a class="headerlink" href="#create_external_feature_group" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_external_feature_group</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -2431,18 +2601,21 @@ external storage to Hopsworks online storage needs to be done manually:</p>
     The values should be booleans indicating the setting. To fully turn off
     statistics computation pass <code>statistics_config=False</code>. Defaults to
     <code>None</code> and will compute only descriptive statistics.</li>
-<li><strong>event_time</strong> <code>Optional[str]</code>: Optionally, provide the name of the feature containing the event
+<li>
+<p><strong>event_time</strong> <code>Optional[str]</code>: Optionally, provide the name of the feature containing the event
     time for the features in this feature group. If event_time is set
-    the feature group can be used for point-in-time joins. Defaults to <code>None</code>.</li>
-</ul>
+    the feature group can be used for point-in-time joins. Defaults to <code>None</code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Event time data type restriction</p>
 <p>The supported data types for the event time column are: <code>timestamp</code>, <code>date</code> and <code>bigint</code>.</p>
 </div>
-<ul>
-<li><strong>expectation_suite</strong> <code>Optional[Union[hsfs.expectation_suite.ExpectationSuite, great_expectations.core.expectation_suite.ExpectationSuite]]</code>: Optionally, attach an expectation suite to the feature
+</li>
+<li>
+<p><strong>
+expectation_suite</strong>: Optionally, attach an expectation suite to the feature
     group which dataframes should be validated against upon insertion.
-    Defaults to <code>None</code>.</li>
+    Defaults to <code>None</code>.</p>
+</li>
 <li><strong>online_enabled</strong> <code>Optional[bool]</code>: Define whether it should be possible to sync the feature group to
     the online feature store for low latency access, defaults to <code>False</code>.</li>
 <li><strong>topic_name</strong> <code>Optional[str]</code>: Optionally, define the name of the topic used for data ingestion. If left undefined it
