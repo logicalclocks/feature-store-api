@@ -250,7 +250,7 @@ class Engine:
             if "sqlalchemy" in str(type(mysql_conn)):
                 sql_query = sql.text(sql_query)
             if dataframe_type.lower() == "polars":
-                result_df = pd.read_database(sql_query, mysql_conn)
+                result_df = pl.read_database(sql_query, mysql_conn)
             else:
                 result_df = pd.read_sql(sql_query, mysql_conn)
             if schema:
@@ -337,7 +337,11 @@ class Engine:
                 and hdfs.path.getsize(path) > 0
             ):
                 if dataframe_type.lower() == "polars":
-                    df_list.append(self._read_polars(data_format, path))
+                    df = self._read_polars(data_format, path)
+                    # Below check performed since some files materialized when creating training data
+                    # If empty dataframe in df_list was read from a csv file then polars cannot contatenate df_list due to shema mismatch
+                    if not df.is_empty():
+                        df_list.append(df)
                 else:
                     df_list.append(self._read_pandas(data_format, path))
         return df_list
