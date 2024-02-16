@@ -107,7 +107,12 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         if ge_report is not None and ge_report.ingestion_result == "REJECTED":
-            return None, ge_report
+            raise exceptions.DataValidationException(
+                "Data validation failed while validation ingestion policy set to strict, "
+                + f"insertion to {feature_group.name} was aborted.\n"
+                + f"Check a summary of your report at {self._get_feature_group_url(feature_group)}, "
+                + f"or download the full report from {ge_report._full_report_path}."
+            )
 
         offline_write_options = write_options
         online_write_options = write_options
