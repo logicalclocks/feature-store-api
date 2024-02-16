@@ -202,6 +202,7 @@ class RondbEngine:
                     row_feature_values=row, metadatas=response["metadata"]
                 )
                 for row in response["features"]
+                if row is not None
             ]
         else:
             return response
@@ -222,6 +223,8 @@ class RondbEngine:
         Raises:
             ValueError: If the length of the feature values and metadata does not match.
         """
+        if row_feature_values is None or metadatas is None:
+            return None
         if len(row_feature_values) != len(metadatas):
             raise ValueError("Length of feature values and metadata do not match.")
 
