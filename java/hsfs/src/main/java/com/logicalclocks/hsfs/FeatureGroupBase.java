@@ -262,8 +262,14 @@ public abstract class FeatureGroupBase<T> {
    */
   public void updateFeatureDescription(String featureName, String description)
       throws FeatureStoreException, IOException {
+
+    Feature feature = this.getFeature(featureName);
+
+    Feature newFeature = new Feature(feature.getName(), feature.getType(), feature.getOnlineType(),
+            feature.getPrimary(), feature.getPartition(), feature.getDefaultValue(), description);
+
     featureGroupEngineBase.updateFeatures(this,
-        Collections.singletonList(Feature.builder().name(featureName).description(description).type("tmp").build()),
+        Collections.singletonList(newFeature),
         this.getClass());
   }
 
