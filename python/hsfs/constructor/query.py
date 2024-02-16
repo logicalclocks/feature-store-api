@@ -380,7 +380,7 @@ class Query:
         query.filter(fg.feature1 == 1).show(10)
         ```
 
-        Composite filters require parenthesis:
+        Composite filters require parenthesis and symbols for logical operands (e.g. `&`, `|`, ...):
         ```python
         query.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
         ```

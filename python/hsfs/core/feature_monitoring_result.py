@@ -131,60 +131,79 @@ class FeatureMonitoringResult:
 
     @property
     def id(self) -> Optional[int]:
+        """Id of the feature monitoring result."""
         return self._id
 
     @property
     def config_id(self) -> int:
+        """Id of the feature monitoring configuration containing this result."""
         return self._config_id
 
     @property
     def feature_store_id(self) -> int:
+        """Id of the Feature Store."""
         return self._feature_store_id
 
     @property
     def detection_statistics_id(self) -> Optional[int]:
+        """Id of the feature descriptive statistics computed on the detection window."""
         return self._detection_statistics_id
 
     @property
     def reference_statistics_id(self) -> Optional[int]:
+        """Id of the feature descriptive statistics computed on the reference window."""
         return self._reference_statistics_id
 
     @property
     def detection_statistics(self) -> Optional[FeatureDescriptiveStatistics]:
+        """Feature descriptive statistics computed on the detection window."""
         return self._detection_statistics
 
     @property
     def reference_statistics(self) -> Optional[FeatureDescriptiveStatistics]:
+        """Feature descriptive statistics computed on the reference window."""
         return self._reference_statistics
 
     @property
     def execution_id(self) -> Optional[int]:
+        """Execution id of the feature monitoring job."""
         return self._execution_id
 
     @property
     def monitoring_time(self) -> int:
+        """Time at which this feature monitoring result was created."""
         return self._monitoring_time
 
     @property
     def difference(self) -> Optional[float]:
+        """Difference between detection and reference values. It can be relative or absolute difference,
+        depending on the statistics comparison configuration provided in `relative` parameter passed to `compare_on()`
+        when enabling feature monitoring.
+        """
         return self._difference
 
     @property
     def shift_detected(self) -> bool:
+        """Whether or not shift was detected in the detection window based on the computed statistics and the threshold provided in `compare_on()`
+        when enabling feature monitoring."""
         return self._shift_detected
 
     @property
     def feature_name(self) -> str:
+        """Name of the feature being monitored."""
         return self._feature_name
 
     @property
     def empty_detection_window(self) -> bool:
+        """Whether or not the detection window was empty in this feature monitoring run."""
         return self._empty_detection_window
 
     @property
     def empty_reference_window(self) -> bool:
+        """Whether or not the reference window was empty in this feature monitoring run."""
         return self._empty_reference_window
 
     @property
     def specific_value(self) -> Optional[float]:
+        """Specific value used as reference in the statistics comparison."""
         return self._specific_value
