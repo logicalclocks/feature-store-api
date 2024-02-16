@@ -130,7 +130,7 @@ class RondbEngine:
         response = self._rondb_rest_api.get_single_raw_feature_vector(payload=payload)
 
         if return_type == self.RETURN_TYPE_FEATURE_VECTOR:
-            return self.convert_rdrs_response_to_feature_vector(
+            return self.convert_rdrs_response_to_dict_feature_vector(
                 row_feature_values=response["features"], metadatas=response["metadata"]
             )
         else:
@@ -222,8 +222,8 @@ class RondbEngine:
         Raises:
             ValueError: If the length of the feature values and metadata does not match.
         """
-        if len(row_feature_values) == len(metadatas):
-            raise ValueError("Length of feature values and metadata does not match.")
+        if len(row_feature_values) != len(metadatas):
+            raise ValueError("Length of feature values and metadata do not match.")
 
         return {
             metadata["featureName"]: (

@@ -298,17 +298,13 @@ class VectorServer:
         """Assembles serving vector from online feature store."""
 
         if use_rondb_rest_client:
-            rdrs_response = self._rondb_engine.get_single_raw_feature_vector(
+            serving_vector = self._rondb_engine.get_single_raw_feature_vector(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
                 feature_view_version=self._feature_view_version,
-                primary_keys=entry,
+                entry=entry,
                 passed_features=passed_features,
-            )
-            serving_vector = (
-                self._rondb_engine.convert_rdrs_response_to_dict_feature_vector(
-                    rdrs_response
-                )
+                return_type=self._rondb_engine.RETURN_TYPE_FEATURE_VECTOR,
             )
 
         else:  # aiomysql branch
@@ -341,23 +337,18 @@ class VectorServer:
         return_type=None,
         passed_features=[],
         allow_missing=False,
-        # new parameter to use rondb rest client
         use_rondb_rest_client: bool = False,
     ):
         """Assembles serving vector from online feature store."""
 
         if use_rondb_rest_client:
-            rdrs_response = self._rondb_engine.get_batch_raw_feature_vectors(
+            batch_results = self._rondb_engine.get_batch_raw_feature_vectors(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
                 feature_view_version=self._feature_view_version,
-                primary_keys=entries,
+                entries=entries,
                 passed_features=passed_features,
-            )
-            batch_results = (
-                self._rondb_engine.convert_rdrs_response_to_dict_feature_vector(
-                    rdrs_response
-                )
+                return_type=self._rondb_engine.RETURN_TYPE_FEATURE_VECTOR,
             )
         else:
             batch_results, _ = self._batch_vector_results(
