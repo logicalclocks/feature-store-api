@@ -201,6 +201,10 @@ class TestFeatureGroupEngine:
             "hsfs.core.great_expectation_engine.GreatExpectationEngine"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
+        mocker.patch(
+            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            return_value="url",
+        )
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
             feature_store_id=feature_store_id
@@ -225,14 +229,15 @@ class TestFeatureGroupEngine:
         mock_ge_engine.return_value.validate.return_value = vr
 
         # Act
-        fg_engine.insert(
-            feature_group=fg,
-            feature_dataframe=None,
-            overwrite=None,
-            operation=None,
-            storage=None,
-            write_options=None,
-        )
+        with pytest.raises(exceptions.DataValidationException):
+            fg_engine.insert(
+                feature_group=fg,
+                feature_dataframe=None,
+                overwrite=None,
+                operation=None,
+                storage=None,
+                write_options=None,
+            )
 
         # Assert
         assert mock_fg_api.return_value.delete_content.call_count == 0
