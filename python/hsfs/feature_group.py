@@ -2492,6 +2492,12 @@ class FeatureGroup(FeatureGroupBase):
 
         # Returns
             (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`. e.g fail to create feature group, dataframe schema does not match
+                existing feature group schema, etc.
+            `hsfs.client.exceptions.DataValidationException`. If data validation fails and the expectation
+                suite `validation_ingestion_policy` is set to `STRICT`. Data is NOT ingested.
         """
         if storage and self.stream:
             warnings.warn(
