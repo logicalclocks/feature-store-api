@@ -1,0 +1,147 @@
+{
+  "get_single_vector_response_json_complete": {
+    "features": ["APPL", "2022-01-01 00:00:00", 21.3, 10],
+    "metadata": [
+      {
+        "featureName": "ticker",
+        "featureType": "string"
+      },
+      {
+        "featureName": "when",
+        "featureType": "date"
+      },
+      {
+        "featureName": "price",
+        "featureType": "float"
+      },
+      {
+        "featureName": "volume",
+        "featureType": "bigint"
+      }
+    ],
+    "status": "COMPLETE"
+  },
+  "get_single_vector_response_json_pk_value_no_match": {
+    "features": ["APPL", null, null, null],
+    "metadata": null,
+    "status": "MISSING"
+  },
+  "get_single_vector_payload": {
+    "featureStoreName": "test_store",
+    "featureViewName": "test_feature_view",
+    "featureViewVersion": 2,
+    "entry": {
+      "ticker": "APPL"
+    },
+    "passedFeatures": [
+      {
+        "price": 21.3
+      }
+    ],
+    "metadataOptions": {
+      "featureName": true,
+      "featureType": true
+    }
+  },
+  "get_batch_vector_payload": {
+    "featureStoreName": "test_store",
+    "featureViewName": "test_feature_view",
+    "featureViewVersion": 2,
+    "entries": [
+      {
+        "ticker": "APPL"
+      },
+      {
+        "ticker": "GOOG"
+      }
+    ],
+    "passedFeatures": [
+      {
+        "price": 21.3
+      },
+      {
+        "volume": 43
+      }
+    ],
+    "metadataOptions": {
+      "featureName": true,
+      "featureType": true
+    }
+  },
+  "get_batch_vector_response_json_complete": {
+    "features": [
+      ["APPL", "2022-01-01 00:00:00", 21.3, 10],
+      ["GOOG", "2022-01-01 00:00:00", 12.3, 43]
+    ],
+    "metadata": [
+      {
+        "featureName": "ticker",
+        "featureType": "string"
+      },
+      {
+        "featureName": "when",
+        "featureType": "date"
+      },
+      {
+        "featureName": "price",
+        "featureType": "float"
+      },
+      {
+        "featureName": "volume",
+        "featureType": "bigint"
+      }
+    ],
+    "status": ["COMPLETE", "COMPLETE"]
+  },
+  "get_batch_vector_response_json_partial_pk_value_no_match": {
+    "features": [
+      ["APPL", null, null, null],
+      ["GOOG", "2022-01-01 00:00:00", 12.3, 43]
+    ],
+    "metadata": [
+      {
+        "featureName": "ticker",
+        "featureType": "string"
+      },
+      {
+        "featureName": "when",
+        "featureType": "date"
+      },
+      {
+        "featureName": "price",
+        "featureType": "float"
+      },
+      {
+        "featureName": "volume",
+        "featureType": "bigint"
+      }
+    ],
+    "status": ["MISSING", "COMPLETE"]
+  },
+  "get_batch_vector_response_json_partial_error": {
+    "features": [
+      ["APPL", "2022-01-01 00:00:00", 21.3, 10],
+      null,
+      ["GOOG", "2022-01-01 00:00:00", 12.3, 43]
+    ],
+    "metadata": [
+      {
+        "featureName": "ticker",
+        "featureType": "string"
+      },
+      {
+        "featureName": "when",
+        "featureType": "date"
+      },
+      {
+        "featureName": "price",
+        "featureType": "float"
+      },
+      {
+        "featureName": "volume",
+        "featureType": "bigint"
+      }
+    ],
+    "status": ["COMPLETE", "ERROR", "COMPLETE"]
+  }
+}

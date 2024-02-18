@@ -58,6 +58,7 @@ FIXTURES = [
     "transformation_function",
     "user",
     "validation_report",
+    "rondb_server",
 ]
 
 backend_fixtures_json = {}
