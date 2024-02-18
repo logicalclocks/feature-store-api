@@ -21,6 +21,10 @@ from hsfs.client import rondb_rest_client, exceptions
 
 
 class RondbRestApi:
+    SINGLE_VECTOR_ENDPOINT = "feature_store"
+    BATCH_VECTOR_ENDPOINT = "batch_feature_store"
+    PING_ENDPOINT = "ping"
+
     def get_single_raw_feature_vector(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Get a single feature vector from the feature store.
 
@@ -46,7 +50,7 @@ class RondbRestApi:
         # Returns:
             The response json containing the feature vector as well as status information
             and optionally descriptive metadata about the features. It contains the following fields:
-                - "status": The status pertinent to this single feature vector.
+                - "status": The status pertinent to this single feature vector. Allowed values are "COMPLETE", "MISSING" and "ERROR".
                 - "features": A list of the feature values.
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
 
@@ -59,8 +63,8 @@ class RondbRestApi:
         """
         return self.handle_rdrs_feature_store_response(
             rondb_rest_client.get_instance()._send_request(
-                "POST",
-                path_params=["feature_store"],
+                method="POST",
+                path_params=[self.SINGLE_VECTOR_ENDPOINT],
                 headers={"Content-Type": "application/json"},
                 data=json.dumps(payload),
             ),
@@ -87,7 +91,7 @@ class RondbRestApi:
         # Returns:
             The response json containing the feature vector as well as status information
             and optionally descriptive metadata about the features. It contains the following fields:
-                - "status": A list of the status for each feature vector retrieval.
+                - "status": A list of the status for each feature vector retrieval. Allowed values are "COMPLETE", "MISSING" and "ERROR".
                 - "features": A list containing list of the feature values for each feature_vector.
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
 
@@ -100,8 +104,8 @@ class RondbRestApi:
         """
         return self.handle_rdrs_feature_store_response(
             rondb_rest_client.get_instance()._send_request(
-                "POST",
-                path_params=["batch_feature_store"],
+                method="POST",
+                path_params=[self.BATCH_VECTOR_ENDPOINT],
                 headers={"Content-Type": "application/json"},
                 data=json.dumps(payload),
             ),
@@ -110,7 +114,7 @@ class RondbRestApi:
     def ping_rondb_rest_server(self) -> int:
         """Ping the RonDB Rest Server to check if it is alive."""
         return rondb_rest_client.get_instance()._send_request(
-            "GET", path_params=["ping"]
+            method="GET", path_params=[self.PING_ENDPOINT]
         )
 
     def handle_rdrs_feature_store_response(self, response: Response) -> dict[str, Any]:
