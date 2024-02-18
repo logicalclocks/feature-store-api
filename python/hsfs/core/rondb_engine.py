@@ -112,7 +112,7 @@ class RondbEngine:
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
 
         # Raises:
-            RestApiError: If the server response status code is not 200.
+            `hsfs.client.exceptions.RestAPIError`: If the server response status code is not 200.
             ValueError: If the length of the feature values and metadata in the reponse does not match.
         """
         payload = self._build_base_payload(
@@ -172,7 +172,7 @@ class RondbEngine:
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
 
         # Raises:
-            RestApiError: If the server response status code is not 200.
+            `hsfs.client.exceptions.RestAPIError`: If the server response status code is not 200.
             ValueError: If the length of the passed features does not match the length of the entries.
         """
         payload = self._build_base_payload(

@@ -55,7 +55,7 @@ class RondbRestApi:
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
 
         # Raises:
-            RestApiError: If the response status code is not 200.
+            `hsfs.client.exceptions.RestAPIError`: If the response status code is not 200.
                 - 400: Requested Metadata does not exist
                 - 401: Access denied. API key does not give access to the feature store (e.g feature store not shared with user),
                     or authorization header (x-api-key) is not properly set.
@@ -96,7 +96,7 @@ class RondbRestApi:
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
 
         # Raises:
-            RestApiError: If the response status code is not 200.
+            `hsfs.client.exceptions.RestAPIError`: If the response status code is not 200.
                 - 400: Requested Metadata does not exist
                 - 401: Access denied. API key does not give access to the feature store (e.g feature store not shared with user),
                     or authorization header (x-api-key) is not properly set.
@@ -127,7 +127,7 @@ class RondbRestApi:
             The response json if the status code is 200, otherwise raises an error.
 
         Raises:
-            RestApiError: If the status code is not 200.
+            `hsfs.client.exceptions.RestAPIError`: If the status code is not 200.
                 - 400: Requested Metadata does not exist (e.g feature view/store does not exist)
                 - 401: Access denied. API key does not give access to the feature store (e.g feature store not shared with user),
                     or authorization header (x-api-key) is not properly set.

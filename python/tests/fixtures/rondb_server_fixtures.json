@@ -144,7 +144,7 @@
     ],
     "status": ["COMPLETE", "ERROR", "COMPLETE"]
   },
-  "bad_request_pk_or_passed_features_error": {
+  "bad_request_primary_key_or_passed_features_error": {
     "code": 12,
     "message": "Wrong primay-key column. Column: ts",
     "reason": "Incorrect primary key."
@@ -158,5 +158,10 @@
     "code": 17,
     "message": "",
     "reason": "Accessing unshared feature store failed"
+  },
+  "internal_server_error": {
+    "code": 13,
+    "message": "Internal server error",
+    "reason": "Internal server error"
   }
 }
