@@ -23,6 +23,7 @@ from hsfs import util
 class RondbEngine:
     RETURN_TYPE_FEATURE_VECTOR = "feature_vector"
     RETURN_TYPE_RESPONSE_JSON = "response_json"  # as a python dict
+    SQL_TIMESTAMP_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
     def __init__(self):
         self._rondb_rest_api = rondb_rest_api.RondbRestApi()
@@ -92,7 +93,7 @@ class RondbEngine:
         Check the RonDB Rest Server Feature Store API documentation for more details:
         https://docs.hopsworks.ai/latest/user_guides/fs/feature_view/feature-server
 
-        Args:
+        # Arguments:
             feature_store_name: The name of the feature store in which the feature view is registered.
                 The suffix '_featurestore' should be omitted.
             feature_view_name: The name of the feature view from which to retrieve the feature vector.
@@ -103,15 +104,15 @@ class RondbEngine:
                 Keys are "featureName" and "featureType" and values are boolean.
             return_type: The type of the return value. Either "feature_vector" or "response_json".
 
-        Returns:
+        # Returns:
             The response json containing the feature vector as well as status information
             and optionally descriptive metadata about the features. It contains the following fields:
                 - "status": The status pertinent to this single feature vector.
                 - "features": A list of the feature values.
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
 
-        Raises:
-            HTTPError: If the server response status code is not 200.
+        # Raises:
+            RestApiError: If the server response status code is not 200.
             ValueError: If the length of the feature values and metadata in the reponse does not match.
         """
         payload = self._build_base_payload(
@@ -151,7 +152,7 @@ class RondbEngine:
         Check the RonDB Rest Server Feature Store API documentation for more details:
         https://docs.hopsworks.ai/latest/user_guides/fs/feature_view/feature-server
 
-        Args:
+        # Arguments:
             feature_store_name: The name of the feature store in which the feature view is registered.
                 The suffix '_featurestore' should be omitted.
             feature_view_name: The name of the feature view from which to retrieve the feature vector.
@@ -163,17 +164,16 @@ class RondbEngine:
                 Keys are "featureName" and "featureType" and values are boolean.
             return_type: The type of the return value. Either "feature_vector" or "response_json".
 
-        Returns:
+        # Returns:
             The response json containing the feature vector as well as status information
             and optionally descriptive metadata about the features. It contains the following fields:
                 - "status": A list of the status for each feature vector retrieval.
                 - "features": A list containing list of the feature values for each feature_vector.
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
 
-        Raises:
-            HTTPError: If the server response status code is not 200.
-            ValueError: If the length of the feature values and metadata in the reponse does not match.
-                or if the length of the passed features does not match the length of the entries.
+        # Raises:
+            RestApiError: If the server response status code is not 200.
+            ValueError: If the length of the passed features does not match the length of the entries.
         """
         payload = self._build_base_payload(
             feature_store_name=feature_store_name,
@@ -197,42 +197,51 @@ class RondbEngine:
         response = self._rondb_rest_api.get_batch_raw_feature_vectors(payload=payload)
 
         if return_type == self.RETURN_TYPE_FEATURE_VECTOR:
-            return [
-                self.convert_rdrs_response_to_dict_feature_vector(
-                    row_feature_values=row, metadatas=response["metadata"]
-                )
-                for row in response["features"]
-                if row is not None
-            ]
+            return self.convert_batch_response_to_feature_vector(
+                batch_response=response
+            )
         else:
             return response
+
+    def convert_batch_response_to_feature_vector(
+        self, batch_response: dict[str, Any]
+    ) -> list[dict[str, Any]]:
+        """Split the response from the RonDB Rest Server Feature Store API to convert each feature vector to a dictionary.
+
+        Skip the feature vectors that have an error status.
+
+        # Arguments:
+            batch_response: The response from the RonDB Rest Server Feature Store API.
+
+        # Returns:
+            A list of dictionaries with the feature names as keys and the feature values as values.
+        """
+        return [
+            self.convert_rdrs_response_to_dict_feature_vector(
+                row_feature_values=row, metadatas=batch_response["metadata"]
+            )
+            for row, status in zip(batch_response["features"], batch_response["status"])
+            if status != "ERROR"
+        ]
 
     def convert_rdrs_response_to_dict_feature_vector(
         self, row_feature_values: list[Any], metadatas: list[dict[str, str]]
     ) -> dict[str, Any]:
         """Convert the response from the RonDB Rest Server Feature Store API to a feature vector.
 
-        Args:
+        # Arguments:
             row_feature_values: A list of the feature values.
             metadatas: A list of dictionaries with metadata for each feature. The order should match the order of the features.
 
-        Returns:
-            A dictionary with the feature names as keys and the feature values as values. Types are preserved
-            as per the metadata, and sql timestamp types are converted to datetime objects.
-
-        Raises:
-            ValueError: If the length of the feature values and metadata does not match.
+        # Returns:
+            A dictionary with the feature names as keys and the feature values as values. Values types are not guaranteed to
+            match the feature type in the metadata. Timestamp SQL types are converted to python datetime.
         """
-        if row_feature_values is None or metadatas is None:
-            return None
-        if len(row_feature_values) != len(metadatas):
-            raise ValueError("Length of feature values and metadata do not match.")
-
         return {
             metadata["featureName"]: (
                 vector_value
                 if (metadata["featureType"] != "timestamp" or vector_value is None)
-                else datetime.strptime(vector_value, "%Y-%m-%d %H:%M:%S")
+                else datetime.strptime(vector_value, self.SQL_TIMESTAMP_STRING_FORMAT)
             )
             for vector_value, metadata in zip(row_feature_values, metadatas)
         }

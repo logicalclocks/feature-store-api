@@ -17,7 +17,7 @@ from typing import Any
 import json
 from requests import Response
 
-from hsfs.client import rondb_rest_client
+from hsfs.client import rondb_rest_client, exceptions
 
 
 class RondbRestApi:
@@ -27,7 +27,12 @@ class RondbRestApi:
         Check the RonDB Rest Server documentation for more details:
         https://docs.hopsworks.ai/latest/user_guides/fs/feature_view/feature-server
 
-        Args:
+        Note that if no entry is found for the primary key, the http status will NOT be 404.
+        Instead the status will be 200 and the "status" field in the response json body will be set
+        to missing. The "features" field will be a list with the primary key values and None/null for the
+        feature values.
+
+        # Arguments:
             payload: The payload to send to the RonDB REST Server Feature Store API.
                 The payload should contains the following fields:
                     - "featureStoreName": The name of the feature store in which the feature view is registered.
@@ -38,15 +43,19 @@ class RondbRestApi:
                         Keys are "featureName" and "featureType" and values are boolean.
                     - "passedFeatures": A dictionary with the feature names as keys and the values to substitute for this specific vector.
 
-        Returns:
+        # Returns:
             The response json containing the feature vector as well as status information
             and optionally descriptive metadata about the features. It contains the following fields:
                 - "status": The status pertinent to this single feature vector.
                 - "features": A list of the feature values.
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
 
-        Raises:
-            HTTPError: If the status code is not 200.
+        # Raises:
+            RestApiError: If the response status code is not 200.
+                - 400: Requested Metadata does not exist
+                - 401: Access denied. API key does not give access to the feature store (e.g feature store not shared with user),
+                    or authorization header (x-api-key) is not properly set.
+                - 500: Internal server error.
         """
         return self.handle_rdrs_feature_store_response(
             rondb_rest_client.get_instance()._send_request(
@@ -63,7 +72,7 @@ class RondbRestApi:
         Check the RonDB Rest Server documentation for more details:
         https://docs.hopsworks.ai/latest/user_guides/fs/feature_view/feature-server
 
-        Args:
+        # Arguments:
             payload: The payload to send to the RonDB REST Server Feature Store API.
             The payload should contains the following fields:
                 - "featureStoreName": The name of the feature store in which the feature view is registered.
@@ -75,15 +84,19 @@ class RondbRestApi:
                 - "metadataOptions": Whether to include feature metadata in the response.
                     Keys are "featureName" and "featureType" and values are boolean.
 
-        Returns:
+        # Returns:
             The response json containing the feature vector as well as status information
             and optionally descriptive metadata about the features. It contains the following fields:
                 - "status": A list of the status for each feature vector retrieval.
                 - "features": A list containing list of the feature values for each feature_vector.
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
 
-        Raises:
-            HTTPError: If the status code is not 200.
+        # Raises:
+            RestApiError: If the response status code is not 200.
+                - 400: Requested Metadata does not exist
+                - 401: Access denied. API key does not give access to the feature store (e.g feature store not shared with user),
+                    or authorization header (x-api-key) is not properly set.
+                - 500: Internal server error.
         """
         return self.handle_rdrs_feature_store_response(
             rondb_rest_client.get_instance()._send_request(
@@ -110,9 +123,13 @@ class RondbRestApi:
             The response json if the status code is 200, otherwise raises an error.
 
         Raises:
-            HTTPError: If the status code is not 200.
+            RestApiError: If the status code is not 200.
+                - 400: Requested Metadata does not exist (e.g feature view/store does not exist)
+                - 401: Access denied. API key does not give access to the feature store (e.g feature store not shared with user),
+                    or authorization header (x-api-key) is not properly set.
+                - 500: Internal server error.
         """
         if response.status_code == 200:
             return response.json()
         else:
-            response.raise_for_status()
+            raise exceptions.RestAPIError(response.url, response)
