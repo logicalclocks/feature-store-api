@@ -35,6 +35,7 @@ from pyspark.sql.types import (
     MapType,
     ArrayType,
 )
+from pyspark.sql import DataFrame
 
 from hsfs import (
     feature_group,
@@ -287,22 +288,31 @@ class TestSpark:
         # Arrange
         spark_engine = spark.Engine()
 
-        mock_df = mocker.Mock()
+        mock_df = mocker.Mock(spec=DataFrame)
 
         # Act
         result = spark_engine._return_dataframe_type(
             dataframe=mock_df,
             dataframe_type="pandas",
         )
-
         # Assert
         assert result == mock_df.toPandas()
+
+        mock_df = mocker.Mock(spec=pd.DataFrame)
+
+        # Act
+        result = spark_engine._return_dataframe_type(
+            dataframe=mock_df,
+            dataframe_type="pandas",
+        )
+        # Assert
+        assert result == mock_df
 
     def test_return_dataframe_type_numpy(self, mocker):
         # Arrange
         spark_engine = spark.Engine()
 
-        mock_df = mocker.Mock()
+        mock_df = mocker.Mock(spec=DataFrame)
 
         # Act
         result = spark_engine._return_dataframe_type(
@@ -313,11 +323,21 @@ class TestSpark:
         # Assert
         assert result == mock_df.toPandas().values
 
+        mock_df = mocker.Mock(spec=pd.DataFrame)
+
+        # Act
+        result = spark_engine._return_dataframe_type(
+            dataframe=mock_df,
+            dataframe_type="numpy",
+        )
+        # Assert
+        assert result == mock_df.values
+
     def test_return_dataframe_type_python(self, mocker):
         # Arrange
         spark_engine = spark.Engine()
 
-        mock_df = mocker.Mock()
+        mock_df = mocker.Mock(spec=DataFrame)
 
         # Act
         result = spark_engine._return_dataframe_type(
@@ -327,6 +347,16 @@ class TestSpark:
 
         # Assert
         assert result == mock_df.toPandas().values.tolist()
+
+        mock_df = mocker.Mock(spec=pd.DataFrame)
+
+        # Act
+        result = spark_engine._return_dataframe_type(
+            dataframe=mock_df,
+            dataframe_type="python",
+        )
+        # Assert
+        assert result == mock_df.values.tolist()
 
     def test_return_dataframe_type_other(self, mocker):
         # Arrange
