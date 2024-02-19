@@ -320,9 +320,13 @@ class FeatureViewEngine:
                 td_updated.splits,
                 read_options,
                 with_primary_keys=primary_keys,
-                primary_keys=self._get_primary_keys_from_query(feature_view_obj.query),
+                primary_keys=self._get_primary_keys_from_query(feature_view_obj.query)
+                if primary_keys
+                else [],
                 with_event_time=event_time,
-                event_time=self._get_eventtimes_from_query(feature_view_obj.query),
+                event_time=self._get_eventtimes_from_query(feature_view_obj.query)
+                if event_time
+                else [],
                 with_training_helper_columns=training_helper_columns,
                 training_helper_columns=feature_view_obj.training_helper_columns,
                 feature_view_features=[
