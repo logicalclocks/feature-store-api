@@ -301,7 +301,7 @@ class VectorServer:
             return polars_df
         else:
             raise Exception(
-                "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
+                "Unknown return type. Supported return types are 'list', 'polars', 'pandas' and 'numpy'"
             )
 
     def get_feature_vectors(
@@ -351,7 +351,7 @@ class VectorServer:
             return polars_df
         else:
             raise Exception(
-                "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
+                "Unknown return type. Supported return types are 'list', 'polars', 'pandas' and 'numpy'"
             )
 
     def get_inference_helper(self, entry, return_type):

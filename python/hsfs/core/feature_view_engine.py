@@ -520,10 +520,20 @@ class FeatureViewEngine:
             )
 
             df = self._drop_helper_columns(
-                df, feature_view_features, with_primary_keys, primary_keys, False
+                df,
+                feature_view_features,
+                with_primary_keys,
+                primary_keys,
+                False,
+                dataframe_type,
             )
             df = self._drop_helper_columns(
-                df, feature_view_features, with_event_time, event_time, False
+                df,
+                feature_view_features,
+                with_event_time,
+                event_time,
+                False,
+                dataframe_type,
             )
             df = self._drop_helper_columns(
                 df,
@@ -531,6 +541,7 @@ class FeatureViewEngine:
                 with_training_helper_columns,
                 training_helper_columns,
                 True,
+                dataframe_type,
             )
             return df
 
@@ -544,10 +555,19 @@ class FeatureViewEngine:
                 raise e
 
     def _drop_helper_columns(
-        self, df, feature_view_features, with_columns, columns, training_helper
+        self,
+        df,
+        feature_view_features,
+        with_columns,
+        columns,
+        training_helper,
+        dataframe_type,
     ):
         if not with_columns:
-            if engine.get_type().startswith("spark"):
+            if (
+                engine.get_type().startswith("spark")
+                and dataframe_type.lower() == "spark"
+            ):
                 existing_cols = [field.name for field in df.schema.fields]
             else:
                 existing_cols = df.columns

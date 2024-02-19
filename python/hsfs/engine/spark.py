@@ -206,7 +206,7 @@ class Engine:
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "spark"]:
             return dataframe
-        if dataframe_type.lower() == "pandas":
+        if dataframe_type.lower() == "pandas" and isinstance(dataframe, DataFrame):
             return dataframe.toPandas()
         if dataframe_type.lower() == "numpy":
             return dataframe.toPandas().values
