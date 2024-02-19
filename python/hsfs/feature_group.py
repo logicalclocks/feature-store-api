@@ -2110,7 +2110,11 @@ class FeatureGroup(FeatureGroupBase):
                     `as_of(end_wallclock_time, exclude_until=start_wallclock_time).read(read_options=read_options)`
                     instead.
 
-        This function only works on feature groups with `HUDI` time travel format.
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
+
+        !!! warning
+            This function only works for feature groups with time_travel_format='HUDI'.
 
         # Arguments
             start_wallclock_time: Start time of the time travel query. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
@@ -2846,6 +2850,9 @@ class FeatureGroup(FeatureGroupBase):
         exclude_until: Optional[Union[str, int, datetime, date]] = None,
     ):
         """Get Query object to retrieve all features of the group at a point in the past.
+
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
 
         This method selects all features in the feature group and returns a Query object
         at the specified point in time. Optionally, commits before a specified point in time can be
