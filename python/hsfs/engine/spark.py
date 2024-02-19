@@ -206,12 +206,17 @@ class Engine:
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "spark"]:
             return dataframe
-        if dataframe_type.lower() == "pandas" and isinstance(dataframe, DataFrame):
-            return dataframe.toPandas()
+
+        # Converting to pandas dataframe if return type is not spark
+        if isinstance(dataframe, DataFrame):
+            dataframe = dataframe.toPandas()
+
+        if dataframe_type.lower() == "pandas":
+            return dataframe
         if dataframe_type.lower() == "numpy":
-            return dataframe.toPandas().values
+            return dataframe.values
         if dataframe_type.lower() == "python":
-            return dataframe.toPandas().values.tolist()
+            return dataframe.values.tolist()
 
         raise TypeError(
             "Dataframe type `{}` not supported on this platform.".format(dataframe_type)
