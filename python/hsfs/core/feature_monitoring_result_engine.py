@@ -382,9 +382,10 @@ class FeatureMonitoringResultEngine:
             )
 
         # sort by feature name
-        sorted_det_stats, sorted_ref_stats = sorted(
-            detection_statistics, key=lambda fds: fds.feature_name
-        ), sorted(reference_statistics, key=lambda fds: fds.feature_name)
+        sorted_det_stats, sorted_ref_stats = (
+            sorted(detection_statistics, key=lambda fds: fds.feature_name),
+            sorted(reference_statistics, key=lambda fds: fds.feature_name),
+        )
 
         fm_results = []
         for det_fds, ref_fds in zip(sorted_det_stats, sorted_ref_stats):
