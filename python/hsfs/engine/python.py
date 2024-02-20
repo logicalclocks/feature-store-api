@@ -400,11 +400,16 @@ class Engine:
         exact_uniqueness=True,
     ):
         # TODO: add statistics for correlations, histograms and exact_uniqueness
+        arrow_schema = pa.Schema.from_pandas(df, preserve_index=False)
 
         # parse timestamp columns to string columns
-        for col, dtype in df.dtypes.items():
-            if isinstance(dtype, type(np.dtype(np.datetime64))):
-                df[col] = df[col].astype(str)
+        for field in arrow_schema:
+            if not (
+                pa.types.is_list(field.type)
+                or pa.types.is_large_list(field.type)
+                or pa.types.is_struct(field.type)
+            ) and PYARROW_HOPSWORKS_DTYPE_MAPPING[field.type] in ["timestamp", "date"]:
+                df[field.name] = df[field.name].astype(str)
 
         if not relevant_columns:
             stats = df.describe().to_dict()
@@ -427,14 +432,21 @@ class Engine:
             stat["completeness"] = 1
 
             # set data type
-            if isinstance(df.dtypes[col], type(np.dtype(np.float64))):
-                stat["dataType"] = "Fractional"
-            elif isinstance(df.dtypes[col], type(np.dtype(np.int64))):
-                stat["dataType"] = "Integral"
-            elif isinstance(df.dtypes[col], type(np.dtype(np.bool_))):
-                stat["dataType"] = "Boolean"
-            elif isinstance(df.dtypes[col], type(np.dtype(object))):
+            arrow_type = arrow_schema.field(col).type
+            if (
+                pa.types.is_list(arrow_type)
+                or pa.types.is_large_list(arrow_type)
+                or pa.types.is_struct(arrow_type)
+                or PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type]
+                in ["timestamp", "date", "binary", "string"]
+            ):
                 stat["dataType"] = "String"
+            elif PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type] in ["float", "double"]:
+                stat["dataType"] = "Fractional"
+            elif PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type] in ["int", "bigint"]:
+                stat["dataType"] = "Integral"
+            elif PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type] == "boolean":
+                stat["dataType"] = "Boolean"
             else:
                 print(
                     "Data type could not be inferred for column '"
