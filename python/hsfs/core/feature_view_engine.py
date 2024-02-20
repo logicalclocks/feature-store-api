@@ -828,9 +828,11 @@ class FeatureViewEngine:
         for _join in fv_query_obj._joins:
             fv_pks.update(
                 [
-                    (self._check_if_exists_with_prefix(
-                        feature.name, fv_pks, check_prefix
-                    ) if check_duplicate else feature.name)
+                    (
+                        self._check_if_exists_with_prefix(feature.name, fv_pks)
+                        if check_duplicate
+                        else feature.name
+                    )
                     if _join.prefix is None
                     else _join.prefix + feature.name
                     for feature in _join.query._left_feature_group.features
@@ -840,7 +842,7 @@ class FeatureViewEngine:
 
         return list(fv_pks)
 
-    def _get_eventtimes_from_query(self, fv_query_obj, check_prefix=True):
+    def _get_eventtimes_from_query(self, fv_query_obj, check_duplicate=True):
         fv_events = set()
         if fv_query_obj._left_feature_group.event_time:
             fv_events.update([fv_query_obj._left_feature_group.event_time])
@@ -848,10 +850,12 @@ class FeatureViewEngine:
             if _join.query._left_feature_group.event_time:
                 fv_events.update(
                     [
-                        self._check_if_exists_with_prefix(
-                            _join.query._left_feature_group.event_time,
-                            fv_events,
-                            check_prefix,
+                        (
+                            self._check_if_exists_with_prefix(
+                                _join.query._left_feature_group.event_time, fv_events
+                            )
+                            if check_duplicate
+                            else _join.query._left_feature_group.event_time
                         )
                         if _join.prefix is None
                         else _join.prefix + _join.query._left_feature_group.event_time
@@ -860,12 +864,11 @@ class FeatureViewEngine:
 
         return list(fv_events)
 
-    def _check_if_exists_with_prefix(self, f_name, f_set, check_prefix):
-        if check_prefix:
-            if f_name in f_set:
-                raise FeatureStoreException(
-                    f"Provided feature {f_name} is ambiguous and exists in more than one feature groups."
-                    "To avoid this error specify prefix in the join."
-                )
+    def _check_if_exists_with_prefix(self, f_name, f_set):
+        if f_name in f_set:
+            raise FeatureStoreException(
+                f"Provided feature {f_name} is ambiguous and exists in more than one feature groups."
+                "To avoid this error specify prefix in the join."
+            )
         else:
             return f_name
