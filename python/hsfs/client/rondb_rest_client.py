@@ -158,7 +158,7 @@ class RondbRestClientSingleton:
         }
 
     def _get_rondb_rest_server_endpoint(self) -> str:
-        if isinstance(client.get_instance(), client.external.Client):
+        if client.get_instance()._is_external():
             external_domain = self.variable_api.get_loadbalancer_external_domain()
             if external_domain == "":
                 external_domain = client.get_instance().host
@@ -198,9 +198,9 @@ class RondbRestClientSingleton:
             """
 
     def _set_auth(self, optional_config: Optional[dict[str, Any]] = None):
-        if isinstance(client.get_instance(), client.external.Client):
-            assert isinstance(
-                client.get_instance()._auth, client.auth.ApiKeyAuth
+        if client.get_instance()._is_external():
+            assert hasattr(
+                client.get_instance()._auth, "_token"
             ), "External client must use API Key authentication. Contact your system administrator."
             self._auth = client.auth.RonDBKeyAuth(client.get_instance()._auth._token)
         elif isinstance(optional_config, dict) and optional_config.get(

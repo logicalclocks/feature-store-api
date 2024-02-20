@@ -173,7 +173,7 @@ class RondbEngine:
 
         # Raises:
             `hsfs.client.exceptions.RestAPIError`: If the server response status code is not 200.
-            ValueError: If the length of the passed features does not match the length of the entries.
+            `ValueError`: If the length of the passed features does not match the length of the entries.
         """
         payload = self._build_base_payload(
             feature_store_name=feature_store_name,
