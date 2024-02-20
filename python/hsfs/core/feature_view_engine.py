@@ -817,7 +817,7 @@ class FeatureViewEngine:
         )
         return util.get_hostname_replaced_url(path)
 
-    def _get_primary_keys_from_query(self, fv_query_obj, check_prefix=True):
+    def _get_primary_keys_from_query(self, fv_query_obj, check_duplicate=True):
         fv_pks = set(
             [
                 feature.name
