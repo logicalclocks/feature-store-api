@@ -828,9 +828,9 @@ class FeatureViewEngine:
         for _join in fv_query_obj._joins:
             fv_pks.update(
                 [
-                    self._check_if_exists_with_prefix(
+                    (self._check_if_exists_with_prefix(
                         feature.name, fv_pks, check_prefix
-                    )
+                    ) if check_duplicate else feature.name)
                     if _join.prefix is None
                     else _join.prefix + feature.name
                     for feature in _join.query._left_feature_group.features
