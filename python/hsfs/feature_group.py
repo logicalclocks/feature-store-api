@@ -3159,7 +3159,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self,
         dataframe_type: Optional[str] = "default",
         online: Optional[bool] = False,
-        read_options: Optional[dict] = {},
+        read_options: Optional[dict] = None,
     ):
         """Get the feature group as a DataFrame.
 
@@ -3187,7 +3187,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
-
+            read_options: Additional options as key/value pairs to pass to the spark engine.
+                Defaults to `None`.
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
             `pyspark.DataFrame`. A Spark DataFrame.
@@ -3220,7 +3221,11 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().read(dataframe_type=dataframe_type, online=online)
+        return self.select_all().read(
+            dataframe_type=dataframe_type,
+            online=online,
+            read_options=read_options or {},
+        )
 
     def show(self, n: int, online: Optional[bool] = False):
         """Show the first `n` rows of the feature group.
