@@ -15,6 +15,7 @@
 #
 
 from dataclasses import dataclass
+from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException
 from typing import Type
 import json
@@ -59,16 +60,25 @@ class HsmlModel:
     # should get from backend because of authorisation check (unshared project etc)
     def get_model(self):
         try:
-            from hsml.core.model_api import ModelApi
+            from hsml.model import Model
         except ModuleNotFoundError:
             raise FeatureStoreException(
                 "Model is attached to embedding feature but hsml library is not installed."
                 "Install hsml library before getting the feature group."
             )
 
-        return ModelApi().get(
-            self.model_name, self.model_version, self.model_registry_id
-        )
+        path_params = [
+            "project",
+            client.get_instance()._project_id,
+            "modelregistries",
+            self.model_registry_id,
+            "models",
+            self.model_name + "_" + str(self.model_version),
+        ]
+        query_params = {"expand": "trainingdatasets"}
+
+        model_json = client.get_instance()._send_request("GET", path_params, query_params)
+        return Model.from_response_json(model_json)
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
