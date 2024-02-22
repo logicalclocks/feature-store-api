@@ -729,7 +729,9 @@ class TestStatisticsEngine:
         feature_store_id = 99
 
         not_found_response = mocker.Mock()
-        not_found_response.json.return_value = {"errorCode": 270226}
+        not_found_response.json.return_value = {
+            "errorCode": exceptions.RestAPIError.FeatureStoreErrorCode.STATISTICS_NOT_FOUND
+        }
         not_found_response.status_code = 404
 
         mocker.patch(
@@ -755,7 +757,9 @@ class TestStatisticsEngine:
         feature_store_id = 99
 
         bad_request_response = mocker.Mock()
-        bad_request_response.json.return_value = {"errorCode": 270225}
+        bad_request_response.json.return_value = {
+            "errorCode": exceptions.RestAPIError.FeatureStoreErrorCode.FEATURE_GROUP_COMMIT_NOT_FOUND
+        }
         bad_request_response.status_code = 400
 
         mocker.patch(

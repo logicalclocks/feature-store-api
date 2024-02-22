@@ -1,5 +1,6 @@
 import argparse
 import json
+from datetime import datetime
 import hsfs
 
 from hsfs.constructor import query
@@ -7,7 +8,7 @@ from typing import Dict, Any
 from pydoop import hdfs
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, _parse_datatype_string, StructField
-from hsfs.core import feature_view_engine
+from hsfs.core import feature_view_engine, feature_monitoring_config_engine
 from hsfs.statistics_config import StatisticsConfig
 
 
@@ -187,6 +188,54 @@ def import_fg(job_conf: Dict[Any, Any]) -> None:
     fg.insert(df)
 
 
+def run_feature_monitoring(job_conf: Dict[str, str]) -> None:
+    """
+    Run feature monitoring for a given entity (feature_group or feature_view)
+    based on a feature monitoring configuration.
+    """
+    feature_store = job_conf.pop("feature_store")
+    fs = get_feature_store_handle(feature_store)
+
+    if job_conf["entity_type"].upper() == "FEATUREGROUPS":
+        entity = fs.get_feature_group(
+            name=job_conf["name"], version=job_conf["version"]
+        )
+        feature_group_id = entity._id
+        feature_view_name, feature_view_version = None, None
+    else:
+        feature_group_id = None
+        entity = fs.get_feature_view(name=job_conf["name"], version=job_conf["version"])
+        feature_view_name, feature_view_version = (
+            entity.name,
+            entity.version,
+        )
+
+    monitoring_config_engine = (
+        feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+            feature_store_id=fs._id,
+            feature_group_id=feature_group_id,
+            feature_view_name=feature_view_name,
+            feature_view_version=feature_view_version,
+        )
+    )
+
+    try:
+        monitoring_config_engine.run_feature_monitoring(
+            entity=entity,
+            config_name=job_conf["config_name"],
+        )
+    except Exception as e:
+        config = monitoring_config_engine.get_feature_monitoring_configs(
+            name=job_conf["config_name"]
+        )
+        monitoring_config_engine._result_engine.save_feature_monitoring_result_with_exception(
+            config_id=config.id,
+            job_name=config.job_name,
+            feature_name=config.feature_name,
+        )
+        raise e
+
+
 if __name__ == "__main__":
     # Setup spark first so it fails faster in case of args errors
     # Otherwise the resource manager will wait until the spark application master
@@ -204,6 +253,7 @@ if __name__ == "__main__":
             "compute_stats",
             "ge_validate",
             "import_fg",
+            "run_feature_monitoring",
         ],
         help="Operation type",
     )
@@ -211,6 +261,16 @@ if __name__ == "__main__":
         "-path",
         type=str,
         help="Location on HopsFS of the JSON containing the full configuration",
+    )
+
+    def parse_isoformat_date(da) -> datetime:
+        # 'Z' is supported in Python 3.11+ so we need to replace it in 3.10
+        return datetime.fromisoformat(da.replace("Z", "+00:00"))
+
+    parser.add_argument(
+        "-start_time",
+        type=parse_isoformat_date,
+        help="Job start time",
     )
 
     args = parser.parse_args()
@@ -228,3 +288,5 @@ if __name__ == "__main__":
         ge_validate(job_conf)
     elif args.op == "import_fg":
         import_fg(job_conf)
+    elif args.op == "run_feature_monitoring":
+        run_feature_monitoring(job_conf)
