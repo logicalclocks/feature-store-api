@@ -320,9 +320,17 @@ class FeatureViewEngine:
                 td_updated.splits,
                 read_options,
                 with_primary_keys=primary_keys,
-                primary_keys=self._get_primary_keys_from_query(feature_view_obj.query),
+                # at this stage training dataset was already written and if there was any name clash it should have
+                # already failed in creation phase, so we don't need to check it here. This is to make
+                # sure that both it is backwards compatible and also to drop columns if user set
+                # primary_keys and event_times to True on creation stage.
+                primary_keys=self._get_primary_keys_from_query(
+                    feature_view_obj.query, False
+                ),
                 with_event_time=event_time,
-                event_time=self._get_eventtimes_from_query(feature_view_obj.query),
+                event_time=self._get_eventtimes_from_query(
+                    feature_view_obj.query, False
+                ),
                 with_training_helper_columns=training_helper_columns,
                 training_helper_columns=feature_view_obj.training_helper_columns,
                 feature_view_features=[
@@ -809,7 +817,7 @@ class FeatureViewEngine:
         )
         return util.get_hostname_replaced_url(path)
 
-    def _get_primary_keys_from_query(self, fv_query_obj):
+    def _get_primary_keys_from_query(self, fv_query_obj, check_duplicate=True):
         fv_pks = set(
             [
                 feature.name
@@ -820,7 +828,11 @@ class FeatureViewEngine:
         for _join in fv_query_obj._joins:
             fv_pks.update(
                 [
-                    self._check_if_exists(feature.name, fv_pks)
+                    (
+                        self._check_if_exists_with_prefix(feature.name, fv_pks)
+                        if check_duplicate
+                        else feature.name
+                    )
                     if _join.prefix is None
                     else _join.prefix + feature.name
                     for feature in _join.query._left_feature_group.features
@@ -830,7 +842,7 @@ class FeatureViewEngine:
 
         return list(fv_pks)
 
-    def _get_eventtimes_from_query(self, fv_query_obj):
+    def _get_eventtimes_from_query(self, fv_query_obj, check_duplicate=True):
         fv_events = set()
         if fv_query_obj._left_feature_group.event_time:
             fv_events.update([fv_query_obj._left_feature_group.event_time])
@@ -838,8 +850,12 @@ class FeatureViewEngine:
             if _join.query._left_feature_group.event_time:
                 fv_events.update(
                     [
-                        self._check_if_exists(
-                            _join.query._left_feature_group.event_time, fv_events
+                        (
+                            self._check_if_exists_with_prefix(
+                                _join.query._left_feature_group.event_time, fv_events
+                            )
+                            if check_duplicate
+                            else _join.query._left_feature_group.event_time
                         )
                         if _join.prefix is None
                         else _join.prefix + _join.query._left_feature_group.event_time
@@ -848,7 +864,7 @@ class FeatureViewEngine:
 
         return list(fv_events)
 
-    def _check_if_exists(self, f_name, f_set):
+    def _check_if_exists_with_prefix(self, f_name, f_set):
         if f_name in f_set:
             raise FeatureStoreException(
                 f"Provided feature {f_name} is ambiguous and exists in more than one feature groups."

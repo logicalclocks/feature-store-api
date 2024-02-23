@@ -260,6 +260,9 @@ class Query:
     ):
         """Perform time travel on the given Query.
 
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
+
         This method returns a new Query object at the specified point in time. Optionally, commits before a
         specified point in time can be excluded from the query. The Query can then either be read into a Dataframe
         or used further to perform joins or construct a training dataset.
