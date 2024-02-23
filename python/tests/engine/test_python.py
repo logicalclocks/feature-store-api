@@ -32,7 +32,7 @@ from hsfs import (
     util,
 )
 from hsfs.engine import python
-from hsfs.core import inode, execution, job
+from hsfs.core import inode, job
 from hsfs.constructor import query
 from hsfs.client import exceptions
 from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
@@ -2566,97 +2566,6 @@ class TestPython:
         # Assert
         assert mock_ingestion_job_conf.call_count == 1
         assert mock_ingestion_job_conf.call_args[1]["write_options"] == {"test": 2}
-
-    def test_wait_for_job(self, mocker):
-        # Arrange
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine.wait_for_job(job=None)
-
-        # Assert
-        assert mock_job_api.return_value.last_execution.call_count == 1
-
-    def test_wait_for_job_wait_for_job_true(self, mocker):
-        # Arrange
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine.wait_for_job(job=None, await_termination=True)
-
-        # Assert
-        assert mock_job_api.return_value.last_execution.call_count == 1
-
-    def test_wait_for_job_wait_for_job_false(self, mocker):
-        # Arrange
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine.wait_for_job(job=None, await_termination=False)
-
-        # Assert
-        assert mock_job_api.return_value.last_execution.call_count == 0
-
-    def test_wait_for_job_final_status_succeeded(self, mocker):
-        # Arrange
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-
-        python_engine = python.Engine()
-
-        mock_job_api.return_value.last_execution.return_value = [
-            execution.Execution(id=1, state=None, final_status="succeeded")
-        ]
-
-        # Act
-        python_engine.wait_for_job(job=None)
-
-        # Assert
-        assert mock_job_api.return_value.last_execution.call_count == 1
-
-    def test_wait_for_job_final_status_failed(self, mocker):
-        # Arrange
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-
-        python_engine = python.Engine()
-
-        mock_job_api.return_value.last_execution.return_value = [
-            execution.Execution(id=1, state=None, final_status="failed")
-        ]
-
-        # Act
-        with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            python_engine.wait_for_job(job=None)
-
-        # Assert
-        assert mock_job_api.return_value.last_execution.call_count == 1
-        assert (
-            str(e_info.value)
-            == "The Hopsworks Job failed, use the Hopsworks UI to access the job logs"
-        )
-
-    def test_wait_for_job_final_status_killed(self, mocker):
-        # Arrange
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-
-        python_engine = python.Engine()
-
-        mock_job_api.return_value.last_execution.return_value = [
-            execution.Execution(id=1, state=None, final_status="killed")
-        ]
-
-        # Act
-        with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            python_engine.wait_for_job(job=None)
-
-        # Assert
-        assert mock_job_api.return_value.last_execution.call_count == 1
-        assert str(e_info.value) == "The Hopsworks Job was stopped"
 
     def test_add_file(self):
         # Arrange

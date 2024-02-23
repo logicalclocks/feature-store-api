@@ -60,7 +60,7 @@ class Job:
     @classmethod
     def from_response_json(cls, json_dict):
         # Job config should not be decamelized when updated
-        config = json_dict.pop("config")
+        config = json_dict.pop("config", None)
         json_decamelized = humps.decamelize(json_dict)
         json_decamelized["config"] = config
         return cls(**json_decamelized)
