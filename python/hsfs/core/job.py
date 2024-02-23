@@ -15,7 +15,9 @@
 #
 
 import humps
-from hsfs import engine
+import time
+
+from hsfs import util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import job_api
 from hsfs.core import job_schedule as js
@@ -116,10 +118,10 @@ class Job:
         self._job_api.launch(self.name, args=args)
         print(
             "Job started successfully, you can follow the progress at \n{}".format(
-                engine.get_instance().get_job_url(self.href)
+                util.get_job_url(self.href)
             )
         )
-        engine.get_instance().wait_for_job(self, await_termination=await_termination)
+        self._wait_for_job(await_termination=await_termination)
 
     def get_state(self):
         """Get the state of the job.
@@ -223,3 +225,28 @@ class Job:
             self._name, job_schedule.to_dict()
         )
         return self._job_schedule
+
+    def _wait_for_job(self, await_termination=True):
+        # If the user passed the wait_for_job option consider it,
+        # otherwise use the default True
+        while await_termination:
+            executions = self._job_api.last_execution(self)
+            if len(executions) > 0:
+                execution = executions[0]
+            else:
+                return
+
+            if execution.final_status.lower() == "succeeded":
+                return
+            elif execution.final_status.lower() == "failed":
+                raise FeatureStoreException(
+                    "The Hopsworks Job failed, use the Hopsworks UI to access the job logs"
+                )
+            elif execution.final_status.lower() == "killed":
+                raise FeatureStoreException("The Hopsworks Job was stopped")
+            elif execution.state.lower() == "framework_failure":
+                raise FeatureStoreException(
+                    "The Hopsworks Job monitoring failed, could not determine the final status"
+                )
+
+            time.sleep(3)

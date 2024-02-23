@@ -17,7 +17,6 @@
 import pandas as pd
 import numpy as np
 import boto3
-import time
 import re
 import ast
 import warnings
@@ -39,7 +38,6 @@ import great_expectations as ge
 
 from io import BytesIO
 from pyhive import hive
-from urllib.parse import urlparse
 from typing import TypeVar, Optional, Dict, Any
 from confluent_kafka import Consumer, Producer, TopicPartition, KafkaError
 from tqdm.auto import tqdm
@@ -65,7 +63,7 @@ from hsfs.core import (
 )
 from hsfs.constructor import query
 from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.client import exceptions, hopsworks
+from hsfs.client import hopsworks
 from hsfs.feature_group import FeatureGroup
 from thrift.transport.TTransport import TTransportException
 from pyhive.exc import OperationalError
@@ -384,7 +382,7 @@ class Engine:
         job = stat_api.compute(metadata_instance)
         print(
             "Statistics Job started successfully, you can follow the progress at \n{}".format(
-                self.get_job_url(job.href)
+                util.get_job_url(job.href)
             )
         )
 
@@ -807,7 +805,7 @@ class Engine:
             td_job = td_api.compute(training_dataset, td_app_conf)
         print(
             "Training dataset job started successfully, you can follow the progress at \n{}".format(
-                self.get_job_url(td_job.href)
+                util.get_job_url(td_job.href)
             )
         )
 
@@ -882,22 +880,6 @@ class Engine:
         """Wrapper around save_dataframe in order to provide no-op."""
         pass
 
-    def get_job_url(self, href: str):
-        """Use the endpoint returned by the API to construct the UI url for jobs
-
-        Args:
-            href (str): the endpoint returned by the API
-        """
-        url = urlparse(href)
-        url_splits = url.path.split("/")
-        project_id = url_splits[4]
-        job_name = url_splits[6]
-        ui_url = url._replace(
-            path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
-        )
-        ui_url = client.get_instance().replace_public_host(ui_url)
-        return ui_url.geturl()
-
     def _get_app_options(self, user_write_options={}):
         """
         Generate the options that should be passed to the application doing the ingestion.
@@ -915,31 +897,6 @@ class Engine:
             write_options=user_write_options,
             spark_job_configuration=spark_job_configuration,
         )
-
-    def wait_for_job(self, job, await_termination=True):
-        # If the user passed the wait_for_job option consider it,
-        # otherwise use the default True
-        while await_termination:
-            executions = self._job_api.last_execution(job)
-            if len(executions) > 0:
-                execution = executions[0]
-            else:
-                return
-
-            if execution.final_status.lower() == "succeeded":
-                return
-            elif execution.final_status.lower() == "failed":
-                raise exceptions.FeatureStoreException(
-                    "The Hopsworks Job failed, use the Hopsworks UI to access the job logs"
-                )
-            elif execution.final_status.lower() == "killed":
-                raise exceptions.FeatureStoreException("The Hopsworks Job was stopped")
-            elif execution.state.lower() == "framework_failure":
-                raise exceptions.FeatureStoreException(
-                    "The Hopsworks Job monitoring failed, could not determine the final status"
-                )
-
-            time.sleep(3)
 
     def add_file(self, file):
         if not file:

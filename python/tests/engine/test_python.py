@@ -2552,23 +2552,6 @@ class TestPython:
         # Assert
         assert result is None
 
-    def test_get_job_url(self, mocker):
-        # Arrange
-        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine.get_job_url(href="1/2/3/4/5/6/7/8")
-
-        # Assert
-        assert (
-            mock_client_get_instance.return_value.replace_public_host.call_args[0][
-                0
-            ].path
-            == "p/5/jobs/named/7/executions"
-        )
-
     def test_get_app_options(self, mocker):
         # Arrange
         mock_ingestion_job_conf = mocker.patch(
