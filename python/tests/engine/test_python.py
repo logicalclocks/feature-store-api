@@ -1721,8 +1721,7 @@ class TestPython:
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mock_dataset_api = mocker.patch("hsfs.core.dataset_api.DatasetApi")
         mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_util_get_job_url = mocker.patch("hsfs.util.get_job_url")
 
         python_engine = python.Engine()
 
@@ -1746,7 +1745,7 @@ class TestPython:
         assert mock_fg_api.return_value.ingestion.call_count == 1
         assert mock_dataset_api.return_value.upload.call_count == 1
         assert mock_job_api.return_value.launch.call_count == 1
-        assert mock_engine_get_instance.return_value.get_job_url.call_count == 1
+        assert mock_util_get_job_url.call_count == 1
 
     def test_get_training_data(self, mocker):
         # Arrange
@@ -2305,9 +2304,9 @@ class TestPython:
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
+        mocker.patch("hsfs.util.get_job_url")
         mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine.wait_for_job"
+            "hsfs.core.job.Job._wait_for_job"
         )
 
         python_engine = python.Engine()
@@ -2336,12 +2335,13 @@ class TestPython:
         # Arrange
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
+        mock_job = mocker.patch("hsfs.core.job.Job")
+
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
-        mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine.wait_for_job"
-        )
+        mock_td_api.return_value.compute.return_value = mock_job
+        mocker.patch("hsfs.util.get_job_url")
 
         python_engine = python.Engine()
 
@@ -2370,18 +2370,18 @@ class TestPython:
         # Assert
         assert mock_fv_api.return_value.compute_training_dataset.call_count == 0
         assert mock_td_api.return_value.compute.call_count == 1
-        assert mock_python_engine_wait_for_job.call_count == 1
+        assert mock_job._wait_for_job.call_count == 1
 
     def test_write_training_dataset_query_fv(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
+        mock_job = mocker.patch("hsfs.core.job.Job")
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mock_fv_api.return_value.compute_training_dataset.return_value = mock_job
+
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
-        mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine.wait_for_job"
-        )
+        mocker.patch("hsfs.util.get_job_url")
 
         python_engine = python.Engine()
 
@@ -2418,7 +2418,7 @@ class TestPython:
         # Assert
         assert mock_fv_api.return_value.compute_training_dataset.call_count == 1
         assert mock_td_api.return_value.compute.call_count == 0
-        assert mock_python_engine_wait_for_job.call_count == 1
+        assert mock_job._wait_for_job.call_count == 1
 
     def test_create_hive_connection(self, mocker):
         # Arrange
@@ -2973,7 +2973,7 @@ class TestPython:
         mock_python_engine_kafka_produce = mocker.patch(
             "hsfs.engine.python.Engine._kafka_produce"
         )
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
+        mocker.patch("hsfs.util.get_job_url")
         mocker.patch(
             "hsfs.engine.python.Engine._kafka_get_offsets",
             return_value=" tests_offsets",
@@ -3024,7 +3024,7 @@ class TestPython:
         mock_python_engine_kafka_produce = mocker.patch(
             "hsfs.engine.python.Engine._kafka_produce"
         )
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
+        mocker.patch("hsfs.util.get_job_url")
         mocker.patch(
             "hsfs.engine.python.Engine._kafka_get_offsets",
             side_effect=["", " tests_offsets"],

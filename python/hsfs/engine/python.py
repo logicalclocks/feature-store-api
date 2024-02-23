@@ -386,7 +386,7 @@ class Engine:
             )
         )
 
-        self.wait_for_job(job)
+        job._wait_for_job()
         return job
 
     def profile(
@@ -809,11 +809,9 @@ class Engine:
             )
         )
 
-        self.wait_for_job(
-            td_job,
-            await_termination=user_write_options.get("wait_for_job", True),
+        td_job._wait_for_job(
+            await_termination=user_write_options.get("wait_for_job", True)
         )
-
         return td_job
 
     def _create_hive_connection(self, feature_store, hive_config=None):
