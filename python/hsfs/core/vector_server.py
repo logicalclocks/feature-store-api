@@ -40,7 +40,7 @@ class VectorServer:
     def __init__(
         self,
         feature_store_id,
-        features=[],
+        features=None,
         training_dataset_version=None,
         serving_keys=None,
         skip_fg_ids=None,
@@ -49,7 +49,7 @@ class VectorServer:
         feature_view_version: int = None,
     ):
         self._training_dataset_version = training_dataset_version
-        self._features = features
+        self._features = [] if features is None else features
         self._feature_vector_col_name = (
             [
                 feat.name
@@ -108,6 +108,10 @@ class VectorServer:
         init_rondb_rest_client: bool = False,
         options=None,
     ):
+        if init_rondb_rest_client is False and init_sql_client is False:
+            raise ValueError(
+                "At least one of the clients should be initialised. Set init_sql_client or init_rondb_rest_client to True."
+            )
         self._init_rondb_rest_client = init_rondb_rest_client
         self._init_sql_client = init_sql_client
 
@@ -119,10 +123,17 @@ class VectorServer:
 
         if self._init_rondb_rest_client is True:
             self._rondb_engine = rondb_engine.RonDBEngine()
-            client.rondb_rest_client.init_rondb_rest_client(
-                optional_config=None
-                if not isinstance(options, dict)
-                else options.get("rondb_rest_config", None)
+            reset_rondb_connection = False
+            rondb_rest_config = None
+            if isinstance(options, dict):
+                reset_rondb_connection = options.get(
+                    "reset_rondb_connection", reset_rondb_connection
+                )
+                rondb_rest_config = options.get("rondb_rest_config", rondb_rest_config)
+
+            client.rondb_rest_client.init_or_reset_rondb_rest_client(
+                optional_config=rondb_rest_config,
+                reset_connection=reset_rondb_connection,
             )
 
         if init_sql_client is True:
@@ -303,12 +314,11 @@ class VectorServer:
         use_sql_client: bool = True,
     ):
         """Assembles serving vector from online feature store."""
-
-        use_rondb_http = self.which_client_and_ensure_initialised(
+        use_rondb_rest = self.which_client_and_ensure_initialised(
             use_rondb_rest_client=use_rondb_rest_client, use_sql_client=use_sql_client
         )
 
-        if use_rondb_http:
+        if use_rondb_rest:
             serving_vector = self._rondb_engine.get_single_raw_feature_vector(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
@@ -352,11 +362,11 @@ class VectorServer:
         use_sql_client: bool = True,
     ):
         """Assembles serving vector from online feature store."""
-        use_rondb_http = self.which_client_and_ensure_initialised(
+        use_rondb_rest = self.which_client_and_ensure_initialised(
             use_rondb_rest_client=use_rondb_rest_client, use_sql_client=use_sql_client
         )
 
-        if use_rondb_http:
+        if use_rondb_rest:
             batch_results = self._rondb_engine.get_batch_raw_feature_vectors(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,

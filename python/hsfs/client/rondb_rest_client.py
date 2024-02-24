@@ -16,6 +16,7 @@
 import requests
 from furl import furl
 from typing import Optional, Any
+from warnings import warn
 
 from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException
@@ -24,18 +25,19 @@ from hsfs.core import variable_api
 _rondb_client = None
 
 
-def init_rondb_rest_client(optional_config: Optional[dict[str, Any]] = None):
-    assert (
-        client.get_instance() is not None
-    ), """Hopsworks Client is not connected. Please connect to Hopsworks cluster
-            via hopsworks.login or hsfs.connection before initialising the RonDB REST Client.
-            """
-
+def init_or_reset_rondb_rest_client(
+    optional_config: Optional[dict[str, Any]] = None, reset_connection: bool = False
+):
     global _rondb_client
     if not _rondb_client:
         _rondb_client = RondbRestClientSingleton(optional_config=optional_config)
+    elif reset_connection:
+        _rondb_client.reset_rondb_connection(optional_config=optional_config)
     else:
-        _rondb_client.refresh_rondb_connection(optional_config=optional_config)
+        warn(
+            "RonDB Rest Client is already initialised. To reset connection or/and override configuration,\
+            use reset_rondb_rest_client_connection or get_instance methods with optional"
+        )
 
 
 def get_instance() -> "RondbRestClientSingleton":
@@ -76,11 +78,9 @@ class RondbRestClientSingleton:
         self._setup_rest_client(
             optional_config=optional_config, use_current_config=False
         )
-        # self._check_rondb_connection()
+        self.is_connected()
 
-    def refresh_rondb_connection(
-        self, optional_config: Optional[dict[str, Any]] = None
-    ):
+    def reset_rondb_connection(self, optional_config: Optional[dict[str, Any]] = None):
         self._check_hopsworks_connection()
         if self._rest_client is not None:
             self._rest_client.close()
@@ -110,7 +110,7 @@ class RondbRestClientSingleton:
             self._rest_client = requests.Session()
         else:
             raise ValueError(
-                "Use the refresh_rondb_connection method to reset the rondb_client_connection"
+                "Use the reset_rondb_connection method to reset the rondb_client_connection"
             )
 
         # Set base_url
@@ -215,10 +215,9 @@ class RondbRestClientSingleton:
                 + f"Provide a configuration with the {self.API_KEY} key."
             )
 
-    def _check_rondb_connection(self):
+    def is_connected(self):
         if self._rest_client is None:
             raise FeatureStoreException("RonDB Rest Client is not initialised.")
-        else:
-            assert self._send_request(
-                "GET", ["ping"]
-            ), "RonDB Rest Server is not reachable."
+
+        if not self._send_request("GET", ["ping"]):
+            warn("Ping failed, RonDB Rest Server is not reachable.")

@@ -59,7 +59,7 @@ class TestRondbRestClient:
         )
 
         # Act
-        rondb_rest_client.init_rondb_rest_client()
+        rondb_rest_client.init_or_reset_rondb_rest_client()
         rondb_rest_client_instance = rondb_rest_client.get_instance()
 
         # Assert
@@ -88,8 +88,10 @@ class TestRondbRestClient:
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException):
-            rondb_rest_client.init_rondb_rest_client()
-        rondb_rest_client.init_rondb_rest_client(optional_config=optional_config)
+            rondb_rest_client.init_or_reset_rondb_rest_client()
+        rondb_rest_client.init_or_reset_rondb_rest_client(
+            optional_config=optional_config
+        )
         rondb_rest_client_instance = rondb_rest_client.get_instance()
 
         # Assert
