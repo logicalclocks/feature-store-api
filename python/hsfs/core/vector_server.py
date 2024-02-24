@@ -17,12 +17,14 @@ import re
 import io
 import avro.schema
 import avro.io
-from hsfs.client.exceptions import FeatureStoreException
 from sqlalchemy import sql, bindparam, exc, text
 import numpy as np
 import pandas as pd
+import asyncio
+
 from hsfs import util
 from hsfs import training_dataset, feature_view, client
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.serving_key import ServingKey
 from hsfs.core import (
     training_dataset_api,
@@ -33,8 +35,6 @@ from hsfs.core import (
     rondb_engine,
 )
 
-import asyncio
-
 
 class VectorServer:
     def __init__(
@@ -44,7 +44,6 @@ class VectorServer:
         training_dataset_version=None,
         serving_keys=None,
         skip_fg_ids=None,
-        use_rondb_rest_client: bool = False,
         feature_store_name: str = None,
         feature_view_name: str = None,
         feature_view_version: int = None,
@@ -95,11 +94,9 @@ class VectorServer:
         self._required_serving_keys = None
         self._async_pool = None
 
-        self._use_rondb_rest_client = use_rondb_rest_client
-        if self._use_rondb_rest_client:
-            self._rondb_engine = rondb_engine.RondbEngine()
-        else:
-            self._rondb_engine = None
+        self._rondb_engine = None
+        self._init_rondb_rest_client = None
+        self._init_sql_client = None
 
     def init_serving(
         self,
@@ -107,27 +104,35 @@ class VectorServer:
         batch,
         external,
         inference_helper_columns=False,
+        init_sql_client=True,
+        init_rondb_rest_client: bool = False,
         options=None,
     ):
+        self._init_rondb_rest_client = init_rondb_rest_client
+        self._init_sql_client = init_sql_client
+
         if external is None:
             external = isinstance(client.get_instance(), client.external.Client)
         # `init_prepared_statement` should be the last because other initialisations
         # has to be done successfully before it is able to fetch feature vectors.
         self.init_transformation(entity)
-        if self._use_rondb_rest_client:
+
+        if self._init_rondb_rest_client is True:
+            self._rondb_engine = rondb_engine.RonDBEngine()
             client.rondb_rest_client.init_rondb_rest_client(
                 optional_config=None
                 if not isinstance(options, dict)
                 else options.get("rondb_rest_config", None)
             )
 
-        self.init_prepared_statement(
-            entity,
-            batch,
-            external,
-            inference_helper_columns,
-            options=options,
-        )
+        if init_sql_client is True:
+            self.init_prepared_statement(
+                entity,
+                batch,
+                external,
+                inference_helper_columns,
+                options=options,
+            )
 
     def init_batch_scoring(self, entity):
         self.init_transformation(entity)
@@ -295,14 +300,15 @@ class VectorServer:
         passed_features=[],
         allow_missing=False,
         use_rondb_rest_client: bool = False,
-        force_sql_client: bool = False,
+        use_sql_client: bool = True,
     ):
         """Assembles serving vector from online feature store."""
 
-        # Only use rondb rest client if it is explicitly set or if it is set as default and not forced to use sql client
-        if use_rondb_rest_client or (
-            self._use_rondb_rest_client and not force_sql_client
-        ):
+        use_rondb_http = self.which_client_and_ensure_initialised(
+            use_rondb_rest_client=use_rondb_rest_client, use_sql_client=use_sql_client
+        )
+
+        if use_rondb_http:
             serving_vector = self._rondb_engine.get_single_raw_feature_vector(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
@@ -343,13 +349,14 @@ class VectorServer:
         passed_features=[],
         allow_missing=False,
         use_rondb_rest_client: bool = False,
-        force_sql_client: bool = False,
+        use_sql_client: bool = True,
     ):
         """Assembles serving vector from online feature store."""
+        use_rondb_http = self.which_client_and_ensure_initialised(
+            use_rondb_rest_client=use_rondb_rest_client, use_sql_client=use_sql_client
+        )
 
-        if use_rondb_rest_client or (
-            self._use_rondb_rest_client and not force_sql_client
-        ):
+        if use_rondb_http:
             batch_results = self._rondb_engine.get_batch_raw_feature_vectors(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
@@ -394,6 +401,44 @@ class VectorServer:
             raise ValueError(
                 "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
             )
+
+    def which_client_and_ensure_initialised(
+        self, use_rondb_rest_client: bool, use_sql_client: bool
+    ) -> bool:
+        """Check if the requested client is initialised as well as deciding which client to use based on default.
+
+        # Arguments:
+            use_rondb_rest_client: bool. user specified override to use rondb_client.
+            use_sql_client: bool. user specified override to use sql_client.
+
+        # Returns:
+            True if rondb rest client is used, False if sql client is used.
+        """
+        if use_rondb_rest_client and use_sql_client:
+            raise ValueError(
+                "Both rondb rest client and sql client cannot be used at the same time."
+            )
+        if self._init_rondb_rest_client is False and self._init_sql_client is False:
+            raise ValueError(
+                "No client is initialised. Call `init_serving` with init_sql_client or init_rondb_client set to True before using it."
+            )
+        if use_sql_client:
+            if (
+                self._init_sql_client is False
+                or self._prepared_statement_engine is None
+            ):
+                raise ValueError(
+                    "SQL Client is not initialised. Call `init_serving` with init_sql_client set to True before using it."
+                )
+            return False
+        if use_rondb_rest_client:
+            if self._init_rondb_rest_client is False or self._rondb_engine is None:
+                raise ValueError(
+                    "RonDB Rest Client is not initialised. Call `init_serving` with init_rondb_client set to True before using it."
+                )
+            return True
+        # If no override is specified, use the initialised client
+        return self._init_rondb_rest_client
 
     def get_inference_helper(self, entry, return_type):
         """Assembles serving vector from online feature store."""
