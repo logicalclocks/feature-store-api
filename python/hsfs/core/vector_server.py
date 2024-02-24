@@ -17,6 +17,7 @@ import re
 import io
 import avro.schema
 import avro.io
+from hsfs.client.exceptions import FeatureStoreException
 from sqlalchemy import sql, bindparam, exc, text
 import numpy as np
 import pandas as pd
@@ -294,10 +295,14 @@ class VectorServer:
         passed_features=[],
         allow_missing=False,
         use_rondb_rest_client: bool = False,
+        force_sql_client: bool = False,
     ):
         """Assembles serving vector from online feature store."""
 
-        if use_rondb_rest_client:
+        # Only use rondb rest client if it is explicitly set or if it is set as default and not forced to use sql client
+        if use_rondb_rest_client or (
+            self._use_rondb_rest_client and not force_sql_client
+        ):
             serving_vector = self._rondb_engine.get_single_raw_feature_vector(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
@@ -327,7 +332,7 @@ class VectorServer:
             pandas_df.columns = self._feature_vector_col_name
             return pandas_df
         else:
-            raise Exception(
+            raise ValueError(
                 "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
             )
 
@@ -338,10 +343,13 @@ class VectorServer:
         passed_features=[],
         allow_missing=False,
         use_rondb_rest_client: bool = False,
+        force_sql_client: bool = False,
     ):
         """Assembles serving vector from online feature store."""
 
-        if use_rondb_rest_client:
+        if use_rondb_rest_client or (
+            self._use_rondb_rest_client and not force_sql_client
+        ):
             batch_results = self._rondb_engine.get_batch_raw_feature_vectors(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
@@ -383,7 +391,7 @@ class VectorServer:
             pandas_df.columns = self._feature_vector_col_name
             return pandas_df
         else:
-            raise Exception(
+            raise ValueError(
                 "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
             )
 
@@ -399,7 +407,7 @@ class VectorServer:
         elif return_type.lower() == "dict":
             return serving_vector
         else:
-            raise Exception(
+            raise ValueError(
                 "Unknown return type. Supported return types are 'pandas' and 'dict'"
             )
 
@@ -432,7 +440,7 @@ class VectorServer:
         elif return_type.lower() == "pandas":
             return pd.DataFrame(batch_results)
         else:
-            raise Exception(
+            raise ValueError(
                 "Unknown return type. Supported return types are 'dict' and 'pandas'"
             )
 
@@ -612,7 +620,7 @@ class VectorServer:
                 if fill_na:
                     vector.append(None)
                 else:
-                    raise Exception(
+                    raise FeatureStoreException(
                         f"Feature '{feature_name}' is missing from vector."
                         "Possible reasons: "
                         "1. There is no match in the given entry."
