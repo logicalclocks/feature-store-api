@@ -356,7 +356,13 @@ class FeatureView:
             feature_view_version=self.version,
         )
         self._batch_vectors_server.init_serving(
-            self, True, external, True, options=options
+            entity=self,
+            batch=True,
+            external=external,
+            inference_helper_columns=True,
+            init_rondb_rest_client=init_rondb_rest_client,
+            init_sql_client=init_sql_client,
+            options=options,
         )
 
         if len(self._get_embedding_fgs()) > 0:
