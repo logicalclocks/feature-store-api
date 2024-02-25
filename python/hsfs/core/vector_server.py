@@ -122,7 +122,7 @@ class VectorServer:
         self.init_transformation(entity)
 
         if self._init_rondb_rest_client is True:
-            self._rondb_engine = rondb_engine.RonDBEngine()
+            self._rondb_engine = rondb_engine.RondbEngine()
             reset_rondb_connection = False
             rondb_rest_config = None
             if isinstance(options, dict):
