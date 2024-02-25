@@ -57,6 +57,9 @@ class TestRondbRestClient:
             "hsfs.core.variable_api.VariableApi.get_loadbalancer_external_domain",
             return_value="app.hopsworks.ai",
         )
+        ping_rdrs_mock = mocker.patch(
+            "hsfs.client.rondb_rest_client.RondbRestClientSingleton.is_connected",
+        )
 
         # Act
         rondb_rest_client.init_or_reset_rondb_rest_client()
@@ -71,6 +74,7 @@ class TestRondbRestClient:
             "https://app.hopsworks.ai:4406/0.1.0"
         )
         assert rondb_rest_client_instance._auth._token == "external_client_api_key"
+        assert ping_rdrs_mock.call_count == 1
 
     def test_setup_rondb_rest_client_internal(self, mocker, monkeypatch):
         # Arrange
@@ -85,6 +89,9 @@ class TestRondbRestClient:
             return_value="consul",
         )
         optional_config = {"api_key": "provided_api_key"}
+        ping_rdrs_mock = mocker.patch(
+            "hsfs.client.rondb_rest_client.RondbRestClientSingleton.is_connected",
+        )
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException):
@@ -105,3 +112,4 @@ class TestRondbRestClient:
             "https://rdrs.service.consul:4406/0.1.0"
         )
         assert rondb_rest_client_instance._auth._token == "provided_api_key"
+        assert ping_rdrs_mock.call_count == 1

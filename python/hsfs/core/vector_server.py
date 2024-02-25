@@ -100,9 +100,9 @@ class VectorServer:
 
     def init_serving(
         self,
-        entity,
-        batch,
-        external,
+        entity: "feature_view.FeatureView",
+        batch: bool,
+        external: bool = None,
         inference_helper_columns=False,
         init_sql_client=True,
         init_rondb_rest_client: bool = False,

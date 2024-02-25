@@ -73,7 +73,7 @@ class RondbRestClientSingleton:
         self._check_hopsworks_connection()
         self.variable_api = variable_api.VariableApi()
         self._auth = None
-        self._rest_client = None
+        self._session = None
         self._current_config = None
         self._setup_rest_client(
             optional_config=optional_config, use_current_config=False
@@ -82,9 +82,9 @@ class RondbRestClientSingleton:
 
     def reset_rondb_connection(self, optional_config: Optional[dict[str, Any]] = None):
         self._check_hopsworks_connection()
-        if self._rest_client is not None:
-            self._rest_client.close()
-        self._rest_client = None
+        if self._session is not None:
+            self._session.close()
+        self._session = None
         self._setup_rest_client(
             optional_config=optional_config,
             use_current_config=False if optional_config else True,
@@ -106,11 +106,12 @@ class RondbRestClientSingleton:
 
         self._set_auth(optional_config)
         self._verify = self._current_config[self.VERIFY_CERTS]
-        if not self._rest_client:
-            self._rest_client = requests.Session()
+        if not self._session:
+            self._session = requests.Session()
         else:
             raise ValueError(
-                "Use the reset_rondb_connection method to reset the rondb_client_connection"
+                "Use the init_or_reset_rondb_connection method with reset_connection flag set "
+                + "to True to reset the rondb_client_connection"
             )
 
         # Set base_url
@@ -119,7 +120,7 @@ class RondbRestClientSingleton:
             f"{scheme}://{self._current_config[self.HOST]}:{self._current_config[self.PORT]}/{self._current_config[self.SERVER_API_VERSION]}"
         )
 
-        assert self._rest_client is not None, "RonDB Rest Client failed to initialise."
+        assert self._session is not None, "RonDB Rest Client failed to initialise."
         assert (
             self._auth is not None
         ), "RonDB Rest Client Authentication failed to initialise. Check API Key."
@@ -169,7 +170,7 @@ class RondbRestClientSingleton:
                 raise FeatureStoreException("Service discovery domain is not set.")
             return f"https://rdrs.service.{service_discovery_domain}:{_DEFAULT_RONDB_REST_CLIENT_PORT}"
 
-    def _send_request(
+    def send_request(
         self,
         method: str,
         path_params: list[str],
@@ -178,12 +179,12 @@ class RondbRestClientSingleton:
     ):
         url = self._base_url.copy()
         url.path.segments.extend(path_params)
-        prepped_request = self._rest_client.prepare_request(
+        prepped_request = self._session.prepare_request(
             requests.Request(
                 method, url=url.url, headers=headers, data=data, auth=self._auth
             )
         )
-        response = self._rest_client.send(
+        response = self._session.send(
             prepped_request,
             verify=self._current_config[self.VERIFY_CERTS],
             timeout=self._current_config[self.TIMEOUT] / 1000,
@@ -216,8 +217,10 @@ class RondbRestClientSingleton:
             )
 
     def is_connected(self):
-        if self._rest_client is None:
+        if self._session is None:
             raise FeatureStoreException("RonDB Rest Client is not initialised.")
 
-        if not self._send_request("GET", ["ping"]):
+        if not self.send_request("GET", ["ping"]):
             warn("Ping failed, RonDB Rest Server is not reachable.")
+            return False
+        return True
