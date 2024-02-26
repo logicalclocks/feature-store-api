@@ -133,6 +133,13 @@ def get_host_name():
     return host
 
 
+def get_dataset_type(path: str):
+    if re.match(r"^(?:hdfs://|)/apps/hive/warehouse/*", path):
+        return "HIVEDB"
+    else:
+        return "DATASET"
+
+
 async def create_async_engine(
     online_conn, external: bool, default_min_size: int, options: dict = None
 ):
@@ -333,6 +340,23 @@ def verify_attribute_key_names(feature_group_obj, external_feature_group=False):
                     f"Provided hudi precombine key {feature_group_obj.hudi_precombine_key} "
                     f"doesn't exist in feature dataframe"
                 )
+
+
+def get_job_url(href: str):
+    """Use the endpoint returned by the API to construct the UI url for jobs
+
+    Args:
+        href (str): the endpoint returned by the API
+    """
+    url = urlparse(href)
+    url_splits = url.path.split("/")
+    project_id = url_splits[4]
+    job_name = url_splits[6]
+    ui_url = url._replace(
+        path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
+    )
+    ui_url = client.get_instance().replace_public_host(ui_url)
+    return ui_url.geturl()
 
 
 def translate_legacy_spark_type(output_type):

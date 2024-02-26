@@ -64,7 +64,13 @@ class ServingKey:
             "feature_name": self._feature_name,
             "join_index": self._join_index,
             "feature_group_id": (
-                self._feature_group["id"] if self._feature_group is not None else None
+                self._feature_group.id if self._feature_group is not None else None
+            ),
+            "feature_group_name": (
+                self._feature_group.name if self._feature_group is not None else None
+            ),
+            "feature_group_version": (
+                self._feature_group.version if self._feature_group is not None else None
             ),
             "required": self._required,
             "prefix": self._prefix,

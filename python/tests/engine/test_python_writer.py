@@ -48,8 +48,7 @@ class TestPythonWriter:
             "hsfs.engine.python.Engine._kafka_produce"
         )
         mocker.patch("hsfs.core.job_api.JobApi")  # get, launch
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
-        mocker.patch("hsfs.engine.python.Engine.wait_for_job")
+        mocker.patch("hsfs.util.get_job_url")
         topic_mock = mocker.MagicMock()
         topic_name = "test_topic"
         topic_metadata = TopicMetadata()
