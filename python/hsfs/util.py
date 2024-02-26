@@ -342,6 +342,23 @@ def verify_attribute_key_names(feature_group_obj, external_feature_group=False):
                 )
 
 
+def get_job_url(href: str):
+    """Use the endpoint returned by the API to construct the UI url for jobs
+
+    Args:
+        href (str): the endpoint returned by the API
+    """
+    url = urlparse(href)
+    url_splits = url.path.split("/")
+    project_id = url_splits[4]
+    job_name = url_splits[6]
+    ui_url = url._replace(
+        path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
+    )
+    ui_url = client.get_instance().replace_public_host(ui_url)
+    return ui_url.geturl()
+
+
 def translate_legacy_spark_type(output_type):
     if output_type == "StringType()":
         return "STRING"

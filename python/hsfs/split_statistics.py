@@ -36,9 +36,11 @@ class SplitStatistics:
         self._name = name
         self._feature_descriptive_statistics = feature_descriptive_statistics
         self._feature_descriptive_statistics = [
-            FeatureDescriptiveStatistics.from_response_json(fds)
-            if isinstance(fds, dict)
-            else fds
+            (
+                FeatureDescriptiveStatistics.from_response_json(fds)
+                if isinstance(fds, dict)
+                else fds
+            )
             for fds in feature_descriptive_statistics
         ]
 
@@ -60,8 +62,10 @@ class SplitStatistics:
 
     @property
     def name(self):
+        """Name of the training dataset split."""
         return self._name
 
     @property
     def feature_descriptive_statistics(self):
+        """List of feature descriptive statistics."""
         return self._feature_descriptive_statistics
