@@ -906,7 +906,9 @@ class Engine:
 
         local_file = os.path.join("/tmp", os.path.basename(file))
         if not os.path.exists(local_file):
-            content_stream = self._dataset_api.read_content(file, "HIVEDB")
+            content_stream = self._dataset_api.read_content(
+                file, util.get_dataset_type(file)
+            )
             bytesio_object = BytesIO(content_stream.content)
             # Write the stuff
             with open(local_file, "wb") as f:
