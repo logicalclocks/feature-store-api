@@ -87,6 +87,28 @@ class TestUtil:
         timestamp = util.get_timestamp_from_date_string("20221118095233099")
         assert timestamp == 1668765153099
 
+    def test_get_dataset_type_HIVEDB(self):
+        db_type = util.get_dataset_type(
+            "/apps/hive/warehouse/temp_featurestore.db/storage_connector_resources/kafka__tstore.jks"
+        )
+        assert db_type == "HIVEDB"
+
+    def test_get_dataset_type_HIVEDB_with_dfs(self):
+        db_type = util.get_dataset_type(
+            "hdfs:///apps/hive/warehouse/temp_featurestore.db/storage_connector_resources/kafka__tstore.jks"
+        )
+        assert db_type == "HIVEDB"
+
+    def test_get_dataset_type_DATASET(self):
+        db_type = util.get_dataset_type("/Projects/temp/Resources/kafka__tstore.jks")
+        assert db_type == "DATASET"
+
+    def test_get_dataset_type_DATASET_with_dfs(self):
+        db_type = util.get_dataset_type(
+            "hdfs:///Projects/temp/Resources/kafka__tstore.jks"
+        )
+        assert db_type == "DATASET"
+
     def test_get_job_url(self, mocker):
         # Arrange
         mock_client_get_instance = mocker.patch("hsfs.client.get_instance")

@@ -133,6 +133,13 @@ def get_host_name():
     return host
 
 
+def get_dataset_type(path: str):
+    if re.match(r"^(?:hdfs://|)/apps/hive/warehouse/*", path):
+        return "HIVEDB"
+    else:
+        return "DATASET"
+
+
 async def create_async_engine(
     online_conn, external: bool, default_min_size: int, options: dict = None
 ):

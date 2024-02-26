@@ -58,6 +58,7 @@ FIXTURES = [
     "transformation_function",
     "user",
     "validation_report",
+    "serving_keys",
 ]
 
 backend_fixtures_json = {}
