@@ -22,6 +22,7 @@ import numpy as np
 import pandas as pd
 import asyncio
 
+
 from hsfs import util
 from hsfs import training_dataset, feature_view, client
 from hsfs.client.exceptions import FeatureStoreException
@@ -35,11 +36,17 @@ from hsfs.core import (
     rondb_engine,
 )
 
+import logging
+
+_logger = logging.getLogger(__name__)
+
 
 class VectorServer:
     DEFAULT_ONLINE_STORE_REST_CLIENT = "rest"
     DEFAULT_ONLINE_STORE_SQL_CLIENT = "sql"
     DEFAULT_ONLINE_STORE_CLIENT_KEY = "default_online_store_client"
+    ONLINE_REST_CLIENT_CONFIG_OPTIONS_KEY = "online_rest_client_config"
+    RESET_ONLINE_REST_CLIENT_OPTIONS_KEY = "reset_online_rest_client"
 
     def __init__(
         self,
@@ -124,21 +131,26 @@ class VectorServer:
         self.init_transformation(entity)
 
         if self._init_rondb_rest_client is True:
+            _logger.info("Initialising Vector Server Online REST client")
             self._rondb_engine = rondb_engine.RondbEngine()
-            reset_rondb_connection = False
-            rondb_rest_config = None
+            reset_online_rest_client = False
+            online_rest_client_config = None
             if isinstance(options, dict):
-                reset_rondb_connection = options.get(
-                    "reset_rondb_connection", reset_rondb_connection
+                reset_online_rest_client = options.get(
+                    self.RESET_ONLINE_REST_CLIENT_OPTIONS_KEY, reset_online_rest_client
                 )
-                rondb_rest_config = options.get("rondb_rest_config", rondb_rest_config)
+                online_rest_client_config = options.get(
+                    self.ONLINE_REST_CLIENT_CONFIG_OPTIONS_KEY,
+                    online_rest_client_config,
+                )
 
             client.rondb_rest_client.init_or_reset_rondb_rest_client(
-                optional_config=rondb_rest_config,
-                reset_connection=reset_rondb_connection,
+                optional_config=online_rest_client_config,
+                reset_connection=reset_online_rest_client,
             )
 
-        if init_sql_client is True:
+        if self._init_sql_client is True:
+            _logger.info("Initialising Vector Server Online SQL client")
             self.init_prepared_statement(
                 entity,
                 batch,
@@ -321,6 +333,7 @@ class VectorServer:
         )
 
         if online_client_str == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
+            _logger.info("get_feature_vector Online REST client")
             serving_vector = self._rondb_engine.get_single_raw_feature_vector(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
@@ -332,6 +345,7 @@ class VectorServer:
 
         else:  # aiomysql branch
             # get result row
+            _logger.info("get_feature_vector Online SQL client")
             serving_vector = self._vector_result(entry, self._prepared_statements)
             # Add the passed features
             serving_vector.update(passed_features)
@@ -369,6 +383,7 @@ class VectorServer:
         )
 
         if online_client_str == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
+            _logger.info("get_feature_vectors through REST client")
             batch_results = self._rondb_engine.get_batch_raw_feature_vectors(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
@@ -378,6 +393,7 @@ class VectorServer:
                 return_type=self._rondb_engine.RETURN_TYPE_FEATURE_VECTOR,
             )
         else:
+            _logger.info("get_feature_vectors through SQL client")
             batch_results, _ = self._batch_vector_results(
                 entries, self._prepared_statements
             )
@@ -942,4 +958,5 @@ class VectorServer:
                 f"Default online client is set to {self.DEFAULT_ONLINE_STORE_SQL_CLIENT} but sql client is not initialised. Call `init_serving` with init_sql_client set to True before using it."
             )
 
+        _logger.info(f"Default online client is set to {default_online_store_client}.")
         self._default_online_store_client = default_online_store_client

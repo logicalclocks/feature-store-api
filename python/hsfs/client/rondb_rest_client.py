@@ -35,8 +35,8 @@ def init_or_reset_rondb_rest_client(
         _rondb_client.reset_rondb_connection(optional_config=optional_config)
     else:
         warn(
-            "RonDB Rest Client is already initialised. To reset connection or/and override configuration,\
-            use reset_rondb_rest_client_connection or get_instance methods with optional"
+            "RonDB Rest Client is already initialised. To reset connection or/and override configuration, "
+            + "use reset_rondb_rest_client_connection or get_instance methods with optional configuration"
         )
 
 

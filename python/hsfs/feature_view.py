@@ -211,18 +211,18 @@ class FeatureView:
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
         options: Optional[dict] = None,
-        init_sql_client: bool = True,
-        init_rondb_rest_client: bool = False,
+        init_online_store_sql_client: bool = True,
+        init_online_store_rest_client: bool = False,
     ):
         """Initialise feature view to retrieve feature vector from online and offline feature store.
 
         The Online Feature Store now supports feature vector retrieval using either the SQL connector
-        or RonDB REST http client. Defaults to SQL connector to match the previous behaviour. To use the
-        RonDB REST http client, set `init_rondb_rest_client` to `True`.
+        or a REST http client. Defaults to SQL connector to match the previous behaviour. To use the
+        the REST client, set `init_online_store_rest_client` to `True`.
 
         Both `get_feature_vector` and `get_feature_vectors` methods will default to using the initialised
         client. If both are initialised, the SQL client will be used by default. You can override this behaviour
-        on a per-call basis using the methods kwargs.
+        on a per-call basis using the methods kwargs or set the default via `set_default_online_store_client` method.
 
         !!! example
             ```python
@@ -330,8 +330,8 @@ class FeatureView:
             batch=False,
             external=external,
             inference_helper_columns=True,
-            init_sql_client=init_sql_client,
-            init_rondb_rest_client=init_rondb_rest_client,
+            init_online_store_client=init_online_store_sql_client,
+            init_online_store_rest_client=init_online_store_rest_client,
             options=options,
         )
 
@@ -360,8 +360,8 @@ class FeatureView:
             batch=True,
             external=external,
             inference_helper_columns=True,
-            init_rondb_rest_client=init_rondb_rest_client,
-            init_sql_client=init_sql_client,
+            init_online_store_rest_client=init_online_store_rest_client,
+            init_online_store_sql_client=init_online_store_sql_client,
             options=options,
         )
 
