@@ -241,12 +241,6 @@ class FeatureView:
 
         !!! example
             ```python
-            # get feature store instance
-            fs = ...
-
-            # get feature view instance
-            feature_view = fs.get_feature_view(...)
-
             # initialise feature view to retrieve a feature vector using the RonDB REST http client
             feature_view.init_serving(
                 training_dataset_version=1,
@@ -254,22 +248,33 @@ class FeatureView:
             )
             ```
 
-        Reset the Online Store REST Client connection to fix configuration options:
+        You can reset the Online Store REST Client connection to fix configuration options. In particular, if you have
+        called `get_feature_vector` or `get_feature_vectors` without first initialising the client, it results in a default configuration
+        being set for the rest client. This will reset the client and apply the new configuration options.
 
         !!! example
             ```python
-            # get feature store instance
-            fs = ...
-
-            # get feature view instance
-            feature_view = fs.get_feature_view(...)
-
             # reset the RonDB REST http client connection
             feature_view.init_serving(
                 training_dataset_version=1,
                 init_online_store_rest_client=True,
                 options={"reset_online_store_rest_client": True, "config_online_store_rest_client": {"host": "new_host", "timeout": 1000}},
             )
+            ```
+
+        Note that both the SQL connector and the REST client can be initialised at the same time. This is useful if you want to
+        fallback on one connector if the other fails.
+
+        !!! example
+            ```python
+            # initialise feature view to retrieve a feature vector using both the SQL connector and the RonDB REST http client
+            feature_view.init_serving(
+                training_dataset_version=1,
+                init_online_store_sql_client=True,
+                init_online_store_rest_client=True,
+            )
+            # When initialising both clients, the SQL connector will be used by default. Change the default client using `set_default_online_client`.
+            feature_view.set_default_online_client("rest")
             ```
 
         # Arguments
@@ -282,7 +287,7 @@ class FeatureView:
                 Defaults to True if connection to Hopsworks is established from external environment (e.g AWS
                 Sagemaker or Google Colab), otherwise to False.
             init_online_store_sql_client: bool, optional. If set to True, initialise the SQL client to retrieve feature vector(s)
-                from the online feature store. Defaults to True if init_online_.
+                from the online feature store. Defaults to True if init_online_store_rest_client is False, otherwise False.
             init_online_store_rest_client: bool, optional. If set to True, initialise the Online Store REST Client to retrieve
                 feature vector(s) from the online feature store. Defaults to False, meaning the sql client will be initialised.
             options: Additional options as key/value pairs for configuring online serving engine.
@@ -290,7 +295,7 @@ class FeatureView:
                   For example: `{"pool_size": 10}`
                 * key: "config_online_store_rest_client" - dict, optional. Optional configuration options to override defaults for the Online Store REST Client.
                 * key: "reset_online_store_rest_client" - bool, optional. If set to True, the Online Store REST Client will be reset. Provide
-                    `config_online_store_rest_client` to override defaults.
+                    "config_online_store_rest_client" to override defaults.
         """
         # initiate batch scoring server
         # `training_dataset_version` should not be set if `None` otherwise backend will look up the td.
@@ -336,7 +341,7 @@ class FeatureView:
             batch=False,
             external=external,
             inference_helper_columns=True,
-            init_online_store_client=init_online_store_sql_client,
+            init_online_store_sql_client=init_online_store_sql_client,
             init_online_store_rest_client=init_online_store_rest_client,
             options=options,
         )

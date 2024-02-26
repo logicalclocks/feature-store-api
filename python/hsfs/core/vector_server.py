@@ -338,13 +338,13 @@ class VectorServer:
 
         if online_client_str == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.info("get_feature_vector Online REST client")
-            serving_vector = self._rondb_engine.get_single_raw_feature_vector(
+            serving_vector = self._online_store_rest_client_engine.get_single_raw_feature_vector(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
                 feature_view_version=self._feature_view_version,
                 entry=entry,
                 passed_features=passed_features,
-                return_type=self._rondb_engine.RETURN_TYPE_FEATURE_VECTOR,
+                return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VECTOR,
             )
 
         else:  # aiomysql branch
@@ -388,13 +388,13 @@ class VectorServer:
 
         if online_client_str == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.info("get_feature_vectors through REST client")
-            batch_results = self._rondb_engine.get_batch_raw_feature_vectors(
+            batch_results = self._online_store_rest_client_engine.get_batch_raw_feature_vectors(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
                 feature_view_version=self._feature_view_version,
                 entries=entries,
                 passed_features=passed_features,
-                return_type=self._rondb_engine.RETURN_TYPE_FEATURE_VECTOR,
+                return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VECTOR,
             )
         else:
             _logger.info("get_feature_vectors through SQL client")
@@ -470,7 +470,7 @@ class VectorServer:
         if force_rest_client:
             if (
                 self._init_online_store_rest_client is False
-                or self._rondb_engine is None
+                or self._online_store_rest_client_engine is None
             ):
                 raise ValueError(
                     "RonDB Rest Client is not initialised. Call `init_serving` with init_online_store_rest_client set to True before using it."

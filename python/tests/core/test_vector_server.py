@@ -229,7 +229,7 @@ class TestVectorServer:
             inference_helper_columns=True,
             init_online_store_sql_client=False,
             init_online_store_rest_client=True,
-            options={"online_store_rest_config": optional_config},
+            options={"config_online_store_rest_client": optional_config},
         )
         batch_server.init_serving(
             entity=fv,
@@ -238,7 +238,7 @@ class TestVectorServer:
             inference_helper_columns=True,
             init_online_store_sql_client=False,
             init_online_store_rest_client=True,
-            options={"online_store_rest_config": optional_config},
+            options={"config_online_store_rest_client": optional_config},
         )
 
         print(init_online_store_rest_client.call_args_list)
@@ -256,12 +256,10 @@ class TestVectorServer:
             == optional_config
         )
         assert (
-            init_online_store_rest_client.call_args_list[0][1]["reset_connection"]
-            is False
+            init_online_store_rest_client.call_args_list[0][1]["reset_client"] is False
         )
         assert (
-            init_online_store_rest_client.call_args_list[1][1]["reset_connection"]
-            is False
+            init_online_store_rest_client.call_args_list[1][1]["reset_client"] is False
         )
 
     def test_reset_connection(
