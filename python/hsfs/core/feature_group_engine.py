@@ -14,7 +14,7 @@
 #
 import warnings
 
-from hsfs import engine, client, util
+from hsfs import engine, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.core import feature_group_base_engine, hudi_engine
@@ -107,11 +107,14 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         if ge_report is not None and ge_report.ingestion_result == "REJECTED":
+            feature_group_url = util.get_feature_group_url(
+                feature_store_id=feature_group.feature_store_id,
+                feature_group_id=feature_group.id,
+            )
             raise exceptions.DataValidationException(
                 "Data validation failed while validation ingestion policy set to strict, "
                 + f"insertion to {feature_group.name} was aborted.\n"
-                + f"Check a summary of your report at {self._get_feature_group_url(feature_group)}, "
-                + f"or download the full report from {ge_report._full_report_path}."
+                + f"You can check a summary or download your report at {feature_group_url}."
             )
 
         offline_write_options = write_options
@@ -358,16 +361,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         self._feature_group_api.save(feature_group)
         print(
             "Feature Group created successfully, explore it at \n"
-            + self._get_feature_group_url(feature_group)
+            + util.get_feature_group_url(
+                feature_store_id=feature_group.feature_store_id,
+                feature_group_id=feature_group.id,
+            )
         )
-
-    def _get_feature_group_url(self, feature_group):
-        sub_path = (
-            "/p/"
-            + str(client.get_instance()._project_id)
-            + "/fs/"
-            + str(feature_group.feature_store_id)
-            + "/fg/"
-            + str(feature_group.id)
-        )
-        return util.get_hostname_replaced_url(sub_path)

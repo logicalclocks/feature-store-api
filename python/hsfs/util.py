@@ -415,6 +415,18 @@ def run_with_loading_animation(message, func, *args, **kwargs):
             print(f"\rFinished: {message} ({(end-start):.2f}s) ", end="\n")
 
 
+def get_feature_group_url(feature_store_id: int, feature_group_id: int):
+    sub_path = (
+        "/p/"
+        + str(client.get_instance()._project_id)
+        + "/fs/"
+        + str(feature_store_id)
+        + "/fg/"
+        + str(feature_group_id)
+    )
+    return get_hostname_replaced_url(sub_path)
+
+
 class VersionWarning(Warning):
     pass
 
