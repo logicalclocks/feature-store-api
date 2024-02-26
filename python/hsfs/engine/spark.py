@@ -793,7 +793,7 @@ class Engine:
             tmp_file = os.path.join(SparkFiles.getRootDirectory(), file_name)
             print("Reading key file from storage connector.")
             response = self._dataset_api.read_content(
-                tmp_file, util.get_dataset_type(file)
+                file, util.get_dataset_type(file)
             )
 
             with open(tmp_file, "wb") as f:
