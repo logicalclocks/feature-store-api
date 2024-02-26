@@ -3244,6 +3244,7 @@ class FeatureView:
 
     def to_dict(self):
         return {
+            "featurestoreId": self._featurestore_id,
             "name": self._name,
             "version": self._version,
             "description": self._description,
