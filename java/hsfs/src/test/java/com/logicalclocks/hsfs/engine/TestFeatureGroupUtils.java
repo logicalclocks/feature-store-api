@@ -41,7 +41,7 @@ public class TestFeatureGroupUtils {
   @Test
   void testGetDatasetTypeHIVEDBWithDfs() throws JsonProcessingException {
     // Arrange
-    String path = "dfs:///apps/hive/warehouse/temp_featurestore.db/storage_connector_resources/kafka__tstore.jks";
+    String path = "hdfs:///apps/hive/warehouse/temp_featurestore.db/storage_connector_resources/kafka__tstore.jks";
 
     // Act
     String databaseType = featureGroupUtils.getDatasetType(path);
@@ -65,7 +65,7 @@ public class TestFeatureGroupUtils {
   @Test
   void testGetDatasetTypeDATASETWithDfs() throws JsonProcessingException {
     // Arrange
-    String path = "dfs:///Projects/temp/Resources/kafka__tstore.jks";
+    String path = "hdfs:///Projects/temp/Resources/kafka__tstore.jks";
 
     // Act
     String databaseType = featureGroupUtils.getDatasetType(path);
