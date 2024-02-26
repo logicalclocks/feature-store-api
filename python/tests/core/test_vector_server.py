@@ -293,3 +293,59 @@ class TestVectorServer:
         assert init_rondb_client.call_count == 2
         assert init_rondb_client.call_args_list[0][1]["reset_connection"] is True
         assert init_rondb_client.call_args_list[1][1]["reset_connection"] is True
+
+    # def test_get_feature_vector_defaults_to_initialised_client_if_rest(self, mocker, monkeypatch, fv, single_server, batch_server):
+    #     # Arrange
+    #     init_rond_client_mock = mocker.Mock()
+    #     monkeypatch.setattr(hsfs.client.rondb_rest_client, "init_or_reset_rondb_rest_client", init_rond_client_mock)
+    #     single_server.init_serving(
+    #         entity=fv,
+    #         batch=False,
+    #         external=True,
+    #         inference_helper_columns=True,
+    #         init_sql_client=False,
+    #         init_rondb_rest_client=True,
+    #     )
+    #     batch_server.init_serving(
+    #         entity=fv,
+    #         batch=True,
+    #         external=True,
+    #         inference_helper_columns=True,
+    #         init_sql_client=False,
+    #         init_rondb_rest_client=True,
+    #     )
+
+    #     # Act
+    #     feature_vector = single_server.get_feature_vector(
+    #         entry={"intt": 2},
+    #         return_type="list",
+    #     )
+    #     feature_vectors_batch = batch_server.get_feature_vectors()
+
+    #     # Assert
+
+    # def test_get_feature_vector_defaults_to_initialised_client_if_sql(self, mocker, monkeypatch, fv, single_server, batch_server):
+    #     # Arrange
+    #     init_rond_client_mock = mocker.Mock()
+    #     monkeypatch.setattr(hsfs.client.rondb_rest_client, "init_or_reset_rondb_rest_client", init_rond_client_mock)
+    #     single_server.init_serving(
+    #         entity=fv,
+    #         batch=False,
+    #         external=True,
+    #         inference_helper_columns=True,
+    #         init_sql_client=True,
+    #         init_rondb_rest_client=True,
+    #     )
+    #     batch_server.init_serving(
+    #         entity=fv,
+    #         batch=True,
+    #         external=True,
+    #         inference_helper_columns=True,
+    #         init_sql_client=True,
+    #         init_rondb_rest_client=True,
+    #     )
+
+    #     # Assert
+    #     assert single_server._rondb_engine is not None
+    #     assert batch_server._rondb_engine is not None
+    #     assert init_rond_client_mock.call_count == 2

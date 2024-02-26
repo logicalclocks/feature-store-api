@@ -571,8 +571,8 @@ class FeatureView:
             return_type,
             passed_features,
             allow_missing,
-            use_rondb_rest_client=force_rest_client,
-            use_sql_client=force_sql_client,
+            force_rest_client=force_rest_client,
+            force_sql_client=force_sql_client,
         )
 
     def get_feature_vectors(
@@ -699,8 +699,8 @@ class FeatureView:
             return_type,
             updated_passed_feature,
             allow_missing,
-            use_rondb_rest_client=force_rest_client,
-            use_sql_client=force_sql_client,
+            force_rest_client=force_rest_client,
+            force_sql_client=force_sql_client,
         )
 
     def get_inference_helper(
@@ -804,6 +804,43 @@ class FeatureView:
         return self._batch_vectors_server.get_inference_helpers(
             self, entry, return_type
         )
+
+    def set_default_online_client(self, client: str):
+        """Set the default client to either 'sql' or 'rest' to retrieve feature vectors from the online feature store.
+
+        If only one client is initialised when calling `init_serving`, this client will be used by default.
+        If both clients are initialised, the SQL client will be used by default. This method allows you to
+        specify the default client. You can override this behaviour on a per-call basis using the methods kwargs.
+
+        # Arguments
+            client: str. The default online client to be used for the feature view.
+                The default online client can be set to "rest" or "sql".
+
+        # Raises
+            `ValueError`. - If vector server is not initialised via `init_serving`
+                - If setting default to a client not initialised. Use `init_serving` with either `init_sql_client`
+                    or `init_rondb_rest_client` to initialise the client.
+                - If client is not "rest" or "sql".
+        """
+        client = client.lower()
+        if client not in ["rest", "sql"]:
+            raise ValueError("Client should be either 'rest' or 'sql'.")
+        if self._single_vector_server is None and self._batch_vectors_server is None:
+            raise ValueError(
+                "Vector server is not initialised. Use init_serving to enable the vector server."
+            )
+        if self._single_vector_server:
+            self._single_vector_server.default_online_store_client = client
+        else:
+            warnings.warn(
+                "Single vector server is not initialised, skipping setting default client."
+            )
+        if self._batch_vectors_server:
+            self._batch_vectors_server.default_online_store_client = client
+        else:
+            warnings.warn(
+                "Batch vector server is not initialised, skipping setting default client."
+            )
 
     def _update_with_vector_db_result(self, vec_server, entry, passed_features):
         if not self._vector_db_client:

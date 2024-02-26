@@ -37,6 +37,10 @@ from hsfs.core import (
 
 
 class VectorServer:
+    DEFAULT_ONLINE_STORE_REST_CLIENT = "rest"
+    DEFAULT_ONLINE_STORE_SQL_CLIENT = "sql"
+    DEFAULT_ONLINE_STORE_CLIENT_KEY = "default_online_store_client"
+
     def __init__(
         self,
         feature_store_id,
@@ -97,6 +101,7 @@ class VectorServer:
         self._rondb_engine = None
         self._init_rondb_rest_client = None
         self._init_sql_client = None
+        self._default_online_store_client = None
 
     def init_serving(
         self,
@@ -108,12 +113,9 @@ class VectorServer:
         init_rondb_rest_client: bool = False,
         options=None,
     ):
-        if init_rondb_rest_client is False and init_sql_client is False:
-            raise ValueError(
-                "At least one of the clients should be initialised. Set init_sql_client or init_rondb_rest_client to True."
-            )
-        self._init_rondb_rest_client = init_rondb_rest_client
-        self._init_sql_client = init_sql_client
+        self._set_default_online_store_client(
+            init_rondb_rest_client, init_sql_client, options
+        )
 
         if external is None:
             external = isinstance(client.get_instance(), client.external.Client)
@@ -310,15 +312,15 @@ class VectorServer:
         return_type=None,
         passed_features=[],
         allow_missing=False,
-        use_rondb_rest_client: bool = False,
-        use_sql_client: bool = True,
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
     ):
         """Assembles serving vector from online feature store."""
-        use_rondb_rest = self.which_client_and_ensure_initialised(
-            use_rondb_rest_client=use_rondb_rest_client, use_sql_client=use_sql_client
+        online_client_str = self.which_client_and_ensure_initialised(
+            force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
 
-        if use_rondb_rest:
+        if online_client_str == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             serving_vector = self._rondb_engine.get_single_raw_feature_vector(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
@@ -358,15 +360,15 @@ class VectorServer:
         return_type=None,
         passed_features=[],
         allow_missing=False,
-        use_rondb_rest_client: bool = False,
-        use_sql_client: bool = True,
+        force_rest_client: bool = False,
+        force_sql_client: bool = False,
     ):
         """Assembles serving vector from online feature store."""
-        use_rondb_rest = self.which_client_and_ensure_initialised(
-            use_rondb_rest_client=use_rondb_rest_client, use_sql_client=use_sql_client
+        online_client_str = self.which_client_and_ensure_initialised(
+            force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
 
-        if use_rondb_rest:
+        if online_client_str == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             batch_results = self._rondb_engine.get_batch_raw_feature_vectors(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
@@ -413,26 +415,26 @@ class VectorServer:
             )
 
     def which_client_and_ensure_initialised(
-        self, use_rondb_rest_client: bool, use_sql_client: bool
-    ) -> bool:
+        self, force_rest_client: bool, force_sql_client: bool
+    ) -> str:
         """Check if the requested client is initialised as well as deciding which client to use based on default.
 
         # Arguments:
-            use_rondb_rest_client: bool. user specified override to use rondb_client.
-            use_sql_client: bool. user specified override to use sql_client.
+            force_rest_client: bool. user specified override to use rondb_client.
+            force_sql_client: bool. user specified override to use sql_client.
 
         # Returns:
-            True if rondb rest client is used, False if sql client is used.
+            An enum specifying the client to be used.
         """
-        if use_rondb_rest_client and use_sql_client:
+        if force_rest_client and force_sql_client:
             raise ValueError(
-                "Both rondb rest client and sql client cannot be used at the same time."
+                "force_rest_client and force_sql_client cannot be used at the same time."
             )
         if self._init_rondb_rest_client is False and self._init_sql_client is False:
             raise ValueError(
                 "No client is initialised. Call `init_serving` with init_sql_client or init_rondb_client set to True before using it."
             )
-        if use_sql_client:
+        if force_sql_client:
             if (
                 self._init_sql_client is False
                 or self._prepared_statement_engine is None
@@ -440,15 +442,41 @@ class VectorServer:
                 raise ValueError(
                     "SQL Client is not initialised. Call `init_serving` with init_sql_client set to True before using it."
                 )
-            return False
-        if use_rondb_rest_client:
+            return self.DEFAULT_ONLINE_STORE_SQL_CLIENT
+
+        if force_rest_client:
             if self._init_rondb_rest_client is False or self._rondb_engine is None:
                 raise ValueError(
                     "RonDB Rest Client is not initialised. Call `init_serving` with init_rondb_client set to True before using it."
                 )
-            return True
+            return self.DEFAULT_ONLINE_STORE_REST_CLIENT
+
         # If no override is specified, use the initialised client
-        return self._init_rondb_rest_client
+        return self.default_online_store_client
+
+    def _set_default_online_store_client(
+        self, init_rondb_rest_client: bool, init_sql_client: bool, options: dict
+    ):
+        if init_rondb_rest_client is False and init_sql_client is False:
+            raise ValueError(
+                "At least one of the clients should be initialised. Set init_sql_client or init_rondb_rest_client to True."
+            )
+        self._init_rondb_rest_client = init_rondb_rest_client
+        self._init_sql_client = init_sql_client
+
+        if init_rondb_rest_client is True and init_sql_client is True:
+            # Defaults to SQL as client for legacy reasons mainly.
+            self.default_online_store_client = (
+                options.get(
+                    "default_online_store_client", self.DEFAULT_ONLINE_STORE_SQL_CLIENT
+                )
+                if isinstance(options, dict)
+                else self.DEFAULT_ONLINE_STORE_SQL_CLIENT
+            )
+        elif init_rondb_rest_client is True:
+            self.default_online_store_client = self.DEFAULT_ONLINE_STORE_REST_CLIENT
+        else:
+            self.default_online_store_client = self.DEFAULT_ONLINE_STORE_SQL_CLIENT
 
     def get_inference_helper(self, entry, return_type):
         """Assembles serving vector from online feature store."""
@@ -884,3 +912,34 @@ class VectorServer:
     @training_dataset_version.setter
     def training_dataset_version(self, training_dataset_version):
         self._training_dataset_version = training_dataset_version
+
+    @property
+    def default_online_store_client(self) -> str:
+        return self._default_online_store_client
+
+    @default_online_store_client.setter
+    def default_online_store_client(self, default_online_store_client: str):
+        if default_online_store_client not in [
+            self.DEFAULT_ONLINE_STORE_REST_CLIENT,
+            self.DEFAULT_ONLINE_STORE_SQL_CLIENT,
+        ]:
+            raise ValueError(
+                f"Default Online Feature Store client should be one of {self.DEFAULT_ONLINE_STORE_REST_CLIENT} or {self.DEFAULT_ONLINE_STORE_SQL_CLIENT}."
+            )
+
+        if (
+            default_online_store_client == self.DEFAULT_ONLINE_STORE_REST_CLIENT
+            and self._init_rondb_rest_client is False
+        ):
+            raise ValueError(
+                f"Default online client is set to {self.DEFAULT_ONLINE_STORE_REST_CLIENT} but rondb rest client is not initialised. Call `init_serving` with init_rondb_client set to True before using it."
+            )
+        elif (
+            default_online_store_client == self.DEFAULT_ONLINE_STORE_SQL_CLIENT
+            and self._init_sql_client is False
+        ):
+            raise ValueError(
+                f"Default online client is set to {self.DEFAULT_ONLINE_STORE_SQL_CLIENT} but sql client is not initialised. Call `init_serving` with init_sql_client set to True before using it."
+            )
+
+        self._default_online_store_client = default_online_store_client
