@@ -117,7 +117,8 @@ class VectorDbClient:
             "query": {
                 "bool": {
                     "must": [
-                        {"knn": {col_name: {"vector": embedding, "k": k}}},
+                        # search 3 times more data if it is using project index
+                        {"knn": {col_name: {"vector": embedding, "k": k * (3 if embedding_feature.embedding_index.col_prefix else 1)}}},
                         {"exists": {"field": col_name}},
                     ]
                     + self._get_query_filter(
