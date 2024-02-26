@@ -64,15 +64,15 @@ class TestVectorServer:
             **init_kwargs_fixtures(fv), features=fv._features
         )
 
-    def test_init_rondb_rest_client(
+    def test_init_online_store_rest_client(
         self, mocker, monkeypatch, fv, single_server, batch_server
     ):
         # Arrange
-        init_rondb_client = mocker.Mock()
+        init_online_store_rest_client = mocker.Mock()
         monkeypatch.setattr(
-            hsfs.client.rondb_rest_client,
-            "init_or_reset_rondb_rest_client",
-            init_rondb_client,
+            hsfs.client.online_store_rest_client,
+            "init_or_reset_online_store_rest_client",
+            init_online_store_rest_client,
         )
 
         # Act
@@ -81,24 +81,24 @@ class TestVectorServer:
             batch=True,
             external=True,
             inference_helper_columns=True,
-            init_sql_client=False,
-            init_rondb_rest_client=True,
+            init_online_store_sql_client=False,
+            init_online_store_rest_client=True,
         )
         single_server.init_serving(
             entity=fv,
             batch=False,
             external=True,
             inference_helper_columns=True,
-            init_sql_client=False,
-            init_rondb_rest_client=True,
+            init_online_store_sql_client=False,
+            init_online_store_rest_client=True,
         )
 
         # Assert
-        assert batch_server._rondb_engine is not None
-        assert single_server._rondb_engine is not None
+        assert batch_server._online_store_rest_client_engine is not None
+        assert single_server._online_store_rest_client_engine is not None
         assert batch_server._prepared_statements is None
         assert single_server._prepared_statements is None
-        assert init_rondb_client.call_count == 2
+        assert init_online_store_rest_client.call_count == 2
 
     def test_default_init_serving_is_sql(self, mocker, fv, single_server, batch_server):
         # Arrange
@@ -113,8 +113,8 @@ class TestVectorServer:
         )
 
         # Assert
-        assert single_server._rondb_engine is None
-        assert batch_server._rondb_engine is None
+        assert single_server._online_store_rest_client_engine is None
+        assert batch_server._online_store_rest_client_engine is None
         assert set_sql_client_mock.call_count == 2
 
     def test_init_serving_both_sql_and_rest_client(
@@ -122,11 +122,11 @@ class TestVectorServer:
     ):
         # Arrange
         set_sql_client_mock = mocker.patch(init_prepared_statement_mock_path)
-        init_rondb_client = mocker.Mock()
+        init_online_store_rest_client = mocker.Mock()
         monkeypatch.setattr(
-            hsfs.client.rondb_rest_client,
-            "init_or_reset_rondb_rest_client",
-            init_rondb_client,
+            hsfs.client.online_store_rest_client,
+            "init_or_reset_online_store_rest_client",
+            init_online_store_rest_client,
         )
 
         # Act
@@ -135,23 +135,23 @@ class TestVectorServer:
             batch=False,
             external=True,
             inference_helper_columns=True,
-            init_sql_client=True,
-            init_rondb_rest_client=True,
+            init_online_store_sql_client=True,
+            init_online_store_rest_client=True,
         )
         batch_server.init_serving(
             entity=fv,
             batch=True,
             external=True,
             inference_helper_columns=True,
-            init_sql_client=True,
-            init_rondb_rest_client=True,
+            init_online_store_sql_client=True,
+            init_online_store_rest_client=True,
         )
 
         # Assert
-        assert single_server._rondb_engine is not None
-        assert batch_server._rondb_engine is not None
+        assert single_server._online_store_rest_client_engine is not None
+        assert batch_server._online_store_rest_client_engine is not None
         assert set_sql_client_mock.call_count == 2
-        assert init_rondb_client.call_count == 2
+        assert init_online_store_rest_client.call_count == 2
 
     def test_init_serving_sql_client(self, mocker, fv, single_server, batch_server):
         # Arrange
@@ -163,21 +163,21 @@ class TestVectorServer:
             batch=False,
             external=True,
             inference_helper_columns=True,
-            init_sql_client=True,
-            init_rondb_rest_client=False,
+            init_online_store_sql_client=True,
+            init_online_store_rest_client=False,
         )
         batch_server.init_serving(
             entity=fv,
             batch=True,
             external=True,
             inference_helper_columns=True,
-            init_sql_client=True,
-            init_rondb_rest_client=False,
+            init_online_store_sql_client=True,
+            init_online_store_rest_client=False,
         )
 
         # Assert
-        assert single_server._rondb_engine is None
-        assert batch_server._rondb_engine is None
+        assert single_server._online_store_rest_client_engine is None
+        assert batch_server._online_store_rest_client_engine is None
         assert set_sql_client_mock.call_count == 2
 
     def test_init_serving_no_client(self, fv, single_server, batch_server):
@@ -190,8 +190,8 @@ class TestVectorServer:
                 batch=False,
                 external=True,
                 inference_helper_columns=True,
-                init_sql_client=False,
-                init_rondb_rest_client=False,
+                init_online_store_sql_client=False,
+                init_online_store_rest_client=False,
             )
         with pytest.raises(ValueError):
             batch_server.init_serving(
@@ -199,8 +199,8 @@ class TestVectorServer:
                 batch=True,
                 external=True,
                 inference_helper_columns=True,
-                init_sql_client=False,
-                init_rondb_rest_client=False,
+                init_online_store_sql_client=False,
+                init_online_store_rest_client=False,
             )
 
     def test_rest_client_config_on_serving(
@@ -214,11 +214,11 @@ class TestVectorServer:
             "host": "localhost",
             "port": 3434,
         }
-        init_rondb_client = mocker.Mock()
+        init_online_store_rest_client = mocker.Mock()
         monkeypatch.setattr(
-            hsfs.client.rondb_rest_client,
-            "init_or_reset_rondb_rest_client",
-            init_rondb_client,
+            hsfs.client.online_store_rest_client,
+            "init_or_reset_online_store_rest_client",
+            init_online_store_rest_client,
         )
 
         # Act
@@ -227,44 +227,52 @@ class TestVectorServer:
             batch=False,
             external=True,
             inference_helper_columns=True,
-            init_sql_client=False,
-            init_rondb_rest_client=True,
-            options={"rondb_rest_config": optional_config},
+            init_online_store_sql_client=False,
+            init_online_store_rest_client=True,
+            options={"online_store_rest_config": optional_config},
         )
         batch_server.init_serving(
             entity=fv,
             batch=True,
             external=True,
             inference_helper_columns=True,
-            init_sql_client=False,
-            init_rondb_rest_client=True,
-            options={"rondb_rest_config": optional_config},
+            init_online_store_sql_client=False,
+            init_online_store_rest_client=True,
+            options={"online_store_rest_config": optional_config},
         )
 
-        print(init_rondb_client.call_args_list)
+        print(init_online_store_rest_client.call_args_list)
 
         # Assert
-        assert single_server._rondb_engine is not None
-        assert batch_server._rondb_engine is not None
-        assert init_rondb_client.call_count == 2
+        assert single_server._online_store_rest_client_engine is not None
+        assert batch_server._online_store_rest_client_engine is not None
+        assert init_online_store_rest_client.call_count == 2
         assert (
-            init_rondb_client.call_args_list[0][1]["optional_config"] == optional_config
+            init_online_store_rest_client.call_args_list[0][1]["optional_config"]
+            == optional_config
         )
         assert (
-            init_rondb_client.call_args_list[1][1]["optional_config"] == optional_config
+            init_online_store_rest_client.call_args_list[1][1]["optional_config"]
+            == optional_config
         )
-        assert init_rondb_client.call_args_list[0][1]["reset_connection"] is False
-        assert init_rondb_client.call_args_list[1][1]["reset_connection"] is False
+        assert (
+            init_online_store_rest_client.call_args_list[0][1]["reset_connection"]
+            is False
+        )
+        assert (
+            init_online_store_rest_client.call_args_list[1][1]["reset_connection"]
+            is False
+        )
 
     def test_reset_connection(
         self, mocker, monkeypatch, fv, single_server, batch_server
     ):
         # Arrange
-        init_rondb_client = mocker.Mock()
+        init_online_store_rest_client = mocker.Mock()
         monkeypatch.setattr(
-            hsfs.client.rondb_rest_client,
-            "init_or_reset_rondb_rest_client",
-            init_rondb_client,
+            hsfs.client.online_store_rest_client,
+            "init_or_reset_online_store_rest_client",
+            init_online_store_rest_client,
         )
 
         # Act
@@ -273,46 +281,52 @@ class TestVectorServer:
             batch=False,
             external=True,
             inference_helper_columns=True,
-            init_sql_client=False,
-            init_rondb_rest_client=True,
-            options={"reset_rondb_connection": True},
+            init_online_store_sql_client=False,
+            init_online_store_rest_client=True,
+            options={"reset_online_store_connection": True},
         )
         batch_server.init_serving(
             entity=fv,
             batch=True,
             external=True,
             inference_helper_columns=True,
-            init_sql_client=False,
-            init_rondb_rest_client=True,
-            options={"reset_rondb_connection": True},
+            init_online_store_sql_client=False,
+            init_online_store_rest_client=True,
+            options={"reset_online_store_connection": True},
         )
 
         # Assert
-        assert single_server._rondb_engine is not None
-        assert batch_server._rondb_engine is not None
-        assert init_rondb_client.call_count == 2
-        assert init_rondb_client.call_args_list[0][1]["reset_connection"] is True
-        assert init_rondb_client.call_args_list[1][1]["reset_connection"] is True
+        assert single_server._online_store_rest_client_engine is not None
+        assert batch_server._online_store_rest_client_engine is not None
+        assert init_online_store_rest_client.call_count == 2
+        assert (
+            init_online_store_rest_client.call_args_list[0][1]["reset_connection"]
+            is True
+        )
+        assert (
+            init_online_store_rest_client.call_args_list[1][1]["reset_connection"]
+            is True
+        )
 
     # def test_get_feature_vector_defaults_to_initialised_client_if_rest(self, mocker, monkeypatch, fv, single_server, batch_server):
     #     # Arrange
     #     init_rond_client_mock = mocker.Mock()
-    #     monkeypatch.setattr(hsfs.client.rondb_rest_client, "init_or_reset_rondb_rest_client", init_rond_client_mock)
+    #     monkeypatch.setattr(hsfs.client.online_store_rest_client, "init_or_reset_online_store_rest_client", init_rond_client_mock)
     #     single_server.init_serving(
     #         entity=fv,
     #         batch=False,
     #         external=True,
     #         inference_helper_columns=True,
-    #         init_sql_client=False,
-    #         init_rondb_rest_client=True,
+    #         init_online_store_sql_client=False,
+    #         init_online_store_rest_client=True,
     #     )
     #     batch_server.init_serving(
     #         entity=fv,
     #         batch=True,
     #         external=True,
     #         inference_helper_columns=True,
-    #         init_sql_client=False,
-    #         init_rondb_rest_client=True,
+    #         init_online_store_sql_client=False,
+    #         init_online_store_rest_client=True,
     #     )
 
     #     # Act
@@ -327,25 +341,25 @@ class TestVectorServer:
     # def test_get_feature_vector_defaults_to_initialised_client_if_sql(self, mocker, monkeypatch, fv, single_server, batch_server):
     #     # Arrange
     #     init_rond_client_mock = mocker.Mock()
-    #     monkeypatch.setattr(hsfs.client.rondb_rest_client, "init_or_reset_rondb_rest_client", init_rond_client_mock)
+    #     monkeypatch.setattr(hsfs.client.online_store_rest_client, "init_or_reset_online_store_rest_client", init_rond_client_mock)
     #     single_server.init_serving(
     #         entity=fv,
     #         batch=False,
     #         external=True,
     #         inference_helper_columns=True,
-    #         init_sql_client=True,
-    #         init_rondb_rest_client=True,
+    #         init_online_store_sql_client=True,
+    #         init_online_store_rest_client=True,
     #     )
     #     batch_server.init_serving(
     #         entity=fv,
     #         batch=True,
     #         external=True,
     #         inference_helper_columns=True,
-    #         init_sql_client=True,
-    #         init_rondb_rest_client=True,
+    #         init_online_store_sql_client=True,
+    #         init_online_store_rest_client=True,
     #     )
 
     #     # Assert
-    #     assert single_server._rondb_engine is not None
-    #     assert batch_server._rondb_engine is not None
+    #     assert single_server._online_store_rest_client_engine is not None
+    #     assert batch_server._online_store_rest_client_engine is not None
     #     assert init_rond_client_mock.call_count == 2

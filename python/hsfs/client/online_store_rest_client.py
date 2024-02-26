@@ -22,41 +22,43 @@ from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import variable_api
 
-_rondb_client = None
+_online_store_rest_client = None
 
 
-def init_or_reset_rondb_rest_client(
-    optional_config: Optional[dict[str, Any]] = None, reset_connection: bool = False
+def init_or_reset_online_store_rest_client(
+    optional_config: Optional[dict[str, Any]] = None, reset_client: bool = False
 ):
-    global _rondb_client
-    if not _rondb_client:
-        _rondb_client = RondbRestClientSingleton(optional_config=optional_config)
-    elif reset_connection:
-        _rondb_client.reset_rondb_connection(optional_config=optional_config)
+    global _online_store_rest_client
+    if not _online_store_rest_client:
+        _online_store_rest_client = OnlineStoreRestClientSingleton(
+            optional_config=optional_config
+        )
+    elif reset_client:
+        _online_store_rest_client.reset_client(optional_config=optional_config)
     else:
         warn(
-            "RonDB Rest Client is already initialised. To reset connection or/and override configuration, "
-            + "use reset_rondb_rest_client_connection or get_instance methods with optional configuration"
+            "Online Store Rest Client is already initialised. To reset connection or/and override configuration, "
+            + "use reset_online_store_rest_client or get_instance methods with optional configuration"
         )
 
 
-def get_instance() -> "RondbRestClientSingleton":
-    global _rondb_client
-    if not _rondb_client:
-        _rondb_client = RondbRestClientSingleton()
-    return _rondb_client
+def get_instance() -> "OnlineStoreRestClientSingleton":
+    global _online_store_rest_client
+    if not _online_store_rest_client:
+        _online_store_rest_client = OnlineStoreRestClientSingleton()
+    return _online_store_rest_client
 
 
-_DEFAULT_RONDB_REST_CLIENT_PORT = 4406
-_DEFAULT_RONDB_REST_CLIENT_TIMEOUT_MS = 600
-_DEFAULT_RONDB_REST_CLIENT_VERIFY_CERTS = True
-_DEFAULT_RONDB_REST_CLIENT_USE_SSL = True
-_DEFAULT_RONDB_REST_CLIENT_SSL_ASSERT_HOSTNAME = True
-_DEFAULT_RONDB_REST_CLIENT_SERVER_API_VERSION = "0.1.0"
-_DEFAULT_RONDB_REST_CLIENT_HTTP_AUTHORIZATION = "X-API-KEY"
+_DEFAULT_ONLINE_STORE_REST_CLIENT_PORT = 4406
+_DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_MS = 600
+_DEFAULT_ONLINE_STORE_REST_CLIENT_VERIFY_CERTS = True
+_DEFAULT_ONLINE_STORE_REST_CLIENT_USE_SSL = True
+_DEFAULT_ONLINE_STORE_REST_CLIENT_SSL_ASSERT_HOSTNAME = True
+_DEFAULT_ONLINE_STORE_REST_CLIENT_SERVER_API_VERSION = "0.1.0"
+_DEFAULT_ONLINE_STORE_REST_CLIENT_HTTP_AUTHORIZATION = "X-API-KEY"
 
 
-class RondbRestClientSingleton:
+class OnlineStoreRestClientSingleton:
     HOST = "host"
     PORT = "port"
     VERIFY_CERTS = "verify_certs"
@@ -80,7 +82,7 @@ class RondbRestClientSingleton:
         )
         self.is_connected()
 
-    def reset_rondb_connection(self, optional_config: Optional[dict[str, Any]] = None):
+    def reset_client(self, optional_config: Optional[dict[str, Any]] = None):
         self._check_hopsworks_connection()
         if self._session is not None:
             self._session.close()
@@ -100,7 +102,7 @@ class RondbRestClientSingleton:
                 "optional_config must be a dictionary. See documentation for allowed keys and values."
             )
         if not use_current_config:
-            self._current_config = self._get_default_rondb_rest_client_config()
+            self._current_config = self._get_default_client_config()
         if optional_config:
             self._current_config.update(optional_config)
 
@@ -110,8 +112,8 @@ class RondbRestClientSingleton:
             self._session = requests.Session()
         else:
             raise ValueError(
-                "Use the init_or_reset_rondb_connection method with reset_connection flag set "
-                + "to True to reset the rondb_client_connection"
+                "Use the init_or_reset_online_store_connection method with reset_connection flag set "
+                + "to True to reset the online_store_client_connection"
             )
 
         # Set base_url
@@ -120,35 +122,35 @@ class RondbRestClientSingleton:
             f"{scheme}://{self._current_config[self.HOST]}:{self._current_config[self.PORT]}/{self._current_config[self.SERVER_API_VERSION]}"
         )
 
-        assert self._session is not None, "RonDB Rest Client failed to initialise."
+        assert (
+            self._session is not None
+        ), "Online Store REST Client failed to initialise."
         assert (
             self._auth is not None
-        ), "RonDB Rest Client Authentication failed to initialise. Check API Key."
+        ), "Online Store REST Client Authentication failed to initialise. Check API Key."
         assert (
             self._base_url is not None
-        ), "RonDB Rest Client Base URL failed to initialise. Check host and port parameters."
+        ), "Online Store REST Client Base URL failed to initialise. Check host and port parameters."
         assert (
             self._current_config is not None
-        ), "RonDB Rest Client Configuration failed to initialise."
+        ), "Online Store REST Client Configuration failed to initialise."
 
-    def _get_default_rondb_rest_client_config(self) -> dict[str, Any]:
-        default_config = self._get_default_rondb_rest_client_static_parameters_config()
-        default_config.update(
-            self._get_default_rondb_rest_client_dynamic_parameters_config()
-        )
+    def _get_default_client_config(self) -> dict[str, Any]:
+        default_config = self._get_default_static_parameters_config()
+        default_config.update(self._get_default_dynamic_parameters_config())
         return default_config
 
-    def _get_default_rondb_rest_client_static_parameters_config(self) -> dict[str, Any]:
+    def _get_default_static_parameters_config(self) -> dict[str, Any]:
         return {
-            self.TIMEOUT: _DEFAULT_RONDB_REST_CLIENT_TIMEOUT_MS,
-            self.VERIFY_CERTS: _DEFAULT_RONDB_REST_CLIENT_VERIFY_CERTS,
-            self.USE_SSL: _DEFAULT_RONDB_REST_CLIENT_USE_SSL,
-            self.SSL_ASSERT_HOSTNAME: _DEFAULT_RONDB_REST_CLIENT_SSL_ASSERT_HOSTNAME,
-            self.SERVER_API_VERSION: _DEFAULT_RONDB_REST_CLIENT_SERVER_API_VERSION,
-            self.HTTP_AUTHORIZATION: _DEFAULT_RONDB_REST_CLIENT_HTTP_AUTHORIZATION,
+            self.TIMEOUT: _DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_MS,
+            self.VERIFY_CERTS: _DEFAULT_ONLINE_STORE_REST_CLIENT_VERIFY_CERTS,
+            self.USE_SSL: _DEFAULT_ONLINE_STORE_REST_CLIENT_USE_SSL,
+            self.SSL_ASSERT_HOSTNAME: _DEFAULT_ONLINE_STORE_REST_CLIENT_SSL_ASSERT_HOSTNAME,
+            self.SERVER_API_VERSION: _DEFAULT_ONLINE_STORE_REST_CLIENT_SERVER_API_VERSION,
+            self.HTTP_AUTHORIZATION: _DEFAULT_ONLINE_STORE_REST_CLIENT_HTTP_AUTHORIZATION,
         }
 
-    def _get_default_rondb_rest_client_dynamic_parameters_config(
+    def _get_default_dynamic_parameters_config(
         self,
     ) -> dict[str, Any]:
         url = furl(self._get_rondb_rest_server_endpoint())
@@ -163,12 +165,12 @@ class RondbRestClientSingleton:
             external_domain = self.variable_api.get_loadbalancer_external_domain()
             if external_domain == "":
                 external_domain = client.get_instance().host
-            return f"https://{external_domain}:{_DEFAULT_RONDB_REST_CLIENT_PORT}"
+            return f"https://{external_domain}:{_DEFAULT_ONLINE_STORE_REST_CLIENT_PORT}"
         else:
             service_discovery_domain = self.variable_api.get_service_discovery_domain()
             if service_discovery_domain == "":
                 raise FeatureStoreException("Service discovery domain is not set.")
-            return f"https://rdrs.service.{service_discovery_domain}:{_DEFAULT_RONDB_REST_CLIENT_PORT}"
+            return f"https://rdrs.service.{service_discovery_domain}:{_DEFAULT_ONLINE_STORE_REST_CLIENT_PORT}"
 
     def send_request(
         self,
@@ -195,7 +197,7 @@ class RondbRestClientSingleton:
         assert (
             client.get_instance() is not None and client.get_instance()._connected
         ), """Hopsworks Client is not connected. Please connect to Hopsworks cluster
-            via hopsworks.login or hsfs.connection before initialising the RonDB REST Client.
+            via hopsworks.login or hsfs.connection before initialising the Online Store REST Client.
             """
 
     def _set_auth(self, optional_config: Optional[dict[str, Any]] = None):
@@ -203,11 +205,13 @@ class RondbRestClientSingleton:
             assert hasattr(
                 client.get_instance()._auth, "_token"
             ), "External client must use API Key authentication. Contact your system administrator."
-            self._auth = client.auth.RonDBKeyAuth(client.get_instance()._auth._token)
+            self._auth = client.auth.OnlineStoreKeyAuth(
+                client.get_instance()._auth._token
+            )
         elif isinstance(optional_config, dict) and optional_config.get(
             self.API_KEY, False
         ):
-            self._auth = client.auth.RonDBKeyAuth(optional_config[self.API_KEY])
+            self._auth = client.auth.OnlineStoreKeyAuth(optional_config[self.API_KEY])
         elif self._auth is not None:
             return
         else:
@@ -218,7 +222,7 @@ class RondbRestClientSingleton:
 
     def is_connected(self):
         if self._session is None:
-            raise FeatureStoreException("RonDB Rest Client is not initialised.")
+            raise FeatureStoreException("Online Store REST Client is not initialised.")
 
         if not self.send_request("GET", ["ping"]):
             warn("Ping failed, RonDB Rest Server is not reachable.")

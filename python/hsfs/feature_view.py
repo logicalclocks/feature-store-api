@@ -211,7 +211,7 @@ class FeatureView:
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
         options: Optional[dict] = None,
-        init_online_store_sql_client: bool = True,
+        init_online_store_sql_client: Optional[bool] = None,
         init_online_store_rest_client: bool = False,
     ):
         """Initialise feature view to retrieve feature vector from online and offline feature store.
@@ -236,7 +236,7 @@ class FeatureView:
             feature_view.init_serving(training_dataset_version=1)
             ```
 
-        Initialising the RonDB REST http client to retrieve feature vectors from the online feature store,
+        Initialising the Online Store REST Client to retrieve feature vectors from the online feature store,
         with additional configuration options.
 
         !!! example
@@ -250,11 +250,11 @@ class FeatureView:
             # initialise feature view to retrieve a feature vector using the RonDB REST http client
             feature_view.init_serving(
                 training_dataset_version=1,
-                init_rondb_rest_client=True,
+                init_online_store_rest_client=True,
             )
             ```
 
-        Reset the RonDB REST http client connection to fix configuration options:
+        Reset the Online Store REST Client connection to fix configuration options:
 
         !!! example
             ```python
@@ -267,8 +267,8 @@ class FeatureView:
             # reset the RonDB REST http client connection
             feature_view.init_serving(
                 training_dataset_version=1,
-                init_rondb_rest_client=True,
-                options={"rondb_client_reset": True, "rondb_client_config": {"host": "new_host", "timeout": 1000}},
+                init_online_store_rest_client=True,
+                options={"reset_online_store_rest_client": True, "config_online_store_rest_client": {"host": "new_host", "timeout": 1000}},
             )
             ```
 
@@ -281,18 +281,17 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used which relies on the private IP.
                 Defaults to True if connection to Hopsworks is established from external environment (e.g AWS
                 Sagemaker or Google Colab), otherwise to False.
-            init_sql_client: bool, optional. If set to True, initialise the SQL client to retrieve feature vector(s)
-                from the online feature store. Defaults to True.
-            init_rondb_rest_client: bool, optional. If set to True, initialise the RonDB REST http client to retrieve
+            init_online_store_sql_client: bool, optional. If set to True, initialise the SQL client to retrieve feature vector(s)
+                from the online feature store. Defaults to True if init_online_.
+            init_online_store_rest_client: bool, optional. If set to True, initialise the Online Store REST Client to retrieve
                 feature vector(s) from the online feature store. Defaults to False, meaning the sql client will be initialised.
             options: Additional options as key/value pairs for configuring online serving engine.
                 * key: kwargs of SqlAlchemy engine creation (See: https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
                   For example: `{"pool_size": 10}`
-                * key: "rondb_client_config" - dict, optional. Optional configuration options to override defaults for the rondb rest client.
-                * key: "rondb_client_reset" - bool, optional. If set to True, the rondb rest client connection will be reset. Provide
-                    `rondb_client_config` to override defaults.
+                * key: "config_online_store_rest_client" - dict, optional. Optional configuration options to override defaults for the Online Store REST Client.
+                * key: "reset_online_store_rest_client" - bool, optional. If set to True, the Online Store REST Client will be reset. Provide
+                    `config_online_store_rest_client` to override defaults.
         """
-
         # initiate batch scoring server
         # `training_dataset_version` should not be set if `None` otherwise backend will look up the td.
         try:
@@ -312,6 +311,13 @@ class FeatureView:
                 util.VersionWarning,
             )
 
+        # Defaults to SQL connector if the user does not specify any of init_online_store* kwargs
+        # Only one client is initialise if user specifies only one init_online_store* kwargs
+        # Only if user specifies both init_online_store* kwargs, both client get initialised
+        if init_online_store_sql_client is None and not init_online_store_rest_client:
+            init_online_store_sql_client = True
+        elif init_online_store_sql_client is None and init_online_store_rest_client:
+            init_online_store_sql_client = False
         # initiate single vector server
         self._single_vector_server = vector_server.VectorServer(
             self._featurestore_id,
@@ -465,8 +471,8 @@ class FeatureView:
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
               1. The training dataset version of the transformation statistics
-              2. Additional configurations of online serving engine (e.g init_rondb_rest_client=True
-                to use RonDB REST http client instead of SQL connector)
+              2. Additional configurations of online serving engine (e.g init_online_store_rest_client=True
+                to use Online Store REST Client instead of SQL connector)
         !!! warning "Missing primary key entries"
             If the provided primary key `entry` can't be found in one or more of the feature groups
             used by this feature view the call to this method will raise an exception.
@@ -529,7 +535,7 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            force_rest_client: bool, optional. If set to True, the RonDB REST http client will be used to retrieve the feature vector.
+            force_rest_client: bool, optional. If set to True, the Online Store REST Client will be used to retrieve the feature vector.
                 Defaults to False.
             force_sql_client: bool, optional. If set to True, the SQL connector will be used to retrieve the feature vector.
                 Defaults to False.
@@ -543,7 +549,7 @@ class FeatureView:
             ordered according to positions of this features in the feature view query.
 
         # Raises
-            `hsfs.client.exceptions.RestAPIError`. If using the RonDB REST http client, and the response status code is not 200.
+            `hsfs.client.exceptions.RestAPIError`. If using the Online Store REST Client, and the response status code is not 200.
                 - 400: Requested Metadata does not exist or the request is malformed.
                 - 401: Access denied. API key does not give access to the feature store (e.g feature store not shared with user),
                     or authorization header (x-api-key) is not properly set.
@@ -558,7 +564,7 @@ class FeatureView:
         if self._single_vector_server is None:
             self.init_serving(
                 external=external,
-                init_rondb_rest_client=force_rest_client,
+                init_online_store_rest_client=force_rest_client,
                 init_sql_client=True
                 if (force_sql_client or not force_rest_client)
                 else False,
@@ -588,8 +594,8 @@ class FeatureView:
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
               1. The training dataset version of the transformation statistics
-              2. Additional configurations of online serving engine (e.g init_rondb_rest_client=True
-                to use RonDB REST http client instead of SQL connector)
+              2. Additional configurations of online serving engine (e.g init_online_store_rest_client=True
+                to use Online Store REST Client instead of SQL connector)
         !!! warning "Missing primary key entries"
             If any of the provided primary key elements in `entry` can't be found in any
             of the feature groups, no feature vector for that primary key value will be
@@ -652,7 +658,7 @@ class FeatureView:
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
             return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
             allow_missing: Setting to `True` returns feature vectors with missing values.
-            force_rest_client: bool, optional. If set to True, the RonDB REST http client will be used to
+            force_rest_client: bool, optional. If set to True, the Online Store REST Client will be used to
                 retrieve the feature vector. Defaults to False.
             force_sql_client: bool, optional. If set to True, the SQL connector will be used to retrieve the
                 feature vector. Defaults to False.
@@ -665,7 +671,7 @@ class FeatureView:
             keys, ordered according to positions of this features in the feature view query.
 
         # Raises
-            `hsfs.client.exceptions.RestAPIError`. If using the RonDB REST http client, and the response status code is not 200.
+            `hsfs.client.exceptions.RestAPIError`. If using the Online Store REST client, and the response status code is not 200.
                 - 400: Requested Metadata does not exist or the request is malformed.
                 - 401: Access denied. API key does not give access to the feature store (e.g feature store not shared with user),
                     or authorization header (x-api-key) is not properly set.
@@ -680,7 +686,7 @@ class FeatureView:
         if self._batch_vectors_server is None:
             self.init_serving(
                 external=external,
-                init_rondb_rest_client=force_rest_client,
+                init_online_store_rest_client=force_rest_client,
                 init_sql_client=True
                 if (force_sql_client or not force_rest_client)
                 else False,
@@ -819,7 +825,7 @@ class FeatureView:
         # Raises
             `ValueError`. - If vector server is not initialised via `init_serving`
                 - If setting default to a client not initialised. Use `init_serving` with either `init_sql_client`
-                    or `init_rondb_rest_client` to initialise the client.
+                    or `init_online_store_rest_client` to initialise the client.
                 - If client is not "rest" or "sql".
         """
         client = client.lower()

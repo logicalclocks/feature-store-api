@@ -18,7 +18,7 @@ import pytest
 from furl import furl
 
 import hsfs
-from hsfs.client import rondb_rest_client, exceptions, auth
+from hsfs.client import online_store_rest_client, exceptions, auth
 
 
 class MockExternalClient:
@@ -44,10 +44,10 @@ class MockInternalClient:
         return "/tmp/ca_chain.pem"
 
 
-class TestRondbRestClient:
-    def test_setup_rondb_rest_client_external_2(self, mocker, monkeypatch):
+class TestOnlineStoreRestClient:
+    def test_setup_rest_client_external(self, mocker, monkeypatch):
         # Arrange
-        rondb_rest_client._rondb_client = None
+        online_store_rest_client._online_store_rest_client = None
 
         def client_get_instance():
             return MockExternalClient()
@@ -58,27 +58,32 @@ class TestRondbRestClient:
             return_value="app.hopsworks.ai",
         )
         ping_rdrs_mock = mocker.patch(
-            "hsfs.client.rondb_rest_client.RondbRestClientSingleton.is_connected",
+            "hsfs.client.online_store_rest_client.OnlineStoreRestClientSingleton.is_connected",
         )
 
         # Act
-        rondb_rest_client.init_or_reset_rondb_rest_client()
-        rondb_rest_client_instance = rondb_rest_client.get_instance()
+        online_store_rest_client.init_or_reset_online_store_rest_client()
+        online_store_rest_client_instance = online_store_rest_client.get_instance()
 
         # Assert
         variable_api_mock.assert_called_once()
-        assert rondb_rest_client_instance._current_config["host"] == "app.hopsworks.ai"
-        assert rondb_rest_client_instance._current_config["port"] == 4406
-        assert rondb_rest_client_instance._current_config["verify_certs"] is True
-        assert rondb_rest_client_instance._base_url == furl(
+        assert (
+            online_store_rest_client_instance._current_config["host"]
+            == "app.hopsworks.ai"
+        )
+        assert online_store_rest_client_instance._current_config["port"] == 4406
+        assert online_store_rest_client_instance._current_config["verify_certs"] is True
+        assert online_store_rest_client_instance._base_url == furl(
             "https://app.hopsworks.ai:4406/0.1.0"
         )
-        assert rondb_rest_client_instance._auth._token == "external_client_api_key"
+        assert (
+            online_store_rest_client_instance._auth._token == "external_client_api_key"
+        )
         assert ping_rdrs_mock.call_count == 1
 
-    def test_setup_rondb_rest_client_internal(self, mocker, monkeypatch):
+    def test_setup_online_store_rest_client_internal(self, mocker, monkeypatch):
         # Arrange
-        rondb_rest_client._rondb_client = None
+        online_store_rest_client._online_store_rest_client = None
 
         def client_get_instance():
             return MockInternalClient()
@@ -90,26 +95,27 @@ class TestRondbRestClient:
         )
         optional_config = {"api_key": "provided_api_key"}
         ping_rdrs_mock = mocker.patch(
-            "hsfs.client.rondb_rest_client.RondbRestClientSingleton.is_connected",
+            "hsfs.client.online_store_rest_client.OnlineStoreRestClientSingleton.is_connected",
         )
 
         # Act
         with pytest.raises(exceptions.FeatureStoreException):
-            rondb_rest_client.init_or_reset_rondb_rest_client()
-        rondb_rest_client.init_or_reset_rondb_rest_client(
+            online_store_rest_client.init_or_reset_online_store_rest_client()
+        online_store_rest_client.init_or_reset_online_store_rest_client(
             optional_config=optional_config
         )
-        rondb_rest_client_instance = rondb_rest_client.get_instance()
+        online_store_rest_client_instance = online_store_rest_client.get_instance()
 
         # Assert
         assert variable_api_mock.call_count == 2
         assert (
-            rondb_rest_client_instance._current_config["host"] == "rdrs.service.consul"
+            online_store_rest_client_instance._current_config["host"]
+            == "rdrs.service.consul"
         )
-        assert rondb_rest_client_instance._current_config["port"] == 4406
-        assert rondb_rest_client_instance._current_config["verify_certs"] is True
-        assert rondb_rest_client_instance._base_url == furl(
+        assert online_store_rest_client_instance._current_config["port"] == 4406
+        assert online_store_rest_client_instance._current_config["verify_certs"] is True
+        assert online_store_rest_client_instance._base_url == furl(
             "https://rdrs.service.consul:4406/0.1.0"
         )
-        assert rondb_rest_client_instance._auth._token == "provided_api_key"
+        assert online_store_rest_client_instance._auth._token == "provided_api_key"
         assert ping_rdrs_mock.call_count == 1

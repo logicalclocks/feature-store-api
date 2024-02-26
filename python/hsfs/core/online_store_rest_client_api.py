@@ -17,10 +17,10 @@ from typing import Any
 import json
 from requests import Response
 
-from hsfs.client import rondb_rest_client, exceptions
+from hsfs.client import online_store_rest_client, exceptions
 
 
-class RondbRestApi:
+class OnlineStoreRestClientApi:
     SINGLE_VECTOR_ENDPOINT = "feature_store"
     BATCH_VECTOR_ENDPOINT = "batch_feature_store"
     PING_ENDPOINT = "ping"
@@ -62,7 +62,7 @@ class RondbRestApi:
                 - 500: Internal server error.
         """
         return self.handle_rdrs_feature_store_response(
-            rondb_rest_client.get_instance().send_request(
+            online_store_rest_client.get_instance().send_request(
                 method="POST",
                 path_params=[self.SINGLE_VECTOR_ENDPOINT],
                 headers={"Content-Type": "application/json"},
@@ -103,7 +103,7 @@ class RondbRestApi:
                 - 500: Internal server error.
         """
         return self.handle_rdrs_feature_store_response(
-            rondb_rest_client.get_instance().send_request(
+            online_store_rest_client.get_instance().send_request(
                 method="POST",
                 path_params=[self.BATCH_VECTOR_ENDPOINT],
                 headers={"Content-Type": "application/json"},
@@ -113,7 +113,7 @@ class RondbRestApi:
 
     def ping_rondb_rest_server(self) -> int:
         """Ping the RonDB Rest Server to check if it is alive."""
-        return rondb_rest_client.get_instance().send_request(
+        return online_store_rest_client.get_instance().send_request(
             method="GET", path_params=[self.PING_ENDPOINT]
         )
 

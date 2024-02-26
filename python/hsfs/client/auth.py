@@ -39,7 +39,7 @@ class ApiKeyAuth(requests.auth.AuthBase):
         return r
 
 
-class RonDBKeyAuth(requests.auth.AuthBase):
+class OnlineStoreKeyAuth(requests.auth.AuthBase):
     """Class to encapsulate an API key."""
 
     def __init__(self, token):

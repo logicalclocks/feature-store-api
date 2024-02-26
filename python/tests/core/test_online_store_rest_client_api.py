@@ -17,10 +17,10 @@ import pytest
 import requests
 import json
 
-from hsfs.core import rondb_rest_api
+from hsfs.core import online_store_rest_client_api
 
 
-class TestRondbRestApi:
+class TestOnlineStoreRestClientApi:
     def test_handle_rdrs_feature_store_response_bad_request_primary_key_or_passed_features(
         self, backend_fixtures
     ):
@@ -32,10 +32,11 @@ class TestRondbRestApi:
                 "bad_request_primary_key_or_passed_features_error"
             ]
         ).encode("utf-8")
+        online_rest_api = online_store_rest_client_api.OnlineStoreRestClientApi()
 
         # Act
-        with pytest.raises(rondb_rest_api.exceptions.RestAPIError):
-            rondb_rest_api.RondbRestApi().handle_rdrs_feature_store_response(response)
+        with pytest.raises(online_store_rest_client_api.exceptions.RestAPIError):
+            online_rest_api.handle_rdrs_feature_store_response(response)
 
     def test_handle_rdrs_feature_store_response_bad_request_metadata(
         self, backend_fixtures
@@ -46,10 +47,11 @@ class TestRondbRestApi:
         response._content = json.dumps(
             backend_fixtures["rondb_server"]["bad_request_feature_store_view_not_exist"]
         ).encode("utf-8")
+        online_rest_api = online_store_rest_client_api.OnlineStoreRestClientApi()
 
         # Act
-        with pytest.raises(rondb_rest_api.exceptions.RestAPIError):
-            rondb_rest_api.RondbRestApi().handle_rdrs_feature_store_response(response)
+        with pytest.raises(online_store_rest_client_api.exceptions.RestAPIError):
+            online_rest_api.handle_rdrs_feature_store_response(response)
 
     def test_handle_rdrs_feature_store_response_unauthorized_request_error(
         self, backend_fixtures
@@ -60,10 +62,11 @@ class TestRondbRestApi:
         response._content = json.dumps(
             backend_fixtures["rondb_server"]["unauthorized_request_error"]
         ).encode("utf-8")
+        online_rest_api = online_store_rest_client_api.OnlineStoreRestClientApi()
 
         # Act
-        with pytest.raises(rondb_rest_api.exceptions.RestAPIError):
-            rondb_rest_api.RondbRestApi().handle_rdrs_feature_store_response(response)
+        with pytest.raises(online_store_rest_client_api.exceptions.RestAPIError):
+            online_rest_api.handle_rdrs_feature_store_response(response)
 
     def test_handle_rdrs_feature_store_response_internal_server_error(
         self, backend_fixtures
@@ -74,7 +77,8 @@ class TestRondbRestApi:
         response._content = json.dumps(
             backend_fixtures["rondb_server"]["internal_server_error"]
         ).encode("utf-8")
+        online_rest_api = online_store_rest_client_api.OnlineStoreRestClientApi()
 
         # Act
-        with pytest.raises(rondb_rest_api.exceptions.RestAPIError):
-            rondb_rest_api.RondbRestApi().handle_rdrs_feature_store_response(response)
+        with pytest.raises(online_store_rest_client_api.exceptions.RestAPIError):
+            online_rest_api.handle_rdrs_feature_store_response(response)
