@@ -450,6 +450,11 @@ class VectorServer:
             raise ValueError(
                 "force_rest_client and force_sql_client cannot be used at the same time."
             )
+
+        # No override, use default client
+        if not force_rest_client and not force_sql_client:
+            return self.default_online_store_client
+
         if (
             self._init_online_store_rest_client is False
             and self._init_online_store_sql_client is False
@@ -457,28 +462,19 @@ class VectorServer:
             raise ValueError(
                 "No client is initialised. Call `init_serving` with init_online_store_sql_client or init_online_store_rest_client set to True before using it."
             )
-        if force_sql_client:
-            if (
-                self._init_online_store_sql_client is False
-                or self._prepared_statement_engine is None
-            ):
-                raise ValueError(
-                    "SQL Client is not initialised. Call `init_serving` with init_online_store_sql_client set to True before using it."
-                )
+        if force_sql_client and (self._init_online_store_sql_client is False):
+            raise ValueError(
+                "SQL Client is not initialised. Call `init_serving` with init_online_store_sql_client set to True before using it."
+            )
+        elif force_sql_client:
             return self.DEFAULT_ONLINE_STORE_SQL_CLIENT
 
-        if force_rest_client:
-            if (
-                self._init_online_store_rest_client is False
-                or self._online_store_rest_client_engine is None
-            ):
-                raise ValueError(
-                    "RonDB Rest Client is not initialised. Call `init_serving` with init_online_store_rest_client set to True before using it."
-                )
+        if force_rest_client and (self._init_online_store_rest_client is False):
+            raise ValueError(
+                "RonDB Rest Client is not initialised. Call `init_serving` with init_online_store_rest_client set to True before using it."
+            )
+        elif force_rest_client:
             return self.DEFAULT_ONLINE_STORE_REST_CLIENT
-
-        # If no override is specified, use the initialised client
-        return self.default_online_store_client
 
     def _set_default_online_store_client(
         self,

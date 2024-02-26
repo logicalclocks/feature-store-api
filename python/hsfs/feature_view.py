@@ -570,7 +570,7 @@ class FeatureView:
             self.init_serving(
                 external=external,
                 init_online_store_rest_client=force_rest_client,
-                init_sql_client=True
+                init_online_store_sql_client=True
                 if (force_sql_client or not force_rest_client)
                 else False,
             )
@@ -692,7 +692,7 @@ class FeatureView:
             self.init_serving(
                 external=external,
                 init_online_store_rest_client=force_rest_client,
-                init_sql_client=True
+                init_online_store_sql_client=True
                 if (force_sql_client or not force_rest_client)
                 else False,
             )
@@ -829,7 +829,7 @@ class FeatureView:
 
         # Raises
             `ValueError`. - If vector server is not initialised via `init_serving`
-                - If setting default to a client not initialised. Use `init_serving` with either `init_sql_client`
+                - If setting default to a client not initialised. Use `init_serving` with either `init_online_store_sql_client`
                     or `init_online_store_rest_client` to initialise the client.
                 - If client is not "rest" or "sql".
         """
