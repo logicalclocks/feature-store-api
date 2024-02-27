@@ -78,7 +78,11 @@ class FeatureView:
         self._query = query
         self._featurestore_id = featurestore_id
         self._feature_store_id = featurestore_id  # for consistency with feature group
-        self._feature_store_name = util.strip_feature_store_suffix(featurestore_name)
+        self._feature_store_name = (
+            None
+            if featurestore_name is None
+            else util.strip_feature_store_suffix(featurestore_name)
+        )
         self._version = version
         self._description = description
         self._labels = labels

@@ -80,6 +80,29 @@ class OnlineStoreRestClientEngine:
             },
         }
 
+    def handle_passed_features_dict(
+        self, passed_features: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Handle the passed features dictionary to convert event time to timestamp.
+
+        Args:
+            passed_features: A dictionary with the feature names as keys and the values to substitute for this specific vector.
+
+        Returns:
+            A dictionary with the feature names as keys and the values to substitute for this specific vector.
+        """
+        # TODO: Handle serialization of complex features or update incoming responses with complex passed features?
+        if passed_features is None:
+            return {}
+        return {
+            key: (
+                value
+                if not isinstance(value, datetime)
+                else util.convert_event_time_to_timestamp(value)
+            )
+            for (key, value) in passed_features.items()
+        }
+
     def get_single_raw_feature_vector(
         self,
         feature_store_name: str,
@@ -125,14 +148,14 @@ class OnlineStoreRestClientEngine:
             return_type=return_type,
         )
         payload["entries"] = entry
-        if isinstance(passed_features, dict):
-            payload["passedFeatures"] = passed_features
-        else:
-            payload["passedFeatures"] = {}
+        payload["passedFeatures"] = self.handle_passed_features_dict(
+            passed_features=passed_features
+        )
 
         response = self._online_store_rest_client_api.get_single_raw_feature_vector(
             payload=payload
         )
+        print(response)
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
             # If the status is "MISSING" the response will not contain metadata
@@ -194,7 +217,10 @@ class OnlineStoreRestClientEngine:
         if isinstance(passed_features, list) and (
             len(passed_features) == len(entries) or len(passed_features) == 0
         ):
-            payload["passedFeatures"] = passed_features
+            payload["passedFeatures"] = [
+                self.handle_passed_features_dict(passed_features=passed_feature)
+                for passed_feature in passed_features
+            ]
         elif passed_features is None:
             payload["passedFeatures"] = []
         else:
@@ -205,6 +231,7 @@ class OnlineStoreRestClientEngine:
         response = self._online_store_rest_client_api.get_batch_raw_feature_vectors(
             payload=payload
         )
+        print(response)
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
             return self.convert_batch_response_to_feature_value_dict(
