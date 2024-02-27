@@ -62,6 +62,13 @@ class FeatureStoreException(Exception):
     """Generic feature store exception"""
 
 
+class DataValidationException(FeatureStoreException):
+    """Raised when data validation fails only when using "STRICT" validation ingestion policy."""
+
+    def __init__(self, message):
+        super().__init__(message)
+
+
 class ExternalClientError(TypeError):
     """Raised when external client cannot be initialized due to missing arguments."""
 
