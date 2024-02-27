@@ -201,6 +201,10 @@ class TestFeatureGroupEngine:
             "hsfs.core.great_expectation_engine.GreatExpectationEngine"
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
+        mocker.patch(
+            "hsfs.util.get_feature_group_url",
+            return_value="url",
+        )
 
         fg_engine = feature_group_engine.FeatureGroupEngine(
             feature_store_id=feature_store_id
@@ -225,14 +229,15 @@ class TestFeatureGroupEngine:
         mock_ge_engine.return_value.validate.return_value = vr
 
         # Act
-        fg_engine.insert(
-            feature_group=fg,
-            feature_dataframe=None,
-            overwrite=None,
-            operation=None,
-            storage=None,
-            write_options=None,
-        )
+        with pytest.raises(exceptions.DataValidationException):
+            fg_engine.insert(
+                feature_group=fg,
+                feature_dataframe=None,
+                overwrite=None,
+                operation=None,
+                storage=None,
+                write_options=None,
+            )
 
         # Assert
         assert mock_fg_api.return_value.delete_content.call_count == 0
@@ -1056,7 +1061,7 @@ class TestFeatureGroupEngine:
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            "hsfs.util.get_feature_group_url",
             return_value=feature_group_url,
         )
         mock_print = mocker.patch("builtins.print")
@@ -1104,7 +1109,7 @@ class TestFeatureGroupEngine:
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            "hsfs.util.get_feature_group_url",
             return_value=feature_group_url,
         )
         mock_print = mocker.patch("builtins.print")
@@ -1153,7 +1158,7 @@ class TestFeatureGroupEngine:
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            "hsfs.util.get_feature_group_url",
             return_value=feature_group_url,
         )
         mock_print = mocker.patch("builtins.print")
@@ -1204,7 +1209,7 @@ class TestFeatureGroupEngine:
         )
 
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            "hsfs.util.get_feature_group_url",
             return_value=feature_group_url,
         )
 
@@ -1309,7 +1314,7 @@ class TestFeatureGroupEngine:
         )
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mocker.patch(
-            "hsfs.core.feature_group_engine.FeatureGroupEngine._get_feature_group_url",
+            "hsfs.util.get_feature_group_url",
             return_value=feature_group_url,
         )
         mock_print = mocker.patch("builtins.print")
@@ -1345,38 +1350,4 @@ class TestFeatureGroupEngine:
             0
         ] == "Feature Group created successfully, explore it at \n{}".format(
             feature_group_url
-        )
-
-    def test_get_feature_group_url(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mocker.patch("hsfs.engine.get_type")
-        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-        mock_util_get_hostname_replaced_url = mocker.patch(
-            "hsfs.util.get_hostname_replaced_url"
-        )
-
-        fg_engine = feature_group_engine.FeatureGroupEngine(
-            feature_store_id=feature_store_id
-        )
-
-        fg = feature_group.FeatureGroup(
-            name="test",
-            version=1,
-            featurestore_id=feature_store_id,
-            primary_key=[],
-            partition_key=[],
-            id=10,
-        )
-
-        mock_client_get_instance.return_value._project_id = 50
-
-        # Act
-        fg_engine._get_feature_group_url(feature_group=fg)
-
-        # Assert
-        assert mock_util_get_hostname_replaced_url.call_count == 1
-        assert (
-            mock_util_get_hostname_replaced_url.call_args[0][0] == "/p/50/fs/99/fg/10"
         )
