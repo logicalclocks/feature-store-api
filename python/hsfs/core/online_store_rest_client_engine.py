@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from typing import Optional, Any, Union, Dict
+from typing import Optional, Any, Union, Dict, List
 from datetime import datetime
 
 from hsfs.core import online_store_rest_client_api
@@ -150,11 +150,11 @@ class OnlineStoreRestClientEngine:
         feature_store_name: str,
         feature_view_name: str,
         feature_view_version: int,
-        entries: list[Dict[str, Any]],
-        passed_features: Optional[list[Dict[str, Any]]] = None,
+        entries: List[Dict[str, Any]],
+        passed_features: Optional[List[Dict[str, Any]]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
-    ) -> list[Dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
         """Get a list of feature vectors from the online feature store via RonDB Rest Server Feature Store API.
 
         Check the RonDB Rest Server Feature Store API documentation for more details:
@@ -215,7 +215,7 @@ class OnlineStoreRestClientEngine:
 
     def convert_batch_response_to_feature_value_dict(
         self, batch_response: Dict[str, Any]
-    ) -> list[Dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
         """Split the response from the RonDB Rest Server Feature Store API to convert each feature vector to a dictionary.
 
         Skip the feature vectors that have an error status.
@@ -235,7 +235,7 @@ class OnlineStoreRestClientEngine:
         ]
 
     def convert_rdrs_response_to_feature_value_dict(
-        self, row_feature_values: list[Any], metadatas: list[Dict[str, str]]
+        self, row_feature_values: List[Any], metadatas: List[Dict[str, str]]
     ) -> Dict[str, Any]:
         """Convert the response from the RonDB Rest Server Feature Store API to a feature:value dict.
 

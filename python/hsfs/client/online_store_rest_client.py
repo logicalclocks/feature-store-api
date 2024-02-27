@@ -15,7 +15,7 @@
 #
 import requests
 from furl import furl
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from warnings import warn
 
 from hsfs import client
@@ -174,7 +174,7 @@ class OnlineStoreRestClientSingleton:
     def send_request(
         self,
         method: str,
-        path_params: list[str],
+        path_params: List[str],
         headers: Optional[Dict[str, Any]] = None,
         data: Optional[Dict[str, Any]] = None,
     ):
