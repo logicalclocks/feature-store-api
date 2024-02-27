@@ -2492,6 +2492,12 @@ class FeatureGroup(FeatureGroupBase):
 
         # Returns
             (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`. e.g fail to create feature group, dataframe schema does not match
+                existing feature group schema, etc.
+            `hsfs.client.exceptions.DataValidationException`. If data validation fails and the expectation
+                suite `validation_ingestion_policy` is set to `STRICT`. Data is NOT ingested.
         """
         if storage and self.stream:
             warnings.warn(
@@ -3383,6 +3389,69 @@ class ExternalFeatureGroup(FeatureGroupBase):
         save_code: Optional[bool] = True,
         wait: bool = False,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
+        """Insert the dataframe feature values ONLY in the online feature store.
+
+        External Feature Groups contains metadata about feature data in an external storage system.
+        External storage system are usually offline, meaning feature values cannot be retrieved in real-time.
+        In order to use the feature values for real-time use-cases, you can insert them
+        in Hopsoworks Online Feature Store via this method.
+
+        The Online Feature Store has a single-entry per primary key value, meaining that providing a new value with
+        for a given primary key will overwrite the existing value. No record of the previous value is kept.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the External Feature Group instance
+            fg = fs.get_feature_group(name="external_sales_records", version=1)
+
+            # get the feature values, e.g reading from csv files in a S3 bucket
+            feature_values = ...
+
+            # insert the feature values in the online feature store
+            fg.insert(feature_values)
+            ```
+
+        !!! Note
+            Data Validation via Great Expectation is supported if you have attached an expectation suite to
+            your External Feature Group. However, as opposed to regular Feature Groups, this can lead to
+            discrepancies between the data in the external storage system and the online feature store.
+
+        # Arguments
+            features: DataFrame, RDD, Ndarray, list. Features to be saved.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, write_options can contain the
+                following entries:
+                * key `kafka_producer_config` and value an object of type [properties](https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.htmln)
+                  used to configure the Kafka client. To optimize for throughput in high latency connection consider
+                  changing [producer properties](https://docs.confluent.io/cloud/current/client-apps/optimizing/throughput.html#producer).
+                * key `internal_kafka` and value `True` or `False` in case you established
+                  connectivity from you Python environment to the internal advertised
+                  listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
+                  will use external listeners when connecting from outside of Hopsworks.
+            validation_options: Additional validation options as key-value pairs, defaults to `{}`.
+                * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
+                * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
+                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+                * key `fetch_expectation_suite` a boolean value, by default `True`, to control whether the expectation
+                   suite of the feature group should be fetched before every insert.
+            save_code: When running HSFS on Hopsworks or Databricks, HSFS can save the code/notebook used to create
+                the feature group or used to insert data to it. When calling the `insert` method repeatedly
+                with small batches of data, this can slow down the writes. Use this option to turn off saving
+                code. Defaults to `True`.
+
+        # Returns
+            Tuple(`Job`, `ValidationReport`) The validation report if validation is enabled.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`. e.g fail to create feature group, dataframe schema does not match
+                existing feature group schema, etc.
+            `hsfs.client.exceptions.DataValidationException`. If data validation fails and the expectation
+                suite `validation_ingestion_policy` is set to `STRICT`. Data is NOT ingested.
+
+        """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         if write_options is None:

@@ -123,3 +123,24 @@ class TestUtil:
             ].path
             == "p/5/jobs/named/7/executions"
         )
+
+    def test_get_feature_group_url(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        feature_group_id = 10
+        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
+        mock_util_get_hostname_replaced_url = mocker.patch(
+            "hsfs.util.get_hostname_replaced_url"
+        )
+        mock_client_get_instance.return_value._project_id = 50
+
+        # Act
+        util.get_feature_group_url(
+            feature_group_id=feature_group_id, feature_store_id=feature_store_id
+        )
+
+        # Assert
+        assert mock_util_get_hostname_replaced_url.call_count == 1
+        assert (
+            mock_util_get_hostname_replaced_url.call_args[0][0] == "/p/50/fs/99/fg/10"
+        )
