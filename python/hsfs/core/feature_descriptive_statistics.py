@@ -214,72 +214,105 @@ class FeatureDescriptiveStatistics:
 
     @property
     def feature_type(self) -> str:
+        """Data type of the feature. It can be one of Boolean, Fractional, Integral, or String."""
         return self._feature_type
 
     @property
     def feature_name(self) -> str:
+        """Name of the feature."""
         return self._feature_name
 
     @property
     def count(self) -> int:
+        """Number of values."""
         return self._count
 
     @property
     def completeness(self) -> Optional[float]:
+        """Fraction of non-null values in a column."""
         return self._completeness
 
     @property
     def num_non_null_values(self) -> Optional[int]:
+        """Number of non-null values."""
         return self._num_non_null_values
 
     @property
     def num_null_values(self) -> Optional[int]:
+        """Number of null values."""
         return self._num_null_values
 
     @property
     def approx_num_distinct_values(self) -> Optional[int]:
+        """Approximate number of distinct values."""
         return self._approx_num_distinct_values
 
     @property
     def min(self) -> Optional[float]:
+        """Minimum value."""
         return self._min
 
     @property
     def max(self) -> Optional[float]:
+        """Maximum value."""
         return self._max
 
     @property
     def sum(self) -> Optional[float]:
+        """Sum of all feature values."""
         return self._sum
 
     @property
     def mean(self) -> Optional[float]:
+        """Mean value."""
         return self._mean
 
     @property
     def stddev(self) -> Optional[float]:
+        """Standard deviation of the feature values."""
         return self._stddev
 
     @property
     def percentiles(self) -> Optional[Mapping[str, float]]:
+        """Percentiles."""
         return self._percentiles
 
     @property
     def distinctness(self) -> Optional[float]:
+        """Fraction of distinct values of a feature over the number of all its values. Distinct values occur at least once.
+
+        !!! note "Example"
+            $[a, a, b]$ contains two distinct values $a$ and $b$, so distinctness is $2/3$.
+        """
         return self._distinctness
 
     @property
     def entropy(self) -> Optional[float]:
+        """Entropy is a measure of the level of information contained in an event (feature value) when considering all possible events (all feature values).
+        Entropy is estimated using observed value counts as the negative sum of (value_count/total_count) * log(value_count/total_count).
+
+        !!! note "Example"
+            $[a, b, b, c, c]$ has three distinct values with counts $[1, 2, 2]$.
+
+            Entropy is then $(-1/5*log(1/5)-2/5*log(2/5)-2/5*log(2/5)) = 1.055$.
+        """
         return self._entropy
 
     @property
     def uniqueness(self) -> Optional[float]:
+        """Fraction of unique values over the number of all values of a column. Unique values occur exactly once.
+
+        !!! note "Example"
+            $[a, a, b]$ contains one unique value $b$, so uniqueness is $1/3$.
+        """
         return self._uniqueness
 
     @property
     def exact_num_distinct_values(self) -> Optional[int]:
+        """Exact number of distinct values."""
         return self._exact_num_distinct_values
 
     @property
     def extended_statistics(self) -> Optional[dict]:
+        """Additional statistics computed on the feature values such as histograms and correlations."""
         return self._extended_statistics

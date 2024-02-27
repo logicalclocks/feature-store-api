@@ -20,7 +20,7 @@ from hsfs.core import inode, arrow_flight_client
 from hsfs.engine import python
 
 import boto3
-from moto import mock_s3
+from moto import mock_aws
 from hsfs.storage_connector import S3Connector
 
 
@@ -28,7 +28,7 @@ class TestPythonReader:
     def test_read_s3_parquet(self, mocker, dataframe_fixture_basic):
         python_engine = python.Engine()
 
-        with mock_s3():
+        with mock_aws():
             s3 = boto3.client(
                 "s3",
                 aws_access_key_id="",
@@ -64,7 +64,7 @@ class TestPythonReader:
     def test_read_s3_csv(self, mocker, dataframe_fixture_basic):
         python_engine = python.Engine()
 
-        with mock_s3():
+        with mock_aws():
             s3 = boto3.client(
                 "s3",
                 aws_access_key_id="",

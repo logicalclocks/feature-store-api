@@ -93,7 +93,10 @@ class Query:
                     fs_query.register_external()
 
                 # Register on hudi/delta feature groups as temporary tables
-                if self._left_feature_group.time_travel_format == "DELTA":
+                if (
+                    hasattr(self._left_feature_group, "_time_travel_format")
+                    and self._left_feature_group.time_travel_format == "DELTA"
+                ):
                     fs_query.register_delta_tables(
                         self._feature_store_id,
                         self._feature_store_name,
@@ -257,6 +260,9 @@ class Query:
     ):
         """Perform time travel on the given Query.
 
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
+
         This method returns a new Query object at the specified point in time. Optionally, commits before a
         specified point in time can be excluded from the query. The Query can then either be read into a Dataframe
         or used further to perform joins or construct a training dataset.
@@ -377,7 +383,7 @@ class Query:
         query.filter(fg.feature1 == 1).show(10)
         ```
 
-        Composite filters require parenthesis:
+        Composite filters require parenthesis and symbols for logical operands (e.g. `&`, `|`, ...):
         ```python
         query.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
         ```

@@ -133,6 +133,13 @@ def get_host_name():
     return host
 
 
+def get_dataset_type(path: str):
+    if re.match(r"^(?:hdfs://|)/apps/hive/warehouse/*", path):
+        return "HIVEDB"
+    else:
+        return "DATASET"
+
+
 async def create_async_engine(
     online_conn, external: bool, default_min_size: int, options: dict = None
 ):
@@ -335,6 +342,23 @@ def verify_attribute_key_names(feature_group_obj, external_feature_group=False):
                 )
 
 
+def get_job_url(href: str):
+    """Use the endpoint returned by the API to construct the UI url for jobs
+
+    Args:
+        href (str): the endpoint returned by the API
+    """
+    url = urlparse(href)
+    url_splits = url.path.split("/")
+    project_id = url_splits[4]
+    job_name = url_splits[6]
+    ui_url = url._replace(
+        path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
+    )
+    ui_url = client.get_instance().replace_public_host(ui_url)
+    return ui_url.geturl()
+
+
 def translate_legacy_spark_type(output_type):
     if output_type == "StringType()":
         return "STRING"
@@ -396,6 +420,18 @@ def run_with_loading_animation(message, func, *args, **kwargs):
             print(f"\rError: {message}           ", end="\n")
         else:
             print(f"\rFinished: {message} ({(end-start):.2f}s) ", end="\n")
+
+
+def get_feature_group_url(feature_store_id: int, feature_group_id: int):
+    sub_path = (
+        "/p/"
+        + str(client.get_instance()._project_id)
+        + "/fs/"
+        + str(feature_store_id)
+        + "/fg/"
+        + str(feature_group_id)
+    )
+    return get_hostname_replaced_url(sub_path)
 
 
 class VersionWarning(Warning):

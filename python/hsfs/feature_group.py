@@ -26,6 +26,7 @@ import pandas as pd
 import numpy as np
 import great_expectations as ge
 import avro.schema
+from hsfs.constructor.filter import Filter, Logic
 from typing import Optional, Union, Any, Dict, List, TypeVar, Tuple
 
 from datetime import datetime, date
@@ -48,12 +49,16 @@ from hsfs.core import (
     spine_group_engine,
     validation_result_engine,
     job_api,
+    feature_monitoring_config_engine,
+    feature_monitoring_result_engine,
 )
 
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.statistics import Statistics
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.validation_report import ValidationReport
+from hsfs.core import feature_monitoring_config as fmc
+from hsfs.core import feature_monitoring_result as fmr
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException, RestAPIError
 from hsfs.core.job import Job
@@ -76,6 +81,7 @@ class FeatureGroupBase:
         expectation_suite=None,
         online_topic_name=None,
         topic_name=None,
+        notification_topic_name=None,
         deprecated=False,
         **kwargs,
     ):
@@ -88,6 +94,7 @@ class FeatureGroupBase:
         self._subject = None
         self._online_topic_name = online_topic_name
         self._topic_name = topic_name
+        self._notification_topic_name = notification_topic_name
         self._deprecated = deprecated
         self._feature_store_id = featurestore_id
         # use setter for correct conversion
@@ -117,6 +124,18 @@ class FeatureGroupBase:
             self._validation_result_engine = (
                 validation_result_engine.ValidationResultEngine(
                     featurestore_id, self._id
+                )
+            )
+            self._feature_monitoring_config_engine = (
+                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                    feature_store_id=featurestore_id,
+                    feature_group_id=self._id,
+                )
+            )
+            self._feature_monitoring_result_engine = (
+                feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+                    feature_store_id=self._feature_store_id,
+                    feature_group_id=self._id,
                 )
             )
 
@@ -361,7 +380,7 @@ class FeatureGroupBase:
             fg.filter(fg.feature1 == 1).show(10)
             ```
 
-        Composite filters require parenthesis:
+        Composite filters require parenthesis and symbols for logical operands (e.g. `&`, `|`, ...):
         !!! example
             ```python
             fg.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
@@ -599,6 +618,36 @@ class FeatureGroupBase:
             `FeatureGroup`. The updated feature group object.
         """
         self._feature_group_engine.update_description(self, description)
+        return self
+
+    def update_notification_topic_name(self, notification_topic_name: str):
+        """Update the notification topic name of the feature group.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            fg.update_notification_topic_name(notification_topic_name="notification_topic_name")
+            ```
+
+        !!! info "Safe update"
+            This method updates the feature group notification topic name safely. In case of failure
+            your local metadata object will keep the old notification topic name.
+
+        # Arguments
+            notification_topic_name: Name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If set to None no notifications are sent.
+
+        # Returns
+            `FeatureGroup`. The updated feature group object.
+        """
+        self._feature_group_engine.update_notification_topic_name(
+            self, notification_topic_name
+        )
         return self
 
     def update_deprecated(self, deprecate: bool = True):
@@ -1149,6 +1198,248 @@ class FeatureGroupBase:
             feature_group_obj = FeatureGroup.from_response_json(feature_group_json)
         return feature_group_obj
 
+    def get_feature_monitoring_configs(
+        self,
+        name: Optional[str] = None,
+        feature_name: Optional[str] = None,
+        config_id: Optional[int] = None,
+    ) -> Union[
+        "fmc.FeatureMonitoringConfig", List["fmc.FeatureMonitoringConfig"], None
+    ]:
+        """Fetch all feature monitoring configs attached to the feature group, or fetch by name or feature name only.
+        If no arguments is provided the method will return all feature monitoring configs
+        attached to the feature group, meaning all feature monitoring configs that are attach
+        to a feature in the feature group. If you wish to fetch a single config, provide the
+        its name. If you wish to fetch all configs attached to a particular feature, provide
+        the feature name.
+        !!! example
+            ```python3
+            # fetch your feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+            # fetch all feature monitoring configs attached to the feature group
+            fm_configs = fg.get_feature_monitoring_configs()
+            # fetch a single feature monitoring config by name
+            fm_config = fg.get_feature_monitoring_configs(name="my_config")
+            # fetch all feature monitoring configs attached to a particular feature
+            fm_configs = fg.get_feature_monitoring_configs(feature_name="my_feature")
+            # fetch a single feature monitoring config with a given id
+            fm_config = fg.get_feature_monitoring_configs(config_id=1)
+            ```
+        # Arguments
+            name: If provided fetch only the feature monitoring config with the given name.
+                Defaults to None.
+            feature_name: If provided, fetch only configs attached to a particular feature.
+                Defaults to None.
+            config_id: If provided, fetch only the feature monitoring config with the given id.
+                Defaults to None.
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
+            ValueError: if both name and feature_name are provided.
+            TypeError: if name or feature_name are not string or None.
+        # Return
+            Union[`FeatureMonitoringConfig`, List[`FeatureMonitoringConfig`], None]
+                A list of feature monitoring configs. If name provided,
+                returns either a single config or None if not found.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can fetch feature monitoring configurations."
+            )
+
+        return self._feature_monitoring_config_engine.get_feature_monitoring_configs(
+            name=name,
+            feature_name=feature_name,
+            config_id=config_id,
+        )
+
+    def get_feature_monitoring_history(
+        self,
+        config_name: Optional[str] = None,
+        config_id: Optional[int] = None,
+        start_time: Optional[Union[int, str, datetime, date]] = None,
+        end_time: Optional[Union[int, str, datetime, date]] = None,
+        with_statistics: Optional[bool] = True,
+    ) -> List["fmr.FeatureMonitoringResult"]:
+        """Fetch feature monitoring history for a given feature monitoring config.
+        !!! example
+            ```python3
+            # fetch your feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+            # fetch feature monitoring history for a given feature monitoring config
+            fm_history = fg.get_feature_monitoring_history(
+                config_name="my_config",
+                start_time="2020-01-01",
+            )
+            # fetch feature monitoring history for a given feature monitoring config id
+            fm_history = fg.get_feature_monitoring_history(
+                config_id=1,
+                start_time=datetime.now() - timedelta(weeks=2),
+                end_time=datetime.now() - timedelta(weeks=1),
+                with_statistics=False,
+            )
+            ```
+        # Arguments
+            config_name: The name of the feature monitoring config to fetch history for.
+                Defaults to None.
+            config_id: The id of the feature monitoring config to fetch history for.
+                Defaults to None.
+            start_time: The start date of the feature monitoring history to fetch.
+                Defaults to None.
+            end_time: The end date of the feature monitoring history to fetch.
+                Defaults to None.
+            with_statistics: Whether to include statistics in the feature monitoring history.
+                Defaults to True. If False, only metadata about the monitoring will be fetched.
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
+            ValueError: if both config_name and config_id are provided.
+            TypeError: if config_name or config_id are not respectively string, int or None.
+        # Return
+            List[`FeatureMonitoringResult`]
+                A list of feature monitoring results containing the monitoring metadata
+                as well as the computed statistics for the detection and reference window
+                if requested.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can fetch feature monitoring history."
+            )
+
+        return self._feature_monitoring_result_engine.get_feature_monitoring_results(
+            config_name=config_name,
+            config_id=config_id,
+            start_time=start_time,
+            end_time=end_time,
+            with_statistics=with_statistics,
+        )
+
+    def create_statistics_monitoring(
+        self,
+        name: str,
+        feature_name: Optional[str] = None,
+        description: Optional[str] = None,
+        start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        cron_expression: Optional[str] = "0 0 12 ? * * *",
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Run a job to compute statistics on snapshot of feature data on a schedule.
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+        !!! example
+            ```python3
+            # fetch feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+            # enable statistics monitoring
+            my_config = fg.create_statistics_monitoring(
+                name="my_config",
+                start_date_time="2021-01-01 00:00:00",
+                description="my description",
+                cron_expression="0 0 12 ? * * *",
+            ).with_detection_window(
+                # Statistics computed on 10% of the last week of data
+                time_offset="1w",
+                row_percentage=0.1,
+            ).save()
+            ```
+        # Arguments
+            name: Name of the feature monitoring configuration.
+                name must be unique for all configurations attached to the feature group.
+            feature_name: Name of the feature to monitor. If not specified, statistics
+                will be computed for all features.
+            description: Description of the feature monitoring configuration.
+            start_date_time: Start date and time from which to start computing statistics.
+            end_date_time: End date and time at which to stop computing statistics.
+            cron_expression: Cron expression to use to schedule the job. The cron expression
+                must be in UTC and follow the Quartz specification. Default is '0 0 12 ? * * *',
+                every day at 12pm UTC.
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+        # Return
+            `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
+                Additional information are required before feature monitoring is enabled.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
+            )
+
+        return self._feature_monitoring_config_engine._build_default_statistics_monitoring_config(
+            name=name,
+            feature_name=feature_name,
+            description=description,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
+            end_date_time=end_date_time,
+            cron_expression=cron_expression,
+        )
+
+    def create_feature_monitoring(
+        self,
+        name: str,
+        feature_name: str,
+        description: Optional[str] = None,
+        start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        cron_expression: Optional[str] = "0 0 12 ? * * *",
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Enable feature monitoring to compare statistics on snapshots of feature data over time.
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+        !!! example
+            ```python3
+            # fetch feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+            # enable feature monitoring
+            my_config = fg.create_feature_monitoring(
+                name="my_monitoring_config",
+                feature_name="my_feature",
+                description="my monitoring config description",
+                cron_expression="0 0 12 ? * * *",
+            ).with_detection_window(
+                # Data inserted in the last day
+                time_offset="1d",
+                window_length="1d",
+            ).with_reference_window(
+                # Data inserted last week on the same day
+                time_offset="1w1d",
+                window_length="1d",
+            ).compare_on(
+                metric="mean",
+                threshold=0.5,
+            ).save()
+            ```
+        # Arguments
+            name: Name of the feature monitoring configuration.
+                name must be unique for all configurations attached to the feature group.
+            feature_name: Name of the feature to monitor.
+            description: Description of the feature monitoring configuration.
+            start_date_time: Start date and time from which to start computing statistics.
+            end_date_time: End date and time at which to stop computing statistics.
+            cron_expression: Cron expression to use to schedule the job. The cron expression
+                must be in UTC and follow the Quartz specification. Default is '0 0 12 ? * * *',
+                every day at 12pm UTC.
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+        # Return
+            `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
+                Additional information are required before feature monitoring is enabled.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can enable feature monitoring."
+            )
+
+        return self._feature_monitoring_config_engine._build_default_feature_monitoring_config(
+            name=name,
+            feature_name=feature_name,
+            description=description,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
+            end_date_time=end_date_time,
+            cron_expression=cron_expression,
+        )
+
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
@@ -1462,6 +1753,15 @@ class FeatureGroupBase:
         self._topic_name = topic_name
 
     @property
+    def notification_topic_name(self):
+        """The topic used for feature group notifications."""
+        return self._notification_topic_name
+
+    @notification_topic_name.setter
+    def notification_topic_name(self, notification_topic_name):
+        self._notification_topic_name = notification_topic_name
+
+    @property
     def deprecated(self):
         """Setting if the feature group is deprecated."""
         return self._deprecated
@@ -1516,7 +1816,12 @@ class FeatureGroupBase:
 
     @property
     def features(self):
-        """Schema information."""
+        """Feature Group schema (alias)"""
+        return self._features
+
+    @property
+    def schema(self):
+        """Feature Group schema"""
         return self._features
 
     def _are_statistics_missing(self, statistics: Statistics):
@@ -1595,6 +1900,7 @@ class FeatureGroup(FeatureGroupBase):
         statistics_config=None,
         online_topic_name=None,
         topic_name=None,
+        notification_topic_name=None,
         event_time=None,
         stream=False,
         expectation_suite=None,
@@ -1616,6 +1922,7 @@ class FeatureGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
             deprecated=deprecated,
         )
         self._feature_store_name = featurestore_name
@@ -1803,7 +2110,11 @@ class FeatureGroup(FeatureGroupBase):
                     `as_of(end_wallclock_time, exclude_until=start_wallclock_time).read(read_options=read_options)`
                     instead.
 
-        This function only works on feature groups with `HUDI` time travel format.
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
+
+        !!! warning
+            This function only works for feature groups with time_travel_format='HUDI'.
 
         # Arguments
             start_wallclock_time: Start time of the time travel query. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
@@ -1831,7 +2142,54 @@ class FeatureGroup(FeatureGroupBase):
             .read(False, "default", read_options)
         )
 
-    def find_neighbors(self, embedding, col=None, k=10, filter=None, min_score=0):
+    def find_neighbors(
+        self,
+        embedding: List[Union[int, float]],
+        col: Optional[str] = None,
+        k: Optional[int] = 10,
+        filter: Optional[Union[Filter, Logic]] = None,
+        min_score: Optional[float] = 0,
+    ) -> List[Tuple[float, List[Any]]]:
+        """
+        Finds the nearest neighbors for a given embedding in the vector database.
+
+        # Arguments
+            embedding: The target embedding for which neighbors are to be found.
+            col: The column name used to compute similarity score. Required only if there
+            are multiple embeddings (optional).
+            k: The number of nearest neighbors to retrieve (default is 10).
+            filter: A filter expression to restrict the search space (optional).
+            min_score: The minimum similarity score for neighbors to be considered (default is 0).
+
+        # Returns
+            A list of tuples representing the nearest neighbors.
+            Each tuple contains: `(The similarity score, A list of feature values)`
+
+        !!! Example
+            ```
+            embedding_index = EmbeddingIndex()
+            embedding_index.add_embedding(name="user_vector", dimension=3)
+            fg = fs.create_feature_group(
+                        name='air_quality',
+                        embedding_index = embedding_index,
+                        version=1,
+                        primary_key=['id1'],
+                        online_enabled=True,
+                    )
+            fg.insert(data)
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+            )
+
+            # apply filter
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+                filter=(fg.id1 > 10) & (fg.id1 < 30)
+            )
+            ```
+        """
         if self._vector_db_client is None and self._embedding_index:
             self._vector_db_client = VectorDbClient(self.select_all())
         results = self._vector_db_client.find_neighbors(
@@ -2138,6 +2496,12 @@ class FeatureGroup(FeatureGroupBase):
 
         # Returns
             (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`. e.g fail to create feature group, dataframe schema does not match
+                existing feature group schema, etc.
+            `hsfs.client.exceptions.DataValidationException`. If data validation fails and the expectation
+                suite `validation_ingestion_policy` is set to `STRICT`. Data is NOT ingested.
         """
         if storage and self.stream:
             warnings.warn(
@@ -2493,6 +2857,9 @@ class FeatureGroup(FeatureGroupBase):
     ):
         """Get Query object to retrieve all features of the group at a point in the past.
 
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
+
         This method selects all features in the feature group and returns a Query object
         at the specified point in time. Optionally, commits before a specified point in time can be
         excluded from the query. The Query can then either be read into a Dataframe
@@ -2751,6 +3118,7 @@ class FeatureGroup(FeatureGroupBase):
             "expectationSuite": self._expectation_suite,
             "parents": self._parents,
             "topicName": self.topic_name,
+            "notificationTopicName": self.notification_topic_name,
             "deprecated": self.deprecated,
         }
         if self.embedding_index:
@@ -2912,8 +3280,10 @@ class ExternalFeatureGroup(FeatureGroupBase):
         href=None,
         online_topic_name=None,
         topic_name=None,
+        notification_topic_name=None,
         spine=False,
         deprecated=False,
+        embedding_index=None,
         **kwargs,
     ):
         super().__init__(
@@ -2924,9 +3294,11 @@ class ExternalFeatureGroup(FeatureGroupBase):
             event_time=event_time,
             online_enabled=online_enabled,
             id=id,
+            embedding_index=embedding_index,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
             deprecated=deprecated,
         )
 
@@ -2983,7 +3355,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             )
         else:
             self._storage_connector = storage_connector
-
+        self._vector_db_client = None
         self._href = href
 
     def save(self):
@@ -3026,6 +3398,69 @@ class ExternalFeatureGroup(FeatureGroupBase):
         save_code: Optional[bool] = True,
         wait: bool = False,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
+        """Insert the dataframe feature values ONLY in the online feature store.
+
+        External Feature Groups contains metadata about feature data in an external storage system.
+        External storage system are usually offline, meaning feature values cannot be retrieved in real-time.
+        In order to use the feature values for real-time use-cases, you can insert them
+        in Hopsoworks Online Feature Store via this method.
+
+        The Online Feature Store has a single-entry per primary key value, meaining that providing a new value with
+        for a given primary key will overwrite the existing value. No record of the previous value is kept.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the External Feature Group instance
+            fg = fs.get_feature_group(name="external_sales_records", version=1)
+
+            # get the feature values, e.g reading from csv files in a S3 bucket
+            feature_values = ...
+
+            # insert the feature values in the online feature store
+            fg.insert(feature_values)
+            ```
+
+        !!! Note
+            Data Validation via Great Expectation is supported if you have attached an expectation suite to
+            your External Feature Group. However, as opposed to regular Feature Groups, this can lead to
+            discrepancies between the data in the external storage system and the online feature store.
+
+        # Arguments
+            features: DataFrame, RDD, Ndarray, list. Features to be saved.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, write_options can contain the
+                following entries:
+                * key `kafka_producer_config` and value an object of type [properties](https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.htmln)
+                  used to configure the Kafka client. To optimize for throughput in high latency connection consider
+                  changing [producer properties](https://docs.confluent.io/cloud/current/client-apps/optimizing/throughput.html#producer).
+                * key `internal_kafka` and value `True` or `False` in case you established
+                  connectivity from you Python environment to the internal advertised
+                  listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
+                  will use external listeners when connecting from outside of Hopsworks.
+            validation_options: Additional validation options as key-value pairs, defaults to `{}`.
+                * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
+                * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
+                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+                * key `fetch_expectation_suite` a boolean value, by default `True`, to control whether the expectation
+                   suite of the feature group should be fetched before every insert.
+            save_code: When running HSFS on Hopsworks or Databricks, HSFS can save the code/notebook used to create
+                the feature group or used to insert data to it. When calling the `insert` method repeatedly
+                with small batches of data, this can slow down the writes. Use this option to turn off saving
+                code. Defaults to `True`.
+
+        # Returns
+            Tuple(`Job`, `ValidationReport`) The validation report if validation is enabled.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`. e.g fail to create feature group, dataframe schema does not match
+                existing feature group schema, etc.
+            `hsfs.client.exceptions.DataValidationException`. If data validation fails and the expectation
+                suite `validation_ingestion_policy` is set to `STRICT`. Data is NOT ingested.
+
+        """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
         if write_options is None:
@@ -3060,7 +3495,10 @@ class ExternalFeatureGroup(FeatureGroupBase):
         )
 
     def read(
-        self, dataframe_type: Optional[str] = "default", online: Optional[bool] = False
+        self,
+        dataframe_type: Optional[str] = "default",
+        online: Optional[bool] = False,
+        read_options: Optional[dict] = None,
     ):
         """Get the feature group as a DataFrame.
 
@@ -3088,7 +3526,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
-
+            read_options: Additional options as key/value pairs to pass to the spark engine.
+                Defaults to `None`.
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
             `pyspark.DataFrame`. A Spark DataFrame.
@@ -3121,10 +3560,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().read(dataframe_type=dataframe_type, online=online)
+        return self.select_all().read(
+            dataframe_type=dataframe_type,
+            online=online,
+            read_options=read_options or {},
+        )
 
-    def show(self, n):
-        """Show the first n rows of the feature group.
+    def show(self, n: int, online: Optional[bool] = False):
+        """Show the first `n` rows of the feature group.
 
         !!! example
             ```python
@@ -3134,8 +3577,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
             # get the Feature Group instance
             fg = fs.get_or_create_feature_group(...)
 
-            fg.show(5)
+            # make a query and show top 5 rows
+            fg.select(['date','weekly_sales','is_holiday']).show(5)
             ```
+
+        # Arguments
+            n: int. Number of rows to show.
+            online: bool, optional. If `True` read from online feature store, defaults
+                to `False`.
         """
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -3143,22 +3592,107 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().show(n)
+        if online and self.embedding_index:
+            if self._vector_db_client is None:
+                self._vector_db_client = VectorDbClient(self.select_all())
+            results = self._vector_db_client.read(
+                self.id,
+                {},
+                pk=self.embedding_index.col_prefix + self.primary_key[0],
+                index_name=self.embedding_index.index_name,
+                n=n,
+            )
+            return [[result[f.name] for f in self.features] for result in results]
+        return self.select_all().show(n, online)
+
+    def find_neighbors(
+        self,
+        embedding: List[Union[int, float]],
+        col: Optional[str] = None,
+        k: Optional[int] = 10,
+        filter: Optional[Union[Filter, Logic]] = None,
+        min_score: Optional[float] = 0,
+    ) -> List[Tuple[float, List[Any]]]:
+        """
+        Finds the nearest neighbors for a given embedding in the vector database.
+
+        # Arguments
+            embedding: The target embedding for which neighbors are to be found.
+            col: The column name used to compute similarity score. Required only if there
+            are multiple embeddings (optional).
+            k: The number of nearest neighbors to retrieve (default is 10).
+            filter: A filter expression to restrict the search space (optional).
+            min_score: The minimum similarity score for neighbors to be considered (default is 0).
+
+        # Returns
+            A list of tuples representing the nearest neighbors.
+            Each tuple contains: `(The similarity score, A list of feature values)`
+
+        !!! Example
+            ```
+            embedding_index = EmbeddingIndex()
+            embedding_index.add_embedding(name="user_vector", dimension=3)
+            fg = fs.create_feature_group(
+                        name='air_quality',
+                        embedding_index = embedding_index,
+                        version=1,
+                        primary_key=['id1'],
+                        online_enabled=True,
+                    )
+            fg.insert(data)
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+            )
+
+            # apply filter
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+                filter=(fg.id1 > 10) & (fg.id1 < 30)
+            )
+            ```
+        """
+        if self._vector_db_client is None and self._embedding_index:
+            self._vector_db_client = VectorDbClient(self.select_all())
+        results = self._vector_db_client.find_neighbors(
+            embedding,
+            feature=(self.__getattr__(col) if col else None),
+            k=k,
+            filter=filter,
+            min_score=min_score,
+        )
+        return [
+            (result[0], [result[1][f.name] for f in self.features])
+            for result in results
+        ]
 
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         if isinstance(json_decamelized, dict):
             _ = json_decamelized.pop("type", None)
+            if "embedding_index" in json_decamelized:
+                json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+                    json_decamelized["embedding_index"]
+                )
             return cls(**json_decamelized)
         for fg in json_decamelized:
             _ = fg.pop("type", None)
+            if "embedding_index" in fg:
+                fg["embedding_index"] = EmbeddingIndex.from_json_response(
+                    fg["embedding_index"]
+                )
         return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         if "type" in json_decamelized:
             _ = json_decamelized.pop("type")
+        if "embedding_index" in json_decamelized:
+            json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+                json_decamelized["embedding_index"]
+            )
         self.__init__(**json_decamelized)
         return self
 
@@ -3166,7 +3700,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
-        return {
+        fg_meta_dict = {
             "id": self._id,
             "name": self._name,
             "description": self._description,
@@ -3187,8 +3721,12 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "onlineEnabled": self._online_enabled,
             "spine": False,
             "topicName": self.topic_name,
+            "notificationTopicName": self.notification_topic_name,
             "deprecated": self.deprecated,
         }
+        if self.embedding_index:
+            fg_meta_dict["embeddingIndex"] = self.embedding_index
+        return fg_meta_dict
 
     @property
     def id(self):

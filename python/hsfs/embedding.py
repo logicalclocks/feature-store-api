@@ -15,9 +15,11 @@
 #
 
 from dataclasses import dataclass
-
+from hsfs import client
+from hsfs.client.exceptions import FeatureStoreException
+from typing import Type
 import json
-
+from typing import Optional, List
 import humps
 
 from hsfs import (
@@ -32,55 +34,194 @@ class SimilarityFunctionType:
 
 
 @dataclass
-class EmbeddingFeature:
-    name: str
-    dimension: int
-    similarity_function_type: SimilarityFunctionType = SimilarityFunctionType.L2
-    feature_group = None
-    embedding_index = None
+class HsmlModel:
+    model_registry_id: int
+    model_name: str
+    model_version: int
 
     @classmethod
     def from_json_response(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+
         return cls(
-            name=json_decamelized.get("name"),
-            dimension=json_decamelized.get("dimension"),
-            similarity_function_type=json_decamelized.get("similarity_function_type"),
+            model_registry_id=json_decamelized.get("model_registry_id"),
+            model_name=json_decamelized.get("model_name"),
+            model_version=json_decamelized.get("model_version"),
         )
+
+    @classmethod
+    def from_model(cls, model):
+        return cls(
+            model_registry_id=model.model_registry_id,
+            model_name=model.name,
+            model_version=model.version,
+        )
+
+    # should get from backend because of authorisation check (unshared project etc)
+    def get_model(self):
+        try:
+            from hsml.model import Model
+        except ModuleNotFoundError:
+            raise FeatureStoreException(
+                "Model is attached to embedding feature but hsml library is not installed."
+                "Install hsml library before getting the feature group."
+            )
+
+        path_params = [
+            "project",
+            client.get_instance()._project_id,
+            "modelregistries",
+            self.model_registry_id,
+            "models",
+            self.model_name + "_" + str(self.model_version),
+        ]
+        query_params = {"expand": "trainingdatasets"}
+
+        model_json = client.get_instance()._send_request(
+            "GET", path_params, query_params
+        )
+        return Model.from_response_json(model_json)
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
         return {
+            "modelRegistryId": self.model_registry_id,
+            "modelName": self.model_name,
+            "modelVersion": self.model_version,
+        }
+
+
+@dataclass
+class EmbeddingFeature:
+    """
+    Represents an embedding feature.
+
+    # Arguments
+        name: The name of the embedding feature.
+        dimension: The dimensionality of the embedding feature.
+        similarity_function_type: The type of similarity function used for the embedding feature.
+          Available functions are `L2`, `COSINE`, and `DOT_PRODUCT`.
+          (default is SimilarityFunctionType.L2).
+        feature_group: The feature group object that contains the embedding feature.
+        embedding_index: The name of the index in the vector database that will store the embedding feature.
+    """
+
+    name: str
+    dimension: int
+    similarity_function_type: SimilarityFunctionType = SimilarityFunctionType.L2
+    model: Type["hsml.model.Model"] = None  # noqa: F821 hsml is an optional dependency
+    feature_group = None
+    embedding_index = None
+
+    @classmethod
+    def from_json_response(cls, json_dict):
+        json_decamelized = humps.decamelize(json_dict)
+        hsml_model_json = json_decamelized.get("model")
+        hsml_model = (
+            HsmlModel.from_json_response(hsml_model_json).get_model()
+            if hsml_model_json
+            else None
+        )
+
+        return cls(
+            name=json_decamelized.get("name"),
+            dimension=json_decamelized.get("dimension"),
+            similarity_function_type=json_decamelized.get("similarity_function_type"),
+            model=hsml_model,
+        )
+
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def to_dict(self):
+        d = {
             "name": self.name,
             "dimension": self.dimension,
             "similarityFunctionType": self.similarity_function_type,
         }
+        if self.model:
+            d["model"] = HsmlModel.from_model(self.model)
+        return d
+
+    def __repr__(self):
+        return self.json()
 
 
 class EmbeddingIndex:
-    def __init__(self, index_name=None, features=None, col_prefix=None):
+    """
+    Represents an index for managing embeddings with associated features.
+
+    # Arguments
+        index_name: The name of the embedding index.
+        features: A list of EmbeddingFeature objects for the features that
+            contain embeddings that should be indexed for similarity search.
+        col_prefix: The prefix to be added to column names.
+
+    !!! Example
+        ```
+        embedding_index = EmbeddingIndex()
+        embedding_index.add_embedding(name="user_vector", dimension=256)
+        embeddings = embedding_index.get_embeddings()
+        ```
+    """
+
+    def __init__(
+        self,
+        index_name: Optional[str] = None,
+        features: Optional[List[EmbeddingFeature]] = None,
+        col_prefix: Optional[str] = None,
+    ):
         self._index_name = index_name
         if features is None:
-            self._features = []
+            self._features = {}
         else:
-            self._features = features
+            self._features = dict([(feat.name, feat) for feat in features])
         self._feature_group = None
         self._col_prefix = col_prefix
 
     def add_embedding(
-        self, name, dimension, similarity_function_type=SimilarityFunctionType.L2
+        self,
+        name: str,
+        dimension: int,
+        similarity_function_type: Optional[
+            SimilarityFunctionType
+        ] = SimilarityFunctionType.L2,
+        model=None,
     ):
-        self._features.append(
-            EmbeddingFeature(name, dimension, similarity_function_type)
+        """
+        Adds a new embedding feature to the index.
+
+        Example:
+        ```
+        embedding_index = EmbeddingIndex()
+        embedding_index.add_embedding(name="user_vector", dimension=256)
+        ```
+
+        # Arguments
+            name: The name of the embedding feature.
+            dimension: The dimensionality of the embedding feature.
+            similarity_function_type: The type of similarity function to be used.
+        """
+        self._features[name] = EmbeddingFeature(
+            name, dimension, similarity_function_type, model=model
         )
 
+    def get_embedding(self, name):
+        return self._features.get(name)
+
     def get_embeddings(self):
-        for feat in self._features:
+        """
+        Returns the list of `hsfs.embedding.EmbeddingFeature` objects associated with the index.
+
+        # Returns
+            A list of `hsfs.embedding.EmbeddingFeature` objects
+        """
+        for feat in self._features.values():
             feat.feature_group = self._feature_group
             feat.embedding_index = self
-        return self._features
+        return self._features.values()
 
     @classmethod
     def from_json_response(cls, json_dict):
@@ -116,6 +257,9 @@ class EmbeddingIndex:
     def to_dict(self):
         return {
             "indexName": self._index_name,
-            "features": self._features,
+            "features": list(self._features.values()),
             "colPrefix": self._col_prefix,
         }
+
+    def __repr__(self):
+        return self.json()
