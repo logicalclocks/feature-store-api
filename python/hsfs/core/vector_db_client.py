@@ -117,8 +117,7 @@ class VectorDbClient:
             "query": {
                 "bool": {
                     "must": [
-                        # search 3 times more data if it is using project index
-                        {"knn": {col_name: {"vector": embedding, "k": k * (3 if embedding_feature.embedding_index.col_prefix else 1)}}},
+                        {"knn": {col_name: {"vector": embedding, "k": k}}},
                         {"exists": {"field": col_name}},
                     ]
                     + self._get_query_filter(
@@ -137,6 +136,14 @@ class VectorDbClient:
 
         results = self._opensearch_client.search(body=query, index=index_name)
 
+        # When using project index (`embedding_feature.embedding_index.col_prefix` is not empty), sometimes the total number of result returned is less than k. Possible reason is that when using project index, some embedding columns have null value if the row is from a different feature group. And opensearch filter out the result where embedding is null after retrieving the top k results. So search 3 times more data if it is using project index and size of result is not k.
+        if (
+            embedding_feature.embedding_index.col_prefix
+            and len(results["hits"]["hits"]) != k
+        ):
+            print("not enough result search again")
+            query["query"]["bool"]["must"][0]["knn"][col_name]["k"] = 3 * k
+            results = self._opensearch_client.search(body=query, index=index_name)
         # https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
         return [
             (
