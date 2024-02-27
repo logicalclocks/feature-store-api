@@ -240,4 +240,11 @@ public class FeatureGroupUtils {
   public Subject getSubject(FeatureGroupBase featureGroup) throws FeatureStoreException, IOException {
     return kafkaApi.getSubject(featureGroup.getFeatureStore(), getFgName(featureGroup));
   }
+
+  public String getDatasetType(String path) {
+    if (Pattern.compile("^(?:hdfs://|)/apps/hive/warehouse/*").matcher(path).find()) {
+      return "HIVEDB";
+    }
+    return "DATASET";
+  }
 }

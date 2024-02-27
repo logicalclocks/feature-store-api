@@ -81,6 +81,14 @@ public class FeatureGroupEngineBase {
     featureGroup.setDescription(apiFG.getDescription());
   }
 
+  public <T extends FeatureGroupBase> void updateNotificationTopicName(FeatureGroupBase featureGroup,
+          String notificationTopicName, Class<T> fgClass)
+      throws FeatureStoreException, IOException {
+    featureGroup.setNotificationTopicName(notificationTopicName);
+    T apiFG = featureGroupApi.updateMetadata(featureGroup, "updateMetadata", fgClass);
+    featureGroup.setNotificationTopicName(apiFG.getNotificationTopicName());
+  }
+
   public <T extends FeatureGroupBase> void updateDeprecated(FeatureGroupBase featureGroup, Boolean deprecate,
                                                             Class<T> fgClass)
       throws FeatureStoreException, IOException {

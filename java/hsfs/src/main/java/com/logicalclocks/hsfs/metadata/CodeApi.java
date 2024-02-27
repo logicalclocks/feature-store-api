@@ -45,25 +45,25 @@ public class CodeApi {
 
   public void post(FeatureGroupBase featureGroup, Code code, String entityId, Code.RunType type, String browserHostName)
           throws FeatureStoreException, IOException {
-    post(featureGroup.getFeatureStore().getProjectId(), featureGroup.getFeatureStore().getId(),
+    post(featureGroup.getFeatureStore().getId(),
             featureGroup.getId(), code, entityId, type, browserHostName);
   }
 
   public void post(TrainingDatasetBase trainingDatasetBase, Code code, String entityId, Code.RunType type,
                    String browserHostName)
           throws FeatureStoreException, IOException {
-    post(trainingDatasetBase.getFeatureStore().getProjectId(), trainingDatasetBase.getFeatureStore().getId(),
+    post(trainingDatasetBase.getFeatureStore().getId(),
             trainingDatasetBase.getId(), code, entityId, type, browserHostName);
   }
 
-  private void post(Integer projectId, Integer featureStoreId, Integer dataSetId, Code code,
+  private void post(Integer featureStoreId, Integer dataSetId, Code code,
                     String entityId, Code.RunType type, String browserHostName)
           throws FeatureStoreException, IOException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH + FeatureStoreApi.FEATURE_STORE_PATH + CODE_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-            .set("projectId", projectId)
+            .set("projectId", hopsworksClient.getProject().getProjectId())
             .set("fsId", featureStoreId)
             .set("dataSetType", entityType.getValue())
             .set("dataSetId", dataSetId)

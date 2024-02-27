@@ -26,6 +26,7 @@ import pandas as pd
 import numpy as np
 import great_expectations as ge
 import avro.schema
+from hsfs.constructor.filter import Filter, Logic
 from typing import Optional, Union, Any, Dict, List, TypeVar, Tuple
 
 from datetime import datetime, date
@@ -48,11 +49,16 @@ from hsfs.core import (
     spine_group_engine,
     validation_result_engine,
     job_api,
+    feature_monitoring_config_engine,
+    feature_monitoring_result_engine,
 )
 
 from hsfs.statistics_config import StatisticsConfig
+from hsfs.statistics import Statistics
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.validation_report import ValidationReport
+from hsfs.core import feature_monitoring_config as fmc
+from hsfs.core import feature_monitoring_result as fmr
 from hsfs.constructor import query, filter
 from hsfs.client.exceptions import FeatureStoreException, RestAPIError
 from hsfs.core.job import Job
@@ -75,6 +81,7 @@ class FeatureGroupBase:
         expectation_suite=None,
         online_topic_name=None,
         topic_name=None,
+        notification_topic_name=None,
         deprecated=False,
         **kwargs,
     ):
@@ -87,6 +94,7 @@ class FeatureGroupBase:
         self._subject = None
         self._online_topic_name = online_topic_name
         self._topic_name = topic_name
+        self._notification_topic_name = notification_topic_name
         self._deprecated = deprecated
         self._feature_store_id = featurestore_id
         # use setter for correct conversion
@@ -116,6 +124,18 @@ class FeatureGroupBase:
             self._validation_result_engine = (
                 validation_result_engine.ValidationResultEngine(
                     featurestore_id, self._id
+                )
+            )
+            self._feature_monitoring_config_engine = (
+                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                    feature_store_id=featurestore_id,
+                    feature_group_id=self._id,
+                )
+            )
+            self._feature_monitoring_result_engine = (
+                feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+                    feature_store_id=self._feature_store_id,
+                    feature_group_id=self._id,
                 )
             )
 
@@ -237,7 +257,7 @@ class FeatureGroupBase:
         else:
             return self.select_except(self.primary_key + [self.event_time])
 
-    def select(self, features: Optional[List[Union[str, feature.Feature]]] = []):
+    def select(self, features: List[Union[str, feature.Feature]]):
         """Select a subset of features of the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
@@ -269,7 +289,7 @@ class FeatureGroupBase:
 
         # Arguments
             features: A list of `Feature` objects or feature names as
-                strings to be selected, defaults to [].
+                strings to be selected.
 
         # Returns
             `Query`: A query object with the selected features of the feature group.
@@ -360,7 +380,7 @@ class FeatureGroupBase:
             fg.filter(fg.feature1 == 1).show(10)
             ```
 
-        Composite filters require parenthesis:
+        Composite filters require parenthesis and symbols for logical operands (e.g. `&`, `|`, ...):
         !!! example
             ```python
             fg.filter((fg.feature1 == 1) | (fg.feature2 >= 2))
@@ -567,7 +587,9 @@ class FeatureGroupBase:
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
         """
+        self._check_statistics_support()  # raises an error if stats not supported
         self._feature_group_engine.update_statistics_config(self)
         return self
 
@@ -596,6 +618,36 @@ class FeatureGroupBase:
             `FeatureGroup`. The updated feature group object.
         """
         self._feature_group_engine.update_description(self, description)
+        return self
+
+    def update_notification_topic_name(self, notification_topic_name: str):
+        """Update the notification topic name of the feature group.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            fg.update_notification_topic_name(notification_topic_name="notification_topic_name")
+            ```
+
+        !!! info "Safe update"
+            This method updates the feature group notification topic name safely. In case of failure
+            your local metadata object will keep the old notification topic name.
+
+        # Arguments
+            notification_topic_name: Name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If set to None no notifications are sent.
+
+        # Returns
+            `FeatureGroup`. The updated feature group object.
+        """
+        self._feature_group_engine.update_notification_topic_name(
+            self, notification_topic_name
+        )
         return self
 
     def update_deprecated(self, deprecate: bool = True):
@@ -1146,6 +1198,248 @@ class FeatureGroupBase:
             feature_group_obj = FeatureGroup.from_response_json(feature_group_json)
         return feature_group_obj
 
+    def get_feature_monitoring_configs(
+        self,
+        name: Optional[str] = None,
+        feature_name: Optional[str] = None,
+        config_id: Optional[int] = None,
+    ) -> Union[
+        "fmc.FeatureMonitoringConfig", List["fmc.FeatureMonitoringConfig"], None
+    ]:
+        """Fetch all feature monitoring configs attached to the feature group, or fetch by name or feature name only.
+        If no arguments is provided the method will return all feature monitoring configs
+        attached to the feature group, meaning all feature monitoring configs that are attach
+        to a feature in the feature group. If you wish to fetch a single config, provide the
+        its name. If you wish to fetch all configs attached to a particular feature, provide
+        the feature name.
+        !!! example
+            ```python3
+            # fetch your feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+            # fetch all feature monitoring configs attached to the feature group
+            fm_configs = fg.get_feature_monitoring_configs()
+            # fetch a single feature monitoring config by name
+            fm_config = fg.get_feature_monitoring_configs(name="my_config")
+            # fetch all feature monitoring configs attached to a particular feature
+            fm_configs = fg.get_feature_monitoring_configs(feature_name="my_feature")
+            # fetch a single feature monitoring config with a given id
+            fm_config = fg.get_feature_monitoring_configs(config_id=1)
+            ```
+        # Arguments
+            name: If provided fetch only the feature monitoring config with the given name.
+                Defaults to None.
+            feature_name: If provided, fetch only configs attached to a particular feature.
+                Defaults to None.
+            config_id: If provided, fetch only the feature monitoring config with the given id.
+                Defaults to None.
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
+            ValueError: if both name and feature_name are provided.
+            TypeError: if name or feature_name are not string or None.
+        # Return
+            Union[`FeatureMonitoringConfig`, List[`FeatureMonitoringConfig`], None]
+                A list of feature monitoring configs. If name provided,
+                returns either a single config or None if not found.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can fetch feature monitoring configurations."
+            )
+
+        return self._feature_monitoring_config_engine.get_feature_monitoring_configs(
+            name=name,
+            feature_name=feature_name,
+            config_id=config_id,
+        )
+
+    def get_feature_monitoring_history(
+        self,
+        config_name: Optional[str] = None,
+        config_id: Optional[int] = None,
+        start_time: Optional[Union[int, str, datetime, date]] = None,
+        end_time: Optional[Union[int, str, datetime, date]] = None,
+        with_statistics: Optional[bool] = True,
+    ) -> List["fmr.FeatureMonitoringResult"]:
+        """Fetch feature monitoring history for a given feature monitoring config.
+        !!! example
+            ```python3
+            # fetch your feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+            # fetch feature monitoring history for a given feature monitoring config
+            fm_history = fg.get_feature_monitoring_history(
+                config_name="my_config",
+                start_time="2020-01-01",
+            )
+            # fetch feature monitoring history for a given feature monitoring config id
+            fm_history = fg.get_feature_monitoring_history(
+                config_id=1,
+                start_time=datetime.now() - timedelta(weeks=2),
+                end_time=datetime.now() - timedelta(weeks=1),
+                with_statistics=False,
+            )
+            ```
+        # Arguments
+            config_name: The name of the feature monitoring config to fetch history for.
+                Defaults to None.
+            config_id: The id of the feature monitoring config to fetch history for.
+                Defaults to None.
+            start_time: The start date of the feature monitoring history to fetch.
+                Defaults to None.
+            end_time: The end date of the feature monitoring history to fetch.
+                Defaults to None.
+            with_statistics: Whether to include statistics in the feature monitoring history.
+                Defaults to True. If False, only metadata about the monitoring will be fetched.
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
+            ValueError: if both config_name and config_id are provided.
+            TypeError: if config_name or config_id are not respectively string, int or None.
+        # Return
+            List[`FeatureMonitoringResult`]
+                A list of feature monitoring results containing the monitoring metadata
+                as well as the computed statistics for the detection and reference window
+                if requested.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can fetch feature monitoring history."
+            )
+
+        return self._feature_monitoring_result_engine.get_feature_monitoring_results(
+            config_name=config_name,
+            config_id=config_id,
+            start_time=start_time,
+            end_time=end_time,
+            with_statistics=with_statistics,
+        )
+
+    def create_statistics_monitoring(
+        self,
+        name: str,
+        feature_name: Optional[str] = None,
+        description: Optional[str] = None,
+        start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        cron_expression: Optional[str] = "0 0 12 ? * * *",
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Run a job to compute statistics on snapshot of feature data on a schedule.
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+        !!! example
+            ```python3
+            # fetch feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+            # enable statistics monitoring
+            my_config = fg.create_statistics_monitoring(
+                name="my_config",
+                start_date_time="2021-01-01 00:00:00",
+                description="my description",
+                cron_expression="0 0 12 ? * * *",
+            ).with_detection_window(
+                # Statistics computed on 10% of the last week of data
+                time_offset="1w",
+                row_percentage=0.1,
+            ).save()
+            ```
+        # Arguments
+            name: Name of the feature monitoring configuration.
+                name must be unique for all configurations attached to the feature group.
+            feature_name: Name of the feature to monitor. If not specified, statistics
+                will be computed for all features.
+            description: Description of the feature monitoring configuration.
+            start_date_time: Start date and time from which to start computing statistics.
+            end_date_time: End date and time at which to stop computing statistics.
+            cron_expression: Cron expression to use to schedule the job. The cron expression
+                must be in UTC and follow the Quartz specification. Default is '0 0 12 ? * * *',
+                every day at 12pm UTC.
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+        # Return
+            `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
+                Additional information are required before feature monitoring is enabled.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
+            )
+
+        return self._feature_monitoring_config_engine._build_default_statistics_monitoring_config(
+            name=name,
+            feature_name=feature_name,
+            description=description,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
+            end_date_time=end_date_time,
+            cron_expression=cron_expression,
+        )
+
+    def create_feature_monitoring(
+        self,
+        name: str,
+        feature_name: str,
+        description: Optional[str] = None,
+        start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        cron_expression: Optional[str] = "0 0 12 ? * * *",
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Enable feature monitoring to compare statistics on snapshots of feature data over time.
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+        !!! example
+            ```python3
+            # fetch feature group
+            fg = fs.get_feature_group(name="my_feature_group", version=1)
+            # enable feature monitoring
+            my_config = fg.create_feature_monitoring(
+                name="my_monitoring_config",
+                feature_name="my_feature",
+                description="my monitoring config description",
+                cron_expression="0 0 12 ? * * *",
+            ).with_detection_window(
+                # Data inserted in the last day
+                time_offset="1d",
+                window_length="1d",
+            ).with_reference_window(
+                # Data inserted last week on the same day
+                time_offset="1w1d",
+                window_length="1d",
+            ).compare_on(
+                metric="mean",
+                threshold=0.5,
+            ).save()
+            ```
+        # Arguments
+            name: Name of the feature monitoring configuration.
+                name must be unique for all configurations attached to the feature group.
+            feature_name: Name of the feature to monitor.
+            description: Description of the feature monitoring configuration.
+            start_date_time: Start date and time from which to start computing statistics.
+            end_date_time: End date and time at which to stop computing statistics.
+            cron_expression: Cron expression to use to schedule the job. The cron expression
+                must be in UTC and follow the Quartz specification. Default is '0 0 12 ? * * *',
+                every day at 12pm UTC.
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+        # Return
+            `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
+                Additional information are required before feature monitoring is enabled.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can enable feature monitoring."
+            )
+
+        return self._feature_monitoring_config_engine._build_default_feature_monitoring_config(
+            name=name,
+            feature_name=feature_name,
+            description=description,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
+            end_date_time=end_date_time,
+            cron_expression=cron_expression,
+        )
+
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
@@ -1171,11 +1465,17 @@ class FeatureGroupBase:
     @property
     def statistics_config(self):
         """Statistics configuration object defining the settings for statistics
-        computation of the feature group."""
+        computation of the feature group.
+
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+        """
+        self._check_statistics_support()  # raises an error if stats not supported
         return self._statistics_config
 
     @statistics_config.setter
     def statistics_config(self, statistics_config):
+        self._check_statistics_support()  # raises an error if stats not supported
         if isinstance(statistics_config, StatisticsConfig):
             self._statistics_config = statistics_config
         elif isinstance(statistics_config, dict):
@@ -1222,8 +1522,13 @@ class FeatureGroupBase:
 
     @property
     def statistics(self):
-        """Get the latest computed statistics for the feature group."""
-        return self._statistics_engine.get_last(self)
+        """Get the latest computed statistics for the whole feature group.
+
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+        """
+        self._check_statistics_support()  # raises an error if stats not supported
+        return self._statistics_engine.get(self)
 
     @property
     def primary_key(self):
@@ -1235,11 +1540,13 @@ class FeatureGroupBase:
         self._primary_key = [pk.lower() for pk in new_primary_key]
 
     def get_statistics(
-        self, commit_time: Optional[Union[str, int, datetime, date]] = None
-    ):
-        """Returns the statistics for this feature group at a specific time.
+        self,
+        computation_time: Optional[Union[str, int, float, datetime, date]] = None,
+        feature_names: Optional[List[str]] = None,
+    ) -> Optional[Statistics]:
+        """Returns the statistics computed at a specific time for the current feature group.
 
-        If `commit_time` is `None`, the most recent statistics are returned.
+        If `computation_time` is `None`, the most recent statistics are returned.
 
         !!! example
             ```python
@@ -1249,24 +1556,62 @@ class FeatureGroupBase:
             # get the Feature Group instance
             fg = fs.get_or_create_feature_group(...)
 
-            fg_statistics = fg.get_statistics(commit_time=None)
+            fg_statistics = fg.get_statistics(computation_time=None)
             ```
 
         # Arguments
-            commit_time: Date and time of the commit. Defaults to `None`. Strings should
+            computation_time: Date and time when statistics were computed. Defaults to `None`. Strings should
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
-
+            feature_names: List of feature names of which statistics are retrieved.
         # Returns
             `Statistics`. Statistics object.
 
         # Raises
-            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.RestAPIError`
+            `hsfs.client.exceptions.FeatureStoreException`.
         """
-        if commit_time is None:
-            return self.statistics
-        else:
-            return self._statistics_engine.get(self, commit_time)
+        self._check_statistics_support()  # raises an error if stats not supported
+        return self._statistics_engine.get(
+            self, computation_time=computation_time, feature_names=feature_names
+        )
+
+    def get_all_statistics(
+        self,
+        computation_time: Optional[Union[str, int, float, datetime, date]] = None,
+        feature_names: Optional[List[str]] = None,
+    ) -> Optional[List[Statistics]]:
+        """Returns all the statistics metadata computed before a specific time for the current feature group.
+
+        If `computation_time` is `None`, all the statistics metadata are returned.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+
+            fg_statistics = fg.get_statistics(computation_time=None)
+            ```
+
+        # Arguments
+            computation_time: Date and time when statistics were computed. Defaults to `None`. Strings should
+                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
+            feature_names: List of feature names of which statistics are retrieved.
+        # Returns
+            `Statistics`. Statistics object.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`
+            `hsfs.client.exceptions.FeatureStoreException`.
+        """
+        self._check_statistics_support()  # raises an error if stats not supported
+        return self._statistics_engine.get_all(
+            self, computation_time=computation_time, feature_names=feature_names
+        )
 
     def compute_statistics(self):
         """Recompute the statistics for the feature group and save them to the
@@ -1290,12 +1635,14 @@ class FeatureGroupBase:
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`. Unable to persist the statistics.
+            `hsfs.client.exceptions.FeatureStoreException`.
         """
+        self._check_statistics_support()  # raises an error if stats not supported
         if self.statistics_config.enabled:
             # Don't read the dataframe here, to avoid triggering a read operation
             # for the Python engine. The Python engine is going to setup a Spark Job
             # to update the statistics.
-            return self._statistics_engine.compute_statistics(self)
+            self._statistics_engine.compute_and_save_statistics(self)
         else:
             warnings.warn(
                 (
@@ -1406,6 +1753,15 @@ class FeatureGroupBase:
         self._topic_name = topic_name
 
     @property
+    def notification_topic_name(self):
+        """The topic used for feature group notifications."""
+        return self._notification_topic_name
+
+    @notification_topic_name.setter
+    def notification_topic_name(self, notification_topic_name):
+        self._notification_topic_name = notification_topic_name
+
+    @property
     def deprecated(self):
         """Setting if the feature group is deprecated."""
         return self._deprecated
@@ -1460,8 +1816,55 @@ class FeatureGroupBase:
 
     @property
     def features(self):
-        """Schema information."""
+        """Feature Group schema (alias)"""
         return self._features
+
+    @property
+    def schema(self):
+        """Feature Group schema"""
+        return self._features
+
+    def _are_statistics_missing(self, statistics: Statistics):
+        if not self.statistics_config.enabled:
+            return False
+        elif statistics is None:
+            return True
+        if (
+            self.statistics_config.histograms
+            or self.statistics_config.correlations
+            or self.statistics_config.exact_uniqueness
+        ):
+            # if statistics are missing, recompute and update statistics.
+            # We need to check for missing statistics because the statistics config can have been modified
+            for fds in statistics.feature_descriptive_statistics:
+                if fds.feature_type in ["Integral", "Fractional"]:
+                    if self.statistics_config.histograms and (
+                        fds.extended_statistics is None
+                        or "histogram" not in fds.extended_statistics
+                    ):
+                        return True
+
+                    if self.statistics_config.correlations and (
+                        fds.extended_statistics is None
+                        or "correlations" not in fds.extended_statistics
+                    ):
+                        return True
+
+                if self.statistics_config.exact_uniqueness and fds.uniqueness is None:
+                    return True
+
+        return False
+
+    def _are_statistics_supported(self):
+        """Whether statistics are supported or not for the current Feature Group type"""
+        return not isinstance(self, SpineGroup)
+
+    def _check_statistics_support(self):
+        """Check for statistics support on the current Feature Group type"""
+        if not self._are_statistics_supported():
+            raise FeatureStoreException(
+                "Statistics not supported for this Feature Group type"
+            )
 
     @features.setter
     def features(self, new_features):
@@ -1497,6 +1900,7 @@ class FeatureGroup(FeatureGroupBase):
         statistics_config=None,
         online_topic_name=None,
         topic_name=None,
+        notification_topic_name=None,
         event_time=None,
         stream=False,
         expectation_suite=None,
@@ -1518,6 +1922,7 @@ class FeatureGroup(FeatureGroupBase):
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
             deprecated=deprecated,
         )
         self._feature_store_name = featurestore_name
@@ -1705,7 +2110,11 @@ class FeatureGroup(FeatureGroupBase):
                     `as_of(end_wallclock_time, exclude_until=start_wallclock_time).read(read_options=read_options)`
                     instead.
 
-        This function only works on feature groups with `HUDI` time travel format.
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
+
+        !!! warning
+            This function only works for feature groups with time_travel_format='HUDI'.
 
         # Arguments
             start_wallclock_time: Start time of the time travel query. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
@@ -1733,7 +2142,54 @@ class FeatureGroup(FeatureGroupBase):
             .read(False, "default", read_options)
         )
 
-    def find_neighbors(self, embedding, col=None, k=10, filter=None, min_score=0):
+    def find_neighbors(
+        self,
+        embedding: List[Union[int, float]],
+        col: Optional[str] = None,
+        k: Optional[int] = 10,
+        filter: Optional[Union[Filter, Logic]] = None,
+        min_score: Optional[float] = 0,
+    ) -> List[Tuple[float, List[Any]]]:
+        """
+        Finds the nearest neighbors for a given embedding in the vector database.
+
+        # Arguments
+            embedding: The target embedding for which neighbors are to be found.
+            col: The column name used to compute similarity score. Required only if there
+            are multiple embeddings (optional).
+            k: The number of nearest neighbors to retrieve (default is 10).
+            filter: A filter expression to restrict the search space (optional).
+            min_score: The minimum similarity score for neighbors to be considered (default is 0).
+
+        # Returns
+            A list of tuples representing the nearest neighbors.
+            Each tuple contains: `(The similarity score, A list of feature values)`
+
+        !!! Example
+            ```
+            embedding_index = EmbeddingIndex()
+            embedding_index.add_embedding(name="user_vector", dimension=3)
+            fg = fs.create_feature_group(
+                        name='air_quality',
+                        embedding_index = embedding_index,
+                        version=1,
+                        primary_key=['id1'],
+                        online_enabled=True,
+                    )
+            fg.insert(data)
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+            )
+
+            # apply filter
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+                filter=(fg.id1 > 10) & (fg.id1 < 30)
+            )
+            ```
+        """
         if self._vector_db_client is None and self._embedding_index:
             self._vector_db_client = VectorDbClient(self.select_all())
         results = self._vector_db_client.find_neighbors(
@@ -1895,10 +2351,10 @@ class FeatureGroup(FeatureGroupBase):
         if ge_report is None or ge_report.ingestion_result == "INGESTED":
             self._code_engine.save_code(self)
 
-        if self.statistics_config.enabled and engine.get_type() == "spark":
+        if self.statistics_config.enabled and engine.get_type().startswith("spark"):
             # Only compute statistics if the engine is Spark.
             # For Python engine, the computation happens in the Hopsworks application
-            self._statistics_engine.compute_statistics(self, feature_dataframe)
+            self._statistics_engine.compute_and_save_statistics(self, feature_dataframe)
         if user_version is None:
             warnings.warn(
                 "No version provided for creating feature group `{}`, incremented version to `{}`.".format(
@@ -2067,9 +2523,9 @@ class FeatureGroup(FeatureGroupBase):
         ):
             self._code_engine.save_code(self)
 
-        if engine.get_type() == "spark":
-            # Only compute statistics if the engine is Spark,
-            # if Python, the statistics are computed by the application doing the insert
+        if engine.get_type().startswith("spark") and not self.stream:
+            # Also, only compute statistics if stream is False.
+            # if True, the backfill job has not been triggered and the data has not been inserted (it's in Kafka)
             self.compute_statistics()
 
         return (
@@ -2395,6 +2851,9 @@ class FeatureGroup(FeatureGroupBase):
     ):
         """Get Query object to retrieve all features of the group at a point in the past.
 
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
+
         This method selects all features in the feature group and returns a Query object
         at the specified point in time. Optionally, commits before a specified point in time can be
         excluded from the query. The Query can then either be read into a Dataframe
@@ -2478,7 +2937,50 @@ class FeatureGroup(FeatureGroupBase):
         # Returns
             `Query`. The query object with the applied time travel condition.
         """
-        return self.select_all().as_of(wallclock_time, exclude_until)
+        return self.select_all().as_of(
+            wallclock_time=wallclock_time, exclude_until=exclude_until
+        )
+
+    def get_statistics_by_commit_window(
+        self,
+        from_commit_time: Optional[Union[str, int, datetime, date]] = None,
+        to_commit_time: Optional[Union[str, int, datetime, date]] = None,
+        feature_names: Optional[List[str]] = None,
+    ):
+        """Returns the statistics computed on a specific commit window for this feature group. If time travel is not enabled, it raises an exception.
+
+        If `from_commit_time` is `None`, the commit window starts from the first commit.
+        If `to_commit_time` is `None`, the commit window ends at the last commit.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+            # get the Feature Group instance
+            fg = fs.get_or_create_feature_group(...)
+            fg_statistics = fg.get_statistics_by_commit_window(from_commit_time=None, to_commit_time=None)
+            ```
+        # Arguments
+            to_commit_time: Date and time of the last commit of the window. Defaults to `None`. Strings should
+                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
+            from_commit_time: Date and time of the first commit of the window. Defaults to `None`. Strings should
+                be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
+                or `%Y-%m-%d %H:%M:%S.%f`.
+            feature_names: List of feature names of which statistics are retrieved.
+        # Returns
+            `Statistics`. Statistics object.
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+        """
+        if not self._is_time_travel_enabled():
+            raise ValueError("Time travel is not enabled for this feature group")
+        return self._statistics_engine.get_by_time_window(
+            self,
+            start_commit_time=from_commit_time,
+            end_commit_time=to_commit_time,
+            feature_names=feature_names,
+        )
 
     def compute_statistics(
         self, wallclock_time: Optional[Union[str, int, datetime, date]] = None
@@ -2503,12 +3005,8 @@ class FeatureGroup(FeatureGroupBase):
             `hsfs.client.exceptions.RestAPIError`. Unable to persist the statistics.
         """
         if self.statistics_config.enabled:
-            # Don't read the dataframe here, to avoid triggering a read operation
-            # for the Python engine. The Python engine is going to setup a Spark Job
-            # to update the statistics.
-
-            fg_commit_id = None
-            if wallclock_time is not None:
+            if self._is_time_travel_enabled() or wallclock_time is not None:
+                wallclock_time = wallclock_time or datetime.now()
                 # Retrieve fg commit id related to this wall clock time and recompute statistics. It will throw
                 # exception if its not time travel enabled feature group.
                 fg_commit_id = [
@@ -2517,21 +3015,24 @@ class FeatureGroup(FeatureGroupBase):
                         self, wallclock_time, 1
                     ).keys()
                 ][0]
-
-            return self._statistics_engine.compute_statistics(
-                self,
-                feature_group_commit_id=fg_commit_id
-                if fg_commit_id is not None
-                else None,
-            )
-        else:
-            warnings.warn(
-                (
-                    "The statistics are not enabled of feature group `{}`, with version"
-                    " `{}`. No statistics computed."
-                ).format(self._name, self._version),
-                util.StorageWarning,
-            )
+                registered_stats = self.get_statistics_by_commit_window(
+                    to_commit_time=fg_commit_id
+                )
+                if registered_stats is not None and self._are_statistics_missing(
+                    registered_stats
+                ):
+                    registered_stats = None
+                # Don't read the dataframe here, to avoid triggering a read operation
+                # for the Python engine. The Python engine is going to setup a Spark Job
+                # to update the statistics.
+                return (
+                    registered_stats
+                    or self._statistics_engine.compute_and_save_statistics(
+                        self,
+                        feature_group_commit_id=fg_commit_id,
+                    )
+                )
+        return super().compute_statistics()
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -2611,6 +3112,7 @@ class FeatureGroup(FeatureGroupBase):
             "expectationSuite": self._expectation_suite,
             "parents": self._parents,
             "topicName": self.topic_name,
+            "notificationTopicName": self.notification_topic_name,
             "deprecated": self.deprecated,
         }
         if self.embedding_index:
@@ -2621,6 +3123,13 @@ class FeatureGroup(FeatureGroupBase):
 
     def _get_table_name(self):
         return self.feature_store_name + "." + self.get_fg_name()
+
+    def _is_time_travel_enabled(self):
+        """Whether time-travel is enabled or not"""
+        return (
+            self._time_travel_format is not None
+            and self._time_travel_format.upper() == "HUDI"
+        )
 
     @property
     def id(self):
@@ -2698,6 +3207,19 @@ class FeatureGroup(FeatureGroupBase):
                         raise e
             raise FeatureStoreException("No materialization job was found")
 
+    @property
+    def statistics(self):
+        """Get the latest computed statistics for the whole feature group."""
+        if self._is_time_travel_enabled():
+            # retrieve the latests statistics computed on the whole Feature Group, including all the commits.
+            now = util.convert_event_time_to_timestamp(datetime.now())
+            return self._statistics_engine.get_by_time_window(
+                self,
+                start_commit_time=None,
+                end_commit_time=now,
+            )
+        return super().statistics
+
     @description.setter
     def description(self, new_description):
         self._description = new_description
@@ -2752,8 +3274,10 @@ class ExternalFeatureGroup(FeatureGroupBase):
         href=None,
         online_topic_name=None,
         topic_name=None,
+        notification_topic_name=None,
         spine=False,
         deprecated=False,
+        embedding_index=None,
         **kwargs,
     ):
         super().__init__(
@@ -2764,9 +3288,11 @@ class ExternalFeatureGroup(FeatureGroupBase):
             event_time=event_time,
             online_enabled=online_enabled,
             id=id,
+            embedding_index=embedding_index,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
             deprecated=deprecated,
         )
 
@@ -2823,7 +3349,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             )
         else:
             self._storage_connector = storage_connector
-
+        self._vector_db_client = None
         self._href = href
 
     def save(self):
@@ -2850,7 +3376,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self._code_engine.save_code(self)
 
         if self.statistics_config.enabled:
-            self._statistics_engine.compute_statistics(self)
+            self._statistics_engine.compute_and_save_statistics(self)
 
     def insert(
         self,
@@ -2900,7 +3426,10 @@ class ExternalFeatureGroup(FeatureGroupBase):
         )
 
     def read(
-        self, dataframe_type: Optional[str] = "default", online: Optional[bool] = False
+        self,
+        dataframe_type: Optional[str] = "default",
+        online: Optional[bool] = False,
+        read_options: Optional[dict] = None,
     ):
         """Get the feature group as a DataFrame.
 
@@ -2928,7 +3457,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
-
+            read_options: Additional options as key/value pairs to pass to the spark engine.
+                Defaults to `None`.
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
             `pyspark.DataFrame`. A Spark DataFrame.
@@ -2961,10 +3491,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().read(dataframe_type=dataframe_type, online=online)
+        return self.select_all().read(
+            dataframe_type=dataframe_type,
+            online=online,
+            read_options=read_options or {},
+        )
 
-    def show(self, n):
-        """Show the first n rows of the feature group.
+    def show(self, n: int, online: Optional[bool] = False):
+        """Show the first `n` rows of the feature group.
 
         !!! example
             ```python
@@ -2974,8 +3508,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
             # get the Feature Group instance
             fg = fs.get_or_create_feature_group(...)
 
-            fg.show(5)
+            # make a query and show top 5 rows
+            fg.select(['date','weekly_sales','is_holiday']).show(5)
             ```
+
+        # Arguments
+            n: int. Number of rows to show.
+            online: bool, optional. If `True` read from online feature store, defaults
+                to `False`.
         """
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -2983,22 +3523,107 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().show(n)
+        if online and self.embedding_index:
+            if self._vector_db_client is None:
+                self._vector_db_client = VectorDbClient(self.select_all())
+            results = self._vector_db_client.read(
+                self.id,
+                {},
+                pk=self.embedding_index.col_prefix + self.primary_key[0],
+                index_name=self.embedding_index.index_name,
+                n=n,
+            )
+            return [[result[f.name] for f in self.features] for result in results]
+        return self.select_all().show(n, online)
+
+    def find_neighbors(
+        self,
+        embedding: List[Union[int, float]],
+        col: Optional[str] = None,
+        k: Optional[int] = 10,
+        filter: Optional[Union[Filter, Logic]] = None,
+        min_score: Optional[float] = 0,
+    ) -> List[Tuple[float, List[Any]]]:
+        """
+        Finds the nearest neighbors for a given embedding in the vector database.
+
+        # Arguments
+            embedding: The target embedding for which neighbors are to be found.
+            col: The column name used to compute similarity score. Required only if there
+            are multiple embeddings (optional).
+            k: The number of nearest neighbors to retrieve (default is 10).
+            filter: A filter expression to restrict the search space (optional).
+            min_score: The minimum similarity score for neighbors to be considered (default is 0).
+
+        # Returns
+            A list of tuples representing the nearest neighbors.
+            Each tuple contains: `(The similarity score, A list of feature values)`
+
+        !!! Example
+            ```
+            embedding_index = EmbeddingIndex()
+            embedding_index.add_embedding(name="user_vector", dimension=3)
+            fg = fs.create_feature_group(
+                        name='air_quality',
+                        embedding_index = embedding_index,
+                        version=1,
+                        primary_key=['id1'],
+                        online_enabled=True,
+                    )
+            fg.insert(data)
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+            )
+
+            # apply filter
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+                filter=(fg.id1 > 10) & (fg.id1 < 30)
+            )
+            ```
+        """
+        if self._vector_db_client is None and self._embedding_index:
+            self._vector_db_client = VectorDbClient(self.select_all())
+        results = self._vector_db_client.find_neighbors(
+            embedding,
+            feature=(self.__getattr__(col) if col else None),
+            k=k,
+            filter=filter,
+            min_score=min_score,
+        )
+        return [
+            (result[0], [result[1][f.name] for f in self.features])
+            for result in results
+        ]
 
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         if isinstance(json_decamelized, dict):
             _ = json_decamelized.pop("type", None)
+            if "embedding_index" in json_decamelized:
+                json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+                    json_decamelized["embedding_index"]
+                )
             return cls(**json_decamelized)
         for fg in json_decamelized:
             _ = fg.pop("type", None)
+            if "embedding_index" in fg:
+                fg["embedding_index"] = EmbeddingIndex.from_json_response(
+                    fg["embedding_index"]
+                )
         return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         if "type" in json_decamelized:
             _ = json_decamelized.pop("type")
+        if "embedding_index" in json_decamelized:
+            json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+                json_decamelized["embedding_index"]
+            )
         self.__init__(**json_decamelized)
         return self
 
@@ -3006,7 +3631,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
-        return {
+        fg_meta_dict = {
             "id": self._id,
             "name": self._name,
             "description": self._description,
@@ -3027,8 +3652,12 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "onlineEnabled": self._online_enabled,
             "spine": False,
             "topicName": self.topic_name,
+            "notificationTopicName": self.notification_topic_name,
             "deprecated": self.deprecated,
         }
+        if self.embedding_index:
+            fg_meta_dict["embeddingIndex"] = self.embedding_index
+        return fg_meta_dict
 
     @property
     def id(self):

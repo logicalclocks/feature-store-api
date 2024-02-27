@@ -62,7 +62,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 feature_group,
                 feature_dataframe,
                 hudi_engine.HudiEngine.HUDI_BULK_INSERT
-                if feature_group.time_travel_format == "HUDI"
+                if feature_group.time_travel_format in ["HUDI", "DELTA"]
                 else None,
                 feature_group.online_enabled,
                 None,
@@ -209,12 +209,23 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         )
 
         # write empty dataframe to update parquet schema
-        engine.get_instance().save_empty_dataframe(feature_group)
+        if feature_group.time_travel_format == "DELTA":
+            engine.get_instance().add_cols_to_delta_table(feature_group, new_features)
+        else:
+            engine.get_instance().save_empty_dataframe(feature_group)
 
     def update_description(self, feature_group, description):
         """Updates the description of a feature group."""
         copy_feature_group = fg.FeatureGroup.from_response_json(feature_group.to_dict())
         copy_feature_group.description = description
+        self._feature_group_api.update_metadata(
+            feature_group, copy_feature_group, "updateMetadata"
+        )
+
+    def update_notification_topic_name(self, feature_group, notification_topic_name):
+        """Updates the notification_topic_name of a feature group."""
+        copy_feature_group = fg.FeatureGroup.from_response_json(feature_group.to_dict())
+        copy_feature_group.notification_topic_name = notification_topic_name
         self._feature_group_api.update_metadata(
             feature_group, copy_feature_group, "updateMetadata"
         )

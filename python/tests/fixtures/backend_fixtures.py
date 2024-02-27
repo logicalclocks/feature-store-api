@@ -26,8 +26,11 @@ FIXTURES = [
     "external_feature_group_alias",
     "external_feature_group",
     "feature",
+    "feature_descriptive_statistics",
     "feature_group_commit",
     "feature_group",
+    "feature_monitoring_config",
+    "feature_monitoring_result",
     "feature_store",
     "feature_view",
     "filter",
@@ -55,6 +58,7 @@ FIXTURES = [
     "transformation_function",
     "user",
     "validation_report",
+    "serving_keys",
 ]
 
 backend_fixtures_json = {}

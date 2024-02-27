@@ -18,13 +18,14 @@ import json
 import humps
 
 from hsfs import util
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 
 class SplitStatistics:
     def __init__(
         self,
         name,
-        content,
+        feature_descriptive_statistics,
         href=None,
         expand=None,
         items=None,
@@ -33,10 +34,15 @@ class SplitStatistics:
         **kwargs
     ):
         self._name = name
-        if not isinstance(content, dict):
-            self._content = json.loads(content)
-        else:
-            self._content = content
+        self._feature_descriptive_statistics = feature_descriptive_statistics
+        self._feature_descriptive_statistics = [
+            (
+                FeatureDescriptiveStatistics.from_response_json(fds)
+                if isinstance(fds, dict)
+                else fds
+            )
+            for fds in feature_descriptive_statistics
+        ]
 
     @classmethod
     def from_response_json(cls, json_dict):
@@ -46,7 +52,9 @@ class SplitStatistics:
     def to_dict(self):
         return {
             "name": self._name,
-            "content": json.dumps(self._content),
+            "featureDescriptiveStatistics": [
+                fds.to_dict() for fds in self._feature_descriptive_statistics
+            ],
         }
 
     def json(self):
@@ -54,8 +62,10 @@ class SplitStatistics:
 
     @property
     def name(self):
+        """Name of the training dataset split."""
         return self._name
 
     @property
-    def content(self):
-        return self._content
+    def feature_descriptive_statistics(self):
+        """List of feature descriptive statistics."""
+        return self._feature_descriptive_statistics

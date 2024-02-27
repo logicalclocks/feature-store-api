@@ -19,6 +19,7 @@ package com.logicalclocks.hsfs.spark;
 
 import com.logicalclocks.hsfs.Feature;
 import com.logicalclocks.hsfs.FeatureStoreException;
+import com.logicalclocks.hsfs.Project;
 import com.logicalclocks.hsfs.metadata.FeatureGroupApi;
 import com.logicalclocks.hsfs.FeatureGroupBase;
 import com.logicalclocks.hsfs.metadata.HopsworksClient;
@@ -66,7 +67,7 @@ public class TestFeatureGroup {
 
     StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
         Collections.singletonList("primaryKey"), Collections.singletonList("partitionKey"), "hudiPrecombineKey",
-        true, features, null, "onlineTopicName", null, null);
+        true, features, null, "onlineTopicName", null, null, null);
 
     Exception pkException = assertThrows(FeatureStoreException.class, () -> {
       featureGroupEngine.saveFeatureGroupMetaData(featureGroup,
@@ -92,7 +93,7 @@ public class TestFeatureGroup {
 
     StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
         Collections.singletonList("featureA"), null, null,
-        true, features, null, "onlineTopicName", null, "eventTime");
+        true, features, null, "onlineTopicName", null, null, "eventTime");
 
     Exception eventTimeException = assertThrows(FeatureStoreException.class, () -> {
       streamFeatureGroupEngine.saveFeatureGroupMetaData(featureGroup,
@@ -118,7 +119,7 @@ public class TestFeatureGroup {
 
     StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
         Collections.singletonList("featureA"), Collections.singletonList("partitionKey"), "hudiPrecombineKey",
-        true, features, null, "onlineTopicName", null, null);
+        true, features, null, "onlineTopicName", null, null, null);
 
     Exception partitionException = assertThrows(FeatureStoreException.class, () -> {
       streamFeatureGroupEngine.saveFeatureGroupMetaData(featureGroup,
@@ -144,7 +145,8 @@ public class TestFeatureGroup {
   public void testFeatureGroupAppendFeaturesResetSubject() throws FeatureStoreException, IOException, ParseException {
     // Arrange
     HopsworksClient hopsworksClient = Mockito.mock(HopsworksClient.class);
-    hopsworksClient.setInstance(new HopsworksClient(Mockito.mock(HopsworksHttpClient.class), "host"));
+    Mockito.when(hopsworksClient.getProject()).thenReturn(new Project(1));
+    HopsworksClient.setInstance(hopsworksClient);
 
     FeatureStore featureStore = Mockito.mock(FeatureStore.class);
     FeatureGroupApi featureGroupApi = Mockito.mock(FeatureGroupApi.class);
@@ -162,7 +164,7 @@ public class TestFeatureGroup {
 
     StreamFeatureGroup featureGroup = new StreamFeatureGroup(featureStore, "fgName", 1, "description",
         Collections.singletonList("featureA"), null, null,
-        true, features, null, "onlineTopicName", null, "eventTime");
+        true, features, null, "onlineTopicName", null, null, "eventTime");
     featureGroup.featureGroupEngine = featureGroupEngine;
 
     // Act

@@ -28,6 +28,7 @@ import numpy as np
 from hsfs.transformation_function import TransformationFunction
 from hsfs.client import exceptions
 from hsfs.core import transformation_function_engine
+from hsfs.embedding import EmbeddingIndex
 
 from hsfs import (
     training_dataset,
@@ -459,7 +460,7 @@ class FeatureStore:
         time_travel_format: Optional[str] = "HUDI",
         partition_key: Optional[List[str]] = [],
         primary_key: Optional[List[str]] = [],
-        embedding_index: Optional[List[dict]] = [],
+        embedding_index: Optional[EmbeddingIndex] = None,
         hudi_precombine_key: Optional[str] = None,
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
@@ -470,6 +471,7 @@ class FeatureStore:
         ] = None,
         parents: Optional[List[feature_group.FeatureGroup]] = [],
         topic_name: Optional[str] = None,
+        notification_topic_name: Optional[str] = None,
     ):
         """Create a feature group metadata object.
 
@@ -513,6 +515,10 @@ class FeatureStore:
                 feature group. This primary key can be a composite key of multiple
                 features and will be used as joining key, if not specified otherwise.
                 Defaults to empty list `[]`, and the feature group won't have any primary key.
+            embedding_index: [`EmbeddingIndex`](./embedding_index_api.md). If an embedding index is provided,
+                vector database is used as online feature store. This enables similarity search by
+                using [`find_neighbors`](./feature_group_api.md#find_neighbors).
+                default to `None`
             hudi_precombine_key: A feature name to be used as a precombine key for the `"HUDI"`
                 feature group. Defaults to `None`. If feature group has time travel format
                 `"HUDI"` and hudi precombine key was not specified then the first primary key of
@@ -535,6 +541,7 @@ class FeatureStore:
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
+
             stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
                 Stream enabled Feature Groups have unified single API for writing streaming features transparently
                 to both online and offline store.
@@ -545,6 +552,8 @@ class FeatureStore:
                 origin where the data is coming from.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If left undefined no notifications are sent.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -568,6 +577,7 @@ class FeatureStore:
             expectation_suite=expectation_suite,
             parents=parents,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
         )
         feature_group_object.feature_store = self
         return feature_group_object
@@ -582,7 +592,7 @@ class FeatureStore:
         time_travel_format: Optional[str] = "HUDI",
         partition_key: Optional[List[str]] = [],
         primary_key: Optional[List[str]] = [],
-        embedding_index: Optional[List[dict]] = [],
+        embedding_index: Optional[EmbeddingIndex] = None,
         hudi_precombine_key: Optional[str] = None,
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
@@ -593,6 +603,7 @@ class FeatureStore:
         stream: Optional[bool] = False,
         parents: Optional[List[feature_group.FeatureGroup]] = [],
         topic_name: Optional[str] = None,
+        notification_topic_name: Optional[str] = None,
     ):
         """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
 
@@ -634,6 +645,10 @@ class FeatureStore:
                 feature group. This primary key can be a composite key of multiple
                 features and will be used as joining key, if not specified otherwise.
                 Defaults to empty list `[]`, and the feature group won't have any primary key.
+            embedding_index: [`EmbeddingIndex`](./embedding_index_api.md). If an embedding index is provided,
+                the vector database is used as online feature store. This enables similarity search by
+                using [`find_neighbors`](./feature_group_api.md#find_neighbors).
+                default is `None`
             hudi_precombine_key: A feature name to be used as a precombine key for the `"HUDI"`
                 feature group. Defaults to `None`. If feature group has time travel format
                 `"HUDI"` and hudi precombine key was not specified then the first primary key of
@@ -659,6 +674,7 @@ class FeatureStore:
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
+
             stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
                 Stream enabled Feature Groups have unified single API for writing streaming features transparently
                 to both online and offline store.
@@ -666,6 +682,8 @@ class FeatureStore:
                 origin where the data is coming from.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If left undefined no notifications are sent.
 
         # Returns
             `FeatureGroup`. The feature group metadata object.
@@ -700,6 +718,7 @@ class FeatureStore:
                     expectation_suite=expectation_suite,
                     parents=parents,
                     topic_name=topic_name,
+                    notification_topic_name=notification_topic_name,
                 )
                 feature_group_object.feature_store = self
                 return feature_group_object
@@ -725,6 +744,7 @@ class FeatureStore:
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
         topic_name: Optional[str] = None,
+        notification_topic_name: Optional[str] = None,
     ):
         """Create a external feature group metadata object.
 
@@ -777,9 +797,12 @@ class FeatureStore:
                 the feature group can be used for point-in-time joins. Defaults to `None`.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If left undefined no notifications are sent.
 
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
 
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
@@ -805,6 +828,7 @@ class FeatureStore:
             event_time=event_time,
             expectation_suite=expectation_suite,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
         )
         feature_group_object.feature_store = self
         return feature_group_object
@@ -821,6 +845,7 @@ class FeatureStore:
         version: Optional[int] = None,
         description: Optional[str] = "",
         primary_key: Optional[List[str]] = [],
+        embedding_index: Optional[EmbeddingIndex] = None,
         features: Optional[List[feature.Feature]] = [],
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         event_time: Optional[str] = None,
@@ -829,6 +854,7 @@ class FeatureStore:
         ] = None,
         online_enabled: Optional[bool] = False,
         topic_name: Optional[str] = None,
+        notification_topic_name: Optional[str] = None,
     ):
         """Create a external feature group metadata object.
 
@@ -915,8 +941,11 @@ class FeatureStore:
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
-            !!! note "Event time data type restriction"
-                The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+                !!! note "Event time data type restriction"
+                    The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
@@ -924,6 +953,8 @@ class FeatureStore:
                 the online feature store for low latency access, defaults to `False`.
             topic_name: Optionally, define the name of the topic used for data ingestion. If left undefined it
                 defaults to using project topic.
+            notification_topic_name: Optionally, define the name of the topic used for sending notifications when entries
+                are inserted or updated on the online feature store. If left undefined no notifications are sent.
 
         # Returns
             `ExternalFeatureGroup`. The external feature group metadata object.
@@ -938,6 +969,7 @@ class FeatureStore:
             version=version,
             description=description,
             primary_key=primary_key,
+            embedding_index=embedding_index,
             featurestore_id=self._id,
             featurestore_name=self._name,
             features=features,
@@ -946,6 +978,7 @@ class FeatureStore:
             expectation_suite=expectation_suite,
             online_enabled=online_enabled,
             topic_name=topic_name,
+            notification_topic_name=notification_topic_name,
         )
         feature_group_object.feature_store = self
         return feature_group_object
@@ -1057,8 +1090,11 @@ class FeatureStore:
                 list of `Feature` objects. Defaults to empty list `[]` and will use the
                 schema information of the DataFrame resulting by executing the provided query
                 against the data source.
-            !!!note "Event time data type restriction"
-                The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+                !!!note "Event time data type restriction"
+                    The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+
             dataframe: DataFrame, RDD, Ndarray, list. Spine dataframe with primary key, event time and
                 label column to use for point in time join when fetching features.
 

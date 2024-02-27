@@ -18,6 +18,9 @@ import json
 import warnings
 from datetime import datetime, date
 from typing import Optional, Union, List, Dict, Any, TypeVar
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core import feature_monitoring_config as fmc
+from hsfs.core import feature_monitoring_result as fmr
 
 import humps
 import copy
@@ -31,19 +34,24 @@ from hsfs import (
     training_dataset,
     usage,
 )
-from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import query, filter
+from hsfs.constructor.filter import Filter, Logic
 from hsfs.core import (
     feature_view_engine,
     transformation_function_engine,
     vector_server,
+    statistics_engine,
+    feature_monitoring_config_engine,
+    feature_monitoring_result_engine,
 )
 from hsfs.transformation_function import TransformationFunction
 from hsfs.statistics_config import StatisticsConfig
+from hsfs.statistics import Statistics
 from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.serving_key import ServingKey
 from hsfs.core.vector_db_client import VectorDbClient
+from hsfs.feature import Feature
 
 
 class FeatureView:
@@ -69,6 +77,7 @@ class FeatureView:
         self._id = id
         self._query = query
         self._featurestore_id = featurestore_id
+        self._feature_store_id = featurestore_id  # for consistency with feature group
         self._feature_store_name = featurestore_name
         self._version = version
         self._description = description
@@ -96,6 +105,13 @@ class FeatureView:
         self._serving_keys = serving_keys
         self._prefix_serving_key_map = {}
         self._vector_db_client = None
+
+        self._statistics_engine = statistics_engine.StatisticsEngine(
+            featurestore_id, self.ENTITY_TYPE
+        )
+
+        if self._id:
+            self._init_feature_monitoring_engine()
 
     def delete(self):
         """Delete current feature view, all associated metadata and training data.
@@ -136,7 +152,9 @@ class FeatureView:
         !!! example
             ```python
             # delete a feature view and all associated metadata
-            feature_view.clean(
+            from hsfs.feature_view import FeatureView
+
+            FeatureView.clean(
                 feature_store_id=1,
                 feature_view_name='feature_view_name',
                 feature_view_version=1
@@ -681,13 +699,54 @@ class FeatureView:
 
     def find_neighbors(
         self,
-        embedding,
-        feature=None,
-        k=10,
-        filter=None,
-        min_score=0,
+        embedding: List[Union[int, float]],
+        feature: Optional[Feature] = None,
+        k: Optional[int] = 10,
+        filter: Optional[Union[Filter, Logic]] = None,
+        min_score: Optional[float] = 0,
         external: Optional[bool] = None,
-    ):
+    ) -> List[List[Any]]:
+        """
+        Finds the nearest neighbors for a given embedding in the vector database.
+
+        # Arguments
+            embedding: The target embedding for which neighbors are to be found.
+            feature: The feature used to compute similarity score. Required only if there
+            are multiple embeddings (optional).
+            k: The number of nearest neighbors to retrieve (default is 10).
+            filter: A filter expression to restrict the search space (optional).
+            min_score: The minimum similarity score for neighbors to be considered (default is 0).
+
+        # Returns
+            A list of feature values
+
+        !!! Example
+            ```
+            embedding_index = EmbeddingIndex()
+            embedding_index.add_embedding(name="user_vector", dimension=3)
+            fg = fs.create_feature_group(
+                        name='air_quality',
+                        embedding_index=embedding_index,
+                        version=1,
+                        primary_key=['id1'],
+                        online_enabled=True,
+                    )
+            fg.insert(data)
+            fv = fs.create_feature_view("air_quality", fg.select_all())
+            fv.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+            )
+
+            # apply filter
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+                feature=fg.user_vector,  # optional
+                filter=(fg.id1 > 10) & (fg.id1 < 30)
+            )
+            ```
+        """
         if self._vector_db_client is None:
             self.init_serving(external=external)
         results = self._vector_db_client.find_neighbors(
@@ -1392,6 +1451,8 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
+                * key `use_spark` and value `True` to materialize training dataset
+                  with Spark instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -1673,6 +1734,8 @@ class FeatureView:
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
+                * key `use_spark` and value `True` to materialize training dataset
+                  with Spark instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -1753,7 +1816,8 @@ class FeatureView:
     def recreate_training_dataset(
         self,
         training_dataset_version: int,
-        write_options: Optional[Dict[Any, Any]] = {},
+        statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
+        write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[
             Union[
                 pd.DataFrame,
@@ -1790,10 +1854,19 @@ class FeatureView:
 
         # Arguments
             training_dataset_version: training dataset version
-            read_options: Additional options as key/value pairs to pass to the execution engine.
+            statistics_config: A configuration object, or a dictionary with keys
+                "`enabled`" to generally enable descriptive statistics computation for
+                this feature group, `"correlations`" to turn on feature correlation
+                computation and `"histograms"` to compute feature value frequencies. The
+                values should be booleans indicating the setting. To fully turn off
+                statistics computation pass `statistics_config=False`. Defaults to
+                `None` and will compute only descriptive statistics.
+            write_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 When using the `python` engine, write_options can contain the
                 following entries:
+                * key `use_spark` and value `True` to materialize training dataset
+                  with Spark instead of [ArrowFlight Server](https://docs.hopsworks.ai/latest/setup_installation/common/arrow_flight_duckdb/).
                 * key `spark` and value an object of type
                 [hsfs.core.job_configuration.JobConfiguration](../job_configuration)
                   to configure the Hopsworks Job used to compute the training dataset.
@@ -1813,7 +1886,11 @@ class FeatureView:
                 that was launched to create the training dataset.
         """
         td, td_job = self._feature_view_engine.recreate_training_dataset(
-            self, training_dataset_version, write_options, spine
+            self,
+            training_dataset_version=training_dataset_version,
+            statistics_config=statistics_config,
+            user_write_options=write_options or {},
+            spine=spine,
         )
         return td_job
 
@@ -2428,7 +2505,7 @@ class FeatureView:
         # Returns
             (X, y): Tuple of dataframe of features and labels
         """
-        td, df = self._feature_view_engine.get_training_data(
+        _, df = self._feature_view_engine.get_training_data(
             self,
             read_options,
             training_dataset_version=training_dataset_version,
@@ -2565,6 +2642,66 @@ class FeatureView:
             training_helper_columns=training_helper_columns,
         )
         return df
+
+    @usage.method_logger
+    def get_training_datasets(self):
+        """Returns the metadata of all training datasets created with this feature view.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get all training dataset metadata
+            list_tds_meta = feature_view.get_training_datasets()
+            ```
+
+        # Returns
+            `List[TrainingDatasetBase]` List of training datasets metadata.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError` in case the backend fails to retrieve the training datasets metadata.
+        """
+        return self._feature_view_engine.get_training_datasets(self)
+
+    @usage.method_logger
+    def get_training_dataset_statistics(
+        self,
+        training_dataset_version,
+        before_transformation=False,
+        feature_names: Optional[List[str]] = None,
+    ) -> Statistics:
+        """
+        Get statistics of a training dataset.
+
+        !!! example
+            ```python
+            # get feature store instance
+            fs = ...
+
+            # get feature view instance
+            feature_view = fs.get_feature_view(...)
+
+            # get training dataset statistics
+            statistics = feature_view.get_training_dataset_statistics(training_dataset_version=1)
+            ```
+
+        # Arguments
+            training_dataset_version: Training dataset version
+            before_transformation: Whether the statistics were computed before transformation functions or not.
+            feature_names: List of feature names of which statistics are retrieved.
+        # Returns
+            `Statistics`
+        """
+        return self._statistics_engine.get(
+            self,
+            training_dataset_version=training_dataset_version,
+            before_transformation=before_transformation,
+            feature_names=feature_names,
+        )
 
     @usage.method_logger
     def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
@@ -2785,6 +2922,248 @@ class FeatureView:
         """
         self._feature_view_engine.delete_training_data(self)
 
+    def get_feature_monitoring_configs(
+        self,
+        name: Optional[str] = None,
+        feature_name: Optional[str] = None,
+        config_id: Optional[int] = None,
+    ) -> Union[
+        "fmc.FeatureMonitoringConfig", List["fmc.FeatureMonitoringConfig"], None
+    ]:
+        """Fetch feature monitoring configs attached to the feature view.
+        If no arguments is provided the method will return all feature monitoring configs
+        attached to the feature view, meaning all feature monitoring configs that are attach
+        to a feature in the feature view. If you wish to fetch a single config, provide the
+        its name. If you wish to fetch all configs attached to a particular feature, provide
+        the feature name.
+        !!! example
+            ```python3
+            # fetch your feature view
+            fv = fs.get_feature_view(name="my_feature_view", version=1)
+            # fetch all feature monitoring configs attached to the feature view
+            fm_configs = fv.get_feature_monitoring_configs()
+            # fetch a single feature monitoring config by name
+            fm_config = fv.get_feature_monitoring_configs(name="my_config")
+            # fetch all feature monitoring configs attached to a particular feature
+            fm_configs = fv.get_feature_monitoring_configs(feature_name="my_feature")
+            # fetch a single feature monitoring config with a particular id
+            fm_config = fv.get_feature_monitoring_configs(config_id=1)
+            ```
+        # Arguments
+            name: If provided fetch only the feature monitoring config with the given name.
+                Defaults to None.
+            feature_name: If provided, fetch only configs attached to a particular feature.
+                Defaults to None.
+            config_id: If provided, fetch only the feature monitoring config with the given id.
+                Defaults to None.
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
+            ValueError: if both name and feature_name are provided.
+            TypeError: if name or feature_name are not string or None.
+        # Return
+            Union[`FeatureMonitoringConfig`, List[`FeatureMonitoringConfig`], None]
+                A list of feature monitoring configs. If name provided,
+                returns either a single config or None if not found.
+        """
+        # TODO: Should this filter out scheduled statistics only configs?
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can fetch feature monitoring configurations."
+            )
+
+        return self._feature_monitoring_config_engine.get_feature_monitoring_configs(
+            name=name,
+            feature_name=feature_name,
+            config_id=config_id,
+        )
+
+    def get_feature_monitoring_history(
+        self,
+        config_name: Optional[str] = None,
+        config_id: Optional[int] = None,
+        start_time: Optional[Union[int, str, datetime, date]] = None,
+        end_time: Optional[Union[int, str, datetime, date]] = None,
+        with_statistics: Optional[bool] = True,
+    ) -> List["fmr.FeatureMonitoringResult"]:
+        """Fetch feature monitoring history for a given feature monitoring config.
+        !!! example
+            ```python3
+            # fetch your feature view
+            fv = fs.get_feature_view(name="my_feature_group", version=1)
+            # fetch feature monitoring history for a given feature monitoring config
+            fm_history = fv.get_feature_monitoring_history(
+                config_name="my_config",
+                start_time="2020-01-01",
+            )
+            # or use the config id
+            fm_history = fv.get_feature_monitoring_history(
+                config_id=1,
+                start_time=datetime.now() - timedelta(weeks=2),
+                end_time=datetime.now() - timedelta(weeks=1),
+                with_statistics=False,
+            )
+            ```
+        # Arguments
+            config_name: The name of the feature monitoring config to fetch history for.
+                Defaults to None.
+            config_id: The id of the feature monitoring config to fetch history for.
+                Defaults to None.
+            start_date: The start date of the feature monitoring history to fetch.
+                Defaults to None.
+            end_date: The end date of the feature monitoring history to fetch.
+                Defaults to None.
+            with_statistics: Whether to include statistics in the feature monitoring history.
+                Defaults to True. If False, only metadata about the monitoring will be fetched.
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+            `hsfs.client.exceptions.FeatureStoreException`.
+            ValueError: if both config_name and config_id are provided.
+            TypeError: if config_name or config_id are not respectively string, int or None.
+        # Return
+            List[`FeatureMonitoringResult`]
+                A list of feature monitoring results containing the monitoring metadata
+                as well as the computed statistics for the detection and reference window
+                if requested.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature View registered with Hopsworks can fetch feature monitoring history."
+            )
+
+        return self._feature_monitoring_result_engine.get_feature_monitoring_results(
+            config_name=config_name,
+            config_id=config_id,
+            start_time=start_time,
+            end_time=end_time,
+            with_statistics=with_statistics,
+        )
+
+    def create_statistics_monitoring(
+        self,
+        name: str,
+        feature_name: Optional[str] = None,
+        description: Optional[str] = None,
+        start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        cron_expression: Optional[str] = "0 0 12 ? * * *",
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Run a job to compute statistics on snapshot of feature data on a schedule.
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+        !!! example
+            ```python3
+            # fetch feature view
+            fv = fs.get_feature_view(name="my_feature_view", version=1)
+            # enable statistics monitoring
+            my_config = fv._create_statistics_monitoring(
+                name="my_config",
+                start_date_time="2021-01-01 00:00:00",
+                description="my description",
+                cron_expression="0 0 12 ? * * *",
+            ).with_detection_window(
+                # Statistics computed on 10% of the last week of data
+                time_offset="1w",
+                row_percentage=0.1,
+            ).save()
+            ```
+        # Arguments
+            name: Name of the feature monitoring configuration.
+                name must be unique for all configurations attached to the feature view.
+            feature_name: Name of the feature to monitor. If not specified, statistics
+                will be computed for all features.
+            description: Description of the feature monitoring configuration.
+            start_date_time: Start date and time from which to start computing statistics.
+            end_date_time: End date and time at which to stop computing statistics.
+            cron_expression: Cron expression to use to schedule the job. The cron expression
+                must be in UTC and follow the Quartz specification. Default is '0 0 12 ? * * *',
+                every day at 12pm UTC.
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+        # Return
+            `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
+                Additional information are required before feature monitoring is enabled.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
+            )
+
+        return self._feature_monitoring_config_engine._build_default_statistics_monitoring_config(
+            name=name,
+            feature_name=feature_name,
+            description=description,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
+            cron_expression=cron_expression,
+            end_date_time=end_date_time,
+        )
+
+    def create_feature_monitoring(
+        self,
+        name: str,
+        feature_name: str,
+        description: Optional[str] = None,
+        start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
+        cron_expression: Optional[str] = "0 0 12 ? * * *",
+    ) -> "fmc.FeatureMonitoringConfig":
+        """Enable feature monitoring to compare statistics on snapshots of feature data over time.
+        !!! experimental
+            Public API is subject to change, this feature is not suitable for production use-cases.
+        !!! example
+            ```python3
+            # fetch feature view
+            fg = fs.get_feature_view(name="my_feature_view", version=1)
+            # enable feature monitoring
+            my_config = fg.create_feature_monitoring(
+                name="my_monitoring_config",
+                feature_name="my_feature",
+                description="my monitoring config description",
+                cron_expression="0 0 12 ? * * *",
+            ).with_detection_window(
+                # Data inserted in the last day
+                time_offset="1d",
+                window_length="1d",
+            ).with_reference_window(
+                # compare to a given value
+                specific_value=0.5,
+            ).compare_on(
+                metric="mean",
+                threshold=0.5,
+            ).save()
+            ```
+        # Arguments
+            name: Name of the feature monitoring configuration.
+                name must be unique for all configurations attached to the feature group.
+            feature_name: Name of the feature to monitor.
+            description: Description of the feature monitoring configuration.
+            start_date_time: Start date and time from which to start computing statistics.
+            end_date_time: End date and time at which to stop computing statistics.
+            cron_expression: Cron expression to use to schedule the job. The cron expression
+                must be in UTC and follow the Quartz specification. Default is '0 0 12 ? * * *',
+                every day at 12pm UTC.
+        # Raises
+            `hsfs.client.exceptions.FeatureStoreException`.
+        # Return
+            `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
+                Additional information are required before feature monitoring is enabled.
+        """
+        if not self._id:
+            raise FeatureStoreException(
+                "Only Feature Group registered with Hopsworks can enable feature monitoring."
+            )
+
+        return self._feature_monitoring_config_engine._build_default_feature_monitoring_config(
+            name=name,
+            feature_name=feature_name,
+            description=description,
+            start_date_time=start_date_time,
+            valid_feature_names=[feat.name for feat in self._features],
+            end_date_time=end_date_time,
+            cron_expression=cron_expression,
+        )
+
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
@@ -2802,11 +3181,6 @@ class FeatureView:
             serving_keys=serving_keys,
         )
         features = json_decamelized.get("features", [])
-        fs_cache = {}
-        # failed to import from module level
-        from hsfs.core.feature_store_api import FeatureStoreApi
-
-        fs_api = FeatureStoreApi()
         if features:
             for feature_index in range(len(features)):
                 feature = (
@@ -2814,14 +3188,6 @@ class FeatureView:
                         features[feature_index]
                     )
                 )
-                fs_cache[feature.feature_group.feature_store_id] = fs_cache.get(
-                    feature.feature_group.feature_store_id,
-                    fs_api.get(feature.feature_group.feature_store_id),
-                )
-                # feature store object is needed in FeatureGroupBaseEngine::get_subject
-                feature.feature_group.feature_store = fs_cache[
-                    feature.feature_group.feature_store_id
-                ]
                 features[feature_index] = feature
         fv.schema = features
         fv.labels = [feature.name for feature in features if feature.label]
@@ -2849,12 +3215,29 @@ class FeatureView:
             "serving_keys",
         ]:
             self._update_attribute_if_present(self, other, key)
+        self._init_feature_monitoring_engine()
         return self
 
     @staticmethod
     def _update_attribute_if_present(this, new, key):
         if getattr(new, key):
             setattr(this, key, getattr(new, key))
+
+    def _init_feature_monitoring_engine(self):
+        self._feature_monitoring_config_engine = (
+            feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                feature_store_id=self._featurestore_id,
+                feature_view_name=self._name,
+                feature_view_version=self._version,
+            )
+        )
+        self._feature_monitoring_result_engine = (
+            feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+                feature_store_id=self._featurestore_id,
+                feature_view_name=self._name,
+                feature_view_version=self._version,
+            )
+        )
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)

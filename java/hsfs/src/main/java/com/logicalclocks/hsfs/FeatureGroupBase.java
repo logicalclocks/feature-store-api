@@ -116,6 +116,10 @@ public abstract class FeatureGroupBase<T> {
 
   @Getter
   @Setter
+  protected String notificationTopicName;
+
+  @Getter
+  @Setter
   protected List<String> statisticColumns;
 
   @Setter
@@ -217,6 +221,17 @@ public abstract class FeatureGroupBase<T> {
   }
 
   /**
+   * Update the notification topic name of the feature group.
+   *
+   * @param notificationTopicName feature group notification topic name.
+   * @throws FeatureStoreException FeatureStoreException
+   * @throws IOException IOException
+   */
+  public void updateNotificationTopicName(String notificationTopicName) throws FeatureStoreException, IOException {
+    featureGroupEngineBase.updateNotificationTopicName(this, notificationTopicName, this.getClass());
+  }
+
+  /**
    * Deprecate the feature group.
    *
    * @throws FeatureStoreException FeatureStoreException
@@ -247,8 +262,14 @@ public abstract class FeatureGroupBase<T> {
    */
   public void updateFeatureDescription(String featureName, String description)
       throws FeatureStoreException, IOException {
+
+    Feature feature = this.getFeature(featureName);
+
+    Feature newFeature = new Feature(feature.getName(), feature.getType(), feature.getOnlineType(),
+            feature.getPrimary(), feature.getPartition(), feature.getDefaultValue(), description);
+
     featureGroupEngineBase.updateFeatures(this,
-        Collections.singletonList(Feature.builder().name(featureName).description(description).type("tmp").build()),
+        Collections.singletonList(newFeature),
         this.getClass());
   }
 

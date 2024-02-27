@@ -88,7 +88,8 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
                               ExternalDataFormat dataFormat, String path, Map<String, String> options,
                               @NonNull StorageConnector storageConnector, String description, List<String> primaryKeys,
                               List<Feature> features, StatisticsConfig statisticsConfig, String eventTime,
-                              boolean onlineEnabled, String onlineTopicName, String topicName) {
+                              boolean onlineEnabled, String onlineTopicName, String topicName,
+                              String notificationTopicName) {
     this();
     this.timeTravelFormat = null;
     this.featureStore = featureStore;
@@ -111,6 +112,7 @@ public class ExternalFeatureGroup extends FeatureGroupBase<Dataset<Row>> {
     this.onlineEnabled = onlineEnabled;
     this.onlineTopicName = onlineTopicName;
     this.topicName = topicName;
+    this.notificationTopicName = notificationTopicName;
   }
 
   public ExternalFeatureGroup() {

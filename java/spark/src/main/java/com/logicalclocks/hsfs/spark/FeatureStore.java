@@ -176,7 +176,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   @Override
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version) throws IOException, FeatureStoreException {
     return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, null,
-        null, null, false, null, null, null, null);
+        null, null, false, null, null, null, null, null);
   }
 
   /**
@@ -209,8 +209,8 @@ public class FeatureStore extends FeatureStoreBase<Query> {
   public FeatureGroup getOrCreateFeatureGroup(String name, Integer version, List<String> primaryKeys,
                                               boolean onlineEnabled, String eventTime)
       throws IOException, FeatureStoreException {
-    return   featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
-        null, null, onlineEnabled, null, null, null, eventTime);
+    return featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
+        null, null, onlineEnabled, null, null, null, null, eventTime);
   }
 
   /**
@@ -249,7 +249,7 @@ public class FeatureStore extends FeatureStoreBase<Query> {
                                               String eventTime) throws IOException, FeatureStoreException {
 
     return featureGroupEngine.getOrCreateFeatureGroup(this, name, version, null, primaryKeys,
-        partitionKeys, null, onlineEnabled, null, null, null, eventTime);
+        partitionKeys, null, onlineEnabled, null, null, null, null, eventTime);
   }
 
   /**
@@ -285,6 +285,8 @@ public class FeatureStore extends FeatureStoreBase<Query> {
    *                          setting. To fully turn off statistics computation pass `statisticsConfig=false`.
    * @param topicName Optionally, define the name of the topic used for data ingestion. If left undefined it defaults
    *                  to using project topic.
+   * @param notificationTopicName Optionally, define the name of the topic used for sending notifications when entries
+   *                  are inserted or updated on the online feature store. If left undefined no notifications are sent.
    * @param eventTime Name of the feature containing the event time for the features in this feature group. If
    *                  eventTime is set the feature group can be used for point-in-time joins.
    *                  The supported data types for the eventTime column are: timestamp, date and bigint
@@ -297,12 +299,12 @@ public class FeatureStore extends FeatureStoreBase<Query> {
                                               List<String> primaryKeys, List<String> partitionKeys,
                                               String hudiPrecombineKey, boolean onlineEnabled,
                                               TimeTravelFormat timeTravelFormat, StatisticsConfig statisticsConfig,
-                                              String topicName, String eventTime)
+                                              String topicName, String notificationTopicName, String eventTime)
       throws IOException, FeatureStoreException {
 
     return featureGroupEngine.getOrCreateFeatureGroup(this, name, version, description, primaryKeys,
         partitionKeys, hudiPrecombineKey, onlineEnabled, timeTravelFormat, statisticsConfig, topicName,
-        eventTime);
+        notificationTopicName, eventTime);
   }
 
   /**

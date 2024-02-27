@@ -33,14 +33,14 @@ public class FeatureStoreApi {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FeatureStoreApi.class);
 
-  public <T> T  get(int projectId, String name, Class<T> fsType)
+  public <T> T  get(String name, Class<T> fsType)
       throws IOException, FeatureStoreException {
     HopsworksClient hopsworksClient = HopsworksClient.getInstance();
     String pathTemplate = HopsworksClient.PROJECT_PATH
         + FEATURE_STORE_NAME_PATH;
 
     String uri = UriTemplate.fromTemplate(pathTemplate)
-        .set("projectId", projectId)
+        .set("projectId", hopsworksClient.getProject().getProjectId())
         .set("fsName", name)
         .expand();
 
