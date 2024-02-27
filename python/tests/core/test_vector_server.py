@@ -281,7 +281,7 @@ class TestVectorServer:
             inference_helper_columns=True,
             init_online_store_sql_client=False,
             init_online_store_rest_client=True,
-            options={"reset_online_store_connection": True},
+            options={"reset_online_store_rest_client": True},
         )
         batch_server.init_serving(
             entity=fv,
@@ -290,7 +290,7 @@ class TestVectorServer:
             inference_helper_columns=True,
             init_online_store_sql_client=False,
             init_online_store_rest_client=True,
-            options={"reset_online_store_connection": True},
+            options={"reset_online_store_rest_client": True},
         )
 
         # Assert
@@ -298,12 +298,10 @@ class TestVectorServer:
         assert batch_server._online_store_rest_client_engine is not None
         assert init_online_store_rest_client.call_count == 2
         assert (
-            init_online_store_rest_client.call_args_list[0][1]["reset_connection"]
-            is True
+            init_online_store_rest_client.call_args_list[0][1]["reset_client"] is True
         )
         assert (
-            init_online_store_rest_client.call_args_list[1][1]["reset_connection"]
-            is True
+            init_online_store_rest_client.call_args_list[1][1]["reset_client"] is True
         )
 
     # def test_get_feature_vector_defaults_to_initialised_client_if_rest(self, mocker, monkeypatch, fv, single_server, batch_server):

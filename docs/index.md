@@ -124,7 +124,7 @@ td.save(feature_join)
 
 A short introduction to the Scala API:
 ```scala
-import com.logicalclocks.hsfs.spark._
+import com.logicalclocks.hsfs._
 val connection = HopsworksConnection.builder().build()
 val fs = connection.getFeatureStore();
 val attendances_features_fg = fs.getFeatureGroup("games_features", 1);
@@ -132,6 +132,22 @@ attendances_features_fg.show(1)
 ```
 
 You can find more examples on how to use the library in our [hops-examples](https://github.com/logicalclocks/hops-examples) repository.
+
+## Usage
+
+Usage data is collected for improving quality of the library. It is turned on by default if the backend
+is "c.app.hopsworks.ai". To turn it off, use one of the following way:
+```python
+# use environment variable
+import os
+os.environ["ENABLE_HOPSWORKS_USAGE"] = "false"
+
+# use `disable_usage_logging`
+import hsfs
+hsfs.disable_usage_logging()
+```
+
+The source code can be found in python/hsfs/usage.py.
 
 ## Documentation
 

@@ -69,7 +69,7 @@ class TestOnlineRestClientEngine:
             "feature_store_name": "test_store_featurestore",
             "feature_view_name": "test_feature_view",
             "feature_view_version": 2,
-            "return_type": online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VECTOR,
+            "return_type": online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
         }
 
         # Act
@@ -109,7 +109,7 @@ class TestOnlineRestClientEngine:
 
         # Act
         feature_vector_dict = (
-            rest_client_engine.convert_rdrs_response_to_dict_feature_vector(
+            rest_client_engine.convert_rdrs_response_to_feature_value_dict(
                 row_feature_values=response["features"], metadatas=response["metadata"]
             )
         )
@@ -117,35 +117,36 @@ class TestOnlineRestClientEngine:
         # Assert
         assert feature_vector_dict == reference_feature_vector
 
-    @pytest.mark.skip(
-        reason="Unclear what is desired behaviour. Should we raise an error?"
-    )
-    def test_convert_rdrs_response_to_feature_vector_dict_pk_value_no_match(
-        self, backend_fixtures
+    @pytest.mark.parametrize("passed_features", [{"price": 12.4}, {}])
+    def test_get_single_raw_feature_vector_pk_value_no_match(
+        self, mocker, passed_features, backend_fixtures
     ):
         # Arrange
         rest_client_engine = (
             online_store_rest_client_engine.OnlineStoreRestClientEngine()
         )
-        response = backend_fixtures["rondb_server"][
-            "get_single_vector_response_json_pk_value_no_match"
-        ]
-        reference_feature_vector = {
-            "ticker": "APPL",
-            "when": None,
-            "price": None,
-            "volume": None,
-        }
+        payload = backend_fixtures["rondb_server"]["get_single_vector_payload"].copy()
+        payload["passed_features"] = passed_features
+
+        mock_online_rest_api = mocker.patch(
+            "hsfs.core.online_store_rest_client_api.OnlineStoreRestClientApi.get_single_raw_feature_vector",
+            return_value=backend_fixtures["rondb_server"][
+                "get_single_vector_response_json_pk_value_no_match"
+            ],
+        )
+        reference_vector = payload["entry"]
+        reference_vector.update(payload["passed_features"])
 
         # Act
-        feature_vector_dict = (
-            rest_client_engine.convert_rdrs_response_to_dict_feature_vector(
-                row_feature_values=response["features"], metadatas=response["metadata"]
-            )
+        response_json = rest_client_engine.get_single_raw_feature_vector(
+            **humps.decamelize(payload),
+            return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
         )
 
         # Assert
-        assert feature_vector_dict == reference_feature_vector
+        # Check that the response was not converted to a feature vector if return_type is response json
+        assert response_json == reference_vector
+        assert mock_online_rest_api.called_once_with(payload=payload)
 
     @pytest.mark.parametrize("passed_features", [{"price": 12.4}, {}])
     def test_get_single_raw_feature_vector_response_json(
@@ -250,7 +251,7 @@ class TestOnlineRestClientEngine:
         # Act
         feature_vector_dict = rest_client_engine.get_batch_raw_feature_vectors(
             **humps.decamelize(payload),
-            return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VECTOR,
+            return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
         )
 
         # Assert
@@ -293,7 +294,7 @@ class TestOnlineRestClientEngine:
         # Act
         feature_vector_dict = rest_client_engine.get_batch_raw_feature_vectors(
             **humps.decamelize(payload),
-            return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VECTOR,
+            return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
         )
 
         # Assert
@@ -336,7 +337,7 @@ class TestOnlineRestClientEngine:
         # Act
         batch_vectors = rest_client_engine.get_batch_raw_feature_vectors(
             **humps.decamelize(payload),
-            return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VECTOR,
+            return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
         )
 
         # Assert

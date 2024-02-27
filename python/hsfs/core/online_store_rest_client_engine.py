@@ -135,6 +135,10 @@ class OnlineStoreRestClientEngine:
         )
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
+            # If the status is "MISSING" the response will not contain metadata
+            if response["status"] == "MISSING":
+                entry.update(passed_features)
+                return entry
             return self.convert_rdrs_response_to_feature_value_dict(
                 row_feature_values=response["features"], metadatas=response["metadata"]
             )
@@ -203,7 +207,7 @@ class OnlineStoreRestClientEngine:
         )
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
-            return self.convert_batch_response_to_feature_vector(
+            return self.convert_batch_response_to_feature_value_dict(
                 batch_response=response
             )
         else:
@@ -250,4 +254,5 @@ class OnlineStoreRestClientEngine:
                 else datetime.strptime(vector_value, self.SQL_TIMESTAMP_STRING_FORMAT)
             )
             for vector_value, metadata in zip(row_feature_values, metadatas)
+            if metadata is not None
         }
