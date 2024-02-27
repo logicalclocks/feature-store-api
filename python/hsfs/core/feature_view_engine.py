@@ -783,6 +783,23 @@ class FeatureViewEngine:
             feature_view_obj.name, feature_view_obj.version
         )
 
+    def get_generated_models(self, feature_view_obj):
+        """Get the generated models using this feature view, based on explicit
+        provenance. These models can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated model links, so deleted
+        will always be empty.
+        For inaccessible models, only a minimal information is returned.
+
+        # Arguments
+            feature_view_instance: Metadata object of feature view.
+
+        # Returns
+            `ProvenanceLinks`:  the models generated using this feature group
+        """
+        return self._feature_view_api.get_generated_models(
+            feature_view_obj.name, feature_view_obj.version
+        )
+
     def _check_feature_group_accessibility(self, feature_view_obj):
         if engine.get_type() in ["python", "hive"]:
             if arrow_flight_client.get_instance().is_enabled():

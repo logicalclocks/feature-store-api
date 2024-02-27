@@ -289,3 +289,37 @@ class FeatureViewApi:
             explicit_provenance.Links.Direction.UPSTREAM,
             explicit_provenance.Links.Type.FEATURE_GROUP,
         )
+
+    def get_generated_models(self, name, version):
+        """Get the generated models using this feature view, based on explicit
+        provenance. These models can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated model links, so deleted
+        will always be empty.
+        For inaccessible models, only a minimal information is returned.
+
+        # Arguments
+            feature_view_instance: Metadata object of feature view.
+
+        # Returns
+            `ExplicitProvenance.Links`: the models generated using this feature
+            group
+        """
+        _client = client.get_instance()
+        path_params = self._base_path + [
+            name,
+            self._VERSION,
+            version,
+            self._PROVENANCE,
+            self._LINKS,
+        ]
+        query_params = {
+            "expand": "provenance_artifacts",
+            "upstreamLvls": 0,
+            "downstreamLvls": 2,
+        }
+        links_json = _client._send_request("GET", path_params, query_params)
+        return explicit_provenance.Links.from_response_json(
+            links_json,
+            explicit_provenance.Links.Direction.DOWNSTREAM,
+            explicit_provenance.Links.Type.MODEL,
+        )

@@ -968,6 +968,21 @@ class FeatureView:
         """
         return self._feature_view_engine.get_parent_feature_groups(self)
 
+    def get_generated_models(self):
+        """Get the generated models using this feature view, based on explicit
+        provenance. These models can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated model links, so deleted
+        will always be empty.
+        For inaccessible models, only a minimal information is returned.
+
+        # Returns
+            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`.
+        """
+        return self._feature_view_engine.get_generated_models(self)
+
     def delete_tag(self, name: str):
         """Delete a tag attached to a feature view.
 
@@ -3167,6 +3182,7 @@ class FeatureView:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+
         serving_keys = json_decamelized.get("serving_keys", None)
         if serving_keys is not None:
             serving_keys = [ServingKey.from_response_json(sk) for sk in serving_keys]

@@ -17,7 +17,7 @@
 import json
 from enum import Enum
 from typing import Set
-from hsfs import feature_group, feature_view, training_dataset
+from hsfs import feature_group, feature_view, training_dataset, util
 import humps
 
 
@@ -26,6 +26,19 @@ class Artifact:
         DELETED = 1
         INACCESSIBLE = 2
         FAULTY = 3
+        NOT_SUPPORTED = 4
+
+        def json(self):
+            return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+        def to_dict(self):
+            return self.name
+
+        def __str__(self):
+            return self.json()
+
+        def __repr__(self):
+            return f"<MetaType.{self.name}>"
 
     def __init__(
         self,
@@ -61,12 +74,22 @@ class Artifact:
         """Version of the artifact"""
         return self._version
 
-    def __str__(self):
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def to_dict(self):
         return {
             "feature_store_name": self._feature_store_name,
-            "name": self._name,
+            "name": self.name,
             "version": self._version,
+            "type": self._type,
+            "meta_type": self._meta_type,
+            "href": self._href,
+            "err": self._exception_cause,
         }
+
+    def __str__(self):
+        return self.json()
 
     def __repr__(self):
         return (
@@ -103,6 +126,17 @@ class Artifact:
                 Artifact.MetaType.INACCESSIBLE,
                 link_json["artifact"]["href"],
             )
+        elif bool(link_json["accessible"]):
+            return Artifact(
+                link_json["artifact"]["featurestore_name"],
+                link_json["artifact"]["name"],
+                link_json["artifact"]["version"],
+                link_json["artifact_type"],
+                Artifact.MetaType.NOT_SUPPORTED,
+                link_json["artifact"]["href"],
+            )
+        else:
+            return None
 
 
 class Links:
@@ -156,6 +190,7 @@ class Links:
     class Type(Enum):
         FEATURE_GROUP = 1
         FEATURE_VIEW = 2
+        MODEL = 3
 
     def __str__(self, indent=None):
         return json.dumps(self, cls=ProvenanceEncoder, indent=indent)
@@ -214,6 +249,44 @@ class Links:
         return links
 
     @staticmethod
+    def __parse_models(links_json: dict, artifacts: Set[str]):
+        from hsml import model
+        from hsml.core import explicit_provenance as hsml_explicit_provenance
+
+        links = Links()
+        for link_json in links_json:
+            if link_json["node"]["artifact_type"] in artifacts:
+                if link_json["node"].get("exception_cause") is not None:
+                    links._faulty.append(
+                        hsml_explicit_provenance.Artifact.from_response_json(
+                            link_json["node"]
+                        )
+                    )
+                elif bool(link_json["node"]["accessible"]):
+                    links.accessible.append(
+                        model.Model.from_response_json(link_json["node"]["artifact"])
+                    )
+                elif bool(link_json["node"]["deleted"]):
+                    links.deleted.append(
+                        hsml_explicit_provenance.Artifact.from_response_json(
+                            link_json["node"]
+                        )
+                    )
+                else:
+                    links.inaccessible.append(
+                        hsml_explicit_provenance.Artifact.from_response_json(
+                            link_json["node"]
+                        )
+                    )
+            else:
+                new_links = Links.__parse_models(link_json["downstream"], artifacts)
+                links.faulty.extend(new_links.faulty)
+                links.accessible.extend(new_links.accessible)
+                links.inaccessible.extend(new_links.inaccessible)
+                links.deleted.extend(new_links.deleted)
+        return links
+
+    @staticmethod
     def from_response_json(json_dict: dict, direction: Direction, artifact: Type):
         """Parse explicit links from json response. There are three types of
         Links: UpstreamFeatureGroups, DownstreamFeatureGroups, DownstreamFeatureViews
@@ -221,37 +294,57 @@ class Links:
         # Arguments
             links_json: json response from the explicit provenance endpoint
             direction: subset of links to parse - UPSTREAM/DOWNSTREAM
-            type: subset of links to parse - FEATURE_GROUP/FEATURE_VIEW
+            type: subset of links to parse - FEATURE_GROUP/FEATURE_VIEW/MODEL
 
         # Returns
             A ProvenanceLink object for the selected parse type.
         """
-
         links_json = humps.decamelize(json_dict)
 
-        if direction == Links.Direction.UPSTREAM:
-            # upstream is currently, always, only feature groups
-            return Links.__parse_feature_groups(
-                links_json["upstream"],
-                {
-                    "FEATURE_GROUP",
-                    "EXTERNAL_FEATURE_GROUP",
-                },
-            )
+        if direction == Links.Direction.DOWNSTREAM and artifact == Links.Type.MODEL:
+            import importlib.util
 
-        if direction == Links.Direction.DOWNSTREAM:
-            if artifact == Links.Type.FEATURE_GROUP:
+            if not importlib.util.find_spec("hsml"):
+                raise ValueError(
+                    "hsml is not installed in the environment - cannot parse model registry artifacts"
+                )
+            if not importlib.util.find_spec("hopsworks"):
+                raise ValueError(
+                    "hopsworks is not installed in the environment - cannot switch from hsml connection to hsfs connection"
+                )
+
+            # make sure the hsml connection is initialized so that the model can actually be used after being returned
+            import hopsworks
+
+            hopsworks._connected_project.get_model_registry()
+
+            return Links.__parse_models(links_json["downstream"], {"MODEL"})
+        else:
+            if direction == Links.Direction.UPSTREAM:
+                # upstream is currently, always, only feature groups
                 return Links.__parse_feature_groups(
-                    links_json["downstream"],
+                    links_json["upstream"],
                     {
                         "FEATURE_GROUP",
                         "EXTERNAL_FEATURE_GROUP",
                     },
                 )
-            else:
-                return Links.__parse_feature_views(
-                    links_json["downstream"], {"FEATURE_VIEW"}
-                )
+
+            if direction == Links.Direction.DOWNSTREAM:
+                if artifact == Links.Type.FEATURE_GROUP:
+                    return Links.__parse_feature_groups(
+                        links_json["downstream"],
+                        {
+                            "FEATURE_GROUP",
+                            "EXTERNAL_FEATURE_GROUP",
+                        },
+                    )
+                elif artifact == Links.Type.FEATURE_VIEW:
+                    return Links.__parse_feature_views(
+                        links_json["downstream"], {"FEATURE_VIEW"}
+                    )
+                else:
+                    return Links()
 
 
 class ProvenanceEncoder(json.JSONEncoder):
@@ -278,4 +371,23 @@ class ProvenanceEncoder(json.JSONEncoder):
                 "name": obj.name,
                 "version": obj.version,
             }
-        return json.JSONEncoder.default(self, obj)
+        else:
+            import importlib.util
+
+            if importlib.util.find_spec("hsml"):
+                from hsml import model
+                from hsml.core import explicit_provenance as hsml_explicit_provenance
+
+                if isinstance(
+                    obj,
+                    (
+                        model.Model,
+                        hsml_explicit_provenance.Artifact,
+                    ),
+                ):
+                    return {
+                        "model_registry_id": obj.model_registry_id,
+                        "name": obj.name,
+                        "version": obj.version,
+                    }
+            return json.JSONEncoder.default(self, obj)

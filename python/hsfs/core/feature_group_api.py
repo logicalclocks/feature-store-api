@@ -280,7 +280,7 @@ class FeatureGroupApi:
             feature_group_instance: Metadata object of feature group.
 
         # Returns
-            `ExplicitProvenance.Links`:  the feature groups used to generated this
+            `ExplicitProvenance.Links`:  the feature groups used to generate this
             feature group
         """
         _client = client.get_instance()
