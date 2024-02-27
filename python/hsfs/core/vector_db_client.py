@@ -141,7 +141,6 @@ class VectorDbClient:
             embedding_feature.embedding_index.col_prefix
             and len(results["hits"]["hits"]) != k
         ):
-            print("not enough result search again")
             query["query"]["bool"]["must"][0]["knn"][col_name]["k"] = 3 * k
             results = self._opensearch_client.search(body=query, index=index_name)
         # https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
