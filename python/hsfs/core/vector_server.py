@@ -344,7 +344,7 @@ class VectorServer:
                 feature_view_version=self._feature_view_version,
                 entry=entry,
                 passed_features=passed_features,
-                return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VECTOR,
+                return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
 
         else:  # aiomysql branch
@@ -394,7 +394,7 @@ class VectorServer:
                 feature_view_version=self._feature_view_version,
                 entries=entries,
                 passed_features=passed_features,
-                return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VECTOR,
+                return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
         else:
             _logger.info("get_feature_vectors through SQL client")

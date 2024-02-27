@@ -21,12 +21,14 @@ from hsfs import util
 
 
 class OnlineStoreRestClientEngine:
-    RETURN_TYPE_FEATURE_VECTOR = "feature_vector"
+    RETURN_TYPE_FEATURE_VALUE_DICT = "feature_value_dict"
     RETURN_TYPE_RESPONSE_JSON = "response_json"  # as a python dict
     SQL_TIMESTAMP_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
     def __init__(self):
-        self._rondb_rest_api = online_store_rest_client_api.OnlineStoreRestClientApi()
+        self._online_store_rest_client_api = (
+            online_store_rest_client_api.OnlineStoreRestClientApi()
+        )
 
     def _build_base_payload(
         self,
@@ -34,7 +36,7 @@ class OnlineStoreRestClientEngine:
         feature_view_name: str,
         feature_view_version: int,
         metadata_options: Optional[dict[str, bool]] = None,
-        return_type: str = RETURN_TYPE_FEATURE_VECTOR,
+        return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
     ) -> dict[str, Union[str, dict[str, bool]]]:
         """Build the base payload for the RonDB REST Server Feature Store API.
 
@@ -53,7 +55,7 @@ class OnlineStoreRestClientEngine:
             metadata_options: Whether to include feature metadata in the response.
                 Keys are "featureName" and "featureType" and values are boolean.
             return_type: The type of the return value. Either "feature_vector" or "response_json".
-                If "feature_vector" is selected the payload will enforce fetching feature metadata.
+                If "feature_value_dict" is selected the payload will enforce fetching feature metadata.
 
         Returns:
             The payload to send to the RonDB REST Server Feature Store API.
@@ -66,13 +68,13 @@ class OnlineStoreRestClientEngine:
                 "featureName": True
                 if (
                     metadata_options is None
-                    or return_type == self.RETURN_TYPE_FEATURE_VECTOR
+                    or return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT
                 )
                 else metadata_options.get("featureName", True),
                 "featureType": True
                 if (
                     metadata_options is None
-                    or return_type == self.RETURN_TYPE_FEATURE_VECTOR
+                    or return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT
                 )
                 else metadata_options.get("featureType", True),
             },
@@ -86,7 +88,7 @@ class OnlineStoreRestClientEngine:
         entry: dict[str, Any],
         passed_features: Optional[dict[str, Any]] = None,
         metadata_options: Optional[dict[str, bool]] = None,
-        return_type: str = RETURN_TYPE_FEATURE_VECTOR,
+        return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
     ) -> dict[str, Any]:
         """Get a single feature vector from the online feature store via RonDB Rest Server Feature Store API.
 
@@ -102,7 +104,7 @@ class OnlineStoreRestClientEngine:
             passed_features: A dictionary with the feature names as keys and the values to substitute for this specific vector.
             metadata_options: Whether to include feature metadata in the response.
                 Keys are "featureName" and "featureType" and values are boolean.
-            return_type: The type of the return value. Either "feature_vector" or "response_json".
+            return_type: The type of the return value. Either "feature_value_dict" or "response_json".
 
         # Returns:
             The response json containing the feature vector as well as status information
@@ -128,10 +130,12 @@ class OnlineStoreRestClientEngine:
         else:
             payload["passedFeatures"] = {}
 
-        response = self._rondb_rest_api.get_single_raw_feature_vector(payload=payload)
+        response = self._online_store_rest_client_api.get_single_raw_feature_vector(
+            payload=payload
+        )
 
-        if return_type == self.RETURN_TYPE_FEATURE_VECTOR:
-            return self.convert_rdrs_response_to_dict_feature_vector(
+        if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
+            return self.convert_rdrs_response_to_feature_value_dict(
                 row_feature_values=response["features"], metadatas=response["metadata"]
             )
         else:
@@ -145,7 +149,7 @@ class OnlineStoreRestClientEngine:
         entries: list[dict[str, Any]],
         passed_features: Optional[list[dict[str, Any]]] = None,
         metadata_options: Optional[dict[str, bool]] = None,
-        return_type: str = RETURN_TYPE_FEATURE_VECTOR,
+        return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
     ) -> list[dict[str, Any]]:
         """Get a list of feature vectors from the online feature store via RonDB Rest Server Feature Store API.
 
@@ -162,7 +166,7 @@ class OnlineStoreRestClientEngine:
                 Note that the list should be ordered in the same way as the entries list.
             metadata_options: Whether to include feature metadata in the response.
                 Keys are "featureName" and "featureType" and values are boolean.
-            return_type: The type of the return value. Either "feature_vector" or "response_json".
+            return_type: The type of the return value. Either "feature_value_dict" or "response_json".
 
         # Returns:
             The response json containing the feature vector as well as status information
@@ -194,16 +198,18 @@ class OnlineStoreRestClientEngine:
                 "Length of passed features does not match the length of the entries."
             )
 
-        response = self._rondb_rest_api.get_batch_raw_feature_vectors(payload=payload)
+        response = self._online_store_rest_client_api.get_batch_raw_feature_vectors(
+            payload=payload
+        )
 
-        if return_type == self.RETURN_TYPE_FEATURE_VECTOR:
+        if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
             return self.convert_batch_response_to_feature_vector(
                 batch_response=response
             )
         else:
             return response
 
-    def convert_batch_response_to_feature_vector(
+    def convert_batch_response_to_feature_value_dict(
         self, batch_response: dict[str, Any]
     ) -> list[dict[str, Any]]:
         """Split the response from the RonDB Rest Server Feature Store API to convert each feature vector to a dictionary.
@@ -217,17 +223,17 @@ class OnlineStoreRestClientEngine:
             A list of dictionaries with the feature names as keys and the feature values as values.
         """
         return [
-            self.convert_rdrs_response_to_dict_feature_vector(
+            self.convert_rdrs_response_to_feature_value_dict(
                 row_feature_values=row, metadatas=batch_response["metadata"]
             )
             for row, status in zip(batch_response["features"], batch_response["status"])
             if status != "ERROR"
         ]
 
-    def convert_rdrs_response_to_dict_feature_vector(
+    def convert_rdrs_response_to_feature_value_dict(
         self, row_feature_values: list[Any], metadatas: list[dict[str, str]]
     ) -> dict[str, Any]:
-        """Convert the response from the RonDB Rest Server Feature Store API to a feature vector.
+        """Convert the response from the RonDB Rest Server Feature Store API to a feature:value dict.
 
         # Arguments:
             row_feature_values: A list of the feature values.

@@ -15,7 +15,7 @@
 #
 import requests
 from furl import furl
-from typing import Optional, Any
+from typing import Optional, Dict, Any
 from warnings import warn
 
 from hsfs import client
@@ -26,7 +26,7 @@ _online_store_rest_client = None
 
 
 def init_or_reset_online_store_rest_client(
-    optional_config: Optional[dict[str, Any]] = None, reset_client: bool = False
+    optional_config: Optional[Dict[str, Any]] = None, reset_client: bool = False
 ):
     global _online_store_rest_client
     if not _online_store_rest_client:
@@ -53,7 +53,6 @@ _DEFAULT_ONLINE_STORE_REST_CLIENT_PORT = 4406
 _DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_MS = 600
 _DEFAULT_ONLINE_STORE_REST_CLIENT_VERIFY_CERTS = True
 _DEFAULT_ONLINE_STORE_REST_CLIENT_USE_SSL = True
-_DEFAULT_ONLINE_STORE_REST_CLIENT_SSL_ASSERT_HOSTNAME = True
 _DEFAULT_ONLINE_STORE_REST_CLIENT_SERVER_API_VERSION = "0.1.0"
 _DEFAULT_ONLINE_STORE_REST_CLIENT_HTTP_AUTHORIZATION = "X-API-KEY"
 
@@ -63,9 +62,7 @@ class OnlineStoreRestClientSingleton:
     PORT = "port"
     VERIFY_CERTS = "verify_certs"
     USE_SSL = "use_ssl"
-    SSL_ASSERT_HOSTNAME = "ssl_assert_hostname"
     CA_CERTS = "ca_certs"
-    HTTP_COMPRESS = "http_compress"
     HTTP_AUTHORIZATION = "http_authorization"
     TIMEOUT = "timeout"
     SERVER_API_VERSION = "server_api_version"
@@ -107,7 +104,6 @@ class OnlineStoreRestClientSingleton:
             self._current_config.update(optional_config)
 
         self._set_auth(optional_config)
-        self._verify = self._current_config[self.VERIFY_CERTS]
         if not self._session:
             self._session = requests.Session()
         else:
@@ -115,6 +111,10 @@ class OnlineStoreRestClientSingleton:
                 "Use the init_or_reset_online_store_connection method with reset_connection flag set "
                 + "to True to reset the online_store_client_connection"
             )
+        if not self._current_config[self.VERIFY_CERTS]:
+            self._session.verify = False
+        else:
+            self._session.verify = self._current_config[self.CA_CERTS]
 
         # Set base_url
         scheme = "https" if self._current_config[self.USE_SSL] else "http"
@@ -145,7 +145,6 @@ class OnlineStoreRestClientSingleton:
             self.TIMEOUT: _DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_MS,
             self.VERIFY_CERTS: _DEFAULT_ONLINE_STORE_REST_CLIENT_VERIFY_CERTS,
             self.USE_SSL: _DEFAULT_ONLINE_STORE_REST_CLIENT_USE_SSL,
-            self.SSL_ASSERT_HOSTNAME: _DEFAULT_ONLINE_STORE_REST_CLIENT_SSL_ASSERT_HOSTNAME,
             self.SERVER_API_VERSION: _DEFAULT_ONLINE_STORE_REST_CLIENT_SERVER_API_VERSION,
             self.HTTP_AUTHORIZATION: _DEFAULT_ONLINE_STORE_REST_CLIENT_HTTP_AUTHORIZATION,
         }
@@ -188,7 +187,6 @@ class OnlineStoreRestClientSingleton:
         )
         response = self._session.send(
             prepped_request,
-            verify=self._current_config[self.VERIFY_CERTS],
             timeout=self._current_config[self.TIMEOUT] / 1000,
         )
         return response
