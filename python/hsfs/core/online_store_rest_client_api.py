@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from typing import Any
+from typing import Any, Dict
 import json
 from requests import Response
 
@@ -25,7 +25,7 @@ class OnlineStoreRestClientApi:
     BATCH_VECTOR_ENDPOINT = "batch_feature_store"
     PING_ENDPOINT = "ping"
 
-    def get_single_raw_feature_vector(self, payload: dict[str, Any]) -> dict[str, Any]:
+    def get_single_raw_feature_vector(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Get a single feature vector from the feature store.
 
         Check the RonDB Rest Server documentation for more details:
@@ -70,7 +70,7 @@ class OnlineStoreRestClientApi:
             ),
         )
 
-    def get_batch_raw_feature_vectors(self, payload: dict[str, Any]) -> dict[str, Any]:
+    def get_batch_raw_feature_vectors(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Get a list of feature vectors from the feature store.
 
         Check the RonDB Rest Server documentation for more details:
@@ -117,7 +117,7 @@ class OnlineStoreRestClientApi:
             method="GET", path_params=[self.PING_ENDPOINT]
         )
 
-    def handle_rdrs_feature_store_response(self, response: Response) -> dict[str, Any]:
+    def handle_rdrs_feature_store_response(self, response: Response) -> Dict[str, Any]:
         """Handle the response from the RonDB Rest Server.
 
         Args:

@@ -68,7 +68,7 @@ class OnlineStoreRestClientSingleton:
     SERVER_API_VERSION = "server_api_version"
     API_KEY = "api_key"
 
-    def __init__(self, optional_config: dict[str, Any] = None):
+    def __init__(self, optional_config: Dict[str, Any] = None):
         self._check_hopsworks_connection()
         self.variable_api = variable_api.VariableApi()
         self._auth = None
@@ -79,7 +79,7 @@ class OnlineStoreRestClientSingleton:
         )
         self.is_connected()
 
-    def reset_client(self, optional_config: Optional[dict[str, Any]] = None):
+    def reset_client(self, optional_config: Optional[Dict[str, Any]] = None):
         self._check_hopsworks_connection()
         if self._session is not None:
             self._session.close()
@@ -91,7 +91,7 @@ class OnlineStoreRestClientSingleton:
 
     def _setup_rest_client(
         self,
-        optional_config: Optional[dict[str, Any]] = None,
+        optional_config: Optional[Dict[str, Any]] = None,
         use_current_config: bool = True,
     ):
         if optional_config and not isinstance(optional_config, dict):
@@ -135,12 +135,12 @@ class OnlineStoreRestClientSingleton:
             self._current_config is not None
         ), "Online Store REST Client Configuration failed to initialise."
 
-    def _get_default_client_config(self) -> dict[str, Any]:
+    def _get_default_client_config(self) -> Dict[str, Any]:
         default_config = self._get_default_static_parameters_config()
         default_config.update(self._get_default_dynamic_parameters_config())
         return default_config
 
-    def _get_default_static_parameters_config(self) -> dict[str, Any]:
+    def _get_default_static_parameters_config(self) -> Dict[str, Any]:
         return {
             self.TIMEOUT: _DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_MS,
             self.VERIFY_CERTS: _DEFAULT_ONLINE_STORE_REST_CLIENT_VERIFY_CERTS,
@@ -151,7 +151,7 @@ class OnlineStoreRestClientSingleton:
 
     def _get_default_dynamic_parameters_config(
         self,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         url = furl(self._get_rondb_rest_server_endpoint())
         return {
             self.HOST: url.host,
@@ -175,8 +175,8 @@ class OnlineStoreRestClientSingleton:
         self,
         method: str,
         path_params: list[str],
-        headers: Optional[dict[str, Any]] = None,
-        data: Optional[dict[str, Any]] = None,
+        headers: Optional[Dict[str, Any]] = None,
+        data: Optional[Dict[str, Any]] = None,
     ):
         url = self._base_url.copy()
         url.path.segments.extend(path_params)
@@ -198,7 +198,7 @@ class OnlineStoreRestClientSingleton:
             via hopsworks.login or hsfs.connection before initialising the Online Store REST Client.
             """
 
-    def _set_auth(self, optional_config: Optional[dict[str, Any]] = None):
+    def _set_auth(self, optional_config: Optional[Dict[str, Any]] = None):
         if client.get_instance()._is_external():
             assert hasattr(
                 client.get_instance()._auth, "_token"
