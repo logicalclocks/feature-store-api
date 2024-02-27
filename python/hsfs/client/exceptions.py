@@ -15,6 +15,7 @@
 #
 
 from enum import Enum
+import json
 
 
 class RestAPIError(Exception):
@@ -34,6 +35,11 @@ class RestAPIError(Exception):
     def __init__(self, url, response):
         try:
             error_object = response.json()
+            if isinstance(error_object, str):
+                error_object = json.loads(error_object)
+                error_object["errorCode"] = error_object.get("code", "")
+                error_object["errorMsg"] = error_object.get("reason", "")
+                error_object["usrMsg"] = error_object.get("message", "")
         except Exception:
             error_object = {}
         message = (
