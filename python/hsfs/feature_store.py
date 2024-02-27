@@ -1522,6 +1522,7 @@ class FeatureStore:
             name=name,
             query=query,
             featurestore_id=self._id,
+            featurestore_name=self._name,
             version=version,
             description=description,
             labels=labels,
