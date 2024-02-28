@@ -144,7 +144,7 @@ public class SparkEngine extends EngineBase {
 
   private HudiEngine hudiEngine = new HudiEngine();
 
-  private SparkEngine() {
+  protected SparkEngine() {
     sparkSession = SparkSession.builder()
         .enableHiveSupport()
         .getOrCreate();
@@ -955,6 +955,18 @@ public class SparkEngine extends EngineBase {
     storageConnector.setSslKeystoreLocation(addFile(storageConnector.getSslKeystoreLocation()));
 
     Map<String, String> config = storageConnector.sparkOptions();
+    // add keytab file
+    String saslJaasConfig = config.get("kafka.sasl.jaas.config");
+    if (saslJaasConfig != null) {
+      Pattern pattern = Pattern.compile("keyTab=[\"'](.+?)[\"']");
+      Matcher matcher = pattern.matcher(saslJaasConfig);
+      while (matcher.find()) {
+        String originalKeytabLocation = matcher.group(1);
+        String newKeytabLocation = addFile(originalKeytabLocation);
+        saslJaasConfig = saslJaasConfig.replace(originalKeytabLocation, newKeytabLocation);
+      }
+      config.put("kafka.sasl.jaas.config", saslJaasConfig);
+    }
 
     if (writeOptions != null) {
       config.putAll(writeOptions);

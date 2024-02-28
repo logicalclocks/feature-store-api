@@ -227,6 +227,35 @@ public class TestSparkEngine {
     }
 
     @Test
+    public void testGetKafkaKerberos() throws FeatureStoreException, IOException {
+        // Arrange
+        HopsworksClient hopsworksClient = Mockito.mock(HopsworksClient.class);
+        hopsworksClient.setInstance(new HopsworksClient(Mockito.mock(HopsworksHttpClient.class), "host"));
+        System.setProperty(HopsworksInternalClient.REST_ENDPOINT_SYS, "");
+
+        SparkEngine sparkEngine = Mockito.spy(SparkEngine.class);
+        StorageConnectorApi storageConnectorApi = Mockito.mock(StorageConnectorApi.class);
+        sparkEngine.storageConnectorApi = storageConnectorApi;
+        StorageConnector.KafkaConnector kafkaConnector = new StorageConnector.KafkaConnector();
+        kafkaConnector.setBootstrapServers("testServer:123");
+        kafkaConnector.setExternalKafka(Boolean.TRUE);
+        kafkaConnector.setSecurityProtocol(SecurityProtocol.SSL);
+        kafkaConnector.setOptions(Collections.singletonList(new Option("sasl.jaas.config", "com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab=\"/home/laurent/my.keytab\" storeKey=true useTicketCache=false serviceName=\"kafka\" principal=\"laurent@kafka.com\";")));
+        kafkaConnector.setSslEndpointIdentificationAlgorithm(SslEndpointIdentificationAlgorithm.EMPTY);
+
+        Mockito.when(sparkEngine.addFile(Mockito.anyString())).thenReturn("result_from_add_file");
+
+        Mockito.when(storageConnectorApi.getKafkaStorageConnector(Mockito.any(), Mockito.anyBoolean()))
+            .thenReturn(kafkaConnector);
+
+        // Act
+        Map<String, String> result = sparkEngine.getKafkaConfig(new FeatureGroup(), new HashMap<>());
+
+        // Assert
+        Assertions.assertEquals("com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true keyTab=\"result_from_add_file\" storeKey=true useTicketCache=false serviceName=\"kafka\" principal=\"laurent@kafka.com\";", result.get("kafka.sasl.jaas.config"));
+    }
+
+    @Test
     public void testMakeQueryName() {
         SparkEngine sparkEngine = SparkEngine.getInstance();
         FeatureGroup featureGroup = new FeatureGroup();
