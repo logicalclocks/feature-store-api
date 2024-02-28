@@ -16,18 +16,27 @@
 
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor.join import Join
+from hsfs.constructor.filter import Filter, Logic
 from hsfs.feature import Feature
 from hsfs.core.opensearch import OpenSearchClientSingleton
+from typing import Union
 
 
 class VectorDbClient:
+    _filter_map = {
+        Filter.GT: "gt",
+        Filter.GE: "gte",
+        Filter.LT: "lt",
+        Filter.LE: "lte",
+    }
+
     def __init__(self, query):
         self._opensearch_client = None
         self._query = query
         self._embedding_features = {}
         self._fg_vdb_col_fg_col_map = {}
         self._fg_vdb_col_td_col_map = {}
-        self._fg_fg_col_vdb_col_map = {}
+        self._fg_col_vdb_col_map = {}
         self._fg_embedding_map = {}
         self._embedding_fg_by_join_index = {}
         self._opensearch_client = None
@@ -56,7 +65,7 @@ class VectorDbClient:
                     ] = q._left_feature_group[pk]
                     fg_col_vdb_col_map[pk] = fg.embedding_index.col_prefix + pk
                 self._fg_vdb_col_fg_col_map[fg.id] = vdb_col_fg_col_map
-                self._fg_fg_col_vdb_col_map[fg.id] = fg_col_vdb_col_map
+                self._fg_col_vdb_col_map[fg.id] = fg_col_vdb_col_map
                 self._fg_embedding_map[fg.id] = fg.embedding_index
 
         # create a join for the left fg so that the dict can be constructed in one loop
@@ -86,7 +95,7 @@ class VectorDbClient:
         feature: Feature = None,
         index_name=None,
         k=10,
-        filter=None,
+        filter: Union[Filter, Logic] = None,
         min_score=0,
     ):
         if not feature:
@@ -101,6 +110,7 @@ class VectorDbClient:
                 raise ValueError(
                     f"feature: {feature.name} is not an embedding feature."
                 )
+        self._check_filter(filter, embedding_feature.feature_group)
         col_name = embedding_feature.embedding_index.col_prefix + embedding_feature.name
         query = {
             "size": k,
@@ -110,6 +120,9 @@ class VectorDbClient:
                         {"knn": {col_name: {"vector": embedding, "k": k}}},
                         {"exists": {"field": col_name}},
                     ]
+                    + self._get_query_filter(
+                        filter, embedding_feature.embedding_index.col_prefix
+                    )
                 }
             },
             "_source": list(
@@ -118,12 +131,18 @@ class VectorDbClient:
                 ).keys()
             ),
         }
-
         if not index_name:
             index_name = embedding_feature.embedding_index.index_name
 
         results = self._opensearch_client.search(body=query, index=index_name)
 
+        # When using project index (`embedding_feature.embedding_index.col_prefix` is not empty), sometimes the total number of result returned is less than k. Possible reason is that when using project index, some embedding columns have null value if the row is from a different feature group. And opensearch filter out the result where embedding is null after retrieving the top k results. So search 3 times more data if it is using project index and size of result is not k.
+        if (
+            embedding_feature.embedding_index.col_prefix
+            and len(results["hits"]["hits"]) != k
+        ):
+            query["query"]["bool"]["must"][0]["knn"][col_name]["k"] = 3 * k
+            results = self._opensearch_client.search(body=query, index=index_name)
         # https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
         return [
             (
@@ -135,6 +154,88 @@ class VectorDbClient:
             )
             for item in results["hits"]["hits"]
         ]
+
+    def _check_filter(self, filter, fg):
+        if not filter:
+            return
+        if isinstance(filter, Filter):
+            if filter.feature.feature_group_id != fg.id:
+                raise FeatureStoreException(
+                    f"filter feature should be from feature group '{fg.name}' version '{fg.version}'"
+                )
+        elif isinstance(filter, Logic):
+            self._check_filter(filter.get_right_filter_or_logic(), fg)
+            self._check_filter(filter.get_left_filter_or_logic(), fg)
+        else:
+            raise FeatureStoreException("filter should be of type `Filter` or `Logic`")
+
+    def _get_query_filter(self, filter, col_prefix=None):
+        if not filter:
+            return []
+        if isinstance(filter, Filter):
+            return [self._convert_filter(filter, col_prefix)]
+        elif isinstance(filter, Logic):
+            if filter.type == Logic.SINGLE:
+                return self._get_query_filter(
+                    filter.get_left_filter_or_logic()
+                ) or self._get_query_filter(
+                    filter.get_right_filter_or_logic(), col_prefix
+                )
+            elif filter.type == Logic.AND:
+                return [
+                    {
+                        "bool": {
+                            "must": (
+                                self._get_query_filter(
+                                    filter.get_left_filter_or_logic(), col_prefix
+                                )
+                                + self._get_query_filter(
+                                    filter.get_right_filter_or_logic(), col_prefix
+                                )
+                            )
+                        }
+                    }
+                ]
+            elif filter.type == Logic.OR:
+                return [
+                    {
+                        "bool": {
+                            "should": (
+                                self._get_query_filter(
+                                    filter.get_left_filter_or_logic(), col_prefix
+                                )
+                                + self._get_query_filter(
+                                    filter.get_right_filter_or_logic(), col_prefix
+                                )
+                            ),
+                            "minimum_should_match": 1,
+                        }
+                    }
+                ]
+            else:
+                raise FeatureStoreException(f"filter type {filter.type} not defined.")
+
+        raise FeatureStoreException("filter should be of type `Filter` or `Logic`")
+
+    def _convert_filter(self, filter, col_prefix=None):
+        condition = filter.condition
+        if col_prefix:
+            feature_name = col_prefix + filter.feature.name
+        else:
+            feature_name = filter.feature.name
+        if condition == Filter.EQ:
+            return {"term": {feature_name: filter.value}}
+        elif condition == filter.NE:
+            return {"bool": {"must_not": [{"term": {feature_name: filter.value}}]}}
+        elif condition == filter.IN:
+            return {"terms": {feature_name: filter.value}}
+        elif condition == filter.LK:
+            return {"wildcard": {feature_name: {"value": "*" + filter.value + "*"}}}
+        elif condition in self._filter_map:
+            return {
+                "range": {feature_name: {self._filter_map[condition]: filter.value}}
+            }
+        raise FeatureStoreException("Filter condition not defined.")
 
     def _rewrite_result_key(self, result_map, key_map):
         new_map = {}
@@ -155,9 +256,14 @@ class VectorDbClient:
         if keys:
             query = {
                 "query": {
-                    "match": self._rewrite_result_key(
-                        keys, self._fg_fg_col_vdb_col_map[fg_id]
-                    )
+                    "bool": {
+                        "must": [
+                            {"match": {key: value}}
+                            for key, value in self._rewrite_result_key(
+                                keys, self._fg_col_vdb_col_map[fg_id]
+                            ).items()
+                        ]
+                    }
                 },
             }
         else:

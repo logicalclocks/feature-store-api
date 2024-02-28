@@ -3,7 +3,7 @@
 
 - Fork and clone the repository
 
-- Create a new Python environment with your favourite environment manager, e.g. virtualenv or conda
+- Create a new Python environment with your favourite environment manager (e.g. virtualenv or conda) and Python 3.9 (newer versions will return a library conflict in `auto_doc.py`)
 
 - Install repository in editable mode with development dependencies:
 
@@ -80,7 +80,7 @@ We use `mkdocs` together with `mike` ([for versioning](https://github.com/jimpor
 2. Install HSFS with `docs` extras:
 
     ```bash
-    pip install -e .[python,dev,docs]
+    pip install -e ".[python,dev,docs]"
     ```
 
 3. To build the docs, first run the auto doc script:
@@ -182,8 +182,7 @@ To add new documentation for APIs, you need to add information about the method/
 ```python
 PAGES = {
     "connection.md": [
-        "hsfs.connection.Connection.connection",
-        "hsfs.connection.Connection.setup_databricks",
+        "hsfs.connection.Connection.connection"
     ]
     "new_template.md": [
             "module",

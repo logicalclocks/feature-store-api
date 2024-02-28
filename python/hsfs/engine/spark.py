@@ -790,7 +790,7 @@ class Engine:
         if isinstance(client.get_instance(), client.external.Client):
             tmp_file = os.path.join(SparkFiles.getRootDirectory(), file_name)
             print("Reading key file from storage connector.")
-            response = self._dataset_api.read_content(tmp_file, "HIVEDB")
+            response = self._dataset_api.read_content(file, util.get_dataset_type(file))
 
             with open(tmp_file, "wb") as f:
                 f.write(response.content)

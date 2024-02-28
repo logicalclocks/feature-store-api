@@ -65,7 +65,7 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
                       String description, List<String> primaryKeys, List<String> partitionKeys,
                       String hudiPrecombineKey, boolean onlineEnabled, TimeTravelFormat timeTravelFormat,
                       List<Feature> features, StatisticsConfig statisticsConfig, String onlineTopicName,
-                      String topicName, String eventTime) {
+                      String topicName, String notificationTopicName, String eventTime) {
     this();
     this.featureStore = featureStore;
     this.name = name;
@@ -83,6 +83,7 @@ public class FeatureGroup extends FeatureGroupBase<Dataset<Row>> {
     this.statisticsConfig = statisticsConfig != null ? statisticsConfig : new StatisticsConfig();
     this.onlineTopicName = onlineTopicName;
     this.topicName = topicName;
+    this.notificationTopicName = notificationTopicName;
     this.eventTime = eventTime;
   }
 

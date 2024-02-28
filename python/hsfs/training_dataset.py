@@ -730,10 +730,14 @@ class TrainingDataset(TrainingDatasetBase):
         """
         if self.statistics_config.enabled and engine.get_type().startswith("spark"):
             try:
-                registered_stats = self._statistics_engine.get(self)
+                registered_stats = self._statistics_engine.get(
+                    self,
+                    before_transformation=False,
+                )
             except RestAPIError as e:
                 if (
-                    e.response.json().get("errorCode", "") == 270226
+                    e.response.json().get("errorCode", "")
+                    == RestAPIError.FeatureStoreErrorCode.STATISTICS_NOT_FOUND
                     and e.response.status_code == 404
                 ):
                     registered_stats = None
@@ -957,7 +961,7 @@ class TrainingDataset(TrainingDatasetBase):
         # Returns
             `Statistics`. Object with statistics information.
         """
-        return self._statistics_engine.get(self)
+        return self._statistics_engine.get(self, before_transformation=False)
 
     @property
     def query(self):
