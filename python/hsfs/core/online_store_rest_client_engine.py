@@ -19,6 +19,11 @@ from datetime import datetime
 from hsfs.core import online_store_rest_client_api
 from hsfs import util
 
+import logging
+import json
+
+_logger = logging.getLogger(__name__)
+
 
 class OnlineStoreRestClientEngine:
     RETURN_TYPE_FEATURE_VALUE_DICT = "feature_value_dict"
@@ -155,7 +160,9 @@ class OnlineStoreRestClientEngine:
         response = self._online_store_rest_client_api.get_single_raw_feature_vector(
             payload=payload
         )
-        print(response)
+        _logger.debug(
+            f"get_single_vector rest client raw response: {json.dumps(response, indent=2)}"
+        )
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
             # If the status is "MISSING" the response will not contain metadata
@@ -231,7 +238,7 @@ class OnlineStoreRestClientEngine:
         response = self._online_store_rest_client_api.get_batch_raw_feature_vectors(
             payload=payload
         )
-        print(response)
+        _logger.debug(response)
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
             return self.convert_batch_response_to_feature_value_dict(
