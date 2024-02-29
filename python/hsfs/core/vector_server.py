@@ -573,6 +573,7 @@ class VectorServer:
         # Initialize the set of values
         serving_vector = {}
         bind_entries = {}
+        prepared_statement_execution = {}
         for prepared_statement_index in prepared_statement_objects:
             pk_entry = {}
             next_statement = False
@@ -592,11 +593,14 @@ class VectorServer:
             if next_statement:
                 continue
             bind_entries[prepared_statement_index] = pk_entry
+            prepared_statement_execution[
+                prepared_statement_index
+            ] = prepared_statement_objects[prepared_statement_index]
 
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
         results_dict = loop.run_until_complete(
-            self._execute_prep_statements(prepared_statement_objects, bind_entries)
+            self._execute_prep_statements(prepared_statement_execution, bind_entries)
         )
 
         for key in results_dict:
@@ -878,6 +882,14 @@ class VectorServer:
     async def _execute_prep_statements(self, prepared_statements: dict, entries: dict):
         """Iterate over prepared statements to create async tasks
         and gather all tasks results for a given list of entries."""
+
+        # validate if prepared_statements and entries have the same keys
+        if prepared_statements.keys() != entries.keys():
+            # iterate over prepared_statements and entries to find the missing key
+            # remove missing keys from prepared_statements
+            for key in list(prepared_statements.keys()):
+                if key not in entries:
+                    prepared_statements.pop(key)
 
         tasks = [
             asyncio.ensure_future(
