@@ -1077,15 +1077,24 @@ class Engine:
             feature_name,
             transformation_fn,
         ) in transformation_functions.items():
-            dataset[feature_name] = dataset[feature_name].map(
-                transformation_fn.transformation_fn
-            )
-            offline_type = Engine.convert_spark_type_to_offline_type(
-                transformation_fn.output_type
-            )
-            dataset[feature_name] = Engine._cast_column_to_offline_type(
-                dataset[feature_name], offline_type
-            )
+            if isinstance(dataset, pl.DataFrame):
+                dataset = dataset.with_columns(
+                    pl.col(feature_name).map_elements(
+                        transformation_fn.transformation_fn
+                    )
+                )
+            else:
+                dataset[feature_name] = dataset[feature_name].map(
+                    transformation_fn.transformation_fn
+                )
+            # The below functions is not required for Polars since polars does have object types like pandas
+            if not isinstance(dataset, pl.DataFrame):
+                offline_type = Engine.convert_spark_type_to_offline_type(
+                    transformation_fn.output_type
+                )
+                dataset[feature_name] = Engine._cast_column_to_offline_type(
+                    dataset[feature_name], offline_type
+                )
 
         return dataset
 
@@ -1439,40 +1448,76 @@ class Engine:
         offline_type = offline_type.lower()
         if offline_type == "timestamp":
             # convert (if tz!=UTC) to utc, then make timezone unaware
-            return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
+            if isinstance(feature_column, pl.Series):
+                return feature_column.cast(pl.Datetime(time_zone=None))
+            else:
+                return pd.to_datetime(feature_column, utc=True).dt.tz_localize(None)
         elif offline_type == "date":
-            return pd.to_datetime(feature_column, utc=True).dt.date
-        elif offline_type.startswith("array<") or offline_type.startswith("struct<"):
-            return feature_column.apply(
-                lambda x: (ast.literal_eval(x) if type(x) is str else x)
-                if (x is not None and x != "")
-                else None
-            )
-        elif offline_type == "boolean":
-            return feature_column.apply(
-                lambda x: (ast.literal_eval(x) if type(x) is str else x)
-                if (x is not None and x != "")
-                else None
-            )
-        elif offline_type == "string":
-            return feature_column.apply(lambda x: str(x) if x is not None else None)
-        elif offline_type.startswith("decimal"):
-            return feature_column.apply(
-                lambda x: decimal.Decimal(x) if (x is not None) else None
-            )
-        else:
-            offline_dtype_mapping = {
-                "bigint": pd.Int64Dtype(),
-                "int": pd.Int32Dtype(),
-                "smallint": pd.Int16Dtype(),
-                "tinyint": pd.Int8Dtype(),
-                "float": np.dtype("float32"),
-                "double": np.dtype("float64"),
-            }
-            if offline_type in offline_dtype_mapping:
-                casted_feature = feature_column.astype(
-                    offline_dtype_mapping[offline_type]
+            if isinstance(feature_column, pl.Series):
+                return feature_column.cast(pl.Date)
+            else:
+                return pd.to_datetime(feature_column, utc=True).dt.date
+        elif (
+            offline_type.startswith("array<")
+            or offline_type.startswith("struct<")
+            or offline_type == "boolean"
+        ):
+            if isinstance(feature_column, pl.Series):
+                return feature_column.map_elements(
+                    lambda x: (ast.literal_eval(x) if type(x) is str else x)
+                    if (x is not None and x != "")
+                    else None
                 )
+            else:
+                return feature_column.apply(
+                    lambda x: (ast.literal_eval(x) if type(x) is str else x)
+                    if (x is not None and x != "")
+                    else None
+                )
+        elif offline_type == "string":
+            if isinstance(feature_column, pl.Series):
+                return feature_column.map_elements(
+                    lambda x: str(x) if x is not None else None
+                )
+            else:
+                return feature_column.apply(lambda x: str(x) if x is not None else None)
+        elif offline_type.startswith("decimal"):
+            if isinstance(feature_column, pl.Series):
+                return feature_column.map_elements(
+                    lambda x: decimal.Decimal(x) if (x is not None) else None
+                )
+            else:
+                return feature_column.apply(
+                    lambda x: decimal.Decimal(x) if (x is not None) else None
+                )
+        else:
+            if isinstance(feature_column, pl.Series):
+                offline_dtype_mapping = {
+                    "bigint": pl.Int64,
+                    "int": pl.Int32,
+                    "smallint": pl.Int16,
+                    "tinyint": pl.Int8,
+                    "float": pl.Float32,
+                    "double": pl.Float64,
+                }
+            else:
+                offline_dtype_mapping = {
+                    "bigint": pd.Int64Dtype(),
+                    "int": pd.Int32Dtype(),
+                    "smallint": pd.Int16Dtype(),
+                    "tinyint": pd.Int8Dtype(),
+                    "float": np.dtype("float32"),
+                    "double": np.dtype("float64"),
+                }
+            if offline_type in offline_dtype_mapping:
+                if isinstance(feature_column, pl.Series):
+                    casted_feature = feature_column.cast(
+                        offline_dtype_mapping[offline_type]
+                    )
+                else:
+                    casted_feature = feature_column.astype(
+                        offline_dtype_mapping[offline_type]
+                    )
                 return casted_feature
             else:
                 return feature_column  # handle gracefully, just return the column as-is

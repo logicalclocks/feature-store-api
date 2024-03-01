@@ -3053,7 +3053,7 @@ class TestPython:
         # Assert
         assert result == file
 
-    def test_apply_transformation_function(self, mocker):
+    def test_apply_transformation_function_pandas(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
 
@@ -3084,6 +3084,48 @@ class TestPython:
         )
 
         df = pd.DataFrame(data={"tf_name": [1, 2]})
+
+        # Act
+        result = python_engine._apply_transformation_function(
+            transformation_functions=td.transformation_functions, dataset=df
+        )
+
+        # Assert
+        assert len(result["tf_name"]) == 2
+        assert result["tf_name"][0] == 2
+        assert result["tf_name"][1] == 3
+
+    def test_apply_transformation_function_polars(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+
+        python_engine = python.Engine()
+
+        def plus_one(a):
+            return a + 1
+
+        tf = transformation_function.TransformationFunction(
+            99,
+            transformation_fn=plus_one,
+            builtin_source_code="",
+            output_type="int",
+        )
+
+        transformation_fn_dict = dict()
+
+        transformation_fn_dict["tf_name"] = tf
+
+        td = training_dataset.TrainingDataset(
+            name="test",
+            version=1,
+            data_format="CSV",
+            featurestore_id=99,
+            splits={},
+            id=10,
+            transformation_functions=transformation_fn_dict,
+        )
+
+        df = pl.DataFrame(data={"tf_name": [1, 2]})
 
         # Act
         result = python_engine._apply_transformation_function(
