@@ -14,10 +14,11 @@
 #   limitations under the License.
 #
 from typing import Optional, Any, Union, Dict, List
-from datetime import datetime
+from datetime import datetime, timezone
 
 from hsfs.core import online_store_rest_client_api
 from hsfs import util
+import hsfs
 
 import logging
 import json
@@ -30,10 +31,41 @@ class OnlineStoreRestClientEngine:
     RETURN_TYPE_RESPONSE_JSON = "response_json"  # as a python dict
     SQL_TIMESTAMP_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-    def __init__(self):
+    def __init__(
+        self,
+        features: List["hsfs.training_dataset_feature.TrainingDatasetFeature"],
+        skip_fg_ids: List[int],
+        serving_keys: List["hsfs.serving_key.ServingKey"],
+    ) -> "OnlineStoreRestClientEngine":
+        """Initialize the RonDB Rest Server Feature Store API client.
+
+        # Arguments:
+            features: A list of features to be used for the feature vector conversion.
+            skip_fg_ids: A list of feature ids to skip when inferring feature vector schema.
+                These ids are linked to features which are part of a Feature Group with embeddings and
+                therefore stored in the embedding online store (see vector_db_client).
+                The name is kept for consistency with vector_server but should be updated to reflect that
+                it is the feature id that is being skipped, not Feature Group (fg).
+            serving_keys: A list of serving keys metadata. Used to allow not providing prefix for the serving keys.
+        """
         self._online_store_rest_client_api = (
             online_store_rest_client_api.OnlineStoreRestClientApi()
         )
+        self._features = features
+        self._ordered_feature_names_and_dtypes = [
+            (feat.name, feat.type)
+            for feat in features
+            if not (
+                feat.label
+                or feat.inference_helper_column
+                or feat.training_helper_column
+                or feat.index in skip_fg_ids
+            )
+        ]
+        self._serving_keys = {sk.feature_name: sk for sk in serving_keys}
+        self._serving_keys_with_prefix = {
+            (sk.prefix + sk.feature_name): sk for sk in serving_keys
+        }
 
     def _build_base_payload(
         self,
@@ -41,7 +73,6 @@ class OnlineStoreRestClientEngine:
         feature_view_name: str,
         feature_view_version: int,
         metadata_options: Optional[Dict[str, bool]] = None,
-        return_type: str = RETURN_TYPE_FEATURE_VALUE_DICT,
     ) -> Dict[str, Union[str, Dict[str, bool]]]:
         """Build the base payload for the RonDB REST Server Feature Store API.
 
@@ -65,38 +96,53 @@ class OnlineStoreRestClientEngine:
         Returns:
             The payload to send to the RonDB REST Server Feature Store API.
         """
-        return {
+        base_payload = {
             "featureStoreName": util.strip_feature_store_suffix(feature_store_name),
             "featureViewName": feature_view_name,
             "featureViewVersion": feature_view_version,
-            "metadataOptions": {
-                "featureName": True
-                if (
-                    metadata_options is None
-                    or return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT
-                )
-                else metadata_options.get("featureName", True),
-                "featureType": True
-                if (
-                    metadata_options is None
-                    or return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT
-                )
-                else metadata_options.get("featureType", True),
-            },
         }
+
+        if metadata_options is None:
+            return base_payload
+        else:
+            base_payload["metadataOptions"] = (
+                {
+                    "featureName": metadata_options.get("featureName", False),
+                    "featureType": metadata_options.get("featureType", False),
+                },
+            )
+            return base_payload
+
+    def check_entry_for_serving_keys(self, entry: Dict[str, Any]) -> Dict[str, Any]:
+        """Check if the entry contains serving keys and add the prefix if necessary.
+
+        # Arguments:
+            entry: A dictionary with the feature names as keys and the primary key as values.
+
+        # Returns:
+            A dictionary with the feature names as keys and the primary key as values.
+        """
+        new_entry = {}
+        if self._serving_keys:
+            for key, value in entry.items():
+                if key in self._serving_keys:
+                    new_entry[self._serving_keys[key].prefix + key] = value
+                elif key in self._serving_keys_with_prefix:
+                    new_entry[key] = value
+        return new_entry
 
     def handle_passed_features_dict(
         self, passed_features: Optional[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Handle the passed features dictionary to convert event time to timestamp.
 
-        Args:
+        # Arguments:
             passed_features: A dictionary with the feature names as keys and the values to substitute for this specific vector.
 
-        Returns:
+        # Returns:
             A dictionary with the feature names as keys and the values to substitute for this specific vector.
         """
-        # TODO: Handle serialization of complex features or update incoming responses with complex passed features?
+        # TODO: Handle prefix for passed features?
         if passed_features is None:
             return {}
         return {
@@ -150,9 +196,8 @@ class OnlineStoreRestClientEngine:
             feature_view_name=feature_view_name,
             feature_view_version=feature_view_version,
             metadata_options=metadata_options,
-            return_type=return_type,
         )
-        payload["entries"] = entry
+        payload["entries"] = self.check_entry_for_serving_keys(entry)
         payload["passedFeatures"] = self.handle_passed_features_dict(
             passed_features=passed_features
         )
@@ -165,12 +210,8 @@ class OnlineStoreRestClientEngine:
         )
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
-            # If the status is "MISSING" the response will not contain metadata
-            if response["status"] == "MISSING":
-                entry.update(passed_features)
-                return entry
             return self.convert_rdrs_response_to_feature_value_dict(
-                row_feature_values=response["features"], metadatas=response["metadata"]
+                row_feature_values=response["features"],
             )
         else:
             return response
@@ -218,9 +259,10 @@ class OnlineStoreRestClientEngine:
             feature_view_name=feature_view_name,
             feature_view_version=feature_view_version,
             metadata_options=metadata_options,
-            return_type=return_type,
         )
-        payload["entries"] = entries
+        payload["entries"] = [
+            self.check_entry_for_serving_keys(entry) for entry in entries
+        ]
         if isinstance(passed_features, list) and (
             len(passed_features) == len(entries) or len(passed_features) == 0
         ):
@@ -262,14 +304,14 @@ class OnlineStoreRestClientEngine:
         """
         return [
             self.convert_rdrs_response_to_feature_value_dict(
-                row_feature_values=row, metadatas=batch_response["metadata"]
+                row_feature_values=row,
             )
-            for row, status in zip(batch_response["features"], batch_response["status"])
-            if status != "ERROR"
+            for row in batch_response["features"]
         ]
 
     def convert_rdrs_response_to_feature_value_dict(
-        self, row_feature_values: List[Any], metadatas: List[Dict[str, str]]
+        self,
+        row_feature_values: List[Any],
     ) -> Dict[str, Any]:
         """Convert the response from the RonDB Rest Server Feature Store API to a feature:value dict.
 
@@ -282,11 +324,34 @@ class OnlineStoreRestClientEngine:
             match the feature type in the metadata. Timestamp SQL types are converted to python datetime.
         """
         return {
-            metadata["featureName"]: (
+            name: (
                 vector_value
-                if (metadata["featureType"] != "timestamp" or vector_value is None)
-                else datetime.strptime(vector_value, self.SQL_TIMESTAMP_STRING_FORMAT)
+                if (dtype != "timestamp" or vector_value is None)
+                else self.handle_timestamp_based_on_dtype(vector_value)
             )
-            for vector_value, metadata in zip(row_feature_values, metadatas)
-            if metadata is not None
+            for vector_value, (name, dtype) in zip(
+                row_feature_values, self._ordered_feature_names_and_dtypes
+            )
         }
+
+    def handle_timestamp_based_on_dtype(
+        self, timestamp_value: Union[str, int]
+    ) -> datetime:
+        """Handle the timestamp based on the dtype which is returned.
+
+        Currently timestamp which are in the database are returned as string. Whereas
+        passed features which were given as datetime are returned as integer timestamp.
+
+        # Arguments:
+            timestamp_value: The timestamp value to be handled, either as int or str.
+        """
+        if isinstance(timestamp_value, int):
+            return datetime.fromtimestamp(
+                timestamp_value / 1000, tz=timezone.utc
+            ).replace(tzinfo=None)
+        elif isinstance(timestamp_value, str):
+            return datetime.strptime(timestamp_value, self.SQL_TIMESTAMP_STRING_FORMAT)
+        else:
+            raise ValueError(
+                f"Timestamp value {timestamp_value} was expected to be of type int or str."
+            )

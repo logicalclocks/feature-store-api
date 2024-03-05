@@ -135,7 +135,11 @@ class VectorServer:
         if self._init_online_store_rest_client is True:
             _logger.info("Initialising Vector Server Online REST client")
             self._online_store_rest_client_engine = (
-                online_store_rest_client_engine.OnlineStoreRestClientEngine()
+                online_store_rest_client_engine.OnlineStoreRestClientEngine(
+                    features=entity.features,
+                    skip_fg_ids=self._skip_fg_ids,
+                    serving_keys=self._serving_keys,
+                )
             )
             reset_online_rest_client = False
             online_store_rest_client_config = None
