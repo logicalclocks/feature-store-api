@@ -284,18 +284,23 @@ class OnlineStoreRestClientEngine:
 
     def convert_rdrs_response_to_feature_value_dict(
         self,
-        row_feature_values: List[Any],
+        row_feature_values: Union[List[Any], None],
     ) -> Dict[str, Any]:
         """Convert the response from the RonDB Rest Server Feature Store API to a feature:value dict.
 
+        When RonDB Server encounter an error it may send a null value for the feature vector. This function
+        will handle this case and return a dictionary with None values for all feature names.
+
         # Arguments:
             row_feature_values: A list of the feature values.
-            metadatas: A list of dictionaries with metadata for each feature. The order should match the order of the features.
 
         # Returns:
             A dictionary with the feature names as keys and the feature values as values. Values types are not guaranteed to
             match the feature type in the metadata. Timestamp SQL types are converted to python datetime.
         """
+        # An argument could be made that passed features are actually set in this vector.
+        if row_feature_values is None:
+            return {name: None for name, _ in self._ordered_feature_names_and_dtypes}
         return {
             name: (
                 vector_value
@@ -318,9 +323,7 @@ class OnlineStoreRestClientEngine:
         # Arguments:
             timestamp_value: The timestamp value to be handled, either as int or str.
         """
-        if timestamp_value is None:
-            return None
-        elif isinstance(timestamp_value, int):
+        if isinstance(timestamp_value, int):
             return datetime.fromtimestamp(
                 timestamp_value / 1000, tz=timezone.utc
             ).replace(tzinfo=None)

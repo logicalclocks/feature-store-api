@@ -21,8 +21,18 @@
     ],
     "status": "COMPLETE"
   },
+  "get_single_vector_response_json_complete_no_metadata": {
+    "features": ["APPL", "2022-01-01 00:00:00", 21.3, 10],
+    "metadata": null,
+    "status": "COMPLETE"
+  },
   "get_single_vector_response_json_pk_value_no_match": {
     "features": ["APPL", null, null, null],
+    "metadata": null,
+    "status": "MISSING"
+  },
+  "get_single_vector_response_json_pk_value_no_match_with_passed_price": {
+    "features": ["APPL", null, 12.4, null],
     "metadata": null,
     "status": "MISSING"
   },
@@ -37,11 +47,7 @@
       {
         "price": 21.3
       }
-    ],
-    "metadataOptions": {
-      "featureName": true,
-      "featureType": true
-    }
+    ]
   },
   "get_batch_vector_payload": {
     "featureStoreName": "test_store",
@@ -62,11 +68,7 @@
       {
         "volume": 43
       }
-    ],
-    "metadataOptions": {
-      "featureName": true,
-      "featureType": true
-    }
+    ]
   },
   "get_batch_vector_response_json_complete": {
     "features": [
@@ -93,28 +95,17 @@
     ],
     "status": ["COMPLETE", "COMPLETE"]
   },
+  "get_batch_vector_response_json_complete_no_metadata": {
+    "features": [
+      ["APPL", "2022-01-01 00:00:00", 21.3, 10],
+      ["GOOG", "2022-01-01 00:00:00", 12.3, 43]
+    ],
+    "status": ["COMPLETE", "COMPLETE"]
+  },
   "get_batch_vector_response_json_partial_pk_value_no_match": {
     "features": [
       ["APPL", null, null, null],
       ["GOOG", "2022-01-01 00:00:00", 12.3, 43]
-    ],
-    "metadata": [
-      {
-        "featureName": "ticker",
-        "featureType": "string"
-      },
-      {
-        "featureName": "when",
-        "featureType": "timestamp"
-      },
-      {
-        "featureName": "price",
-        "featureType": "float"
-      },
-      {
-        "featureName": "volume",
-        "featureType": "bigint"
-      }
     ],
     "status": ["MISSING", "COMPLETE"]
   },
@@ -123,24 +114,6 @@
       ["APPL", "2022-01-01 00:00:00", 21.3, 10],
       null,
       ["GOOG", "2022-01-01 00:00:00", 12.3, 43]
-    ],
-    "metadata": [
-      {
-        "featureName": "ticker",
-        "featureType": "string"
-      },
-      {
-        "featureName": "when",
-        "featureType": "timestamp"
-      },
-      {
-        "featureName": "price",
-        "featureType": "float"
-      },
-      {
-        "featureName": "volume",
-        "featureType": "bigint"
-      }
     ],
     "status": ["COMPLETE", "ERROR", "COMPLETE"]
   },

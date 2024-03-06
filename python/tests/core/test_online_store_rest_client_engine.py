@@ -52,19 +52,48 @@ class TestOnlineRestClientEngine:
             for feat in features
         ]
 
-    @pytest.mark.parametrize(
-        "keys", [["featureName", "featureType"], ["featureType", "featureName"]]
-    )
-    def test_build_base_payload_response_json(
+    def test_build_base_payload_no_metadata_options(
         self,
-        keys,
         backend_fixtures,
-        training_dataset_features_online,
     ):
         # Arrange
         rest_client_engine = (
             online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                features=training_dataset_features_online,
+                features=[],
+                skip_fg_ids=[],
+            )
+        )
+        kwargs = {
+            "feature_store_name": "test_store_featurestore",
+            "feature_view_name": "test_feature_view",
+            "feature_view_version": 2,
+        }
+
+        # Act
+        payload = rest_client_engine._build_base_payload(**kwargs)
+
+        # Assert
+        for (key, value) in payload.items():
+            if key != "metadataOptions":
+                assert (
+                    backend_fixtures["rondb_server"]["get_single_vector_payload"][key]
+                    == value
+                )
+
+        assert ("metadataOptions" in payload.keys()) is False
+
+    @pytest.mark.parametrize(
+        "keys", [["featureName", "featureType"], ["featureType", "featureName"]]
+    )
+    def test_build_base_payload_with_metadata_options(
+        self,
+        keys,
+        backend_fixtures,
+    ):
+        # Arrange
+        rest_client_engine = (
+            online_store_rest_client_engine.OnlineStoreRestClientEngine(
+                features=[],
                 skip_fg_ids=[],
             )
         )
@@ -86,47 +115,18 @@ class TestOnlineRestClientEngine:
                     == value
                 )
 
-        print(payload)
         assert payload["metadataOptions"][keys[1]] is False
         assert payload["metadataOptions"][keys[0]] is True
 
     @pytest.mark.parametrize(
-        "metadata_options", [{"featureType": False, "featureName": False}, {}]
+        "fixture_key",
+        [
+            "get_single_vector_response_json_complete",
+            "get_single_vector_response_json_complete_no_metadata",
+        ],
     )
-    def test_build_base_payload_feature_vector(
-        self, metadata_options, backend_fixtures, training_dataset_features_online
-    ):
-        # Arrange
-        rest_client_engine = (
-            online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                features=training_dataset_features_online,
-                skip_fg_ids=[],
-            )
-        )
-        kwargs = {
-            "feature_store_name": "test_store_featurestore",
-            "feature_view_name": "test_feature_view",
-            "feature_view_version": 2,
-        }
-
-        # Act
-        payload = rest_client_engine._build_base_payload(
-            **kwargs, metadata_options=metadata_options
-        )
-
-        # Assert
-        for (key, value) in payload.items():
-            if key != "metadataOptions":
-                assert (
-                    backend_fixtures["rondb_server"]["get_single_vector_payload"][key]
-                    == value
-                )
-        # enforce featureType/featureName to be true if return type is feature vector to enable conversion
-        assert payload["metadataOptions"]["featureType"] is True
-        assert payload["metadataOptions"]["featureName"] is True
-
     def test_convert_rdrs_response_to_feature_vector_dict_single_complete_response(
-        self, backend_fixtures, training_dataset_features_ticker
+        self, backend_fixtures, training_dataset_features_ticker, fixture_key
     ):
         # Arrange
         rest_client_engine = (
@@ -135,9 +135,7 @@ class TestOnlineRestClientEngine:
                 skip_fg_ids=[],
             )
         )
-        response = backend_fixtures["rondb_server"][
-            "get_single_vector_response_json_complete"
-        ]
+        response = backend_fixtures["rondb_server"][fixture_key]
         reference_feature_vector = {
             "ticker": "APPL",
             "when": datetime.strptime(
@@ -157,18 +155,28 @@ class TestOnlineRestClientEngine:
         # Assert
         assert feature_vector_dict == reference_feature_vector
 
-    @pytest.mark.parametrize("passed_features", [{"price": 12.4}, {}])
+    @pytest.mark.parametrize(
+        "passed_features, fixture_key",
+        [
+            (
+                {"price": 12.4},
+                "get_single_vector_response_json_pk_value_no_match_with_passed_price",
+            ),
+            ({}, "get_single_vector_response_json_pk_value_no_match"),
+        ],
+    )
     def test_get_single_raw_feature_vector_pk_value_no_match(
         self,
         mocker,
         passed_features,
+        fixture_key,
         backend_fixtures,
-        training_dataset_features_online,
+        training_dataset_features_ticker,
     ):
         # Arrange
         rest_client_engine = (
             online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                features=training_dataset_features_online,
+                features=training_dataset_features_ticker,
                 skip_fg_ids=[],
             )
         )
@@ -177,11 +185,10 @@ class TestOnlineRestClientEngine:
 
         mock_online_rest_api = mocker.patch(
             "hsfs.core.online_store_rest_client_api.OnlineStoreRestClientApi.get_single_raw_feature_vector",
-            return_value=backend_fixtures["rondb_server"][
-                "get_single_vector_response_json_pk_value_no_match"
-            ],
+            return_value=backend_fixtures["rondb_server"][fixture_key],
         )
         reference_vector = payload["entry"]
+        reference_vector.update({"when": None, "price": None, "volume": None})
         reference_vector.update(payload["passed_features"])
 
         # Act
@@ -192,6 +199,8 @@ class TestOnlineRestClientEngine:
 
         # Assert
         # Check that the response was not converted to a feature vector if return_type is response json
+        print("resp :", response_json)
+        print("ref :", reference_vector)
         assert response_json == reference_vector
         assert mock_online_rest_api.called_once_with(payload=payload)
 
@@ -271,8 +280,15 @@ class TestOnlineRestClientEngine:
         )
         assert mock_online_rest_api.called_once_with(payload=payload)
 
+    @pytest.mark.parametrize(
+        "fixture_key",
+        [
+            "get_batch_vector_response_json_complete",
+            "get_batch_vector_response_json_complete_no_metadata",
+        ],
+    )
     def test_get_batch_raw_feature_vectors_as_dict(
-        self, mocker, backend_fixtures, training_dataset_features_ticker
+        self, mocker, backend_fixtures, fixture_key, training_dataset_features_ticker
     ):
         # Arrange
         rest_client_engine = (
@@ -284,9 +300,7 @@ class TestOnlineRestClientEngine:
         payload = backend_fixtures["rondb_server"]["get_batch_vector_payload"].copy()
         mock_online_rest_api = mocker.patch(
             RONDB_REST_API_GET_BATCH_RAW_FEATURE_VECTORS,
-            return_value=backend_fixtures["rondb_server"][
-                "get_batch_vector_response_json_complete"
-            ],
+            return_value=backend_fixtures["rondb_server"][fixture_key],
         )
 
         reference_batch_vectors = [
@@ -392,6 +406,12 @@ class TestOnlineRestClientEngine:
                 ),
                 "price": 21.3,
                 "volume": 10,
+            },
+            {
+                "ticker": None,
+                "when": None,
+                "price": None,
+                "volume": None,
             },
             {
                 "ticker": "GOOG",
