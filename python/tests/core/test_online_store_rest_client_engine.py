@@ -25,21 +25,31 @@ RONDB_REST_API_GET_BATCH_RAW_FEATURE_VECTORS = "hsfs.core.online_store_rest_clie
 
 class TestOnlineRestClientEngine:
     @pytest.fixture()
-    def training_dataset_features_online(self, backend_fixtures):
+    def training_dataset_features_online(self, backend_fixtures, mocker):
+        feature_group = backend_fixtures["feature_group"]["get"]["response"]
+        features = []
+        for feat in backend_fixtures["training_dataset_feature"][
+            "get_fraud_online_training_dataset_features"
+        ]["response"]:
+            feat["featuregroup"] = feature_group
+            features.append(feat)
         return [
             training_dataset_feature.TrainingDatasetFeature.from_response_json(feat)
-            for feat in backend_fixtures["training_dataset_feature"][
-                "get_fraud_online_training_dataset_features"
-            ]["response"]
+            for feat in features
         ]
 
     @pytest.fixture()
-    def training_dataset_features_ticker(self, backend_fixtures):
+    def training_dataset_features_ticker(self, backend_fixtures, mocker):
+        feature_group = backend_fixtures["feature_group"]["get"]["response"]
+        features = []
+        for feat in backend_fixtures["training_dataset_feature"][
+            "get_ticker_training_dataset_features"
+        ]["response"]:
+            feat["featuregroup"] = feature_group
+            features.append(feat)
         return [
             training_dataset_feature.TrainingDatasetFeature.from_response_json(feat)
-            for feat in backend_fixtures["training_dataset_feature"][
-                "get_ticker_training_dataset_features"
-            ]["response"]
+            for feat in features
         ]
 
     @pytest.mark.parametrize(
@@ -50,10 +60,7 @@ class TestOnlineRestClientEngine:
         keys,
         backend_fixtures,
         training_dataset_features_online,
-        training_dataset_features_ticker,
     ):
-        print(training_dataset_features_online)
-        print(training_dataset_features_ticker)
         # Arrange
         rest_client_engine = (
             online_store_rest_client_engine.OnlineStoreRestClientEngine(
@@ -68,7 +75,7 @@ class TestOnlineRestClientEngine:
         }
 
         # Act
-        kwargs["metadata_options"] = {keys[0]: False}
+        kwargs["metadata_options"] = {keys[0]: True}
         payload = rest_client_engine._build_base_payload(**kwargs)
 
         # Assert
@@ -79,10 +86,9 @@ class TestOnlineRestClientEngine:
                     == value
                 )
 
-        # featureName/featureType is missing, insert key with default value True
-        assert payload["metadataOptions"][keys[1]] is True
-        # does not enforce featureType/featureName to be true if return type is response json
-        assert payload["metadataOptions"][keys[0]] is False
+        print(payload)
+        assert payload["metadataOptions"][keys[1]] is False
+        assert payload["metadataOptions"][keys[0]] is True
 
     @pytest.mark.parametrize(
         "metadata_options", [{"featureType": False, "featureName": False}, {}]

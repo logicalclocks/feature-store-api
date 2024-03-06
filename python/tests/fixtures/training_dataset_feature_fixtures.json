@@ -87,6 +87,7 @@
   "get_fraud_online_training_dataset_features": {
     "response": [
       {
+        "id": 15,
         "featureGroupFeatureName": "datetime",
         "index": 0,
         "inferenceHelperColumn": false,
@@ -97,6 +98,7 @@
         "type": "timestamp"
       },
       {
+        "id": 15,
         "featureGroupFeatureName": "cc_num",
         "index": 1,
         "inferenceHelperColumn": false,
@@ -107,6 +109,7 @@
         "type": "bigint"
       },
       {
+        "id": 15,
         "featureGroupFeatureName": "amount",
         "index": 2,
         "inferenceHelperColumn": false,
@@ -117,6 +120,7 @@
         "type": "double"
       },
       {
+        "id": 15,
         "featureGroupFeatureName": "country",
         "index": 3,
         "inferenceHelperColumn": false,
@@ -127,6 +131,7 @@
         "type": "string"
       },
       {
+        "id": 15,
         "featureGroupFeatureName": "fraud_label",
         "index": 4,
         "inferenceHelperColumn": false,
@@ -137,6 +142,7 @@
         "type": "bigint"
       },
       {
+        "id": 15,
         "featureGroupFeatureName": "loc_delta_t_plus_1",
         "index": 5,
         "inferenceHelperColumn": false,
@@ -147,6 +153,7 @@
         "type": "double"
       },
       {
+        "id": 15,
         "featureGroupFeatureName": "loc_delta_t_minus_1",
         "index": 6,
         "inferenceHelperColumn": true,
@@ -157,6 +164,7 @@
         "type": "double"
       },
       {
+        "id": 15,
         "featureGroupFeatureName": "time_delta_t_minus_1",
         "index": 7,
         "inferenceHelperColumn": false,
@@ -167,6 +175,7 @@
         "type": "double"
       },
       {
+        "id": 15,
         "featureGroupFeatureName": "gender",
         "index": 8,
         "inferenceHelperColumn": false,
@@ -181,6 +190,7 @@
   "get_ticker_training_dataset_features": {
     "response": [
       {
+        "id": 15,
         "featureGroupFeatureName": "ticker",
         "index": 0,
         "inferenceHelperColumn": false,
@@ -191,6 +201,7 @@
         "type": "string"
       },
       {
+        "id": 15,
         "featureGroupFeatureName": "when",
         "index": 1,
         "inferenceHelperColumn": false,
@@ -201,6 +212,7 @@
         "type": "timestamp"
       },
       {
+        "id": 15,
         "featureGroupFeatureName": "price",
         "index": 2,
         "inferenceHelperColumn": false,
@@ -211,6 +223,7 @@
         "type": "double"
       },
       {
+        "id": 15,
         "featureGroupFeatureName": "volume",
         "index": 3,
         "inferenceHelperColumn": false,

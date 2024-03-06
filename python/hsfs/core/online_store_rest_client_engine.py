@@ -100,12 +100,10 @@ class OnlineStoreRestClientEngine:
         if metadata_options is None:
             return base_payload
         else:
-            base_payload["metadataOptions"] = (
-                {
-                    "featureName": metadata_options.get("featureName", False),
-                    "featureType": metadata_options.get("featureType", False),
-                },
-            )
+            base_payload["metadataOptions"] = {
+                "featureName": metadata_options.get("featureName", False),
+                "featureType": metadata_options.get("featureType", False),
+            }
             return base_payload
 
     def handle_passed_features_dict(
