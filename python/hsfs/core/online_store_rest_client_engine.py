@@ -105,12 +105,10 @@ class OnlineStoreRestClientEngine:
         if metadata_options is None:
             return base_payload
         else:
-            base_payload["metadataOptions"] = (
-                {
-                    "featureName": metadata_options.get("featureName", False),
-                    "featureType": metadata_options.get("featureType", False),
-                },
-            )
+            base_payload["metadataOptions"] = {
+                "featureName": metadata_options.get("featureName", False),
+                "featureType": metadata_options.get("featureType", False),
+            }
             return base_payload
 
     def check_entry_for_serving_keys(self, entry: Dict[str, Any]) -> Dict[str, Any]:
