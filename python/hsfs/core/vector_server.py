@@ -138,7 +138,6 @@ class VectorServer:
                 online_store_rest_client_engine.OnlineStoreRestClientEngine(
                     features=entity.features,
                     skip_fg_ids=self._skip_fg_ids,
-                    serving_keys=self._serving_keys,
                 )
             )
             reset_online_rest_client = False

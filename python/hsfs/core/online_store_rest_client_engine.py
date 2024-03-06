@@ -35,7 +35,6 @@ class OnlineStoreRestClientEngine:
         self,
         features: List["hsfs.training_dataset_feature.TrainingDatasetFeature"],
         skip_fg_ids: List[int],
-        serving_keys: List["hsfs.serving_key.ServingKey"],
     ) -> "OnlineStoreRestClientEngine":
         """Initialize the RonDB Rest Server Feature Store API client.
 
@@ -46,12 +45,12 @@ class OnlineStoreRestClientEngine:
                 therefore stored in the embedding online store (see vector_db_client).
                 The name is kept for consistency with vector_server but should be updated to reflect that
                 it is the feature id that is being skipped, not Feature Group (fg).
-            serving_keys: A list of serving keys metadata. Used to allow not providing prefix for the serving keys.
         """
         self._online_store_rest_client_api = (
             online_store_rest_client_api.OnlineStoreRestClientApi()
         )
         self._features = features
+        self._skip_fg_ids = skip_fg_ids
         self._ordered_feature_names_and_dtypes = [
             (feat.name, feat.type)
             for feat in features
@@ -62,10 +61,6 @@ class OnlineStoreRestClientEngine:
                 or feat.index in skip_fg_ids
             )
         ]
-        self._serving_keys = {sk.feature_name: sk for sk in serving_keys}
-        self._serving_keys_with_prefix = {
-            (sk.prefix + sk.feature_name): sk for sk in serving_keys
-        }
 
     def _build_base_payload(
         self,
@@ -112,24 +107,6 @@ class OnlineStoreRestClientEngine:
                 },
             )
             return base_payload
-
-    def check_entry_for_serving_keys(self, entry: Dict[str, Any]) -> Dict[str, Any]:
-        """Check if the entry contains serving keys and add the prefix if necessary.
-
-        # Arguments:
-            entry: A dictionary with the feature names as keys and the primary key as values.
-
-        # Returns:
-            A dictionary with the feature names as keys and the primary key as values.
-        """
-        new_entry = {}
-        if self._serving_keys:
-            for key, value in entry.items():
-                if key in self._serving_keys:
-                    new_entry[self._serving_keys[key].prefix + key] = value
-                elif key in self._serving_keys_with_prefix:
-                    new_entry[key] = value
-        return new_entry
 
     def handle_passed_features_dict(
         self, passed_features: Optional[Dict[str, Any]]
@@ -197,7 +174,7 @@ class OnlineStoreRestClientEngine:
             feature_view_version=feature_view_version,
             metadata_options=metadata_options,
         )
-        payload["entries"] = self.check_entry_for_serving_keys(entry)
+        payload["entries"] = entry
         payload["passedFeatures"] = self.handle_passed_features_dict(
             passed_features=passed_features
         )
@@ -260,9 +237,7 @@ class OnlineStoreRestClientEngine:
             feature_view_version=feature_view_version,
             metadata_options=metadata_options,
         )
-        payload["entries"] = [
-            self.check_entry_for_serving_keys(entry) for entry in entries
-        ]
+        payload["entries"] = entries
         if isinstance(passed_features, list) and (
             len(passed_features) == len(entries) or len(passed_features) == 0
         ):
@@ -336,7 +311,7 @@ class OnlineStoreRestClientEngine:
 
     def handle_timestamp_based_on_dtype(
         self, timestamp_value: Union[str, int]
-    ) -> datetime:
+    ) -> Optional[datetime]:
         """Handle the timestamp based on the dtype which is returned.
 
         Currently timestamp which are in the database are returned as string. Whereas
@@ -345,7 +320,9 @@ class OnlineStoreRestClientEngine:
         # Arguments:
             timestamp_value: The timestamp value to be handled, either as int or str.
         """
-        if isinstance(timestamp_value, int):
+        if timestamp_value is None:
+            return None
+        elif isinstance(timestamp_value, int):
             return datetime.fromtimestamp(
                 timestamp_value / 1000, tz=timezone.utc
             ).replace(tzinfo=None)
