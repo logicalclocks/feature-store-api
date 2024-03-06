@@ -336,7 +336,7 @@ class OnlineStoreRestClientEngine:
 
     def handle_timestamp_based_on_dtype(
         self, timestamp_value: Union[str, int]
-    ) -> datetime:
+    ) -> Optional[datetime]:
         """Handle the timestamp based on the dtype which is returned.
 
         Currently timestamp which are in the database are returned as string. Whereas
@@ -345,7 +345,9 @@ class OnlineStoreRestClientEngine:
         # Arguments:
             timestamp_value: The timestamp value to be handled, either as int or str.
         """
-        if isinstance(timestamp_value, int):
+        if timestamp_value is None:
+            return None
+        elif isinstance(timestamp_value, int):
             return datetime.fromtimestamp(
                 timestamp_value / 1000, tz=timezone.utc
             ).replace(tzinfo=None)
