@@ -127,7 +127,7 @@ public class HudiEngine {
   protected static final String PROJECT_ID = "projectId";
   protected static final String FEATURE_STORE_NAME = "featureStoreName";
   protected static final String SUBJECT_ID = "subjectId";
-  protected static final String FEATURE_GROUP_ID = "featureGroupID";
+  protected static final String FEATURE_GROUP_ID = "featureGroupId";
   protected static final String FEATURE_GROUP_NAME = "featureGroupName";
   protected static final String FEATURE_GROUP_VERSION = "featureGroupVersion";
   protected static final String FUNCTION_TYPE = "functionType";
