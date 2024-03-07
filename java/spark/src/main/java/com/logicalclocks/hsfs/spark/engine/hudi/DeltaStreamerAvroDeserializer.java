@@ -68,7 +68,7 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
   @SneakyThrows
   @Override
   public void configure(Map<String, ?> configs, boolean isKey) {
-    this.subjectId = (String) configs.get(HudiEngine.SUBJECT_ID);
+    this.subjectId = (String) configs.get(HudiEngine.SCHEMA_ID);
     GenericData.get().addLogicalTypeConversion(new Conversions.DecimalConversion());
     String featureGroupSchema = (String) configs.get(HudiEngine.FEATURE_GROUP_SCHEMA);
     String encodedFeatureGroupSchema = configs.get(HudiEngine.FEATURE_GROUP_ENCODED_SCHEMA).toString()
