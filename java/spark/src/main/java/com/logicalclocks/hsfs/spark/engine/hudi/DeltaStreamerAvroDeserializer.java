@@ -106,7 +106,7 @@ public class DeltaStreamerAvroDeserializer implements Deserializer<GenericRecord
   public GenericRecord deserialize(String topic, Headers headers, byte[] data) {
     if (subjectId.equals(getHeader(headers, "subjectId"))
         && featureGroupId.equals(getHeader(headers, "featureGroupId"))) {
-          return deserialize(topic, data);
+      return deserialize(topic, data);
     }
     return null; // this job doesn't care about this entry, no point in deserializing
   }
