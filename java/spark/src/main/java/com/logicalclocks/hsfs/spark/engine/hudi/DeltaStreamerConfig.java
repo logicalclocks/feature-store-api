@@ -125,7 +125,8 @@ public class DeltaStreamerConfig implements Serializable {
             .build();
 
     // During Hudi upgrades we might need to bump this version. This version matches Hudi 0.12.x
-    if (metaClient.getTableConfig().getTableVersion() != HoodieTableVersion.FIVE) {
+    if (metaClient.getTableConfig().contains(HoodieTableConfig.VERSION)
+        && metaClient.getTableConfig().getTableVersion() != HoodieTableVersion.FIVE) {
       // We need to update the hoodie.datasource.write.operation option in the metadata table as newer
       // HoodieDeltaStreamer versions fail if the value doesn't match with the operation (upsert).
       metaClient.getTableConfig().setValue(HudiEngine.HUDI_TABLE_OPERATION, WriteOperationType.UPSERT.value());
