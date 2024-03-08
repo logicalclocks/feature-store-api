@@ -17,7 +17,6 @@
 from dataclasses import dataclass
 from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException
-from typing import Type
 import json
 from typing import Optional, List
 import humps
