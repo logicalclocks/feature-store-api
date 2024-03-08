@@ -95,6 +95,9 @@ class OnlineStoreRestClientEngine:
             "featureStoreName": util.strip_feature_store_suffix(feature_store_name),
             "featureViewName": feature_view_name,
             "featureViewVersion": feature_view_version,
+            "options": {
+                "validatePassedFeatures": False,
+            },
         }
 
         if metadata_options is None:
