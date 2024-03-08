@@ -2153,6 +2153,10 @@ class FeatureGroup(FeatureGroupBase):
         """
         Finds the nearest neighbors for a given embedding in the vector database.
 
+        If `filter` or `min_score` is specified, or if embedding feature is stored in default project index,
+        the number of results returned may be less than k. Try using a large value of k and extract the top k
+        items from the results if needed.
+
         # Arguments
             embedding: The target embedding for which neighbors are to be found.
             col: The column name used to compute similarity score. Required only if there
@@ -3615,6 +3619,10 @@ class ExternalFeatureGroup(FeatureGroupBase):
     ) -> List[Tuple[float, List[Any]]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
+
+        If `filter` or `min_score` is specified, or if embedding feature is stored in default project index,
+        the number of results returned may be less than k. Try using a large value of k and extract the top k
+        items from the results if needed.
 
         # Arguments
             embedding: The target embedding for which neighbors are to be found.
