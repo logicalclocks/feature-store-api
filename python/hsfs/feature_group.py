@@ -3051,7 +3051,7 @@ class FeatureGroup(FeatureGroupBase):
             _ = json_decamelized.pop("type", None)
             json_decamelized.pop("validation_type", None)
             if "embedding_index" in json_decamelized:
-                json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+                json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
                     json_decamelized["embedding_index"]
                 )
             return cls(**json_decamelized)
@@ -3061,7 +3061,7 @@ class FeatureGroup(FeatureGroupBase):
             _ = fg.pop("type", None)
             fg.pop("validation_type", None)
             if "embedding_index" in fg:
-                fg["embedding_index"] = EmbeddingIndex.from_json_response(
+                fg["embedding_index"] = EmbeddingIndex.from_response_json(
                     fg["embedding_index"]
                 )
         return [cls(**fg) for fg in json_decamelized]
@@ -3071,7 +3071,7 @@ class FeatureGroup(FeatureGroupBase):
         json_decamelized["stream"] = json_decamelized["type"] == "streamFeatureGroupDTO"
         _ = json_decamelized.pop("type")
         if "embedding_index" in json_decamelized:
-            json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+            json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
                 json_decamelized["embedding_index"]
             )
         self.__init__(**json_decamelized)
@@ -3673,14 +3673,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
         if isinstance(json_decamelized, dict):
             _ = json_decamelized.pop("type", None)
             if "embedding_index" in json_decamelized:
-                json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+                json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
                     json_decamelized["embedding_index"]
                 )
             return cls(**json_decamelized)
         for fg in json_decamelized:
             _ = fg.pop("type", None)
             if "embedding_index" in fg:
-                fg["embedding_index"] = EmbeddingIndex.from_json_response(
+                fg["embedding_index"] = EmbeddingIndex.from_response_json(
                     fg["embedding_index"]
                 )
         return [cls(**fg) for fg in json_decamelized]
@@ -3690,7 +3690,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         if "type" in json_decamelized:
             _ = json_decamelized.pop("type")
         if "embedding_index" in json_decamelized:
-            json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+            json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
                 json_decamelized["embedding_index"]
             )
         self.__init__(**json_decamelized)

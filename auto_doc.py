@@ -59,12 +59,6 @@ PAGES = {
             "hsfs.feature_group.ExternalFeatureGroup"
         ),
     },
-    "api/embedding_index_api.md": {
-        "embedding_index": ["hsfs.embedding.EmbeddingIndex"],
-        "embedding_index_methods": keras_autodoc.get_methods(
-            "hsfs.embedding.EmbeddingIndex"
-        ),
-    },
     "api/spine_group_api.md": {
         "fg": ["hsfs.feature_group.SpineGroup"],
         "fg_create": ["hsfs.feature_store.FeatureStore.get_or_create_spine_group"],
@@ -330,6 +324,30 @@ PAGES = {
         "feature_monitoring_window_config_properties": keras_autodoc.get_properties(
             "hsfs.core.monitoring_window_config.MonitoringWindowConfig"
         ),
+    },
+    "api/embedding_index_api.md": {
+        "embedding_index": [
+            "hsfs.embedding.EmbeddingIndex"
+        ],
+        "embedding_index_properties": keras_autodoc.get_properties(
+            "hsfs.embedding.EmbeddingIndex"
+        ),
+        "embedding_index_methods": keras_autodoc.get_methods(
+            "hsfs.embedding.EmbeddingIndex", exclude=["from_response_json"]
+        ),
+    },
+    "api/embedding_feature_api.md": {
+        "embedding_feature": [
+            "hsfs.embedding.EmbeddingFeature"
+        ],
+        "embedding_feature_properties": keras_autodoc.get_properties(
+            "hsfs.embedding.EmbeddingFeature"
+        ),
+    },
+    "api/similarity_function_type_api.md": {
+        "similarity_function_type": [
+            "hsfs.embedding.SimilarityFunctionType"
+        ],
     },
 }
 
