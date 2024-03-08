@@ -36,6 +36,7 @@ class SimilarityFunctionType:
         COSINE (str): Represents cosine similarity function.
         DOT_PRODUCT (str): Represents dot product similarity function.
     """
+
     L2 = "l2_norm"
     COSINE = "cosine"
     DOT_PRODUCT = "dot_product"
@@ -46,6 +47,7 @@ class HsmlModel:
     """
     Data class storing the metadata of a hsml model
     """
+
     model_registry_id: int
     model_name: str
     model_version: int
@@ -124,9 +126,9 @@ class EmbeddingFeature:
         name: str = None,
         dimension: int = None,
         similarity_function_type: SimilarityFunctionType = SimilarityFunctionType.L2,
-        model = None,
-        feature_group = None,
-        embedding_index = None
+        model=None,
+        feature_group=None,
+        embedding_index=None,
     ):
         self._name = name
         self._dimension = dimension
@@ -181,7 +183,6 @@ class EmbeddingFeature:
     def embedding_index(self):
         """EmbeddingIndex: The index for managing embedding features."""
         return self._embedding_index
-
 
     def json(self):
         """Serialize the EmbeddingFeature object to a JSON string."""
