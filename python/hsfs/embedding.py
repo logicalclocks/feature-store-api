@@ -178,10 +178,28 @@ class EmbeddingFeature:
         """FeatureGroup: The feature group object that contains the embedding feature."""
         return self._feature_group
 
+    @feature_group.setter
+    def feature_group(self, feature_group):
+        """Set the feature group object that contains the embedding feature.
+
+        Args:
+            feature_group (FeatureGroup): The feature group object.
+        """
+        self._feature_group = feature_group
+
     @property
     def embedding_index(self):
         """EmbeddingIndex: The index for managing embedding features."""
         return self._embedding_index
+
+    @embedding_index.setter
+    def embedding_index(self, embedding_index):
+        """Set the index for managing embedding features.
+
+        Args:
+            embedding_index (EmbeddingIndex): The embedding index object.
+        """
+        self._embedding_index = embedding_index
 
     def json(self):
         """Serialize the EmbeddingFeature object to a JSON string."""
