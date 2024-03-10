@@ -2,8 +2,9 @@ import random
 
 from common.hopsworks_client import HopsworksClient
 from common.stop_watch import stopwatch
-from locust import User, task, constant, events
+from locust import HttpUser, User, task, constant, events
 from locust.runners import MasterRunner, LocalRunner
+from urllib3 import PoolManager
 
 
 @events.init.add_listener
@@ -26,7 +27,39 @@ def on_locust_quitting(environment, **kwargs):
         environment.hopsworks_client.close()
 
 
-class FeatureVectorLookup(User):
+class RESTFeatureVectorLookup(HttpUser):
+    wait_time = constant(0)
+    weight = 5
+    pool_manager = PoolManager(maxsize=10, block=True)
+
+    def __init__(self, environment):
+        super().__init__(environment)
+        self.env = environment
+        self.hopsworks_client = HopsworksClient(environment)
+        self.fv = self.hopsworks_client.get_or_create_fv()
+
+        with open(".api_key", "r") as f:
+            self.headers = {"X-API-KEY": f.read().strip()}
+
+    def on_stop(self):
+        print("Closing user")
+        self.hopsworks_client.close()
+
+    @task
+    def get_feature_vector(self):
+        data = {
+            "featureStoreName": self.hopsworks_client.hopsworks_config.get(
+                "project", "test"
+            ),
+            "featureViewName": self.fv.name,
+            "featureViewVersion": self.fv.version,
+            "entries": {"ip": random.randint(0, self.hopsworks_client.rows - 1)},
+            "metadataOptions": {"featureName": False, "featureType": False},
+        }
+        self.client.post("/0.1.0/feature_store", json=data, headers=self.headers)
+
+
+class MySQLFeatureVectorLookup(User):
     wait_time = constant(0)
     weight = 5
     # fixed_count = 1
@@ -54,7 +87,7 @@ class FeatureVectorLookup(User):
         self.fv.get_feature_vector(pk)
 
 
-class FeatureVectorBatchLookup(User):
+class MySQLFeatureVectorBatchLookup(User):
     wait_time = constant(0)
     weight = 1
     # fixed_count = 1
