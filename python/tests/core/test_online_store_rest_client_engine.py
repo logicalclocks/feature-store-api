@@ -13,19 +13,20 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import humps
-import pytest
 from datetime import datetime
 
-from hsfs.core import online_store_rest_client_engine
+import pytest
 from hsfs import training_dataset_feature
+from hsfs.core import online_store_rest_client_engine
+from hsfs.util import convert_event_time_to_timestamp
+
 
 RONDB_REST_API_GET_BATCH_RAW_FEATURE_VECTORS = "hsfs.core.online_store_rest_client_api.OnlineStoreRestClientApi.get_batch_raw_feature_vectors"
 
 
 class TestOnlineRestClientEngine:
     @pytest.fixture()
-    def training_dataset_features_online(self, backend_fixtures, mocker):
+    def training_dataset_features_online(self, backend_fixtures):
         feature_group = backend_fixtures["feature_group"]["get"]["response"]
         features = []
         for feat in backend_fixtures["training_dataset_feature"][
@@ -39,7 +40,7 @@ class TestOnlineRestClientEngine:
         ]
 
     @pytest.fixture()
-    def training_dataset_features_ticker(self, backend_fixtures, mocker):
+    def training_dataset_features_ticker(self, backend_fixtures):
         feature_group = backend_fixtures["feature_group"]["get"]["response"]
         features = []
         for feat in backend_fixtures["training_dataset_feature"][
@@ -52,28 +53,34 @@ class TestOnlineRestClientEngine:
             for feat in features
         ]
 
-    def test_build_base_payload_no_metadata_options(
-        self,
-        backend_fixtures,
-    ):
-        # Arrange
-        rest_client_engine = (
-            online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                features=[],
-                skip_fg_ids=[],
-            )
+    @pytest.fixture()
+    def rest_client_engine_base(self):
+        return online_store_rest_client_engine.OnlineStoreRestClientEngine(
+            feature_store_name="test_store_featurestore",
+            feature_view_name="test_feature_view",
+            feature_view_version=2,
+            features=[],
+            skip_fg_ids=[],
         )
-        kwargs = {
-            "feature_store_name": "test_store_featurestore",
-            "feature_view_name": "test_feature_view",
-            "feature_view_version": 2,
-        }
 
+    @pytest.fixture()
+    def rest_client_engine_ticker(self, training_dataset_features_ticker):
+        return online_store_rest_client_engine.OnlineStoreRestClientEngine(
+            feature_store_name="test_store_featurestore",
+            feature_view_name="test_feature_view",
+            feature_view_version=2,
+            features=training_dataset_features_ticker,
+            skip_fg_ids=[],
+        )
+
+    def test_build_base_payload_no_metadata_options(
+        self, rest_client_engine_base, backend_fixtures
+    ):
         # Act
-        payload = rest_client_engine._build_base_payload(**kwargs)
+        payload = rest_client_engine_base._build_base_payload()
 
         # Assert
-        for (key, value) in payload.items():
+        for key, value in payload.items():
             if key != "metadataOptions":
                 assert (
                     backend_fixtures["rondb_server"]["get_single_vector_payload"][key]
@@ -86,29 +93,15 @@ class TestOnlineRestClientEngine:
         "keys", [["featureName", "featureType"], ["featureType", "featureName"]]
     )
     def test_build_base_payload_with_metadata_options(
-        self,
-        keys,
-        backend_fixtures,
+        self, keys, rest_client_engine_base, backend_fixtures
     ):
-        # Arrange
-        rest_client_engine = (
-            online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                features=[],
-                skip_fg_ids=[],
-            )
-        )
-        kwargs = {
-            "feature_store_name": "test_store_featurestore",
-            "feature_view_name": "test_feature_view",
-            "feature_view_version": 2,
-        }
-
         # Act
-        kwargs["metadata_options"] = {keys[0]: True}
-        payload = rest_client_engine._build_base_payload(**kwargs)
+        payload = rest_client_engine_base._build_base_payload(
+            metadata_options={keys[0]: True, keys[1]: False}
+        )
 
         # Assert
-        for (key, value) in payload.items():
+        for key, value in payload.items():
             if key != "metadataOptions":
                 assert (
                     backend_fixtures["rondb_server"]["get_single_vector_payload"][key]
@@ -122,24 +115,28 @@ class TestOnlineRestClientEngine:
         "fixture_key",
         [
             "get_single_vector_response_json_complete",
+            "get_single_vector_response_json_complete_int_timestamp",
             "get_single_vector_response_json_complete_no_metadata",
         ],
     )
     def test_convert_rdrs_response_to_feature_vector_dict_single_complete_response(
-        self, backend_fixtures, training_dataset_features_ticker, fixture_key
+        self, backend_fixtures, rest_client_engine_ticker, fixture_key
     ):
         # Arrange
-        rest_client_engine = (
-            online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                features=training_dataset_features_ticker,
-                skip_fg_ids=[],
+        if "int_timestamp" in fixture_key:
+            response = backend_fixtures["rondb_server"][
+                fixture_key.replace("_int_timestamp", "")
+            ]
+            response["features"][1] = convert_event_time_to_timestamp(
+                "2022-01-01 00:00:00"
             )
-        )
-        response = backend_fixtures["rondb_server"][fixture_key]
+        else:
+            response = backend_fixtures["rondb_server"][fixture_key]
         reference_feature_vector = {
             "ticker": "APPL",
             "when": datetime.strptime(
-                "2022-01-01 00:00:00", rest_client_engine.SQL_TIMESTAMP_STRING_FORMAT
+                "2022-01-01 00:00:00",
+                rest_client_engine_ticker.SQL_TIMESTAMP_STRING_FORMAT,
             ),
             "price": 21.3,
             "volume": 10,
@@ -147,7 +144,7 @@ class TestOnlineRestClientEngine:
 
         # Act
         feature_vector_dict = (
-            rest_client_engine.convert_rdrs_response_to_feature_value_dict(
+            rest_client_engine_ticker.convert_rdrs_response_to_feature_value_dict(
                 row_feature_values=response["features"]
             )
         )
@@ -171,15 +168,9 @@ class TestOnlineRestClientEngine:
         passed_features,
         fixture_key,
         backend_fixtures,
-        training_dataset_features_ticker,
+        rest_client_engine_ticker,
     ):
         # Arrange
-        rest_client_engine = (
-            online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                features=training_dataset_features_ticker,
-                skip_fg_ids=[],
-            )
-        )
         payload = backend_fixtures["rondb_server"]["get_single_vector_payload"].copy()
         payload["passed_features"] = passed_features
 
@@ -189,11 +180,12 @@ class TestOnlineRestClientEngine:
         )
         reference_vector = payload["entry"]
         reference_vector.update({"when": None, "price": None, "volume": None})
-        reference_vector.update(payload["passed_features"])
+        reference_vector.update(passed_features)
 
         # Act
-        response_json = rest_client_engine.get_single_raw_feature_vector(
-            **humps.decamelize(payload),
+        response_json = rest_client_engine_ticker.get_single_raw_feature_vector(
+            entry=payload["entry"],
+            passed_features=passed_features,
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
         )
 
@@ -206,19 +198,9 @@ class TestOnlineRestClientEngine:
 
     @pytest.mark.parametrize("passed_features", [{"price": 12.4}, {}])
     def test_get_single_raw_feature_vector_response_json(
-        self,
-        mocker,
-        passed_features,
-        backend_fixtures,
-        training_dataset_features_ticker,
+        self, mocker, passed_features, backend_fixtures, rest_client_engine_ticker
     ):
         # Arrange
-        rest_client_engine = (
-            online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                features=training_dataset_features_ticker,
-                skip_fg_ids=[],
-            )
-        )
         payload = backend_fixtures["rondb_server"]["get_single_vector_payload"].copy()
         payload["passed_features"] = passed_features
 
@@ -228,10 +210,10 @@ class TestOnlineRestClientEngine:
                 "get_single_vector_response_json_complete"
             ],
         )
-
         # Act
-        response_json = rest_client_engine.get_single_raw_feature_vector(
-            **humps.decamelize(payload),
+        response_json = rest_client_engine_ticker.get_single_raw_feature_vector(
+            entry=payload["entry"],
+            passed_features=passed_features,
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_RESPONSE_JSON,
         )
 
@@ -246,15 +228,12 @@ class TestOnlineRestClientEngine:
         assert mock_online_rest_api.called_once_with(payload=payload)
 
     def test_get_batch_raw_feature_vectors_response_json(
-        self, mocker, backend_fixtures, training_dataset_features_ticker
+        self,
+        mocker,
+        backend_fixtures,
+        rest_client_engine_ticker: online_store_rest_client_engine.OnlineStoreRestClientEngine,
     ):
         # Arrange
-        rest_client_engine = (
-            online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                features=training_dataset_features_ticker,
-                skip_fg_ids=[],
-            )
-        )
         payload = backend_fixtures["rondb_server"]["get_batch_vector_payload"].copy()
 
         mock_online_rest_api = mocker.patch(
@@ -265,8 +244,8 @@ class TestOnlineRestClientEngine:
         )
 
         # Act
-        response_json = rest_client_engine.get_batch_raw_feature_vectors(
-            **humps.decamelize(payload),
+        response_json = rest_client_engine_ticker.get_batch_raw_feature_vectors(
+            entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_RESPONSE_JSON,
         )
 
@@ -288,15 +267,13 @@ class TestOnlineRestClientEngine:
         ],
     )
     def test_get_batch_raw_feature_vectors_as_dict(
-        self, mocker, backend_fixtures, fixture_key, training_dataset_features_ticker
+        self,
+        mocker,
+        backend_fixtures,
+        fixture_key,
+        rest_client_engine_ticker: online_store_rest_client_engine.OnlineStoreRestClientEngine,
     ):
         # Arrange
-        rest_client_engine = (
-            online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                features=training_dataset_features_ticker,
-                skip_fg_ids=[],
-            )
-        )
         payload = backend_fixtures["rondb_server"]["get_batch_vector_payload"].copy()
         mock_online_rest_api = mocker.patch(
             RONDB_REST_API_GET_BATCH_RAW_FEATURE_VECTORS,
@@ -308,7 +285,7 @@ class TestOnlineRestClientEngine:
                 "ticker": "APPL",
                 "when": datetime.strptime(
                     "2022-01-01 00:00:00",
-                    rest_client_engine.SQL_TIMESTAMP_STRING_FORMAT,
+                    rest_client_engine_ticker.SQL_TIMESTAMP_STRING_FORMAT,
                 ),
                 "price": 21.3,
                 "volume": 10,
@@ -317,7 +294,7 @@ class TestOnlineRestClientEngine:
                 "ticker": "GOOG",
                 "when": datetime.strptime(
                     "2022-01-01 00:00:00",
-                    rest_client_engine.SQL_TIMESTAMP_STRING_FORMAT,
+                    rest_client_engine_ticker.SQL_TIMESTAMP_STRING_FORMAT,
                 ),
                 "price": 12.3,
                 "volume": 43,
@@ -325,8 +302,8 @@ class TestOnlineRestClientEngine:
         ]
 
         # Act
-        feature_vector_dict = rest_client_engine.get_batch_raw_feature_vectors(
-            **humps.decamelize(payload),
+        feature_vector_dict = rest_client_engine_ticker.get_batch_raw_feature_vectors(
+            entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
         )
 
@@ -335,15 +312,12 @@ class TestOnlineRestClientEngine:
         assert mock_online_rest_api.called_once_with(payload=payload)
 
     def test_get_batch_raw_feature_partial_pk_missing_vectors_as_dict(
-        self, mocker, backend_fixtures, training_dataset_features_ticker
+        self,
+        mocker,
+        backend_fixtures,
+        rest_client_engine_ticker: online_store_rest_client_engine.OnlineStoreRestClientEngine,
     ):
         # Arrange
-        rest_client_engine = (
-            online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                features=training_dataset_features_ticker,
-                skip_fg_ids=[],
-            )
-        )
         payload = backend_fixtures["rondb_server"]["get_batch_vector_payload"].copy()
         mock_online_rest_api = mocker.patch(
             RONDB_REST_API_GET_BATCH_RAW_FEATURE_VECTORS,
@@ -363,7 +337,7 @@ class TestOnlineRestClientEngine:
                 "ticker": "GOOG",
                 "when": datetime.strptime(
                     "2022-01-01 00:00:00",
-                    rest_client_engine.SQL_TIMESTAMP_STRING_FORMAT,
+                    rest_client_engine_ticker.SQL_TIMESTAMP_STRING_FORMAT,
                 ),
                 "price": 12.3,
                 "volume": 43,
@@ -371,8 +345,8 @@ class TestOnlineRestClientEngine:
         ]
 
         # Act
-        feature_vector_dict = rest_client_engine.get_batch_raw_feature_vectors(
-            **humps.decamelize(payload),
+        feature_vector_dict = rest_client_engine_ticker.get_batch_raw_feature_vectors(
+            entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
         )
 
@@ -381,15 +355,9 @@ class TestOnlineRestClientEngine:
         assert mock_online_rest_api.called_once_with(payload=payload)
 
     def test_get_batch_raw_feature_partial_error(
-        self, mocker, backend_fixtures, training_dataset_features_ticker
+        self, mocker, backend_fixtures, rest_client_engine_ticker
     ):
         # Arrange
-        rest_client_engine = (
-            online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                features=training_dataset_features_ticker,
-                skip_fg_ids=[],
-            )
-        )
         payload = backend_fixtures["rondb_server"]["get_batch_vector_payload"].copy()
         mock_online_rest_api = mocker.patch(
             "hsfs.core.online_store_rest_client_api.OnlineStoreRestClientApi.get_batch_raw_feature_vectors",
@@ -402,7 +370,7 @@ class TestOnlineRestClientEngine:
                 "ticker": "APPL",
                 "when": datetime.strptime(
                     "2022-01-01 00:00:00",
-                    rest_client_engine.SQL_TIMESTAMP_STRING_FORMAT,
+                    rest_client_engine_ticker.SQL_TIMESTAMP_STRING_FORMAT,
                 ),
                 "price": 21.3,
                 "volume": 10,
@@ -417,7 +385,7 @@ class TestOnlineRestClientEngine:
                 "ticker": "GOOG",
                 "when": datetime.strptime(
                     "2022-01-01 00:00:00",
-                    rest_client_engine.SQL_TIMESTAMP_STRING_FORMAT,
+                    rest_client_engine_ticker.SQL_TIMESTAMP_STRING_FORMAT,
                 ),
                 "price": 12.3,
                 "volume": 43,
@@ -425,8 +393,8 @@ class TestOnlineRestClientEngine:
         ]
 
         # Act
-        batch_vectors = rest_client_engine.get_batch_raw_feature_vectors(
-            **humps.decamelize(payload),
+        batch_vectors = rest_client_engine_ticker.get_batch_raw_feature_vectors(
+            entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
         )
 

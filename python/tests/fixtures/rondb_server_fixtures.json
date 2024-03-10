@@ -43,11 +43,12 @@
     "entry": {
       "ticker": "APPL"
     },
-    "passedFeatures": [
-      {
-        "price": 21.3
-      }
-    ]
+    "passedFeatures": {
+      "price": 21.3
+    },
+    "options": {
+      "validatePassedFeatures": false
+    }
   },
   "get_batch_vector_payload": {
     "featureStoreName": "test_store",
@@ -68,7 +69,10 @@
       {
         "volume": 43
       }
-    ]
+    ],
+    "options": {
+      "validatePassedFeatures": false
+    }
   },
   "get_batch_vector_response_json_complete": {
     "features": [

@@ -1,18 +1,13 @@
 exclude: setup.py
 repos:
--   repo: https://github.com/psf/black
-    rev: 22.8.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.2
     hooks:
-    -   id: black
-        language_version: python3
--   repo: https://github.com/pycqa/flake8
-    rev: 3.9.2
-    hooks:
-      - id: flake8
-        language_version: python3
-        args: [--config=python/.flake8]
--   repo: https://github.com/pre-commit/pre-commit-hooks
+      - id: ruff
+        args: [--fix, --config=python/pyproject.yml]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.3.0
     hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: end-of-file-fixer

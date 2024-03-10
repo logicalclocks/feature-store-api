@@ -13,15 +13,14 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from typing import Optional, Any, Union, Dict, List
-from datetime import datetime, timezone
-
-from hsfs.core import online_store_rest_client_api
-from hsfs import util
-import hsfs
-
 import logging
-import json
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Union
+
+import hsfs
+from hsfs import util
+from hsfs.core import online_store_rest_client_api
+
 
 _logger = logging.getLogger(__name__)
 
@@ -33,24 +32,42 @@ class OnlineStoreRestClientEngine:
 
     def __init__(
         self,
+        feature_store_name: str,
+        feature_view_name: str,
+        feature_view_version: int,
         features: List["hsfs.training_dataset_feature.TrainingDatasetFeature"],
         skip_fg_ids: List[int],
-    ) -> "OnlineStoreRestClientEngine":
-        """Initialize the RonDB Rest Server Feature Store API client.
+    ):
+        """Initialize the Online Store Rest Client Engine. This class contains the logic to mediate
+        the interaction between the python client and the RonDB Rest Server Feature Store API.
 
         # Arguments:
-            features: A list of features to be used for the feature vector conversion.
+            feature_store_name: The name of the feature store in which the feature view is registered.
+            feature_view_name: The name of the feature view from which to retrieve the feature vector.
+            feature_view_version: The version of the feature view from which to retrieve the feature vector.
+            features: A list of features to be used for the feature vector conversion. Note that the features
+                must be ordered according to the feature vector schema.
             skip_fg_ids: A list of feature ids to skip when inferring feature vector schema.
                 These ids are linked to features which are part of a Feature Group with embeddings and
                 therefore stored in the embedding online store (see vector_db_client).
                 The name is kept for consistency with vector_server but should be updated to reflect that
                 it is the feature id that is being skipped, not Feature Group (fg).
         """
+        _logger.info(
+            f"Initializing Online Store Rest Client Engine for Feature View {feature_view_name}, version: {feature_view_version} in Feature Store {feature_store_name}."
+        )
         self._online_store_rest_client_api = (
             online_store_rest_client_api.OnlineStoreRestClientApi()
         )
+        self._feature_store_name = feature_store_name
+        self._feature_view_name = feature_view_name
+        self._feature_view_version = feature_view_version
         self._features = features
+        _logger.debug(f"Features: {features}")
         self._skip_fg_ids = skip_fg_ids
+        _logger.debug(
+            f"These indexes must be skip as they correspond to features of an embedded client: {skip_fg_ids}"
+        )
         self._ordered_feature_names_and_dtypes = [
             (feat.name, feat.type)
             for feat in features
@@ -61,82 +78,81 @@ class OnlineStoreRestClientEngine:
                 or feat.index in skip_fg_ids
             )
         ]
+        _logger.debug(
+            f"Ordered feature names and dtypes, skipping helper columns or features belonging to embedded Feature Groups: {self._ordered_feature_names_and_dtypes}"
+        )
 
     def _build_base_payload(
         self,
-        feature_store_name: str,
-        feature_view_name: str,
-        feature_view_version: int,
         metadata_options: Optional[Dict[str, bool]] = None,
+        validate_passed_features: bool = False,
     ) -> Dict[str, Union[str, Dict[str, bool]]]:
         """Build the base payload for the RonDB REST Server Feature Store API.
 
         Check the RonDB Rest Server Feature Store API documentation for more details:
         https://docs.hopsworks.ai/latest/user_guides/fs/feature_view/feature-server
 
-        !!! warning
-            featureName and featureType must be set to True to allow the response to be converted
-            to a feature vector with convert_rdrs_response_to_dict_feature_vector.
-
-        Args:
-            feature_store_name: The name of the feature store in which the feature view is registered.
-                The suffix '_featurestore' should be omitted.
-            feature_view_name: The name of the feature view from which to retrieve the feature vector.
-            feature_view_version: The version of the feature view from which to retrieve the feature vector.
+        # Arguments:
+            validate_passed_features: Whether to validate the passed features against
+                the feature view schema on the RonDB Server.
             metadata_options: Whether to include feature metadata in the response.
                 Keys are "featureName" and "featureType" and values are boolean.
-            return_type: The type of the return value. Either "feature_vector" or "response_json".
-                If "feature_value_dict" is selected the payload will enforce fetching feature metadata.
 
         Returns:
-            The payload to send to the RonDB REST Server Feature Store API.
+            A payload dictionary containing metadata information to send to the RonDB REST Server Feature Store API.
         """
+        _logger.debug(
+            f"Building base payload for Feature View {self._feature_view_name}, version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
+        )
         base_payload = {
-            "featureStoreName": util.strip_feature_store_suffix(feature_store_name),
-            "featureViewName": feature_view_name,
-            "featureViewVersion": feature_view_version,
+            "featureStoreName": util.strip_feature_store_suffix(
+                self._feature_store_name
+            ),
+            "featureViewName": self._feature_view_name,
+            "featureViewVersion": self._feature_view_version,
             "options": {
-                "validatePassedFeatures": False,
+                "validatePassedFeatures": validate_passed_features,
             },
         }
 
-        if metadata_options is None:
-            return base_payload
-        else:
+        if metadata_options is not None:
             base_payload["metadataOptions"] = {
                 "featureName": metadata_options.get("featureName", False),
                 "featureType": metadata_options.get("featureType", False),
             }
-            return base_payload
+
+        _logger.debug(f"Base payload: {base_payload}")
+        return base_payload
 
     def handle_passed_features_dict(
         self, passed_features: Optional[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Handle the passed features dictionary to convert event time to timestamp.
 
+        This step is necessary to handle passed features which are passed as datetime objects as
+        the latter are not JSON serializable.
+
         # Arguments:
             passed_features: A dictionary with the feature names as keys and the values to substitute for this specific vector.
 
         # Returns:
-            A dictionary with the feature names as keys and the values to substitute for this specific vector.
+            Same dictionary with the event time converted to UNIX timestamps.
         """
-        # TODO: Handle prefix for passed features?
         if passed_features is None:
+            _logger.debug("No passed features to handle.")
             return {}
-        return {
-            key: (
-                value
-                if not isinstance(value, datetime)
-                else util.convert_event_time_to_timestamp(value)
-            )
-            for (key, value) in passed_features.items()
-        }
+
+        for key, value in passed_features.items():
+            if isinstance(value, datetime):
+                _logger.debug(
+                    f"Converting event time {value} for feature {key} to timestamp."
+                )
+                passed_features[key] = util.convert_event_time_to_timestamp(value)
+
+        return passed_features
 
     def get_single_raw_feature_vector(
         self,
-        feature_store_name: str,
-        feature_view_name: str,
-        feature_view_version: int,
         entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
@@ -148,10 +164,6 @@ class OnlineStoreRestClientEngine:
         https://docs.hopsworks.ai/latest/user_guides/fs/feature_view/feature-server
 
         # Arguments:
-            feature_store_name: The name of the feature store in which the feature view is registered.
-                The suffix '_featurestore' should be omitted.
-            feature_view_name: The name of the feature view from which to retrieve the feature vector.
-            feature_view_version: The version of the feature view from which to retrieve the feature vector.
             entry: A dictionary with the feature names as keys and the primary key as values.
             passed_features: A dictionary with the feature names as keys and the values to substitute for this specific vector.
             metadata_options: Whether to include feature metadata in the response.
@@ -164,27 +176,27 @@ class OnlineStoreRestClientEngine:
                 - "status": The status pertinent to this single feature vector.
                 - "features": A list of the feature values.
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
+                    Null if metadata options are not set or status is ERROR.
 
         # Raises:
             `hsfs.client.exceptions.RestAPIError`: If the server response status code is not 200.
             ValueError: If the length of the feature values and metadata in the reponse does not match.
         """
+        _logger.info(
+            f"Getting single raw feature vector for Feature View {self._feature_view_name}, version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
+        )
+        _logger.debug(f"entry: {entry}, passed features: {passed_features}")
         payload = self._build_base_payload(
-            feature_store_name=feature_store_name,
-            feature_view_name=feature_view_name,
-            feature_view_version=feature_view_version,
             metadata_options=metadata_options,
+            # This ensures consistency with the sql client behaviour.
+            validate_passed_features=False,
         )
         payload["entries"] = entry
         payload["passedFeatures"] = self.handle_passed_features_dict(
             passed_features=passed_features
         )
-
         response = self._online_store_rest_client_api.get_single_raw_feature_vector(
             payload=payload
-        )
-        _logger.debug(
-            f"get_single_vector rest client raw response: {json.dumps(response, indent=2)}"
         )
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
@@ -196,9 +208,6 @@ class OnlineStoreRestClientEngine:
 
     def get_batch_raw_feature_vectors(
         self,
-        feature_store_name: str,
-        feature_view_name: str,
-        feature_view_version: int,
         entries: List[Dict[str, Any]],
         passed_features: Optional[List[Dict[str, Any]]] = None,
         metadata_options: Optional[Dict[str, bool]] = None,
@@ -210,10 +219,6 @@ class OnlineStoreRestClientEngine:
         https://docs.hopsworks.ai/latest/user_guides/fs/feature_view/feature-server
 
         # Arguments:
-            feature_store_name: The name of the feature store in which the feature view is registered.
-                The suffix '_featurestore' should be omitted.
-            feature_view_name: The name of the feature view from which to retrieve the feature vector.
-            feature_view_version: The version of the feature view from which to retrieve the feature vector.
             entries: A list of dictionaries with the feature names as keys and the primary key as values.
             passed_features: A list of dictionaries with the feature names as keys and the values to substitute.
                 Note that the list should be ordered in the same way as the entries list.
@@ -227,16 +232,20 @@ class OnlineStoreRestClientEngine:
                 - "status": A list of the status for each feature vector retrieval.
                 - "features": A list containing list of the feature values for each feature_vector.
                 - "metadata": A list of dictionaries with metadata for each feature. The order should match the order of the features.
+                    Null if metadata options are not set or status is ERROR.
 
         # Raises:
             `hsfs.client.exceptions.RestAPIError`: If the server response status code is not 200.
             `ValueError`: If the length of the passed features does not match the length of the entries.
         """
+        _logger.info(
+            f"Getting batch raw feature vectors for Feature View {self._feature_view_name}, version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
+        )
+        _logger.debug(f"entries: {entries}\npassed features: {passed_features}")
         payload = self._build_base_payload(
-            feature_store_name=feature_store_name,
-            feature_view_name=feature_view_name,
-            feature_view_version=feature_view_version,
             metadata_options=metadata_options,
+            # This ensures consistency with the sql client behaviour.
+            validate_passed_features=False,
         )
         payload["entries"] = entries
         if isinstance(passed_features, list) and (
@@ -259,6 +268,9 @@ class OnlineStoreRestClientEngine:
         _logger.debug(response)
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
+            _logger.debug(
+                "Converting batch response to feature value dictionary for each feature vector."
+            )
             return self.convert_batch_response_to_feature_value_dict(
                 batch_response=response
             )
@@ -303,7 +315,11 @@ class OnlineStoreRestClientEngine:
         """
         # An argument could be made that passed features are actually set in this vector.
         if row_feature_values is None:
+            _logger.debug("Feature vector is null, returning None for all features.")
             return {name: None for name, _ in self._ordered_feature_names_and_dtypes}
+        _logger.debug(
+            f"Converting list feature values to dictionary {row_feature_values}."
+        )
         return {
             name: (
                 vector_value
@@ -311,7 +327,7 @@ class OnlineStoreRestClientEngine:
                 else self.handle_timestamp_based_on_dtype(vector_value)
             )
             for vector_value, (name, dtype) in zip(
-                row_feature_values, self._ordered_feature_names_and_dtypes
+                row_feature_values, self._ordered_feature_names_and_dtypes, strict=False
             )
         }
 
@@ -327,10 +343,16 @@ class OnlineStoreRestClientEngine:
             timestamp_value: The timestamp value to be handled, either as int or str.
         """
         if isinstance(timestamp_value, int):
+            _logger.debug(
+                f"Converting timestamp {timestamp_value} to datetime from UNIX timestamp."
+            )
             return datetime.fromtimestamp(
                 timestamp_value / 1000, tz=timezone.utc
             ).replace(tzinfo=None)
         elif isinstance(timestamp_value, str):
+            _logger.debug(
+                f"Parsing timestamp {timestamp_value} to datetime from SQL timestamp string."
+            )
             return datetime.strptime(timestamp_value, self.SQL_TIMESTAMP_STRING_FORMAT)
         else:
             raise ValueError(
