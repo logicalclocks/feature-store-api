@@ -159,7 +159,7 @@ class OnlineStoreRestClientEngine:
 
         return passed_features
 
-    def get_single_raw_feature_vector(
+    def get_single_feature_vector(
         self,
         entry: Dict[str, Any],
         passed_features: Optional[Dict[str, Any]] = None,
@@ -214,7 +214,7 @@ class OnlineStoreRestClientEngine:
         else:
             return response
 
-    def get_batch_raw_feature_vectors(
+    def get_batch_feature_vectors(
         self,
         entries: List[Dict[str, Any]],
         passed_features: Optional[List[Dict[str, Any]]] = None,

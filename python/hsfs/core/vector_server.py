@@ -347,15 +347,11 @@ class VectorServer:
 
         if online_client_str == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.info("get_feature_vector Online REST client")
-            serving_vector = self._online_store_rest_client_engine.get_single_raw_feature_vector(
-                feature_store_name=self._feature_store_name,
-                feature_view_name=self._feature_view_name,
-                feature_view_version=self._feature_view_version,
+            vector = self._online_store_rest_client_engine.get_single_feature_vector(
                 entry=entry,
                 passed_features=passed_features,
                 return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
-            serving_vector = self.deserialize_complex_features(row_dict=serving_vector)
 
         else:  # aiomysql branch
             # get result row
@@ -400,19 +396,13 @@ class VectorServer:
 
         if online_client_str == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.info("get_feature_vectors through REST client")
-            batch_results = self._online_store_rest_client_engine.get_batch_raw_feature_vectors(
+            vectors = self._online_store_rest_client_engine.get_batch_feature_vectors(
                 feature_store_name=self._feature_store_name,
                 feature_view_name=self._feature_view_name,
                 feature_view_version=self._feature_view_version,
                 entries=entries,
                 passed_features=passed_features,
                 return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
-            )
-            batch_results = list(
-                map(
-                    lambda result_dict: self.deserialize_complex_features(result_dict),
-                    batch_results,
-                )
             )
         else:
             _logger.info("get_feature_vectors through SQL client")
