@@ -55,8 +55,6 @@ class OnlineStoreRestClientEngine:
             skip_fg_ids: A list of feature ids to skip when inferring feature vector schema.
                 These ids are linked to features which are part of a Feature Group with embeddings and
                 therefore stored in the embedding online store (see vector_db_client).
-                The name is kept for consistency with vector_server but should be updated to reflect that
-                it is the feature id that is being skipped, not Feature Group (fg).
         """
         _logger.info(
             f"Initializing Online Store Rest Client Engine for Feature View {feature_view_name}, version: {feature_view_version} in Feature Store {feature_store_name}."
