@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -129,7 +128,6 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
    * @throws SQLException In case there is online storage (RonDB) access error or other errors.
    * @throws ClassNotFoundException In case class `com.mysql.jdbc.Driver` can not be found.
    */
-  @Deprecated
   public void initServing(Boolean batch, Boolean external)
       throws FeatureStoreException, IOException, SQLException, ClassNotFoundException {
     vectorServer.initServing(this, batch, external);
@@ -324,95 +322,6 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
   }
 
   /**
-   * Add name/value tag to the feature view.
-   *
-   * @param name
-   *     name of the tag
-   * @param value
-   *     value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public abstract void addTag(String name, Object value) throws FeatureStoreException, IOException;
-
-  /**
-   * Get all tags of the feature view.
-   *
-   * @return a map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  @JsonIgnore
-  public abstract Map<String, Object> getTags() throws FeatureStoreException, IOException;
-
-  /**
-   * Get a single tag value of the feature view.
-   *
-   * @param name
-   *     name of the tag
-   * @return The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  @JsonIgnore
-  public abstract Object getTag(String name) throws FeatureStoreException, IOException;
-
-  /**
-   * Delete a tag of the feature view.
-   *
-   * @param name
-   *     name of the tag to be deleted
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public abstract void deleteTag(String name) throws FeatureStoreException, IOException;
-
-  /**
-   * Add name/value tag to the training dataset.
-   *
-   * @param name
-   *     name of the tag
-   * @param value
-   *     value of the tag. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public abstract void addTrainingDatasetTag(Integer version, String name, Object value) throws FeatureStoreException,
-      IOException;
-
-  /**
-   * Get all tags of the training dataset.
-   *
-   * @return a map of tag name and values. The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  @JsonIgnore
-  public abstract Map<String, Object> getTrainingDatasetTags(Integer version) throws FeatureStoreException, IOException;
-
-  /**
-   * Get a single tag value of the training dataset.
-   *
-   * @param name
-   *     name of the tag
-   * @return The value of a tag can be any valid json - primitives, arrays or json objects
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  @JsonIgnore
-  public abstract Object getTrainingDatasetTag(Integer version, String name) throws FeatureStoreException, IOException;
-
-  /**
-   * Delete a tag of the training dataset.
-   *
-   * @param name
-   *     name of the tag to be deleted
-   * @throws FeatureStoreException
-   * @throws IOException
-   */
-  public abstract void deleteTrainingDatasetTag(Integer version, String name) throws FeatureStoreException, IOException;
-
-  /**
    * Set of primary key names that is used as keys in input dict object for `get_serving_vector` method.
    *
    * @return Set of serving keys
@@ -429,41 +338,4 @@ public abstract class FeatureViewBase<T extends FeatureViewBase, T3 extends Feat
     }
     return vectorServer.getServingKeys();
   }
-
-  public abstract void delete() throws FeatureStoreException, IOException;
-
-  public abstract void clean(T3 featureStore, String featureViewName, Integer featureViewVersion)
-      throws FeatureStoreException, IOException;
-
-  public abstract T update(T other) throws FeatureStoreException, IOException;
-
-  public abstract String getBatchQuery() throws FeatureStoreException, IOException, ParseException;
-
-  public abstract String getBatchQuery(String startTime, String endTime)
-      throws FeatureStoreException, IOException, ParseException;
-
-  public abstract T5 getBatchData() throws FeatureStoreException, IOException, ParseException;
-
-  public abstract T5 getBatchData(String startTime, String endTime)
-      throws FeatureStoreException, IOException, ParseException;
-
-  public abstract T5 getBatchData(String startTime, String endTime, Map<String, String> readOptions)
-      throws FeatureStoreException, IOException, ParseException;
-
-  public abstract Object getTrainingData(Integer version, Map<String, String> readOptions)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Object getTrainTestSplit(Integer version, Map<String, String> readOptions)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract Object getTrainValidationTestSplit(Integer version, Map<String, String> readOptions)
-      throws IOException, FeatureStoreException, ParseException;
-
-  public abstract void purgeTrainingData(Integer version) throws FeatureStoreException, IOException;
-
-  public abstract void purgeAllTrainingData() throws FeatureStoreException, IOException;
-
-  public abstract void deleteTrainingDataset(Integer version) throws FeatureStoreException, IOException;
-
-  public abstract void deleteAllTrainingDatasets() throws FeatureStoreException, IOException;
 }

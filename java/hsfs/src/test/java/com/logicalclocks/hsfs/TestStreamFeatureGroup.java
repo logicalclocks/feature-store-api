@@ -29,7 +29,7 @@ import org.mockito.Mockito;
 import org.apache.log4j.Level;
 
 
-class TestFeatureGroupBaseForApi {
+class TestStreamFeatureGroup {
   @Test
   void testParsingJson() throws JsonProcessingException {
     // Arrange
@@ -43,7 +43,7 @@ class TestFeatureGroupBaseForApi {
     String json = "{\"name\":\"test_fg\",\"version\":1,\"deprecated\":false}";
 
     // Act
-    FeatureGroupBaseForApi fg = objectMapper.readValue(json, FeatureGroupBaseForApi.class);
+    StreamFeatureGroup fg = objectMapper.readValue(json, StreamFeatureGroup.class);
 
     // Assert
     Assert.assertEquals(false, fg.getDeprecated());
@@ -63,7 +63,7 @@ class TestFeatureGroupBaseForApi {
     String json = "{\"name\":\"test_fg\",\"version\":1,\"deprecated\":true}";
 
     // Act
-    FeatureGroupBaseForApi fg = objectMapper.readValue(json, FeatureGroupBaseForApi.class);
+    StreamFeatureGroup fg = objectMapper.readValue(json, StreamFeatureGroup.class);
 
     // Assert
     Assert.assertEquals(true, fg.getDeprecated());

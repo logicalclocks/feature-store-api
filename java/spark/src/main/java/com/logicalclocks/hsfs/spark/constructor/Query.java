@@ -44,27 +44,22 @@ public class Query extends QueryBase<Query, StreamFeatureGroup, Dataset<Row>> {
     super(leftFeatureGroup, leftFeatures);
   }
 
-  @Override
   public String sql() {
     return sql(Storage.OFFLINE, FsQuery.class);
   }
 
-  @Override
   public String sql(Storage storage) {
     return sql(storage, FsQuery.class);
   }
 
-  @Override
   public Dataset<Row> read() throws FeatureStoreException, IOException {
     return read(false, null);
   }
 
-  @Override
   public Dataset<Row> read(boolean online) throws FeatureStoreException, IOException {
     return read(online, null);
   }
 
-  @Override
   public Dataset<Row> read(boolean online, Map<String, String> readOptions) throws FeatureStoreException, IOException {
     FsQuery fsQuery = (FsQuery)
         queryConstructorApi.constructQuery(leftFeatureGroup.getFeatureStore(), this, FsQuery.class);
@@ -84,12 +79,10 @@ public class Query extends QueryBase<Query, StreamFeatureGroup, Dataset<Row>> {
     }
   }
 
-  @Override
   public void show(int numRows) throws FeatureStoreException, IOException {
     show(false, numRows);
   }
 
-  @Override
   public void show(boolean online, int numRows) throws FeatureStoreException, IOException {
     SparkEngine.getInstance().objectToDataset(read(online)).show(numRows);
   }
