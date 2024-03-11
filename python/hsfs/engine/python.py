@@ -604,7 +604,9 @@ class Engine:
         # This conversion might cause a bottleneck in performance when using polars with greater expectations.
         # This patch is done becuase currently great_expecatations does not support polars, would need to be made proper when support added.
         if isinstance(dataframe, pl.DataFrame):
-            warnings.warn("Great Expectations does not support Polars dataframes directly using Great Expectations with Polars datarames can be slow.")
+            warnings.warn(
+                "Great Expectations does not support Polars dataframes directly using Great Expectations with Polars datarames can be slow."
+            )
             dataframe = dataframe.to_pandas()
         report = ge.from_pandas(
             dataframe, expectation_suite=expectation_suite
