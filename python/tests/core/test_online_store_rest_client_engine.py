@@ -77,7 +77,7 @@ class TestOnlineRestClientEngine:
         self, rest_client_engine_base, backend_fixtures
     ):
         # Act
-        payload = rest_client_engine_base._build_base_payload()
+        payload = rest_client_engine_base.build_base_payload()
 
         # Assert
         for key, value in payload.items():
@@ -96,7 +96,7 @@ class TestOnlineRestClientEngine:
         self, keys, rest_client_engine_base, backend_fixtures
     ):
         # Act
-        payload = rest_client_engine_base._build_base_payload(
+        payload = rest_client_engine_base.build_base_payload(
             metadata_options={keys[0]: True, keys[1]: False}
         )
 
@@ -119,7 +119,7 @@ class TestOnlineRestClientEngine:
             "get_single_vector_response_json_complete_no_metadata",
         ],
     )
-    def test_convert_rdrs_response_to_feature_vector_dict_single_complete_response(
+    def test_convert_rdrs_response_to_feature_vector_row_single_complete_response(
         self, backend_fixtures, rest_client_engine_ticker, fixture_key
     ):
         # Arrange
@@ -143,10 +143,9 @@ class TestOnlineRestClientEngine:
         }
 
         # Act
-        feature_vector_dict = (
-            rest_client_engine_ticker.convert_rdrs_response_to_feature_value_dict(
-                row_feature_values=response["features"]
-            )
+        feature_vector_dict = rest_client_engine_ticker.convert_rdrs_response_to_feature_value_row(
+            row_feature_values=response["features"],
+            return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
         )
 
         # Assert

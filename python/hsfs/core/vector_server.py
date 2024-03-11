@@ -13,30 +13,28 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import re
+import asyncio
 import io
-import avro.schema
+import logging
+import re
+
 import avro.io
-from sqlalchemy import sql, bindparam, exc, text
+import avro.schema
 import numpy as np
 import pandas as pd
-import asyncio
-
-
-from hsfs import util
-from hsfs import training_dataset, feature_view, client
+from hsfs import client, feature_view, training_dataset, util
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.serving_key import ServingKey
 from hsfs.core import (
-    online_store_rest_client_engine,
-    training_dataset_api,
-    storage_connector_api,
-    transformation_function_engine,
     feature_view_api,
     feature_view_engine,
+    online_store_rest_client_engine,
+    storage_connector_api,
+    training_dataset_api,
+    transformation_function_engine,
 )
+from hsfs.serving_key import ServingKey
+from sqlalchemy import bindparam, exc, sql, text
 
-import logging
 
 _logger = logging.getLogger(__name__)
 
@@ -131,14 +129,20 @@ class VectorServer:
         # `init_prepared_statement` should be the last because other initialisations
         # has to be done successfully before it is able to fetch feature vectors.
         self.init_transformation(entity)
+        self._complex_features = self.get_complex_feature_schemas()
 
         if self._init_online_store_rest_client is True:
-            _logger.info("Initialising Vector Server Online REST client")
-            self._online_store_rest_client_engine = (
-                online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                    features=entity.features,
-                    skip_fg_ids=self._skip_fg_ids,
-                )
+            _logger.info("Initialising Vector Server Online Store REST client")
+            self._online_store_rest_client_engine = online_store_rest_client_engine.OnlineStoreRestClientEngine(
+                feature_store_name=self._feature_store_name,
+                feature_view_name=entity.name,
+                feature_view_version=entity.version,
+                features=entity.features,
+                skip_fg_ids=self._skip_fg_ids,
+                # Code duplication added to avoid unnecessary transforming and iterating over feature vectors
+                # multiple times. This is a temporary solution until the code is refactored with new sql client
+                complex_features=self._complex_features,
+                transformation_functions=self._transformation_functions,
             )
             reset_online_rest_client = False
             online_store_rest_client_config = None
@@ -227,9 +231,9 @@ class VectorServer:
 
         self._prefix_by_serving_index = prefix_by_serving_index
         for sk in self._serving_keys:
-            self._serving_key_by_serving_index[
-                sk.join_index
-            ] = self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
+            self._serving_key_by_serving_index[sk.join_index] = (
+                self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
+            )
         # sort the serving by PreparedStatementParameter.index
         for join_index in self._serving_key_by_serving_index:
             # feature_name_order_by_psp do not include the join index when the joint feature only contains label only
@@ -241,8 +245,7 @@ class VectorServer:
                         _sk.feature_name, 0
                     ),
                 )
-        # get schemas for complex features once
-        self._complex_features = self.get_complex_feature_schemas()
+
         self._valid_serving_key = set(
             [sk.feature_name for sk in self._serving_keys]
             + [sk.required_serving_key for sk in self._serving_keys]
@@ -257,9 +260,9 @@ class VectorServer:
             if prepared_statement.feature_group_id in self._skip_fg_ids:
                 continue
             query_online = str(prepared_statement.query_online).replace("\n", " ")
-            prefix_by_serving_index[
-                prepared_statement.prepared_statement_index
-            ] = prepared_statement.prefix
+            prefix_by_serving_index[prepared_statement.prepared_statement_index] = (
+                prepared_statement.prefix
+            )
 
             # In java prepared statement `?` is used for parametrization.
             # In sqlalchemy `:feature_name` is used instead of `?`
@@ -270,13 +273,13 @@ class VectorServer:
                     key=lambda psp: psp.index,
                 )
             ]
-            feature_name_order_by_psp[
-                prepared_statement.prepared_statement_index
-            ] = dict(
-                [
-                    (psp.name, psp.index)
-                    for psp in prepared_statement.prepared_statement_parameters
-                ]
+            feature_name_order_by_psp[prepared_statement.prepared_statement_index] = (
+                dict(
+                    [
+                        (psp.name, psp.index)
+                        for psp in prepared_statement.prepared_statement_parameters
+                    ]
+                )
             )
             # construct serving key if it is not provided.
             if self._serving_keys is None:
@@ -303,9 +306,9 @@ class VectorServer:
                     batch_ids=bindparam("batch_ids", expanding=True)
                 )
 
-            prepared_statements_dict[
-                prepared_statement.prepared_statement_index
-            ] = query_online
+            prepared_statements_dict[prepared_statement.prepared_statement_index] = (
+                query_online
+            )
 
         # assign serving key if it is not provided.
         if self._serving_keys is None:
@@ -329,12 +332,15 @@ class VectorServer:
         self,
         entry,
         return_type=None,
-        passed_features=[],
+        passed_features=None,
         allow_missing=False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
     ):
         """Assembles serving vector from online feature store."""
+        if passed_features is None:
+            passed_features = []
+
         online_client_str = self.which_client_and_ensure_initialised(
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
         )
@@ -349,6 +355,7 @@ class VectorServer:
                 passed_features=passed_features,
                 return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
+            serving_vector = self.deserialize_complex_features(row_dict=serving_vector)
 
         else:  # aiomysql branch
             # get result row
@@ -357,10 +364,10 @@ class VectorServer:
             # Add the passed features
             serving_vector.update(passed_features)
 
-        # apply transformation functions
-        result_dict = self._apply_transformation(serving_vector)
+            # apply transformation functions
+            result_dict = self._apply_transformation(serving_vector)
 
-        vector = self._generate_vector(result_dict, allow_missing)
+            vector = self._generate_vector(result_dict, allow_missing)
 
         if return_type.lower() == "list":
             return vector
@@ -379,11 +386,13 @@ class VectorServer:
         self,
         entries,
         return_type=None,
-        passed_features=[],
+        passed_features=None,
         allow_missing=False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
     ):
+        if passed_features is None:
+            passed_features = []
         """Assembles serving vector from online feature store."""
         online_client_str = self.which_client_and_ensure_initialised(
             force_rest_client=force_rest_client, force_sql_client=force_sql_client
@@ -399,6 +408,12 @@ class VectorServer:
                 passed_features=passed_features,
                 return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
             )
+            batch_results = list(
+                map(
+                    lambda result_dict: self.deserialize_complex_features(result_dict),
+                    batch_results,
+                )
+            )
         else:
             _logger.info("get_feature_vectors through SQL client")
             batch_results, _ = self._batch_vector_results(
@@ -408,21 +423,21 @@ class VectorServer:
             for vector_index, pf in enumerate(passed_features):
                 batch_results[vector_index].update(pf)
 
-        # apply transformation functions
-        batch_transformed = list(
-            map(
-                lambda results_dict: self._apply_transformation(results_dict),
-                batch_results,
+            # apply transformation functions
+            batch_transformed = list(
+                map(
+                    lambda results_dict: self._apply_transformation(results_dict),
+                    batch_results,
+                )
             )
-        )
 
-        # get vectors
-        vectors = []
-        for result in batch_transformed:
-            # for backward compatibility, before 3.4, if result is empty,
-            # instead of throwing error, it skips the result
-            if len(result) != 0 or allow_missing:
-                vectors.append(self._generate_vector(result, fill_na=allow_missing))
+            # get vectors
+            vectors = []
+            for result in batch_transformed:
+                # for backward compatibility, before 3.4, if result is empty,
+                # instead of throwing error, it skips the result
+                if len(result) != 0 or allow_missing:
+                    vectors.append(self._generate_vector(result, fill_na=allow_missing))
 
         if return_type.lower() == "list":
             return vectors
@@ -596,9 +611,9 @@ class VectorServer:
             if next_statement:
                 continue
             bind_entries[prepared_statement_index] = pk_entry
-            prepared_statement_execution[
-                prepared_statement_index
-            ] = prepared_statement_objects[prepared_statement_index]
+            prepared_statement_execution[prepared_statement_index] = (
+                prepared_statement_objects[prepared_statement_index]
+            )
 
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
@@ -608,9 +623,7 @@ class VectorServer:
 
         for key in results_dict:
             for row in results_dict[key]:
-                result_dict = self.deserialize_complex_features(
-                    self._complex_features, dict(row)
-                )
+                result_dict = self.deserialize_complex_features(dict(row))
                 serving_vector.update(result_dict)
 
         return serving_vector
@@ -632,9 +645,9 @@ class VectorServer:
             if prepared_statement_index not in self._serving_key_by_serving_index:
                 continue
 
-            prepared_stmts_to_execute[
-                prepared_statement_index
-            ] = prepared_statement_objects[prepared_statement_index]
+            prepared_stmts_to_execute[prepared_statement_index] = (
+                prepared_statement_objects[prepared_statement_index]
+            )
             entry_values_tuples = list(
                 map(
                     lambda e: tuple(
@@ -676,14 +689,12 @@ class VectorServer:
             for row in parallel_results[prepared_statement_index]:
                 row_dict = dict(row)
                 # can primary key be complex feature?
-                result_dict = self.deserialize_complex_features(
-                    self._complex_features, row_dict
-                )
+                result_dict = self.deserialize_complex_features(row_dict)
                 # note: should used serialized value
                 # as it is from users' input
-                statement_results[
-                    self._get_result_key(prefix_features, row_dict)
-                ] = result_dict
+                statement_results[self._get_result_key(prefix_features, row_dict)] = (
+                    result_dict
+                )
 
             # add partial results to the global results
             for i, entry in enumerate(entries):
@@ -707,8 +718,8 @@ class VectorServer:
             if f.is_complex()
         }
 
-    def deserialize_complex_features(self, feature_schemas, row_dict):
-        for feature_name, schema in feature_schemas.items():
+    def deserialize_complex_features(self, row_dict):
+        for feature_name, schema in self._complex_features.items():
             if feature_name in row_dict:
                 bytes_reader = io.BytesIO(row_dict[feature_name])
                 decoder = avro.io.BinaryDecoder(bytes_reader)
