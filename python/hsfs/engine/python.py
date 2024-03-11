@@ -39,7 +39,6 @@ import great_expectations as ge
 
 from io import BytesIO
 from pyhive import hive
-from urllib.parse import urlparse
 from typing import TypeVar, Optional, Dict, Any, Union
 from confluent_kafka import Consumer, Producer, TopicPartition, KafkaError
 from tqdm.auto import tqdm
