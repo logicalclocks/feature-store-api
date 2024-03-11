@@ -2049,8 +2049,9 @@ class FeatureGroup(FeatureGroupBase):
                 or `%Y-%m-%d %H:%M:%S.%f`.
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                 Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
@@ -3527,8 +3528,9 @@ class ExternalFeatureGroup(FeatureGroupBase):
             Feature Groups.
 
         # Arguments
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
             read_options: Additional options as key/value pairs to pass to the spark engine.

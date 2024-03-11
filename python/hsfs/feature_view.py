@@ -860,8 +860,9 @@ class FeatureView:
                 that may not be used in training the model itself but can be used during batch or online inference
                 for extra information. If inference helper columns were not defined in the feature view
                 `inference_helper_columns=True` will not any effect. Defaults to `False`, no helper columns.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
             `pyspark.DataFrame`. A Spark DataFrame.
@@ -2022,8 +2023,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view
                 then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
                 columns.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
         """
@@ -2190,8 +2192,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view
                 then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
                 columns.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -2392,8 +2395,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view
                 then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
                 columns.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2524,8 +2528,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view or during
                 materializing training dataset in the file system then`training_helper_columns=True` will not have
                 any effect. Defaults to `False`, no training helper columns.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X, y): Tuple of dataframe of features and labels
         """
@@ -2588,8 +2593,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view or during
                 materializing training dataset in the file system then`training_helper_columns=True` will not have
                 any effect. Defaults to `False`, no training helper columns.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -2654,8 +2660,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view or during
                 materializing training dataset in the file system then`training_helper_columns=True` will not have
                 any effect. Defaults to `False`, no training helper columns.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
