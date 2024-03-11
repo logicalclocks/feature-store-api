@@ -13,9 +13,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import pytest
-
 import hsfs
+import pytest
 from hsfs import feature_view
 from hsfs.core import vector_server
 
@@ -47,7 +46,9 @@ class TestVectorServer:
         mocker.patch("hsfs.core.feature_store_api.FeatureStoreApi.get")
 
         return feature_view.FeatureView.from_response_json(
-            backend_fixtures["feature_view"]["get"]["response"]
+            backend_fixtures["feature_view"][
+                "get_with_complete_training_dataset_features"
+            ]["response"]
         )
 
     @pytest.fixture
