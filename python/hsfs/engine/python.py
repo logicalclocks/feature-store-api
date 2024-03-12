@@ -1106,9 +1106,10 @@ class Engine:
                     transformation_fn.transformation_fn
                 )
             # The below functions is not required for Polars since polars does have object types like pandas
-            if not (isinstance(dataset, pl.DataFrame) or isinstance(
-                dataset, pl.dataframe.frame.DataFrame
-            )):
+            if not (
+                isinstance(dataset, pl.DataFrame)
+                or isinstance(dataset, pl.dataframe.frame.DataFrame)
+            ):
                 offline_type = Engine.convert_spark_type_to_offline_type(
                     transformation_fn.output_type
                 )
