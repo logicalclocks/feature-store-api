@@ -2167,7 +2167,9 @@ class TestPython:
         )
 
         # Assert
-        assert isinstance(result_df, pl.DataFrame)
+        assert isinstance(result_df, pl.Dataframe) or isinstance(
+            result_df, pl.dataframe.frame.DataFrame
+        )
         assert result_df_split is None
 
     def test_split_labels_dataframe_type_python(self):
@@ -2261,7 +2263,9 @@ class TestPython:
         )
         print(type(result_df_split))
         # Assert
-        assert isinstance(result_df, pl.DataFrame)
+        assert isinstance(result_df, pl.Dataframe) or isinstance(
+            result_df, pl.dataframe.frame.DataFrame
+        )
         assert isinstance(result_df_split, pl.Series)
 
     def test_split_labels_labels_dataframe_type_python(self):
@@ -2934,7 +2938,9 @@ class TestPython:
         )
 
         # Assert
-        assert isinstance(result, pl.DataFrame)
+        assert isinstance(result, pl.Dataframe) or isinstance(
+            result, pl.dataframe.frame.DataFrame
+        )
         assert df.equals(result)
 
     def test_return_dataframe_type_numpy(self):
