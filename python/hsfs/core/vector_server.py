@@ -350,7 +350,7 @@ class VectorServer:
             vector = self._online_store_rest_client_engine.get_single_feature_vector(
                 entry=entry,
                 passed_features=passed_features,
-                return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
+                return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_LIST,
             )
 
         else:  # aiomysql branch
@@ -399,7 +399,7 @@ class VectorServer:
             vectors = self._online_store_rest_client_engine.get_batch_feature_vectors(
                 entries=entries,
                 passed_features=passed_features,
-                return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
+                return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_LIST,
             )
         else:
             _logger.info("get_feature_vectors through SQL client")
