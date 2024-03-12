@@ -13,15 +13,25 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import io
 import logging
+from base64 import b64decode
 from datetime import datetime, timezone
+from io import BytesIO
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-import avro
 import hsfs
+from avro.schema import Schema
 from hsfs import util
 from hsfs.core import online_store_rest_client_api
+
+
+HAS_FASTAVRO = False
+try:
+    from fastavro import schemaless_reader
+
+    HAS_FASTAVRO = True
+except ImportError:
+    from avro.io import BinaryDecoder
 
 
 _logger = logging.getLogger(__name__)
@@ -40,7 +50,7 @@ class OnlineStoreRestClientEngine:
         feature_view_version: int,
         features: List["hsfs.training_dataset_feature.TrainingDatasetFeature"],
         skip_fg_ids: List[int],
-        complex_features: Dict[str, avro.schema.Schema] = None,
+        complex_features: Dict[str, Schema] = None,
         transformation_functions: Dict[str, Callable] = None,
     ):
         """Initialize the Online Store Rest Client Engine. This class contains the logic to mediate
@@ -336,15 +346,24 @@ class OnlineStoreRestClientEngine:
             }
 
     def build_complex_feature_decoders(
-        self, complex_feature_schemas: Dict[str, avro.schema.Schema]
+        self, complex_feature_schemas: Dict[str, Schema]
     ) -> Dict[str, Callable]:
         """Build a dictionary of functions to deserialize the complex feature values returned from RonDB Server."""
-        return {
-            f_name: lambda feature_value, avro_schema=schema: avro_schema.read(
-                avro.io.BinaryDecoder(io.BytesIO(feature_value))
-            )
-            for (f_name, schema) in complex_feature_schemas.items()
-        }
+        if HAS_FASTAVRO:
+            return {
+                f_name: lambda feature_value, avro_schema=schema: schemaless_reader(
+                    BytesIO(b64decode(feature_value)),
+                    avro_schema.writers_schema.to_json(),
+                )
+                for (f_name, schema) in complex_feature_schemas.items()
+            }
+        else:
+            return {
+                f_name: lambda feature_value, avro_schema=schema: avro_schema.read(
+                    BinaryDecoder(BytesIO(b64decode(feature_value)))
+                )
+                for (f_name, schema) in complex_feature_schemas.items()
+            }
 
     def set_return_feature_value_handlers(self) -> List[Callable]:
         """Build a dictionary of functions to convert/deserialize/transform the feature values returned from RonDB Server.
