@@ -490,7 +490,7 @@ class Engine:
         exact_uniqueness=True,
     ):
         # TODO: add statistics for correlations, histograms and exact_uniqueness
-        if isinstance(df, pl.Dataframe) or isinstance(df, pl.dataframe.frame.DataFrame):
+        if isinstance(df, pl.DataFrame) or isinstance(df, pl.dataframe.frame.DataFrame):
             arrow_schema = df.to_arrow().schema
         else:
             arrow_schema = pa.Schema.from_pandas(df, preserve_index=False)
@@ -502,7 +502,7 @@ class Engine:
                 or pa.types.is_large_list(field.type)
                 or pa.types.is_struct(field.type)
             ) and PYARROW_HOPSWORKS_DTYPE_MAPPING[field.type] in ["timestamp", "date"]:
-                if isinstance(df, pl.Dataframe) or isinstance(
+                if isinstance(df, pl.DataFrame) or isinstance(
                     df, pl.dataframe.frame.DataFrame
                 ):
                     df = df.with_columns(pl.col(field.name).cast(pl.String))
@@ -525,7 +525,7 @@ class Engine:
         final_stats = []
         for col in relevant_columns:
 
-            if isinstance(df, pl.Dataframe) or isinstance(
+            if isinstance(df, pl.DataFrame) or isinstance(
                 df, pl.dataframe.frame.DataFrame
             ):
                 stats[col] = dict(zip(stats["statistic"], stats[col]))
@@ -606,7 +606,7 @@ class Engine:
     ):
         # This conversion might cause a bottleneck in performance when using polars with greater expectations.
         # This patch is done becuase currently great_expecatations does not support polars, would need to be made proper when support added.
-        if isinstance(dataframe, pl.Dataframe) or isinstance(
+        if isinstance(dataframe, pl.DataFrame) or isinstance(
             dataframe, pl.dataframe.frame.DataFrame
         ):
             warnings.warn(
@@ -626,7 +626,7 @@ class Engine:
     ):
         if (
             isinstance(dataframe, pd.DataFrame)
-            or isinstance(dataframe, pl.Dataframe)
+            or isinstance(dataframe, pl.DataFrame)
             or isinstance(dataframe, pl.dataframe.frame.DataFrame)
         ):
             upper_case_features = [
@@ -675,7 +675,7 @@ class Engine:
     ):
         if isinstance(dataframe, pd.DataFrame):
             arrow_schema = pa.Schema.from_pandas(dataframe, preserve_index=False)
-        elif isinstance(dataframe, pl.Dataframe) or isinstance(
+        elif isinstance(dataframe, pl.DataFrame) or isinstance(
             dataframe, pl.dataframe.frame.DataFrame
         ):
             arrow_schema = dataframe.to_arrow().schema
@@ -883,12 +883,12 @@ class Engine:
             groups += [i] * int(df_size * split.percentage)
         groups += [len(splits) - 1] * (df_size - len(groups))
         random.shuffle(groups)
-        if isinstance(df, pl.Dataframe) or isinstance(df, pl.dataframe.frame.DataFrame):
+        if isinstance(df, pl.DataFrame) or isinstance(df, pl.dataframe.frame.DataFrame):
             df = df.with_columns(pl.Series(name=split_column, values=groups))
         else:
             df[split_column] = groups
         for i, split in enumerate(splits):
-            if isinstance(df, pl.Dataframe) or isinstance(
+            if isinstance(df, pl.DataFrame) or isinstance(
                 df, pl.dataframe.frame.DataFrame
             ):
                 split_df = df.filter(pl.col(split_column) == i).drop(split_column)
@@ -1093,7 +1093,7 @@ class Engine:
             feature_name,
             transformation_fn,
         ) in transformation_functions.items():
-            if isinstance(dataset, pl.Dataframe) or isinstance(
+            if isinstance(dataset, pl.DataFrame) or isinstance(
                 dataset, pl.dataframe.frame.DataFrame
             ):
                 dataset = dataset.with_columns(
@@ -1106,9 +1106,9 @@ class Engine:
                     transformation_fn.transformation_fn
                 )
             # The below functions is not required for Polars since polars does have object types like pandas
-            if not isinstance(dataset, pl.Dataframe) or isinstance(
+            if not (isinstance(dataset, pl.DataFrame) or isinstance(
                 dataset, pl.dataframe.frame.DataFrame
-            ):
+            )):
                 offline_type = Engine.convert_spark_type_to_offline_type(
                     transformation_fn.output_type
                 )

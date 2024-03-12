@@ -2167,7 +2167,7 @@ class TestPython:
         )
 
         # Assert
-        assert isinstance(result_df, pl.Dataframe) or isinstance(
+        assert isinstance(result_df, pl.DataFrame) or isinstance(
             result_df, pl.dataframe.frame.DataFrame
         )
         assert result_df_split is None
@@ -2263,7 +2263,7 @@ class TestPython:
         )
         print(type(result_df_split))
         # Assert
-        assert isinstance(result_df, pl.Dataframe) or isinstance(
+        assert isinstance(result_df, pl.DataFrame) or isinstance(
             result_df, pl.dataframe.frame.DataFrame
         )
         assert isinstance(result_df_split, pl.Series)
@@ -2938,7 +2938,7 @@ class TestPython:
         )
 
         # Assert
-        assert isinstance(result, pl.Dataframe) or isinstance(
+        assert isinstance(result, pl.DataFrame) or isinstance(
             result, pl.dataframe.frame.DataFrame
         )
         assert df.equals(result)
