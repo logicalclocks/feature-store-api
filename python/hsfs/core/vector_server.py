@@ -397,9 +397,6 @@ class VectorServer:
         if online_client_str == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
             _logger.info("get_feature_vectors through REST client")
             vectors = self._online_store_rest_client_engine.get_batch_feature_vectors(
-                feature_store_name=self._feature_store_name,
-                feature_view_name=self._feature_view_name,
-                feature_view_version=self._feature_view_version,
                 entries=entries,
                 passed_features=passed_features,
                 return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_DICT,
