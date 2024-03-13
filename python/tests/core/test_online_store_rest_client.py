@@ -14,11 +14,10 @@
 #   limitations under the License.
 #
 # from unittest.mock import patch
+import hsfs
 import pytest
 from furl import furl
-
-import hsfs
-from hsfs.client import online_store_rest_client, exceptions, auth
+from hsfs.client import auth, exceptions, online_store_rest_client
 
 
 class MockExternalClient:

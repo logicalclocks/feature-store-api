@@ -16,7 +16,7 @@
 from datetime import datetime
 
 import pytest
-from hsfs import training_dataset_feature
+from hsfs import serving_key, training_dataset_feature
 from hsfs.core import online_store_rest_client_engine
 from hsfs.util import convert_event_time_to_timestamp
 
@@ -55,6 +55,13 @@ class TestOnlineRestClientEngine:
         ]
 
     @pytest.fixture()
+    def serving_keys_ticker(self, backend_fixtures):
+        serving_keys = []
+        for key in backend_fixtures["serving_keys"]["get_ticker"]["response"]:
+            serving_keys.append(serving_key.ServingKey.from_response_json(key))
+        return serving_keys
+
+    @pytest.fixture()
     def rest_client_engine_base(self):
         return online_store_rest_client_engine.OnlineStoreRestClientEngine(
             feature_store_name="test_store_featurestore",
@@ -65,13 +72,16 @@ class TestOnlineRestClientEngine:
         )
 
     @pytest.fixture()
-    def rest_client_engine_ticker(self, training_dataset_features_ticker):
+    def rest_client_engine_ticker(
+        self, training_dataset_features_ticker, serving_keys_ticker
+    ):
         return online_store_rest_client_engine.OnlineStoreRestClientEngine(
             feature_store_name="test_store_featurestore",
             feature_view_name="test_feature_view",
             feature_view_version=2,
             features=training_dataset_features_ticker,
             skip_fg_ids=[],
+            serving_keys=serving_keys_ticker,
         )
 
     def test_build_base_payload_no_metadata_options(

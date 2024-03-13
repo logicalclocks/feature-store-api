@@ -439,14 +439,8 @@ class NpDatetimeEncoder(json.JSONEncoder):
 
     def default(self, obj):
         dtypes = (np.datetime64, np.complexfloating)
-        if isinstance(obj, (datetime.datetime, datetime.date, datetime.time)):
-            return obj.strpftime(self.SQL_TIMESTAMP_STRING_FORMAT)
-        elif isinstance(obj, datetime.timedelta):
-            return (
-                (datetime.datetime.min + obj)
-                .time()
-                .strpftime(self.SQL_TIMESTAMP_STRING_FORMAT)
-            )
+        if isinstance(obj, (datetime, date, time)):
+            return convert_event_time_to_timestamp(obj)
         elif isinstance(obj, dtypes):
             return str(obj)
         elif isinstance(obj, np.integer):
