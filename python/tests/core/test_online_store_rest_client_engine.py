@@ -21,7 +21,8 @@ from hsfs.core import online_store_rest_client_engine
 from hsfs.util import convert_event_time_to_timestamp
 
 
-RONDB_REST_API_GET_BATCH_RAW_FEATURE_VECTORS = "hsfs.core.online_store_rest_client_api.OnlineStoreRestClientApi.get_batch_raw_feature_vectors"
+ONLINE_STORE_REST_CLIENT_API_GET_BATCH_RAW_FEATURE_VECTORS = "hsfs.core.online_store_rest_client_api.OnlineStoreRestClientApi.get_batch_raw_feature_vectors"
+ONLINE_STORE_REST_CLIENT_API_GET_SINGLE_RAW_FEATURE_VECTOR = "hsfs.core.online_store_rest_client_api.OnlineStoreRestClientApi.get_single_raw_feature_vector"
 
 
 class TestOnlineRestClientEngine:
@@ -161,7 +162,7 @@ class TestOnlineRestClientEngine:
             ({}, "get_single_vector_response_json_pk_value_no_match"),
         ],
     )
-    def test_get_single_raw_feature_vector_pk_value_no_match(
+    def test_get_single_feature_vector_pk_value_no_match(
         self,
         mocker,
         passed_features,
@@ -174,7 +175,7 @@ class TestOnlineRestClientEngine:
         payload["passed_features"] = passed_features
 
         mock_online_rest_api = mocker.patch(
-            "hsfs.core.online_store_rest_client_api.OnlineStoreRestClientApi.get_single_raw_feature_vector",
+            ONLINE_STORE_REST_CLIENT_API_GET_SINGLE_RAW_FEATURE_VECTOR,
             return_value=backend_fixtures["rondb_server"][fixture_key],
         )
         reference_vector = payload["entry"]
@@ -182,7 +183,7 @@ class TestOnlineRestClientEngine:
         reference_vector.update(passed_features)
 
         # Act
-        response_json = rest_client_engine_ticker.get_single_raw_feature_vector(
+        response_json = rest_client_engine_ticker.get_single_feature_vector(
             entry=payload["entry"],
             passed_features=passed_features,
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
@@ -196,7 +197,7 @@ class TestOnlineRestClientEngine:
         assert mock_online_rest_api.called_once_with(payload=payload)
 
     @pytest.mark.parametrize("passed_features", [{"price": 12.4}, {}])
-    def test_get_single_raw_feature_vector_response_json(
+    def test_get_single_feature_vector_response_json(
         self, mocker, passed_features, backend_fixtures, rest_client_engine_ticker
     ):
         # Arrange
@@ -204,13 +205,13 @@ class TestOnlineRestClientEngine:
         payload["passed_features"] = passed_features
 
         mock_online_rest_api = mocker.patch(
-            "hsfs.core.online_store_rest_client_api.OnlineStoreRestClientApi.get_single_raw_feature_vector",
+            ONLINE_STORE_REST_CLIENT_API_GET_SINGLE_RAW_FEATURE_VECTOR,
             return_value=backend_fixtures["rondb_server"][
                 "get_single_vector_response_json_complete"
             ],
         )
         # Act
-        response_json = rest_client_engine_ticker.get_single_raw_feature_vector(
+        response_json = rest_client_engine_ticker.get_single_feature_vector(
             entry=payload["entry"],
             passed_features=passed_features,
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_RESPONSE_JSON,
@@ -226,7 +227,7 @@ class TestOnlineRestClientEngine:
         )
         assert mock_online_rest_api.called_once_with(payload=payload)
 
-    def test_get_batch_raw_feature_vectors_response_json(
+    def test_get_batch_feature_vectors_response_json(
         self,
         mocker,
         backend_fixtures,
@@ -236,14 +237,14 @@ class TestOnlineRestClientEngine:
         payload = backend_fixtures["rondb_server"]["get_batch_vector_payload"].copy()
 
         mock_online_rest_api = mocker.patch(
-            RONDB_REST_API_GET_BATCH_RAW_FEATURE_VECTORS,
+            ONLINE_STORE_REST_CLIENT_API_GET_BATCH_RAW_FEATURE_VECTORS,
             return_value=backend_fixtures["rondb_server"][
                 "get_batch_vector_response_json_complete"
             ],
         )
 
         # Act
-        response_json = rest_client_engine_ticker.get_batch_raw_feature_vectors(
+        response_json = rest_client_engine_ticker.get_batch_feature_vectors(
             entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_RESPONSE_JSON,
         )
@@ -265,7 +266,7 @@ class TestOnlineRestClientEngine:
             "get_batch_vector_response_json_complete_no_metadata",
         ],
     )
-    def test_get_batch_raw_feature_vectors_as_dict(
+    def test_get_batch_feature_vectors_as_dict(
         self,
         mocker,
         backend_fixtures,
@@ -275,7 +276,7 @@ class TestOnlineRestClientEngine:
         # Arrange
         payload = backend_fixtures["rondb_server"]["get_batch_vector_payload"].copy()
         mock_online_rest_api = mocker.patch(
-            RONDB_REST_API_GET_BATCH_RAW_FEATURE_VECTORS,
+            ONLINE_STORE_REST_CLIENT_API_GET_BATCH_RAW_FEATURE_VECTORS,
             return_value=backend_fixtures["rondb_server"][fixture_key],
         )
 
@@ -301,7 +302,7 @@ class TestOnlineRestClientEngine:
         ]
 
         # Act
-        feature_vector_dict = rest_client_engine_ticker.get_batch_raw_feature_vectors(
+        feature_vector_dict = rest_client_engine_ticker.get_batch_feature_vectors(
             entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
         )
@@ -310,7 +311,7 @@ class TestOnlineRestClientEngine:
         assert feature_vector_dict == reference_batch_vectors
         assert mock_online_rest_api.called_once_with(payload=payload)
 
-    def test_get_batch_raw_feature_partial_pk_missing_vectors_as_dict(
+    def test_get_batch_feature_partial_pk_missing_vectors_as_dict(
         self,
         mocker,
         backend_fixtures,
@@ -319,7 +320,7 @@ class TestOnlineRestClientEngine:
         # Arrange
         payload = backend_fixtures["rondb_server"]["get_batch_vector_payload"].copy()
         mock_online_rest_api = mocker.patch(
-            RONDB_REST_API_GET_BATCH_RAW_FEATURE_VECTORS,
+            ONLINE_STORE_REST_CLIENT_API_GET_BATCH_RAW_FEATURE_VECTORS,
             return_value=backend_fixtures["rondb_server"][
                 "get_batch_vector_response_json_partial_pk_value_no_match"
             ],
@@ -344,7 +345,7 @@ class TestOnlineRestClientEngine:
         ]
 
         # Act
-        feature_vector_dict = rest_client_engine_ticker.get_batch_raw_feature_vectors(
+        feature_vector_dict = rest_client_engine_ticker.get_batch_feature_vectors(
             entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
         )
@@ -353,13 +354,13 @@ class TestOnlineRestClientEngine:
         assert feature_vector_dict == reference_batch_vectors
         assert mock_online_rest_api.called_once_with(payload=payload)
 
-    def test_get_batch_raw_feature_partial_error(
+    def test_get_batch_feature_partial_error(
         self, mocker, backend_fixtures, rest_client_engine_ticker
     ):
         # Arrange
         payload = backend_fixtures["rondb_server"]["get_batch_vector_payload"].copy()
         mock_online_rest_api = mocker.patch(
-            "hsfs.core.online_store_rest_client_api.OnlineStoreRestClientApi.get_batch_raw_feature_vectors",
+            ONLINE_STORE_REST_CLIENT_API_GET_BATCH_RAW_FEATURE_VECTORS,
             return_value=backend_fixtures["rondb_server"][
                 "get_batch_vector_response_json_partial_error"
             ],
@@ -392,7 +393,7 @@ class TestOnlineRestClientEngine:
         ]
 
         # Act
-        batch_vectors = rest_client_engine_ticker.get_batch_raw_feature_vectors(
+        batch_vectors = rest_client_engine_ticker.get_batch_feature_vectors(
             entries=payload["entries"],
             return_type=online_store_rest_client_engine.OnlineStoreRestClientEngine.RETURN_TYPE_FEATURE_VALUE_DICT,
         )

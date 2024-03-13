@@ -351,9 +351,14 @@ class OnlineStoreRestClientEngine:
         """Build a dictionary of functions to deserialize the complex feature values returned from RonDB Server."""
         if HAS_FASTAVRO:
             return {
-                f_name: lambda feature_value, avro_schema=schema: schemaless_reader(
-                    BytesIO(b64decode(feature_value)),
-                    avro_schema.writers_schema.to_json(),
+                f_name: (
+                    lambda feature_value, avro_schema=schema: schemaless_reader(
+                        BytesIO(b64decode(feature_value)),
+                        avro_schema.writers_schema.to_json(),
+                    )
+                    # embedded features are deserialized already but not complex features stored in Opensearch
+                    if isinstance(feature_value, str)
+                    else feature_value
                 )
                 for (f_name, schema) in complex_feature_schemas.items()
             }
@@ -383,14 +388,18 @@ class OnlineStoreRestClientEngine:
             f"Setting return feature value handlers for Feature View {self._feature_view_name}, version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
         )
         for feature in self._features:
-            if (
-                feature.label
-                or feature.inference_helper_column
-                or feature.training_helper_column
-                or feature.index in self.skip_fg_ids
-            ):
-                # These features are not part of the feature vector.
+            # These features are not part of the feature vector.
+            if feature.label:
+                _logger.debug(
+                    f"Skipping Feature {feature.name} as it is a label therefore not part of feature vector."
+                )
                 continue
+            if feature.training_helper_column:
+                _logger.debug(
+                    f"Skipping Feature {feature.name} as it is a training helper column therefore not part of feature vector."
+                )
+                continue
+
             self._ordered_feature_names.append(feature.name)
             if feature.is_complex() and feature.name in self._transformation_fns.keys():
                 # deserialize and then transform
@@ -448,7 +457,7 @@ class OnlineStoreRestClientEngine:
                 )
                 self._return_feature_value_handlers[feature.name] = lambda x: x
         _logger.debug(
-            f"Ordered feature names, skipping helper columns or features belonging to embedded Feature Groups: {self._ordered_feature_names}"
+            f"Ordered feature names, skipping label or training helper columns: {self._ordered_feature_names}"
         )
 
     def _handle_timestamp_based_on_dtype(
@@ -474,6 +483,11 @@ class OnlineStoreRestClientEngine:
                 f"Parsing timestamp {timestamp_value} to datetime from SQL timestamp string."
             )
             return datetime.strptime(timestamp_value, self.SQL_TIMESTAMP_STRING_FORMAT)
+        elif isinstance(timestamp_value, datetime):
+            _logger.debug(
+                f"Returning passed timestamp {timestamp_value} as it is already a datetime."
+            )
+            return timestamp_value
         else:
             raise ValueError(
                 f"Timestamp value {timestamp_value} was expected to be of type int or str."
