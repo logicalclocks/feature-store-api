@@ -143,6 +143,8 @@ class VectorServer:
                 # multiple times. This is a temporary solution until the code is refactored with new sql client
                 complex_features=self._complex_features,
                 transformation_functions=self._transformation_functions,
+                # Temporary fix to allow for missing primary keys in the entry
+                serving_keys=self._serving_keys,
             )
             reset_online_rest_client = False
             online_store_rest_client_config = None

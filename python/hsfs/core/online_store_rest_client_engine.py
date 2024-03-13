@@ -168,8 +168,8 @@ class OnlineStoreRestClientEngine:
                 # The FG is in Opensearch therefore the serving key is not relevant for RonDB Server.
                 continue
             if (
-                sk.feature_name not in entry.entries
-                or (sk.prefix + sk.feature_name) not in entry.entries
+                sk.feature_name not in entry.keys()
+                or (sk.prefix + sk.feature_name) not in entry.keys()
             ):
                 _logger.debug(
                     f"Adding missing serving key {sk.required_serving_key()} to entry with value `1`."
