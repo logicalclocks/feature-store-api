@@ -148,7 +148,7 @@ class OnlineStoreRestClientEngine:
 
     def handle_missing_serving_keys_in_entry(
         self, entry: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    ) -> Tuple[Dict[str, Any], bool]:
         """Handle missing serving keys in the entry dictionary by filling them with a random unlikely value.
 
         This function is used to avoid backend errors on missing keys. This is a hacky solution and should be
@@ -163,6 +163,7 @@ class OnlineStoreRestClientEngine:
         _logger.debug(
             f"Handling missing serving keys in entry for Feature View {self._feature_view_name}, version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
         )
+        use_batch_api = False
         for sk in self._serving_keys:
             if sk.join_index in self.skip_fg_ids:
                 # The FG is in Opensearch therefore the serving key is not relevant for RonDB Server.
@@ -171,11 +172,48 @@ class OnlineStoreRestClientEngine:
                 sk.feature_name not in entry.keys()
                 and (sk.prefix + sk.feature_name) not in entry.keys()
             ):
+                # _logger.debug(
+                #     f"Adding missing serving key {sk.prefix + sk.feature_name} to entry with value `1`."
+                # )
+                # entry[sk.prefix + sk.feature_name] = 1
                 _logger.debug(
-                    f"Adding missing serving key {sk.required_serving_key} to entry with value `1`."
+                    f"Switching to batch API as {sk.prefix + sk.feature_name} is missing from entry."
                 )
-                entry[sk.required_serving_key] = 1
-        return entry
+                use_batch_api = True
+            elif (
+                sk.feature_name in entry.keys()
+                and (sk.prefix + sk.feature_name) not in entry.keys()
+            ):
+                # check if the feature name is already prefixed, if not fix it
+                _logger.debug(
+                    f"Fixing prefix serving key {sk.prefix + sk.feature_name} to entry with value {entry[sk.feature_name]}."
+                )
+                entry[sk.prefix + sk.feature_name] = entry[sk.feature_name]
+
+                # check that there is no serving key with the same name but no prefix which also relies on this entry.
+                # e.g joined fg_1, fg_2 on feature_1 which is pk for both fg_1 and fg_2. fg_1 has serving key feature_1
+                # and fg_2 has serving key prefix + feature_1. Only {"feature_1": val} is provided. The correct entry would be
+                # {"feature_1": val, prefix + "feature_1": val}. In this particular case we cannot remove entry["feature_1"]
+                # as it is used by fg_1. We need to keep both entries. Otherwise we have to remove entry["feature_1"].
+                if (
+                    len(
+                        [
+                            serv_k
+                            for serv_k in self._serving_keys
+                            if (
+                                serv_k.feature_name == sk.feature_name
+                                and (serv_k.prefix == "" or serv_k.prefix is None)
+                            )
+                        ]
+                    )
+                    == 0
+                ):
+                    _logger.debug(f"Removing serving key {sk.feature_name} from entry.")
+                    entry.pop(sk.feature_name)
+
+        _logger.debug(f"entry with aletered primary-key:value pair : {entry}")
+
+        return entry, use_batch_api
 
     def handle_passed_features_dict(
         self, passed_features: Optional[Dict[str, Any]]
@@ -201,7 +239,7 @@ class OnlineStoreRestClientEngine:
                     f"Converting event time {value} for feature {key} to timestamp."
                 )
                 passed_features[key] = util.convert_event_time_to_timestamp(value)
-
+        _logger.debug(f"Passed features with event time converted: {passed_features}")
         return passed_features
 
     def get_single_feature_vector(
@@ -244,13 +282,27 @@ class OnlineStoreRestClientEngine:
             # This ensures consistency with the sql client behaviour. Missing in current RonDB Server.
             # validate_passed_features=False,
         )
-        payload["entries"] = self.handle_missing_serving_keys_in_entry(entry)
-        payload["passedFeatures"] = self.handle_passed_features_dict(
-            passed_features=passed_features
+        payload["entries"], use_batch_api = self.handle_missing_serving_keys_in_entry(
+            entry
         )
-        response = self._online_store_rest_client_api.get_single_raw_feature_vector(
-            payload=payload
-        )
+        # payload["passedFeatures"] = self.handle_passed_features_dict(passed_features)
+        payload["passedFeatures"] = passed_features
+
+        if use_batch_api:
+            _logger.debug(
+                "Switching to batch API as at least one serving key is missing from entry."
+            )
+            payload["entries"] = [payload["entries"]]
+            payload["passedFeatures"] = [payload["passedFeatures"]]
+            response = {
+                "features": self._online_store_rest_client_api.get_batch_raw_feature_vectors(
+                    payload=payload
+                )["features"][0]
+            }
+        else:
+            response = self._online_store_rest_client_api.get_single_raw_feature_vector(
+                payload=payload
+            )
 
         if return_type != self.RETURN_TYPE_RESPONSE_JSON:
             return self.convert_rdrs_response_to_feature_value_row(
@@ -301,15 +353,16 @@ class OnlineStoreRestClientEngine:
             # validate_passed_features=False,
         )
         payload["entries"] = [
-            self.handle_missing_serving_keys_in_entry(entry) for entry in entries
+            self.handle_missing_serving_keys_in_entry(entry)[0] for entry in entries
         ]
         if isinstance(passed_features, list) and (
             len(passed_features) == len(entries) or len(passed_features) == 0
         ):
-            payload["passedFeatures"] = [
-                self.handle_passed_features_dict(passed_features=passed_feature)
-                for passed_feature in passed_features
-            ]
+            # payload["passedFeatures"] = [
+            #     self.handle_passed_features_dict(passed_features=passed_feature)
+            #     for passed_feature in passed_features
+            # ]
+            payload["passedFeatures"] = passed_features
         elif passed_features is None:
             payload["passedFeatures"] = []
         else:
@@ -354,7 +407,11 @@ class OnlineStoreRestClientEngine:
         """
         if row_feature_values is None:
             _logger.debug("Feature vector is null, returning None for all features.")
-            return {name: None for name in self._ordered_feature_names}
+            return (
+                {name: None for name in self._ordered_feature_names}
+                if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT
+                else [None for _ in self._ordered_feature_names]
+            )
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_LIST:
             _logger.debug(

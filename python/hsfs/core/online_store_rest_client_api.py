@@ -17,6 +17,7 @@ import json
 import logging
 from typing import Any, Dict
 
+from hsfs import util
 from hsfs.client import exceptions, online_store_rest_client
 from requests import Response
 
@@ -66,14 +67,14 @@ class OnlineStoreRestClientApi:
                 - 500: Internal server error.
         """
         _logger.debug(
-            f"Sending request to RonDB Rest Server with payload: {json.dumps(payload, indent=2)}"
+            f"Sending request to RonDB Rest Server with payload: {json.dumps(payload, indent=2, cls=util.NpDatetimeEncoder)}"
         )
         return self.handle_rdrs_feature_store_response(
             online_store_rest_client.get_instance().send_request(
                 method="POST",
                 path_params=[self.SINGLE_VECTOR_ENDPOINT],
                 headers={"Content-Type": "application/json"},
-                data=json.dumps(payload),
+                data=json.dumps(payload, cls=util.NpDatetimeEncoder),
             ),
         )
 
@@ -110,14 +111,14 @@ class OnlineStoreRestClientApi:
                 - 500: Internal server error.
         """
         _logger.debug(
-            f"Sending request to RonDB Rest Server with payload: {json.dumps(payload, indent=2)}"
+            f"Sending request to RonDB Rest Server with payload: {json.dumps(payload, indent=2, cls=util.NpDatetimeEncoder)}"
         )
         return self.handle_rdrs_feature_store_response(
             online_store_rest_client.get_instance().send_request(
                 method="POST",
                 path_params=[self.BATCH_VECTOR_ENDPOINT],
                 headers={"Content-Type": "application/json"},
-                data=json.dumps(payload),
+                data=json.dumps(payload, cls=util.NpDatetimeEncoder),
             ),
         )
 

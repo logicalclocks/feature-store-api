@@ -14,24 +14,24 @@
 #   limitations under the License.
 #
 
-import re
-import json
-import pandas as pd
-import time
-import threading
+import asyncio
 import itertools
-
-from datetime import datetime, date, timezone
+import json
+import re
+import threading
+import time
+from datetime import date, datetime, timezone
 from urllib.parse import urljoin, urlparse
 
-from sqlalchemy import create_engine
-
+import numpy as np
+import pandas as pd
+from aiomysql.sa import create_engine as async_create_engine
 from hsfs import client, feature
 from hsfs.client import exceptions
 from hsfs.core import variable_api
-from aiomysql.sa import create_engine as async_create_engine
-import asyncio
+from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
+
 
 FEATURE_STORE_NAME_SUFFIX = "_featurestore"
 
@@ -209,13 +209,13 @@ def get_timestamp_from_date_string(input_date):
             date_time = datetime.strptime(norm_input_date, date_format)
         else:
             date_time = datetime.fromisoformat(input_date[:-1])
-    except ValueError:
+    except ValueError as err:
         raise ValueError(
             "Unable to parse the normalized input date value : "
             + norm_input_date
             + " with format "
             + date_format
-        )
+        ) from err
     if date_time.tzinfo is None:
         date_time = date_time.replace(tzinfo=timezone.utc)
     return int(float(date_time.timestamp()) * 1000)
@@ -432,6 +432,32 @@ def get_feature_group_url(feature_store_id: int, feature_group_id: int):
         + str(feature_group_id)
     )
     return get_hostname_replaced_url(sub_path)
+
+
+class NpDatetimeEncoder(json.JSONEncoder):
+    SQL_TIMESTAMP_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+    def default(self, obj):
+        dtypes = (np.datetime64, np.complexfloating)
+        if isinstance(obj, (datetime.datetime, datetime.date, datetime.time)):
+            return obj.strpftime(self.SQL_TIMESTAMP_STRING_FORMAT)
+        elif isinstance(obj, datetime.timedelta):
+            return (
+                (datetime.datetime.min + obj)
+                .time()
+                .strpftime(self.SQL_TIMESTAMP_STRING_FORMAT)
+            )
+        elif isinstance(obj, dtypes):
+            return str(obj)
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            if any([np.issubdtype(obj.dtype, i) for i in dtypes]):
+                return obj.astype(str).tolist()
+            return obj.tolist()
+        return super(NpDatetimeEncoder, self).default(obj)
 
 
 class VersionWarning(Warning):
