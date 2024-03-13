@@ -317,10 +317,11 @@ class OnlineStoreRestClientEngine:
         if row_feature_values is None:
             _logger.debug("Feature vector is null, returning None for all features.")
             return {name: None for name in self._ordered_feature_names}
-        _logger.debug(
-            f"Converting list feature values to dictionary {row_feature_values}."
-        )
+
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_LIST:
+            _logger.debug(
+                f"Apply deserializer or transformation function to feature value list : {row_feature_values}."
+            )
             return [
                 self._return_feature_value_handlers[name](value)
                 if value is not None
@@ -332,6 +333,9 @@ class OnlineStoreRestClientEngine:
                 )
             ]
         elif return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
+            _logger.debug(
+                f"Apply deserializer or transformation function and convert feature values to dictionary : {row_feature_values}."
+            )
             return {
                 name: (
                     self._return_feature_value_handlers[name](value)
@@ -407,8 +411,10 @@ class OnlineStoreRestClientEngine:
                     f"Adding return feature value deserializer for complex feature {feature.name} with transformation function."
                 )
                 self._return_value_handlers[feature.name] = (
-                    lambda feature_value,
-                    feature_name=feature.name: self.transformation_fns[feature_name](
+                    lambda feature_value, feature_name=feature.name: _logger.debug(
+                        f"Deserialize and transform value of feature {feature_name}"
+                    )
+                    or self.transformation_fns[feature_name].transformation_fn(
                         self._complex_feature_decoder[feature_name](feature_value)
                     )
                 )
@@ -418,7 +424,10 @@ class OnlineStoreRestClientEngine:
                     f"Adding return feature value deserializer for complex feature {feature.name}."
                 )
                 self._return_feature_value_handlers[feature.name] = (
-                    self._complex_feature_decoders[feature.name]
+                    lambda feature_value, feature_name=feature.name: _logger.debug(
+                        f"Transform value of feature {feature_name}"
+                    )
+                    or self._complex_feature_decoders[feature_name](feature_value)
                 )
             elif (
                 feature.type == "timestamp"
@@ -429,8 +438,10 @@ class OnlineStoreRestClientEngine:
                     f"Adding return feature value converter for timestamp feature {feature.name} with transformation function."
                 )
                 self._return_feature_value_handlers[feature.name] = (
-                    lambda feature_value,
-                    feature_name=feature.name: self._transformation_fns[feature_name](
+                    lambda feature_value, feature_name=feature.name: _logger.debug(
+                        f"Convert and transform timestamp feature {feature_name}"
+                    )
+                    or self._transformation_fns[feature_name].transformation_fn(
                         self._handle_timestamp_based_on_dtype(feature_value)
                     )
                 )
@@ -448,14 +459,24 @@ class OnlineStoreRestClientEngine:
                     f"Adding return feature value transformation for feature {feature.name}."
                 )
                 self._return_feature_value_handlers[feature.name] = (
-                    self._transformation_fns[feature.name]
+                    lambda feature_value, feature_name=feature.name: _logger.debug(
+                        f"Transform value of feature {feature_name}"
+                    )
+                    or self._transformation_fns[feature_name].transformation_fn(
+                        feature_value
+                    )
                 )
             else:
                 # no transformation
                 _logger.debug(
                     f"Adding return feature value handler for feature {feature.name}."
                 )
-                self._return_feature_value_handlers[feature.name] = lambda x: x
+                self._return_feature_value_handlers[feature.name] = (
+                    lambda feature_value, feature_name=feature.name: _logger.debug(
+                        f"Applying identity to value of {feature_name}"
+                    )
+                    or feature_value
+                )
         _logger.debug(
             f"Ordered feature names, skipping label or training helper columns: {self._ordered_feature_names}"
         )
