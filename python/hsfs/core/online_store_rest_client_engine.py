@@ -169,12 +169,12 @@ class OnlineStoreRestClientEngine:
                 continue
             if (
                 sk.feature_name not in entry.keys()
-                or (sk.prefix + sk.feature_name) not in entry.keys()
+                and (sk.prefix + sk.feature_name) not in entry.keys()
             ):
                 _logger.debug(
-                    f"Adding missing serving key {sk.required_serving_key()} to entry with value `1`."
+                    f"Adding missing serving key {sk.required_serving_key} to entry with value `1`."
                 )
-                entry[sk.required_serving_key()] = 1
+                entry[sk.required_serving_key] = 1
         return entry
 
     def handle_passed_features_dict(
