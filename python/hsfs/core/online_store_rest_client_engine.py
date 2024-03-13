@@ -306,7 +306,9 @@ class OnlineStoreRestClientEngine:
 
         if return_type != self.RETURN_TYPE_RESPONSE_JSON:
             return self.convert_rdrs_response_to_feature_value_row(
-                row_feature_values=response["features"], return_type=return_type
+                row_feature_values=response["features"],
+                passed_features=passed_features,
+                return_type=return_type,
             )
         else:
             return response
@@ -380,9 +382,12 @@ class OnlineStoreRestClientEngine:
             return [
                 self.convert_rdrs_response_to_feature_value_row(
                     row_feature_values=row,
+                    passed_features=passed,
                     return_type=return_type,
                 )
-                for row in response["features"]
+                for row, passed in zip(
+                    response["features"], passed_features, strict=True
+                )
             ]
         else:
             return response
