@@ -17,11 +17,11 @@ import logging
 from base64 import b64decode
 from datetime import datetime, timezone
 from io import BytesIO
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 import hsfs
 from avro.schema import Schema
-from hsfs import util
+from hsfs import serving_key, util
 from hsfs.core import online_store_rest_client_api
 
 
@@ -49,9 +49,10 @@ class OnlineStoreRestClientEngine:
         feature_view_name: str,
         feature_view_version: int,
         features: List["hsfs.training_dataset_feature.TrainingDatasetFeature"],
-        skip_fg_ids: List[int],
+        skip_fg_ids: Set[int],
         complex_features: Dict[str, Schema] = None,
         transformation_functions: Dict[str, Callable] = None,
+        serving_keys: Optional[List[serving_key.ServingKey]] = None,
     ):
         """Initialize the Online Store Rest Client Engine. This class contains the logic to mediate
         the interaction between the python client and the RonDB Rest Server Feature Store API.
@@ -62,9 +63,10 @@ class OnlineStoreRestClientEngine:
             feature_view_version: The version of the feature view from which to retrieve the feature vector.
             features: A list of features to be used for the feature vector conversion. Note that the features
                 must be ordered according to the feature vector schema.
-            skip_fg_ids: A list of feature ids to skip when inferring feature vector schema.
-                These ids are linked to features which are part of a Feature Group with embeddings and
+            skip_fg_ids: A set of feature group ids to skip when inferring feature vector schema.
+                These ids are linked to Feature Groups with embeddings and
                 therefore stored in the embedding online store (see vector_db_client).
+            serving_keys: Required serving keys, it allows us to fake the missing ones in entries.
         """
         _logger.info(
             f"Initializing Online Store Rest Client Engine for Feature View {feature_view_name}, version: {feature_view_version} in Feature Store {feature_store_name}."
@@ -98,10 +100,14 @@ class OnlineStoreRestClientEngine:
 
         self.set_return_feature_value_handlers()
 
+        # Temporary solution to handle missing serving keys in entries
+        self._serving_keys = serving_keys
+
     def build_base_payload(
         self,
         metadata_options: Optional[Dict[str, bool]] = None,
-        validate_passed_features: bool = False,
+        # Missing in current RonDB Server.
+        # validate_passed_features: bool = False,
     ) -> Dict[str, Union[str, Dict[str, bool]]]:
         """Build the base payload for the RonDB REST Server Feature Store API.
 
@@ -126,9 +132,9 @@ class OnlineStoreRestClientEngine:
             ),
             "featureViewName": self._feature_view_name,
             "featureViewVersion": self._feature_view_version,
-            "options": {
-                "validatePassedFeatures": validate_passed_features,
-            },
+            # "options": {
+            #     "validatePassedFeatures": validate_passed_features,
+            # },
         }
 
         if metadata_options is not None:
@@ -139,6 +145,37 @@ class OnlineStoreRestClientEngine:
 
         _logger.debug(f"Base payload: {base_payload}")
         return base_payload
+
+    def handle_missing_serving_keys_in_entry(
+        self, entry: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Handle missing serving keys in the entry dictionary by filling them with a random unlikely value.
+
+        This function is used to avoid backend errors on missing keys. This is a hacky solution and should be
+        phased out as soon as possible with a RonDB Server upgrade.
+
+        # Arguments:
+            entry: A dictionary with the feature names as keys and the primary key as values.
+
+        # Returns:
+            The entry dictionary with the missing serving keys filled with None values.
+        """
+        _logger.debug(
+            f"Handling missing serving keys in entry for Feature View {self._feature_view_name}, version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
+        )
+        for sk in self._serving_keys:
+            if sk.join_index in self.skip_fg_ids:
+                # The FG is in Opensearch therefore the serving key is not relevant for RonDB Server.
+                continue
+            if (
+                sk.feature_name not in entry.entries
+                or (sk.prefix + sk.feature_name) not in entry.entries
+            ):
+                _logger.debug(
+                    f"Adding missing serving key {sk.required_serving_key()} to entry with value `1`."
+                )
+                entry[sk.required_serving_key()] = 1
+        return entry
 
     def handle_passed_features_dict(
         self, passed_features: Optional[Dict[str, Any]]
@@ -204,10 +241,10 @@ class OnlineStoreRestClientEngine:
         _logger.debug(f"entry: {entry}, passed features: {passed_features}")
         payload = self.build_base_payload(
             metadata_options=metadata_options,
-            # This ensures consistency with the sql client behaviour.
-            validate_passed_features=False,
+            # This ensures consistency with the sql client behaviour. Missing in current RonDB Server.
+            # validate_passed_features=False,
         )
-        payload["entries"] = entry
+        payload["entries"] = self.handle_missing_serving_keys_in_entry(entry)
         payload["passedFeatures"] = self.handle_passed_features_dict(
             passed_features=passed_features
         )
@@ -260,10 +297,12 @@ class OnlineStoreRestClientEngine:
         _logger.debug(f"entries: {entries}\npassed features: {passed_features}")
         payload = self.build_base_payload(
             metadata_options=metadata_options,
-            # This ensures consistency with the sql client behaviour.
-            validate_passed_features=False,
+            # This ensures consistency with the sql client behaviour. Missing in current RonDB Server.
+            # validate_passed_features=False,
         )
-        payload["entries"] = entries
+        payload["entries"] = [
+            self.handle_missing_serving_keys_in_entry(entry) for entry in entries
+        ]
         if isinstance(passed_features, list) and (
             len(passed_features) == len(entries) or len(passed_features) == 0
         ):
