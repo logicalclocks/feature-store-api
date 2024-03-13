@@ -211,7 +211,7 @@ class OnlineStoreRestClientEngine:
                     _logger.debug(f"Removing serving key {sk.feature_name} from entry.")
                     entry.pop(sk.feature_name)
 
-        _logger.debug(f"entry with aletered primary-key:value pair : {entry}")
+        _logger.debug(f"entry with altered primary-key:value pair : {entry}")
 
         return entry, use_batch_api
 
@@ -390,6 +390,7 @@ class OnlineStoreRestClientEngine:
     def convert_rdrs_response_to_feature_value_row(
         self,
         row_feature_values: Union[List[Any], None],
+        passed_features: Dict[str, Any] = None,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_LIST,
     ) -> Union[List[Any], Dict[str, Any]]:
         """Convert the response from the RonDB Rest Server Feature Store API to a feature:value dict.
@@ -412,6 +413,21 @@ class OnlineStoreRestClientEngine:
                 if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT
                 else [None for _ in self._ordered_feature_names]
             )
+
+        # Merge with handlers if kept in the future.
+        if passed_features is not None and len(passed_features.keys()) > 0:
+            row_feature_values = [
+                passed_features.get(name, None)
+                or passed_features.get(fg_feature_name, None)
+                if value is None
+                else None
+                for name, fg_feature_name, value in zip(
+                    self._ordered_feature_names,
+                    self._ordered_feature_group_feature_names,
+                    row_feature_values,
+                    strict=True,
+                )
+            ]
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_LIST:
             _logger.debug(
@@ -483,6 +499,7 @@ class OnlineStoreRestClientEngine:
         """
         self._return_feature_value_handlers = {}
         self._ordered_feature_names = []
+        self._ordered_feature_group_feature_names = []
         _logger.debug(
             f"Setting return feature value handlers for Feature View {self._feature_view_name}, version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
         )
@@ -500,6 +517,9 @@ class OnlineStoreRestClientEngine:
                 continue
 
             self._ordered_feature_names.append(feature.name)
+            self._ordered_feature_group_feature_names.append(
+                feature.feature_group_feature_name
+            )
             if feature.is_complex() and feature.name in self._transformation_fns.keys():
                 # deserialize and then transform
                 _logger.debug(
