@@ -14,22 +14,21 @@
 #   limitations under the License.
 #
 
+import base64
 import datetime
 import json
-import base64
 import warnings
 from functools import wraps
 
 import pyarrow
 import pyarrow.flight
-from pyarrow.flight import FlightServerError
-from hsfs import client
-from hsfs import feature_group
+from hsfs import client, feature_group, util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi
-from hsfs import util
 from hsfs.storage_connector import StorageConnector
+from pyarrow.flight import FlightServerError
 from retrying import retry
+
 
 _arrow_flight_instance = None
 
@@ -78,7 +77,8 @@ class ArrowFlightClient:
             f"Could not establish connection to ArrowFlight Server. ({message}) "
             f"Will fall back to hive/spark for this session. "
             f"If the error persists, you can disable using ArrowFlight "
-            f"by changing the cluster configuration (set 'enable_flyingduck'='false')."
+            f"by changing the cluster configuration (set 'enable_flyingduck'='false').",
+            stacklevel=1,
         )
 
     def _initialize_connection(self):
@@ -204,7 +204,7 @@ class ArrowFlightClient:
 
         return decorator
 
-    def _should_retry(exception):
+    def _should_retry(self, exception):
         return isinstance(exception, pyarrow._flight.FlightUnavailableError)
 
     @retry(
@@ -270,7 +270,9 @@ class ArrowFlightClient:
     def is_flyingduck_query_object(self, query_obj):
         return isinstance(query_obj, dict) and "query_string" in query_obj
 
-    def create_query_object(self, query, query_str, on_demand_fg_aliases=[]):
+    def create_query_object(self, query, query_str, on_demand_fg_aliases=None):
+        if on_demand_fg_aliases is None:
+            on_demand_fg_aliases = []
         features = {}
         connectors = {}
         for fg in query.featuregroups:

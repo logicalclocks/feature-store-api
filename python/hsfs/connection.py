@@ -14,21 +14,21 @@
 #   limitations under the License.
 #
 
-import os
 import importlib.util
+import os
 
-from requests.exceptions import ConnectionError
-
-from hsfs.decorators import connected, not_connected
-from hsfs.core.opensearch import OpenSearchClientSingleton
-from hsfs import engine, client, util, usage
+from hsfs import client, engine, usage, util
 from hsfs.core import (
     feature_store_api,
-    project_api,
     hosts_api,
+    project_api,
     services_api,
     variable_api,
 )
+from hsfs.core.opensearch import OpenSearchClientSingleton
+from hsfs.decorators import connected, not_connected
+from requests.exceptions import ConnectionError
+
 
 AWS_DEFAULT_REGION = "default"
 HOPSWORKS_PORT_DEFAULT = 443

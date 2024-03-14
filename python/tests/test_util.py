@@ -14,10 +14,11 @@
 #   limitations under the License.
 #
 
-from datetime import datetime, date
-from hsfs import util
+from datetime import date, datetime
+
 import pytest
 import pytz
+from hsfs import util
 
 
 class TestUtil:

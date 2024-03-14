@@ -14,55 +14,55 @@
 #   limitations under the License.
 #
 
-import os
-import shutil
-import json
 import copy
 import importlib.util
+import json
+import os
 import re
+import shutil
 import warnings
+from datetime import datetime, timezone
 from typing import Optional, TypeVar
 
+import avro
 import numpy as np
 import pandas as pd
-import avro
-from datetime import datetime, timezone
-
 import tzlocal
+
 
 # in case importing in %%local
 
 try:
     import pyspark
     from pyspark import SparkFiles
-    from pyspark.sql import SparkSession, DataFrame, SQLContext
     from pyspark.rdd import RDD
+    from pyspark.sql import DataFrame, SparkSession, SQLContext
+    from pyspark.sql.avro.functions import from_avro, to_avro
     from pyspark.sql.functions import (
-        struct,
-        concat,
-        col,
-        lit,
         array,
+        col,
+        concat,
         from_json,
+        lit,
+        struct,
         udf,
     )
-    from pyspark.sql.avro.functions import from_avro, to_avro
     from pyspark.sql.types import (
-        ByteType,
-        ShortType,
-        IntegerType,
-        LongType,
-        FloatType,
-        DoubleType,
-        DecimalType,
-        DateType,
-        StringType,
-        TimestampType,
         ArrayType,
-        StructType,
         BinaryType,
         BooleanType,
+        ByteType,
+        DateType,
+        DecimalType,
+        DoubleType,
+        FloatType,
+        IntegerType,
+        LongType,
+        ShortType,
+        StringType,
         StructField,
+        StructType,
+        TimestampType,
     )
 
     if pd.__version__ >= "2.0.0" and pyspark.__version__ < "3.2.3":
@@ -70,24 +70,9 @@ try:
         def iteritems(self):
             return self.items()
 
-        setattr(pd.DataFrame, "iteritems", iteritems)
+        pd.DataFrame.iteritems = iteritems
 except ImportError:
     pass
-
-from hsfs import feature, training_dataset_feature, client, util
-from hsfs.feature_group import ExternalFeatureGroup, SpineGroup
-from hsfs.storage_connector import StorageConnector
-from hsfs.client.exceptions import FeatureStoreException
-from hsfs.client import hopsworks
-from hsfs.core import (
-    hudi_engine,
-    delta_engine,
-    transformation_function_engine,
-    storage_connector_api,
-    dataset_api,
-)
-from hsfs.constructor import query
-from hsfs.training_dataset_split import TrainingDatasetSplit
 
 from great_expectations.core.batch import RuntimeBatchRequest
 from great_expectations.data_context import BaseDataContext
@@ -95,6 +80,20 @@ from great_expectations.data_context.types.base import (
     DataContextConfig,
     InMemoryStoreBackendDefaults,
 )
+from hsfs import client, feature, training_dataset_feature, util
+from hsfs.client import hopsworks
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.constructor import query
+from hsfs.core import (
+    dataset_api,
+    delta_engine,
+    hudi_engine,
+    storage_connector_api,
+    transformation_function_engine,
+)
+from hsfs.feature_group import ExternalFeatureGroup, SpineGroup
+from hsfs.storage_connector import StorageConnector
+from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
 class Engine:
@@ -137,7 +136,7 @@ class Engine:
         self.set_job_group("", "")
         return self._return_dataframe_type(result_df, dataframe_type)
 
-    def is_flyingduck_query_supported(self, query, read_options={}):
+    def is_flyingduck_query_supported(self, query, read_options=None):
         return False  # we do not support flyingduck on pyspark clients
 
     def _sql_offline(self, sql_query, feature_store):
@@ -145,7 +144,7 @@ class Engine:
         self._spark_session.sql("USE {}".format(feature_store))
         return self._spark_session.sql(sql_query)
 
-    def show(self, sql_query, feature_store, n, online_conn, read_options={}):
+    def show(self, sql_query, feature_store, n, online_conn, read_options=None):
         return self.sql(
             sql_query, feature_store, online_conn, "default", read_options
         ).show(n)
@@ -266,6 +265,7 @@ class Engine:
                         upper_case_features
                     ),
                     util.FeatureGroupWarning,
+                    stacklevel=1,
                 )
 
             lowercase_dataframe = dataframe.select(
@@ -334,7 +334,7 @@ class Engine:
                         feature_group, dataframe, online_write_options
                     )
         except Exception as e:
-            raise FeatureStoreException(e).with_traceback(e.__traceback__)
+            raise FeatureStoreException(e).with_traceback(e.__traceback__) from e
 
     def save_stream_dataframe(
         self,
@@ -438,9 +438,7 @@ class Engine:
                 **write_options
             ).partitionBy(
                 feature_group.partition_key if feature_group.partition_key else []
-            ).saveAsTable(
-                feature_group._get_table_name()
-            )
+            ).saveAsTable(feature_group._get_table_name())
 
     def _save_online_dataframe(self, feature_group, dataframe, write_options):
         write_options = self._get_kafka_config(
@@ -539,13 +537,15 @@ class Engine:
         query_obj,
         user_write_options,
         save_mode,
-        read_options={},
+        read_options=None,
         feature_view_obj=None,
         to_df=False,
     ):
         write_options = self.write_options(
             training_dataset.data_format, user_write_options
         )
+        if read_options is None:
+            read_options = {}
 
         if len(training_dataset.splits) == 0:
             if isinstance(query_obj, query.Query):
@@ -588,7 +588,9 @@ class Engine:
                 training_dataset, split_dataset, write_options, save_mode, to_df=to_df
             )
 
-    def _split_df(self, query_obj, training_dataset, read_options={}):
+    def _split_df(self, query_obj, training_dataset, read_options=None):
+        if read_options is None:
+            read_options = {}
         if (
             training_dataset.splits[0].split_type
             == TrainingDatasetSplit.TIME_SERIES_SPLIT
@@ -652,7 +654,7 @@ class Engine:
             split_path = training_dataset.location + "/" + str(split_name)
             feature_dataframes[split_name] = self._write_training_dataset_single(
                 training_dataset.transformation_functions,
-                feature_dataframes[split_name],
+                feature_dataframe,
                 training_dataset.storage_connector,
                 training_dataset.data_format,
                 write_options,
@@ -921,7 +923,7 @@ class Engine:
                     feat.dataType, using_hudi
                 )
             except ValueError as e:
-                raise FeatureStoreException(f"Feature '{name}': {str(e)}")
+                raise FeatureStoreException(f"Feature '{name}': {str(e)}") from e
             features.append(
                 feature.Feature(
                     name, converted_type, feat.metadata.get("description", None)
@@ -1020,13 +1022,9 @@ class Engine:
             feature_group.location
         ).withColumns(new_features_map).limit(0).write.format("delta").mode(
             "append"
-        ).option(
-            "mergeSchema", "true"
-        ).option(
+        ).option("mergeSchema", "true").option(
             "spark.databricks.delta.schema.autoMerge.enabled", "true"
-        ).save(
-            feature_group.location
-        )
+        ).save(feature_group.location)
 
     def _apply_transformation_function(self, transformation_functions, dataset):
         # generate transformation function expressions
@@ -1044,8 +1042,8 @@ class Engine:
                 + feature_name
             )
 
-            def timezone_decorator(func):
-                if transformation_fn.output_type != "TIMESTAMP":
+            def timezone_decorator(func, trans_fn=transformation_fn):
+                if trans_fn.output_type != "TIMESTAMP":
                     return func
 
                 current_timezone = tzlocal.get_localzone()
@@ -1237,8 +1235,10 @@ class Engine:
         return df
 
     def _get_kafka_config(
-        self, feature_store_id: int, write_options: dict = {}
+        self, feature_store_id: int, write_options: dict = None
     ) -> dict:
+        if write_options is None:
+            write_options = {}
         external = not (
             isinstance(client.get_instance(), hopsworks.Client)
             or write_options.get("internal_kafka", False)

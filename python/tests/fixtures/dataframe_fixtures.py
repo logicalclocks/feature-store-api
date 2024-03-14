@@ -14,9 +14,10 @@
 #   limitations under the License.
 #
 
-import pytest
+from datetime import datetime, timedelta, timezone
+
 import pandas as pd
-from datetime import datetime, timezone, timedelta
+import pytest
 
 
 @pytest.fixture

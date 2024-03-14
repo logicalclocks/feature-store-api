@@ -17,7 +17,7 @@
 import json
 
 from hsfs import client
-from hsfs.core import job, execution, job_schedule
+from hsfs.core import execution, job, job_schedule
 
 
 class JobApi:

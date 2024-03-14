@@ -14,10 +14,11 @@
 #   limitations under the License.
 #
 
+from typing import Any, Dict, Optional, Union
+
+import great_expectations as ge
 from hsfs import engine, validation_report
 from hsfs import expectation_suite as es
-from typing import Dict, Any, Optional, Union
-import great_expectations as ge
 
 
 class GreatExpectationEngine:
@@ -39,7 +40,7 @@ class GreatExpectationEngine:
             ge.core.ExpectationSuite, es.ExpectationSuite, None
         ] = None,
         save_report: bool = False,
-        validation_options: Dict[str, Any] = {},
+        validation_options: Dict[str, Any] = None,
         ge_type: bool = True,
         ingestion_result: str = "UNKNOWN",
     ) -> Union[
@@ -47,6 +48,9 @@ class GreatExpectationEngine:
         validation_report.ValidationReport,
         None,
     ]:
+        if validation_options is None:
+            validation_options = {}
+
         suite = self.fetch_or_convert_expectation_suite(
             feature_group, expectation_suite, validation_options
         )
@@ -88,14 +92,16 @@ class GreatExpectationEngine:
         expectation_suite: Union[
             ge.core.ExpectationSuite, es.ExpectationSuite, None
         ] = None,
-        validation_options: dict = {},
+        validation_options: dict = None,
     ) -> Optional[es.ExpectationSuite]:
         """Convert provided expectation suite or fetch the one attached to the Feature Group from backend."""
         if expectation_suite is not None:
             if isinstance(expectation_suite, es.ExpectationSuite):
                 return expectation_suite
             return es.ExpectationSuite.from_ge_type(expectation_suite)
-        if validation_options.get("fetch_expectation_suite", True):
+        if isinstance(validation_options, dict) and validation_options.get(
+            "fetch_expectation_suite", True
+        ):
             return feature_group.get_expectation_suite(False)
         return feature_group.expectation_suite
 

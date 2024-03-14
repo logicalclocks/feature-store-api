@@ -14,15 +14,16 @@
 #   limitations under the License.
 #
 
-from typing import Dict, List, Optional, Union, Tuple
 from datetime import date, datetime
+from typing import Dict, List, Optional, Tuple, Union
+
+from hsfs import util
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core import feature_monitoring_config as fmc
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 from hsfs.core.feature_monitoring_config_api import FeatureMonitoringConfigApi
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.core.feature_monitoring_result_api import FeatureMonitoringResultApi
-from hsfs.core import feature_monitoring_config as fmc
-from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
-from hsfs.client.exceptions import FeatureStoreException
-from hsfs import util
 from hsfs.core.job_api import JobApi
 
 
@@ -361,11 +362,13 @@ class FeatureMonitoringResultEngine:
         detection_statistics: List[FeatureDescriptiveStatistics],
         reference_statistics: List[FeatureDescriptiveStatistics],
     ):
-        assert len(reference_statistics) == len(
-            detection_statistics
+        assert (
+            len(reference_statistics) == len(detection_statistics)
         ), "detection_statistics and reference_statistics must contain the same number of feature statistics"
         det_stats_set, ref_stats_set = set(), set()
-        for det_fds, ref_fds in zip(detection_statistics, reference_statistics):
+        for det_fds, ref_fds in zip(
+            detection_statistics, reference_statistics, strict=False
+        ):
             det_stats_set.add((det_fds.feature_name, det_fds.feature_type))
             ref_stats_set.add((ref_fds.feature_name, ref_fds.feature_type))
 
@@ -388,7 +391,7 @@ class FeatureMonitoringResultEngine:
         )
 
         fm_results = []
-        for det_fds, ref_fds in zip(sorted_det_stats, sorted_ref_stats):
+        for det_fds, ref_fds in zip(sorted_det_stats, sorted_ref_stats, strict=False):
             difference, shift_detected = self.compute_difference_and_shift(
                 fm_config=fm_config,
                 detection_statistics=det_fds,

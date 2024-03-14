@@ -15,6 +15,7 @@
 #
 
 from typing import List
+
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 

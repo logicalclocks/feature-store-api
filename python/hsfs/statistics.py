@@ -15,12 +15,12 @@
 #
 
 import json
-import humps
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
+import humps
 from hsfs import util
-from hsfs.split_statistics import SplitStatistics
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.split_statistics import SplitStatistics
 
 
 class Statistics:

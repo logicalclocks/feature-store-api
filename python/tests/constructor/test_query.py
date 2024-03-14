@@ -16,9 +16,9 @@
 import warnings
 
 import pytest
-from hsfs import feature_group, feature
-from hsfs.constructor import query, join, filter
+from hsfs import feature, feature_group
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.constructor import filter, join, query
 
 
 class TestQuery:

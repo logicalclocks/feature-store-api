@@ -15,18 +15,17 @@
 #
 
 import json
-from typing import Optional, Union, List, Dict, Any
-
-import humps
-import great_expectations as ge
 import re
+from typing import Any, Dict, List, Optional, Union
 
+import great_expectations as ge
+import humps
 from hsfs import util
-from hsfs.ge_expectation import GeExpectation
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core import expectation_suite_engine
 from hsfs.core.expectation_engine import ExpectationEngine
 from hsfs.core.variable_api import VariableApi
-from hsfs.core import expectation_suite_engine
-from hsfs.client.exceptions import FeatureStoreException
+from hsfs.ge_expectation import GeExpectation
 
 
 class ExpectationSuite:

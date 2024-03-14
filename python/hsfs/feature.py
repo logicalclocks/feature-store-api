@@ -14,9 +14,9 @@
 #   limitations under the License.
 #
 
-import humps
 import json
 
+import humps
 from hsfs import util
 from hsfs.constructor import filter
 

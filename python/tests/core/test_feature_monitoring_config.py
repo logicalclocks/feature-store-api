@@ -16,10 +16,10 @@
 
 from datetime import datetime, timezone
 
-from hsfs.core.job_schedule import JobSchedule
 from hsfs.core import feature_monitoring_config as fmc
-from hsfs.core.monitoring_window_config import WindowConfigType
 from hsfs.core.feature_monitoring_config import FeatureMonitoringType
+from hsfs.core.job_schedule import JobSchedule
+from hsfs.core.monitoring_window_config import WindowConfigType
 
 
 class TestFeatureMonitoringConfig:

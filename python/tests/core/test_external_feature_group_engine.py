@@ -14,8 +14,7 @@
 #   limitations under the License.
 #
 import pytest
-
-from hsfs import feature_group, feature, storage_connector
+from hsfs import feature, feature_group, storage_connector
 from hsfs.client import exceptions
 from hsfs.core import external_feature_group_engine
 from hsfs.engine import python

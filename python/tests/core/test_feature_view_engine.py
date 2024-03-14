@@ -13,26 +13,25 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import pytest
+from unittest.mock import MagicMock
 
+import pytest
 from hsfs import (
-    feature_view,
-    transformation_function_attached,
-    training_dataset,
-    split_statistics,
-    feature_group,
-    feature,
     engine,
+    feature,
+    feature_group,
+    feature_view,
+    split_statistics,
+    training_dataset,
+    transformation_function_attached,
 )
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import fs_query
-from hsfs.core import feature_view_engine
 from hsfs.constructor.query import Query
-from hsfs.core import arrow_flight_client
-from hsfs.storage_connector import BigQueryConnector, StorageConnector
+from hsfs.core import arrow_flight_client, feature_view_engine
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.storage_connector import BigQueryConnector, StorageConnector
 
-from unittest.mock import MagicMock
 
 engine.init("python")
 fg1 = feature_group.FeatureGroup(
@@ -814,9 +813,7 @@ class TestFeatureViewEngine:
             labels=[],
         )
 
-        mock_fv_engine_create_training_data_metadata.return_value.training_dataset_type = (
-            training_dataset.TrainingDataset.IN_MEMORY
-        )
+        mock_fv_engine_create_training_data_metadata.return_value.training_dataset_type = training_dataset.TrainingDataset.IN_MEMORY
         mock_fv_engine_create_training_data_metadata.return_value.IN_MEMORY = (
             training_dataset.TrainingDataset.IN_MEMORY
         )
@@ -1860,9 +1857,7 @@ class TestFeatureViewEngine:
         assert (
             mock_engine_get_instance.return_value._apply_transformation_function.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == tf_value
         )
         assert (

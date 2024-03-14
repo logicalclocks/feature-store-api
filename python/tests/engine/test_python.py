@@ -14,28 +14,27 @@
 #   limitations under the License.
 #
 import decimal
+from datetime import date, datetime
 
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pyarrow as pa
-from confluent_kafka.admin import TopicMetadata, PartitionMetadata
-
-from datetime import datetime, date
+import pytest
+from confluent_kafka.admin import PartitionMetadata, TopicMetadata
 from hsfs import (
-    storage_connector,
-    feature_group,
-    training_dataset,
-    feature_view,
-    transformation_function,
     feature,
+    feature_group,
+    feature_view,
+    storage_connector,
+    training_dataset,
+    transformation_function,
     util,
 )
-from hsfs.engine import python
-from hsfs.core import inode, job
-from hsfs.constructor import query
 from hsfs.client import exceptions
+from hsfs.constructor import query
 from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
+from hsfs.core import inode, job
+from hsfs.engine import python
 from hsfs.training_dataset_feature import TrainingDatasetFeature
 
 
@@ -1469,7 +1468,8 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": 2.0 for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1487,7 +1487,8 @@ class TestPython:
         # Arrange
         mapping = {"user0": 2.0, "user1": "test"}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1505,7 +1506,8 @@ class TestPython:
         # Arrange
         mapping = {"user0": list(np.random.normal(size=5)), "user1": ["test", "test"]}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1523,7 +1525,8 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": "test" for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1541,7 +1544,8 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": {"value": "test"} for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1564,7 +1568,8 @@ class TestPython:
             f"user{i}": {"value": list(np.random.normal(size=5))} for i in range(2)
         }
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1585,7 +1590,8 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": {"value": {"value": "test"}} for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1606,7 +1612,8 @@ class TestPython:
         # Arrange
         mapping = [{"value": np.random.normal(size=5)}]
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1624,7 +1631,8 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": [{"value": np.random.normal(size=5)}] for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 

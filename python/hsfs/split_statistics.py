@@ -15,8 +15,8 @@
 #
 
 import json
-import humps
 
+import humps
 from hsfs import util
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
@@ -31,7 +31,7 @@ class SplitStatistics:
         items=None,
         count=None,
         type=None,
-        **kwargs
+        **kwargs,
     ):
         self._name = name
         self._feature_descriptive_statistics = feature_descriptive_statistics

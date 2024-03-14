@@ -16,6 +16,7 @@
 
 from hsfs.client import external, hopsworks
 
+
 _client = None
 
 

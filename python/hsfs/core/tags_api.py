@@ -16,7 +16,7 @@
 
 import json
 
-from hsfs import client, tag, feature_view
+from hsfs import client, feature_view, tag
 
 
 class TagsApi:

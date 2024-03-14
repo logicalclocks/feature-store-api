@@ -16,13 +16,12 @@
 
 import json
 import warnings
-from typing import List, Union, Optional
+from datetime import date, datetime
+from typing import List, Optional, Union
 
-from datetime import datetime, date
-
-from hsfs import engine, statistics, util, split_statistics
+from hsfs import engine, split_statistics, statistics, util
 from hsfs.client import exceptions
-from hsfs.core import statistics_api, job
+from hsfs.core import job, statistics_api
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 
@@ -172,6 +171,7 @@ class StatisticsEngine:
                 "statistics for. A possible cause might be that you inserted only data "
                 "to the online storage of a feature group.",
                 category=util.StatisticsWarning,
+                stacklevel=1,
             )
             # if empty data, set count to 0 and return
             col_stats = [{"column": col_name, "count": 0} for col_name in columns]
@@ -437,6 +437,7 @@ class StatisticsEngine:
             warnings.warn(
                 "There is no Deequ statistics to deserialize. A possible cause might be that Deequ did not succeed in the statistics computation.",
                 category=util.StatisticsWarning,
+                stacklevel=1,
             )
             return None
         if isinstance(stats, str):

@@ -17,15 +17,15 @@
 import base64
 import os
 import textwrap
-import furl
-from pathlib import Path
 from abc import ABC, abstractmethod
+from pathlib import Path
 
+import furl
 import requests
 import urllib3
-
-from hsfs.client import exceptions, auth
+from hsfs.client import auth, exceptions
 from hsfs.decorators import connected
+
 
 try:
     import jks

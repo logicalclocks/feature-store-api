@@ -15,15 +15,15 @@
 #
 
 import json
-import humps
-from typing import Optional, List, Union
-from datetime import datetime, date
+from datetime import date, datetime
+from typing import List, Optional, Union
 
-from hsfs import util, engine, feature_group
-from hsfs.core import query_constructor_api, storage_connector_api, arrow_flight_client
+import humps
+from hsfs import engine, feature_group, util
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import join
 from hsfs.constructor.filter import Filter, Logic
-from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core import arrow_flight_client, query_constructor_api, storage_connector_api
 from hsfs.feature import Feature
 
 
@@ -115,7 +115,7 @@ class Query:
         self,
         online: Optional[bool] = False,
         dataframe_type: Optional[str] = "default",
-        read_options: Optional[dict] = {},
+        read_options: Optional[dict] = None,
     ):
         """Read the specified query into a DataFrame.
 
@@ -200,9 +200,9 @@ class Query:
     def join(
         self,
         sub_query: "Query",
-        on: Optional[List[str]] = [],
-        left_on: Optional[List[str]] = [],
-        right_on: Optional[List[str]] = [],
+        on: Optional[List[str]] = None,
+        left_on: Optional[List[str]] = None,
+        right_on: Optional[List[str]] = None,
         join_type: Optional[str] = "inner",
         prefix: Optional[str] = None,
     ):
@@ -248,7 +248,14 @@ class Query:
             `Query`: A new Query object representing the join.
         """
         self._joins.append(
-            join.Join(sub_query, on, left_on, right_on, join_type.upper(), prefix)
+            join.Join(
+                sub_query,
+                on or [],
+                left_on or [],
+                right_on or [],
+                join_type.upper(),
+                prefix,
+            )
         )
 
         return self
@@ -723,8 +730,8 @@ class Query:
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
-        except FeatureStoreException:
-            raise AttributeError(f"'Query' object has no attribute '{name}'. ")
+        except FeatureStoreException as err:
+            raise AttributeError(f"'Query' object has no attribute '{name}'. ") from err
 
     def __getitem__(self, name):
         if not isinstance(name, str):
