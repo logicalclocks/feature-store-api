@@ -2600,7 +2600,7 @@ class FeatureView:
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
         """
-        td, df = self._feature_view_engine.get_training_data(
+        _, df = self._feature_view_engine.get_training_data(
             self,
             read_options,
             training_dataset_version=training_dataset_version,
@@ -2667,7 +2667,7 @@ class FeatureView:
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
         """
-        td, df = self._feature_view_engine.get_training_data(
+        _, df = self._feature_view_engine.get_training_data(
             self,
             read_options,
             training_dataset_version=training_dataset_version,
