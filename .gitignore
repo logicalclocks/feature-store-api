@@ -50,6 +50,8 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+.ruff_cache/
+bigquery.json
 
 # Translations
 *.mo

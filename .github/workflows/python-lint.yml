@@ -16,7 +16,7 @@ jobs:
         run: pip install ruff==0.3.2
 
       - name: ruff
-        run: ruff check python --fix --config python/pyproject.toml --output-format=github
+        run: ruff check python --fix --config=python/pyproject.toml --output-format=github
 
   unit_tests_ubuntu_utc:
     name: Unit Testing (Ubuntu)

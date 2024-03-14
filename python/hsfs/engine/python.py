@@ -611,9 +611,12 @@ class Engine:
         ):
             warnings.warn(
                 "Currently Great Expectations does not support Polars dataframes. This operation will convert to Pandas dataframe that can be slow.",
+                util.FeatureGroupWarning,
                 stacklevel=1,
             )
             dataframe = dataframe.to_pandas()
+        if ge_validate_kwargs is None:
+            ge_validate_kwargs = {}
         report = ge.from_pandas(
             dataframe, expectation_suite=expectation_suite
         ).validate(**ge_validate_kwargs)

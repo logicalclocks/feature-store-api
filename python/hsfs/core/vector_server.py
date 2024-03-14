@@ -24,7 +24,6 @@ import numpy as np
 import pandas as pd
 import polars as pl
 from hsfs import client, feature_view, training_dataset, util
-from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import (
     feature_view_api,
     feature_view_engine,
@@ -58,6 +57,8 @@ class VectorServer:
         feature_view_name: str = None,
         feature_view_version: int = None,
     ):
+        if features is None:
+            features = []
         self._training_dataset_version = training_dataset_version
         self._features = [] if features is None else features
         self._feature_vector_col_name = (
@@ -764,7 +765,7 @@ class VectorServer:
                 if fill_na:
                     vector.append(None)
                 else:
-                    raise FeatureStoreException(
+                    raise client.exceptions.FeatureStoreException(
                         f"Feature '{feature_name}' is missing from vector."
                         "Possible reasons: "
                         "1. There is no match in the given entry."

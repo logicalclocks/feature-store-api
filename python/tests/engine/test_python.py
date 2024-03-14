@@ -1760,7 +1760,7 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": 2.0 for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            data=zip(list(range(1, 2)), [mapping] * 2),
             columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
@@ -1779,7 +1779,7 @@ class TestPython:
         # Arrange
         mapping = {"user0": 2.0, "user1": "test"}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            data=zip(list(range(1, 2)), [mapping] * 2),
             columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
@@ -1798,7 +1798,7 @@ class TestPython:
         # Arrange
         mapping = {"user0": list(np.random.normal(size=5)), "user1": ["test", "test"]}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            data=zip(list(range(1, 2)), [mapping] * 2),
             columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
@@ -1817,7 +1817,7 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": "test" for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            data=zip(list(range(1, 2)), [mapping] * 2),
             columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
@@ -1836,7 +1836,7 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": {"value": "test"} for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            data=zip(list(range(1, 2)), [mapping] * 2),
             columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
@@ -1860,7 +1860,7 @@ class TestPython:
             f"user{i}": {"value": list(np.random.normal(size=5))} for i in range(2)
         }
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            data=zip(list(range(1, 2)), [mapping] * 2),
             columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
@@ -1882,7 +1882,7 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": {"value": {"value": "test"}} for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            data=zip(list(range(1, 2)), [mapping] * 2),
             columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
@@ -1904,7 +1904,7 @@ class TestPython:
         # Arrange
         mapping = [{"value": np.random.normal(size=5)}]
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            data=zip(list(range(1, 2)), [mapping] * 2),
             columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
@@ -1923,7 +1923,7 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": [{"value": np.random.normal(size=5)}] for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2, strict=False),
+            data=zip(list(range(1, 2)), [mapping] * 2),
             columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
