@@ -14,9 +14,11 @@
 #   limitations under the License.
 #
 
-import pytest
 import json
 import os
+
+import pytest
+
 
 FIXTURES_DIR = os.path.dirname(os.path.abspath(__file__))
 
