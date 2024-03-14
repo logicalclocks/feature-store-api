@@ -15,26 +15,8 @@
 #
 
 import numpy
-from pyspark.sql.types import (
-    ByteType,
-    ShortType,
-    IntegerType,
-    LongType,
-    FloatType,
-    DoubleType,
-    DecimalType,
-    DateType,
-    StringType,
-    TimestampType,
-    StructType,
-    BinaryType,
-    BooleanType,
-    StructField,
-    MapType,
-    ArrayType,
-)
-from pyspark.sql import DataFrame
-
+import pandas as pd
+import pytest
 from hsfs import (
     engine,
     expectation_suite,
@@ -50,6 +32,7 @@ from hsfs.constructor import hudi_feature_group_alias, query
 from hsfs.core import training_dataset_engine
 from hsfs.engine import spark
 from hsfs.training_dataset_feature import TrainingDatasetFeature
+from pyspark.sql import DataFrame
 from pyspark.sql.types import (
     ArrayType,
     BinaryType,

@@ -20,6 +20,7 @@ import json
 import warnings
 from functools import wraps
 
+import polars as pl
 import pyarrow
 import pyarrow.flight
 from hsfs import client, feature_group, util
@@ -28,7 +29,6 @@ from hsfs.core.variable_api import VariableApi
 from hsfs.storage_connector import StorageConnector
 from pyarrow.flight import FlightServerError
 from retrying import retry
-import polars as pl
 
 
 _arrow_flight_instance = None

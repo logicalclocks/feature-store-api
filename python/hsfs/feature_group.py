@@ -22,14 +22,11 @@ from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 import avro.schema
-from hsfs.constructor.filter import Filter, Logic
-
-import polars as pl
-
 import great_expectations as ge
 import humps
 import numpy as np
 import pandas as pd
+import polars as pl
 from hsfs import (
     engine,
     feature,
@@ -42,6 +39,7 @@ from hsfs import (
 )
 from hsfs.client.exceptions import FeatureStoreException, RestAPIError
 from hsfs.constructor import filter, query
+from hsfs.constructor.filter import Filter, Logic
 from hsfs.core import (
     code_engine,
     expectation_suite_engine,

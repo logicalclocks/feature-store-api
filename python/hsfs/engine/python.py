@@ -14,11 +14,6 @@
 #   limitations under the License.
 #
 
-import pandas as pd
-import polars as pl
-import numpy as np
-import boto3
-import re
 import ast
 import decimal
 import json
@@ -33,19 +28,14 @@ import uuid
 import warnings
 from datetime import datetime, timezone
 from io import BytesIO
-from pyhive import hive
-from typing import TypeVar, Optional, Dict, Any, Union
-from confluent_kafka import Consumer, Producer, TopicPartition, KafkaError
-from tqdm.auto import tqdm
-from botocore.response import StreamingBody
-from sqlalchemy import sql
-from typing import Any, Dict, Optional, TypeVar
+from typing import Any, Dict, Optional, TypeVar, Union
 
 import avro
 import boto3
 import great_expectations as ge
 import numpy as np
 import pandas as pd
+import polars as pl
 import pyarrow as pa
 import pytz
 from botocore.response import StreamingBody
@@ -536,7 +526,7 @@ class Engine:
             if isinstance(df, pl.DataFrame) or isinstance(
                 df, pl.dataframe.frame.DataFrame
             ):
-                stats[col] = dict(zip(stats["statistic"], stats[col]))
+                stats[col] = dict(zip(stats["statistic"], stats[col], strict=False))
 
             # set data type
             arrow_type = arrow_schema.field(col).type
@@ -618,7 +608,9 @@ class Engine:
             dataframe, pl.dataframe.frame.DataFrame
         ):
             warnings.warn(
-                "Currently Great Expectations does not support Polars dataframes. This operation will convert to Pandas dataframe that can be slow."
+                "Currently Great Expectations does not support Polars dataframes. This operation will convert to Pandas dataframe that can be slow.",
+                util.FeatureGroupWarning,
+                stacklevel=1,
             )
             dataframe = dataframe.to_pandas()
         if ge_validate_kwargs is None:

@@ -16,12 +16,9 @@
 import decimal
 from datetime import date, datetime
 
-import pytest
-import pandas as pd
-import polars as pl
-from polars.testing import assert_frame_equal as polars_assert_frame_equal
 import numpy as np
 import pandas as pd
+import polars as pl
 import pyarrow as pa
 import pytest
 from confluent_kafka.admin import PartitionMetadata, TopicMetadata
@@ -40,6 +37,7 @@ from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
 from hsfs.core import inode, job
 from hsfs.engine import python
 from hsfs.training_dataset_feature import TrainingDatasetFeature
+from polars.testing import assert_frame_equal as polars_assert_frame_equal
 
 
 class TestPython:
