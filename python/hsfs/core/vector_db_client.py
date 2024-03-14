@@ -16,7 +16,7 @@
 
 from typing import Union
 
-from hsfs.client.exceptions import FeatureStoreException
+from hsfs.client.exceptions import FeatureStoreException, VectorDatabaseException
 from hsfs.constructor.filter import Filter, Logic
 from hsfs.constructor.join import Join
 from hsfs.core.opensearch import OpenSearchClientSingleton
@@ -41,6 +41,7 @@ class VectorDbClient:
         self._fg_embedding_map = {}
         self._embedding_fg_by_join_index = {}
         self._opensearch_client = None
+        self._index_result_limit_k = {}
         self.init()
 
     def init(self):
@@ -140,8 +141,31 @@ class VectorDbClient:
             embedding_feature.embedding_index.col_prefix
             and len(results["hits"]["hits"]) != k
         ):
-            query["query"]["bool"]["must"][0]["knn"][col_name]["k"] = 3 * k
+            # Get the max number of results allowed to request if it is not available.
+            # This is expected to be executed once only.
+            if not self._index_result_limit_k.get(index_name):
+                query["query"]["bool"]["must"][0]["knn"][col_name]["k"] = 2**31 - 1
+                try:
+                    # It is expected that this request ALWAYS fails because requested k is too large.
+                    # The purpose here is to get the max k allowed from the vector database, and cache it.
+                    self._opensearch_client.search(body=query, index=index_name)
+                except VectorDatabaseException as e:
+                    if (
+                        e.reason == VectorDatabaseException.REQUESTED_K_TOO_LARGE
+                        and e.info.get(
+                            VectorDatabaseException.REQUESTED_K_TOO_LARGE_INFO_K
+                        )
+                    ):
+                        self._index_result_limit_k[index_name] = e.info.get(
+                            VectorDatabaseException.REQUESTED_K_TOO_LARGE_INFO_K
+                        )
+                    else:
+                        raise e
+            query["query"]["bool"]["must"][0]["knn"][col_name]["k"] = min(
+                self._index_result_limit_k.get(index_name, k), 3 * k
+            )
             results = self._opensearch_client.search(body=query, index=index_name)
+
         # https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
         return [
             (
