@@ -526,7 +526,7 @@ class Engine:
             if isinstance(df, pl.DataFrame) or isinstance(
                 df, pl.dataframe.frame.DataFrame
             ):
-                stats[col] = dict(zip(stats["statistic"], stats[col], strict=False))
+                stats[col] = dict(zip(stats["statistic"], stats[col]))
 
             # set data type
             arrow_type = arrow_schema.field(col).type

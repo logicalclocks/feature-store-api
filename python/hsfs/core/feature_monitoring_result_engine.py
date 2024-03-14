@@ -366,9 +366,7 @@ class FeatureMonitoringResultEngine:
             len(reference_statistics) == len(detection_statistics)
         ), "detection_statistics and reference_statistics must contain the same number of feature statistics"
         det_stats_set, ref_stats_set = set(), set()
-        for det_fds, ref_fds in zip(
-            detection_statistics, reference_statistics, strict=False
-        ):
+        for det_fds, ref_fds in zip(detection_statistics, reference_statistics):
             det_stats_set.add((det_fds.feature_name, det_fds.feature_type))
             ref_stats_set.add((ref_fds.feature_name, ref_fds.feature_type))
 
@@ -391,7 +389,7 @@ class FeatureMonitoringResultEngine:
         )
 
         fm_results = []
-        for det_fds, ref_fds in zip(sorted_det_stats, sorted_ref_stats, strict=False):
+        for det_fds, ref_fds in zip(sorted_det_stats, sorted_ref_stats):
             difference, shift_detected = self.compute_difference_and_shift(
                 fm_config=fm_config,
                 detection_statistics=det_fds,
