@@ -17,6 +17,7 @@
 import re
 import json
 import pandas as pd
+import numpy as np
 import time
 import threading
 import itertools
@@ -432,6 +433,24 @@ def get_feature_group_url(feature_store_id: int, feature_group_id: int):
         + str(feature_group_id)
     )
     return get_hostname_replaced_url(sub_path)
+
+
+class NpDatetimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        dtypes = (np.datetime64, np.complexfloating)
+        if isinstance(obj, (datetime, date)):
+            return convert_event_time_to_timestamp(obj)
+        elif isinstance(obj, dtypes):
+            return str(obj)
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            if any([np.issubdtype(obj.dtype, i) for i in dtypes]):
+                return obj.astype(str).tolist()
+            return obj.tolist()
+        return super(NpDatetimeEncoder, self).default(obj)
 
 
 class VersionWarning(Warning):
