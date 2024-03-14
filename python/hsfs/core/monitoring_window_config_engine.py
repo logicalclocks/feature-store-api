@@ -259,9 +259,14 @@ class MonitoringWindowConfigEngine:
                 entity,
                 training_dataset_version=monitoring_window_config.training_dataset_version,
             )
+            before_transformation = (
+                feature_name is not None
+                and td_meta.transformation_functions is not None
+                and feature_name in td_meta.transformation_functions.keys()
+            )
             registered_stats = entity.get_training_dataset_statistics(
                 training_dataset_version=monitoring_window_config.training_dataset_version,
-                before_transformation=td_meta.transformation_functions is not None,
+                before_transformation=before_transformation,
                 feature_names=[feature_name] if feature_name is not None else None,
             )
             if (

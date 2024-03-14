@@ -20,6 +20,7 @@ import json
 import warnings
 from functools import wraps
 
+import polars as pl
 import pyarrow
 import pyarrow.flight
 from hsfs import client, feature_group, util
@@ -215,21 +216,29 @@ class ArrowFlightClient:
     def get_flight_info(self, descriptor):
         return self._connection.get_flight_info(descriptor)
 
-    def _get_dataset(self, descriptor, timeout=DEFAULT_TIMEOUT):
+    def _get_dataset(
+        self, descriptor, timeout=DEFAULT_TIMEOUT, dataframe_type="default"
+    ):
         info = self.get_flight_info(descriptor)
         options = pyarrow.flight.FlightCallOptions(timeout=timeout)
         reader = self._connection.do_get(self._info_to_ticket(info), options)
-        return reader.read_pandas()
+        if dataframe_type.lower() == "polars":
+            return pl.from_arrow(reader.read_all())
+        else:
+            return reader.read_pandas()
 
     @_handle_afs_exception(user_message=READ_ERROR)
-    def read_query(self, query_object, arrow_flight_config):
+    def read_query(self, query_object, arrow_flight_config, dataframe_type):
         query_encoded = json.dumps(query_object).encode("ascii")
         descriptor = pyarrow.flight.FlightDescriptor.for_command(query_encoded)
         return self._get_dataset(
             descriptor,
-            arrow_flight_config.get("timeout")
-            if arrow_flight_config
-            else self.DEFAULT_TIMEOUT,
+            (
+                arrow_flight_config.get("timeout")
+                if arrow_flight_config
+                else self.DEFAULT_TIMEOUT
+            ),
+            dataframe_type,
         )
 
     @_handle_afs_exception(user_message=READ_ERROR)

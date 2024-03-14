@@ -36,6 +36,7 @@ setup(
         "fsspec",
         "retrying",
         "aiomysql",
+        "polars",
         "opensearch-py>=1.1.0,<=2.4.2",
     ],
     extras_require={

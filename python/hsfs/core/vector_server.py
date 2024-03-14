@@ -22,6 +22,7 @@ import avro.io
 import avro.schema
 import numpy as np
 import pandas as pd
+import polars as pl
 from hsfs import client, feature_view, training_dataset, util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import (
@@ -375,9 +376,15 @@ class VectorServer:
             pandas_df = pd.DataFrame(vector).transpose()
             pandas_df.columns = self._feature_vector_col_name
             return pandas_df
+        elif return_type.lower() == "polars":
+            # Polar considers one dimensional list as a single columns so passed vector as 2d list
+            polars_df = pl.DataFrame(
+                [vector], schema=self._feature_vector_col_name, orient="row"
+            )
+            return polars_df
         else:
             raise ValueError(
-                "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
+                "Unknown return type. Supported return types are 'list', ' polars', 'pandas' and 'numpy'"
             )
 
     def get_feature_vectors(
@@ -436,9 +443,14 @@ class VectorServer:
             pandas_df = pd.DataFrame(vectors)
             pandas_df.columns = self._feature_vector_col_name
             return pandas_df
+        elif return_type.lower() == "polars":
+            polars_df = pl.DataFrame(
+                vectors, schema=self._feature_vector_col_name, orient="row"
+            )
+            return polars_df
         else:
             raise ValueError(
-                "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
+                "Unknown return type. Supported return types are 'list', 'polars', 'pandas' and 'numpy'"
             )
 
     def which_client_and_ensure_initialised(
@@ -527,6 +539,12 @@ class VectorServer:
             return pd.DataFrame([serving_vector])
         elif return_type.lower() == "dict":
             return serving_vector
+        elif return_type.lower() == "polars":
+            # Polar considers one dimensional list as a single columns so passed vector as 2d list
+            polars_df = pl.DataFrame(
+                [serving_vector], schema=self._feature_vector_col_name, orient="row"
+            )
+            return polars_df
         else:
             raise ValueError(
                 "Unknown return type. Supported return types are 'pandas' and 'dict'"
@@ -560,6 +578,11 @@ class VectorServer:
             return batch_results
         elif return_type.lower() == "pandas":
             return pd.DataFrame(batch_results)
+        elif return_type.lower() == "polars":
+            polars_df = pl.DataFrame(
+                batch_results, schema=self._feature_vector_col_name, orient="row"
+            )
+            return polars_df
         else:
             raise ValueError(
                 "Unknown return type. Supported return types are 'dict' and 'pandas'"
