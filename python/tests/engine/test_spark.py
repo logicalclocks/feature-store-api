@@ -32,6 +32,7 @@ from hsfs.constructor import hudi_feature_group_alias, query
 from hsfs.core import training_dataset_engine
 from hsfs.engine import spark
 from hsfs.training_dataset_feature import TrainingDatasetFeature
+from pyspark.sql import DataFrame
 from pyspark.sql.types import (
     ArrayType,
     BinaryType,
@@ -287,7 +288,7 @@ class TestSpark:
         # Arrange
         spark_engine = spark.Engine()
 
-        mock_df = mocker.Mock(spec=pd.DataFrame)
+        mock_df = mocker.Mock(spec=DataFrame)
 
         # Act
         result = spark_engine._return_dataframe_type(
@@ -311,7 +312,7 @@ class TestSpark:
         # Arrange
         spark_engine = spark.Engine()
 
-        mock_df = mocker.Mock(spec=pd.DataFrame)
+        mock_df = mocker.Mock(spec=DataFrame)
 
         # Act
         result = spark_engine._return_dataframe_type(
@@ -336,7 +337,7 @@ class TestSpark:
         # Arrange
         spark_engine = spark.Engine()
 
-        mock_df = mocker.Mock(spec=pd.DataFrame)
+        mock_df = mocker.Mock(spec=DataFrame)
 
         # Act
         result = spark_engine._return_dataframe_type(
