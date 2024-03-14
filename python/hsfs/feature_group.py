@@ -30,6 +30,7 @@ from hsfs.constructor.filter import Filter, Logic
 from typing import Optional, Union, Any, Dict, List, TypeVar, Tuple
 
 from datetime import datetime, date
+import polars as pl
 
 from hsfs import (
     util,
@@ -2048,8 +2049,9 @@ class FeatureGroup(FeatureGroupBase):
                 or `%Y-%m-%d %H:%M:%S.%f`.
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                 Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
@@ -2068,6 +2070,7 @@ class FeatureGroup(FeatureGroupBase):
             `DataFrame`: The spark dataframe containing the feature data.
             `pyspark.DataFrame`. A Spark DataFrame.
             `pandas.DataFrame`. A Pandas DataFrame.
+            `polars.DataFrame`. A Polars DataFrame.
             `numpy.ndarray`. A two-dimensional Numpy array.
             `list`. A two-dimensional Python list.
 
@@ -2247,6 +2250,7 @@ class FeatureGroup(FeatureGroupBase):
         self,
         features: Union[
             pd.DataFrame,
+            pl.DataFrame,
             TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
             TypeVar("pyspark.RDD"),  # noqa: F821
             np.ndarray,
@@ -2263,14 +2267,14 @@ class FeatureGroup(FeatureGroupBase):
             To achieve the old behaviour, set `wait` argument to `True`.
 
         Calling `save` creates the metadata for the feature group in the feature store.
-        If a DataFrame, RDD or Ndarray is provided, the data is written to the
+        If a Pandas DataFrame, Polars DatFrame, RDD or Ndarray is provided, the data is written to the
         online/offline feature store as specified.
         By default, this writes the feature group to the offline storage, and if
         `online_enabled` for the feature group, also to the online feature store.
         The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
         # Arguments
-            features: DataFrame, RDD, Ndarray or a list of features. Features to be saved.
+            features: Pandas DataFrame, Polars DataFrame, RDD, Ndarray or a list of features. Features to be saved.
                 This argument is optional if the feature list is provided in the create_feature_group or
                 in the get_or_create_feature_group method invokation.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
@@ -2371,6 +2375,7 @@ class FeatureGroup(FeatureGroupBase):
         self,
         features: Union[
             pd.DataFrame,
+            pl.DataFrame,
             TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
             TypeVar("pyspark.RDD"),  # noqa: F821
             np.ndarray,
@@ -2391,7 +2396,7 @@ class FeatureGroup(FeatureGroupBase):
         default, the data is inserted into the offline storage as well as the online storage if the feature group is
         `online_enabled=True`.
 
-        The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
+        The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame, a Polars DataFrame
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
         If statistics are enabled, statistics are recomputed for the entire feature
         group.
@@ -2450,7 +2455,7 @@ class FeatureGroup(FeatureGroupBase):
             ```
 
         # Arguments
-            features: DataFrame, RDD, Ndarray, list. Features to be saved.
+            features: Pandas DataFrame, Polars DataFrame, RDD, Ndarray, list. Features to be saved.
             overwrite: Drop all data in the feature group before
                 inserting new data. This does not affect metadata, defaults to False.
             operation: Apache Hudi operation type `"insert"` or `"upsert"`.
@@ -2543,6 +2548,7 @@ class FeatureGroup(FeatureGroupBase):
         self,
         features: Union[
             pd.DataFrame,
+            pl.DataFrame,
             TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
             TypeVar("pyspark.RDD"),  # noqa: F821
             np.ndarray,
@@ -2613,7 +2619,7 @@ class FeatureGroup(FeatureGroupBase):
             ```
 
         # Arguments
-            features: DataFrame, RDD, Ndarray, list. Features to be saved.
+            features: Pandas DataFrame, Polars DataFrame, RDD, Ndarray, list. Features to be saved.
             overwrite: Drop all data in the feature group before
                 inserting new data. This does not affect metadata, defaults to False.
             operation: Apache Hudi operation type `"insert"` or `"upsert"`.
@@ -3522,8 +3528,9 @@ class ExternalFeatureGroup(FeatureGroupBase):
             Feature Groups.
 
         # Arguments
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
             read_options: Additional options as key/value pairs to pass to the spark engine.
