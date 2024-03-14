@@ -657,7 +657,7 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"pandas"`, `"polars"` or `"dict"`. Defaults to `"dict"`.
+            return_type: `"pandas"`, `"polars"` or `"dict"`. Defaults to `"pandas"`.
 
         # Returns
             `pd.DataFrame`, `polars.DataFrame` or `List[dict]`.  Defaults to `pd.DataFrame`.

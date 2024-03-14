@@ -610,7 +610,7 @@ class Engine:
             dataframe, pl.dataframe.frame.DataFrame
         ):
             warnings.warn(
-                "Great Expectations does not support Polars dataframes directly using Great Expectations with Polars datarames can be slow."
+                "Currently Great Expectations does not support Polars dataframes. This operation will convert to Pandas dataframe that can be slow."
             )
             dataframe = dataframe.to_pandas()
         report = ge.from_pandas(

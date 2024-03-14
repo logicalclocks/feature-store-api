@@ -119,8 +119,9 @@ class StorageConnector(ABC):
             options: Any additional key/value options to be passed to the connector.
             path: Path to be read from within the bucket of the storage connector. Not relevant
                 for JDBC or database based connectors such as Snowflake, JDBC or Redshift.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
 
         # Returns
             `DataFrame`.
@@ -294,8 +295,9 @@ class S3Connector(StorageConnector):
             data_format: The file format of the files to be read, e.g. `csv`, `parquet`.
             options: Any additional key/value options to be passed to the S3 connector.
             path: Path within the bucket to be read.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, "polars"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
 
         # Returns
             `DataFrame`.
@@ -482,8 +484,9 @@ class RedshiftConnector(StorageConnector):
             data_format: Not relevant for JDBC based connectors such as Redshift.
             options: Any additional key/value options to be passed to the JDBC connector.
             path: Not relevant for JDBC based connectors such as Redshift.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
 
         # Returns
             `DataFrame`.
@@ -627,8 +630,9 @@ class AdlsConnector(StorageConnector):
             options: Any additional key/value options to be passed to the ADLS connector.
             path: Path within the bucket to be read. For example, path=`path` will read directly from the container specified on connector by constructing the URI as 'abfss://[container-name]@[account_name].dfs.core.windows.net/[path]'.
             If no path is specified default container path will be used from connector.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
 
         # Returns
             `DataFrame`.
@@ -823,8 +827,9 @@ class SnowflakeConnector(StorageConnector):
             data_format: Not relevant for Snowflake connectors.
             options: Any additional key/value options to be passed to the engine.
             path: Not relevant for Snowflake connectors.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
 
         # Returns
             `DataFrame`.
@@ -906,8 +911,9 @@ class JdbcConnector(StorageConnector):
             data_format: Not relevant for JDBC based connectors.
             options: Any additional key/value options to be passed to the JDBC connector.
             path: Not relevant for JDBC based connectors.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
 
         # Returns
             `DataFrame`.
@@ -1332,8 +1338,9 @@ class GcsConnector(StorageConnector):
             data_format: Spark data format. Defaults to `None`.
             options: Spark options. Defaults to `None`.
             path: GCS path. Defaults to `None`.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas", `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Raises
             `ValueError`: Malformed arguments.
 
@@ -1516,8 +1523,9 @@ class BigQueryConnector(StorageConnector):
             data_format: Spark data format. Defaults to `None`.
             options: Spark options. Defaults to `None`.
             path: BigQuery table path. Defaults to `None`.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
 
         # Raises
             `ValueError`: Malformed arguments.
