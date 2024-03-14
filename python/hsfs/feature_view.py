@@ -14,44 +14,43 @@
 #   limitations under the License.
 #
 
+import copy
 import json
 import warnings
-from datetime import datetime, date
-from typing import Optional, Union, List, Dict, Any, TypeVar
-from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core import feature_monitoring_config as fmc
-from hsfs.core import feature_monitoring_result as fmr
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 import humps
-import copy
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 from hsfs import (
-    util,
-    training_dataset_feature,
     storage_connector,
     training_dataset,
+    training_dataset_feature,
     usage,
+    util,
 )
-from hsfs.constructor import query, filter
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.constructor import filter, query
 from hsfs.constructor.filter import Filter, Logic
+from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import (
-    feature_view_engine,
-    transformation_function_engine,
-    vector_server,
-    statistics_engine,
     feature_monitoring_config_engine,
     feature_monitoring_result_engine,
+    feature_view_engine,
+    statistics_engine,
+    transformation_function_engine,
+    vector_server,
 )
-from hsfs.transformation_function import TransformationFunction
-from hsfs.statistics_config import StatisticsConfig
-from hsfs.statistics import Statistics
+from hsfs.core import feature_monitoring_result as fmr
 from hsfs.core.feature_view_api import FeatureViewApi
-from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.serving_key import ServingKey
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.feature import Feature
+from hsfs.serving_key import ServingKey
+from hsfs.statistics import Statistics
+from hsfs.statistics_config import StatisticsConfig
+from hsfs.training_dataset_split import TrainingDatasetSplit
+from hsfs.transformation_function import TransformationFunction
 
 
 class FeatureView:
@@ -65,10 +64,10 @@ class FeatureView:
         id=None,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        labels: Optional[List[str]] = [],
-        inference_helper_columns: Optional[List[str]] = [],
-        training_helper_columns: Optional[List[str]] = [],
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
+        labels: Optional[List[str]] = None,
+        inference_helper_columns: Optional[List[str]] = None,
+        training_helper_columns: Optional[List[str]] = None,
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
         featurestore_name=None,
         serving_keys: Optional[List[ServingKey]] = None,
         **kwargs,
@@ -85,16 +84,20 @@ class FeatureView:
         )
         self._version = version
         self._description = description
-        self._labels = labels
-        self._inference_helper_columns = inference_helper_columns
-        self._training_helper_columns = training_helper_columns
+        self._labels = labels if labels else []
+        self._inference_helper_columns = (
+            inference_helper_columns if inference_helper_columns else []
+        )
+        self._training_helper_columns = (
+            training_helper_columns if training_helper_columns else []
+        )
         self._transformation_functions = (
             {
                 ft_name: copy.deepcopy(transformation_functions[ft_name])
                 for ft_name in transformation_functions
             }
             if transformation_functions
-            else transformation_functions
+            else {}
         )
         self._features = []
         self._feature_view_engine = feature_view_engine.FeatureViewEngine(
@@ -144,6 +147,7 @@ class FeatureView:
                 self._name, self._version
             ),
             util.JobWarning,
+            stacklevel=2,
         )
         self._feature_view_engine.delete(self.name, self.version)
 
@@ -298,6 +302,15 @@ class FeatureView:
                 * key: kwargs of SqlAlchemy engine creation (See: https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
                   For example: `{"pool_size": 10}`
                 * key: "config_online_store_rest_client" - dict, optional. Optional configuration options to override defaults for the Online Store REST Client.
+                    * key: "api_key" - str. The API key to use for the Online Store REST Client. THIS IS REQUIRED FOR INTERNAL CLIENTS.
+                    * key: "host" - str, optional. The host of the Online Store REST Client.
+                    * key: "port" - int, optional. The port of the Online Store REST Client.
+                    * key: "verify_certs" - bool, optional. If set to True, the Online Store REST Client will verify the server's certificate.
+                    * key: "ca_chain" - str, optional. The path to the CA chain file.
+                    * key: "use_ssl" - bool, optional. If set to True, the Online Store REST Client will use SSL.
+                    * key: "timeout" - int, optional. The timeout of the Online Store REST Client.
+                    * key: "server_api_version" - str, optional. The version of the RonDB Server FeatureStore API.
+                    * key: "http_authorization" - str, optional. The HTTP authorization header to use for the Online Store REST Client.
                 * key: "reset_online_store_rest_client" - bool, optional. If set to True, the Online Store REST Client will be reset. Provide
                     "config_online_store_rest_client" to override defaults.
         """
@@ -318,6 +331,7 @@ class FeatureView:
             warnings.warn(
                 "No training dataset version was provided to initialise serving. Defaulting to version 1.",
                 util.VersionWarning,
+                stacklevel=1,
             )
 
         # Defaults to SQL connector if the user does not specify any of init_online_store* kwargs
@@ -470,7 +484,7 @@ class FeatureView:
     def get_feature_vector(
         self,
         entry: Dict[str, Any],
-        passed_features: Optional[Dict[str, Any]] = {},
+        passed_features: Optional[Dict[str, Any]] = None,
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
@@ -578,6 +592,8 @@ class FeatureView:
                 if (force_sql_client or not force_rest_client)
                 else False,
             )
+        if passed_features is None:
+            passed_features = {}
         passed_features = self._update_with_vector_db_result(
             self._single_vector_server, entry, passed_features
         )
@@ -593,7 +609,7 @@ class FeatureView:
     def get_feature_vectors(
         self,
         entry: List[Dict[str, Any]],
-        passed_features: Optional[List[Dict[str, Any]]] = [],
+        passed_features: Optional[List[Dict[str, Any]]] = None,
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
@@ -700,6 +716,8 @@ class FeatureView:
                 if (force_sql_client or not force_rest_client)
                 else False,
             )
+        if passed_features is None:
+            passed_features = []
         updated_passed_feature = []
         for i in range(len(entry)):
             updated_passed_feature.append(
@@ -848,13 +866,15 @@ class FeatureView:
             self._single_vector_server.default_online_store_client = client
         else:
             warnings.warn(
-                "Single vector server is not initialised, skipping setting default client."
+                "Single vector server is not initialised, skipping setting default client.",
+                stacklevel=1,
             )
         if self._batch_vectors_server:
             self._batch_vectors_server.default_online_store_client = client
         else:
             warnings.warn(
-                "Batch vector server is not initialised, skipping setting default client."
+                "Batch vector server is not initialised, skipping setting default client.",
+                stacklevel=1,
             )
 
     def _update_with_vector_db_result(self, vec_server, entry, passed_features):
@@ -1186,7 +1206,7 @@ class FeatureView:
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[
             Union[
                 pd.DataFrame,
@@ -1396,7 +1416,7 @@ class FeatureView:
         td, td_job = self._feature_view_engine.create_training_dataset(
             self,
             td,
-            write_options,
+            write_options or {},
             spine=spine,
             primary_keys=primary_keys,
             event_time=event_time,
@@ -1405,6 +1425,7 @@ class FeatureView:
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
 
         return td.version, td_job
@@ -1425,7 +1446,7 @@ class FeatureView:
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[
             Union[
                 pd.DataFrame,
@@ -1680,7 +1701,7 @@ class FeatureView:
             storage_connector=storage_connector,
             location=location,
             featurestore_id=self._featurestore_id,
-            splits={},
+            splits=None,
             seed=seed,
             statistics_config=statistics_config,
             coalesce=coalesce,
@@ -1690,7 +1711,7 @@ class FeatureView:
         td, td_job = self._feature_view_engine.create_training_dataset(
             self,
             td,
-            write_options,
+            write_options or {},
             spine=spine,
             primary_keys=primary_keys,
             event_time=event_time,
@@ -1699,6 +1720,7 @@ class FeatureView:
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
 
         return td.version, td_job
@@ -1722,7 +1744,7 @@ class FeatureView:
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[
             Union[
                 pd.DataFrame,
@@ -1981,7 +2003,7 @@ class FeatureView:
         td, td_job = self._feature_view_engine.create_training_dataset(
             self,
             td,
-            write_options,
+            write_options or {},
             spine=spine,
             primary_keys=primary_keys,
             event_time=event_time,
@@ -1990,6 +2012,7 @@ class FeatureView:
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
 
         return td.version, td_job
@@ -2067,7 +2090,7 @@ class FeatureView:
             `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
         """
-        td, td_job = self._feature_view_engine.recreate_training_dataset(
+        _, td_job = self._feature_view_engine.recreate_training_dataset(
             self,
             training_dataset_version=training_dataset_version,
             statistics_config=statistics_config,
@@ -2224,6 +2247,7 @@ class FeatureView:
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
         return df
 
@@ -2397,6 +2421,7 @@ class FeatureView:
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
         return df
 
@@ -2608,6 +2633,7 @@ class FeatureView:
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
         return df
 
