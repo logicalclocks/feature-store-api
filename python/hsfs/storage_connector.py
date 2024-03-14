@@ -13,16 +13,15 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import base64
 import os
 import re
+import warnings
 from abc import ABC, abstractmethod
 from typing import Optional
 
 import humps
-import base64
-import warnings
-
-from hsfs import engine, client
+from hsfs import client, engine
 from hsfs.core import storage_connector_api
 
 
@@ -101,7 +100,7 @@ class StorageConnector(ABC):
         self,
         query: str = None,
         data_format: str = None,
-        options: dict = {},
+        options: dict = None,
         path: str = None,
         dataframe_type: Optional[str] = "default",
     ):
@@ -127,7 +126,7 @@ class StorageConnector(ABC):
             `DataFrame`.
         """
         return engine.get_instance().read(
-            self, data_format, options, path, dataframe_type
+            self, data_format, options or {}, path, dataframe_type
         )
 
     def refetch(self):
@@ -281,7 +280,7 @@ class S3Connector(StorageConnector):
         self,
         query: str = None,
         data_format: str = None,
-        options: dict = {},
+        options: dict = None,
         path: str = "",
         dataframe_type: Optional[str] = "default",
     ):
@@ -471,7 +470,7 @@ class RedshiftConnector(StorageConnector):
         self,
         query: str = None,
         data_format: str = None,
-        options: dict = {},
+        options: dict = None,
         path: str = None,
         dataframe_type: Optional[str] = "default",
     ):
@@ -619,7 +618,7 @@ class AdlsConnector(StorageConnector):
         self,
         query: str = None,
         data_format: str = None,
-        options: dict = {},
+        options: dict = None,
         path: str = "",
         dataframe_type: Optional[str] = "default",
     ):
@@ -647,7 +646,7 @@ class AdlsConnector(StorageConnector):
             )
 
         return engine.get_instance().read(
-            self, data_format, options, path, dataframe_type
+            self, data_format, options or {}, path, dataframe_type
         )
 
 
@@ -814,7 +813,7 @@ class SnowflakeConnector(StorageConnector):
         self,
         query: str = None,
         data_format: str = None,
-        options: dict = {},
+        options: dict = None,
         path: str = None,
         dataframe_type: Optional[str] = "default",
     ):
@@ -900,7 +899,7 @@ class JdbcConnector(StorageConnector):
         self,
         query: str,
         data_format: str = None,
-        options: dict = {},
+        options: dict = None,
         path: str = None,
         dataframe_type: Optional[str] = "default",
     ):
@@ -1028,9 +1027,9 @@ class KafkaConnector(StorageConnector):
         )
 
         # set ssl
-        config[
-            "ssl.endpoint.identification.algorithm"
-        ] = self._ssl_endpoint_identification_algorithm
+        config["ssl.endpoint.identification.algorithm"] = (
+            self._ssl_endpoint_identification_algorithm
+        )
 
         # Here we cannot use `not self._external_kafka` as for normal kafka connectors
         # this option is not set and so the `not self._external_kafka` would return true
@@ -1060,7 +1059,8 @@ class KafkaConnector(StorageConnector):
         if self._external_kafka:
             warnings.warn(
                 "Getting connection details to externally managed Kafka cluster. "
-                "Make sure that the topic being used exists."
+                "Make sure that the topic being used exists.",
+                stacklevel=1,
             )
 
         return config
@@ -1174,7 +1174,7 @@ class KafkaConnector(StorageConnector):
         self,
         query: str = None,
         data_format: str = None,
-        options: dict = {},
+        options: dict = None,
         path: str = None,
         dataframe_type: Optional[str] = "default",
     ):
@@ -1189,7 +1189,7 @@ class KafkaConnector(StorageConnector):
         topic_pattern: bool = False,
         message_format: str = "avro",
         schema: str = None,
-        options: dict = {},
+        options: dict = None,
         include_metadata: bool = False,
     ):
         """Reads a Kafka stream from a topic or multiple topics into a Dataframe.
@@ -1223,15 +1223,12 @@ class KafkaConnector(StorageConnector):
         """
         if message_format.lower() not in ["avro", "json", None]:
             raise ValueError("Can only read JSON and AVRO encoded records from Kafka.")
-
+        if options is None:
+            options = {}
         if topic_pattern is True:
             options["subscribePattern"] = topic
         else:
             options["subscribe"] = topic
-
-        # if include_headers is True:
-        #    stream = stream.option("includeHeaders", "true")
-        #    kafka_cols.append(col("headers"))
 
         return engine.get_instance().read_stream(
             self,
@@ -1314,7 +1311,7 @@ class GcsConnector(StorageConnector):
         self,
         query: str = None,
         data_format: str = None,
-        options: dict = {},
+        options: dict = None,
         path: str = "",
         dataframe_type: Optional[str] = "default",
     ):
@@ -1363,7 +1360,7 @@ class GcsConnector(StorageConnector):
             )
 
         return engine.get_instance().read(
-            self, data_format, options, path, dataframe_type
+            self, data_format, options or {}, path, dataframe_type
         )
 
     def prepare_spark(self, path: Optional[str] = None):
@@ -1492,7 +1489,7 @@ class BigQueryConnector(StorageConnector):
         self,
         query: str = None,
         data_format: str = None,
-        options: dict = {},
+        options: dict = None,
         path: str = None,
         dataframe_type: Optional[str] = "default",
     ):
