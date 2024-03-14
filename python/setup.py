@@ -43,16 +43,14 @@ setup(
         "dev": [
             "pytest==7.4.4",
             "pytest-mock==3.12.0",
-            "flake8",
-            "black",
+            "ruff==0.3.2",
             "pyspark==3.1.1",
             "moto[s3]==5.0.0",
         ],
         "dev-pandas1": [
             "pytest==7.4.4",
             "pytest-mock==3.12.0",
-            "flake8",
-            "black",
+            "ruff==0.3.2",
             "pyspark==3.1.1",
             "moto[s3]==5.0.0",
             "pandas<=1.5.3",
