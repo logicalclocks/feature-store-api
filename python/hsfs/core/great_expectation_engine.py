@@ -99,11 +99,11 @@ class GreatExpectationEngine:
             if isinstance(expectation_suite, es.ExpectationSuite):
                 return expectation_suite
             return es.ExpectationSuite.from_ge_type(expectation_suite)
-        if isinstance(validation_options, dict) and validation_options.get(
+        if isinstance(validation_options, dict) and not validation_options.get(
             "fetch_expectation_suite", True
         ):
-            return feature_group.get_expectation_suite(False)
-        return feature_group.expectation_suite
+            return feature_group.expectation_suite
+        return feature_group.get_expectation_suite(False)
 
     def should_run_validation(
         self,
