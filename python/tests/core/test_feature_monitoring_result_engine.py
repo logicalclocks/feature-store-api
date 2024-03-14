@@ -14,13 +14,15 @@
 #   limitations under the License.
 #
 
-from hsfs.core import feature_monitoring_result_engine
-from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
-from hsfs.core import feature_monitoring_config as fmc
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
+from unittest.mock import call
+
 import dateutil
 from hsfs import util
-from unittest.mock import call
+from hsfs.core import feature_monitoring_config as fmc
+from hsfs.core import feature_monitoring_result_engine
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
+
 
 DEFAULT_MONITORING_TIME_SORT_BY = "monitoring_time:desc"
 DEFAULT_FEATURE_STORE_ID = 67
@@ -129,11 +131,11 @@ class TestFeatureMonitoringResultEngine:
         mocker.patch(
             "hsfs.core.feature_monitoring_result_engine.FeatureMonitoringResultEngine.get_monitoring_job_execution_id",
         )
-        result_engine = (
-            result_engine
-        ) = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-            feature_store_id=DEFAULT_FEATURE_STORE_ID,
-            feature_group_id=DEFAULT_FEATURE_GROUP_ID,
+        result_engine = result_engine = (
+            feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+                feature_store_id=DEFAULT_FEATURE_STORE_ID,
+                feature_group_id=DEFAULT_FEATURE_GROUP_ID,
+            )
         )
         result = result_engine.build_feature_monitoring_result(
             config_id=DEFAULT_CONFIG_ID,

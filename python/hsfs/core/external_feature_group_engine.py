@@ -15,7 +15,7 @@
 
 from hsfs import engine, util
 from hsfs import feature_group as fg
-from hsfs.client.exceptions import FeatureStoreException, DataValidationException
+from hsfs.client.exceptions import DataValidationException, FeatureStoreException
 from hsfs.core import feature_group_base_engine
 
 
@@ -52,7 +52,7 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
         feature_group,
         feature_dataframe,
         write_options: dict,
-        validation_options: dict = {},
+        validation_options: dict = None,
     ):
         if not feature_group.online_enabled:
             raise FeatureStoreException(
@@ -74,7 +74,7 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
         ge_report = feature_group._great_expectation_engine.validate(
             feature_group=feature_group,
             dataframe=feature_dataframe,
-            validation_options=validation_options,
+            validation_options=validation_options or {},
             ingestion_result="INGESTED",
             ge_type=False,
         )

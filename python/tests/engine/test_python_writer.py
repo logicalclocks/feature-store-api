@@ -14,14 +14,14 @@
 #   limitations under the License.
 #
 
-from io import BytesIO
 import datetime
 import json
-import fastavro
+from io import BytesIO
 
+import fastavro
+from confluent_kafka.admin import TopicMetadata
 from hsfs import feature_group
 from hsfs.engine import python
-from confluent_kafka.admin import TopicMetadata
 
 
 class TestPythonWriter:

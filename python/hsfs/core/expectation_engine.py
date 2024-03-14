@@ -15,8 +15,8 @@
 #
 
 from typing import Optional
-from hsfs.core import expectation_api
 
+from hsfs.core import expectation_api
 from hsfs.ge_expectation import GeExpectation
 
 

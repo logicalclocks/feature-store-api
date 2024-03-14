@@ -13,23 +13,20 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from typing import Any, Dict, List, Optional, Union
-from datetime import date, datetime
 import re
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional, Union
+
 import pandas as pd
-
-from hsfs.core import feature_monitoring_config_api
+from hsfs import feature_group, feature_view
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import feature_monitoring_config as fmc
-from hsfs.core.feature_monitoring_result_engine import FeatureMonitoringResultEngine
-from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
+from hsfs.core import feature_monitoring_config_api, monitoring_window_config_engine
 from hsfs.core import monitoring_window_config as mwc
-from hsfs.core import monitoring_window_config_engine
-
+from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
+from hsfs.core.feature_monitoring_result_engine import FeatureMonitoringResultEngine
 from hsfs.core.job import Job
 from hsfs.core.job_api import JobApi
-from hsfs.client.exceptions import FeatureStoreException
-
-from hsfs import feature_group, feature_view
 
 
 class FeatureMonitoringConfigEngine:
@@ -153,8 +150,7 @@ class FeatureMonitoringConfigEngine:
             and metric.lower() not in self._VALID_FRACTIONAL_METRICS
         ):
             raise ValueError(
-                f"Invalid metric {metric.lower()}. "
-                "Supported metrics are {}.".format(
+                f"Invalid metric {metric.lower()}. " "Supported metrics are {}.".format(
                     set(self._VALID_FRACTIONAL_METRICS).union(
                         set(self._VALID_CATEGORICAL_METRICS)
                     )

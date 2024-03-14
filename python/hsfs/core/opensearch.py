@@ -14,10 +14,11 @@
 #   limitations under the License.
 #
 
-from hsfs.client.exceptions import FeatureStoreException
 import logging
-from hsfs.core.opensearch_api import OpenSearchApi
+
 from hsfs import client
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core.opensearch_api import OpenSearchApi
 
 
 class OpenSearchClientSingleton:
@@ -35,18 +36,20 @@ class OpenSearchClientSingleton:
             try:
                 from opensearchpy import OpenSearch
                 from opensearchpy.exceptions import (
-                    ConnectionError as OpenSearchConnectionError,
                     AuthenticationException as OpenSearchAuthenticationException,
+                )
+                from opensearchpy.exceptions import (
+                    ConnectionError as OpenSearchConnectionError,
                 )
 
                 self.OpenSearchConnectionError = OpenSearchConnectionError
                 self.OpenSearchAuthenticationException = (
                     OpenSearchAuthenticationException
                 )
-            except ModuleNotFoundError:
+            except ModuleNotFoundError as err:
                 raise FeatureStoreException(
                     "hopsworks and opensearchpy are required for embedding similarity search"
-                )
+                ) from err
             # query log is at INFO level
             # 2023-11-24 15:10:49,470 INFO: POST https://localhost:9200/index/_search [status:200 request:0.041s]
             logging.getLogger("opensearchpy").setLevel(logging.WARNING)

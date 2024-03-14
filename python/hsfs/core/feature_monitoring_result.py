@@ -15,11 +15,11 @@
 #
 
 import json
-import humps
+from datetime import date, datetime
 from typing import Optional, Union
-from hsfs import util
-from datetime import datetime, date
 
+import humps
+from hsfs import util
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 
 

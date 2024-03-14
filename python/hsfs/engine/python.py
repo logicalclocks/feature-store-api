@@ -20,23 +20,18 @@ import numpy as np
 import boto3
 import re
 import ast
-import warnings
-import logging
-import avro
-import pyarrow as pa
-import json
-import random
-import uuid
 import decimal
-import numbers
+import json
+import logging
 import math
+import numbers
 import os
+import random
+import re
 import sys
-import pytz
+import uuid
+import warnings
 from datetime import datetime, timezone
-
-import great_expectations as ge
-
 from io import BytesIO
 from pyhive import hive
 from typing import TypeVar, Optional, Dict, Any, Union
@@ -44,32 +39,44 @@ from confluent_kafka import Consumer, Producer, TopicPartition, KafkaError
 from tqdm.auto import tqdm
 from botocore.response import StreamingBody
 from sqlalchemy import sql
+from typing import Any, Dict, Optional, TypeVar
 
+import avro
+import boto3
+import great_expectations as ge
+import numpy as np
+import pandas as pd
+import pyarrow as pa
+import pytz
+from botocore.response import StreamingBody
+from confluent_kafka import Consumer, KafkaError, Producer, TopicPartition
 from hsfs import client, feature, util
-from hsfs.feature_group import ExternalFeatureGroup
+from hsfs.client import hopsworks
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.constructor import query
 from hsfs.core import (
-    feature_group_api,
+    arrow_flight_client,
     dataset_api,
-    job_api,
+    feature_group_api,
+    feature_view_api,
     ingestion_job_conf,
+    job_api,
     statistics_api,
+    storage_connector_api,
     training_dataset_api,
     training_dataset_job_conf,
-    feature_view_api,
     transformation_function_engine,
-    arrow_flight_client,
-    storage_connector_api,
     variable_api,
 )
-from hsfs.constructor import query
-from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.client import hopsworks
-from hsfs.feature_group import FeatureGroup
-from thrift.transport.TTransport import TTransportException
-from pyhive.exc import OperationalError
-
+from hsfs.feature_group import ExternalFeatureGroup, FeatureGroup
 from hsfs.storage_connector import StorageConnector
+from hsfs.training_dataset_split import TrainingDatasetSplit
+from pyhive import hive
+from pyhive.exc import OperationalError
+from sqlalchemy import sql
+from thrift.transport.TTransport import TTransportException
+from tqdm.auto import tqdm
+
 
 # Disable pyhive INFO logging
 logging.getLogger("pyhive").setLevel(logging.WARNING)
@@ -166,9 +173,9 @@ class Engine:
                 sql_query, online_conn, dataframe_type, read_options, schema
             )
 
-    def is_flyingduck_query_supported(self, query, read_options={}):
+    def is_flyingduck_query_supported(self, query, read_options=None):
         return arrow_flight_client.get_instance().is_query_supported(
-            query, read_options
+            query, read_options or {}
         )
 
     def _sql_offline(
@@ -178,7 +185,7 @@ class Engine:
         dataframe_type,
         schema=None,
         hive_config=None,
-        arrow_flight_config={},
+        arrow_flight_config=None,
     ):
         if not isinstance(dataframe_type, str) or dataframe_type.lower() not in [
             "pandas",
@@ -196,7 +203,7 @@ class Engine:
                 "Reading data from Hopsworks, using ArrowFlight",
                 arrow_flight_client.get_instance().read_query,
                 sql_query,
-                arrow_flight_config,
+                arrow_flight_config or {},
                 dataframe_type,
             )
         else:
@@ -318,13 +325,13 @@ class Engine:
             )
 
     def _read_hopsfs(
-        self, location, data_format, read_options={}, dataframe_type="default"
+        self, location, data_format, read_options=None, dataframe_type="default"
     ):
         # providing more informative error
         try:
             from pydoop import hdfs
         except ModuleNotFoundError:
-            return self._read_hopsfs_remote(location, data_format, read_options)
+            return self._read_hopsfs_remote(location, data_format, read_options or {})
         util.setup_pydoop()
         path_list = hdfs.ls(location, recursive=True)
 
@@ -348,10 +355,12 @@ class Engine:
     # This is a version of the read method that uses the Hopsworks REST APIs or Flyginduck Server
     # To read the training dataset content, this to avoid the pydoop dependency
     # requirement and allow users to read Hopsworks training dataset from outside
-    def _read_hopsfs_remote(self, location, data_format, read_options={}):
+    def _read_hopsfs_remote(self, location, data_format, read_options=None):
         total_count = 10000
         offset = 0
         df_list = []
+        if read_options is None:
+            read_options = {}
 
         while offset < total_count:
             total_count, inode_list = self._dataset_api.list_files(
@@ -445,9 +454,9 @@ class Engine:
             "Streaming Sources are not supported for pure Python Environments."
         )
 
-    def show(self, sql_query, feature_store, n, online_conn, read_options={}):
+    def show(self, sql_query, feature_store, n, online_conn, read_options=None):
         return self.sql(
-            sql_query, feature_store, online_conn, "default", read_options
+            sql_query, feature_store, online_conn, "default", read_options or {}
         ).head(n)
 
     def register_external_temporary_table(self, external_fg, alias):
@@ -524,7 +533,6 @@ class Engine:
 
         final_stats = []
         for col in relevant_columns:
-
             if isinstance(df, pl.DataFrame) or isinstance(
                 df, pl.dataframe.frame.DataFrame
             ):
@@ -602,7 +610,7 @@ class Engine:
         self,
         dataframe: Union[pl.DataFrame, pd.DataFrame],
         expectation_suite: TypeVar("ge.core.ExpectationSuite"),
-        ge_validate_kwargs: Optional[Dict[Any, Any]] = {},
+        ge_validate_kwargs: Optional[Dict[Any, Any]] = None,
     ):
         # This conversion might cause a bottleneck in performance when using polars with greater expectations.
         # This patch is done becuase currently great_expecatations does not support polars, would need to be made proper when support added.
@@ -613,6 +621,8 @@ class Engine:
                 "Currently Great Expectations does not support Polars dataframes. This operation will convert to Pandas dataframe that can be slow."
             )
             dataframe = dataframe.to_pandas()
+        if ge_validate_kwargs is None:
+            ge_validate_kwargs = {}
         report = ge.from_pandas(
             dataframe, expectation_suite=expectation_suite
         ).validate(**ge_validate_kwargs)
@@ -648,6 +658,7 @@ class Engine:
                         upper_case_features
                     ),
                     util.FeatureGroupWarning,
+                    stacklevel=1,
                 )
                 dataframe_copy.columns = [x.lower() for x in dataframe_copy.columns]
 
@@ -687,7 +698,7 @@ class Engine:
                     arrow_schema.field(feat_name).type
                 )
             except ValueError as e:
-                raise FeatureStoreException(f"Feature '{name}': {str(e)}")
+                raise FeatureStoreException(f"Feature '{name}': {str(e)}") from e
             features.append(feature.Feature(name, converted_type))
         return features
 
@@ -1006,17 +1017,17 @@ class Engine:
                 keystore=client.get_instance()._get_jks_key_store_path(),
                 keystore_password=client.get_instance()._cert_key,
             )
-        except (TTransportException, AttributeError):
+        except (TTransportException, AttributeError) as err:
             raise ValueError(
                 f"Cannot connect to hive server. Please check the host name '{client.get_instance()._host}' "
                 "is correct and make sure port '9085' is open on host server."
-            )
-        except OperationalError as e:
-            if e.args[0].status.statusCode == 3:
+            ) from err
+        except OperationalError as err:
+            if err.args[0].status.statusCode == 3:
                 raise RuntimeError(
                     f"Cannot access feature store '{feature_store}'. Please check if your project has the access right."
                     f" It is possible to request access from data owners of '{feature_store}'."
-                )
+                ) from err
 
     def _return_dataframe_type(self, dataframe, dataframe_type):
         if dataframe_type.lower() in ["default", "pandas", "polars"]:
@@ -1051,7 +1062,7 @@ class Engine:
         """Wrapper around save_dataframe in order to provide no-op."""
         pass
 
-    def _get_app_options(self, user_write_options={}):
+    def _get_app_options(self, user_write_options=None):
         """
         Generate the options that should be passed to the application doing the ingestion.
         Options should be data format, data options to read the input dataframe and
@@ -1060,12 +1071,14 @@ class Engine:
         Users can pass Spark configurations to the save/insert method
         Property name should match the value in the JobConfiguration.__init__
         """
-        spark_job_configuration = user_write_options.pop("spark", None)
+        spark_job_configuration = (
+            user_write_options.pop("spark", None) if user_write_options else None
+        )
 
         return ingestion_job_conf.IngestionJobConf(
             data_format="PARQUET",
             data_options=[],
-            write_options=user_write_options,
+            write_options=user_write_options or {},
             spark_job_configuration=spark_job_configuration,
         )
 
@@ -1267,6 +1280,7 @@ class Engine:
                 warnings.warn(
                     "This is the first ingestion after an upgrade or backup/restore, running materialization job even though `start_offline_materialization` was set to `False`.",
                     util.FeatureGroupWarning,
+                    stacklevel=1,
                 )
             # set the initial_check_point to the lowest offset (it was not set previously due to topic not existing)
             initial_check_point = self._kafka_get_offsets(
@@ -1370,8 +1384,10 @@ class Engine:
         return lambda record, outf: writer.write(record, avro.io.BinaryEncoder(outf))
 
     def _get_kafka_config(
-        self, feature_store_id: int, write_options: dict = {}
+        self, feature_store_id: int, write_options: dict = None
     ) -> dict:
+        if write_options is None:
+            write_options = {}
         external = not (
             isinstance(client.get_instance(), hopsworks.Client)
             or write_options.get("internal_kafka", False)
@@ -1437,8 +1453,8 @@ class Engine:
     def _convert_simple_pandas_dtype_to_offline_type(arrow_type):
         try:
             return PYARROW_HOPSWORKS_DTYPE_MAPPING[arrow_type]
-        except KeyError:
-            raise ValueError(f"dtype '{arrow_type}' not supported")
+        except KeyError as err:
+            raise ValueError(f"dtype '{arrow_type}' not supported") from err
 
     @staticmethod
     def _convert_pandas_object_type_to_offline_type(arrow_type):
@@ -1450,11 +1466,10 @@ class Engine:
         if pa.types.is_struct(arrow_type):
             struct_schema = {}
             for index in range(arrow_type.num_fields):
-                sub_arrow_type = arrow_type.field(index).type
-                struct_schema[
-                    arrow_type.field(index).name
-                ] = Engine._convert_pandas_dtype_to_offline_type(
-                    arrow_type.field(index).type
+                struct_schema[arrow_type.field(index).name] = (
+                    Engine._convert_pandas_dtype_to_offline_type(
+                        arrow_type.field(index).type
+                    )
                 )
             return (
                 "struct<"
@@ -1485,13 +1500,13 @@ class Engine:
         ):
             if isinstance(feature_column, pl.Series):
                 return feature_column.map_elements(
-                    lambda x: (ast.literal_eval(x) if type(x) is str else x)
+                    lambda x: (ast.literal_eval(x) if isinstance(x, str) else x)
                     if (x is not None and x != "")
                     else None
                 )
             else:
                 return feature_column.apply(
-                    lambda x: (ast.literal_eval(x) if type(x) is str else x)
+                    lambda x: (ast.literal_eval(x) if isinstance(x, str) else x)
                     if (x is not None and x != "")
                     else None
                 )
@@ -1555,7 +1570,7 @@ class Engine:
             return feature_column.apply(lambda x: str(x) if x is not None else None)
         elif online_type == "boolean":
             return feature_column.apply(
-                lambda x: (ast.literal_eval(x) if type(x) is str else x)
+                lambda x: (ast.literal_eval(x) if isinstance(x, str) else x)
                 if (x is not None and x != "")
                 else None
             )

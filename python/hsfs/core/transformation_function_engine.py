@@ -14,14 +14,13 @@
 #   limitations under the License.
 #
 
-import numpy
 import datetime
 from functools import partial
 
-from hsfs import training_dataset, training_dataset_feature, statistics
-from hsfs.core import transformation_function_api, statistics_api
+import numpy
+from hsfs import statistics, training_dataset, training_dataset_feature, util
+from hsfs.core import statistics_api, transformation_function_api
 from hsfs.core.builtin_transformation_function import BuiltInTransformationFunction
-from hsfs import util
 
 
 class TransformationFunctionEngine:
@@ -88,9 +87,9 @@ class TransformationFunctionEngine:
         )
         transformation_fn_dict = {}
         for attached_transformation_fn in attached_transformation_fns:
-            transformation_fn_dict[
-                attached_transformation_fn.name
-            ] = attached_transformation_fn.transformation_function
+            transformation_fn_dict[attached_transformation_fn.name] = (
+                attached_transformation_fn.transformation_function
+            )
         return transformation_fn_dict
 
     @staticmethod

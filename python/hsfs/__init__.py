@@ -16,10 +16,10 @@
 
 import warnings
 
-from hsfs import util, version
-from hsfs.connection import Connection
-from hsfs import usage
 import nest_asyncio
+from hsfs import usage, util, version
+from hsfs.connection import Connection
+
 
 __version__ = version.__version__
 

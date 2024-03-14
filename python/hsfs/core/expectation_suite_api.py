@@ -15,6 +15,7 @@
 #
 
 from typing import Optional
+
 from hsfs import client
 from hsfs import expectation_suite as es
 from hsfs.core.variable_api import VariableApi
