@@ -385,9 +385,7 @@ class OnlineStoreRestClientEngine:
                     passed_features=passed,
                     return_type=return_type,
                 )
-                for row, passed in zip(
-                    response["features"], passed_features, strict=False
-                )
+                for row, passed in zip(response["features"], passed_features)
             ]
         else:
             return response
