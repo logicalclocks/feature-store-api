@@ -33,7 +33,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         feature_group,
         feature_dataframe,
         write_options,
-        validation_options: dict = {},
+        validation_options: dict = None,
     ):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
@@ -47,7 +47,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         ge_report = feature_group._great_expectation_engine.validate(
             feature_group=feature_group,
             dataframe=feature_dataframe,
-            validation_options=validation_options,
+            validation_options=validation_options or {},
             ingestion_result="INGESTED",
         )
 
@@ -80,7 +80,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         operation,
         storage,
         write_options,
-        validation_options: dict = {},
+        validation_options: dict = None,
     ):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
@@ -101,7 +101,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         ge_report = feature_group._great_expectation_engine.validate(
             feature_group=feature_group,
             dataframe=feature_dataframe,
-            validation_options=validation_options,
+            validation_options=validation_options or {},
             ingestion_result="INGESTED",
             ge_type=False,
         )
@@ -296,7 +296,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if not feature_group.stream:
             warnings.warn(
                 "`insert_stream` method in the next release will be available only for feature groups created with "
-                "`stream=True`."
+                "`stream=True`.",
+                stacklevel=1,
             )
 
         streaming_query = engine.get_instance().save_stream_dataframe(

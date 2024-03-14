@@ -16,20 +16,21 @@
 
 import datetime
 import warnings
-from hsfs import engine, training_dataset_feature, client, util, feature_group
+
+from hsfs import client, engine, feature_group, training_dataset_feature, util
 from hsfs.client import exceptions
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.core import (
-    tags_api,
-    transformation_function_engine,
-    feature_view_api,
-    code_engine,
-    statistics_engine,
-    training_dataset_engine,
-    query_constructor_api,
     arrow_flight_client,
+    code_engine,
+    feature_view_api,
+    query_constructor_api,
+    statistics_engine,
+    tags_api,
+    training_dataset_engine,
+    transformation_function_engine,
 )
+from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
 class FeatureViewEngine:
@@ -63,7 +64,8 @@ class FeatureViewEngine:
         if feature_view_obj.query.is_time_travel():
             warnings.warn(
                 "`as_of` argument in the `Query` will be ignored because"
-                " feature view does not support time travel query."
+                " feature view does not support time travel query.",
+                stacklevel=1,
             )
         if feature_view_obj.labels:
             for label_name in feature_view_obj.labels:
@@ -203,7 +205,7 @@ class FeatureViewEngine:
                     "Cannot generate dataset(s) from the given start/end time because"
                     " event time column is not available in the left feature groups."
                     " A start/end time should not be provided as parameters."
-                )
+                ) from e
             else:
                 raise e
 
@@ -225,7 +227,7 @@ class FeatureViewEngine:
                     "Cannot generate a query from the given start/end time because"
                     " event time column is not available in the left feature groups."
                     " A start/end time should not be provided as parameters."
-                )
+                ) from e
             else:
                 raise e
 
@@ -280,7 +282,7 @@ class FeatureViewEngine:
         self,
         feature_view_obj,
         read_options=None,
-        splits=[],
+        splits=None,
         training_dataset_obj=None,
         training_dataset_version=None,
         spine=None,
@@ -299,6 +301,8 @@ class FeatureViewEngine:
                 feature_view_obj, training_dataset_obj
             )
         # check splits
+        if splits is None:
+            splits = []
         if len(splits) != len(td_updated.splits):
             if len(td_updated.splits) == 0:
                 method_name = "get_training_data"
@@ -529,7 +533,7 @@ class FeatureViewEngine:
                 raise FileNotFoundError(
                     f"Failed to read dataset from {path}."
                     " Check if path exists or recreate a training dataset."
-                )
+                ) from e
             else:
                 raise e
 

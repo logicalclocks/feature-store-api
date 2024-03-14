@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from enum import Enum
 import json
+from enum import Enum
 
 
 class RestAPIError(Exception):

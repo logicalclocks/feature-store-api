@@ -14,18 +14,20 @@
 #   limitations under the License.
 #
 
-import os
-import boto3
 import base64
 import json
+import os
+
+import boto3
 import requests
+
 
 try:
     from pyspark.sql import SparkSession
 except ImportError:
     pass
 
-from hsfs.client import base, auth, exceptions
+from hsfs.client import auth, base, exceptions
 from hsfs.client.exceptions import FeatureStoreException
 
 

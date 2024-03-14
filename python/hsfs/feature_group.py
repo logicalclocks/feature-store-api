@@ -15,56 +15,55 @@
 #
 
 import copy
-import time
-
-from hsfs.embedding import EmbeddingIndex
-from hsfs.ge_validation_result import ValidationResult
-import humps
 import json
+import time
 import warnings
-import pandas as pd
-import numpy as np
-import great_expectations as ge
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+
 import avro.schema
-from hsfs.constructor.filter import Filter, Logic
-from typing import Optional, Union, Any, Dict, List, TypeVar, Tuple
-
-from datetime import datetime, date
-
+import great_expectations as ge
+import humps
+import numpy as np
+import pandas as pd
 from hsfs import (
-    util,
     engine,
     feature,
-    user,
     feature_group_writer,
+    user,
+    util,
+)
+from hsfs import (
     storage_connector as sc,
 )
+from hsfs.client.exceptions import FeatureStoreException, RestAPIError
+from hsfs.constructor import filter, query
+from hsfs.constructor.filter import Filter, Logic
 from hsfs.core import (
-    feature_group_engine,
-    statistics_engine,
-    expectation_suite_engine,
-    validation_report_engine,
     code_engine,
+    expectation_suite_engine,
     external_feature_group_engine,
-    spine_group_engine,
-    validation_result_engine,
-    job_api,
+    feature_group_engine,
     feature_monitoring_config_engine,
     feature_monitoring_result_engine,
+    great_expectation_engine,
+    job_api,
+    spine_group_engine,
+    statistics_engine,
+    validation_report_engine,
+    validation_result_engine,
 )
-
-from hsfs.statistics_config import StatisticsConfig
-from hsfs.statistics import Statistics
-from hsfs.expectation_suite import ExpectationSuite
-from hsfs.validation_report import ValidationReport
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
-from hsfs.constructor import query, filter
-from hsfs.client.exceptions import FeatureStoreException, RestAPIError
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
-from hsfs.core import great_expectation_engine
 from hsfs.core.vector_db_client import VectorDbClient
+from hsfs.embedding import EmbeddingIndex
+from hsfs.expectation_suite import ExpectationSuite
+from hsfs.ge_validation_result import ValidationResult
+from hsfs.statistics import Statistics
+from hsfs.statistics_config import StatisticsConfig
+from hsfs.validation_report import ValidationReport
 
 
 class FeatureGroupBase:
@@ -150,7 +149,8 @@ class FeatureGroupBase:
     def check_deprecated(self):
         if self.deprecated:
             warnings.warn(
-                f"Feature Group `{self._name}`, version `{self._version}` is deprecated"
+                f"Feature Group `{self._name}`, version `{self._version}` is deprecated",
+                stacklevel=1,
             )
 
     def delete(self):
@@ -184,6 +184,7 @@ class FeatureGroupBase:
                 self._name, self._version
             ),
             util.JobWarning,
+            stacklevel=1,
         )
         self._feature_group_engine.delete(self)
 
@@ -301,7 +302,9 @@ class FeatureGroupBase:
             feature_store_id=self._feature_store_id,
         )
 
-    def select_except(self, features: Optional[List[Union[str, feature.Feature]]] = []):
+    def select_except(
+        self, features: Optional[List[Union[str, feature.Feature]]] = None
+    ):
         """Select all features including primary key and event time feature
         of the feature group except provided `features` and return a query object.
 
@@ -560,10 +563,10 @@ class FeatureGroupBase:
         """
         try:
             return self.__getitem__(name)
-        except KeyError:
+        except KeyError as err:
             raise FeatureStoreException(
                 f"'FeatureGroup' object has no feature called '{name}'."
-            )
+            ) from err
 
     def update_statistics_config(self):
         """Update the statistics configuration of the feature group.
@@ -1064,7 +1067,7 @@ class FeatureGroupBase:
         expectation_id: int,
         start_validation_time: Union[str, int, datetime, date, None] = None,
         end_validation_time: Union[str, int, datetime, date, None] = None,
-        filter_by: List[str] = [],
+        filter_by: List[str] = None,
         ge_type: bool = True,
     ) -> Union[List[ValidationResult], List[ge.core.ExpectationValidationResult]]:
         """Fetch validation history of an Expectation specified by its id.
@@ -1107,7 +1110,7 @@ class FeatureGroupBase:
                 expectation_id=expectation_id,
                 start_validation_time=start_validation_time,
                 end_validation_time=end_validation_time,
-                filter_by=filter_by,
+                filter_by=filter_by or [],
                 ge_type=ge_type,
             )
         else:
@@ -1122,7 +1125,7 @@ class FeatureGroupBase:
         ] = None,
         expectation_suite: Optional[ExpectationSuite] = None,
         save_report: Optional[bool] = False,
-        validation_options: Optional[Dict[Any, Any]] = {},
+        validation_options: Optional[Dict[Any, Any]] = None,
         ingestion_result: str = "UNKNOWN",
         ge_type: bool = True,
     ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
@@ -1175,7 +1178,7 @@ class FeatureGroupBase:
             dataframe=engine.get_instance().convert_to_default_dataframe(dataframe),
             expectation_suite=expectation_suite,
             save_report=save_report,
-            validation_options=validation_options,
+            validation_options=validation_options or {},
             ingestion_result=ingestion_result,
             ge_type=ge_type,
         )
@@ -1443,12 +1446,12 @@ class FeatureGroupBase:
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
-        except KeyError:
+        except KeyError as err:
             raise AttributeError(
                 f"'FeatureGroup' object has no attribute '{name}'. "
                 "If you are trying to access a feature, fall back on "
                 "using the `get_feature` method."
-            )
+            ) from err
 
     def __getitem__(self, name):
         if not isinstance(name, str):
@@ -1650,6 +1653,7 @@ class FeatureGroupBase:
                     " `{}`. No statistics computed."
                 ).format(self._name, self._version),
                 util.StorageWarning,
+                stacklevel=1,
             )
 
     @property
@@ -1806,7 +1810,9 @@ class FeatureGroupBase:
         try:
             avro.schema.parse(schema_s)
         except avro.schema.SchemaParseException as e:
-            raise FeatureStoreException("Failed to construct Avro Schema: {}".format(e))
+            raise FeatureStoreException(
+                "Failed to construct Avro Schema: {}".format(e)
+            ) from e
         return schema_s
 
     def _get_feature_avro_schema(self, feature_name):
@@ -1983,6 +1989,7 @@ class FeatureGroup(FeatureGroupBase):
                             "because Stream enabled feature groups only support `{}`"
                         ).format(self._time_travel_format, expected_format),
                         util.FeatureGroupWarning,
+                        stacklevel=1,
                     )
                     self._time_travel_format = expected_format
 
@@ -2013,7 +2020,7 @@ class FeatureGroup(FeatureGroupBase):
         wallclock_time: Optional[Union[str, int, datetime, date]] = None,
         online: Optional[bool] = False,
         dataframe_type: Optional[str] = "default",
-        read_options: Optional[dict] = {},
+        read_options: Optional[dict] = None,
     ):
         """
         Read the feature group into a dataframe.
@@ -2087,21 +2094,21 @@ class FeatureGroup(FeatureGroupBase):
                 .read(
                     online,
                     dataframe_type,
-                    read_options,
+                    read_options or {},
                 )
             )
         else:
             return self.select_all().read(
                 online,
                 dataframe_type,
-                read_options,
+                read_options or {},
             )
 
     def read_changes(
         self,
         start_wallclock_time: Union[str, int, datetime, date],
         end_wallclock_time: Union[str, int, datetime, date],
-        read_options: Optional[dict] = {},
+        read_options: Optional[dict] = None,
     ):
         """Reads updates of this feature that occurred between specified points in time.
 
@@ -2139,7 +2146,7 @@ class FeatureGroup(FeatureGroupBase):
         return (
             self.select_all()
             .pull_changes(start_wallclock_time, end_wallclock_time)
-            .read(False, "default", read_options)
+            .read(False, "default", read_options or {})
         )
 
     def find_neighbors(
@@ -2252,8 +2259,8 @@ class FeatureGroup(FeatureGroupBase):
             np.ndarray,
             List[feature.Feature],
         ] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
-        validation_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
+        validation_options: Optional[Dict[Any, Any]] = None,
         wait: bool = False,
     ):
         """Persist the metadata and materialize the feature group to the feature store.
@@ -2324,7 +2331,7 @@ class FeatureGroup(FeatureGroupBase):
             # dataframe structure
             self._features = self._features if len(self._features) > 0 else features
             self._feature_group_engine.save_feature_group_metadata(
-                self, None, write_options
+                self, None, write_options or {}
             )
 
             return None, None
@@ -2346,7 +2353,7 @@ class FeatureGroup(FeatureGroupBase):
 
         # fg_job is used only if the python engine is used
         fg_job, ge_report = self._feature_group_engine.save(
-            self, feature_dataframe, write_options, validation_options
+            self, feature_dataframe, write_options, validation_options or {}
         )
         if ge_report is None or ge_report.ingestion_result == "INGESTED":
             self._code_engine.save_code(self)
@@ -2361,6 +2368,7 @@ class FeatureGroup(FeatureGroupBase):
                     self._name, self._version
                 ),
                 util.VersionWarning,
+                stacklevel=1,
             )
         return (
             fg_job,
@@ -2379,8 +2387,8 @@ class FeatureGroup(FeatureGroupBase):
         overwrite: Optional[bool] = False,
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
-        write_options: Optional[Dict[str, Any]] = {},
-        validation_options: Optional[Dict[str, Any]] = {},
+        write_options: Optional[Dict[str, Any]] = None,
+        validation_options: Optional[Dict[str, Any]] = None,
         save_code: Optional[bool] = True,
         wait: bool = False,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
@@ -2505,11 +2513,14 @@ class FeatureGroup(FeatureGroupBase):
         """
         if storage and self.stream:
             warnings.warn(
-                "Specifying the storage option is not supported if the streaming APIs are enabled"
+                "Specifying the storage option is not supported if the streaming APIs are enabled",
+                stacklevel=1,
             )
 
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
+        if validation_options is None:
+            validation_options = {}
         if write_options is None:
             write_options = {}
         if "wait_for_job" not in write_options:
@@ -2551,8 +2562,8 @@ class FeatureGroup(FeatureGroupBase):
         overwrite: Optional[bool] = False,
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
-        write_options: Optional[Dict[str, Any]] = {},
-        validation_options: Optional[Dict[str, Any]] = {},
+        write_options: Optional[Dict[str, Any]] = None,
+        validation_options: Optional[Dict[str, Any]] = None,
     ) -> Union[
         Tuple[Optional[Job], Optional[ValidationReport]],
         feature_group_writer.FeatureGroupWriter,
@@ -2667,8 +2678,8 @@ class FeatureGroup(FeatureGroupBase):
                 overwrite,
                 operation,
                 storage,
-                write_options,
-                validation_options,
+                write_options or {},
+                validation_options or {},
             )
 
     def finalize_multi_part_insert(self):
@@ -2709,7 +2720,7 @@ class FeatureGroup(FeatureGroupBase):
         await_termination: Optional[bool] = False,
         timeout: Optional[int] = None,
         checkpoint_dir: Optional[str] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
     ):
         """Ingest a Spark Structured Streaming Dataframe to the online feature store.
 
@@ -2785,6 +2796,7 @@ class FeatureGroup(FeatureGroupBase):
                     " `{}` will not compute statistics."
                 ).format(self._name, self._version),
                 util.StatisticsWarning,
+                stacklevel=1,
             )
 
             return self._feature_group_engine.insert_stream(
@@ -2795,7 +2807,7 @@ class FeatureGroup(FeatureGroupBase):
                 await_termination,
                 timeout,
                 checkpoint_dir,
-                write_options,
+                write_options or {},
             )
 
     def commit_details(
@@ -2836,7 +2848,7 @@ class FeatureGroup(FeatureGroupBase):
     def commit_delete_record(
         self,
         delete_df: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
     ):
         """Drops records present in the provided DataFrame and commits it as update to this
         Feature group. This method can only be used on time travel enabled feature groups.
@@ -2848,7 +2860,7 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        self._feature_group_engine.commit_delete(self, delete_df, write_options)
+        self._feature_group_engine.commit_delete(self, delete_df, write_options or {})
 
     def as_of(
         self,
@@ -3261,7 +3273,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         query=None,
         data_format=None,
         path=None,
-        options={},
+        options=None,
         name=None,
         version=None,
         description=None,
@@ -3347,7 +3359,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             self.primary_key = primary_key
             self.statistics_config = statistics_config
             self._features = features
-            self._options = options
+            self._options = options or {}
 
         if storage_connector is not None and isinstance(storage_connector, dict):
             self._storage_connector = sc.StorageConnector.from_response_json(
@@ -3393,8 +3405,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
             np.ndarray,
             List[list],
         ],
-        write_options: Optional[Dict[str, Any]] = {},
-        validation_options: Optional[Dict[str, Any]] = {},
+        write_options: Optional[Dict[str, Any]] = None,
+        validation_options: Optional[Dict[str, Any]] = None,
         save_code: Optional[bool] = True,
         wait: bool = False,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
@@ -3463,6 +3475,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
         """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
+        if validation_options is None:
+            validation_options = {}
         if write_options is None:
             write_options = {}
         if "wait_for_job" not in write_options:
@@ -3487,6 +3501,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
                     " `{}`. Call `compute_statistics` explicitly to compute statistics over the data in the external storage system."
                 ).format(self._name, self._version),
                 util.StorageWarning,
+                stacklevel=1,
             )
 
         return (
@@ -3784,7 +3799,7 @@ class SpineGroup(FeatureGroupBase):
         query=None,
         data_format=None,
         path=None,
-        options={},
+        options=None,
         name=None,
         version=None,
         description=None,
