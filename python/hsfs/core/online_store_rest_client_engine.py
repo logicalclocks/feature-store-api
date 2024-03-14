@@ -164,6 +164,7 @@ class OnlineStoreRestClientEngine:
             f"Handling missing serving keys in entry for Feature View {self._feature_view_name}, version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
         )
         use_batch_api = False
+        entry = entry.copy()
         for sk in self._serving_keys:
             if sk.join_index in self.skip_fg_ids:
                 # The FG is in Opensearch therefore the serving key is not relevant for RonDB Server.
@@ -218,29 +219,28 @@ class OnlineStoreRestClientEngine:
     def handle_passed_features_dict(
         self, passed_features: Optional[Dict[str, Any]]
     ) -> Dict[str, Any]:
-        """Handle the passed features dictionary to convert event time to timestamp.
-
-        This step is necessary to handle passed features which are passed as datetime objects as
-        the latter are not JSON serializable.
+        """This must remove all passed features for which the feature name is not part of the feature vector.
 
         # Arguments:
             passed_features: A dictionary with the feature names as keys and the values to substitute for this specific vector.
 
         # Returns:
-            Same dictionary with the event time converted to UNIX timestamps.
+            A purged dictionary.
         """
         if passed_features is None:
             _logger.debug("No passed features to handle.")
             return {}
 
-        for key, value in passed_features.items():
-            if isinstance(value, datetime):
-                _logger.debug(
-                    f"Converting event time {value} for feature {key} to timestamp."
-                )
-                passed_features[key] = util.convert_event_time_to_timestamp(value)
-        _logger.debug(f"Passed features with event time converted: {passed_features}")
-        return passed_features
+        _logger.debug("Purging passed features dictionary.")
+        new_passed_features = {
+            name: value
+            for name, value in passed_features.items()
+            if name in self._ordered_feature_names
+        }
+        _logger.debug(
+            f"Purged following keys: {[key for key in passed_features.keys() if key not in new_passed_features.keys()]}"
+        )
+        return new_passed_features
 
     def get_single_feature_vector(
         self,
@@ -285,8 +285,7 @@ class OnlineStoreRestClientEngine:
         payload["entries"], use_batch_api = self.handle_missing_serving_keys_in_entry(
             entry
         )
-        # payload["passedFeatures"] = self.handle_passed_features_dict(passed_features)
-        payload["passedFeatures"] = passed_features
+        payload["passedFeatures"] = self.handle_passed_features_dict(passed_features)
 
         if use_batch_api:
             _logger.debug(
@@ -360,11 +359,10 @@ class OnlineStoreRestClientEngine:
         if isinstance(passed_features, list) and (
             len(passed_features) == len(entries) or len(passed_features) == 0
         ):
-            # payload["passedFeatures"] = [
-            #     self.handle_passed_features_dict(passed_features=passed_feature)
-            #     for passed_feature in passed_features
-            # ]
-            payload["passedFeatures"] = passed_features
+            payload["passedFeatures"] = [
+                self.handle_passed_features_dict(passed_features=passed_feature)
+                for passed_feature in passed_features
+            ]
         elif passed_features is None:
             payload["passedFeatures"] = []
         else:
@@ -379,6 +377,8 @@ class OnlineStoreRestClientEngine:
 
         if return_type != self.RETURN_TYPE_RESPONSE_JSON:
             _logger.debug("Converting batch response to feature value rows for each.")
+            if passed_features is None or len(passed_features) == 0:
+                passed_features = [None] * len(response["features"])
             return [
                 self.convert_rdrs_response_to_feature_value_row(
                     row_feature_values=row,
@@ -386,7 +386,7 @@ class OnlineStoreRestClientEngine:
                     return_type=return_type,
                 )
                 for row, passed in zip(
-                    response["features"], passed_features, strict=True
+                    response["features"], passed_features, strict=False
                 )
             ]
         else:
@@ -421,11 +421,14 @@ class OnlineStoreRestClientEngine:
 
         # Merge with handlers if kept in the future.
         if passed_features is not None and len(passed_features.keys()) > 0:
+            _logger.debug(
+                f"Passed features: {passed_features} are merged with row feature {row_feature_values}."
+            )
             row_feature_values = [
                 passed_features.get(name, None)
                 or passed_features.get(fg_feature_name, None)
                 if value is None
-                else None
+                else value
                 for name, fg_feature_name, value in zip(
                     self._ordered_feature_names,
                     self._ordered_feature_group_feature_names,
@@ -433,6 +436,7 @@ class OnlineStoreRestClientEngine:
                     strict=True,
                 )
             ]
+        _logger.debug(f"Row feature values after passed features: {row_feature_values}")
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_LIST:
             _logger.debug(

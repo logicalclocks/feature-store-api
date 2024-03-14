@@ -435,11 +435,9 @@ def get_feature_group_url(feature_store_id: int, feature_group_id: int):
 
 
 class NpDatetimeEncoder(json.JSONEncoder):
-    SQL_TIMESTAMP_STRING_FORMAT = "%Y-%m-%d %H:%M:%S"
-
     def default(self, obj):
         dtypes = (np.datetime64, np.complexfloating)
-        if isinstance(obj, (datetime, date, time)):
+        if isinstance(obj, (datetime, date)):
             return convert_event_time_to_timestamp(obj)
         elif isinstance(obj, dtypes):
             return str(obj)
