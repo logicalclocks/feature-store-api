@@ -968,7 +968,34 @@ class FeatureView:
         """
         return self._feature_view_engine.get_parent_feature_groups(self)
 
-    def get_generated_models(self):
+    def get_newest_model(self, training_dataset_version: Optional[int] = None):
+        """Get the latest generated model using this feature view, based on explicit
+        provenance. Search only through the accessible models.
+        For more items use the base method - get_models_provenance
+
+        # Returns
+            `Model`: Newest Generated Model.
+        """
+        models = self.get_models(training_dataset_version=training_dataset_version)
+        models.sort(key=lambda model: model.created, reverse=True)
+        if models:
+            return models[0]
+        else:
+            return None
+
+    def get_models(self, training_dataset_version: Optional[int] = None):
+        """Get the generated models using this feature view, based on explicit
+        provenance. Only the accessible models are returned.
+        For more items use the base method - get_models_provenance
+
+        # Returns
+            `List[Model]: List of models.
+        """
+        return self.get_models_provenance(
+            training_dataset_version=training_dataset_version
+        ).accessible
+
+    def get_models_provenance(self, training_dataset_version: Optional[int] = None):
         """Get the generated models using this feature view, based on explicit
         provenance. These models can be accessible or inaccessible. Explicit
         provenance does not track deleted generated model links, so deleted
@@ -977,11 +1004,10 @@ class FeatureView:
 
         # Returns
             `ProvenanceLinks`: Object containing the section of provenance graph requested.
-
-        # Raises
-            `hsfs.client.exceptions.RestAPIError`.
         """
-        return self._feature_view_engine.get_generated_models(self)
+        return self._feature_view_engine.get_models_provenance(
+            self, training_dataset_version=training_dataset_version
+        )
 
     def delete_tag(self, name: str):
         """Delete a tag attached to a feature view.

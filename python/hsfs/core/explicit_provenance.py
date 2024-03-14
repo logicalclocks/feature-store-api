@@ -16,7 +16,7 @@
 
 import json
 from enum import Enum
-from typing import Set
+from typing import Set, Optional
 from hsfs import feature_group, feature_view, training_dataset, util
 import humps
 
@@ -249,13 +249,15 @@ class Links:
         return links
 
     @staticmethod
-    def __parse_models(links_json: dict, artifacts: Set[str]):
+    def __parse_models(
+        links_json: dict, training_dataset_version: Optional[int] = None
+    ):
         from hsml import model
         from hsml.core import explicit_provenance as hsml_explicit_provenance
 
         links = Links()
         for link_json in links_json:
-            if link_json["node"]["artifact_type"] in artifacts:
+            if link_json["node"]["artifact_type"] == "MODEL":
                 if link_json["node"].get("exception_cause") is not None:
                     links._faulty.append(
                         hsml_explicit_provenance.Artifact.from_response_json(
@@ -279,15 +281,31 @@ class Links:
                         )
                     )
             else:
-                new_links = Links.__parse_models(link_json["downstream"], artifacts)
-                links.faulty.extend(new_links.faulty)
-                links.accessible.extend(new_links.accessible)
-                links.inaccessible.extend(new_links.inaccessible)
-                links.deleted.extend(new_links.deleted)
+                # the only artifact types here are MODEL and TRAINING_DATASET
+                # elif link_json["node"]["artifact_type"] == "TRAINING_DATASET":
+                if (
+                    training_dataset_version
+                    and link_json["node"]["artifact"]["version"]
+                    != training_dataset_version
+                ):
+                    # Skip the following operations if the versions don't match
+                    pass
+                else:
+                    new_links = Links.__parse_models(link_json["downstream"])
+                    links.faulty.extend(new_links.faulty)
+                    links.accessible.extend(new_links.accessible)
+                    links.inaccessible.extend(new_links.inaccessible)
+                    links.deleted.extend(new_links.deleted)
+
         return links
 
     @staticmethod
-    def from_response_json(json_dict: dict, direction: Direction, artifact: Type):
+    def from_response_json(
+        json_dict: dict,
+        direction: Direction,
+        artifact: Type,
+        training_dataset_version: Optional[int] = None,
+    ):
         """Parse explicit links from json response. There are three types of
         Links: UpstreamFeatureGroups, DownstreamFeatureGroups, DownstreamFeatureViews
 
@@ -318,7 +336,10 @@ class Links:
 
             hopsworks._connected_project.get_model_registry()
 
-            return Links.__parse_models(links_json["downstream"], {"MODEL"})
+            return Links.__parse_models(
+                links_json["downstream"],
+                training_dataset_version=training_dataset_version,
+            )
         else:
             if direction == Links.Direction.UPSTREAM:
                 # upstream is currently, always, only feature groups

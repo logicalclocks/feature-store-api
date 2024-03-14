@@ -30,6 +30,7 @@ from hsfs.core import (
     query_constructor_api,
     arrow_flight_client,
 )
+from typing import Optional
 
 
 class FeatureViewEngine:
@@ -783,7 +784,9 @@ class FeatureViewEngine:
             feature_view_obj.name, feature_view_obj.version
         )
 
-    def get_generated_models(self, feature_view_obj):
+    def get_models_provenance(
+        self, feature_view_obj, training_dataset_version: Optional[int] = None
+    ):
         """Get the generated models using this feature view, based on explicit
         provenance. These models can be accessible or inaccessible. Explicit
         provenance does not track deleted generated model links, so deleted
@@ -796,8 +799,10 @@ class FeatureViewEngine:
         # Returns
             `ProvenanceLinks`:  the models generated using this feature group
         """
-        return self._feature_view_api.get_generated_models(
-            feature_view_obj.name, feature_view_obj.version
+        return self._feature_view_api.get_models_provenance(
+            feature_view_obj.name,
+            feature_view_obj.version,
+            training_dataset_version=training_dataset_version,
         )
 
     def _check_feature_group_accessibility(self, feature_view_obj):

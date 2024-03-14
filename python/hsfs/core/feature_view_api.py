@@ -25,6 +25,7 @@ from hsfs.constructor import serving_prepared_statement, query
 from hsfs.client.exceptions import RestAPIError
 
 from hsfs.core import explicit_provenance
+from typing import Optional
 
 
 class FeatureViewApi:
@@ -290,7 +291,9 @@ class FeatureViewApi:
             explicit_provenance.Links.Type.FEATURE_GROUP,
         )
 
-    def get_generated_models(self, name, version):
+    def get_models_provenance(
+        self, name, version, training_dataset_version: Optional[int] = None
+    ):
         """Get the generated models using this feature view, based on explicit
         provenance. These models can be accessible or inaccessible. Explicit
         provenance does not track deleted generated model links, so deleted
@@ -322,4 +325,5 @@ class FeatureViewApi:
             links_json,
             explicit_provenance.Links.Direction.DOWNSTREAM,
             explicit_provenance.Links.Type.MODEL,
+            training_dataset_version=training_dataset_version,
         )
