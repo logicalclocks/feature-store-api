@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 import json
-import humps
 
+import humps
 from hsfs import util
 
 
