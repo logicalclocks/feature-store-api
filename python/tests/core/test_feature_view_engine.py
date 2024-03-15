@@ -1134,6 +1134,7 @@ class TestFeatureViewEngine:
             with_training_helper_columns=None,
             training_helper_columns=None,
             feature_view_features=[],
+            dataframe_type="default",
         )
 
         # Assert
@@ -1186,6 +1187,7 @@ class TestFeatureViewEngine:
             with_training_helper_columns=None,
             training_helper_columns=None,
             feature_view_features=[],
+            dataframe_type="default",
         )
 
         # Assert
@@ -1231,6 +1233,7 @@ class TestFeatureViewEngine:
             with_training_helper_columns=False,
             training_helper_columns=[],
             feature_view_features=[],
+            dataframe_type="default",
         )
 
         # Assert
@@ -1272,6 +1275,7 @@ class TestFeatureViewEngine:
                 with_training_helper_columns=None,
                 training_helper_columns=None,
                 feature_view_features=[],
+                dataframe_type="default",
             )
 
         # Assert
