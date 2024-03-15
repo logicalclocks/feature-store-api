@@ -292,7 +292,10 @@ class FeatureViewApi:
         )
 
     def get_models_provenance(
-        self, name, version, training_dataset_version: Optional[int] = None
+        self,
+        feature_view_name,
+        feature_view_version,
+        training_dataset_version: Optional[int] = None,
     ):
         """Get the generated models using this feature view, based on explicit
         provenance. These models can be accessible or inaccessible. Explicit
@@ -301,7 +304,9 @@ class FeatureViewApi:
         For inaccessible models, only a minimal information is returned.
 
         # Arguments
-            feature_view_instance: Metadata object of feature view.
+            feature_view_name: Filter generated models based on feature view name.
+            feature_view_version: Filter generated models based on feature view version.
+            training_dataset_version: Filter generated models based on the used training dataset version.
 
         # Returns
             `ExplicitProvenance.Links`: the models generated using this feature
@@ -309,9 +314,9 @@ class FeatureViewApi:
         """
         _client = client.get_instance()
         path_params = self._base_path + [
-            name,
+            feature_view_name,
             self._VERSION,
-            version,
+            feature_view_version,
             self._PROVENANCE,
             self._LINKS,
         ]

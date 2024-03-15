@@ -794,7 +794,8 @@ class FeatureViewEngine:
         For inaccessible models, only a minimal information is returned.
 
         # Arguments
-            feature_view_instance: Metadata object of feature view.
+            feature_view_obj: Filter generated models based on feature view (name, version).
+            training_dataset_version: Filter generated models based on the used training dataset version.
 
         # Returns
             `ProvenanceLinks`:  the models generated using this feature group

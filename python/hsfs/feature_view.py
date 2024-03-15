@@ -973,6 +973,9 @@ class FeatureView:
         provenance. Search only through the accessible models.
         For more items use the base method - get_models_provenance
 
+        # Arguments
+            training_dataset_version: Filter generated models based on the used training dataset version.
+
         # Returns
             `Model`: Newest Generated Model.
         """
@@ -988,6 +991,8 @@ class FeatureView:
         provenance. Only the accessible models are returned.
         For more items use the base method - get_models_provenance
 
+        # Arguments
+            training_dataset_version: Filter generated models based on the used training dataset version.
         # Returns
             `List[Model]: List of models.
         """
@@ -1001,6 +1006,9 @@ class FeatureView:
         provenance does not track deleted generated model links, so deleted
         will always be empty.
         For inaccessible models, only a minimal information is returned.
+
+        # Arguments
+            training_dataset_version: Filter generated models based on the used training dataset version.
 
         # Returns
             `ProvenanceLinks`: Object containing the section of provenance graph requested.

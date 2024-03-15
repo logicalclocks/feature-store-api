@@ -101,42 +101,28 @@ class Artifact:
     @staticmethod
     def from_response_json(json_dict: dict):
         link_json = humps.decamelize(json_dict)
+        href = None
+        exception_cause = None
         if link_json.get("exception_cause") is not None:
-            return Artifact(
-                link_json["artifact"]["project"],
-                link_json["artifact"]["name"],
-                link_json["artifact"]["version"],
-                link_json["artifact_type"],
-                Artifact.MetaType.FAULTY,
-            )
+            meta_type = Artifact.MetaType.FAULTY
+            exception_cause = link_json.get("exception_cause")
         elif bool(link_json["deleted"]):
-            return Artifact(
-                link_json["artifact"]["project"],
-                link_json["artifact"]["name"],
-                link_json["artifact"]["version"],
-                link_json["artifact_type"],
-                Artifact.MetaType.DELETED,
-            )
+            meta_type = Artifact.MetaType.DELETED
         elif not bool(link_json["accessible"]):
-            return Artifact(
-                link_json["artifact"]["project"],
-                link_json["artifact"]["name"],
-                link_json["artifact"]["version"],
-                link_json["artifact_type"],
-                Artifact.MetaType.INACCESSIBLE,
-                link_json["artifact"]["href"],
-            )
-        elif bool(link_json["accessible"]):
-            return Artifact(
-                link_json["artifact"]["featurestore_name"],
-                link_json["artifact"]["name"],
-                link_json["artifact"]["version"],
-                link_json["artifact_type"],
-                Artifact.MetaType.NOT_SUPPORTED,
-                link_json["artifact"]["href"],
-            )
+            meta_type = Artifact.MetaType.INACCESSIBLE
+            href = link_json["artifact"]["href"]
         else:
-            return None
+            meta_type = Artifact.MetaType.NOT_SUPPORTED
+            href = link_json["artifact"]["href"]
+        return Artifact(
+            link_json["artifact"]["project"],
+            link_json["artifact"]["name"],
+            link_json["artifact"]["version"],
+            link_json["artifact_type"],
+            meta_type,
+            href=href,
+            exception_cause=exception_cause,
+        )
 
 
 class Links:
