@@ -415,7 +415,6 @@ class OnlineStoreRestClientEngine:
                     self._ordered_feature_names,
                     self._ordered_feature_group_feature_names,
                     row_feature_values,
-                    strict=True,
                 )
             ]
         _logger.debug(f"Row feature values after passed features: {row_feature_values}")
@@ -431,7 +430,6 @@ class OnlineStoreRestClientEngine:
                 for name, value in zip(
                     self.ordered_feature_names_and_dtypes,
                     row_feature_values,
-                    strict=True,
                 )
             ]
         elif return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT:
@@ -447,7 +445,6 @@ class OnlineStoreRestClientEngine:
                 for (name, value) in zip(
                     self._ordered_feature_names,
                     row_feature_values,
-                    strict=True,
                 )
             }
 
