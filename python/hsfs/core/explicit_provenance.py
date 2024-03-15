@@ -148,38 +148,37 @@ class Links:
 
     @property
     def deleted(self):
-        """List of [Artifact objects](../links#artifact) which contains
+        """List of [Artifact objects] which contains
         minimal information (name, version) about the entities
-        (feature groups, feature views) they represent.
-        These entities have been removed from the feature store.
+        (feature groups, feature views, models) they represent.
+        These entities have been removed from the feature store/model registry.
         """
         return self._deleted
 
     @property
     def inaccessible(self):
-        """List of [Artifact objects](../links#artifact) which contains
+        """List of [Artifact objects] which contains
         minimal information (name, version) about the entities
-        (feature groups, feature views) they represent.
-        These entities exist in the feature store, however the user
+        (feature groups, feature views, models) they represent.
+        These entities exist in the feature store/model registry, however the user
         does not have access to them anymore.
         """
         return self._inaccessible
 
     @property
     def accessible(self):
-        """List of [feature groups](../feature_group_api) or
-        [feature views](../feature_view_api) metadata objects
+        """List of [FeatureGroups|FeatureViews|Models] objects
         which are part of the provenance graph requested. These entities
-        exist in the feature store and the user has access to them.
+        exist in the feature store/model registry and the user has access to them.
         """
         return self._accessible
 
     @property
     def faulty(self):
-        """List of [Artifact objects](../links#artifact) which contains
+        """List of [Artifact objects] which contains
         minimal information (name, version) about the entities
-        (feature groups, feature views) they represent.
-        These entities exist in the feature store, however they are corrupted.
+        (feature groups, feature views, models) they represent.
+        These entities exist in the feature store/model registry, however they are corrupted.
         """
         return self._faulty
 
@@ -305,16 +304,21 @@ class Links:
             import importlib.util
 
             if not importlib.util.find_spec("hsml"):
-                raise ValueError(
+                raise Exception(
                     "hsml is not installed in the environment - cannot parse model registry artifacts"
                 )
             if not importlib.util.find_spec("hopsworks"):
-                raise ValueError(
+                raise Exception(
                     "hopsworks is not installed in the environment - cannot switch from hsml connection to hsfs connection"
                 )
 
             # make sure the hsml connection is initialized so that the model can actually be used after being returned
             import hopsworks
+
+            if not hopsworks._connected_project:
+                raise Exception(
+                    "hopsworks connection is not initialized - use hopsworks.login to connect if you want the ability to use provenance with connections between hsfs and hsml"
+                )
 
             hopsworks._connected_project.get_model_registry()
 
