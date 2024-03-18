@@ -274,9 +274,16 @@ class Engine:
                 )
             )
         if dataframe_type.lower() == "polars":
-            return self._return_dataframe_type(
-                pl.concat(df_list), dataframe_type=dataframe_type
-            )
+            # Below check performed since some files materialized when creating training data are empty
+            # If empty dataframe is in df_list then polars cannot concatenate df_list due to schema mismatch
+            # However if the entire split contains only empty files which can occur when the data size is very small then one of the empty dataframe is return so that the column names can be accessed.
+            non_empty_df_list = [df for df in df_list if not df.is_empty()]
+            if non_empty_df_list:
+                return self._return_dataframe_type(
+                    pl.concat(non_empty_df_list), dataframe_type=dataframe_type
+                )
+            else:
+                return df_list[0]
         else:
             return self._return_dataframe_type(
                 pd.concat(df_list, ignore_index=True), dataframe_type=dataframe_type
@@ -333,11 +340,7 @@ class Engine:
                 and hdfs.path.getsize(path) > 0
             ):
                 if dataframe_type.lower() == "polars":
-                    df = self._read_polars(data_format, path)
-                    # Below check performed since some files materialized when creating training data
-                    # If empty dataframe in df_list was read from a csv file then polars cannot contatenate df_list due to shema mismatch
-                    if not df.is_empty():
-                        df_list.append(df)
+                    df_list.append(self._read_polars(data_format, path))
                 else:
                     df_list.append(self._read_pandas(data_format, path))
         return df_list

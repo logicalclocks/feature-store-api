@@ -249,6 +249,68 @@ class TestPython:
         assert mock_python_engine_read_hopsfs.call_count == 1
         assert mock_python_engine_read_s3.call_count == 0
 
+    def test_read_hopsfs_connector_empty_dataframe(self, mocker):
+        # Arrange
+
+        # Setting list of empty dataframes as return value from _read_hopsfs
+        mock_python_engine_read_hopsfs = mocker.patch(
+            "hsfs.engine.python.Engine._read_hopsfs",
+            return_value=[pd.DataFrame(), pd.DataFrame()],
+        )
+        mock_python_engine_read_s3 = mocker.patch("hsfs.engine.python.Engine._read_s3")
+
+        python_engine = python.Engine()
+
+        connector = storage_connector.HopsFSConnector(
+            id=1, name="test_connector", featurestore_id=1
+        )
+
+        # Act
+        dataframe = python_engine.read(
+            storage_connector=connector,
+            data_format="csv",
+            read_options=None,
+            location=None,
+            dataframe_type="default",
+        )
+
+        # Assert
+        assert mock_python_engine_read_hopsfs.call_count == 1
+        assert mock_python_engine_read_s3.call_count == 0
+        assert isinstance(dataframe, pd.DataFrame)
+        assert len(dataframe) == 0
+
+    def test_read_hopsfs_connector_empty_dataframe_polars(self, mocker):
+        # Arrange
+
+        # Setting empty list as return value from _read_hopsfs
+        mock_python_engine_read_hopsfs = mocker.patch(
+            "hsfs.engine.python.Engine._read_hopsfs",
+            return_value=[pl.DataFrame(), pl.DataFrame()],
+        )
+        mock_python_engine_read_s3 = mocker.patch("hsfs.engine.python.Engine._read_s3")
+
+        python_engine = python.Engine()
+
+        connector = storage_connector.HopsFSConnector(
+            id=1, name="test_connector", featurestore_id=1
+        )
+
+        # Act
+        dataframe = python_engine.read(
+            storage_connector=connector,
+            data_format="csv",
+            read_options=None,
+            location=None,
+            dataframe_type="polars",
+        )
+
+        # Assert
+        assert mock_python_engine_read_hopsfs.call_count == 1
+        assert mock_python_engine_read_s3.call_count == 0
+        assert isinstance(dataframe, pl.DataFrame)
+        assert len(dataframe) == 0
+
     def test_read_s3_connector(self, mocker):
         # Arrange
         mocker.patch("pandas.concat")
