@@ -137,8 +137,8 @@ sudo sh get-docker.sh
 #### Load the docker image
 
 ```bash
-wget https://repo.hops.works/dev/moritz/locust_benchmark/locust-2.15.1-hsfs-3.3.0.dev1-amd64.tgz
-sudo docker load < locust-2.15.0-hsfs-3.2.0.dev1-amd64.tgz
+wget https://repo.hops.works/dev/dhananjay/locust-benchmarking/locust-2.17-hsfs-3.5.0.dev1.tar.gz
+sudo docker load < locust-2.17-hsfs-3.5.0.dev1.tar.gz
 ```
 
 #### Create feature group and configure test

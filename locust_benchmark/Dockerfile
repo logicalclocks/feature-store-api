@@ -1,4 +1,4 @@
-FROM locustio/locust:2.15.1
+FROM locustio/locust:2.17.0
 
 USER root
 

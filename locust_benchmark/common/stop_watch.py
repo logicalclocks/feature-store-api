@@ -20,6 +20,7 @@ def stopwatch(func):
                 name=task_name,
                 response_time=total,
                 exception=e,
+                response_length=0,
             )
         else:
             total = int((time.time() - start) * 1000)
