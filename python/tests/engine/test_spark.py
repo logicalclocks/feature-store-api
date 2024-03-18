@@ -35,6 +35,7 @@ from pyspark.sql.types import (
     MapType,
     ArrayType,
 )
+from pyspark.sql import DataFrame
 
 from hsfs import (
     feature_group,
@@ -287,22 +288,31 @@ class TestSpark:
         # Arrange
         spark_engine = spark.Engine()
 
-        mock_df = mocker.Mock()
+        mock_df = mocker.Mock(spec=DataFrame)
 
         # Act
         result = spark_engine._return_dataframe_type(
             dataframe=mock_df,
             dataframe_type="pandas",
         )
-
         # Assert
         assert result == mock_df.toPandas()
+
+        mock_df = mocker.Mock(spec=pd.DataFrame)
+
+        # Act
+        result = spark_engine._return_dataframe_type(
+            dataframe=mock_df,
+            dataframe_type="pandas",
+        )
+        # Assert
+        assert result == mock_df
 
     def test_return_dataframe_type_numpy(self, mocker):
         # Arrange
         spark_engine = spark.Engine()
 
-        mock_df = mocker.Mock()
+        mock_df = mocker.Mock(spec=DataFrame)
 
         # Act
         result = spark_engine._return_dataframe_type(
@@ -313,11 +323,21 @@ class TestSpark:
         # Assert
         assert result == mock_df.toPandas().values
 
+        mock_df = mocker.Mock(spec=pd.DataFrame)
+
+        # Act
+        result = spark_engine._return_dataframe_type(
+            dataframe=mock_df,
+            dataframe_type="numpy",
+        )
+        # Assert
+        assert result == mock_df.values
+
     def test_return_dataframe_type_python(self, mocker):
         # Arrange
         spark_engine = spark.Engine()
 
-        mock_df = mocker.Mock()
+        mock_df = mocker.Mock(spec=DataFrame)
 
         # Act
         result = spark_engine._return_dataframe_type(
@@ -327,6 +347,16 @@ class TestSpark:
 
         # Assert
         assert result == mock_df.toPandas().values.tolist()
+
+        mock_df = mocker.Mock(spec=pd.DataFrame)
+
+        # Act
+        result = spark_engine._return_dataframe_type(
+            dataframe=mock_df,
+            dataframe_type="python",
+        )
+        # Assert
+        assert result == mock_df.values.tolist()
 
     def test_return_dataframe_type_other(self, mocker):
         # Arrange
@@ -1699,6 +1729,7 @@ class TestSpark:
             feature_view_obj=None,
             query_obj=None,
             read_options=None,
+            dataframe_type="default",
         )
 
         # Assert
@@ -1712,10 +1743,7 @@ class TestSpark:
         df = pd.DataFrame(data=d)
 
         # Act
-        result = spark_engine.split_labels(
-            df=df,
-            labels=None,
-        )
+        result = spark_engine.split_labels(df=df, labels=None, dataframe_type="default")
 
         # Assert
         assert result == (df, None)
@@ -1734,8 +1762,7 @@ class TestSpark:
 
         # Act
         df_new, labels_df = spark_engine.split_labels(
-            df=spark_df,
-            labels=["col_0"],
+            df=spark_df, labels=["col_0"], dataframe_type="default"
         )
 
         # Assert
@@ -2809,6 +2836,7 @@ class TestSpark:
                 data_format=None,
                 read_options=None,
                 location=None,
+                dataframe_type="default",
             )
 
         # Assert
@@ -2827,6 +2855,7 @@ class TestSpark:
                 data_format="",
                 read_options=None,
                 location=None,
+                dataframe_type="default",
             )
 
         # Assert
@@ -2849,6 +2878,7 @@ class TestSpark:
             data_format="csv",
             read_options={"name": "value"},
             location=None,
+            dataframe_type="default",
         )
 
         # Assert
@@ -2881,6 +2911,7 @@ class TestSpark:
             data_format="delta",
             read_options=None,
             location="test_location",
+            dataframe_type="default",
         )
 
         # Assert
@@ -2910,6 +2941,7 @@ class TestSpark:
             data_format="parquet",
             read_options=None,
             location="test_location",
+            dataframe_type="default",
         )
 
         # Assert
@@ -2940,6 +2972,7 @@ class TestSpark:
             data_format="hudi",
             read_options=None,
             location="test_location",
+            dataframe_type="default",
         )
 
         # Assert
@@ -2969,6 +3002,7 @@ class TestSpark:
             data_format="orc",
             read_options=None,
             location="test_location",
+            dataframe_type="default",
         )
 
         # Assert
@@ -2998,6 +3032,7 @@ class TestSpark:
             data_format="bigquery",
             read_options=None,
             location="test_location",
+            dataframe_type="default",
         )
 
         # Assert
@@ -3028,6 +3063,7 @@ class TestSpark:
             data_format="csv",
             read_options=None,
             location="test_location",
+            dataframe_type="default",
         )
 
         # Assert
@@ -3058,6 +3094,7 @@ class TestSpark:
             data_format="csv",
             read_options=None,
             location="test_location",
+            dataframe_type="default",
         )
 
         # Assert
