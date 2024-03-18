@@ -2156,6 +2156,10 @@ class FeatureGroup(FeatureGroupBase):
         """
         Finds the nearest neighbors for a given embedding in the vector database.
 
+        If `filter` or `min_score` is specified, or if embedding feature is stored in default project index,
+        the number of results returned may be less than k. Try using a large value of k and extract the top k
+        items from the results if needed.
+
         # Arguments
             embedding: The target embedding for which neighbors are to be found.
             col: The column name used to compute similarity score. Required only if there
@@ -3057,7 +3061,7 @@ class FeatureGroup(FeatureGroupBase):
             _ = json_decamelized.pop("type", None)
             json_decamelized.pop("validation_type", None)
             if "embedding_index" in json_decamelized:
-                json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+                json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
                     json_decamelized["embedding_index"]
                 )
             return cls(**json_decamelized)
@@ -3067,7 +3071,7 @@ class FeatureGroup(FeatureGroupBase):
             _ = fg.pop("type", None)
             fg.pop("validation_type", None)
             if "embedding_index" in fg:
-                fg["embedding_index"] = EmbeddingIndex.from_json_response(
+                fg["embedding_index"] = EmbeddingIndex.from_response_json(
                     fg["embedding_index"]
                 )
         return [cls(**fg) for fg in json_decamelized]
@@ -3077,7 +3081,7 @@ class FeatureGroup(FeatureGroupBase):
         json_decamelized["stream"] = json_decamelized["type"] == "streamFeatureGroupDTO"
         _ = json_decamelized.pop("type")
         if "embedding_index" in json_decamelized:
-            json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+            json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
                 json_decamelized["embedding_index"]
             )
         self.__init__(**json_decamelized)
@@ -3623,6 +3627,10 @@ class ExternalFeatureGroup(FeatureGroupBase):
         """
         Finds the nearest neighbors for a given embedding in the vector database.
 
+        If `filter` or `min_score` is specified, or if embedding feature is stored in default project index,
+        the number of results returned may be less than k. Try using a large value of k and extract the top k
+        items from the results if needed.
+
         # Arguments
             embedding: The target embedding for which neighbors are to be found.
             col: The column name used to compute similarity score. Required only if there
@@ -3680,14 +3688,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
         if isinstance(json_decamelized, dict):
             _ = json_decamelized.pop("type", None)
             if "embedding_index" in json_decamelized:
-                json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+                json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
                     json_decamelized["embedding_index"]
                 )
             return cls(**json_decamelized)
         for fg in json_decamelized:
             _ = fg.pop("type", None)
             if "embedding_index" in fg:
-                fg["embedding_index"] = EmbeddingIndex.from_json_response(
+                fg["embedding_index"] = EmbeddingIndex.from_response_json(
                     fg["embedding_index"]
                 )
         return [cls(**fg) for fg in json_decamelized]
@@ -3697,7 +3705,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         if "type" in json_decamelized:
             _ = json_decamelized.pop("type")
         if "embedding_index" in json_decamelized:
-            json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+            json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
                 json_decamelized["embedding_index"]
             )
         self.__init__(**json_decamelized)
