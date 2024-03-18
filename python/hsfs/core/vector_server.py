@@ -20,6 +20,7 @@ import avro.io
 from sqlalchemy import sql, bindparam, exc, text
 import numpy as np
 import pandas as pd
+import polars as pl
 from hsfs import util
 from hsfs import training_dataset, feature_view, client
 from hsfs.serving_key import ServingKey
@@ -292,9 +293,15 @@ class VectorServer:
             pandas_df = pd.DataFrame(vector).transpose()
             pandas_df.columns = self._feature_vector_col_name
             return pandas_df
+        elif return_type.lower() == "polars":
+            # Polar considers one dimensional list as a single columns so passed vector as 2d list
+            polars_df = pl.DataFrame(
+                [vector], schema=self._feature_vector_col_name, orient="row"
+            )
+            return polars_df
         else:
             raise Exception(
-                "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
+                "Unknown return type. Supported return types are 'list', 'polars', 'pandas' and 'numpy'"
             )
 
     def get_feature_vectors(
@@ -337,9 +344,14 @@ class VectorServer:
             pandas_df = pd.DataFrame(vectors)
             pandas_df.columns = self._feature_vector_col_name
             return pandas_df
+        elif return_type.lower() == "polars":
+            polars_df = pl.DataFrame(
+                vectors, schema=self._feature_vector_col_name, orient="row"
+            )
+            return polars_df
         else:
             raise Exception(
-                "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
+                "Unknown return type. Supported return types are 'list', 'polars', 'pandas' and 'numpy'"
             )
 
     def get_inference_helper(self, entry, return_type):
@@ -353,6 +365,12 @@ class VectorServer:
             return pd.DataFrame([serving_vector])
         elif return_type.lower() == "dict":
             return serving_vector
+        elif return_type.lower() == "polars":
+            # Polar considers one dimensional list as a single columns so passed vector as 2d list
+            polars_df = pl.DataFrame(
+                [serving_vector], schema=self._feature_vector_col_name, orient="row"
+            )
+            return polars_df
         else:
             raise Exception(
                 "Unknown return type. Supported return types are 'pandas' and 'dict'"
@@ -386,6 +404,11 @@ class VectorServer:
             return batch_results
         elif return_type.lower() == "pandas":
             return pd.DataFrame(batch_results)
+        elif return_type.lower() == "polars":
+            polars_df = pl.DataFrame(
+                batch_results, schema=self._feature_vector_col_name, orient="row"
+            )
+            return polars_df
         else:
             raise Exception(
                 "Unknown return type. Supported return types are 'dict' and 'pandas'"
@@ -406,6 +429,7 @@ class VectorServer:
         # Initialize the set of values
         serving_vector = {}
         bind_entries = {}
+        prepared_statement_execution = {}
         for prepared_statement_index in prepared_statement_objects:
             pk_entry = {}
             next_statement = False
@@ -425,11 +449,14 @@ class VectorServer:
             if next_statement:
                 continue
             bind_entries[prepared_statement_index] = pk_entry
+            prepared_statement_execution[
+                prepared_statement_index
+            ] = prepared_statement_objects[prepared_statement_index]
 
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
         results_dict = loop.run_until_complete(
-            self._execute_prep_statements(prepared_statement_objects, bind_entries)
+            self._execute_prep_statements(prepared_statement_execution, bind_entries)
         )
 
         for key in results_dict:
@@ -711,6 +738,14 @@ class VectorServer:
     async def _execute_prep_statements(self, prepared_statements: dict, entries: dict):
         """Iterate over prepared statements to create async tasks
         and gather all tasks results for a given list of entries."""
+
+        # validate if prepared_statements and entries have the same keys
+        if prepared_statements.keys() != entries.keys():
+            # iterate over prepared_statements and entries to find the missing key
+            # remove missing keys from prepared_statements
+            for key in list(prepared_statements.keys()):
+                if key not in entries:
+                    prepared_statements.pop(key)
 
         tasks = [
             asyncio.ensure_future(
