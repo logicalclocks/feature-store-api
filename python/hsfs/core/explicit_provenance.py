@@ -295,9 +295,10 @@ class Links:
         Links: UpstreamFeatureGroups, DownstreamFeatureGroups, DownstreamFeatureViews
 
         # Arguments
-            links_json: json response from the explicit provenance endpoint
+            json_dict: json response from the explicit provenance endpoint
             direction: subset of links to parse - UPSTREAM/DOWNSTREAM
-            type: subset of links to parse - FEATURE_GROUP/FEATURE_VIEW/MODEL
+            artifact: subset of links to parse - FEATURE_GROUP/FEATURE_VIEW/MODEL
+            training_dataset_version: training dataset version
 
         # Returns
             A ProvenanceLink object for the selected parse type.
