@@ -60,6 +60,11 @@ class VectorServer:
             if features
             else []
         )
+        self._inference_helper_col_name = (
+            [feat.name for feat in features if feat.inference_helper_column]
+            if features
+            else []
+        )
         self._skip_fg_ids = skip_fg_ids or set()
         self._prepared_statement_engine = None
         self._prepared_statements = None
@@ -373,7 +378,7 @@ class VectorServer:
         elif return_type.lower() == "polars":
             # Polar considers one dimensional list as a single columns so passed vector as 2d list
             polars_df = pl.DataFrame(
-                [serving_vector], schema=self._feature_vector_col_name, orient="row"
+                [serving_vector], schema=self._inference_helper_col_name, orient="row"
             )
             return polars_df
         else:
@@ -411,7 +416,7 @@ class VectorServer:
             return pd.DataFrame(batch_results)
         elif return_type.lower() == "polars":
             polars_df = pl.DataFrame(
-                batch_results, schema=self._feature_vector_col_name, orient="row"
+                batch_results, schema=self._inference_helper_col_name, orient="row"
             )
             return polars_df
         else:
