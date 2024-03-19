@@ -15,11 +15,11 @@
 #
 
 import logging
+import re
 
 from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException, VectorDatabaseException
 from hsfs.core.opensearch_api import OpenSearchApi
-import re
 
 
 class OpenSearchClientSingleton:
@@ -38,10 +38,12 @@ class OpenSearchClientSingleton:
                 from opensearchpy import OpenSearch
                 from opensearchpy.exceptions import (
                     AuthenticationException as OpenSearchAuthenticationException,
-                    RequestError as RequestError,
                 )
                 from opensearchpy.exceptions import (
                     ConnectionError as OpenSearchConnectionError,
+                )
+                from opensearchpy.exceptions import (
+                    RequestError as RequestError,
                 )
 
                 self.OpenSearchConnectionError = OpenSearchConnectionError
