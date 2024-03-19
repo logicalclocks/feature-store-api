@@ -328,7 +328,9 @@ class Engine:
         try:
             from pydoop import hdfs
         except ModuleNotFoundError:
-            return self._read_hopsfs_remote(location, data_format, read_options or {})
+            return self._read_hopsfs_remote(
+                location, data_format, read_options, dataframe_type
+            )
         util.setup_pydoop()
         path_list = hdfs.ls(location, recursive=True)
 
@@ -348,7 +350,9 @@ class Engine:
     # This is a version of the read method that uses the Hopsworks REST APIs or Flyginduck Server
     # To read the training dataset content, this to avoid the pydoop dependency
     # requirement and allow users to read Hopsworks training dataset from outside
-    def _read_hopsfs_remote(self, location, data_format, read_options=None):
+    def _read_hopsfs_remote(
+        self, location, data_format, read_options={}, dataframe_type="default"
+    ):
         total_count = 10000
         offset = 0
         df_list = []
@@ -367,13 +371,20 @@ class Engine:
                     ):
                         arrow_flight_config = read_options.get("arrow_flight_config")
                         df = arrow_flight_client.get_instance().read_path(
-                            inode.path, arrow_flight_config
+                            inode.path,
+                            arrow_flight_config,
+                            dataframe_type=dataframe_type,
                         )
                     else:
                         content_stream = self._dataset_api.read_content(inode.path)
-                        df = self._read_pandas(
-                            data_format, BytesIO(content_stream.content)
-                        )
+                        if dataframe_type.lower() == "polars":
+                            df = self._read_polars(
+                                data_format, BytesIO(content_stream.content)
+                            )
+                        else:
+                            df = self._read_pandas(
+                                data_format, BytesIO(content_stream.content)
+                            )
 
                     df_list.append(df)
                 offset += 1
