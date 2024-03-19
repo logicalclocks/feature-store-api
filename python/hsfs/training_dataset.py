@@ -869,7 +869,7 @@ class TrainingDataset(TrainingDatasetBase):
             return tds
         else:  # backwards compatibility
             for td in json_decamelized:
-                _ = td.pop("type")
+                _ = td.pop("type", None)
                 cls._rewrite_location(td)
             return [cls(**td) for td in json_decamelized]
 
