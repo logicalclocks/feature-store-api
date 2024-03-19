@@ -295,6 +295,9 @@ class Client(base.Client):
         """no need to replace as we are already in external client"""
         return url
 
+    def _is_external(self):
+        return True
+
     @property
     def host(self):
         return self._host
