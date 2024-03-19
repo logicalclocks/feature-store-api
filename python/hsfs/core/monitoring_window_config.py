@@ -15,12 +15,12 @@
 #
 
 import json
-import humps
-from typing import List, Optional, Union
-from hsfs.util import FeatureStoreEncoder
 from enum import Enum
+from typing import List, Optional, Union
 
+import humps
 from hsfs.core import monitoring_window_config_engine
+from hsfs.util import FeatureStoreEncoder
 
 
 class WindowConfigType(str, Enum):

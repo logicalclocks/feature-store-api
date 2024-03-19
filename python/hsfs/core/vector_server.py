@@ -13,37 +13,38 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import re
+import asyncio
 import io
-import avro.schema
+import re
+
 import avro.io
-from sqlalchemy import sql, bindparam, exc, text
+import avro.schema
 import numpy as np
 import pandas as pd
 import polars as pl
-from hsfs import util
-from hsfs import training_dataset, feature_view, client
-from hsfs.serving_key import ServingKey
+from hsfs import client, feature_view, training_dataset, util
 from hsfs.core import (
-    training_dataset_api,
-    storage_connector_api,
-    transformation_function_engine,
     feature_view_api,
     feature_view_engine,
+    storage_connector_api,
+    training_dataset_api,
+    transformation_function_engine,
 )
-
-import asyncio
+from hsfs.serving_key import ServingKey
+from sqlalchemy import bindparam, exc, sql, text
 
 
 class VectorServer:
     def __init__(
         self,
         feature_store_id,
-        features=[],
+        features=None,
         training_dataset_version=None,
         serving_keys=None,
         skip_fg_ids=None,
     ):
+        if features is None:
+            features = []
         self._training_dataset_version = training_dataset_version
         self._features = features
         self._feature_vector_col_name = (
@@ -169,9 +170,9 @@ class VectorServer:
 
         self._prefix_by_serving_index = prefix_by_serving_index
         for sk in self._serving_keys:
-            self._serving_key_by_serving_index[
-                sk.join_index
-            ] = self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
+            self._serving_key_by_serving_index[sk.join_index] = (
+                self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
+            )
         # sort the serving by PreparedStatementParameter.index
         for join_index in self._serving_key_by_serving_index:
             # feature_name_order_by_psp do not include the join index when the joint feature only contains label only
@@ -199,9 +200,9 @@ class VectorServer:
             if prepared_statement.feature_group_id in self._skip_fg_ids:
                 continue
             query_online = str(prepared_statement.query_online).replace("\n", " ")
-            prefix_by_serving_index[
-                prepared_statement.prepared_statement_index
-            ] = prepared_statement.prefix
+            prefix_by_serving_index[prepared_statement.prepared_statement_index] = (
+                prepared_statement.prefix
+            )
 
             # In java prepared statement `?` is used for parametrization.
             # In sqlalchemy `:feature_name` is used instead of `?`
@@ -212,13 +213,13 @@ class VectorServer:
                     key=lambda psp: psp.index,
                 )
             ]
-            feature_name_order_by_psp[
-                prepared_statement.prepared_statement_index
-            ] = dict(
-                [
-                    (psp.name, psp.index)
-                    for psp in prepared_statement.prepared_statement_parameters
-                ]
+            feature_name_order_by_psp[prepared_statement.prepared_statement_index] = (
+                dict(
+                    [
+                        (psp.name, psp.index)
+                        for psp in prepared_statement.prepared_statement_parameters
+                    ]
+                )
             )
             # construct serving key if it is not provided.
             if self._serving_keys is None:
@@ -245,9 +246,9 @@ class VectorServer:
                     batch_ids=bindparam("batch_ids", expanding=True)
                 )
 
-            prepared_statements_dict[
-                prepared_statement.prepared_statement_index
-            ] = query_online
+            prepared_statements_dict[prepared_statement.prepared_statement_index] = (
+                query_online
+            )
 
         # assign serving key if it is not provided.
         if self._serving_keys is None:
@@ -271,12 +272,14 @@ class VectorServer:
         self,
         entry,
         return_type=None,
-        passed_features=[],
+        passed_features=None,
         allow_missing=False,
     ):
         """Assembles serving vector from online feature store."""
 
         # get result row
+        if passed_features is None:
+            passed_features = []
         serving_vector = self._vector_result(entry, self._prepared_statements)
         # Add the passed features
         serving_vector.update(passed_features)
@@ -308,11 +311,13 @@ class VectorServer:
         self,
         entries,
         return_type=None,
-        passed_features=[],
+        passed_features=None,
         allow_missing=False,
     ):
         """Assembles serving vector from online feature store."""
 
+        if passed_features is None:
+            passed_features = []
         batch_results, _ = self._batch_vector_results(
             entries, self._prepared_statements
         )
@@ -449,9 +454,9 @@ class VectorServer:
             if next_statement:
                 continue
             bind_entries[prepared_statement_index] = pk_entry
-            prepared_statement_execution[
-                prepared_statement_index
-            ] = prepared_statement_objects[prepared_statement_index]
+            prepared_statement_execution[prepared_statement_index] = (
+                prepared_statement_objects[prepared_statement_index]
+            )
 
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
@@ -485,9 +490,9 @@ class VectorServer:
             if prepared_statement_index not in self._serving_key_by_serving_index:
                 continue
 
-            prepared_stmts_to_execute[
-                prepared_statement_index
-            ] = prepared_statement_objects[prepared_statement_index]
+            prepared_stmts_to_execute[prepared_statement_index] = (
+                prepared_statement_objects[prepared_statement_index]
+            )
             entry_values_tuples = list(
                 map(
                     lambda e: tuple(
@@ -534,9 +539,9 @@ class VectorServer:
                 )
                 # note: should used serialized value
                 # as it is from users' input
-                statement_results[
-                    self._get_result_key(prefix_features, row_dict)
-                ] = result_dict
+                statement_results[self._get_result_key(prefix_features, row_dict)] = (
+                    result_dict
+                )
 
             # add partial results to the global results
             for i, entry in enumerate(entries):

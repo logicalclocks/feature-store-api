@@ -14,12 +14,12 @@
 #   limitations under the License.
 #
 
+from datetime import datetime
+
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_config_engine
 from hsfs.core.monitoring_window_config import WindowConfigType
 from hsfs.util import convert_event_time_to_timestamp
-
-from datetime import datetime
 
 
 DEFAULT_DESCRIPTION = "A feature monitoring configuration for unit test."

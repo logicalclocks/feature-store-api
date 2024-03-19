@@ -14,15 +14,16 @@
 #   limitations under the License.
 #
 
-from typing import Dict, List, Optional, Union, Tuple
 from datetime import date, datetime
+from typing import Dict, List, Optional, Tuple, Union
+
+from hsfs import util
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core import feature_monitoring_config as fmc
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
 from hsfs.core.feature_monitoring_config_api import FeatureMonitoringConfigApi
 from hsfs.core.feature_monitoring_result import FeatureMonitoringResult
 from hsfs.core.feature_monitoring_result_api import FeatureMonitoringResultApi
-from hsfs.core import feature_monitoring_config as fmc
-from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
-from hsfs.client.exceptions import FeatureStoreException
-from hsfs import util
 from hsfs.core.job_api import JobApi
 
 
@@ -361,8 +362,8 @@ class FeatureMonitoringResultEngine:
         detection_statistics: List[FeatureDescriptiveStatistics],
         reference_statistics: List[FeatureDescriptiveStatistics],
     ):
-        assert len(reference_statistics) == len(
-            detection_statistics
+        assert (
+            len(reference_statistics) == len(detection_statistics)
         ), "detection_statistics and reference_statistics must contain the same number of feature statistics"
         det_stats_set, ref_stats_set = set(), set()
         for det_fds, ref_fds in zip(detection_statistics, reference_statistics):

@@ -14,13 +14,12 @@
 #   limitations under the License.
 #
 
-import pandas as pd
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+
 import numpy as np
-
-from typing import Optional, Union, Any, Dict, List, TypeVar, Tuple
-
-from hsfs.validation_report import ValidationReport
+import pandas as pd
 from hsfs.core.job import Job
+from hsfs.validation_report import ValidationReport
 
 
 class FeatureGroupWriter:
@@ -42,9 +41,13 @@ class FeatureGroupWriter:
         overwrite: Optional[bool] = False,
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
-        write_options: Optional[Dict[str, Any]] = {},
-        validation_options: Optional[Dict[str, Any]] = {},
+        write_options: Optional[Dict[str, Any]] = None,
+        validation_options: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
+        if validation_options is None:
+            validation_options = {}
+        if write_options is None:
+            write_options = {}
         return self._feature_group.insert(
             features=features,
             overwrite=overwrite,

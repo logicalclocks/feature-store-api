@@ -14,16 +14,16 @@
 #   limitations under the License.
 #
 
-from dataclasses import dataclass
-from hsfs import client
-from hsfs.client.exceptions import FeatureStoreException
 import json
-from typing import Optional, List
-import humps
+from dataclasses import dataclass
+from typing import List, Optional
 
+import humps
 from hsfs import (
+    client,
     util,
 )
+from hsfs.client.exceptions import FeatureStoreException
 
 
 class SimilarityFunctionType:
@@ -73,11 +73,11 @@ class HsmlModel:
     def get_model(self):
         try:
             from hsml.model import Model
-        except ModuleNotFoundError:
+        except ModuleNotFoundError as err:
             raise FeatureStoreException(
                 "Model is attached to embedding feature but hsml library is not installed."
                 "Install hsml library before getting the feature group."
-            )
+            ) from err
 
         path_params = [
             "project",

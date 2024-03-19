@@ -14,9 +14,9 @@
 #   limitations under the License.
 #
 
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
-from hsfs import client, statistics, feature_view
+from hsfs import client, feature_view, statistics
 from hsfs.core import job
 
 

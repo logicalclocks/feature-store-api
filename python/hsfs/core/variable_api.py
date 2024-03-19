@@ -14,9 +14,9 @@
 #   limitations under the License.
 #
 
-from hsfs import client
 import re
 
+from hsfs import client
 from hsfs.client.exceptions import RestAPIError
 
 

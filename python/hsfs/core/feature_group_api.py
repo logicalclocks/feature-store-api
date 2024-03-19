@@ -14,11 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs import client
-from hsfs import feature_group, feature_group_commit
-from hsfs.core import ingestion_job
-
-from hsfs.core import explicit_provenance
+from hsfs import client, feature_group, feature_group_commit
+from hsfs.core import explicit_provenance, ingestion_job
 
 
 class FeatureGroupApi:

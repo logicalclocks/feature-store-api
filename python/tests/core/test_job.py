@@ -16,9 +16,8 @@
 
 
 import pytest
-
-from hsfs.core import job, execution
 from hsfs.client import exceptions
+from hsfs.core import execution, job
 
 
 class TestJob:

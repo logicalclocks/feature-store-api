@@ -14,22 +14,23 @@
 #   limitations under the License.
 #
 
-import pytest
-import numpy
 import datetime
 
+import numpy
+import pytest
 from hsfs import (
+    engine,
     feature,
     feature_group,
+    feature_view,
     training_dataset,
     transformation_function,
     transformation_function_attached,
-    feature_view,
-    engine,
 )
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core import transformation_function_engine
 from hsfs.constructor.query import Query
+from hsfs.core import transformation_function_engine
+
 
 fg1 = feature_group.FeatureGroup(
     name="test1",

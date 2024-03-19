@@ -15,8 +15,8 @@
 #
 
 
-from hsfs.constructor import external_feature_group_alias
 from hsfs import feature_group
+from hsfs.constructor import external_feature_group_alias
 
 
 class TestExternalFeatureGroupAlias:

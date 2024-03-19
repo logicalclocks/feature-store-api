@@ -15,7 +15,6 @@
 #
 
 import humps
-
 from hsfs import feature_group as feature_group_module
 
 

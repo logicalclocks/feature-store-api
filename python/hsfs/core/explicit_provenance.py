@@ -17,8 +17,9 @@
 import json
 from enum import Enum
 from typing import Set, Optional
-from hsfs import feature_group, feature_view, training_dataset, util
+
 import humps
+from hsfs import feature_group, feature_view, training_dataset, util
 
 
 class Artifact:

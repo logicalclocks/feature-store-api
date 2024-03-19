@@ -15,11 +15,10 @@
 #
 
 import json
-
-import humps
 from typing import Optional
-import great_expectations as ge
 
+import great_expectations as ge
+import humps
 from hsfs import util
 from hsfs.ge_validation_result import ValidationResult
 

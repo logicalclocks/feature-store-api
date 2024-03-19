@@ -15,8 +15,8 @@
 #
 
 
-from hsfs import ge_expectation
 import great_expectations as ge
+from hsfs import ge_expectation
 
 
 class TestGeExpectation:

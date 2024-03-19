@@ -14,8 +14,7 @@
 #   limitations under the License.
 #
 
-from hsfs.engine import spark
-from hsfs.engine import python
+from hsfs.engine import python, spark
 
 
 class TestPythonSparkConvertDataframe:

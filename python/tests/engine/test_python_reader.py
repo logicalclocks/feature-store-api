@@ -14,14 +14,12 @@
 #   limitations under the License.
 #
 
-import pandas as pd
-from hsfs.core import inode, arrow_flight_client
-
-from hsfs.engine import python
-
 import boto3
-from moto import mock_aws
+import pandas as pd
+from hsfs.core import arrow_flight_client, inode
+from hsfs.engine import python
 from hsfs.storage_connector import S3Connector
+from moto import mock_aws
 
 
 class TestPythonReader:
