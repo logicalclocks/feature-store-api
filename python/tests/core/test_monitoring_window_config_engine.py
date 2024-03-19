@@ -13,15 +13,16 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from hsfs.core import monitoring_window_config_engine as mwce
-from hsfs.core import monitoring_window_config as mwc
-from hsfs.util import convert_event_time_to_timestamp
-from mock import call
-from hsfs import feature_group, feature_view
-from hsfs.constructor import query
+from datetime import datetime, timedelta
 
 import pytest
-from datetime import timedelta, datetime
+from hsfs import feature_group, feature_view
+from hsfs.constructor import query
+from hsfs.core import monitoring_window_config as mwc
+from hsfs.core import monitoring_window_config_engine as mwce
+from hsfs.util import convert_event_time_to_timestamp
+from mock import call
+
 
 DEFAULT_FEATURE_NAME = "amount"
 

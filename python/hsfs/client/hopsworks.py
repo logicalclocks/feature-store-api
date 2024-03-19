@@ -18,8 +18,8 @@ import os
 from pathlib import Path
 
 import requests
+from hsfs.client import auth, base
 
-from hsfs.client import base, auth
 
 try:
     import jks

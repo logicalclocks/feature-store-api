@@ -14,10 +14,11 @@
 #   limitations under the License.
 #
 
-from typing import Union, List
+from typing import List, Union
+
 from hsfs import client
-from hsfs.validation_report import ValidationReport
 from hsfs.core.variable_api import VariableApi
+from hsfs.validation_report import ValidationReport
 
 
 class ValidationReportApi:

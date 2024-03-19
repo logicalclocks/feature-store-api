@@ -14,13 +14,13 @@
 #   limitations under the License.
 #
 
-from typing import Union, List, Dict
-from hsfs.core import validation_result_api
-from datetime import datetime, date
-from hsfs.util import convert_event_time_to_timestamp
+from datetime import date, datetime
+from typing import Dict, List, Union
 
-from hsfs.ge_validation_result import ValidationResult
 from great_expectations.core import ExpectationValidationResult
+from hsfs.core import validation_result_api
+from hsfs.ge_validation_result import ValidationResult
+from hsfs.util import convert_event_time_to_timestamp
 
 
 class ValidationResultEngine:
@@ -41,7 +41,7 @@ class ValidationResultEngine:
         expectation_id: int,
         start_validation_time: Union[str, int, datetime, date, None] = None,
         end_validation_time: Union[str, int, datetime, date, None] = None,
-        filter_by: List[str] = [],
+        filter_by: List[str] = None,
         ge_type: bool = True,
     ) -> Union[List[ValidationResult], List[ExpectationValidationResult]]:
         """Get Validation Results relevant to an Expectation specified by expectation_id.
@@ -62,7 +62,7 @@ class ValidationResultEngine:
         :type end_validation_time: Union[str, int, datetime, date, None]
         """
         query_params = self._build_query_params(
-            filter_by=filter_by,
+            filter_by=filter_by or [],
             start_validation_time=start_validation_time,
             end_validation_time=end_validation_time,
         )
@@ -81,7 +81,7 @@ class ValidationResultEngine:
 
     def _build_query_params(
         self,
-        filter_by: List[str] = [],
+        filter_by: List[str] = None,
         start_validation_time: Union[str, int, datetime, date, None] = None,
         end_validation_time: Union[str, int, datetime, date, None] = None,
     ) -> Dict[str, str]:
@@ -93,17 +93,18 @@ class ValidationResultEngine:
             "EXPERIMENT",
             "FG_DATA",
         ]
-        ingestion_filters = []
-        for ingestion_filter in filter_by:
-            if ingestion_filter.upper() in allowed_ingestion_filters:
-                ingestion_filters.append(
-                    f"ingestion_result_eq:{ingestion_filter.upper()}"
-                )
-            else:
-                raise ValueError(
-                    f"Illegal Value {ingestion_filter} in filter_by."
-                    + f"Allowed values are {', '.join(allowed_ingestion_filters)}"
-                )
+        if isinstance(filter_by, list):
+            ingestion_filters = []
+            for ingestion_filter in filter_by:
+                if ingestion_filter.upper() in allowed_ingestion_filters:
+                    ingestion_filters.append(
+                        f"ingestion_result_eq:{ingestion_filter.upper()}"
+                    )
+                else:
+                    raise ValueError(
+                        f"Illegal Value {ingestion_filter} in filter_by."
+                        + f"Allowed values are {', '.join(allowed_ingestion_filters)}"
+                    )
 
         query_params["filter_by"].extend(ingestion_filters)
 

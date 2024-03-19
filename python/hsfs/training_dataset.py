@@ -15,26 +15,25 @@
 
 import json
 import warnings
-from typing import Optional, Union, Any, Dict, List, TypeVar
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 import humps
-import pandas as pd
 import numpy as np
-
-from hsfs import util, engine, training_dataset_feature, client
-from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.statistics_config import StatisticsConfig
-from hsfs.storage_connector import StorageConnector, HopsFSConnector
+import pandas as pd
+from hsfs import client, engine, training_dataset_feature, util
+from hsfs.client.exceptions import RestAPIError
+from hsfs.constructor import filter, query
 from hsfs.core import (
+    code_engine,
+    statistics_engine,
     training_dataset_api,
     training_dataset_engine,
-    statistics_engine,
-    code_engine,
     transformation_function_engine,
     vector_server,
 )
-from hsfs.constructor import query, filter
-from hsfs.client.exceptions import RestAPIError
+from hsfs.statistics_config import StatisticsConfig
+from hsfs.storage_connector import HopsFSConnector, StorageConnector
+from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
 class TrainingDatasetBase:
@@ -596,7 +595,7 @@ class TrainingDataset(TrainingDatasetBase):
             np.ndarray,
             List[list],
         ],
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
     ):
         """Materialize the training dataset to storage.
 
@@ -631,7 +630,7 @@ class TrainingDataset(TrainingDatasetBase):
         user_stats_config = self._statistics_config
         # td_job is used only if the python engine is used
         training_dataset, td_job = self._training_dataset_engine.save(
-            self, features, write_options
+            self, features, write_options or {}
         )
         self.storage_connector = training_dataset.storage_connector
         # currently we do not save the training dataset statistics config for training datasets
@@ -645,6 +644,7 @@ class TrainingDataset(TrainingDatasetBase):
                     self._name, self._version
                 ),
                 util.VersionWarning,
+                stacklevel=1,
             )
 
         return td_job
@@ -660,7 +660,7 @@ class TrainingDataset(TrainingDatasetBase):
             List[list],
         ],
         overwrite: bool,
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
     ):
         """Insert additional feature data into the training dataset.
 
@@ -695,7 +695,7 @@ class TrainingDataset(TrainingDatasetBase):
         """
         # td_job is used only if the python engine is used
         td_job = self._training_dataset_engine.insert(
-            self, features, write_options, overwrite
+            self, features, write_options or {}, overwrite
         )
 
         self._code_engine.save_code(self)
@@ -703,7 +703,7 @@ class TrainingDataset(TrainingDatasetBase):
 
         return td_job
 
-    def read(self, split=None, read_options={}):
+    def read(self, split=None, read_options=None):
         """Read the training dataset into a dataframe.
 
         It is also possible to read only a specific split.
@@ -722,7 +722,7 @@ class TrainingDataset(TrainingDatasetBase):
                 "The training dataset has splits, please specify the split you want to read"
             )
 
-        return self._training_dataset_engine.read(self, split, read_options)
+        return self._training_dataset_engine.read(self, split, read_options or {})
 
     def compute_statistics(self):
         """Compute the statistics for the training dataset and save them to the
@@ -850,6 +850,7 @@ class TrainingDataset(TrainingDatasetBase):
                 self._name, self._version
             ),
             util.JobWarning,
+            stacklevel=1,
         )
         self._training_dataset_api.delete(self)
 
@@ -897,9 +898,9 @@ class TrainingDataset(TrainingDatasetBase):
             if td_json["location"].endswith(
                 f"/Projects/{_client._project_name}/{_client._project_name}_Training_Datasets"
             ):
-                td_json[
-                    "location"
-                ] = f"{td_json['location']}/{td_json['name']}_{td_json['version']}"
+                td_json["location"] = (
+                    f"{td_json['location']}/{td_json['name']}_{td_json['version']}"
+                )
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)

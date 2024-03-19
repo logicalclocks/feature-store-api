@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs.core import feature_group_api, storage_connector_api, tags_api, kafka_api
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core import feature_group_api, kafka_api, storage_connector_api, tags_api
 
 
 class FeatureGroupBaseEngine:

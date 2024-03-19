@@ -17,14 +17,12 @@
 from hsfs import (
     client,
     feature_view,
-    transformation_function_attached,
     training_dataset,
+    transformation_function_attached,
 )
-from hsfs.core import job
-from hsfs.constructor import serving_prepared_statement, query
 from hsfs.client.exceptions import RestAPIError
-
-from hsfs.core import explicit_provenance
+from hsfs.constructor import query, serving_prepared_statement
+from hsfs.core import explicit_provenance, job
 
 
 class FeatureViewApi:
@@ -90,7 +88,7 @@ class FeatureViewApi:
                     "Cannot get back the feature view because the query defined is no longer valid."
                     " Some feature groups used in the query may have been deleted. You can clean up this feature view on the UI"
                     " or `FeatureView.clean`."
-                )
+                ) from e
             else:
                 raise e
 
@@ -108,7 +106,7 @@ class FeatureViewApi:
                     "Cannot get back the feature view because the query defined is no longer valid."
                     " Some feature groups used in the query may have been deleted. You can clean up this feature view on the UI"
                     " or `FeatureView.clean`."
-                )
+                ) from e
             else:
                 raise e
 

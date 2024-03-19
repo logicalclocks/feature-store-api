@@ -14,10 +14,11 @@
 #   limitations under the License.
 #
 
-from typing import Any, Dict, Optional, List, Union
-from hsfs.core import expectation_suite_api
+from typing import Any, Dict, List, Optional, Union
+
 from hsfs import client, util
 from hsfs import expectation_suite as es
+from hsfs.core import expectation_suite_api
 from hsfs.ge_expectation import GeExpectation
 
 

@@ -14,12 +14,13 @@
 #   limitations under the License.
 #
 
-from hsfs.client.exceptions import FeatureStoreException
-from hsfs.constructor.join import Join
-from hsfs.constructor.filter import Filter, Logic
-from hsfs.feature import Feature
-from hsfs.core.opensearch import OpenSearchClientSingleton
 from typing import Union
+
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.constructor.filter import Filter, Logic
+from hsfs.constructor.join import Join
+from hsfs.core.opensearch import OpenSearchClientSingleton
+from hsfs.feature import Feature
 
 
 class VectorDbClient:
@@ -60,9 +61,9 @@ class VectorDbClient:
                     fg_col_vdb_col_map[f.name] = fg.embedding_index.col_prefix + f.name
                 # add primary key to the map in case it is not selected as feature
                 for pk in q._left_feature_group.primary_key:
-                    vdb_col_fg_col_map[
-                        fg.embedding_index.col_prefix + pk
-                    ] = q._left_feature_group[pk]
+                    vdb_col_fg_col_map[fg.embedding_index.col_prefix + pk] = (
+                        q._left_feature_group[pk]
+                    )
                     fg_col_vdb_col_map[pk] = fg.embedding_index.col_prefix + pk
                 self._fg_vdb_col_fg_col_map[fg.id] = vdb_col_fg_col_map
                 self._fg_col_vdb_col_map[fg.id] = fg_col_vdb_col_map
@@ -84,9 +85,7 @@ class VectorDbClient:
                 for feat in join_fg.features:
                     vdb_col_td_col_map[
                         join_fg.embedding_index.col_prefix + feat.name
-                    ] = (
-                        join.prefix or ""
-                    ) + feat.name  # join.prefix can be None
+                    ] = (join.prefix or "") + feat.name  # join.prefix can be None
                 self._fg_vdb_col_td_col_map[join_fg.id] = vdb_col_td_col_map
 
     def find_neighbors(

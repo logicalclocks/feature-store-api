@@ -14,9 +14,9 @@
 #   limitations under the License.
 #
 
+import humps
 from hsfs import util
 from hsfs.constructor import query
-import humps
 
 
 class Join:

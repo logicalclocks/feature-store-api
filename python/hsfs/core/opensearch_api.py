@@ -15,7 +15,6 @@
 #
 
 from furl import furl
-
 from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi

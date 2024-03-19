@@ -14,44 +14,44 @@
 #   limitations under the License.
 #
 
-import pytest
-import pandas as pd
 import numpy
-from pyspark.sql.types import (
-    ByteType,
-    ShortType,
-    IntegerType,
-    LongType,
-    FloatType,
-    DoubleType,
-    DecimalType,
-    DateType,
-    StringType,
-    TimestampType,
-    StructType,
-    BinaryType,
-    BooleanType,
-    StructField,
-    MapType,
-    ArrayType,
-)
-from pyspark.sql import DataFrame
-
+import pandas as pd
+import pytest
 from hsfs import (
-    feature_group,
-    training_dataset,
-    transformation_function,
-    feature,
-    storage_connector,
-    expectation_suite,
-    training_dataset_feature,
     engine,
+    expectation_suite,
+    feature,
+    feature_group,
+    storage_connector,
+    training_dataset,
+    training_dataset_feature,
+    transformation_function,
 )
+from hsfs.client import exceptions
+from hsfs.constructor import hudi_feature_group_alias, query
 from hsfs.core import training_dataset_engine
 from hsfs.engine import spark
-from hsfs.constructor import query, hudi_feature_group_alias
-from hsfs.client import exceptions
 from hsfs.training_dataset_feature import TrainingDatasetFeature
+from pyspark.sql import DataFrame
+from pyspark.sql.types import (
+    ArrayType,
+    BinaryType,
+    BooleanType,
+    ByteType,
+    DateType,
+    DecimalType,
+    DoubleType,
+    FloatType,
+    IntegerType,
+    LongType,
+    MapType,
+    ShortType,
+    StringType,
+    StructField,
+    StructType,
+    TimestampType,
+)
+
 
 engine._engine_type = "spark"
 
@@ -912,71 +912,61 @@ class TestSpark:
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "test_mode"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "kafka"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "checkpointLocation"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.call_args[
                 0
-            ][
-                1
-            ]
+            ][1]
             == f"/Projects/test_project_name/Resources/{self._get_spark_query_name(project_id, fg)}-checkpoint"
         )
-        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
-            1
-        ] == {
-            "kafka.bootstrap.servers": "test_bootstrap_servers",
-            "kafka.security.protocol": "test_security_protocol",
-            "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
-            "kafka.ssl.key.password": "test_ssl_key_password",
-            "kafka.ssl.keystore.location": "result_from_add_file",
-            "kafka.ssl.keystore.password": "test_ssl_keystore_password",
-            "kafka.ssl.truststore.location": "result_from_add_file",
-            "kafka.ssl.truststore.password": "test_ssl_truststore_password",
-            "kafka.test_option_name": "test_option_value",
-            "test_name": "test_value",
-        }
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
+                1
+            ]
+            == {
+                "kafka.bootstrap.servers": "test_bootstrap_servers",
+                "kafka.security.protocol": "test_security_protocol",
+                "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+                "kafka.ssl.key.password": "test_ssl_key_password",
+                "kafka.ssl.keystore.location": "result_from_add_file",
+                "kafka.ssl.keystore.password": "test_ssl_keystore_password",
+                "kafka.ssl.truststore.location": "result_from_add_file",
+                "kafka.ssl.truststore.password": "test_ssl_truststore_password",
+                "kafka.test_option_name": "test_option_value",
+                "test_name": "test_value",
+            }
+        )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "topic"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
                 0
-            ][
-                1
-            ]
+            ][1]
             == "test_online_topic_name"
         )
-        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
-            0
-        ][
-            0
-        ] == self._get_spark_query_name(
-            project_id, fg
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
+                0
+            ][0]
+            == self._get_spark_query_name(project_id, fg)
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.return_value.start.return_value.awaitTermination.call_count
@@ -1038,71 +1028,60 @@ class TestSpark:
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "test_mode"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "kafka"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "checkpointLocation"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.call_args[
                 0
-            ][
-                1
-            ]
+            ][1]
             == "/Projects/test_project_name/Resources/test_query_name-checkpoint"
         )
-        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
-            1
-        ] == {
-            "kafka.bootstrap.servers": "test_bootstrap_servers",
-            "kafka.security.protocol": "test_security_protocol",
-            "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
-            "kafka.ssl.key.password": "test_ssl_key_password",
-            "kafka.ssl.keystore.location": "result_from_add_file",
-            "kafka.ssl.keystore.password": "test_ssl_keystore_password",
-            "kafka.ssl.truststore.location": "result_from_add_file",
-            "kafka.ssl.truststore.password": "test_ssl_truststore_password",
-            "kafka.test_option_name": "test_option_value",
-            "test_name": "test_value",
-        }
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
+                1
+            ]
+            == {
+                "kafka.bootstrap.servers": "test_bootstrap_servers",
+                "kafka.security.protocol": "test_security_protocol",
+                "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+                "kafka.ssl.key.password": "test_ssl_key_password",
+                "kafka.ssl.keystore.location": "result_from_add_file",
+                "kafka.ssl.keystore.password": "test_ssl_keystore_password",
+                "kafka.ssl.truststore.location": "result_from_add_file",
+                "kafka.ssl.truststore.password": "test_ssl_truststore_password",
+                "kafka.test_option_name": "test_option_value",
+                "test_name": "test_value",
+            }
+        )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "topic"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
                 0
-            ][
-                1
-            ]
+            ][1]
             == "test_online_topic_name"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "test_query_name"
         )
         assert (
@@ -1172,71 +1151,61 @@ class TestSpark:
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "test_mode"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "kafka"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "checkpointLocation"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.call_args[
                 0
-            ][
-                1
-            ]
+            ][1]
             == "test_checkpoint_dir"
         )
-        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
-            1
-        ] == {
-            "kafka.bootstrap.servers": "test_bootstrap_servers",
-            "kafka.security.protocol": "test_security_protocol",
-            "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
-            "kafka.ssl.key.password": "test_ssl_key_password",
-            "kafka.ssl.keystore.location": "result_from_add_file",
-            "kafka.ssl.keystore.password": "test_ssl_keystore_password",
-            "kafka.ssl.truststore.location": "result_from_add_file",
-            "kafka.ssl.truststore.password": "test_ssl_truststore_password",
-            "kafka.test_option_name": "test_option_value",
-            "test_name": "test_value",
-        }
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
+                1
+            ]
+            == {
+                "kafka.bootstrap.servers": "test_bootstrap_servers",
+                "kafka.security.protocol": "test_security_protocol",
+                "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+                "kafka.ssl.key.password": "test_ssl_key_password",
+                "kafka.ssl.keystore.location": "result_from_add_file",
+                "kafka.ssl.keystore.password": "test_ssl_keystore_password",
+                "kafka.ssl.truststore.location": "result_from_add_file",
+                "kafka.ssl.truststore.password": "test_ssl_truststore_password",
+                "kafka.test_option_name": "test_option_value",
+                "test_name": "test_value",
+            }
+        )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "topic"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
                 0
-            ][
-                1
-            ]
+            ][1]
             == "test_online_topic_name"
         )
-        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
-            0
-        ][
-            0
-        ] == self._get_spark_query_name(
-            project_id, fg
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
+                0
+            ][0]
+            == self._get_spark_query_name(project_id, fg)
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.return_value.start.return_value.awaitTermination.call_count
@@ -1299,71 +1268,61 @@ class TestSpark:
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "test_mode"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "kafka"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "checkpointLocation"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.call_args[
                 0
-            ][
-                1
-            ]
+            ][1]
             == f"/Projects/test_project_name/Resources/{self._get_spark_query_name(project_id, fg)}-checkpoint"
         )
-        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
-            1
-        ] == {
-            "kafka.bootstrap.servers": "test_bootstrap_servers",
-            "kafka.security.protocol": "test_security_protocol",
-            "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
-            "kafka.ssl.key.password": "test_ssl_key_password",
-            "kafka.ssl.keystore.location": "result_from_add_file",
-            "kafka.ssl.keystore.password": "test_ssl_keystore_password",
-            "kafka.ssl.truststore.location": "result_from_add_file",
-            "kafka.ssl.truststore.password": "test_ssl_truststore_password",
-            "kafka.test_option_name": "test_option_value",
-            "test_name": "test_value",
-        }
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.call_args[
+                1
+            ]
+            == {
+                "kafka.bootstrap.servers": "test_bootstrap_servers",
+                "kafka.security.protocol": "test_security_protocol",
+                "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+                "kafka.ssl.key.password": "test_ssl_key_password",
+                "kafka.ssl.keystore.location": "result_from_add_file",
+                "kafka.ssl.keystore.password": "test_ssl_keystore_password",
+                "kafka.ssl.truststore.location": "result_from_add_file",
+                "kafka.ssl.truststore.password": "test_ssl_truststore_password",
+                "kafka.test_option_name": "test_option_value",
+                "test_name": "test_value",
+            }
+        )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "topic"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.call_args[
                 0
-            ][
-                1
-            ]
+            ][1]
             == "test_online_topic_name"
         )
-        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
-            0
-        ][
-            0
-        ] == self._get_spark_query_name(
-            project_id, fg
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.call_args[
+                0
+            ][0]
+            == self._get_spark_query_name(project_id, fg)
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.return_value.start.return_value.awaitTermination.call_count
@@ -1372,9 +1331,7 @@ class TestSpark:
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.writeStream.outputMode.return_value.format.return_value.option.return_value.options.return_value.option.return_value.queryName.return_value.start.return_value.awaitTermination.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == 123
         )
 
@@ -1415,17 +1372,13 @@ class TestSpark:
         assert (
             mock_df.write.format.return_value.mode.return_value.options.return_value.partitionBy.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == []
         )
         assert (
             mock_df.write.format.return_value.mode.return_value.options.return_value.partitionBy.return_value.saveAsTable.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "test_get_table_name"
         )
 
@@ -1471,19 +1424,16 @@ class TestSpark:
         assert mock_df.write.format.return_value.mode.return_value.options.call_args[
             1
         ] == {"test_name": "test_value"}
-        assert mock_df.write.format.return_value.mode.return_value.options.return_value.partitionBy.call_args[
-            0
-        ][
-            0
-        ] == [
-            "f"
-        ]
+        assert (
+            mock_df.write.format.return_value.mode.return_value.options.return_value.partitionBy.call_args[
+                0
+            ][0]
+            == ["f"]
+        )
         assert (
             mock_df.write.format.return_value.mode.return_value.options.return_value.partitionBy.return_value.saveAsTable.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "test_get_table_name"
         )
 
@@ -1567,39 +1517,36 @@ class TestSpark:
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.write.format.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "kafka"
         )
-        assert mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.write.format.return_value.options.call_args[
-            1
-        ] == {
-            "kafka.bootstrap.servers": "test_bootstrap_servers",
-            "kafka.security.protocol": "test_security_protocol",
-            "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
-            "kafka.ssl.key.password": "test_ssl_key_password",
-            "kafka.ssl.keystore.location": "result_from_add_file",
-            "kafka.ssl.keystore.password": "test_ssl_keystore_password",
-            "kafka.ssl.truststore.location": "result_from_add_file",
-            "kafka.ssl.truststore.password": "test_ssl_truststore_password",
-            "kafka.test_option_name": "test_option_value",
-            "test_name": "test_value",
-        }
+        assert (
+            mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.write.format.return_value.options.call_args[
+                1
+            ]
+            == {
+                "kafka.bootstrap.servers": "test_bootstrap_servers",
+                "kafka.security.protocol": "test_security_protocol",
+                "kafka.ssl.endpoint.identification.algorithm": "test_ssl_endpoint_identification_algorithm",
+                "kafka.ssl.key.password": "test_ssl_key_password",
+                "kafka.ssl.keystore.location": "result_from_add_file",
+                "kafka.ssl.keystore.password": "test_ssl_keystore_password",
+                "kafka.ssl.truststore.location": "result_from_add_file",
+                "kafka.ssl.truststore.password": "test_ssl_truststore_password",
+                "kafka.test_option_name": "test_option_value",
+                "test_name": "test_value",
+            }
+        )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.write.format.return_value.options.return_value.option.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "topic"
         )
         assert (
             mock_spark_engine_online_fg_to_avro.return_value.withColumn.return_value.write.format.return_value.options.return_value.option.call_args[
                 0
-            ][
-                1
-            ]
+            ][1]
             == "test_online_topic_name"
         )
         assert (
@@ -2753,9 +2700,7 @@ class TestSpark:
         assert (
             mock_spark_engine_apply_transformation_function.return_value.write.format.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "csv"
         )
 
@@ -2789,9 +2734,7 @@ class TestSpark:
         assert (
             mock_spark_engine_apply_transformation_function.return_value.write.format.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == "csv"
         )
 
@@ -2888,11 +2831,12 @@ class TestSpark:
         assert (
             mock_pyspark_getOrCreate.return_value.read.format.call_args[0][0] == "csv"
         )
-        assert mock_pyspark_getOrCreate.return_value.read.format.return_value.options.call_args[
-            1
-        ] == {
-            "name": "value"
-        }
+        assert (
+            mock_pyspark_getOrCreate.return_value.read.format.return_value.options.call_args[
+                1
+            ]
+            == {"name": "value"}
+        )
 
     def test_read_location_format_delta(self, mocker):
         # Arrange
@@ -3127,9 +3071,7 @@ class TestSpark:
             featurestore_id=99,
         )
 
-        mock_pyspark_getOrCreate.return_value.read.format.return_value.options.return_value = (
-            {}
-        )
+        mock_pyspark_getOrCreate.return_value.read.format.return_value.options.return_value = {}
 
         # Act
         result = spark_engine.read_stream(

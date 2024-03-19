@@ -14,14 +14,14 @@
 #   limitations under the License.
 #
 
-import humps
 import time
+from datetime import datetime, timezone
 
+import humps
 from hsfs import util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import job_api
 from hsfs.core import job_schedule as js
-from datetime import datetime, timezone
 
 
 class Job:

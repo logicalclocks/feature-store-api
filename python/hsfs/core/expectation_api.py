@@ -14,9 +14,10 @@
 #   limitations under the License.
 #
 
+from typing import List
+
 from hsfs import client
 from hsfs.ge_expectation import GeExpectation
-from typing import List
 
 
 class ExpectationApi:

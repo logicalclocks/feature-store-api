@@ -14,23 +14,25 @@
 #   limitations under the License.
 #
 
-import hsfs
-from hsfs import (
-    feature_store,
-    feature_group,
-    user,
-    statistics_config,
-    feature,
-    storage_connector,
-    expectation_suite,
-    util,
-    engine,
-    feature_group_writer,
-)
-from hsfs.engine import python
-from hsfs.client.exceptions import FeatureStoreException, RestAPIError
-import pytest
 import warnings
+
+import hsfs
+import pytest
+from hsfs import (
+    engine,
+    expectation_suite,
+    feature,
+    feature_group,
+    feature_group_writer,
+    feature_store,
+    statistics_config,
+    storage_connector,
+    user,
+    util,
+)
+from hsfs.client.exceptions import FeatureStoreException, RestAPIError
+from hsfs.engine import python
+
 
 engine.init("python")
 test_feature_group = feature_group.FeatureGroup(
@@ -369,16 +371,16 @@ class TestFeatureGroup:
         )
 
         # call first time should populate cache
-        fg.materialization_job
+        fg.materialization_job  # noqa: B018
 
         mock_job_api.assert_called_once_with("test_fg_2_offline_fg_materialization")
         assert fg._materialization_job == mock_job
 
         # call second time
-        fg.materialization_job
+        fg.materialization_job  # noqa: B018
 
         # make sure it still was called only once
-        mock_job_api.assert_called_once
+        mock_job_api.assert_called_once  # noqa: B018
         assert fg.materialization_job == mock_job
 
     def test_materialization_job_retry_success(self, mocker):
@@ -449,7 +451,7 @@ class TestFeatureGroup:
 
         # Act
         with pytest.raises(FeatureStoreException) as e_info:
-            fg.materialization_job
+            fg.materialization_job  # noqa: B018
 
         # Assert
         assert mock_job_api.call_count == 6

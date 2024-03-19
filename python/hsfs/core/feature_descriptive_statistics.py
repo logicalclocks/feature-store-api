@@ -15,8 +15,9 @@
 #
 
 import json
+from typing import Mapping, Optional, Union
+
 import humps
-from typing import Optional, Union, Mapping
 from hsfs.util import FeatureStoreEncoder
 
 
@@ -95,8 +96,8 @@ class FeatureDescriptiveStatistics:
             return None
         try:
             return getattr(self, stat_name)
-        except KeyError:
-            raise AttributeError(f"'{name}' statistic has not been computed")
+        except KeyError as err:
+            raise AttributeError(f"'{name}' statistic has not been computed") from err
 
     @classmethod
     def from_response_json(cls, json_dict):

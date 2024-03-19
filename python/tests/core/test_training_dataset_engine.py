@@ -15,10 +15,9 @@
 #
 
 import pytest
-
 from hsfs import training_dataset, training_dataset_feature, transformation_function
-from hsfs.core import training_dataset_engine
 from hsfs.constructor import query
+from hsfs.core import training_dataset_engine
 
 
 class TestTrainingDatasetEngine:
@@ -53,9 +52,7 @@ class TestTrainingDatasetEngine:
 
         features = [f, f1]
 
-        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = (
-            features
-        )
+        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = features
 
         # Act
         td_engine.save(training_dataset=td, features=None, user_write_options=None)
@@ -143,9 +140,7 @@ class TestTrainingDatasetEngine:
 
         features = [f, f1]
 
-        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = (
-            features
-        )
+        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = features
 
         # Act
         with pytest.raises(ValueError) as e_info:
@@ -193,9 +188,7 @@ class TestTrainingDatasetEngine:
 
         features = [f, f1]
 
-        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = (
-            features
-        )
+        mock_engine_get_instance.return_value.parse_schema_training_dataset.return_value = features
 
         # Act
         td_engine.save(training_dataset=td, features=None, user_write_options=None)

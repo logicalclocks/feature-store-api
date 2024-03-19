@@ -14,9 +14,8 @@
 #   limitations under the License.
 #
 
-import humps
-
 import hsfs.feature_group as feature_group
+import humps
 from hsfs.feature import Feature
 from hsfs.transformation_function import TransformationFunction
 
