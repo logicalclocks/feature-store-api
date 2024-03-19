@@ -82,12 +82,12 @@ class OpenSearchClientSingleton:
         except self.RequestError as e:
             caused_by = e.info.get("error") and e.info["error"].get("caused_by")
             if caused_by and caused_by["type"] == "illegal_argument_exception":
-                raise self._create_vector_database_exception(caused_by["reason"])
+                raise self._create_vector_database_exception(caused_by["reason"]) from e
             raise VectorDatabaseException(
                 VectorDatabaseException.OTHERS,
                 f"Error in Opensearch request: {e}",
                 e.info,
-            )
+            )  from e
 
     def close(self):
         if self._opensearch_client:
