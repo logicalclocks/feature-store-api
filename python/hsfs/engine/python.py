@@ -351,7 +351,7 @@ class Engine:
     # To read the training dataset content, this to avoid the pydoop dependency
     # requirement and allow users to read Hopsworks training dataset from outside
     def _read_hopsfs_remote(
-        self, location, data_format, read_options={}, dataframe_type="default"
+        self, location, data_format, read_options=None, dataframe_type="default"
     ):
         total_count = 10000
         offset = 0
