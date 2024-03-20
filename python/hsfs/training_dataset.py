@@ -329,13 +329,22 @@ class TrainingDatasetBase:
     @splits.setter
     def splits(self, splits):
         # user api differs from how the backend expects the splits to be represented
-        self._splits = [
-            TrainingDatasetSplit(
-                name=k, split_type=TrainingDatasetSplit.RANDOM_SPLIT, percentage=v
+        if splits is None:
+            self._splits = []
+        elif isinstance(splits, dict):
+            self._splits = [
+                TrainingDatasetSplit(
+                    name=k, split_type=TrainingDatasetSplit.RANDOM_SPLIT, percentage=v
+                )
+                for k, v in splits.items()
+                if v is not None
+            ]
+        else:
+            raise TypeError(
+                "The argument `splits` has to be `None` or a dictionary of key, relative size e.g "
+                + "{'train': 0.7, 'test': 0.1, 'validation': 0.2}.\n"
+                + "Got {} with type {}".format(splits, type(splits))
             )
-            for k, v in splits.items()
-            if v is not None
-        ]
 
     @property
     def location(self):
