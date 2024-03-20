@@ -250,29 +250,29 @@ class TrainingDatasetBase:
         }
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the training dataset."""
         return self._name
 
     @name.setter
-    def name(self, name):
+    def name(self, name: str) -> None:
         self._name = name
 
     @property
-    def version(self):
+    def version(self) -> int:
         """Version number of the training dataset."""
         return self._version
 
     @version.setter
-    def version(self, version):
+    def version(self, version: int) -> None:
         self._version = version
 
     @property
-    def description(self):
+    def description(self) -> Optional[str]:
         return self._description
 
     @description.setter
-    def description(self, description):
+    def description(self, description: Optional[str]) -> None:
         """Description of the training dataset contents."""
         self._description = description
 
@@ -286,14 +286,14 @@ class TrainingDatasetBase:
         self._data_format = data_format
 
     @property
-    def coalesce(self):
+    def coalesce(self) -> bool:
         """If true the training dataset data will be coalesced into
         a single partition before writing. The resulting training dataset
         will be a single file per split"""
         return self._coalesce
 
     @coalesce.setter
-    def coalesce(self, coalesce):
+    def coalesce(self, coalesce: bool):
         self._coalesce = coalesce
 
     @property
@@ -322,37 +322,46 @@ class TrainingDatasetBase:
             )
 
     @property
-    def splits(self):
+    def splits(self) -> List[TrainingDatasetSplit]:
         """Training dataset splits. `train`, `test` or `eval` and corresponding percentages."""
         return self._splits
 
     @splits.setter
-    def splits(self, splits):
+    def splits(self, splits: Optional[Dict[str, float]]):
         # user api differs from how the backend expects the splits to be represented
-        self._splits = [
-            TrainingDatasetSplit(
-                name=k, split_type=TrainingDatasetSplit.RANDOM_SPLIT, percentage=v
+        if splits is None:
+            self._splits = []
+        elif isinstance(splits, dict):
+            self._splits = [
+                TrainingDatasetSplit(
+                    name=k, split_type=TrainingDatasetSplit.RANDOM_SPLIT, percentage=v
+                )
+                for k, v in splits.items()
+                if v is not None
+            ]
+        else:
+            raise TypeError(
+                "The argument `splits` has to be `None` or a dictionary of key, relative size e.g "
+                + "{'train': 0.7, 'test': 0.1, 'validation': 0.2}.\n"
+                + "Got {} with type {}".format(splits, type(splits))
             )
-            for k, v in splits.items()
-            if v is not None
-        ]
 
     @property
-    def location(self):
-        """Path to the training dataset location."""
+    def location(self) -> str:
+        """Path to the training dataset location. Can be an empty string if e.g. the training dataset is in-memory."""
         return self._location
 
     @location.setter
-    def location(self, location):
+    def location(self, location: str):
         self._location = location
 
     @property
-    def seed(self):
-        """Seed."""
+    def seed(self) -> Optional[int]:
+        """Seed used to perform random split, ensure reproducibility of the random split at a later date."""
         return self._seed
 
     @seed.setter
-    def seed(self, seed):
+    def seed(self, seed: Optional[int]):
         self._seed = seed
 
     @property

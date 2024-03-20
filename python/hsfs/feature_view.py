@@ -1567,7 +1567,7 @@ class FeatureView:
             storage_connector=storage_connector,
             location=location,
             featurestore_id=self._featurestore_id,
-            splits=None,
+            splits={},
             seed=seed,
             statistics_config=statistics_config,
             coalesce=coalesce,
