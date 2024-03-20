@@ -55,6 +55,58 @@ class TestOnlineRestClientEngine:
         ]
 
     @pytest.fixture()
+    def training_dataset_complex_features(self, backend_fixtures):
+        feature_group = backend_fixtures["feature_group"]["get"]["response"]
+        features = []
+        for feat in backend_fixtures["training_dataset_feature"][
+            "get_complex_training_dataset_features"
+        ]["response"]:
+            feat["featuregroup"] = feature_group
+            features.append(feat)
+        return [
+            training_dataset_feature.TrainingDatasetFeature.from_response_json(feat)
+            for feat in features
+        ]
+
+    @pytest.fixture()
+    def training_dataset_features_mix_rondb_and_opensearch(self, backend_fixtures):
+        feature_group = backend_fixtures["feature_group"]["get"]["response"]
+        embedded_feature_group = backend_fixtures["feature_group"]["get_embedded"][
+            "response"
+        ]
+        features = []
+        for feat in backend_fixtures["training_dataset_feature"][
+            "get_complex_training_dataset_features"
+        ]["response"]:
+            feat["featuregroup"] = feature_group
+            features.append(feat)
+        for feat in backend_fixtures["training_dataset_feature"][
+            "get_opensearch_training_dataset_features"
+        ]["response"]:
+            feat["featuregroup"] = embedded_feature_group
+            features.append(feat)
+        return [
+            training_dataset_feature.TrainingDatasetFeature.from_response_json(feat)
+            for feat in features
+        ]
+
+    @pytest.fixture()
+    def serving_keys_complex_features(self, backend_fixtures):
+        serving_keys = []
+        for key in backend_fixtures["serving_keys"]["get_complex_features"]["response"]:
+            serving_keys.append(serving_key.ServingKey.from_response_json(key))
+        return serving_keys
+
+    @pytest.fixture()
+    def serving_keys_mix_rondb_and_opensearch(self, backend_fixtures):
+        serving_keys = []
+        for key in backend_fixtures["serving_keys"]["get_mix_rondb_and_opensearch"][
+            "response"
+        ]:
+            serving_keys.append(serving_key.ServingKey.from_response_json(key))
+        return serving_keys
+
+    @pytest.fixture()
     def serving_keys_ticker(self, backend_fixtures):
         serving_keys = []
         for key in backend_fixtures["serving_keys"]["get_ticker"]["response"]:
