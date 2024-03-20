@@ -16,7 +16,7 @@
 
 import json
 from enum import Enum
-from typing import Set, Optional
+from typing import Optional, Set
 
 import humps
 from hsfs import feature_group, feature_view, training_dataset, util
