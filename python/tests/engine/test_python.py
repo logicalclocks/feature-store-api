@@ -257,7 +257,6 @@ class TestPython:
             "hsfs.engine.python.Engine._read_hopsfs",
             return_value=[pd.DataFrame(), pd.DataFrame()],
         )
-        mock_python_engine_read_s3 = mocker.patch("hsfs.engine.python.Engine._read_s3")
 
         python_engine = python.Engine()
 
@@ -276,7 +275,6 @@ class TestPython:
 
         # Assert
         assert mock_python_engine_read_hopsfs.call_count == 1
-        assert mock_python_engine_read_s3.call_count == 0
         assert isinstance(dataframe, pd.DataFrame)
         assert len(dataframe) == 0
 
@@ -288,7 +286,6 @@ class TestPython:
             "hsfs.engine.python.Engine._read_hopsfs",
             return_value=[pl.DataFrame(), pl.DataFrame()],
         )
-        mock_python_engine_read_s3 = mocker.patch("hsfs.engine.python.Engine._read_s3")
 
         python_engine = python.Engine()
 
@@ -307,7 +304,6 @@ class TestPython:
 
         # Assert
         assert mock_python_engine_read_hopsfs.call_count == 1
-        assert mock_python_engine_read_s3.call_count == 0
         assert isinstance(dataframe, pl.DataFrame)
         assert len(dataframe) == 0
 

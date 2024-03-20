@@ -329,7 +329,7 @@ class Engine:
             from pydoop import hdfs
         except ModuleNotFoundError:
             return self._read_hopsfs_remote(
-                location, data_format, read_options, dataframe_type
+                location, data_format, read_options or {}, dataframe_type
             )
         util.setup_pydoop()
         path_list = hdfs.ls(location, recursive=True)
