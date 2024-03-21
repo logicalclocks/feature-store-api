@@ -373,7 +373,7 @@ class VectorServer:
         elif return_type.lower() == "polars":
             # Polar considers one dimensional list as a single columns so passed vector as 2d list
             polars_df = pl.DataFrame(
-                [serving_vector], schema=self._feature_vector_col_name, orient="row"
+                [serving_vector], schema=serving_vector.keys(), orient="row"
             )
             return polars_df
         else:
@@ -411,7 +411,9 @@ class VectorServer:
             return pd.DataFrame(batch_results)
         elif return_type.lower() == "polars":
             polars_df = pl.DataFrame(
-                batch_results, schema=self._feature_vector_col_name, orient="row"
+                batch_results,
+                schema=feature_view_object.inference_helper_columns,
+                orient="row",
             )
             return polars_df
         else:

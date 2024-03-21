@@ -242,9 +242,11 @@ class ArrowFlightClient:
         )
 
     @_handle_afs_exception(user_message=READ_ERROR)
-    def read_path(self, path, arrow_flight_config):
+    def read_path(self, path, arrow_flight_config, dataframe_type):
         descriptor = pyarrow.flight.FlightDescriptor.for_path(path)
-        return self._get_dataset(descriptor, arrow_flight_config)
+        return self._get_dataset(
+            descriptor, arrow_flight_config, dataframe_type=dataframe_type
+        )
 
     @_handle_afs_exception(user_message=WRITE_ERROR)
     def create_training_dataset(
