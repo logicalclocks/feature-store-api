@@ -16,6 +16,7 @@
 
 import json
 import humps
+import warnings
 from typing import Optional, List, Union
 from datetime import datetime, date
 
@@ -146,6 +147,12 @@ class Query:
         # Returns
             `DataFrame`: DataFrame depending on the chosen type.
         """
+        if not isinstance(online, bool):
+            warnings.warn(
+                f"Passed {online} as value to online kwarg for `read` method. The `online` parameter is expected to be a boolean"
+                + " to specify whether to read from the Online Feature Store.",
+                stacklevel=1,
+            )
         if not read_options:
             read_options = {}
         self._check_read_supported(online)
@@ -493,6 +500,13 @@ class Query:
                 raise FeatureStoreException(
                     "Reading from query containing embedding is not supported."
                     " Use `feature_view.get_feature_vector(s) instead."
+                )
+            elif fg.online_enabled is False:
+                raise FeatureStoreException(
+                    f"Found {fg.name} in query Feature Groups which is not `online_enabled`."
+                    + "If you intend to use the Online Feature Store, please enable the Feature Group"
+                    + " for online serving by setting `online=True` on creation. Otherwise, set online=False"
+                    + " when using the `read` method."
                 )
 
     @classmethod
