@@ -16,7 +16,7 @@
 from datetime import datetime
 
 import pytest
-from hsfs import serving_key, training_dataset_feature
+from hsfs import training_dataset_feature
 from hsfs.core import online_store_rest_client_engine
 from hsfs.util import convert_event_time_to_timestamp
 
@@ -70,20 +70,20 @@ class TestOnlineRestClientEngine:
 
     @pytest.fixture()
     def training_dataset_features_mix_rondb_and_opensearch(self, backend_fixtures):
-        feature_group = backend_fixtures["feature_group"]["get"]["response"]
-        embedded_feature_group = backend_fixtures["feature_group"]["get_embedded"][
+        feature_group = backend_fixtures["feature_group"]["get_profile_fraud_tid_fg"][
+            "response"
+        ]
+        embedded_feature_group = backend_fixtures["feature_group"]["get_embedded_fg"][
             "response"
         ]
         features = []
         for feat in backend_fixtures["training_dataset_feature"][
-            "get_complex_training_dataset_features"
+            "get_mix_rondb_and_opensearch_training_dataset_features"
         ]["response"]:
-            feat["featuregroup"] = feature_group
-            features.append(feat)
-        for feat in backend_fixtures["training_dataset_feature"][
-            "get_opensearch_training_dataset_features"
-        ]["response"]:
-            feat["featuregroup"] = embedded_feature_group
+            if feat["featuregroup"]["name"] == feature_group["name"]:
+                feat["featuregroup"] = feature_group
+            else:
+                feat["featuregroup"] = embedded_feature_group
             features.append(feat)
         return [
             training_dataset_feature.TrainingDatasetFeature.from_response_json(feat)
@@ -91,27 +91,18 @@ class TestOnlineRestClientEngine:
         ]
 
     @pytest.fixture()
-    def serving_keys_complex_features(self, backend_fixtures):
-        serving_keys = []
-        for key in backend_fixtures["serving_keys"]["get_complex_features"]["response"]:
-            serving_keys.append(serving_key.ServingKey.from_response_json(key))
-        return serving_keys
-
-    @pytest.fixture()
-    def serving_keys_mix_rondb_and_opensearch(self, backend_fixtures):
-        serving_keys = []
-        for key in backend_fixtures["serving_keys"]["get_mix_rondb_and_opensearch"][
-            "response"
-        ]:
-            serving_keys.append(serving_key.ServingKey.from_response_json(key))
-        return serving_keys
-
-    @pytest.fixture()
-    def serving_keys_ticker(self, backend_fixtures):
-        serving_keys = []
-        for key in backend_fixtures["serving_keys"]["get_ticker"]["response"]:
-            serving_keys.append(serving_key.ServingKey.from_response_json(key))
-        return serving_keys
+    def training_dataset_features_composite_keys(self, backend_fixtures):
+        feature_group = backend_fixtures["feature_group"]["get"]["response"]
+        features = []
+        for feat in backend_fixtures["training_dataset_feature"][
+            "get_composite_keys_training_dataset_features"
+        ]["response"]:
+            feat["featuregroup"] = feature_group
+            features.append(feat)
+        return [
+            training_dataset_feature.TrainingDatasetFeature.from_response_json(feat)
+            for feat in features
+        ]
 
     @pytest.fixture()
     def rest_client_engine_base(self):
@@ -121,19 +112,54 @@ class TestOnlineRestClientEngine:
             feature_view_version=2,
             features=[],
             skip_fg_ids=[],
+            complex_features=None,
+            transformation_functions=None,
         )
 
     @pytest.fixture()
-    def rest_client_engine_ticker(
-        self, training_dataset_features_ticker, serving_keys_ticker
-    ):
+    def rest_client_engine_ticker(self, training_dataset_features_ticker):
         return online_store_rest_client_engine.OnlineStoreRestClientEngine(
             feature_store_name="test_store_featurestore",
             feature_view_name="test_feature_view",
             feature_view_version=2,
             features=training_dataset_features_ticker,
             skip_fg_ids=[],
-            serving_keys=serving_keys_ticker,
+            complex_features=None,
+            transformation_functions=None,
+        )
+
+    @pytest.fixture()
+    def rest_client_engine_composite_keys(
+        self, training_dataset_features_composite_keys
+    ):
+        return online_store_rest_client_engine.OnlineStoreRestClientEngine(
+            feature_store_name="test_store_featurestore",
+            feature_view_name="test_feature_view",
+            feature_view_version=2,
+            features=training_dataset_features_composite_keys,
+            skip_fg_ids=[],
+        )
+
+    @pytest.fixture()
+    def rest_client_engine_mix_rondb_and_opensearch(
+        self, training_dataset_features_mix_rondb_and_opensearch
+    ):
+        return online_store_rest_client_engine.OnlineStoreRestClientEngine(
+            feature_store_name="test_store_featurestore",
+            feature_view_name="test_feature_view",
+            feature_view_version=2,
+            features=training_dataset_features_mix_rondb_and_opensearch,
+            skip_fg_ids=[],
+        )
+
+    @pytest.fixture()
+    def rest_client_engine_complex_features(self, training_dataset_complex_features):
+        return online_store_rest_client_engine.OnlineStoreRestClientEngine(
+            feature_store_name="test_store_featurestore",
+            feature_view_name="test_feature_view",
+            feature_view_version=2,
+            features=training_dataset_complex_features,
+            skip_fg_ids=[],
         )
 
     def test_build_base_payload_no_metadata_options(

@@ -455,38 +455,14 @@
     "headers": null
   },
   "get_external_snowflake": {
-    "response": {"id": 13,
+    "response": {
+      "id": 13,
       "name": "tpch1snowflake",
       "description": "On-demand feature group for tpch1 customer data",
       "version": 1,
-      "features": [{"name": "c_custkey",
-        "type": "decimal(38,0)",
-        "description": null,
-        "partition": false,
-        "hudiPrecombineKey": false,
-        "primary": false,
-        "onlineType": null,
-        "defaultValue": null,
-        "featureGroupId": 13},
-        {"name": "c_name",
-          "type": "string",
-          "description": null,
-          "partition": false,
-          "hudiPrecombineKey": false,
-          "primary": false,
-          "onlineType": null,
-          "defaultValue": null,
-          "featureGroupId": 13},
-        {"name": "c_address",
-          "type": "string",
-          "description": null,
-          "partition": false,
-          "hudiPrecombineKey": false,
-          "primary": false,
-          "onlineType": null,
-          "defaultValue": null,
-          "featureGroupId": 13},
-        {"name": "c_nationkey",
+      "features": [
+        {
+          "name": "c_custkey",
           "type": "decimal(38,0)",
           "description": null,
           "partition": false,
@@ -494,8 +470,10 @@
           "primary": false,
           "onlineType": null,
           "defaultValue": null,
-          "featureGroupId": 13},
-        {"name": "c_phone",
+          "featureGroupId": 13
+        },
+        {
+          "name": "c_name",
           "type": "string",
           "description": null,
           "partition": false,
@@ -503,8 +481,43 @@
           "primary": false,
           "onlineType": null,
           "defaultValue": null,
-          "featureGroupId": 13},
-        {"name": "c_acctbal",
+          "featureGroupId": 13
+        },
+        {
+          "name": "c_address",
+          "type": "string",
+          "description": null,
+          "partition": false,
+          "hudiPrecombineKey": false,
+          "primary": false,
+          "onlineType": null,
+          "defaultValue": null,
+          "featureGroupId": 13
+        },
+        {
+          "name": "c_nationkey",
+          "type": "decimal(38,0)",
+          "description": null,
+          "partition": false,
+          "hudiPrecombineKey": false,
+          "primary": false,
+          "onlineType": null,
+          "defaultValue": null,
+          "featureGroupId": 13
+        },
+        {
+          "name": "c_phone",
+          "type": "string",
+          "description": null,
+          "partition": false,
+          "hudiPrecombineKey": false,
+          "primary": false,
+          "onlineType": null,
+          "defaultValue": null,
+          "featureGroupId": 13
+        },
+        {
+          "name": "c_acctbal",
           "type": "decimal(12,2)",
           "description": null,
           "partition": false,
@@ -512,8 +525,10 @@
           "primary": false,
           "onlineType": null,
           "defaultValue": null,
-          "featureGroupId": 13},
-        {"name": "c_mktsegment",
+          "featureGroupId": 13
+        },
+        {
+          "name": "c_mktsegment",
           "type": "string",
           "description": null,
           "partition": false,
@@ -521,8 +536,10 @@
           "primary": false,
           "onlineType": null,
           "defaultValue": null,
-          "featureGroupId": 13},
-        {"name": "c_comment",
+          "featureGroupId": 13
+        },
+        {
+          "name": "c_comment",
           "type": "string",
           "description": null,
           "partition": false,
@@ -530,26 +547,33 @@
           "primary": false,
           "onlineType": null,
           "defaultValue": null,
-          "featureGroupId": 13}],
+          "featureGroupId": 13
+        }
+      ],
       "featurestoreId": 67,
       "query": "select * from Customer",
       "dataFormat": null,
       "path": "",
       "options": null,
-      "storageConnector": {"id": 4,
+      "storageConnector": {
+        "id": 4,
         "name": "snowflake",
         "featurestoreId": 67,
-        "storageConnectorType": "SNOWFLAKE"},
+        "storageConnectorType": "SNOWFLAKE"
+      },
       "type": "onDemandFeaturegroupDTO",
-      "statisticsConfig": {"enabled": true,
+      "statisticsConfig": {
+        "enabled": true,
         "correlations": false,
         "histograms": false,
         "exactUniqueness": false,
-        "columns": []},
+        "columns": []
+      },
       "eventTime": null,
       "expectationSuite": null,
       "onlineEnabled": false,
-      "spine": false},
+      "spine": false
+    },
     "method": "GET",
     "path_params": [
       "project",
@@ -563,5 +587,169 @@
       "version": 1
     },
     "headers": null
+  },
+  "get_profile_fraud_tid_fg": {
+    "response": {
+      "id": 9281,
+      "name": "profile_fraud_tid_case",
+      "version": 1,
+      "description": "Credit card holder demographic data-testing passed features",
+      "onlineEnabled": true,
+      "timeTravelFormat": "HUDI",
+      "features": [
+        {
+          "name": "cc_num",
+          "type": "bigint",
+          "description": null,
+          "partition": false,
+          "hudiPrecombineKey": true,
+          "primary": true,
+          "onlineType": null,
+          "defaultValue": null,
+          "featureGroupId": 9281
+        },
+        {
+          "name": "gender",
+          "type": "string",
+          "description": null,
+          "partition": false,
+          "hudiPrecombineKey": false,
+          "primary": false,
+          "onlineType": null,
+          "defaultValue": null,
+          "featureGroupId": 9281
+        }
+      ],
+      "featurestoreId": 7247,
+      "type": "streamFeatureGroupDTO",
+      "statisticsConfig": {
+        "enabled": true,
+        "correlations": false,
+        "histograms": false,
+        "exactUniqueness": false,
+        "columns": []
+      },
+      "eventTime": null,
+      "expectationSuite": null,
+      "parents": null,
+      "topicName": null,
+      "notificationTopicName": null,
+      "deprecated": false,
+      "deltaStreamerJobConf": null
+    }
+  },
+  "get_embedded_fraud_fg": {
+    "id": 10253,
+    "name": "the_fraud_embedded_fg",
+    "version": 3,
+    "description": "",
+    "onlineEnabled": true,
+    "timeTravelFormat": "HUDI",
+    "features": [
+      {
+        "name": "id1",
+        "type": "bigint",
+        "description": null,
+        "partition": false,
+        "hudiPrecombineKey": true,
+        "primary": true,
+        "onlineType": null,
+        "defaultValue": null,
+        "featureGroupId": 10253
+      },
+      {
+        "name": "ts",
+        "type": "bigint",
+        "description": null,
+        "partition": false,
+        "hudiPrecombineKey": false,
+        "primary": false,
+        "onlineType": null,
+        "defaultValue": null,
+        "featureGroupId": 10253
+      },
+      {
+        "name": "embedding",
+        "type": "array<bigint>",
+        "description": null,
+        "partition": false,
+        "hudiPrecombineKey": false,
+        "primary": false,
+        "onlineType": null,
+        "defaultValue": null,
+        "featureGroupId": 10253
+      },
+      {
+        "name": "cc_num",
+        "type": "bigint",
+        "description": null,
+        "partition": false,
+        "hudiPrecombineKey": false,
+        "primary": false,
+        "onlineType": null,
+        "defaultValue": null,
+        "featureGroupId": 10253
+      },
+      {
+        "name": "city",
+        "type": "string",
+        "description": null,
+        "partition": false,
+        "hudiPrecombineKey": false,
+        "primary": false,
+        "onlineType": null,
+        "defaultValue": null,
+        "featureGroupId": 10253
+      },
+      {
+        "name": "amount",
+        "type": "double",
+        "description": null,
+        "partition": false,
+        "hudiPrecombineKey": false,
+        "primary": false,
+        "onlineType": null,
+        "defaultValue": null,
+        "featureGroupId": 10253
+      },
+      {
+        "name": "id2",
+        "type": "string",
+        "description": null,
+        "partition": false,
+        "hudiPrecombineKey": false,
+        "primary": true,
+        "onlineType": null,
+        "defaultValue": null,
+        "featureGroupId": 10253
+      }
+    ],
+    "featurestoreId": 7247,
+    "type": "streamFeatureGroupDTO",
+    "statisticsConfig": {
+      "enabled": true,
+      "correlations": false,
+      "histograms": false,
+      "exactUniqueness": false,
+      "columns": []
+    },
+    "eventTime": "ts",
+    "expectationSuite": null,
+    "parents": null,
+    "topicName": null,
+    "notificationTopicName": null,
+    "deprecated": false,
+    "embeddingIndex": {
+      "indexName": "7299__embedding_fraud_embedded_fg",
+      "features": [
+        {
+          "name": "embedding",
+          "dimension": 3,
+          "similarityFunctionType": "l2_norm"
+        }
+      ],
+      "colPrefix": ""
+    },
+    "deltaStreamerJobConf": null
   }
 }

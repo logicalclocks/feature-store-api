@@ -21,7 +21,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 import hsfs
 from avro.schema import Schema
-from hsfs import serving_key, util
+from hsfs import util
 from hsfs.core import online_store_rest_client_api
 
 
@@ -52,7 +52,6 @@ class OnlineStoreRestClientEngine:
         skip_fg_ids: Set[int],
         complex_features: Dict[str, Schema] = None,
         transformation_functions: Dict[str, Callable] = None,
-        serving_keys: Optional[List[serving_key.ServingKey]] = None,
     ):
         """Initialize the Online Store Rest Client Engine. This class contains the logic to mediate
         the interaction between the python client and the RonDB Rest Server Feature Store API.
@@ -66,7 +65,10 @@ class OnlineStoreRestClientEngine:
             skip_fg_ids: A set of feature group ids to skip when inferring feature vector schema.
                 These ids are linked to Feature Groups with embeddings and
                 therefore stored in the embedding online store (see vector_db_client).
-            serving_keys: Required serving keys, it allows us to fake the missing ones in entries.
+            complex_features: A dictionary of complex feature schemas. The keys are the feature names
+                and the values are the Avro schemas.
+            transformation_functions: A dictionary of transformation functions. The keys are the feature names
+                and the values are the transformation functions.
         """
         _logger.info(
             f"Initializing Online Store Rest Client Engine for Feature View {feature_view_name}, version: {feature_view_version} in Feature Store {feature_store_name}."
@@ -100,14 +102,10 @@ class OnlineStoreRestClientEngine:
 
         self.set_return_feature_value_handlers()
 
-        # Temporary solution to handle missing serving keys in entries
-        self._serving_keys = serving_keys
-
     def build_base_payload(
         self,
         metadata_options: Optional[Dict[str, bool]] = None,
-        # Missing in current RonDB Server.
-        # validate_passed_features: bool = False,
+        validate_passed_features: bool = False,
     ) -> Dict[str, Union[str, Dict[str, bool]]]:
         """Build the base payload for the RonDB REST Server Feature Store API.
 
@@ -132,9 +130,9 @@ class OnlineStoreRestClientEngine:
             ),
             "featureViewName": self._feature_view_name,
             "featureViewVersion": self._feature_view_version,
-            # "options": {
-            #     "validatePassedFeatures": validate_passed_features,
-            # },
+            "options": {
+                "validatePassedFeatures": validate_passed_features,
+            },
         }
 
         if metadata_options is not None:
@@ -145,102 +143,6 @@ class OnlineStoreRestClientEngine:
 
         _logger.debug(f"Base payload: {base_payload}")
         return base_payload
-
-    def handle_missing_serving_keys_in_entry(
-        self, entry: Dict[str, Any]
-    ) -> Tuple[Dict[str, Any], bool]:
-        """Handle missing serving keys in the entry dictionary by filling them with a random unlikely value.
-
-        This function is used to avoid backend errors on missing keys. This is a hacky solution and should be
-        phased out as soon as possible with a RonDB Server upgrade.
-
-        # Arguments:
-            entry: A dictionary with the feature names as keys and the primary key as values.
-
-        # Returns:
-            The entry dictionary with the missing serving keys filled with None values.
-        """
-        _logger.debug(
-            f"Handling missing serving keys in entry for Feature View {self._feature_view_name}, version: {self._feature_view_version} in Feature Store {self._feature_store_name}."
-        )
-        use_batch_api = False
-        entry = entry.copy()
-        for sk in self._serving_keys:
-            if sk.join_index in self.skip_fg_ids:
-                # The FG is in Opensearch therefore the serving key is not relevant for RonDB Server.
-                continue
-            if (
-                sk.feature_name not in entry.keys()
-                and (sk.prefix + sk.feature_name) not in entry.keys()
-            ):
-                # _logger.debug(
-                #     f"Adding missing serving key {sk.prefix + sk.feature_name} to entry with value `1`."
-                # )
-                # entry[sk.prefix + sk.feature_name] = 1
-                _logger.debug(
-                    f"Switching to batch API as {sk.prefix + sk.feature_name} is missing from entry."
-                )
-                use_batch_api = True
-            elif (
-                sk.feature_name in entry.keys()
-                and (sk.prefix + sk.feature_name) not in entry.keys()
-            ):
-                # check if the feature name is already prefixed, if not fix it
-                _logger.debug(
-                    f"Fixing prefix serving key {sk.prefix + sk.feature_name} to entry with value {entry[sk.feature_name]}."
-                )
-                entry[sk.prefix + sk.feature_name] = entry[sk.feature_name]
-
-                # check that there is no serving key with the same name but no prefix which also relies on this entry.
-                # e.g joined fg_1, fg_2 on feature_1 which is pk for both fg_1 and fg_2. fg_1 has serving key feature_1
-                # and fg_2 has serving key prefix + feature_1. Only {"feature_1": val} is provided. The correct entry would be
-                # {"feature_1": val, prefix + "feature_1": val}. In this particular case we cannot remove entry["feature_1"]
-                # as it is used by fg_1. We need to keep both entries. Otherwise we have to remove entry["feature_1"].
-                if (
-                    len(
-                        [
-                            serv_k
-                            for serv_k in self._serving_keys
-                            if (
-                                serv_k.feature_name == sk.feature_name
-                                and (serv_k.prefix == "" or serv_k.prefix is None)
-                            )
-                        ]
-                    )
-                    == 0
-                ):
-                    _logger.debug(f"Removing serving key {sk.feature_name} from entry.")
-                    entry.pop(sk.feature_name)
-
-        _logger.debug(f"entry with altered primary-key:value pair : {entry}")
-
-        return entry, use_batch_api
-
-    def handle_passed_features_dict(
-        self, passed_features: Optional[Dict[str, Any]]
-    ) -> Dict[str, Any]:
-        """This must remove all passed features for which the feature name is not part of the feature vector.
-
-        # Arguments:
-            passed_features: A dictionary with the feature names as keys and the values to substitute for this specific vector.
-
-        # Returns:
-            A purged dictionary.
-        """
-        if passed_features is None:
-            _logger.debug("No passed features to handle.")
-            return {}
-
-        _logger.debug("Purging passed features dictionary.")
-        new_passed_features = {
-            name: value
-            for name, value in passed_features.items()
-            if name in self._ordered_feature_names
-        }
-        _logger.debug(
-            f"Purged following keys: {[key for key in passed_features.keys() if key not in new_passed_features.keys()]}"
-        )
-        return new_passed_features
 
     def get_single_feature_vector(
         self,
@@ -279,34 +181,19 @@ class OnlineStoreRestClientEngine:
         _logger.debug(f"entry: {entry}, passed features: {passed_features}")
         payload = self.build_base_payload(
             metadata_options=metadata_options,
-            # This ensures consistency with the sql client behaviour. Missing in current RonDB Server.
-            # validate_passed_features=False,
+            # This ensures consistency with the sql client behaviour.
+            validate_passed_features=False,
         )
-        payload["entries"], use_batch_api = self.handle_missing_serving_keys_in_entry(
-            entry
-        )
-        payload["passedFeatures"] = self.handle_passed_features_dict(passed_features)
+        payload["entries"] = entry
+        payload["passedFeatures"] = passed_features
 
-        if use_batch_api:
-            _logger.debug(
-                "Switching to batch API as at least one serving key is missing from entry."
-            )
-            payload["entries"] = [payload["entries"]]
-            payload["passedFeatures"] = [payload["passedFeatures"]]
-            response = {
-                "features": self._online_store_rest_client_api.get_batch_raw_feature_vectors(
-                    payload=payload
-                )["features"][0]
-            }
-        else:
-            response = self._online_store_rest_client_api.get_single_raw_feature_vector(
-                payload=payload
-            )
+        response = self._online_store_rest_client_api.get_single_raw_feature_vector(
+            payload=payload
+        )
 
         if return_type != self.RETURN_TYPE_RESPONSE_JSON:
             return self.convert_rdrs_response_to_feature_value_row(
                 row_feature_values=response["features"],
-                passed_features=passed_features,
                 return_type=return_type,
             )
         else:
@@ -350,19 +237,14 @@ class OnlineStoreRestClientEngine:
         _logger.debug(f"entries: {entries}\npassed features: {passed_features}")
         payload = self.build_base_payload(
             metadata_options=metadata_options,
-            # This ensures consistency with the sql client behaviour. Missing in current RonDB Server.
-            # validate_passed_features=False,
+            # This ensures consistency with the sql client behaviour.
+            validate_passed_features=False,
         )
-        payload["entries"] = [
-            self.handle_missing_serving_keys_in_entry(entry)[0] for entry in entries
-        ]
+        payload["entries"] = entries
         if isinstance(passed_features, list) and (
             len(passed_features) == len(entries) or len(passed_features) == 0
         ):
-            payload["passedFeatures"] = [
-                self.handle_passed_features_dict(passed_features=passed_feature)
-                for passed_feature in passed_features
-            ]
+            payload["passedFeatures"] = passed_features
         elif passed_features is None:
             payload["passedFeatures"] = []
         else:
@@ -377,15 +259,12 @@ class OnlineStoreRestClientEngine:
 
         if return_type != self.RETURN_TYPE_RESPONSE_JSON:
             _logger.debug("Converting batch response to feature value rows for each.")
-            if passed_features is None or len(passed_features) == 0:
-                passed_features = [None] * len(response["features"])
             return [
                 self.convert_rdrs_response_to_feature_value_row(
                     row_feature_values=row,
-                    passed_features=passed,
                     return_type=return_type,
                 )
-                for row, passed in zip(response["features"], passed_features)
+                for row in response["features"]
             ]
         else:
             return response
@@ -393,7 +272,6 @@ class OnlineStoreRestClientEngine:
     def convert_rdrs_response_to_feature_value_row(
         self,
         row_feature_values: Union[List[Any], None],
-        passed_features: Dict[str, Any] = None,
         return_type: str = RETURN_TYPE_FEATURE_VALUE_LIST,
     ) -> Union[List[Any], Dict[str, Any]]:
         """Convert the response from the RonDB Rest Server Feature Store API to a feature:value dict.
@@ -416,24 +294,6 @@ class OnlineStoreRestClientEngine:
                 if return_type == self.RETURN_TYPE_FEATURE_VALUE_DICT
                 else [None for _ in self._ordered_feature_names]
             )
-
-        # Merge with handlers if kept in the future.
-        if passed_features is not None and len(passed_features.keys()) > 0:
-            _logger.debug(
-                f"Passed features: {passed_features} are merged with row feature {row_feature_values}."
-            )
-            row_feature_values = [
-                passed_features.get(name, None)
-                or passed_features.get(fg_feature_name, None)
-                if value is None
-                else value
-                for name, fg_feature_name, value in zip(
-                    self._ordered_feature_names,
-                    self._ordered_feature_group_feature_names,
-                    row_feature_values,
-                )
-            ]
-        _logger.debug(f"Row feature values after passed features: {row_feature_values}")
 
         if return_type == self.RETURN_TYPE_FEATURE_VALUE_LIST:
             _logger.debug(
