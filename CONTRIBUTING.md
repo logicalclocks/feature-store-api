@@ -116,62 +116,67 @@ On docs.hopsworks.ai we implement the following versioning scheme:
 
 ###### Build Instructions
 
-4.  For this you can either checkout and make a local copy of the `upstream/gh-pages` branch, where
-    `mike` maintains the current state of docs.hopsworks.ai, or just build documentation for the branch you are updating:
+4.  For this you can either checkout and make a local copy of the `upstream/gh-pages` branch, where `mike` maintains the current state of docs.hopsworks.ai, or just build documentation for the branch you are updating:
 
-        Building *one* branch:
+    Building _one_ branch:
 
-        Checkout your dev branch with modified docs:
-        ```bash
-        git checkout [dev-branch]
-        ```
+    Checkout your dev branch with modified docs:
 
-        Generate API docs if necessary:
-        ```bash
-        python auto_doc.py
-        ```
+    ```bash
+    git checkout [dev-branch]
+    ```
 
-        Build docs with a version and alias
-        ```bash
-        mike deploy [version] [alias] --update-alias
+    Generate API docs if necessary:
 
-        # for example, if you are updating documentation to be merged to master,
-        # which will become the new SNAPSHOT version:
-        mike deploy 2.2.0-SNAPSHOT dev --update-alias
+    ```bash
+    python auto_doc.py
+    ```
 
-        # if you are updating docs of the latest stable release branch
-        mike deploy [version] latest --update-alias
+    Build docs with a version and alias
 
-        # if you are updating docs of a previous stable release branch
-        mike deploy [version]
-        ```
+    ```bash
+    mike deploy [version] [alias] --update-alias
 
-        If no gh-pages branch existed in your local repository, this will have created it.
+    # for example, if you are updating documentation to be merged to master,
+    # which will become the new SNAPSHOT version:
+    mike deploy 2.2.0-SNAPSHOT dev --update-alias
 
-        **Important**: If no previous docs were built, you will have to choose a version as default to be loaded as index, as follows
+    # if you are updating docs of the latest stable release branch
+    mike deploy [version] latest --update-alias
 
-        ```bash
-        mike set-default [version-or-alias]
-        ```
+    # if you are updating docs of a previous stable release branch
+    mike deploy [version]
+    ```
 
-        You can now checkout the gh-pages branch and serve:
-        ```bash
-        git checkout gh-pages
-        mike serve
-        ```
+    If no gh-pages branch existed in your local repository, this will have created it.
 
-        You can also list all available versions/aliases:
-        ```bash
-        mike list
-        ```
+    **Important**: If no previous docs were built, you will have to choose a version as default to be loaded as index, as follows
 
-        Delete and reset your local gh-pages branch:
-        ```bash
-        mike delete --all
+    ```bash
+    mike set-default [version-or-alias]
+    ```
 
-        # or delete single version
-        mike delete [version-or-alias]
-        ```
+    You can now checkout the gh-pages branch and serve:
+
+    ```bash
+    git checkout gh-pages
+    mike serve
+    ```
+
+    You can also list all available versions/aliases:
+
+    ```bash
+    mike list
+    ```
+
+    Delete and reset your local gh-pages branch:
+
+    ```bash
+    mike delete --all
+
+    # or delete single version
+    mike delete [version-or-alias]
+    ```
 
 #### Adding new API documentation
 

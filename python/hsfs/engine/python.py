@@ -28,7 +28,7 @@ import uuid
 import warnings
 from datetime import datetime, timezone
 from io import BytesIO
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, TypeVar, Union
 
 import avro
 import boto3
@@ -274,9 +274,16 @@ class Engine:
                 )
             )
         if dataframe_type.lower() == "polars":
-            return self._return_dataframe_type(
-                pl.concat(df_list), dataframe_type=dataframe_type
-            )
+            # Below check performed since some files materialized when creating training data are empty
+            # If empty dataframe is in df_list then polars cannot concatenate df_list due to schema mismatch
+            # However if the entire split contains only empty files which can occur when the data size is very small then one of the empty dataframe is return so that the column names can be accessed.
+            non_empty_df_list = [df for df in df_list if not df.is_empty()]
+            if non_empty_df_list:
+                return self._return_dataframe_type(
+                    pl.concat(non_empty_df_list), dataframe_type=dataframe_type
+                )
+            else:
+                return df_list[0]
         else:
             return self._return_dataframe_type(
                 pd.concat(df_list, ignore_index=True), dataframe_type=dataframe_type
@@ -321,7 +328,9 @@ class Engine:
         try:
             from pydoop import hdfs
         except ModuleNotFoundError:
-            return self._read_hopsfs_remote(location, data_format, read_options or {})
+            return self._read_hopsfs_remote(
+                location, data_format, read_options or {}, dataframe_type
+            )
         util.setup_pydoop()
         path_list = hdfs.ls(location, recursive=True)
 
@@ -333,11 +342,7 @@ class Engine:
                 and hdfs.path.getsize(path) > 0
             ):
                 if dataframe_type.lower() == "polars":
-                    df = self._read_polars(data_format, path)
-                    # Below check performed since some files materialized when creating training data
-                    # If empty dataframe in df_list was read from a csv file then polars cannot contatenate df_list due to shema mismatch
-                    if not df.is_empty():
-                        df_list.append(df)
+                    df_list.append(self._read_polars(data_format, path))
                 else:
                     df_list.append(self._read_pandas(data_format, path))
         return df_list
@@ -345,7 +350,9 @@ class Engine:
     # This is a version of the read method that uses the Hopsworks REST APIs or Flyginduck Server
     # To read the training dataset content, this to avoid the pydoop dependency
     # requirement and allow users to read Hopsworks training dataset from outside
-    def _read_hopsfs_remote(self, location, data_format, read_options=None):
+    def _read_hopsfs_remote(
+        self, location, data_format, read_options=None, dataframe_type="default"
+    ):
         total_count = 10000
         offset = 0
         df_list = []
@@ -364,13 +371,20 @@ class Engine:
                     ):
                         arrow_flight_config = read_options.get("arrow_flight_config")
                         df = arrow_flight_client.get_instance().read_path(
-                            inode.path, arrow_flight_config
+                            inode.path,
+                            arrow_flight_config,
+                            dataframe_type=dataframe_type,
                         )
                     else:
                         content_stream = self._dataset_api.read_content(inode.path)
-                        df = self._read_pandas(
-                            data_format, BytesIO(content_stream.content)
-                        )
+                        if dataframe_type.lower() == "polars":
+                            df = self._read_polars(
+                                data_format, BytesIO(content_stream.content)
+                            )
+                        else:
+                            df = self._read_pandas(
+                                data_format, BytesIO(content_stream.content)
+                            )
 
                     df_list.append(df)
                 offset += 1
@@ -599,7 +613,7 @@ class Engine:
     def validate_with_great_expectations(
         self,
         dataframe: Union[pl.DataFrame, pd.DataFrame],
-        expectation_suite: "ge.core.ExpectationSuite",
+        expectation_suite: TypeVar("ge.core.ExpectationSuite"),
         ge_validate_kwargs: Optional[Dict[Any, Any]] = None,
     ):
         if ge_validate_kwargs is None:

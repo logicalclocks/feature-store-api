@@ -46,6 +46,7 @@ additional connection information, such as host and port, is required. For more 
 ## Getting Started On Hopsworks
 
 Instantiate a connection and get the project feature store handler
+
 ```python
 import hsfs
 
@@ -54,6 +55,7 @@ fs = connection.get_feature_store()
 ```
 
 Create a new feature group
+
 ```python
 fg = fs.create_feature_group("rain",
                         version=1,
@@ -65,28 +67,33 @@ fg.save(dataframe)
 ```
 
 Upsert new data in to the feature group with `time_travel_format="HUDI"`".
+
 ```python
 fg.insert(upsert_df)
 ```
 
 Retrieve commit timeline metdata of the feature group with `time_travel_format="HUDI"`".
+
 ```python
 fg.commit_details()
 ```
 
 "Reading feature group as of specific point in time".
+
 ```python
 fg = fs.get_feature_group("rain", 1)
 fg.read("2020-10-20 07:34:11").show()
 ```
 
-Read updates  that occurred between specified points in time.
+Read updates that occurred between specified points in time.
+
 ```python
 fg = fs.get_feature_group("rain", 1)
 fg.read_changes("2020-10-20 07:31:38", "2020-10-20 07:34:11").show()
 ```
 
 Join features together
+
 ```python
 feature_join = rain_fg.select_all()
                     .join(temperature_fg.select_all(), on=["date", "location_id"])
@@ -95,6 +102,7 @@ feature_join.show(5)
 ```
 
 join feature groups that correspond to specific point in time
+
 ```python
 feature_join = rain_fg.select_all()
                     .join(temperature_fg.select_all(), on=["date", "location_id"])
@@ -104,6 +112,7 @@ feature_join.show(5)
 ```
 
 join feature groups that correspond to different time
+
 ```python
 rain_fg_q = rain_fg.select_all().as_of("2020-10-20 07:41:43")
 temperature_fg_q = temperature_fg.select_all().as_of("2020-10-20 07:32:33")
@@ -112,6 +121,7 @@ joined_features_q = rain_fg_q.join(temperature_fg_q).join(location_fg_q)
 ```
 
 Use the query object to create a training dataset:
+
 ```python
 td = fs.create_training_dataset("rain_dataset",
                                 version=1,
@@ -123,6 +133,7 @@ td.save(feature_join)
 ```
 
 A short introduction to the Scala API:
+
 ```scala
 import com.logicalclocks.hsfs._
 val connection = HopsworksConnection.builder().build()
@@ -137,6 +148,7 @@ You can find more examples on how to use the library in our [hops-examples](http
 
 Usage data is collected for improving quality of the library. It is turned on by default if the backend
 is "c.app.hopsworks.ai". To turn it off, use one of the following way:
+
 ```python
 # use environment variable
 import os
@@ -158,7 +170,6 @@ Documentation is available at [Hopsworks Feature Store Documentation](https://do
 For general questions about the usage of Hopsworks and the Feature Store please open a topic on [Hopsworks Community](https://community.hopsworks.ai/).
 
 Please report any issue using [Github issue tracking](https://github.com/logicalclocks/feature-store-api/issues).
-
 
 ## Contributing
 

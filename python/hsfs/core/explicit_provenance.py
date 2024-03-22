@@ -16,10 +16,10 @@
 
 import json
 from enum import Enum
-from typing import Set
+from typing import Optional, Set
 
 import humps
-from hsfs import feature_group, feature_view, training_dataset
+from hsfs import feature_group, feature_view, training_dataset, util
 
 
 class Artifact:
@@ -27,6 +27,19 @@ class Artifact:
         DELETED = 1
         INACCESSIBLE = 2
         FAULTY = 3
+        NOT_SUPPORTED = 4
+
+        def json(self):
+            return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+        def to_dict(self):
+            return self.name
+
+        def __str__(self):
+            return self.json()
+
+        def __repr__(self):
+            return f"<MetaType.{self.name}>"
 
     def __init__(
         self,
@@ -62,12 +75,22 @@ class Artifact:
         """Version of the artifact"""
         return self._version
 
-    def __str__(self):
+    def json(self):
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
+
+    def to_dict(self):
         return {
             "feature_store_name": self._feature_store_name,
-            "name": self._name,
+            "name": self.name,
             "version": self._version,
+            "type": self._type,
+            "meta_type": self._meta_type,
+            "href": self._href,
+            "err": self._exception_cause,
         }
+
+    def __str__(self):
+        return self.json()
 
     def __repr__(self):
         return (
@@ -79,31 +102,28 @@ class Artifact:
     @staticmethod
     def from_response_json(json_dict: dict):
         link_json = humps.decamelize(json_dict)
+        href = None
+        exception_cause = None
         if link_json.get("exception_cause") is not None:
-            return Artifact(
-                link_json["artifact"]["project"],
-                link_json["artifact"]["name"],
-                link_json["artifact"]["version"],
-                link_json["artifact_type"],
-                Artifact.MetaType.FAULTY,
-            )
+            meta_type = Artifact.MetaType.FAULTY
+            exception_cause = link_json.get("exception_cause")
         elif bool(link_json["deleted"]):
-            return Artifact(
-                link_json["artifact"]["project"],
-                link_json["artifact"]["name"],
-                link_json["artifact"]["version"],
-                link_json["artifact_type"],
-                Artifact.MetaType.DELETED,
-            )
+            meta_type = Artifact.MetaType.DELETED
         elif not bool(link_json["accessible"]):
-            return Artifact(
-                link_json["artifact"]["project"],
-                link_json["artifact"]["name"],
-                link_json["artifact"]["version"],
-                link_json["artifact_type"],
-                Artifact.MetaType.INACCESSIBLE,
-                link_json["artifact"]["href"],
-            )
+            meta_type = Artifact.MetaType.INACCESSIBLE
+            href = link_json["artifact"]["href"]
+        else:
+            meta_type = Artifact.MetaType.NOT_SUPPORTED
+            href = link_json["artifact"]["href"]
+        return Artifact(
+            link_json["artifact"]["project"],
+            link_json["artifact"]["name"],
+            link_json["artifact"]["version"],
+            link_json["artifact_type"],
+            meta_type,
+            href=href,
+            exception_cause=exception_cause,
+        )
 
 
 class Links:
@@ -115,38 +135,37 @@ class Links:
 
     @property
     def deleted(self):
-        """List of [Artifact objects](../links#artifact) which contains
+        """List of [Artifact objects] which contains
         minimal information (name, version) about the entities
-        (feature groups, feature views) they represent.
-        These entities have been removed from the feature store.
+        (feature groups, feature views, models) they represent.
+        These entities have been removed from the feature store/model registry.
         """
         return self._deleted
 
     @property
     def inaccessible(self):
-        """List of [Artifact objects](../links#artifact) which contains
+        """List of [Artifact objects] which contains
         minimal information (name, version) about the entities
-        (feature groups, feature views) they represent.
-        These entities exist in the feature store, however the user
+        (feature groups, feature views, models) they represent.
+        These entities exist in the feature store/model registry, however the user
         does not have access to them anymore.
         """
         return self._inaccessible
 
     @property
     def accessible(self):
-        """List of [feature groups](../feature_group_api) or
-        [feature views](../feature_view_api) metadata objects
+        """List of [FeatureGroups|FeatureViews|Models] objects
         which are part of the provenance graph requested. These entities
-        exist in the feature store and the user has access to them.
+        exist in the feature store/model registry and the user has access to them.
         """
         return self._accessible
 
     @property
     def faulty(self):
-        """List of [Artifact objects](../links#artifact) which contains
+        """List of [Artifact objects] which contains
         minimal information (name, version) about the entities
-        (feature groups, feature views) they represent.
-        These entities exist in the feature store, however they are corrupted.
+        (feature groups, feature views, models) they represent.
+        These entities exist in the feature store/model registry, however they are corrupted.
         """
         return self._faulty
 
@@ -157,6 +176,7 @@ class Links:
     class Type(Enum):
         FEATURE_GROUP = 1
         FEATURE_VIEW = 2
+        MODEL = 3
 
     def __str__(self, indent=None):
         return json.dumps(self, cls=ProvenanceEncoder, indent=indent)
@@ -215,44 +235,129 @@ class Links:
         return links
 
     @staticmethod
-    def from_response_json(json_dict: dict, direction: Direction, artifact: Type):
+    def __parse_models(
+        links_json: dict, training_dataset_version: Optional[int] = None
+    ):
+        from hsml import model
+        from hsml.core import explicit_provenance as hsml_explicit_provenance
+
+        links = Links()
+        for link_json in links_json:
+            if link_json["node"]["artifact_type"] == "MODEL":
+                if link_json["node"].get("exception_cause") is not None:
+                    links._faulty.append(
+                        hsml_explicit_provenance.Artifact.from_response_json(
+                            link_json["node"]
+                        )
+                    )
+                elif bool(link_json["node"]["accessible"]):
+                    links.accessible.append(
+                        model.Model.from_response_json(link_json["node"]["artifact"])
+                    )
+                elif bool(link_json["node"]["deleted"]):
+                    links.deleted.append(
+                        hsml_explicit_provenance.Artifact.from_response_json(
+                            link_json["node"]
+                        )
+                    )
+                else:
+                    links.inaccessible.append(
+                        hsml_explicit_provenance.Artifact.from_response_json(
+                            link_json["node"]
+                        )
+                    )
+            else:
+                # the only artifact types here are MODEL and TRAINING_DATASET
+                # elif link_json["node"]["artifact_type"] == "TRAINING_DATASET":
+                if (
+                    training_dataset_version
+                    and link_json["node"]["artifact"]["version"]
+                    != training_dataset_version
+                ):
+                    # Skip the following operations if the versions don't match
+                    pass
+                else:
+                    new_links = Links.__parse_models(link_json["downstream"])
+                    links.faulty.extend(new_links.faulty)
+                    links.accessible.extend(new_links.accessible)
+                    links.inaccessible.extend(new_links.inaccessible)
+                    links.deleted.extend(new_links.deleted)
+
+        return links
+
+    @staticmethod
+    def from_response_json(
+        json_dict: dict,
+        direction: Direction,
+        artifact: Type,
+        training_dataset_version: Optional[int] = None,
+    ):
         """Parse explicit links from json response. There are three types of
         Links: UpstreamFeatureGroups, DownstreamFeatureGroups, DownstreamFeatureViews
 
         # Arguments
-            links_json: json response from the explicit provenance endpoint
+            json_dict: json response from the explicit provenance endpoint
             direction: subset of links to parse - UPSTREAM/DOWNSTREAM
-            type: subset of links to parse - FEATURE_GROUP/FEATURE_VIEW
+            artifact: subset of links to parse - FEATURE_GROUP/FEATURE_VIEW/MODEL
+            training_dataset_version: training dataset version
 
         # Returns
             A ProvenanceLink object for the selected parse type.
         """
-
         links_json = humps.decamelize(json_dict)
 
-        if direction == Links.Direction.UPSTREAM:
-            # upstream is currently, always, only feature groups
-            return Links.__parse_feature_groups(
-                links_json["upstream"],
-                {
-                    "FEATURE_GROUP",
-                    "EXTERNAL_FEATURE_GROUP",
-                },
-            )
+        if direction == Links.Direction.DOWNSTREAM and artifact == Links.Type.MODEL:
+            import importlib.util
 
-        if direction == Links.Direction.DOWNSTREAM:
-            if artifact == Links.Type.FEATURE_GROUP:
+            if not importlib.util.find_spec("hsml"):
+                raise Exception(
+                    "hsml is not installed in the environment - cannot parse model registry artifacts"
+                )
+            if not importlib.util.find_spec("hopsworks"):
+                raise Exception(
+                    "hopsworks is not installed in the environment - cannot switch from hsml connection to hsfs connection"
+                )
+
+            # make sure the hsml connection is initialized so that the model can actually be used after being returned
+            import hopsworks
+
+            if not hopsworks._connected_project:
+                raise Exception(
+                    "hopsworks connection is not initialized - use hopsworks.login to connect if you want the ability to use provenance with connections between hsfs and hsml"
+                )
+
+            hopsworks._connected_project.get_model_registry()
+
+            return Links.__parse_models(
+                links_json["downstream"],
+                training_dataset_version=training_dataset_version,
+            )
+        else:
+            if direction == Links.Direction.UPSTREAM:
+                # upstream is currently, always, only feature groups
                 return Links.__parse_feature_groups(
-                    links_json["downstream"],
+                    links_json["upstream"],
                     {
                         "FEATURE_GROUP",
                         "EXTERNAL_FEATURE_GROUP",
                     },
                 )
-            else:
-                return Links.__parse_feature_views(
-                    links_json["downstream"], {"FEATURE_VIEW"}
-                )
+
+            if direction == Links.Direction.DOWNSTREAM:
+                if artifact == Links.Type.FEATURE_GROUP:
+                    return Links.__parse_feature_groups(
+                        links_json["downstream"],
+                        {
+                            "FEATURE_GROUP",
+                            "EXTERNAL_FEATURE_GROUP",
+                        },
+                    )
+                elif artifact == Links.Type.FEATURE_VIEW:
+                    return Links.__parse_feature_views(
+                        links_json["downstream"], {"FEATURE_VIEW"}
+                    )
+                else:
+                    return Links()
 
 
 class ProvenanceEncoder(json.JSONEncoder):
@@ -279,4 +384,23 @@ class ProvenanceEncoder(json.JSONEncoder):
                 "name": obj.name,
                 "version": obj.version,
             }
-        return json.JSONEncoder.default(self, obj)
+        else:
+            import importlib.util
+
+            if importlib.util.find_spec("hsml"):
+                from hsml import model
+                from hsml.core import explicit_provenance as hsml_explicit_provenance
+
+                if isinstance(
+                    obj,
+                    (
+                        model.Model,
+                        hsml_explicit_provenance.Artifact,
+                    ),
+                ):
+                    return {
+                        "model_registry_id": obj.model_registry_id,
+                        "name": obj.name,
+                        "version": obj.version,
+                    }
+            return json.JSONEncoder.default(self, obj)

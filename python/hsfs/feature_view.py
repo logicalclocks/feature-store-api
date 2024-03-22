@@ -911,6 +911,10 @@ class FeatureView:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
 
+        If `filter` or `min_score` is specified, or if embedding feature is stored in default project index,
+        the number of results returned may be less than k. Try using a large value of k and extract the top k
+        items from the results if needed.
+
         # Arguments
             embedding: The target embedding for which neighbors are to be found.
             feature: The feature used to compute similarity score. Required only if there
@@ -1179,6 +1183,55 @@ class FeatureView:
             `ProvenanceLinks`: Object containing the section of provenance graph requested.
         """
         return self._feature_view_engine.get_parent_feature_groups(self)
+
+    def get_newest_model(self, training_dataset_version: Optional[int] = None):
+        """Get the latest generated model using this feature view, based on explicit
+        provenance. Search only through the accessible models.
+        For more items use the base method - get_models_provenance
+
+        # Arguments
+            training_dataset_version: Filter generated models based on the used training dataset version.
+
+        # Returns
+            `Model`: Newest Generated Model.
+        """
+        models = self.get_models(training_dataset_version=training_dataset_version)
+        models.sort(key=lambda model: model.created, reverse=True)
+        if models:
+            return models[0]
+        else:
+            return None
+
+    def get_models(self, training_dataset_version: Optional[int] = None):
+        """Get the generated models using this feature view, based on explicit
+        provenance. Only the accessible models are returned.
+        For more items use the base method - get_models_provenance
+
+        # Arguments
+            training_dataset_version: Filter generated models based on the used training dataset version.
+        # Returns
+            `List[Model]: List of models.
+        """
+        return self.get_models_provenance(
+            training_dataset_version=training_dataset_version
+        ).accessible
+
+    def get_models_provenance(self, training_dataset_version: Optional[int] = None):
+        """Get the generated models using this feature view, based on explicit
+        provenance. These models can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated model links, so deleted
+        will always be empty.
+        For inaccessible models, only a minimal information is returned.
+
+        # Arguments
+            training_dataset_version: Filter generated models based on the used training dataset version.
+
+        # Returns
+            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+        """
+        return self._feature_view_engine.get_models_provenance(
+            self, training_dataset_version=training_dataset_version
+        )
 
     def delete_tag(self, name: str):
         """Delete a tag attached to a feature view.
@@ -3415,6 +3468,7 @@ class FeatureView:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+
         serving_keys = json_decamelized.get("serving_keys", None)
         if serving_keys is not None:
             serving_keys = [ServingKey.from_response_json(sk) for sk in serving_keys]
@@ -3492,6 +3546,7 @@ class FeatureView:
 
     def to_dict(self):
         return {
+            "featurestoreId": self._featurestore_id,
             "name": self._name,
             "version": self._version,
             "description": self._description,

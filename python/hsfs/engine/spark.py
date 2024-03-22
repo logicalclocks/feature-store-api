@@ -532,8 +532,12 @@ class Engine:
 
     def split_labels(self, df, labels, dataframe_type):
         if labels:
-            labels_df = df.select(*labels)
-            df_new = df.drop(*labels)
+            if isinstance(df, pd.DataFrame):
+                labels_df = df[labels]
+                df_new = df.drop(columns=labels)
+            else:
+                labels_df = df.select(*labels)
+                df_new = df.drop(*labels)
             return (
                 self._return_dataframe_type(df_new, dataframe_type),
                 self._return_dataframe_type(labels_df, dataframe_type),
