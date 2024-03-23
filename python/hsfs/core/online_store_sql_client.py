@@ -204,7 +204,29 @@ class OnlineStoreSqlClient:
             prefix_by_serving_index,
         )
 
-    def get_single_feature_vector(
+    def get_single_feature_vector(self, entry: Dict[str, Any]) -> Dict[str, Any]:
+        """Retrieve single vector with parallel queries using aiomysql engine."""
+        return self._single_vector_result(entry, self._prepared_statements)
+
+    def get_batch_feature_vector(self, entries: Dict[str, Any]) -> Dict[str, Any]:
+        """Retrieve batch vector with parallel queries using aiomysql engine."""
+        return self._batch_vector_results(entries, self._batch_prepared_statements)
+
+    def get_inference_helper_vector(self, entry: Dict[str, Any]) -> Dict[str, Any]:
+        """Retrieve single vector with parallel queries using aiomysql engine."""
+        return self._single_vector_result(
+            entry, self._helper_column_prepared_statements
+        )
+
+    def get_batch_inference_helper_vector(
+        self, entries: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Retrieve batch vector with parallel queries using aiomysql engine."""
+        return self._batch_vector_results(
+            entries, self._batch_helper_column_prepared_statements
+        )
+
+    def _single_vector_result(
         self, entry, prepared_statement_objects
     ) -> Dict[str, Any]:
         """Retrieve single vector with parallel queries using aiomysql engine."""
@@ -361,6 +383,7 @@ class OnlineStoreSqlClient:
         )
 
     def _validate_serving_key(self, entry):
+        _logger.debug(f"Validating serving key {entry}")
         for key in entry:
             if key not in self._valid_serving_key:
                 raise ValueError(
@@ -369,6 +392,7 @@ class OnlineStoreSqlClient:
                 )
 
     def filter_entry_by_join_index(self, entry, join_index):
+        _logger.debug(f"Filtering entry {entry} by join index {join_index}")
         fg_entry = {}
         complete = True
         for sk in self._serving_key_by_serving_index[join_index]:
@@ -391,6 +415,7 @@ class OnlineStoreSqlClient:
         # `.*?` - matches any character (except for line terminators). `*?` Quantifier —
         # Matches between zero and unlimited times, expanding until needed, i.e 1st occurrence of `\?`
         # character.
+        _logger.debug(f"Parametrizing name {name} in query {query_online}")
         return re.sub(
             r"^(.*?)\?",
             r"\1:" + name,
@@ -415,8 +440,14 @@ class OnlineStoreSqlClient:
         return tuple(result_key)
 
     async def _set_aiomysql_connection(self, default_min_size: int, options=None):
+        _logger.debug(
+            "Fetching storage connector for sql connection to Online Feature Store."
+        )
         online_connector = self._storage_connector_api.get_online_connector(
             self._feature_store_id
+        )
+        _logger.debug(
+            f"Creating async engine with options: {options} and default min size: {default_min_size}"
         )
         self._async_pool = await util.create_async_engine(
             online_connector, self._external, default_min_size, options=options
@@ -473,11 +504,48 @@ class OnlineStoreSqlClient:
 
     @property
     def prepared_statements(self):
-        """The dict object of prepared_statements as values and kes as indices of positions in the query for
-        selecting features from feature groups of the training dataset.
+        """The dict object of prepared_statements as values and keys as indices of positions in the query for
+        selecting features from feature groups of the training dataset. Used for single vector retrieval.
         """
         return self._prepared_statements
 
     @prepared_statements.setter
     def prepared_statements(self, prepared_statements):
         self._prepared_statements = prepared_statements
+
+    @property
+    def batch_prepared_statements(self):
+        """The dict object of prepared_statements as values and keys as indices of positions in the query for
+        selecting features from feature groups of the training dataset. Used for batch retrieval.
+        """
+        return self._batch_prepared_statements
+
+    @batch_prepared_statements.setter
+    def batch_prepared_statements(self, batch_prepared_statements):
+        self._batch_prepared_statements = batch_prepared_statements
+
+    @property
+    def helper_column_prepared_statements(self):
+        """The dict object of prepared_statements as values and keys as indices of positions in the query for
+        selecting features from feature groups of the training dataset. Used for single vector retrieval.
+        """
+        return self._helper_column_prepared_statements
+
+    @helper_column_prepared_statements.setter
+    def helper_column_prepared_statements(self, helper_column_prepared_statements):
+        self._helper_column_prepared_statements = helper_column_prepared_statements
+
+    @property
+    def batch_helper_column_prepared_statements(self):
+        """The dict object of prepared_statements as values and keys as indices of positions in the query for
+        selecting features from feature groups of the training dataset. Used for single vector retrieval.
+        """
+        return self._helper_column_prepared_statements
+
+    @batch_helper_column_prepared_statements.setter
+    def batch_helper_column_prepared_statements(
+        self, batch_helper_column_prepared_statements
+    ):
+        self._batch_helper_column_prepared_statements = (
+            batch_helper_column_prepared_statements
+        )

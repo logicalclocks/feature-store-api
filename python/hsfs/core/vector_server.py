@@ -15,7 +15,7 @@
 #
 import io
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import avro.io
 import avro.schema
@@ -227,36 +227,51 @@ class VectorServer:
         else:  # aiomysql branch
             # get result row
             _logger.info("get_feature_vector Online SQL client")
-            serving_vector = self.get_single_feature_vector(entry)
+            serving_vector = self.online_store_sql_client.get_single_feature_vector(
+                entry
+            )
             # Deserialize complex features
+            _logger.debug("Deserializing complex features")
             serving_vector = self.deserialize_complex_features(serving_vector)
 
             # Add the passed features
+            _logger.debug("Updating with passed features")
             serving_vector.update(passed_features)
 
             # apply transformation functions
+            _logger.debug("Applying transformation functions")
             result_dict = self._apply_transformation(serving_vector)
 
+            _logger.debug(
+                "Converting to row vectors to list, optionally filling missing values"
+            )
             vector = self._generate_vector(result_dict, allow_missing)
 
-        if return_type.lower() == "list":
-            return vector
-        elif return_type.lower() == "numpy":
-            return np.array(vector)
-        elif return_type.lower() == "pandas":
-            pandas_df = pd.DataFrame(vector).transpose()
-            pandas_df.columns = self._feature_vector_col_name
-            return pandas_df
-        elif return_type.lower() == "polars":
-            # Polar considers one dimensional list as a single columns so passed vector as 2d list
-            polars_df = pl.DataFrame(
-                [vector], schema=self._feature_vector_col_name, orient="row"
-            )
-            return polars_df
-        else:
-            raise ValueError(
-                "Unknown return type. Supported return types are 'list', ' polars', 'pandas' and 'numpy'"
-            )
+        # if return_type.lower() == "list":
+        #     _logger.debug("Returning feature vector as value list")
+        #     return vector
+        # elif return_type.lower() == "numpy":
+        #     _logger.debug("Returning feature vector as numpy array")
+        #     return np.array(vector)
+        # elif return_type.lower() == "pandas":
+        #     _logger.debug("Returning feature vector as pandas dataframe")
+        #     pandas_df = pd.DataFrame(vector).transpose()
+        #     pandas_df.columns = self._feature_vector_col_name
+        #     return pandas_df
+        # elif return_type.lower() == "polars":
+        #     _logger.debug("Returning feature vector as polars dataframe")
+        #     # Polar considers one dimensional list as a single columns so passed vector as 2d list
+        #     polars_df = pl.DataFrame(
+        #         [vector], schema=self._feature_vector_col_name, orient="row"
+        #     )
+        #     return polars_df
+        # else:
+        #     raise ValueError(
+        #         "Unknown return type. Supported return types are 'list', ' polars', 'pandas' and 'numpy'"
+        #     )
+        return self.handle_feature_vector_return_type(
+            vector, batch=False, inference_helper=False, return_type=return_type
+        )
 
     def get_feature_vectors(
         self,
@@ -283,10 +298,9 @@ class VectorServer:
             )
         else:
             _logger.info("get_feature_vectors through SQL client")
-            batch_results, _ = self._batch_vector_results(
-                entries, self._prepared_statements
-            )
+            batch_results, _ = self._batch_vector_results(entries)
             # Deserialize complex features
+            _logger.debug("Deserializing complex features")
             batch_results = list(
                 map(
                     lambda row_dict: self.deserialize_complex_features(row_dict),
@@ -300,6 +314,7 @@ class VectorServer:
                 batch_results[vector_index].update(pf)
 
             # apply transformation functions
+            _logger.debug("Applying transformation functions")
             batch_transformed = list(
                 map(
                     lambda results_dict: self._apply_transformation(results_dict),
@@ -308,6 +323,9 @@ class VectorServer:
             )
 
             # get vectors
+            _logger.debug(
+                "Converting to row vectors to list, optionally filling missing values"
+            )
             vectors = []
             for result in batch_transformed:
                 # for backward compatibility, before 3.4, if result is empty,
@@ -315,22 +333,39 @@ class VectorServer:
                 if len(result) != 0 or allow_missing:
                     vectors.append(self._generate_vector(result, fill_na=allow_missing))
 
-        if return_type.lower() == "list":
-            return vectors
+        return self.handle_feature_vector_return_type(
+            vectors, batch=True, inference_helper=False, return_type=return_type
+        )
+
+    def handle_feature_vector_return_type(
+        self,
+        feature_vectorz: Union[List[Any], List[List[Any]]],
+        batch: bool,
+        inference_helper: bool,
+        return_type: str,
+    ):
+        if return_type.lower() == "list" and not inference_helper:
+            _logger.debug("Returning feature vector as value list")
+            return feature_vectorz
         elif return_type.lower() == "numpy":
-            return np.array(vectors)
+            _logger.debug("Returning feature vector as numpy array")
+            return np.array(feature_vectorz)
         elif return_type.lower() == "pandas":
-            pandas_df = pd.DataFrame(vectors)
+            _logger.debug("Returning feature vector as pandas dataframe")
+            pandas_df = pd.DataFrame(feature_vectorz)
             pandas_df.columns = self._feature_vector_col_name
             return pandas_df
         elif return_type.lower() == "polars":
+            _logger.debug("Returning feature vector as polars dataframe")
             polars_df = pl.DataFrame(
-                vectors, schema=self._feature_vector_col_name, orient="row"
+                feature_vectorz,
+                schema=self._feature_vector_col_name,
+                orient="row",
             )
             return polars_df
         else:
             raise ValueError(
-                "Unknown return type. Supported return types are 'list', 'polars', 'pandas' and 'numpy'"
+                f"""Unknown return type. Supported return types are {"'list', " if not inference_helper else ""}'polars', 'pandas' and 'numpy'"""
             )
 
     def which_client_and_ensure_initialised(
@@ -408,34 +443,25 @@ class VectorServer:
         else:
             self.default_online_store_client = self.DEFAULT_ONLINE_STORE_SQL_CLIENT
 
-    def get_inference_helper(self, entry, return_type):
+    def get_inference_helper(
+        self, entry, return_type: str
+    ) -> Union[pd.DataFrame, pl.DataFrame, Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
-
-        serving_vector = self._vector_result(
-            entry, self._helper_column_prepared_statements
+        _logger.info("Retrieve inference helper values for single entry.")
+        _logger.debug(f"entry: {entry} as return type: {return_type}")
+        return self.handle_feature_vector_return_type(
+            self.get_inference_helper_result(entry),
+            batch=False,
+            inference_helper=True,
+            return_type=return_type,
         )
-
-        if return_type.lower() == "pandas":
-            return pd.DataFrame([serving_vector])
-        elif return_type.lower() == "dict":
-            return serving_vector
-        elif return_type.lower() == "polars":
-            # Polar considers one dimensional list as a single columns so passed vector as 2d list
-            polars_df = pl.DataFrame(
-                [serving_vector], schema=serving_vector.keys(), orient="row"
-            )
-            return polars_df
-        else:
-            raise ValueError(
-                "Unknown return type. Supported return types are 'pandas', 'polars' and 'dict'"
-            )
 
     def get_inference_helpers(
         self,
-        feature_view_object,
-        entries,
-        return_type,
-    ):
+        feature_view_object: "feature_view.FeatureView",
+        entries: List[Dict[str, Any]],
+        return_type: str,
+    ) -> Union[pd.DataFrame, pl.DataFrame, List[Dict[str, Any]]]:
         """Assembles serving vector from online feature store."""
         batch_results, serving_keys = self._batch_vector_results(
             entries, self._helper_column_prepared_statements
@@ -443,6 +469,7 @@ class VectorServer:
 
         # drop serving and primary key names from the result dict
         drop_list = serving_keys + list(feature_view_object.primary_keys)
+
         _ = list(
             map(
                 lambda results_dict: [
@@ -454,23 +481,11 @@ class VectorServer:
             )
         )
 
-        if return_type.lower() == "dict":
-            return batch_results
-        elif return_type.lower() == "pandas":
-            return pd.DataFrame(batch_results)
-        elif return_type.lower() == "polars":
-            polars_df = pl.DataFrame(
-                batch_results,
-                schema=feature_view_object.inference_helper_columns,
-                orient="row",
-            )
-            return polars_df
-        else:
-            raise ValueError(
-                "Unknown return type. Supported return types are 'pandas', 'polars' and 'dict'"
-            )
+        return self.handle_feature_vector_return_type(
+            batch_results, batch=True, inference_helper=True, return_type=return_type
+        )
 
-    def get_complex_feature_schemas(self):
+    def get_complex_feature_schemas(self) -> Dict[str, avro.io.DatumReader]:
         return {
             f.name: avro.io.DatumReader(
                 avro.schema.parse(
@@ -483,7 +498,7 @@ class VectorServer:
             if f.is_complex()
         }
 
-    def deserialize_complex_features(self, row_dict):
+    def deserialize_complex_features(self, row_dict: Dict[str, Any]) -> Dict[str, Any]:
         for feature_name, schema in self._complex_features.items():
             if feature_name in row_dict:
                 bytes_reader = io.BytesIO(row_dict[feature_name])
@@ -491,7 +506,7 @@ class VectorServer:
                 row_dict[feature_name] = schema.read(decoder)
         return row_dict
 
-    def _generate_vector(self, result_dict, fill_na=False):
+    def _generate_vector(self, result_dict: Dict[str, Any], fill_na=False):
         # feature values
         vector = []
         for feature_name in self._feature_vector_col_name:
@@ -551,7 +566,7 @@ class VectorServer:
                 raise ValueError(
                     "Training data version is required for transformation. Call `feature_view.init_serving(version)` "
                     "or `feature_view.init_batch_scoring(version)` to pass the training dataset version."
-                    "Training data can be created by `feature_view.create_training_data` or `feature_view.get_training_data`."
+                    "Training data can be created by `feature_view.create_training_data` or `feature_view.training_data`."
                 )
             td_tffn_stats = self._feature_view_engine._statistics_engine.get(
                 entity,
