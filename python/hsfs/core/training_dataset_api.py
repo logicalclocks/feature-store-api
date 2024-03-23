@@ -14,16 +14,20 @@
 #   limitations under the License.
 #
 
+from typing import List
+
 from hsfs import client, training_dataset
 from hsfs.constructor import fs_query, serving_prepared_statement
 from hsfs.core import job
 
 
 class TrainingDatasetApi:
-    def __init__(self, feature_store_id):
+    def __init__(self, feature_store_id: int):
         self._feature_store_id = feature_store_id
 
-    def post(self, training_dataset_instance):
+    def post(
+        self, training_dataset_instance: "training_dataset.TrainingDataset"
+    ) -> "training_dataset.TrainingDataset":
         _client = client.get_instance()
         path_params = [
             "project",
@@ -42,7 +46,7 @@ class TrainingDatasetApi:
             ),
         )
 
-    def get(self, name, version):
+    def get(self, name: str, version: int) -> "training_dataset.TrainingDataset":
         _client = client.get_instance()
         path_params = [
             "project",
@@ -61,7 +65,7 @@ class TrainingDatasetApi:
         else:
             return td_list
 
-    def get_query(self, training_dataset_instance, with_label, is_hive_query):
+    def get_query(self, training_dataset_instance, with_label, is_hive_query: bool):
         _client = client.get_instance()
         path_params = [
             "project",
@@ -78,7 +82,9 @@ class TrainingDatasetApi:
             _client._send_request("GET", path_params, query_params)
         )
 
-    def compute(self, training_dataset_instance, td_app_conf):
+    def compute(
+        self, training_dataset_instance: "training_dataset.TrainingDataset", td_app_conf
+    ):
         """
         Setup a Hopsworks job to compute the query and write the training dataset
         Args:
@@ -103,7 +109,10 @@ class TrainingDatasetApi:
         )
 
     def update_metadata(
-        self, training_dataset_instance, training_dataset_copy, query_parameter
+        self,
+        training_dataset_instance: "training_dataset.TrainingDataset",
+        training_dataset_copy: "training_dataset.TrainingDataset",
+        query_parameter: str,
     ):
         """Update the metadata of a training dataset.
 
@@ -122,7 +131,7 @@ class TrainingDatasetApi:
                 "updateStatsConfig".
 
         # Returns
-            FeatureGroup. The updated feature group metadata object.
+            TrainingDataset. The updated training dataset metadata object.
         """
         _client = client.get_instance()
         path_params = [
@@ -145,7 +154,9 @@ class TrainingDatasetApi:
             ),
         )
 
-    def get_serving_prepared_statement(self, training_dataset_instance, batch):
+    def get_serving_prepared_statement(
+        self, training_dataset_instance: "training_dataset.TrainingDataset", batch: bool
+    ) -> List["serving_prepared_statement.ServingPreparedStatement"]:
         """Get serving prepared statement metadata object for a training dataset.
         Args:
             training_dataset_instance (training_dataset): the metadata instance of the training dataset
@@ -167,7 +178,9 @@ class TrainingDatasetApi:
             _client._send_request("GET", path_params, query_params, headers=headers)
         )
 
-    def delete(self, training_dataset_instance):
+    def delete(
+        self, training_dataset_instance: "training_dataset.TrainingDataset"
+    ) -> None:
         """Delete the training dataset and materialized files in HopsFS."""
         _client = client.get_instance()
         path_params = [

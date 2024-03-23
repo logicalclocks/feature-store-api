@@ -46,14 +46,11 @@ class OnlineStoreSqlClient:
         )
         self._storage_connector_api = storage_connector_api.StorageConnectorApi()
 
-    def init_prepared_statement(
+    def fetch_prepared_statements(
         self,
         entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
-        batch: bool,
-        external: bool,
         inference_helper_columns: bool,
-        options: Optional[Dict[str, Any]] = None,
-    ) -> None:
+    ):
         if isinstance(entity, feature_view.FeatureView):
             _logger.debug(
                 f"Initializing prepared statements for feature view {entity.name} version {entity.version}."
@@ -62,70 +59,149 @@ class OnlineStoreSqlClient:
                 _logger.debug(
                     "Inference helper columns are enabled, fetching corresponding prepared statements."
                 )
-                helper_column_prepared_statements = (
+                self._helper_column_prepared_statements = (
                     self._feature_view_api.get_serving_prepared_statement(
-                        entity.name, entity.version, batch, inference_helper_columns
+                        entity.name,
+                        entity.version,
+                        batch=False,
+                        inference_helper_columns=True,
                     )
                 )
-            _logger.debug(
-                f"Fetching prepared statements for serving vectors, batch set to {batch}."
+                self._batch_helper_column_prepared_statements = (
+                    self._feature_view_api.get_serving_prepared_statement(
+                        entity.name,
+                        entity.version,
+                        batch=True,
+                        inference_helper_columns=True,
+                    )
+                )
+            _logger.debug("Fetching prepared statements for feature vectors.")
+            self._prepared_statements = (
+                self._feature_view_api.get_serving_prepared_statement(
+                    entity.name,
+                    entity.version,
+                    batch=False,
+                    inference_helper_columns=False,
+                )
             )
-            prepared_statements = self._feature_view_api.get_serving_prepared_statement(
-                entity.name, entity.version, batch, inference_helper_columns=False
+            self._batch_prepared_statements = (
+                self._feature_view_api.get_serving_prepared_statement(
+                    entity.name,
+                    entity.version,
+                    batch=True,
+                    inference_helper_columns=False,
+                )
             )
         elif isinstance(entity, training_dataset.TrainingDataset):
             _logger.debug(
-                f"Initializing prepared statements for training dataset {entity.name} version {entity.version}."
+                f"Fetching prepared statements for training dataset {entity.name} version {entity.version}."
             )
-            prepared_statements = (
-                self._training_dataset_api.get_serving_prepared_statement(entity, batch)
+            self._prepared_statements = (
+                self._training_dataset_api.get_serving_prepared_statement(
+                    entity, batch=False
+                )
+            )
+            self._batch_prepared_statements = (
+                self._training_dataset_api.get_serving_prepared_statement(
+                    entity, batch=True
+                )
             )
         else:
             raise ValueError(
                 "Object type needs to be `feature_view.FeatureView` or `training_dataset.TrainingDataset`."
             )
+
+    def init_prepared_statement(
+        self,
+        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        external: bool,
+        inference_helper_columns: bool,
+        options: Optional[Dict[str, Any]] = None,
+    ) -> None:
         _logger.debug(
-            "Reset prepared statements and external as user may be re-initialising with different parameters"
+            "Fetch and reset prepared statements and external as user may be re-initialising with different parameters"
         )
-        self._prepared_statement_engine = None
-        self._prepared_statements = None
-        self._helper_column_prepared_statements = None
+        self.fetch_prepared_statements(entity, inference_helper_columns)
         self._external = external
         _logger.debug("Acquiring or starting event loop for async engine.")
         loop = asyncio.get_event_loop()
         _logger.debug(f"Setting up aiomysql connection, with options : {options}")
         loop.run_until_complete(
-            self._set_aiomysql_connection(len(prepared_statements), options=options)
+            self._set_aiomysql_connection(
+                len(self._prepared_statements), options=options
+            )
         )
 
-        (
-            self._prepared_statements,
-            feature_name_order_by_psp,
-            prefix_by_serving_index,
-        ) = self._parametrize_prepared_statements(prepared_statements, batch)
+        self._prepared_statements = self._parametrize_prepared_statements(
+            self._prepared_statements, batch=False
+        )
+        # Use the prepared statements to initialize the serving utils
+        self.init_parametrize_and_serving_utils()
+        self._batch_prepared_statements, _ = self._parametrize_prepared_statements(
+            self._batch_prepared_statements, batch=True
+        )
 
         if inference_helper_columns:
-            (
-                self._helper_column_prepared_statements,
-                _,
-                _,
-            ) = self._parametrize_prepared_statements(
-                helper_column_prepared_statements, batch
+            self._helper_column_prepared_statements = (
+                self._parametrize_prepared_statements(
+                    self._helper_column_prepared_statements, batch=False
+                )
+            )
+            self._batch_helper_column_prepared_statements = (
+                self._parametrize_prepared_statements(
+                    self._batch_helper_column_prepared_statements, batch=True
+                )
             )
 
-        self._prefix_by_serving_index = prefix_by_serving_index
+    def init_parametrize_and_serving_utils(self):
+        self._prefix_by_serving_index = {}
+        self._feature_name_order_by_psp = {}
+        for statement in self._prepared_statements:
+            if statement.feature_group_id in self._skip_fg_ids:
+                continue
+
+        self._prefix_by_serving_index[statement.prepared_statement_index] = (
+            statement.prefix
+        )
+        self._feature_name_order_by_psp[statement.prepared_statement_index] = dict(
+            [(psp.name, psp.index) for psp in statement.prepared_statement_parameters]
+        )
+        pk_names = [
+            psp.name
+            for psp in sorted(
+                statement.prepared_statement_parameters,
+                key=lambda psp: psp.index,
+            )
+        ]
+        # construct serving key if it is not provided.
+        if self._serving_keys is None:
+            serving_keys = set()
+            for pk_name in pk_names:
+                # should use `ignore_prefix=True` because before hsfs 3.3,
+                # only primary key of a feature group are matched in
+                # user provided entry.
+                serving_key = ServingKey(
+                    feature_name=pk_name,
+                    join_index=statement.prepared_statement_index,
+                    prefix=statement.prefix,
+                    ignore_prefix=True,
+                )
+                serving_keys.add(serving_key)
+
         for sk in self._serving_keys:
             self._serving_key_by_serving_index[sk.join_index] = (
                 self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
             )
+
         # sort the serving by PreparedStatementParameter.index
         for join_index in self._serving_key_by_serving_index:
             # feature_name_order_by_psp do not include the join index when the joint feature only contains label only
             # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
-            if join_index in feature_name_order_by_psp:
+            if join_index in self._feature_name_order_by_psp:
                 self._serving_key_by_serving_index[join_index] = sorted(
                     self._serving_key_by_serving_index[join_index],
-                    key=lambda _sk, join_index=join_index: feature_name_order_by_psp[
+                    key=lambda _sk,
+                    join_index=join_index: self._feature_name_order_by_psp[
                         join_index
                     ].get(_sk.feature_name, 0),
                 )
@@ -137,19 +213,11 @@ class OnlineStoreSqlClient:
 
     def _parametrize_prepared_statements(self, prepared_statements, batch):
         prepared_statements_dict = {}
-        serving_keys = set()
-        feature_name_order_by_psp = dict()
-        prefix_by_serving_index = {}
         for prepared_statement in prepared_statements:
             if prepared_statement.feature_group_id in self._skip_fg_ids:
                 continue
             query_online = str(prepared_statement.query_online).replace("\n", " ")
-            prefix_by_serving_index[prepared_statement.prepared_statement_index] = (
-                prepared_statement.prefix
-            )
 
-            # In java prepared statement `?` is used for parametrization.
-            # In sqlalchemy `:feature_name` is used instead of `?`
             pk_names = [
                 psp.name
                 for psp in sorted(
@@ -157,27 +225,6 @@ class OnlineStoreSqlClient:
                     key=lambda psp: psp.index,
                 )
             ]
-            feature_name_order_by_psp[prepared_statement.prepared_statement_index] = (
-                dict(
-                    [
-                        (psp.name, psp.index)
-                        for psp in prepared_statement.prepared_statement_parameters
-                    ]
-                )
-            )
-            # construct serving key if it is not provided.
-            if self._serving_keys is None:
-                for pk_name in pk_names:
-                    # should use `ignore_prefix=True` because before hsfs 3.3,
-                    # only primary key of a feature group are matched in
-                    # user provided entry.
-                    serving_key = ServingKey(
-                        feature_name=pk_name,
-                        join_index=prepared_statement.prepared_statement_index,
-                        prefix=prepared_statement.prefix,
-                        ignore_prefix=True,
-                    )
-                    serving_keys.add(serving_key)
 
             if not batch:
                 for pk_name in pk_names:
@@ -194,15 +241,7 @@ class OnlineStoreSqlClient:
                 query_online
             )
 
-        # assign serving key if it is not provided.
-        if self._serving_keys is None:
-            self._serving_keys = serving_keys
-
-        return (
-            prepared_statements_dict,
-            feature_name_order_by_psp,
-            prefix_by_serving_index,
-        )
+        return prepared_statements_dict
 
     def get_single_feature_vector(self, entry: Dict[str, Any]) -> Dict[str, Any]:
         """Retrieve single vector with parallel queries using aiomysql engine."""

@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import avro.io
 import avro.schema
+import hsfs
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -43,36 +44,39 @@ class VectorServer:
 
     def __init__(
         self,
-        feature_store_id,
-        features=None,
-        training_dataset_version=None,
-        serving_keys=None,
+        feature_store_id: int,
+        features: Optional[
+            List["hsfs.training_dataset_feature.TrainingDatasetFeature"]
+        ] = None,
+        training_dataset_version: Optional[int] = None,
+        serving_keys: Optional[List["hsfs.serving_key.ServingKey"]] = None,
         skip_fg_ids=None,
         feature_store_name: str = None,
         feature_view_name: str = None,
         feature_view_version: int = None,
     ):
+        self._training_dataset_version = training_dataset_version
+
         if features is None:
             features = []
-        self._training_dataset_version = training_dataset_version
-        self._features = [] if features is None else features
 
-        self._feature_vector_col_name = (
-            [
-                feat.name
-                for feat in features
-                if not (
-                    feat.label
-                    or feat.inference_helper_column
-                    or feat.training_helper_column
-                )
-            ]
-            if features
-            else []
-        )
+        self._features = features
+        self._feature_vector_col_name = [
+            feat.name
+            for feat in features
+            if not (
+                feat.label
+                or feat.inference_helper_column
+                or feat.training_helper_column
+            )
+        ]
+        self._inference_helper_col_name = [
+            feat.name for feat in features if feat.inference_helper_column
+        ]
+
         self._skip_fg_ids = skip_fg_ids or set()
-
         self._serving_keys = serving_keys
+
         self._feature_store_id = feature_store_id
         self._feature_store_name = feature_store_name
         self._feature_view_name = feature_view_name
@@ -103,7 +107,7 @@ class VectorServer:
         inference_helper_columns: bool = False,
         init_online_store_sql_client: bool = True,
         init_online_store_rest_client: bool = False,
-        options=None,
+        options: Optional[Dict[str, Any]] = None,
     ):
         self._set_default_online_store_client(
             init_online_store_rest_client=init_online_store_rest_client,
@@ -186,7 +190,7 @@ class VectorServer:
         external: bool,
         inference_helper_columns: bool,
         options: Optional[Dict[str, Any]] = None,
-    ):
+    ) -> None:
         _logger.info("Initialising Vector Server Online SQL client")
         self._online_store_sql_client = online_store_sql_client.OnlineStoreSqlClient(
             feature_store_id=self._feature_store_id,
@@ -201,13 +205,13 @@ class VectorServer:
 
     def get_feature_vector(
         self,
-        entry,
-        return_type=None,
-        passed_features=None,
-        allow_missing=False,
+        entry: Dict[str, Any],
+        return_type: Optional[str] = None,
+        passed_features: Optional[Dict[str, Any]] = None,
+        allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
-    ):
+    ) -> Union[pd.DataFrame, pl.DataFrame, List[Any], Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
         if passed_features is None:
             passed_features = []
@@ -247,38 +251,16 @@ class VectorServer:
             )
             vector = self._generate_vector(result_dict, allow_missing)
 
-        # if return_type.lower() == "list":
-        #     _logger.debug("Returning feature vector as value list")
-        #     return vector
-        # elif return_type.lower() == "numpy":
-        #     _logger.debug("Returning feature vector as numpy array")
-        #     return np.array(vector)
-        # elif return_type.lower() == "pandas":
-        #     _logger.debug("Returning feature vector as pandas dataframe")
-        #     pandas_df = pd.DataFrame(vector).transpose()
-        #     pandas_df.columns = self._feature_vector_col_name
-        #     return pandas_df
-        # elif return_type.lower() == "polars":
-        #     _logger.debug("Returning feature vector as polars dataframe")
-        #     # Polar considers one dimensional list as a single columns so passed vector as 2d list
-        #     polars_df = pl.DataFrame(
-        #         [vector], schema=self._feature_vector_col_name, orient="row"
-        #     )
-        #     return polars_df
-        # else:
-        #     raise ValueError(
-        #         "Unknown return type. Supported return types are 'list', ' polars', 'pandas' and 'numpy'"
-        #     )
         return self.handle_feature_vector_return_type(
             vector, batch=False, inference_helper=False, return_type=return_type
         )
 
     def get_feature_vectors(
         self,
-        entries,
-        return_type=None,
-        passed_features=None,
-        allow_missing=False,
+        entries: List[Dict[str, Any]],
+        return_type: Optional[str] = None,
+        passed_features: List[Dict[str, Any]] = None,
+        allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
     ):
@@ -343,7 +325,7 @@ class VectorServer:
         batch: bool,
         inference_helper: bool,
         return_type: str,
-    ):
+    ) -> Union[pd.DataFrame, pl.DataFrame, List[Any], Dict[str, Any]]:
         if return_type.lower() == "list" and not inference_helper:
             _logger.debug("Returning feature vector as value list")
             return feature_vectorz
@@ -352,14 +334,17 @@ class VectorServer:
             return np.array(feature_vectorz)
         elif return_type.lower() == "pandas":
             _logger.debug("Returning feature vector as pandas dataframe")
-            pandas_df = pd.DataFrame(feature_vectorz)
+            if batch:
+                pandas_df = pd.DataFrame(feature_vectorz)
+            else:
+                pandas_df = pd.DataFrame(feature_vectorz).transpose()
             pandas_df.columns = self._feature_vector_col_name
             return pandas_df
         elif return_type.lower() == "polars":
             _logger.debug("Returning feature vector as polars dataframe")
             polars_df = pl.DataFrame(
-                feature_vectorz,
-                schema=self._feature_vector_col_name,
+                feature_vectorz if batch else [feature_vectorz],
+                schema=self._feature_vector_col_name if not inference_helper else None,
                 orient="row",
             )
             return polars_df
