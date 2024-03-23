@@ -15,6 +15,7 @@
 #
 import io
 import logging
+from typing import Any, Dict, Optional, Union
 
 import avro.io
 import avro.schema
@@ -25,6 +26,7 @@ from hsfs import client, feature_view, training_dataset
 from hsfs.core import (
     feature_view_engine,
     online_store_rest_client_engine,
+    online_store_sql_client,
     transformation_function_engine,
 )
 
@@ -117,50 +119,85 @@ class VectorServer:
         self._complex_features = self.get_complex_feature_schemas()
 
         if self._init_online_store_rest_client is True:
-            _logger.info("Initialising Vector Server Online Store REST client")
-            self._online_store_rest_client_engine = online_store_rest_client_engine.OnlineStoreRestClientEngine(
-                feature_store_name=self._feature_store_name,
-                feature_view_name=entity.name,
-                feature_view_version=entity.version,
-                features=entity.features,
-                skip_fg_ids=self._skip_fg_ids,
-                # Code duplication added to avoid unnecessary transforming and iterating over feature vectors
-                # multiple times. This is a temporary solution until the code is refactored with new sql client
-                complex_features=self._complex_features,
-                transformation_functions=self._transformation_functions,
-            )
-            reset_online_rest_client = False
-            online_store_rest_client_config = None
-            if isinstance(options, dict):
-                reset_online_rest_client = options.get(
-                    self.RESET_ONLINE_REST_CLIENT_OPTIONS_KEY, reset_online_rest_client
-                )
-                online_store_rest_client_config = options.get(
-                    self.ONLINE_REST_CLIENT_CONFIG_OPTIONS_KEY,
-                    online_store_rest_client_config,
-                )
-
-            client.online_store_rest_client.init_or_reset_online_store_rest_client(
-                optional_config=online_store_rest_client_config,
-                reset_client=reset_online_rest_client,
+            self.setup_online_store_rest_client_and_engine(
+                entity=entity, options=options
             )
 
         if self._init_online_store_sql_client is True:
-            _logger.info("Initialising Vector Server Online SQL client")
-            self.online_store_sql_client.init_prepared_statement(
-                entity,
-                batch,
-                external,
-                inference_helper_columns,
+            self.setup_online_store_sql_client(
+                entity=entity,
+                batch=batch,
+                external=external,
+                inference_helper_columns=inference_helper_columns,
                 options=options,
             )
 
-    def init_batch_scoring(self, entity):
+    def init_batch_scoring(
+        self,
+        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+    ):
         self.init_transformation(entity)
 
-    def init_transformation(self, entity):
+    def init_transformation(
+        self,
+        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+    ):
         # attach transformation functions
         self._transformation_functions = self._get_transformation_fns(entity)
+
+    def setup_online_store_rest_client_and_engine(
+        self,
+        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        options: Optional[Dict[str, Any]] = None,
+    ):
+        # naming is off here, but it avoids confusion with the argument init_online_store_rest_client
+        _logger.info("Initialising Vector Server Online Store REST client")
+        self._online_store_rest_client_engine = online_store_rest_client_engine.OnlineStoreRestClientEngine(
+            feature_store_name=self._feature_store_name,
+            feature_view_name=entity.name,
+            feature_view_version=entity.version,
+            features=entity.features,
+            skip_fg_ids=self._skip_fg_ids,
+            # Code duplication added to avoid unnecessary transforming and iterating over feature vectors
+            # multiple times. This is a temporary solution until the code is refactored with new sql client
+            complex_features=self._complex_features,
+            transformation_functions=self._transformation_functions,
+        )
+        reset_online_rest_client = False
+        online_store_rest_client_config = None
+        if isinstance(options, dict):
+            reset_online_rest_client = options.get(
+                self.RESET_ONLINE_REST_CLIENT_OPTIONS_KEY, reset_online_rest_client
+            )
+            online_store_rest_client_config = options.get(
+                self.ONLINE_REST_CLIENT_CONFIG_OPTIONS_KEY,
+                online_store_rest_client_config,
+            )
+
+        client.online_store_rest_client.init_or_reset_online_store_rest_client(
+            optional_config=online_store_rest_client_config,
+            reset_client=reset_online_rest_client,
+        )
+
+    def setup_online_store_sql_client(
+        self,
+        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        batch: bool,
+        external: bool,
+        inference_helper_columns: bool,
+        options: Optional[Dict[str, Any]] = None,
+    ):
+        _logger.info("Initialising Vector Server Online SQL client")
+        self._online_store_sql_client = online_store_sql_client.OnlineStoreSqlClient(
+            feature_store_id=self._feature_store_id,
+        )
+        self.online_store_sql_client.init_prepared_statement(
+            entity,
+            batch,
+            external,
+            inference_helper_columns,
+            options=options,
+        )
 
     def get_feature_vector(
         self,
@@ -190,7 +227,10 @@ class VectorServer:
         else:  # aiomysql branch
             # get result row
             _logger.info("get_feature_vector Online SQL client")
-            serving_vector = self._vector_result(entry, self._prepared_statements)
+            serving_vector = self.get_single_feature_vector(entry)
+            # Deserialize complex features
+            serving_vector = self.deserialize_complex_features(serving_vector)
+
             # Add the passed features
             serving_vector.update(passed_features)
 
@@ -246,7 +286,16 @@ class VectorServer:
             batch_results, _ = self._batch_vector_results(
                 entries, self._prepared_statements
             )
+            # Deserialize complex features
+            batch_results = list(
+                map(
+                    lambda row_dict: self.deserialize_complex_features(row_dict),
+                    batch_results,
+                )
+            )
+
             # apply passed features to each batch result
+            _logger.debug("Updating with passed features")
             for vector_index, pf in enumerate(passed_features):
                 batch_results[vector_index].update(pf)
 
@@ -557,6 +606,10 @@ class VectorServer:
     @property
     def default_online_store_client(self) -> str:
         return self._default_online_store_client
+
+    @property
+    def online_store_sql_client(self) -> "online_store_sql_client.OnlineStoreSqlClient":
+        return self._online_store_sql_client
 
     @default_online_store_client.setter
     def default_online_store_client(self, default_online_store_client: str):

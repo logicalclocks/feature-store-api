@@ -16,7 +16,7 @@
 import asyncio
 import logging
 import re
-from typing import Union
+from typing import Any, Dict, Optional, Union
 
 from hsfs import feature_view, training_dataset, util
 from hsfs.core import feature_view_api, storage_connector_api, training_dataset_api
@@ -52,7 +52,7 @@ class OnlineStoreSqlClient:
         batch: bool,
         external: bool,
         inference_helper_columns: bool,
-        options=None,
+        options: Optional[Dict[str, Any]] = None,
     ) -> None:
         if isinstance(entity, feature_view.FeatureView):
             _logger.debug(
@@ -204,7 +204,9 @@ class OnlineStoreSqlClient:
             prefix_by_serving_index,
         )
 
-    def _vector_result(self, entry, prepared_statement_objects):
+    def get_single_feature_vector(
+        self, entry, prepared_statement_objects
+    ) -> Dict[str, Any]:
         """Retrieve single vector with parallel queries using aiomysql engine."""
 
         if all([isinstance(val, list) for val in entry.values()]):
@@ -244,14 +246,20 @@ class OnlineStoreSqlClient:
             )
 
         # run all the prepared statements in parallel using aiomysql engine
+        _logger.debug(
+            f"Executing prepared statements for serving vector with entries: {bind_entries}"
+        )
         loop = asyncio.get_event_loop()
         results_dict = loop.run_until_complete(
             self._execute_prep_statements(prepared_statement_execution, bind_entries)
         )
+        _logger.debug(f"Retrieved feature vectors: {results_dict}")
 
+        _logger.debug("Constructing serving vector from results")
         for key in results_dict:
             for row in results_dict[key]:
-                result_dict = self.deserialize_complex_features(dict(row))
+                _logger.debug(f"Processing row: {row} for prepared statement {key}")
+                result_dict = dict(row)
                 serving_vector.update(result_dict)
 
         return serving_vector
@@ -316,8 +324,8 @@ class OnlineStoreSqlClient:
             # iterate over results by index of the prepared statement
             for row in parallel_results[prepared_statement_index]:
                 row_dict = dict(row)
-                # can primary key be complex feature?
-                result_dict = self.deserialize_complex_features(row_dict)
+                # can primary key be complex feature? No, not supported.
+                result_dict = row_dict
                 # note: should used serialized value
                 # as it is from users' input
                 statement_results[self._get_result_key(prefix_features, row_dict)] = (

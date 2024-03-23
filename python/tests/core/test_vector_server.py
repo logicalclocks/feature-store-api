@@ -28,8 +28,8 @@ def init_kwargs_fixtures(fv: feature_view.FeatureView):
     }
 
 
-init_prepared_statement_mock_path = (
-    "hsfs.core.vector_server.VectorServer.init_prepared_statement"
+setup_online_store_sql_client_mock_path = (
+    "hsfs.core.vector_server.VectorServer.setup_online_store_sql_client"
 )
 
 
@@ -97,13 +97,13 @@ class TestVectorServer:
         # Assert
         assert batch_server._online_store_rest_client_engine is not None
         assert single_server._online_store_rest_client_engine is not None
-        assert batch_server._prepared_statements is None
-        assert single_server._prepared_statements is None
+        assert batch_server._online_store_sql_client is None
+        assert single_server._online_store_sql_client is None
         assert init_online_store_rest_client.call_count == 2
 
     def test_default_init_serving_is_sql(self, mocker, fv, single_server, batch_server):
         # Arrange
-        set_sql_client_mock = mocker.patch(init_prepared_statement_mock_path)
+        set_sql_client_mock = mocker.patch(setup_online_store_sql_client_mock_path)
 
         # Act
         single_server.init_serving(
@@ -122,7 +122,7 @@ class TestVectorServer:
         self, mocker, monkeypatch, fv, single_server, batch_server
     ):
         # Arrange
-        set_sql_client_mock = mocker.patch(init_prepared_statement_mock_path)
+        set_sql_client_mock = mocker.patch(setup_online_store_sql_client_mock_path)
         init_online_store_rest_client = mocker.Mock()
         monkeypatch.setattr(
             hsfs.client.online_store_rest_client,
@@ -156,7 +156,7 @@ class TestVectorServer:
 
     def test_init_serving_sql_client(self, mocker, fv, single_server, batch_server):
         # Arrange
-        set_sql_client_mock = mocker.patch(init_prepared_statement_mock_path)
+        set_sql_client_mock = mocker.patch(setup_online_store_sql_client_mock_path)
 
         # Act
         single_server.init_serving(
