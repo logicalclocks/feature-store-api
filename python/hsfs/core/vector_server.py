@@ -101,7 +101,7 @@ class VectorServer:
 
     def init_serving(
         self,
-        entity: "feature_view.FeatureView",
+        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
         batch: bool,
         external: bool = None,
         inference_helper_columns: bool = False,
