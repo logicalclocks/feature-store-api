@@ -1,5 +1,5 @@
 #
-#   Copyright 2023 Logical Clocks AB
+#   Copyright 2024 Hopsworks AB
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -444,7 +444,7 @@ class OnlineStoreSqlClient:
         return complete, fg_entry
 
     @staticmethod
-    def _parametrize_query(name, query_online):
+    def _parametrize_query(name: str, query_online: str) -> str:
         # Now we have ordered pk_names, iterate over it and replace `?` with `:feature_name` one by one.
         # Regex `"^(.*?)\?"` will identify 1st occurrence of `?` in the sql string and replace it with provided
         # feature name, e.g. `:feature_name`:. As we iteratively update `query_online` we are always aiming to
@@ -588,3 +588,22 @@ class OnlineStoreSqlClient:
         self._batch_helper_column_prepared_statements = (
             batch_helper_column_prepared_statements
         )
+
+    @property
+    def prefix_by_serving_index(self) -> Dict[int, str]:
+        """The dict object of prefixes as values and keys as indices of positions in the query for
+        selecting features from feature groups of the training dataset.
+        """
+        return self._prefix_by_serving_index
+
+    @prefix_by_serving_index.setter
+    def prefix_by_serving_index(self, prefix_by_serving_index: Dict[int, str]) -> None:
+        self._prefix_by_serving_index = prefix_by_serving_index
+
+    @property
+    def training_dataset_api(self) -> training_dataset_api.TrainingDatasetApi:
+        return self._training_dataset_api
+
+    @property
+    def feature_view_api(self) -> feature_view_api.FeatureViewApi:
+        return self._feature_view_api
