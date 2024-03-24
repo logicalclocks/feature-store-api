@@ -78,45 +78,59 @@ class TestVectorServer:
             **init_kwargs_fixtures(fv), features=fv._features
         )
 
-    @pytest.fixture
+    @pytest.fixture(scope="function")
     def base_feature_names(self):
         return ["int-like", "string-like", "datetime-like", "float-like"]
 
-    @pytest.fixture
-    def complete_feature_names(self, base_feature_names):
-        return base_feature_names + [
-            "list-like",
+    @pytest.fixture(scope="function")
+    def complete_feature_names(self):
+        return [
+            "int-like",
+            "string-like",
+            "datetime-like",
+            "float-like",
             "dict-like",
             "long-like",
             "empty-like",
             "bool-like",
         ]
 
-    @pytest.fixture
-    def base_feature_name_with_embedding(self, complete_feature_names):
-        return complete_feature_names + ["embedding"]
+    @pytest.fixture(scope="function")
+    def base_feature_name_with_embedding(self):
+        return [
+            "int-like",
+            "string-like",
+            "datetime-like",
+            "float-like",
+            "embedding-like",
+        ]
 
-    @pytest.fixture
+    @pytest.fixture(scope="function")
+    def base_feature_name_with_list(self):
+        return ["int-like", "string-like", "datetime-like", "float-like", "list-like"]
+
+    @pytest.fixture(scope="function")
     def single_base_feature_vectorz(self):
         return [1, "string", datetime.datetime.now(), 3.0]
 
-    @pytest.fixture
-    def single_complete_feature_vectorz(self, single_base_feature_vectorz):
-        single_base_feature_vectorz.extend([[2, 1], {"a": 1}, 1e12, None, True])
-        return single_base_feature_vectorz
+    @pytest.fixture(scope="function")
+    def single_complete_feature_vectorz(self):
+        now = datetime.datetime.now()
+        return [1, "str", now, 3.0, {"a": 1}, 1e12, None, True]
 
-    @pytest.fixture
-    def single_feature_vectorz_with_embedding(self, single_base_feature_vectorz):
-        single_base_feature_vectorz.append(np.array([1, 2, 3]))
-        return single_base_feature_vectorz
+    @pytest.fixture(scope="function")
+    def single_feature_vectorz_with_embedding(self):
+        return [1, "string", datetime.datetime.now(), 3.0, np.array([1, 2, 3])]
 
-    @pytest.fixture
-    def single_feature_vectorz_partial(self, single_base_feature_vectorz):
-        single_base_feature_vectorz[1] = None
-        single_base_feature_vectorz.extend([None, None, 1e12, None, None])
-        return single_base_feature_vectorz
+    @pytest.fixture(scope="function")
+    def single_feature_vectorz_with_list(self):
+        return [1, "string", datetime.datetime.now(), 3.0, [1, 2, 3]]
 
-    @pytest.fixture
+    @pytest.fixture(scope="function")
+    def single_feature_vectorz_partial(self):
+        return [1, None, datetime.datetime.now(), 3.0, None, 1e12, None, None]
+
+    @pytest.fixture(scope="function")
     def batch_base_feature_vectorz(self):
         return [
             [1, "string", datetime.datetime.now(), 3.0],
@@ -124,24 +138,34 @@ class TestVectorServer:
         ]
 
     @pytest.fixture
-    def batch_complete_feature_vectorz(self, batch_base_feature_vectorz):
-        batch_base_feature_vectorz[0].extend([[2, 1], {"a": 1}, 1e12, None, True])
-        batch_base_feature_vectorz[1].extend([[1, 2], {"b": 2}, 1e13, 2, False])
-        return batch_base_feature_vectorz
+    def batch_complete_feature_vectorz(self):
+        now, today = datetime.datetime.now(), datetime.datetime.today()
+        return [
+            [1, "string", now, 3.0, {"a": 1}, 1e12, None, True],
+            [2, "string-ish", today, 3.0, {"b": 2}, 1e13, 2, False],
+        ]
 
     @pytest.fixture
-    def batch_feature_vectorz_with_embedding(self, batch_base_feature_vectorz):
-        batch_base_feature_vectorz[0].append(np.array([1, 2, 3]))
-        batch_base_feature_vectorz[1].append(np.array([4, 5, 6]))
-        return batch_base_feature_vectorz
+    def batch_feature_vectorz_with_embedding(self):
+        return [
+            [1, "string", datetime.datetime.now(), 3.0, np.array([1, 2, 3])],
+            [2, "string-ish", datetime.datetime.today(), 3.0, np.array([4, 5, 6])],
+        ]
 
     @pytest.fixture
-    def batch_feature_vectorz_partial(self, batch_base_feature_vectorz):
-        batch_base_feature_vectorz[0][1] = None
-        batch_base_feature_vectorz.extend([None, None, 1e12, None, None])
-        batch_base_feature_vectorz[1][1] = None
-        batch_base_feature_vectorz[1].extend([None, None, 1e13, None, None])
-        return batch_base_feature_vectorz
+    def batch_feature_vectorz_with_list(self):
+        return [
+            [1, "string", datetime.datetime.now(), 3.0, [1, 2, 3]],
+            [2, "string-ish", datetime.datetime.today(), 3.0, [4, 5, 6]],
+        ]
+
+    @pytest.fixture
+    def batch_feature_vectorz_partial(self):
+        now, today = datetime.datetime.now(), datetime.datetime.today()
+        return [
+            [1, None, now, 3.0, None, 1e12, None, None],
+            [2, None, today, 3.0, None, 1e13, None, None],
+        ]
 
     def test_init_online_store_rest_client(
         self, mocker, monkeypatch, fv, single_server, batch_server
@@ -427,10 +451,10 @@ class TestVectorServer:
         [
             "single_base_feature_vectorz",
             "single_complete_feature_vectorz",
-            "single_feature_vectorz_with_embedding",
             "single_feature_vectorz_partial",
+            # embedding and list are not supported when converting to numpy
         ],
-        ids=["base", "complete", "embedding", "partial"],
+        ids=["base", "complete", "partial"],
     )
     def test_handle_single_feature_vector_return_type_numpy(
         self, request, single_server, feature_vectorz
@@ -459,8 +483,9 @@ class TestVectorServer:
                 "base_feature_name_with_embedding",
             ),
             ("single_feature_vectorz_partial", "complete_feature_names"),
+            ("single_feature_vectorz_with_list", "base_feature_name_with_list"),
         ],
-        ids=["base", "complete", "embedding", "partial"],
+        ids=["base", "complete", "embedding", "partial", "list"],
     )
     def test_handle_feature_vector_return_type_pandas(
         self, request, single_server, feature_vectorz, column_names
@@ -494,8 +519,9 @@ class TestVectorServer:
                 "base_feature_name_with_embedding",
             ),
             ("single_feature_vectorz_partial", "complete_feature_names"),
+            ("single_feature_vectorz_with_list", "base_feature_name_with_list"),
         ],
-        ids=["base", "complete", "embedding", "partial"],
+        ids=["base", "complete", "embedding", "partial", "list"],
     )
     def test_handle_feature_vector_return_type_polars(
         self, request, single_server, feature_vectorz, column_names
@@ -520,7 +546,9 @@ class TestVectorServer:
             schema=single_server._feature_vector_col_name,
             orient="row",
         )
-        assert result.frame_equal(expected_df)
+
+        # To avoid not implemented error
+        assert result.to_pandas().equals(expected_df.to_pandas())
 
     @pytest.mark.parametrize(
         "feature_vectorz, batch, inference_helper",
@@ -550,7 +578,9 @@ class TestVectorServer:
             "batch_complete_feature_vectorz",
             "batch_feature_vectorz_with_embedding",
             "batch_feature_vectorz_partial",
+            "batch_feature_vectorz_with_list",
         ],
+        ids=["base", "complete", "embedding", "partial", "list"],
     )
     def test_handle_batch_feature_vector_return_type_list(
         self, request, batch_server, feature_vectorz
@@ -587,10 +617,10 @@ class TestVectorServer:
         [
             "batch_base_feature_vectorz",
             "batch_complete_feature_vectorz",
-            "batch_feature_vectorz_with_embedding",
             "batch_feature_vectorz_partial",
+            # embedding and list are not supported when converting to numpy
         ],
-        ids=["base", "complete", "embedding", "partial"],
+        ids=["base", "complete", "partial"],
     )
     def test_handle_batch_feature_vector_return_type_numpy(
         self, request, batch_server, feature_vectorz
@@ -619,8 +649,9 @@ class TestVectorServer:
                 "base_feature_name_with_embedding",
             ),
             ("batch_feature_vectorz_partial", "complete_feature_names"),
+            ("batch_feature_vectorz_with_list", "base_feature_name_with_list"),
         ],
-        ids=["base", "complete", "embedding", "partial"],
+        ids=["base", "complete", "embedding", "partial", "list"],
     )
     def test_handle_batch_feature_vector_return_type_pandas(
         self, request, batch_server, feature_vectorz, column_names
@@ -653,8 +684,9 @@ class TestVectorServer:
                 "base_feature_name_with_embedding",
             ),
             ("batch_feature_vectorz_partial", "complete_feature_names"),
+            ("batch_feature_vectorz_with_list", "base_feature_name_with_list"),
         ],
-        ids=["base", "complete", "embedding", "partial"],
+        ids=["base", "complete", "embedding", "partial", "list"],
     )
     def test_handle_batch_feature_vector_return_type_polars(
         self, request, batch_server, feature_vectorz, column_names
@@ -676,4 +708,29 @@ class TestVectorServer:
         expected_df = pl.DataFrame(
             feature_vectorz, schema=batch_server._feature_vector_col_name
         )
-        assert result.frame_equal(expected_df)
+
+        # To avoid not implemented error
+        assert result.to_pandas().equals(expected_df.to_pandas())
+
+    @pytest.mark.parametrize(
+        "feature_vectorz, batch",
+        [
+            ("single_feature_vectorz_with_list", False),
+            ("single_feature_vectorz_with_embedding", False),
+            ("batch_feature_vectorz_with_list", True),
+            ("batch_feature_vectorz_with_embedding", True),
+        ],
+    )
+    def test_handle_feature_vector_return_type_numpy_with_list_or_array(
+        self, request, batch_server, feature_vectorz, batch
+    ):
+        # Arrange
+        inference_helper = False
+        return_type = "numpy"
+        feature_vectorz = request.getfixturevalue(feature_vectorz)
+
+        # Act
+        with pytest.raises(ValueError):
+            batch_server.handle_feature_vector_return_type(
+                feature_vectorz, batch, inference_helper, return_type
+            )
