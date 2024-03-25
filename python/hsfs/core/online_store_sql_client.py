@@ -19,6 +19,7 @@ import re
 from typing import Any, Dict, List, Optional, Union
 
 from hsfs import feature_view, training_dataset, util
+from hsfs.constructor import serving_prepared_statement
 from hsfs.core import feature_view_api, storage_connector_api, training_dataset_api
 from hsfs.serving_key import ServingKey
 from sqlalchemy import bindparam, exc, sql, text
@@ -28,8 +29,9 @@ _logger = logging.getLogger(__name__)
 
 
 class OnlineStoreSqlClient:
-    def init(self, feature_store_id: id):
+    def __init__(self, feature_store_id: id):
         _logger.info("Initializing OnlineStoreSqlClient")
+        self._feature_store_id = feature_store_id
         self._prefix_by_serving_index = None
         self._prepared_statement_engine = None
         self._prepared_statements = None
@@ -554,6 +556,10 @@ class OnlineStoreSqlClient:
         return results_dict
 
     @property
+    def feature_store_id(self) -> int:
+        return self._feature_store_id
+
+    @property
     def prepared_statement_engine(self):
         """JDBC connection engine to retrieve connections to online features store from."""
         return self._prepared_statement_engine
@@ -563,40 +569,63 @@ class OnlineStoreSqlClient:
         self._prepared_statement_engine = prepared_statement_engine
 
     @property
-    def prepared_statements(self):
+    def prepared_statements(
+        self,
+    ) -> Dict[int, "serving_prepared_statement.ServingPreparedStatement"]:
         """The dict object of prepared_statements as values and keys as indices of positions in the query for
         selecting features from feature groups of the training dataset. Used for single vector retrieval.
         """
         return self._prepared_statements
 
     @prepared_statements.setter
-    def prepared_statements(self, prepared_statements):
+    def prepared_statements(
+        self,
+        prepared_statements: Dict[
+            int, "serving_prepared_statement.ServingPreparedStatement"
+        ],
+    ) -> None:
         self._prepared_statements = prepared_statements
 
     @property
-    def batch_prepared_statements(self):
+    def batch_prepared_statements(
+        self,
+    ) -> Dict[int, "serving_prepared_statement.ServingPreparedStatement"]:
         """The dict object of prepared_statements as values and keys as indices of positions in the query for
         selecting features from feature groups of the training dataset. Used for batch retrieval.
         """
         return self._batch_prepared_statements
 
     @batch_prepared_statements.setter
-    def batch_prepared_statements(self, batch_prepared_statements):
+    def batch_prepared_statements(
+        self,
+        batch_prepared_statements: Dict[
+            int, "serving_prepared_statement.ServingPreparedStatement"
+        ],
+    ) -> None:
         self._batch_prepared_statements = batch_prepared_statements
 
     @property
-    def helper_column_prepared_statements(self):
+    def helper_column_prepared_statements(
+        self,
+    ) -> Optional[Dict[int, "serving_prepared_statement.ServingPreparedStatement"]]:
         """The dict object of prepared_statements as values and keys as indices of positions in the query for
         selecting features from feature groups of the training dataset. Used for single vector retrieval.
         """
         return self._helper_column_prepared_statements
 
     @helper_column_prepared_statements.setter
-    def helper_column_prepared_statements(self, helper_column_prepared_statements):
+    def helper_column_prepared_statements(
+        self,
+        helper_column_prepared_statements: Dict[
+            int, "serving_prepared_statement.ServingPreparedStatement"
+        ],
+    ) -> None:
         self._helper_column_prepared_statements = helper_column_prepared_statements
 
     @property
-    def batch_helper_column_prepared_statements(self):
+    def batch_helper_column_prepared_statements(
+        self,
+    ) -> Optional[Dict[int, "serving_prepared_statement.ServingPreparedStatement"]]:
         """The dict object of prepared_statements as values and keys as indices of positions in the query for
         selecting features from feature groups of the training dataset. Used for single vector retrieval.
         """
@@ -604,8 +633,11 @@ class OnlineStoreSqlClient:
 
     @batch_helper_column_prepared_statements.setter
     def batch_helper_column_prepared_statements(
-        self, batch_helper_column_prepared_statements
-    ):
+        self,
+        batch_helper_column_prepared_statements: Dict[
+            int, "serving_prepared_statement.ServingPreparedStatement"
+        ],
+    ) -> None:
         self._batch_helper_column_prepared_statements = (
             batch_helper_column_prepared_statements
         )
@@ -622,7 +654,7 @@ class OnlineStoreSqlClient:
         self._prefix_by_serving_index = prefix_by_serving_index
 
     @property
-    def _serving_key_by_serving_index(
+    def serving_key_by_serving_index(
         self,
     ) -> Dict[int, List["ServingKey"]]:
         """The dict object of serving keys as values and keys as indices of positions in the query for
@@ -631,7 +663,7 @@ class OnlineStoreSqlClient:
         return self._serving_key_by_serving_index
 
     @property
-    def _feature_name_order_by_psp(self) -> Dict[int, Dict[str, int]]:
+    def feature_name_order_by_psp(self) -> Dict[int, Dict[str, int]]:
         """The dict object of feature names as values and keys as indices of positions in the query for
         selecting features from feature groups of the training dataset.
         """
