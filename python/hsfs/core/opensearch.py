@@ -24,6 +24,9 @@ from hsfs.core.opensearch_api import OpenSearchApi
 from retrying import retry
 
 
+def _is_timeout(exception):
+    return isinstance(exception, urllib3.exceptions.ReadTimeoutError)
+
 class OpenSearchClientSingleton:
     _instance = None
 
@@ -72,10 +75,6 @@ class OpenSearchClientSingleton:
         self._opensearch_client.close()
         self._opensearch_client = None
         self._setup_opensearch_client()
-
-    @classmethod
-    def _is_timeout(cls, exception):
-        return isinstance(exception, urllib3.exceptions.ReadTimeoutError)
 
     @retry(
         wait_exponential_multiplier=1000,
