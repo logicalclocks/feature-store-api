@@ -327,7 +327,9 @@ class OnlineStoreSqlClient:
 
     def _batch_vector_results(self, entries, prepared_statement_objects):
         """Execute prepared statements in parallel using aiomysql engine."""
-
+        _logger.info(
+            f"Starting batch vector retrieval for {len(entries)} entries via aiomysql engine."
+        )
         # create dict object that will have of order of the vector as key and values as
         # vector itself to stitch them correctly if there are multiple feature groups involved. At this point we
         # expect that backend will return correctly ordered vectors.
@@ -336,6 +338,7 @@ class OnlineStoreSqlClient:
         serving_keys_all_fg = []
         prepared_stmts_to_execute = {}
         # construct the list of entry values for binding to query
+        _logger.debug(f"Parametrize prepared statements with entry values: {entries}")
         for prepared_statement_index in prepared_statement_objects:
             # prepared_statement_index include fg with label only
             # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
@@ -363,38 +366,56 @@ class OnlineStoreSqlClient:
                     entries,
                 )
             )
+            _logger.debug(
+                f"Prepared statement {prepared_statement_index} with entries: {entry_values_tuples}"
+            )
             entry_values[prepared_statement_index] = {"batch_ids": entry_values_tuples}
 
+        _logger.debug(
+            f"Executing prepared statements for batch vector with entries: {entry_values}"
+        )
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
         parallel_results = loop.run_until_complete(
             self._execute_prep_statements(prepared_stmts_to_execute, entry_values)
         )
 
+        _logger.debug(f"Retrieved feature vectors: {parallel_results}, stitching them.")
         # construct the results
         for prepared_statement_index in prepared_stmts_to_execute:
             statement_results = {}
             serving_keys = self._serving_key_by_serving_index[prepared_statement_index]
             serving_keys_all_fg += serving_keys
-            # Use prefix from prepare statement because prefix from serving key is collision adjusted.
             prefix_features = [
                 (self._prefix_by_serving_index[prepared_statement_index] or "")
                 + sk.feature_name
                 for sk in self._serving_key_by_serving_index[prepared_statement_index]
             ]
-            # iterate over results by index of the prepared statement
+            _logger.debug(
+                f"Use prefix from prepare statement because prefix from serving key is collision adjusted {prefix_features}."
+            )
+            _logger.debug("iterate over results by index of the prepared statement")
             for row in parallel_results[prepared_statement_index]:
+                _logger.debug(f"Processing row: {row}")
                 row_dict = dict(row)
                 # can primary key be complex feature? No, not supported.
                 result_dict = row_dict
-                # note: should used serialized value
-                # as it is from users' input
+                _logger.debug(
+                    f"Add result to statement results: {self._get_result_key(prefix_features, row_dict)} : {result_dict}"
+                )
                 statement_results[self._get_result_key(prefix_features, row_dict)] = (
                     result_dict
                 )
 
-            # add partial results to the global results
+            _logger.debug(f"Add partial results to batch results: {statement_results}")
             for i, entry in enumerate(entries):
+                _logger.debug(
+                    "Processing entry %s : %s",
+                    entry,
+                    statement_results.get(
+                        self._get_result_key_serving_key(serving_keys, entry), {}
+                    ),
+                )
                 batch_results[i].update(
                     statement_results.get(
                         self._get_result_key_serving_key(serving_keys, entry), {}

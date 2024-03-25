@@ -21,6 +21,7 @@ import re
 import threading
 import time
 from datetime import date, datetime, timezone
+from typing import Optional
 from urllib.parse import urljoin, urlparse
 
 import numpy as np
@@ -231,7 +232,7 @@ def get_delta_datestr_from_timestamp(timestamp):
     ]
 
 
-def convert_event_time_to_timestamp(event_time):
+def convert_event_time_to_timestamp(event_time) -> Optional[int]:
     if not event_time:
         return None
     if isinstance(event_time, str):
