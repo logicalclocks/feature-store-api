@@ -16,10 +16,12 @@
 
 import logging
 import re
+import urllib3
 
 from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException, VectorDatabaseException
 from hsfs.core.opensearch_api import OpenSearchApi
+from retrying import retry
 
 
 class OpenSearchClientSingleton:
@@ -71,6 +73,14 @@ class OpenSearchClientSingleton:
         self._opensearch_client = None
         self._setup_opensearch_client()
 
+    def _is_timeout(self, exception):
+        return isinstance(exception, urllib3.exceptions.ReadTimeoutError)
+
+    @retry(
+        wait_exponential_multiplier=1000,
+        stop_max_attempt_number=3,
+        retry_on_exception=_is_timeout,
+    )
     def search(self, index=None, body=None):
         try:
             return self._opensearch_client.search(body=body, index=index)
