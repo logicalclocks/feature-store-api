@@ -114,20 +114,19 @@ class TestVectorServer:
         return [1, "string", datetime.datetime.now(), 3.0]
 
     @pytest.fixture(scope="function")
-    def single_complete_feature_vectorz(self):
-        now = datetime.datetime.now()
-        return [1, "str", now, 3.0, {"a": 1}, 1e12, None, True]
+    def single_complete_feature_vectorz(self, single_base_feature_vectorz):
+        return single_base_feature_vectorz + [{"a": 1}, 1e12, None, True]
 
     @pytest.fixture(scope="function")
-    def single_feature_vectorz_with_embedding(self):
-        return [1, "string", datetime.datetime.now(), 3.0, np.array([1, 2, 3])]
+    def single_feature_vectorz_with_embedding(self, single_base_feature_vectorz):
+        return single_base_feature_vectorz + [np.array([1, 2, 3])]
 
     @pytest.fixture(scope="function")
-    def single_feature_vectorz_with_list(self):
-        return [1, "string", datetime.datetime.now(), 3.0, [1, 2, 3]]
+    def single_feature_vectorz_with_list(self, single_base_feature_vectorz):
+        return single_base_feature_vectorz + [[1, 2, 3]]
 
     @pytest.fixture(scope="function")
-    def single_feature_vectorz_partial(self):
+    def single_feature_vectorz_partial(self, single_base_feature_vectorz):
         return [1, None, datetime.datetime.now(), 3.0, None, 1e12, None, None]
 
     @pytest.fixture(scope="function")
@@ -138,34 +137,35 @@ class TestVectorServer:
         ]
 
     @pytest.fixture
-    def batch_complete_feature_vectorz(self):
-        now, today = datetime.datetime.now(), datetime.datetime.today()
+    def batch_complete_feature_vectorz(self, batch_base_feature_vectorz):
         return [
-            [1, "string", now, 3.0, {"a": 1}, 1e12, None, True],
-            [2, "string-ish", today, 3.0, {"b": 2}, 1e13, 2, False],
+            batch_base_feature_vectorz[0] + [{"a": 1}, 1e12, None, True],
+            batch_base_feature_vectorz[1] + [{"b": 2}, 1e13, 2, False],
         ]
 
     @pytest.fixture
-    def batch_feature_vectorz_with_embedding(self):
+    def batch_feature_vectorz_with_embedding(self, batch_base_feature_vectorz):
         return [
-            [1, "string", datetime.datetime.now(), 3.0, np.array([1, 2, 3])],
-            [2, "string-ish", datetime.datetime.today(), 3.0, np.array([4, 5, 6])],
+            batch_base_feature_vectorz[0] + [np.array([1, 2, 3])],
+            batch_base_feature_vectorz[1] + [np.array([4, 5, 6])],
         ]
 
     @pytest.fixture
-    def batch_feature_vectorz_with_list(self):
+    def batch_feature_vectorz_with_list(self, batch_base_feature_vectorz):
         return [
-            [1, "string", datetime.datetime.now(), 3.0, [1, 2, 3]],
-            [2, "string-ish", datetime.datetime.today(), 3.0, [4, 5, 6]],
+            batch_base_feature_vectorz[0] + [[1, 2, 3]],
+            batch_base_feature_vectorz[1] + [[4, 5, 6]],
         ]
 
     @pytest.fixture
-    def batch_feature_vectorz_partial(self):
-        now, today = datetime.datetime.now(), datetime.datetime.today()
-        return [
-            [1, None, now, 3.0, None, 1e12, None, None],
-            [2, None, today, 3.0, None, 1e13, None, None],
+    def batch_feature_vectorz_partial(self, batch_base_feature_vectorz):
+        batch_with_partials = [
+            batch_base_feature_vectorz[0] + [None, 1e12, None, None],
+            batch_base_feature_vectorz[1] + [None, 1e13, None, None],
         ]
+        batch_with_partials[0][1] = None
+        batch_with_partials[1][1] = None
+        return batch_with_partials
 
     def test_init_online_store_rest_client(
         self, mocker, monkeypatch, fv, single_server, batch_server

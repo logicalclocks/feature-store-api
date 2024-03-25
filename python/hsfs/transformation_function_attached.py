@@ -12,6 +12,8 @@
 #  limitations under the License.
 #
 
+from typing import Any, Dict, List, Optional, Union
+
 import humps
 from hsfs import transformation_function as transformation_fn
 
@@ -19,12 +21,14 @@ from hsfs import transformation_function as transformation_fn
 class TransformationFunctionAttached:
     def __init__(
         self,
-        name,
-        transformation_function,
-        type=None,
-        items=None,
-        count=None,
-        href=None,
+        name: str,
+        transformation_function: Union[
+            Dict[str, Any], "transformation_fn.TransformationFunction"
+        ],
+        type: Optional[str] = None,
+        items: Optional[Dict[str, Any]] = None,
+        count: Optional[int] = None,
+        href: Optional[str] = None,
         **kwargs,
     ):
         self._name = name
@@ -37,7 +41,11 @@ class TransformationFunctionAttached:
         )
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(
+        cls, json_dict: Dict[str, Any]
+    ) -> Union[
+        "TransformationFunctionAttached", List["TransformationFunctionAttached"]
+    ]:
         json_decamelized = humps.decamelize(json_dict)
         if "count" in json_decamelized:
             if json_decamelized["count"] == 0:
@@ -46,25 +54,28 @@ class TransformationFunctionAttached:
         else:
             return cls(**json_decamelized)
 
-    def update_from_response_json(self, json_dict):
+    def update_from_response_json(
+        self, json_dict: Dict[str, Any]
+    ) -> "TransformationFunctionAttached":
         json_decamelized = humps.decamelize(json_dict)
         self.__init__(**json_decamelized)
         return self
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Set feature name."""
         return self._name
 
     @name.setter
-    def name(self, name):
+    def name(self, name: str) -> None:
         self._name = name
 
     @property
-    def transformation_function(self):
-        """Set transformation functions."""
+    def transformation_function(self) -> "transformation_fn.TransformationFunction":
         return self._transformation_function
 
     @transformation_function.setter
-    def transformation_function(self, transformation_function):
+    def transformation_function(
+        self, transformation_function: "transformation_fn.TransformationFunction"
+    ) -> None:
         self._transformation_function = transformation_function

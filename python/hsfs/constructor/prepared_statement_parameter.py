@@ -14,44 +14,56 @@
 #
 
 import json
+from typing import Any, Dict, Optional
 
 import humps
 from hsfs import util
 
 
 class PreparedStatementParameter:
-    def __init__(self, name=None, index=None, type=None, href=None, **kwargs):
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        index: Optional[int] = None,
+        type: Optional[str] = None,
+        href: Optional[str] = None,
+        **kwargs,
+    ):
         self._name = name
         self._index = index
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(
+        cls, json_dict: Dict[str, Any]
+    ) -> "PreparedStatementParameter":
         json_decamelized = humps.decamelize(json_dict)
         return cls(**json_decamelized)
 
-    def update_from_response_json(self, json_dict):
+    def update_from_response_json(
+        self, json_dict: Dict[str, Any]
+    ) -> "PreparedStatementParameter":
         json_decamelized = humps.decamelize(json_dict)
         self.__init__(**json_decamelized)
         return self
 
-    def json(self):
+    def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {"name": self._name, "index": self._index}
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def index(self):
+    def index(self) -> int:
         return self._index
 
     @name.setter
-    def name(self, name):
+    def name(self, name: str):
         self._name = name
 
     @index.setter
-    def prepared_statement_index(self, index):
+    def prepared_statement_index(self, index: int):
         self._index = index

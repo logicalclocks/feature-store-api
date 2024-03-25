@@ -12,8 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-
 import json
+from typing import Any, Dict, List, Optional
 
 import humps
 from hsfs import util
@@ -23,15 +23,17 @@ from hsfs.constructor import prepared_statement_parameter
 class ServingPreparedStatement:
     def __init__(
         self,
-        feature_group_id=None,
-        prepared_statement_index=None,
-        prepared_statement_parameters=None,
-        query_online=None,
-        prefix=None,
-        type=None,
-        items=None,
-        count=None,
-        href=None,
+        feature_group_id: Optional[int] = None,
+        prepared_statement_index: Optional[int] = None,
+        prepared_statement_parameters: Optional[
+            List["prepared_statement_parameter.PreparedStatementParameter"]
+        ] = None,
+        query_online: Optional[str] = None,
+        prefix: Optional[str] = None,
+        type: Optional[str] = None,
+        items: Optional[List[Dict[str, Any]]] = None,
+        count: Optional[int] = None,
+        href: Optional[str] = None,
         **kwargs,
     ):
         self._feature_group_id = feature_group_id
@@ -46,7 +48,9 @@ class ServingPreparedStatement:
         self._prefix = prefix
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(
+        cls, json_dict: Dict[str, Any]
+    ) -> List["ServingPreparedStatement"]:
         json_decamelized = humps.decamelize(json_dict)
         if json_decamelized["count"] == 0:
             return []
@@ -58,10 +62,10 @@ class ServingPreparedStatement:
         self.__init__(**json_decamelized)
         return self
 
-    def json(self):
+    def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "preparedStatementIndex": self._prepared_statement_index,
             "preparedStatementParameters": self._prepared_statement_parameters,
@@ -69,41 +73,48 @@ class ServingPreparedStatement:
         }
 
     @property
-    def feature_group_id(self):
+    def feature_group_id(self) -> Optional[int]:
         return self._feature_group_id
 
     @property
-    def prepared_statement_index(self):
+    def prepared_statement_index(self) -> Optional[int]:
         return self._prepared_statement_index
 
     @property
-    def prepared_statement_parameters(self):
+    def prepared_statement_parameters(
+        self,
+    ) -> List["prepared_statement_parameter.PreparedStatementParameter"]:
         return self._prepared_statement_parameters
 
     @property
-    def query_online(self):
+    def query_online(self) -> Optional[str]:
         return self._query_online
 
     @property
-    def prefix(self):
+    def prefix(self) -> Optional[str]:
         return self._prefix
 
     @feature_group_id.setter
-    def feature_group_id(self, feature_group_id):
+    def feature_group_id(self, feature_group_id: Optional[int]):
         self._feature_group_id = feature_group_id
 
     @prepared_statement_index.setter
-    def prepared_statement_index(self, prepared_statement_index):
+    def prepared_statement_index(self, prepared_statement_index: Optional[int]):
         self._prepared_statement_index = prepared_statement_index
 
     @prepared_statement_parameters.setter
-    def prepared_statement_parameters(self, prepared_statement_parameters):
+    def prepared_statement_parameters(
+        self,
+        prepared_statement_parameters: List[
+            "prepared_statement_parameter.PreparedStatementParameter"
+        ],
+    ):
         self._prepared_statement_parameters = prepared_statement_parameters
 
     @query_online.setter
-    def query_online(self, query_online):
+    def query_online(self, query_online: Optional[str]):
         self._query_online = query_online
 
     @prefix.setter
-    def prefix(self, prefix):
+    def prefix(self, prefix: Optional[str]):
         self._prefix = prefix

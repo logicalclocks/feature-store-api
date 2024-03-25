@@ -15,7 +15,7 @@
 #
 import io
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 import avro.io
 import avro.schema
@@ -491,13 +491,12 @@ class VectorServer:
                 row_dict[feature_name] = schema.read(decoder)
         return row_dict
 
-    def _generate_vector(self, result_dict: Dict[str, Any], fill_na=False):
-        # feature values
-        vector = []
+    def _generate_vector(self, result_dict: Dict[str, Any], fill_na: bool = False):
+        feature_values = []
         for feature_name in self._feature_vector_col_name:
             if feature_name not in result_dict:
                 if fill_na:
-                    vector.append(None)
+                    feature_values.append(None)
                 else:
                     raise client.exceptions.FeatureStoreException(
                         f"Feature '{feature_name}' is missing from vector."
@@ -509,10 +508,10 @@ class VectorServer:
                         f"[{', '.join(set(sk.feature_name for sk in self._serving_keys))}] are not provided."
                     )
             else:
-                vector.append(result_dict[feature_name])
-        return vector
+                feature_values.append(result_dict[feature_name])
+        return feature_values
 
-    def _apply_transformation(self, row_dict):
+    def _apply_transformation(self, row_dict: Dict[str, Any]) -> Dict[str, Any]:
         for feature_name in self._transformation_functions:
             if feature_name in row_dict:
                 transformation_fn = self._transformation_functions[
@@ -521,7 +520,12 @@ class VectorServer:
                 row_dict[feature_name] = transformation_fn(row_dict[feature_name])
         return row_dict
 
-    def _get_transformation_fns(self, entity):
+    def _get_transformation_fns(
+        self,
+        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+    ) -> Dict[
+        str, "hsfs.transformation_function_attached.TransformationFunctionAttached"
+    ]:
         # get attached transformation functions
         transformation_functions = (
             self._transformation_function_engine.get_td_transformation_fn(entity)
@@ -575,7 +579,7 @@ class VectorServer:
         return transformation_fns
 
     @property
-    def required_serving_keys(self):
+    def required_serving_keys(self) -> Set[str]:
         """Set of primary key names that is used as keys in input dict object for `get_feature_vector` method."""
         if self._required_serving_keys is not None:
             return self._required_serving_keys
@@ -588,19 +592,19 @@ class VectorServer:
         return self._required_serving_keys
 
     @property
-    def serving_keys(self):
+    def serving_keys(self) -> List["hsfs.serving_key.ServingKey"]:
         return self._serving_keys
 
     @serving_keys.setter
-    def serving_keys(self, serving_vector_keys):
+    def serving_keys(self, serving_vector_keys: List["hsfs.serving_key.ServingKey"]):
         self._serving_keys = serving_vector_keys
 
     @property
-    def training_dataset_version(self):
+    def training_dataset_version(self) -> Optional[int]:
         return self._training_dataset_version
 
     @training_dataset_version.setter
-    def training_dataset_version(self, training_dataset_version):
+    def training_dataset_version(self, training_dataset_version: Optional[int]):
         self._training_dataset_version = training_dataset_version
 
     @property

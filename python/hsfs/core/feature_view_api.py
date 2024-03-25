@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 
-from typing import Optional
+from typing import List, Optional, Union
 
 from hsfs import (
     client,
@@ -24,7 +24,7 @@ from hsfs import (
 )
 from hsfs.client.exceptions import RestAPIError
 from hsfs.constructor import query, serving_prepared_statement
-from hsfs.core import explicit_provenance, job
+from hsfs.core import explicit_provenance, job, training_dataset_job_conf
 
 
 class FeatureViewApi:
@@ -43,7 +43,7 @@ class FeatureViewApi:
     _PROVENANCE = "provenance"
     _LINKS = "links"
 
-    def __init__(self, feature_store_id):
+    def __init__(self, feature_store_id: int):
         self._feature_store_id = feature_store_id
         self._client = client.get_instance()
         self._base_path = [
@@ -54,7 +54,9 @@ class FeatureViewApi:
             "featureview",
         ]
 
-    def post(self, feature_view_obj):
+    def post(
+        self, feature_view_obj: "feature_view.FeatureView"
+    ) -> "feature_view.FeatureView":
         headers = {"content-type": "application/json"}
         return feature_view_obj.update_from_response_json(
             self._client._send_request(
@@ -65,7 +67,7 @@ class FeatureViewApi:
             )
         )
 
-    def update(self, feature_view_obj):
+    def update(self, feature_view_obj: "feature_view.FeatureView") -> None:
         headers = {"content-type": "application/json"}
         self._client._send_request(
             self._PUT,
@@ -75,7 +77,7 @@ class FeatureViewApi:
             data=feature_view_obj.json(),
         )
 
-    def get_by_name(self, name):
+    def get_by_name(self, name: str) -> "feature_view.FeatureView":
         path = self._base_path + [name]
         try:
             return [
@@ -94,7 +96,9 @@ class FeatureViewApi:
             else:
                 raise e
 
-    def get_by_name_version(self, name, version):
+    def get_by_name_version(
+        self, name: str, version: int
+    ) -> "feature_view.FeatureView":
         path = self._base_path + [name, self._VERSION, version]
         try:
             return feature_view.FeatureView.from_response_json(
@@ -112,28 +116,28 @@ class FeatureViewApi:
             else:
                 raise e
 
-    def delete_by_name(self, name):
+    def delete_by_name(self, name: str) -> None:
         path = self._base_path + [name]
         self._client._send_request(self._DELETE, path)
 
-    def delete_by_name_version(self, name, version):
+    def delete_by_name_version(self, name: str, version: int) -> None:
         path = self._base_path + [name, self._VERSION, version]
         self._client._send_request(self._DELETE, path)
 
     def get_batch_query(
         self,
-        name,
-        version,
-        start_time,
-        end_time,
-        training_dataset_version=None,
-        with_label=False,
-        primary_keys=False,
-        event_time=False,
-        inference_helper_columns=False,
-        training_helper_columns=False,
-        is_python_engine=False,
-    ):
+        name: str,
+        version: int,
+        start_time: Optional[int],
+        end_time: Optional[int],
+        training_dataset_version: Optional[int] = None,
+        with_label: bool = False,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        inference_helper_columns: bool = False,
+        training_helper_columns: bool = False,
+        is_python_engine: bool = False,
+    ) -> "query.Query":
         path = self._base_path + [
             name,
             self._VERSION,
@@ -160,8 +164,8 @@ class FeatureViewApi:
         )
 
     def get_serving_prepared_statement(
-        self, name, version, batch, inference_helper_columns
-    ):
+        self, name: str, version: int, batch: bool, inference_helper_columns: bool
+    ) -> "serving_prepared_statement.ServingPreparedStatement":
         path = self._base_path + [
             name,
             self._VERSION,
@@ -177,13 +181,23 @@ class FeatureViewApi:
             self._client._send_request("GET", path, query_params, headers=headers)
         )
 
-    def get_attached_transformation_fn(self, name, version):
+    def get_attached_transformation_fn(
+        self, name: str, version: int
+    ) -> Union[
+        "transformation_function_attached.TransformationFunctionAttached",
+        List["transformation_function_attached.TransformationFunctionAttached"],
+    ]:
         path = self._base_path + [name, self._VERSION, version, self._TRANSFORMATION]
         return transformation_function_attached.TransformationFunctionAttached.from_response_json(
             self._client._send_request("GET", path)
         )
 
-    def create_training_dataset(self, name, version, training_dataset_obj):
+    def create_training_dataset(
+        self,
+        name: str,
+        version: int,
+        training_dataset_obj: "training_dataset.TrainingDataset",
+    ) -> "training_dataset.TrainingDataset":
         path = self.get_training_data_base_path(name, version)
         headers = {"content-type": "application/json"}
         return training_dataset_obj.update_from_response_json(
@@ -192,20 +206,28 @@ class FeatureViewApi:
             )
         )
 
-    def get_training_dataset_by_version(self, name, version, training_dataset_version):
+    def get_training_dataset_by_version(
+        self, name: str, version: int, training_dataset_version: int
+    ) -> "training_dataset.TrainingDataset":
         path = self.get_training_data_base_path(name, version, training_dataset_version)
         return training_dataset.TrainingDataset.from_response_json_single(
             self._client._send_request("GET", path)
         )
 
-    def get_training_datasets(self, name, version):
+    def get_training_datasets(
+        self, name: str, version: int
+    ) -> List["training_dataset.TrainingDataset"]:
         path = self.get_training_data_base_path(name, version)
         return training_dataset.TrainingDataset.from_response_json(
             self._client._send_request("GET", path)
         )
 
     def compute_training_dataset(
-        self, name, version, training_dataset_version, td_app_conf
+        self,
+        name: str,
+        version: int,
+        training_dataset_version: int,
+        td_app_conf: "training_dataset_job_conf.TrainingDatasetJobConf",
     ):
         path = self.get_training_data_base_path(
             name, version, training_dataset_version
@@ -217,20 +239,22 @@ class FeatureViewApi:
             )
         )
 
-    def delete_training_data(self, name, version):
+    def delete_training_data(self, name: str, version: int):
         path = self.get_training_data_base_path(name, version)
         return self._client._send_request("DELETE", path)
 
-    def delete_training_data_version(self, name, version, training_dataset_version):
+    def delete_training_data_version(
+        self, name: str, version: int, training_dataset_version: int
+    ):
         path = self.get_training_data_base_path(name, version, training_dataset_version)
         return self._client._send_request("DELETE", path)
 
-    def delete_training_dataset_only(self, name, version):
+    def delete_training_dataset_only(self, name: str, version: int):
         path = self.get_training_data_base_path(name, version) + [self._DATA]
         return self._client._send_request("DELETE", path)
 
     def delete_training_dataset_only_version(
-        self, name, version, training_dataset_version
+        self, name: str, version: int, training_dataset_version: int
     ):
         path = self.get_training_data_base_path(
             name, version, training_dataset_version
@@ -238,7 +262,9 @@ class FeatureViewApi:
 
         return self._client._send_request("DELETE", path)
 
-    def get_training_data_base_path(self, name, version, training_data_version=None):
+    def get_training_data_base_path(
+        self, name: str, version: int, training_data_version=None
+    ):
         if training_data_version:
             return self._base_path + [
                 name,
@@ -256,7 +282,9 @@ class FeatureViewApi:
                 self._TRAINING_DATASET,
             ]
 
-    def get_parent_feature_groups(self, name, version):
+    def get_parent_feature_groups(
+        self, name: str, version: int
+    ) -> "explicit_provenance.Links":
         """Get the parents of this feature view, based on explicit provenance.
         Parents are feature groups or external feature groups. These feature
         groups can be accessible, deleted or inaccessible.
@@ -292,10 +320,10 @@ class FeatureViewApi:
 
     def get_models_provenance(
         self,
-        feature_view_name,
-        feature_view_version,
+        feature_view_name: str,
+        feature_view_version: int,
         training_dataset_version: Optional[int] = None,
-    ):
+    ) -> "explicit_provenance.Links":
         """Get the generated models using this feature view, based on explicit
         provenance. These models can be accessible or inaccessible. Explicit
         provenance does not track deleted generated model links, so deleted

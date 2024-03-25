@@ -16,7 +16,7 @@
 import asyncio
 import logging
 import re
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from hsfs import feature_view, training_dataset, util
 from hsfs.core import feature_view_api, storage_connector_api, training_dataset_api
@@ -599,6 +599,22 @@ class OnlineStoreSqlClient:
     @prefix_by_serving_index.setter
     def prefix_by_serving_index(self, prefix_by_serving_index: Dict[int, str]) -> None:
         self._prefix_by_serving_index = prefix_by_serving_index
+
+    @property
+    def _serving_key_by_serving_index(
+        self,
+    ) -> Dict[int, List["ServingKey"]]:
+        """The dict object of serving keys as values and keys as indices of positions in the query for
+        selecting features from feature groups of the training dataset.
+        """
+        return self._serving_key_by_serving_index
+
+    @property
+    def _feature_name_order_by_psp(self) -> Dict[int, Dict[str, int]]:
+        """The dict object of feature names as values and keys as indices of positions in the query for
+        selecting features from feature groups of the training dataset.
+        """
+        return self._feature_name_order_by_psp
 
     @property
     def training_dataset_api(self) -> training_dataset_api.TrainingDatasetApi:
