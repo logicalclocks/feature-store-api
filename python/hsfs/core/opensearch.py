@@ -73,7 +73,8 @@ class OpenSearchClientSingleton:
         self._opensearch_client = None
         self._setup_opensearch_client()
 
-    def _is_timeout(self, exception):
+    @classmethod
+    def _is_timeout(cls, exception):
         return isinstance(exception, urllib3.exceptions.ReadTimeoutError)
 
     @retry(
