@@ -130,7 +130,6 @@ class VectorServer:
         if self._init_online_store_sql_client is True:
             self.setup_online_store_sql_client(
                 entity=entity,
-                batch=batch,
                 external=external,
                 inference_helper_columns=inference_helper_columns,
                 options=options,
@@ -167,6 +166,7 @@ class VectorServer:
             complex_features=self._complex_features,
             transformation_functions=self._transformation_functions,
         )
+        # This logic needs to move to the above engine init
         reset_online_rest_client = False
         online_store_rest_client_config = None
         if isinstance(options, dict):
@@ -186,7 +186,6 @@ class VectorServer:
     def setup_online_store_sql_client(
         self,
         entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
-        batch: bool,
         external: bool,
         inference_helper_columns: bool,
         options: Optional[Dict[str, Any]] = None,
@@ -194,10 +193,10 @@ class VectorServer:
         _logger.info("Initialising Vector Server Online SQL client")
         self._online_store_sql_client = online_store_sql_client.OnlineStoreSqlClient(
             feature_store_id=self._feature_store_id,
+            skip_fg_ids=self._skip_fg_ids,
         )
         self.online_store_sql_client.init_prepared_statement(
             entity,
-            batch,
             external,
             inference_helper_columns,
             options=options,

@@ -16,7 +16,7 @@
 import asyncio
 import logging
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 from hsfs import feature_view, training_dataset, util
 from hsfs.constructor import serving_prepared_statement
@@ -29,7 +29,7 @@ _logger = logging.getLogger(__name__)
 
 
 class OnlineStoreSqlClient:
-    def __init__(self, feature_store_id: id):
+    def __init__(self, feature_store_id: id, skip_fg_ids: Optional[Set[int]]):
         _logger.info("Initializing OnlineStoreSqlClient")
         self._feature_store_id = feature_store_id
         self._prefix_by_serving_index = None
@@ -39,6 +39,7 @@ class OnlineStoreSqlClient:
         self._pkname_by_serving_index = None
         self._valid_serving_key = None
         self._serving_key_by_serving_index = {}
+        self._skip_fg_ids = skip_fg_ids or set()
         self._async_pool = None
         self._external = True
 
@@ -668,6 +669,15 @@ class OnlineStoreSqlClient:
         selecting features from feature groups of the training dataset.
         """
         return self._feature_name_order_by_psp
+
+    @property
+    def skip_fg_ids(self) -> List[int]:
+        """The list of feature group ids to skip when retrieving feature vectors.
+
+        The retrieval of Feature values stored in Feature Group with embedding is handled via a separate client
+        as there are not stored in RonDB.
+        """
+        return self._skip_fg_ids
 
     @property
     def training_dataset_api(self) -> training_dataset_api.TrainingDatasetApi:
