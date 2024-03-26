@@ -38,7 +38,7 @@ class TestOnlineStoreSqlClient:
             ]["response"]
         )
 
-    @pytest.fixture
+    @pytest.fixture(scope="function")
     def online_store_sql_client(self, mocker):
         feature_store_id = 1
         skip_fg_ids = set()
@@ -73,14 +73,14 @@ class TestOnlineStoreSqlClient:
         self, backend_fixtures, online_store_sql_client
     ):
         # Arrange
-        online_store_sql_client._prepared_statements = hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
+        prepared_statements = hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
             json_dict=backend_fixtures["serving_prepared_statement"]["get_list"][
                 "response"
             ]
         )
 
         # Act
-        online_store_sql_client.init_parametrize_and_serving_utils()
+        online_store_sql_client.init_parametrize_and_serving_utils(prepared_statements)
 
         # Assert
         assert isinstance(online_store_sql_client.serving_keys, set)

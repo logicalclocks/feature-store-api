@@ -16,7 +16,7 @@
 import asyncio
 import logging
 import re
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from hsfs import feature_view, training_dataset, util
 from hsfs.constructor import serving_prepared_statement
@@ -29,20 +29,27 @@ _logger = logging.getLogger(__name__)
 
 
 class OnlineStoreSqlClient:
+    BATCH_HELPER_KEY = "batch_helper_column"
+    SINGLE_HELPER_KEY = "single_helper_column"
+    BATCH_VECTOR_KEY = "batch_feature_vectors"
+    SINGLE_VECTOR_KEY = "single_feature_vector"
+
     def __init__(self, feature_store_id: id, skip_fg_ids: Optional[Set[int]]):
         _logger.info("Initializing OnlineStoreSqlClient")
         self._feature_store_id = feature_store_id
+        self._skip_fg_ids = skip_fg_ids or set()
+        self._external = True
+
         self._prefix_by_serving_index = None
-        self._prepared_statement_engine = None
-        self._prepared_statements = None
-        self._helper_column_prepared_statements = None
         self._pkname_by_serving_index = None
         self._valid_serving_key = None
         self._serving_key_by_serving_index = {}
-        self._skip_fg_ids = skip_fg_ids or set()
         self._async_pool = None
-        self._external = True
         self._serving_keys = set()
+
+        self._prepared_statements = {}
+        self._parametrised_prepared_statements = {}
+        self._prepared_statement_engine = None
 
         self._feature_view_api = feature_view_api.FeatureViewApi(feature_store_id)
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
@@ -54,81 +61,36 @@ class OnlineStoreSqlClient:
         self,
         entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
         inference_helper_columns: bool,
-    ):
+    ) -> None:
         if isinstance(entity, feature_view.FeatureView):
             _logger.debug(
                 f"Initializing prepared statements for feature view {entity.name} version {entity.version}."
             )
-            if inference_helper_columns:
-                _logger.debug(
-                    "Inference helper columns are enabled, fetching corresponding prepared statements."
-                )
-                self._helper_column_prepared_statements = (
-                    self._feature_view_api.get_serving_prepared_statement(
+            for key in self.get_prepared_statement_labels(inference_helper_columns):
+                self.prepared_statements[key] = (
+                    self.feature_view_api.get_serving_prepared_statement(
                         entity.name,
                         entity.version,
-                        batch=False,
-                        inference_helper_columns=True,
+                        batch=key.startswith("batch"),
+                        inference_helper_columns=key.endswith("helper_column"),
                     )
                 )
-                self._batch_helper_column_prepared_statements = (
-                    self._feature_view_api.get_serving_prepared_statement(
-                        entity.name,
-                        entity.version,
-                        batch=True,
-                        inference_helper_columns=True,
-                    )
-                )
-            _logger.debug("Fetching prepared statements for feature vectors.")
-            self._prepared_statements = (
-                self._feature_view_api.get_serving_prepared_statement(
-                    entity.name,
-                    entity.version,
-                    batch=False,
-                    inference_helper_columns=False,
-                )
-            )
-            _logger.debug(f"Statements: {self._prepared_statements}.")
-            self._batch_prepared_statements = (
-                self._feature_view_api.get_serving_prepared_statement(
-                    entity.name,
-                    entity.version,
-                    batch=True,
-                    inference_helper_columns=False,
-                )
-            )
         elif isinstance(entity, training_dataset.TrainingDataset):
             _logger.debug(
-                f"Fetching prepared statements for training dataset {entity.name} version {entity.version}."
+                f"Initializing prepared statements for training dataset {entity.name} version {entity.version}."
             )
-            self._prepared_statements = (
-                self._training_dataset_api.get_serving_prepared_statement(
-                    entity, batch=False
+            for key in self.get_prepared_statement_labels(
+                with_inference_helper_column=False
+            ):
+                self.prepared_statements[key] = (
+                    self.training_dataset_api.get_serving_prepared_statement(
+                        entity, batch=key.startswith("batch")
+                    )
                 )
-            )
-            self._batch_prepared_statements = (
-                self._training_dataset_api.get_serving_prepared_statement(
-                    entity, batch=True
-                )
-            )
         else:
             raise ValueError(
                 "Object type needs to be `feature_view.FeatureView` or `training_dataset.TrainingDataset`."
             )
-
-    def init_async_mysql_connection(self, options=None):
-        assert self._prepared_statements is not None, (
-            "Prepared statements are not initialized. "
-            "Please call `init_prepared_statement` method first."
-        )
-        _logger.debug("Acquiring or starting event loop for async engine.")
-        loop = asyncio.get_event_loop()
-        _logger.debug(f"Setting up aiomysql connection, with options : {options}")
-        loop.run_until_complete(
-            self._set_aiomysql_connection(
-                len(self._prepared_statements), options=options
-            )
-        )
 
     def init_prepared_statement(
         self,
@@ -143,31 +105,26 @@ class OnlineStoreSqlClient:
         self._external = external
 
         # Use the prepared statements to initialize the serving utils
-        self.init_parametrize_and_serving_utils()
-        self._prepared_statements = self._parametrize_prepared_statements(
-            self._prepared_statements, batch=False
+        self.init_parametrize_and_serving_utils(
+            self.prepared_statements[self.SINGLE_VECTOR_KEY]
         )
 
-        self._batch_prepared_statements = self._parametrize_prepared_statements(
-            self._batch_prepared_statements, batch=True
-        )
-
-        if inference_helper_columns:
-            self._helper_column_prepared_statements = (
+        for key in self.get_prepared_statement_labels(inference_helper_columns):
+            self._parametrised_prepared_statements[key] = (
                 self._parametrize_prepared_statements(
-                    self._helper_column_prepared_statements, batch=False
-                )
-            )
-            self._batch_helper_column_prepared_statements = (
-                self._parametrize_prepared_statements(
-                    self._batch_helper_column_prepared_statements, batch=True
+                    self.prepared_statements[key], batch=key.startswith("batch")
                 )
             )
 
-    def init_parametrize_and_serving_utils(self):
+    def init_parametrize_and_serving_utils(
+        self,
+        prepared_statements: Dict[
+            int, "serving_prepared_statement.ServingPreparedStatement"
+        ],
+    ) -> None:
         self._prefix_by_serving_index = {}
         self._feature_name_order_by_psp = {}
-        for statement in self._prepared_statements:
+        for statement in prepared_statements:
             if statement.feature_group_id in self._skip_fg_ids:
                 continue
 
@@ -226,7 +183,13 @@ class OnlineStoreSqlClient:
             + [sk.required_serving_key for sk in self._serving_keys]
         )
 
-    def _parametrize_prepared_statements(self, prepared_statements, batch):
+    def _parametrize_prepared_statements(
+        self,
+        prepared_statements: List[
+            "serving_prepared_statement.ServingPreparedStatement"
+        ],
+        batch: bool,
+    ) -> Dict[int, sql.text]:
         prepared_statements_dict = {}
         for prepared_statement in prepared_statements:
             if prepared_statement.feature_group_id in self._skip_fg_ids:
@@ -258,30 +221,50 @@ class OnlineStoreSqlClient:
 
         return prepared_statements_dict
 
+    def init_async_mysql_connection(self, options=None):
+        assert self._prepared_statements.get(self.SINGLE_VECTOR_KEY) is not None, (
+            "Prepared statements are not initialized. "
+            "Please call `init_prepared_statement` method first."
+        )
+        _logger.debug("Acquiring or starting event loop for async engine.")
+        loop = asyncio.get_event_loop()
+        _logger.debug(f"Setting up aiomysql connection, with options : {options}")
+        loop.run_until_complete(
+            self._set_aiomysql_connection(
+                len(self._prepared_statements[self.SINGLE_VECTOR_KEY]), options=options
+            )
+        )
+
     def get_single_feature_vector(self, entry: Dict[str, Any]) -> Dict[str, Any]:
         """Retrieve single vector with parallel queries using aiomysql engine."""
-        return self._single_vector_result(entry, self._prepared_statements)
+        return self._single_vector_result(
+            entry, self.parametrised_prepared_statements[self.SINGLE_VECTOR_KEY]
+        )
 
-    def get_batch_feature_vector(self, entries: Dict[str, Any]) -> Dict[str, Any]:
+    def get_batch_feature_vector(
+        self, entries: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Retrieve batch vector with parallel queries using aiomysql engine."""
-        return self._batch_vector_results(entries, self._batch_prepared_statements)
+        return self._batch_vector_results(
+            entries, self.prepared_statements[self.BATCH_VECTOR_KEY]
+        )
 
     def get_inference_helper_vector(self, entry: Dict[str, Any]) -> Dict[str, Any]:
         """Retrieve single vector with parallel queries using aiomysql engine."""
         return self._single_vector_result(
-            entry, self._helper_column_prepared_statements
+            entry, self.parametrised_prepared_statements[self.SINGLE_HELPER_KEY]
         )
 
     def get_batch_inference_helper_vector(
-        self, entries: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, entries: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Retrieve batch vector with parallel queries using aiomysql engine."""
         return self._batch_vector_results(
-            entries, self._batch_helper_column_prepared_statements
+            entries, self.parametrised_prepared_statements[self.BATCH_HELPER_KEY]
         )
 
     def _single_vector_result(
-        self, entry, prepared_statement_objects
+        self, entry: Dict[str, Any], prepared_statement_objects: Dict[int, sql.text]
     ) -> Dict[str, Any]:
         """Retrieve single vector with parallel queries using aiomysql engine."""
 
@@ -340,7 +323,11 @@ class OnlineStoreSqlClient:
 
         return serving_vector
 
-    def _batch_vector_results(self, entries, prepared_statement_objects):
+    def _batch_vector_results(
+        self,
+        entries: List[Dict[str, Any]],
+        prepared_statement_objects: Dict[int, sql.text],
+    ):
         """Execute prepared statements in parallel using aiomysql engine."""
         _logger.info(
             f"Starting batch vector retrieval for {len(entries)} entries via aiomysql engine."
@@ -439,25 +426,34 @@ class OnlineStoreSqlClient:
         return batch_results, serving_keys_all_fg
 
     def refresh_mysql_connection(self):
+        _logger.debug("Refreshing MySQL connection.")
         try:
+            _logger.debug("Checking if the connection is still alive.")
             with self._prepared_statement_engine.connect():
                 # This will raise an exception if the connection is closed
                 pass
         except exc.OperationalError:
+            _logger.debug("Connection is closed, re-establishing connection.")
             self._set_mysql_connection()
 
     def _make_preview_statement(self, statement, n):
         return text(statement.text[: statement.text.find(" WHERE ")] + f" LIMIT {n}")
 
     def _set_mysql_connection(self, options=None):
+        _logger.debug(
+            "Retrieve MySQL connection details from the online storage connector."
+        )
         online_conn = self._storage_connector_api.get_online_connector(
             self._feature_store_id
+        )
+        _logger.debug(
+            f"Creating MySQL {'external' if self.external is True else ''}engine with options: {options}."
         )
         self._prepared_statement_engine = util.create_mysql_engine(
             online_conn, self._external, options=options
         )
 
-    def _validate_serving_key(self, entry):
+    def _validate_serving_key(self, entry: Dict[str, Any]):
         _logger.debug(f"Validating serving key {entry}")
         for key in entry:
             if key not in self._valid_serving_key:
@@ -466,7 +462,7 @@ class OnlineStoreSqlClient:
                     f" followings: [{', '.join(self._valid_serving_key)}]"
                 )
 
-    def filter_entry_by_join_index(self, entry, join_index):
+    def filter_entry_by_join_index(self, entry: Dict[str, Any], join_index: int):
         _logger.debug(f"Filtering entry {entry} by join index {join_index}")
         fg_entry = {}
         complete = True
@@ -498,23 +494,51 @@ class OnlineStoreSqlClient:
         )
 
     @staticmethod
-    def _get_result_key(primary_keys, result_dict):
+    def _get_result_key(primary_keys: str, result_dict: Dict[str, str]) -> Tuple[str]:
+        _logger.debug(f"Get result key {primary_keys} from result dict {result_dict}")
         result_key = []
         for pk in primary_keys:
             result_key.append(result_dict.get(pk))
         return tuple(result_key)
 
     @staticmethod
-    def _get_result_key_serving_key(serving_keys, result_dict):
+    def _get_result_key_serving_key(
+        serving_keys: List["ServingKey"], result_dict: Dict[str, Dict[str, Any]]
+    ) -> Tuple[str]:
+        _logger.debug(
+            f"Get result key serving key {serving_keys} from result dict {result_dict}"
+        )
         result_key = []
         for sk in serving_keys:
+            _logger.debug(
+                f"Get result key for serving key {sk.required_serving_key} or {sk.feature_name}"
+            )
             result_key.append(
                 result_dict.get(sk.required_serving_key)
                 or result_dict.get(sk.feature_name)
             )
+        _logger.debug(f"Result key: {result_key}")
         return tuple(result_key)
 
-    async def _set_aiomysql_connection(self, default_min_size: int, options=None):
+    @staticmethod
+    def get_prepared_statement_labels(
+        with_inference_helper_column: bool = False,
+    ) -> List[str]:
+        if with_inference_helper_column:
+            return [
+                OnlineStoreSqlClient.SINGLE_VECTOR_KEY,
+                OnlineStoreSqlClient.BATCH_VECTOR_KEY,
+                OnlineStoreSqlClient.SINGLE_HELPER_KEY,
+                OnlineStoreSqlClient.BATCH_HELPER_KEY,
+            ]
+        return [
+            OnlineStoreSqlClient.SINGLE_VECTOR_KEY,
+            OnlineStoreSqlClient.BATCH_VECTOR_KEY,
+        ]
+
+    async def _set_aiomysql_connection(
+        self, default_min_size: int, options: Optional[Dict[str, Any]] = None
+    ) -> None:
         _logger.debug(
             "Fetching storage connector for sql connection to Online Feature Store."
         )
@@ -533,14 +557,23 @@ class OnlineStoreSqlClient:
         # Get a connection from the pool
         async with self._async_pool.acquire() as conn:
             # Execute the prepared statement
+            _logger.debug(
+                f"Executing prepared statement: {stmt} with bind params: {bind_params}"
+            )
             cursor = await conn.execute(stmt, bind_params)
             # Fetch the result
+            _logger.debug("Waiting for resultset.")
             resultset = await cursor.fetchall()
+            _logger.debug(f"Retrieved resultset: {resultset}. Closing cursor.")
             await cursor.close()
 
         return resultset
 
-    async def _execute_prep_statements(self, prepared_statements: dict, entries: dict):
+    async def _execute_prep_statements(
+        self,
+        prepared_statements: Dict[int, str],
+        entries: Union[List[Dict[str, Any]], Dict[str, Any]],
+    ):
         """Iterate over prepared statements to create async tasks
         and gather all tasks results for a given list of entries."""
 
@@ -564,8 +597,7 @@ class OnlineStoreSqlClient:
         # Create a dict of results with the prepared statement index as key
         for i, key in enumerate(prepared_statements):
             results_dict[key] = results[i]
-        # TODO: close connection? closing connection pool here will make un-acquirable for future connections
-        # unless init_serving is explicitly called before get_feature_vector(s).
+
         return results_dict
 
     @property
@@ -584,9 +616,11 @@ class OnlineStoreSqlClient:
     @property
     def prepared_statements(
         self,
-    ) -> Dict[int, "serving_prepared_statement.ServingPreparedStatement"]:
-        """The dict object of prepared_statements as values and keys as indices of positions in the query for
-        selecting features from feature groups of the training dataset. Used for single vector retrieval.
+    ) -> Dict[str, Dict[int, "serving_prepared_statement.ServingPreparedStatement"]]:
+        """Contains up to 4 prepared statements for single and batch vector retrieval, and single or batch inference helpers.
+
+        The keys are the labels for the prepared statements, and the values are dictionaries of prepared statements
+        with the prepared statement index as the key.
         """
         return self._prepared_statements
 
@@ -594,66 +628,26 @@ class OnlineStoreSqlClient:
     def prepared_statements(
         self,
         prepared_statements: Dict[
-            int, "serving_prepared_statement.ServingPreparedStatement"
+            str, Dict[int, "serving_prepared_statement.ServingPreparedStatement"]
         ],
     ) -> None:
         self._prepared_statements = prepared_statements
 
     @property
-    def batch_prepared_statements(
+    def parametrised_prepared_statements(
         self,
-    ) -> Dict[int, "serving_prepared_statement.ServingPreparedStatement"]:
+    ) -> Dict[str, Dict[int, sql.text]]:
         """The dict object of prepared_statements as values and keys as indices of positions in the query for
         selecting features from feature groups of the training dataset. Used for batch retrieval.
         """
-        return self._batch_prepared_statements
+        return self._parametrised_prepared_statements
 
-    @batch_prepared_statements.setter
-    def batch_prepared_statements(
+    @parametrised_prepared_statements.setter
+    def parametrised_prepared_statements(
         self,
-        batch_prepared_statements: Dict[
-            int, "serving_prepared_statement.ServingPreparedStatement"
-        ],
+        parametrised_prepared_statements: Dict[str, Dict[int, sql.text]],
     ) -> None:
-        self._batch_prepared_statements = batch_prepared_statements
-
-    @property
-    def helper_column_prepared_statements(
-        self,
-    ) -> Optional[Dict[int, "serving_prepared_statement.ServingPreparedStatement"]]:
-        """The dict object of prepared_statements as values and keys as indices of positions in the query for
-        selecting features from feature groups of the training dataset. Used for single vector retrieval.
-        """
-        return self._helper_column_prepared_statements
-
-    @helper_column_prepared_statements.setter
-    def helper_column_prepared_statements(
-        self,
-        helper_column_prepared_statements: Dict[
-            int, "serving_prepared_statement.ServingPreparedStatement"
-        ],
-    ) -> None:
-        self._helper_column_prepared_statements = helper_column_prepared_statements
-
-    @property
-    def batch_helper_column_prepared_statements(
-        self,
-    ) -> Optional[Dict[int, "serving_prepared_statement.ServingPreparedStatement"]]:
-        """The dict object of prepared_statements as values and keys as indices of positions in the query for
-        selecting features from feature groups of the training dataset. Used for single vector retrieval.
-        """
-        return self._helper_column_prepared_statements
-
-    @batch_helper_column_prepared_statements.setter
-    def batch_helper_column_prepared_statements(
-        self,
-        batch_helper_column_prepared_statements: Dict[
-            int, "serving_prepared_statement.ServingPreparedStatement"
-        ],
-    ) -> None:
-        self._batch_helper_column_prepared_statements = (
-            batch_helper_column_prepared_statements
-        )
+        self._parametrised_prepared_statements = parametrised_prepared_statements
 
     @property
     def prefix_by_serving_index(self) -> Dict[int, str]:

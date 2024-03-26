@@ -165,7 +165,7 @@ class FeatureViewApi:
 
     def get_serving_prepared_statement(
         self, name: str, version: int, batch: bool, inference_helper_columns: bool
-    ) -> "serving_prepared_statement.ServingPreparedStatement":
+    ) -> List["serving_prepared_statement.ServingPreparedStatement"]:
         path = self._base_path + [
             name,
             self._VERSION,
