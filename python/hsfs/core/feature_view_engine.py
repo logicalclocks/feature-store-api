@@ -16,20 +16,22 @@
 
 import datetime
 import warnings
-from hsfs import engine, training_dataset_feature, client, util, feature_group
+from typing import Optional
+
+from hsfs import client, engine, feature_group, training_dataset_feature, util
 from hsfs.client import exceptions
 from hsfs.client.exceptions import FeatureStoreException
-from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.core import (
-    tags_api,
-    transformation_function_engine,
-    feature_view_api,
-    code_engine,
-    statistics_engine,
-    training_dataset_engine,
-    query_constructor_api,
     arrow_flight_client,
+    code_engine,
+    feature_view_api,
+    query_constructor_api,
+    statistics_engine,
+    tags_api,
+    training_dataset_engine,
+    transformation_function_engine,
 )
+from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
 class FeatureViewEngine:
@@ -63,7 +65,8 @@ class FeatureViewEngine:
         if feature_view_obj.query.is_time_travel():
             warnings.warn(
                 "`as_of` argument in the `Query` will be ignored because"
-                " feature view does not support time travel query."
+                " feature view does not support time travel query.",
+                stacklevel=1,
             )
         if feature_view_obj.labels:
             for label_name in feature_view_obj.labels:
@@ -203,7 +206,7 @@ class FeatureViewEngine:
                     "Cannot generate dataset(s) from the given start/end time because"
                     " event time column is not available in the left feature groups."
                     " A start/end time should not be provided as parameters."
-                )
+                ) from e
             else:
                 raise e
 
@@ -225,7 +228,7 @@ class FeatureViewEngine:
                     "Cannot generate a query from the given start/end time because"
                     " event time column is not available in the left feature groups."
                     " A start/end time should not be provided as parameters."
-                )
+                ) from e
             else:
                 raise e
 
@@ -280,13 +283,14 @@ class FeatureViewEngine:
         self,
         feature_view_obj,
         read_options=None,
-        splits=[],
+        splits=None,
         training_dataset_obj=None,
         training_dataset_version=None,
         spine=None,
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
+        dataframe_type="default",
     ):
         # check if provided td version has already existed.
         if training_dataset_version:
@@ -299,6 +303,8 @@ class FeatureViewEngine:
                 feature_view_obj, training_dataset_obj
             )
         # check splits
+        if splits is None:
+            splits = []
         if len(splits) != len(td_updated.splits):
             if len(td_updated.splits) == 0:
                 method_name = "get_training_data"
@@ -320,14 +326,26 @@ class FeatureViewEngine:
                 td_updated.splits,
                 read_options,
                 with_primary_keys=primary_keys,
-                primary_keys=self._get_primary_keys_from_query(feature_view_obj.query),
+                # at this stage training dataset was already written and if there was any name clash it should have
+                # already failed in creation phase, so we don't need to check it here. This is to make
+                # sure that both it is backwards compatible and also to drop columns if user set
+                # primary_keys and event_times to True on creation stage.
+                primary_keys=self._get_primary_keys_from_query(
+                    feature_view_obj.query, False
+                ),
                 with_event_time=event_time,
-                event_time=[feature_view_obj.query._left_feature_group.event_time],
+                event_time=self._get_eventtimes_from_query(
+                    feature_view_obj.query, False
+                ),
                 with_training_helper_columns=training_helper_columns,
                 training_helper_columns=feature_view_obj.training_helper_columns,
                 feature_view_features=[
                     feature.name for feature in feature_view_obj.features
                 ],
+                # forcing dataframe type to default here since dataframe operations are required for training data split.
+                dataframe_type="default"
+                if dataframe_type.lower() in ["numpy", "python"]
+                else dataframe_type,  # forcing dataframe type to default here since dataframe operations are required for training data split.
             )
         else:
             self._check_feature_group_accessibility(feature_view_obj)
@@ -344,7 +362,7 @@ class FeatureViewEngine:
                 spine=spine,
             )
             split_df = engine.get_instance().get_training_data(
-                td_updated, feature_view_obj, query, read_options
+                td_updated, feature_view_obj, query, read_options, dataframe_type
             )
             self.compute_training_dataset_statistics(
                 feature_view_obj, td_updated, split_df
@@ -355,7 +373,7 @@ class FeatureViewEngine:
             for split in td_updated.splits:
                 split_name = split.name
                 split_df[split_name] = engine.get_instance().split_labels(
-                    split_df[split_name], feature_view_obj.labels
+                    split_df[split_name], feature_view_obj.labels, dataframe_type
                 )
             feature_dfs = []
             label_dfs = []
@@ -365,7 +383,7 @@ class FeatureViewEngine:
             return td_updated, feature_dfs + label_dfs
         else:
             split_df = engine.get_instance().split_labels(
-                split_df, feature_view_obj.labels
+                split_df, feature_view_obj.labels, dataframe_type
             )
             return td_updated, split_df
 
@@ -438,6 +456,7 @@ class FeatureViewEngine:
         with_training_helper_columns,
         training_helper_columns,
         feature_view_features,
+        dataframe_type,
     ):
         if splits:
             result = {}
@@ -454,6 +473,7 @@ class FeatureViewEngine:
                     with_training_helper_columns,
                     training_helper_columns,
                     feature_view_features,
+                    dataframe_type,
                 )
             return result
         else:
@@ -469,6 +489,7 @@ class FeatureViewEngine:
                 with_training_helper_columns,
                 training_helper_columns,
                 feature_view_features,
+                dataframe_type,
             )
 
     def _cast_columns(self, data_format, df, schema):
@@ -491,6 +512,7 @@ class FeatureViewEngine:
         with_training_helper_columns,
         training_helper_columns,
         feature_view_features,
+        dataframe_type,
     ):
         try:
             df = training_data_obj.storage_connector.read(
@@ -499,13 +521,24 @@ class FeatureViewEngine:
                 data_format=training_data_obj.data_format,
                 options=read_options,
                 path=path,
+                dataframe_type=dataframe_type,
             )
 
             df = self._drop_helper_columns(
-                df, feature_view_features, with_primary_keys, primary_keys, False
+                df,
+                feature_view_features,
+                with_primary_keys,
+                primary_keys,
+                False,
+                dataframe_type,
             )
             df = self._drop_helper_columns(
-                df, feature_view_features, with_event_time, event_time, False
+                df,
+                feature_view_features,
+                with_event_time,
+                event_time,
+                False,
+                dataframe_type,
             )
             df = self._drop_helper_columns(
                 df,
@@ -513,6 +546,7 @@ class FeatureViewEngine:
                 with_training_helper_columns,
                 training_helper_columns,
                 True,
+                dataframe_type,
             )
             return df
 
@@ -521,15 +555,24 @@ class FeatureViewEngine:
                 raise FileNotFoundError(
                     f"Failed to read dataset from {path}."
                     " Check if path exists or recreate a training dataset."
-                )
+                ) from e
             else:
                 raise e
 
     def _drop_helper_columns(
-        self, df, feature_view_features, with_columns, columns, training_helper
+        self,
+        df,
+        feature_view_features,
+        with_columns,
+        columns,
+        training_helper,
+        dataframe_type,
     ):
         if not with_columns:
-            if engine.get_type().startswith("spark"):
+            if (
+                engine.get_type().startswith("spark")
+                and dataframe_type.lower() == "spark"
+            ):
                 existing_cols = [field.name for field in df.schema.fields]
             else:
                 existing_cols = df.columns
@@ -705,8 +748,15 @@ class FeatureViewEngine:
         primary_keys=False,
         event_time=False,
         inference_helper_columns=False,
+        dataframe_type="default",
     ):
         self._check_feature_group_accessibility(feature_view_obj)
+
+        # check if primary_keys/event_time are ambiguous
+        if primary_keys:
+            self._get_primary_keys_from_query(feature_view_obj.query)
+        if event_time:
+            self._get_eventtimes_from_query(feature_view_obj.query)
 
         feature_dataframe = self.get_batch_query(
             feature_view_obj,
@@ -719,7 +769,7 @@ class FeatureViewEngine:
             training_helper_columns=False,
             training_dataset_version=training_dataset_version,
             spine=spine,
-        ).read(read_options=read_options)
+        ).read(read_options=read_options, dataframe_type=dataframe_type)
         if transformation_functions:
             return engine.get_instance()._apply_transformation_function(
                 transformation_functions, dataset=feature_dataframe
@@ -769,6 +819,28 @@ class FeatureViewEngine:
             feature_view_obj.name, feature_view_obj.version
         )
 
+    def get_models_provenance(
+        self, feature_view_obj, training_dataset_version: Optional[int] = None
+    ):
+        """Get the generated models using this feature view, based on explicit
+        provenance. These models can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated model links, so deleted
+        will always be empty.
+        For inaccessible models, only a minimal information is returned.
+
+        # Arguments
+            feature_view_obj: Filter generated models based on feature view (name, version).
+            training_dataset_version: Filter generated models based on the used training dataset version.
+
+        # Returns
+            `ProvenanceLinks`:  the models generated using this feature group
+        """
+        return self._feature_view_api.get_models_provenance(
+            feature_view_obj.name,
+            feature_view_obj.version,
+            training_dataset_version=training_dataset_version,
+        )
+
     def _check_feature_group_accessibility(self, feature_view_obj):
         if engine.get_type() in ["python", "hive"]:
             if arrow_flight_client.get_instance().is_enabled():
@@ -803,7 +875,7 @@ class FeatureViewEngine:
         )
         return util.get_hostname_replaced_url(path)
 
-    def _get_primary_keys_from_query(self, fv_query_obj):
+    def _get_primary_keys_from_query(self, fv_query_obj, check_duplicate=True):
         fv_pks = set(
             [
                 feature.name
@@ -814,10 +886,47 @@ class FeatureViewEngine:
         for _join in fv_query_obj._joins:
             fv_pks.update(
                 [
-                    feature.name
+                    (
+                        self._check_if_exists_with_prefix(feature.name, fv_pks)
+                        if check_duplicate
+                        else feature.name
+                    )
+                    if _join.prefix is None
+                    else _join.prefix + feature.name
                     for feature in _join.query._left_feature_group.features
                     if feature.primary
                 ]
             )
 
         return list(fv_pks)
+
+    def _get_eventtimes_from_query(self, fv_query_obj, check_duplicate=True):
+        fv_events = set()
+        if fv_query_obj._left_feature_group.event_time:
+            fv_events.update([fv_query_obj._left_feature_group.event_time])
+        for _join in fv_query_obj._joins:
+            if _join.query._left_feature_group.event_time:
+                fv_events.update(
+                    [
+                        (
+                            self._check_if_exists_with_prefix(
+                                _join.query._left_feature_group.event_time, fv_events
+                            )
+                            if check_duplicate
+                            else _join.query._left_feature_group.event_time
+                        )
+                        if _join.prefix is None
+                        else _join.prefix + _join.query._left_feature_group.event_time
+                    ]
+                )
+
+        return list(fv_events)
+
+    def _check_if_exists_with_prefix(self, f_name, f_set):
+        if f_name in f_set:
+            raise FeatureStoreException(
+                f"Provided feature {f_name} is ambiguous and exists in more than one feature groups."
+                "To avoid this error specify prefix in the join."
+            )
+        else:
+            return f_name

@@ -33,6 +33,18 @@ nav:
       - ValidationReport: generated/api/validation_report_api.md
       - Job: generated/api/job.md
       - Provenance Links: generated/api/links.md
+      - Statistics:
+          - Statistics: generated/api/statistics_api.md
+          - Split Statistics: generated/api/split_statistics_api.md
+          - Feature descriptive statistics: generated/api/feature_descriptive_statistics_api.md
+      - Feature Monitoring:
+          - Configuration: generated/api/feature_monitoring_config_api.md
+          - Result: generated/api/feature_monitoring_result_api.md
+          - Window: generated/api/feature_monitoring_window_config_api.md
+      - Embedding:
+          - EmbeddingIndex: generated/api/embedding_index_api.md
+          - EmbeddingFeature: generated/api/embedding_feature_api.md
+          - SimilarityFunctionType: generated/api/similarity_function_type_api.md
     - Contributing: CONTRIBUTING.md
   - Community ↗: https://community.hopsworks.ai/
 

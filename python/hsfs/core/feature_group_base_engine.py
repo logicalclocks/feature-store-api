@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs.core import feature_group_api, storage_connector_api, tags_api, kafka_api
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core import feature_group_api, kafka_api, storage_connector_api, tags_api
 
 
 class FeatureGroupBaseEngine:
@@ -58,7 +58,7 @@ class FeatureGroupBaseEngine:
             feature_group_instance: Metadata object of feature group.
 
         # Returns
-            `ProvenanceLinks`:  the feature groups used to generated this feature group
+            `ProvenanceLinks`:  the feature groups used to generate this feature group
         """
         return self._feature_group_api.get_parent_feature_groups(feature_group)
 

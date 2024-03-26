@@ -15,7 +15,7 @@
 #
 
 
-from hsfs import training_dataset_feature, feature_group, transformation_function
+from hsfs import feature_group, training_dataset_feature, transformation_function
 
 
 class TestTrainingDatasetFeature:

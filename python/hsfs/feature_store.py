@@ -15,40 +15,38 @@
 #   limitations under the License.
 #
 
-import warnings
 import datetime
-from typing import Optional, Union, List, Dict, TypeVar
+import warnings
+from typing import Dict, List, Optional, TypeVar, Union
 
+import great_expectations as ge
 import humps
 import numpy
-import great_expectations as ge
-import pandas as pd
 import numpy as np
-
-from hsfs.transformation_function import TransformationFunction
-from hsfs.client import exceptions
-from hsfs.core import transformation_function_engine
-from hsfs.embedding import EmbeddingIndex
-
+import pandas as pd
 from hsfs import (
-    training_dataset,
-    feature_group,
-    feature,
-    util,
-    storage_connector,
     expectation_suite,
+    feature,
+    feature_group,
     feature_view,
+    storage_connector,
+    training_dataset,
     usage,
+    util,
 )
+from hsfs.client import exceptions
+from hsfs.constructor.query import Query
 from hsfs.core import (
     feature_group_api,
-    storage_connector_api,
-    training_dataset_api,
     feature_group_engine,
     feature_view_engine,
+    storage_connector_api,
+    training_dataset_api,
+    transformation_function_engine,
 )
-from hsfs.constructor.query import Query
+from hsfs.embedding import EmbeddingIndex
 from hsfs.statistics_config import StatisticsConfig
+from hsfs.transformation_function import TransformationFunction
 
 
 class FeatureStore:
@@ -144,6 +142,7 @@ class FeatureStore:
                     name, self.DEFAULT_VERSION
                 ),
                 util.VersionWarning,
+                stacklevel=1,
             )
             version = self.DEFAULT_VERSION
         feature_group_object = self._feature_group_api.get(
@@ -242,6 +241,7 @@ class FeatureStore:
                     name, self.DEFAULT_VERSION
                 ),
                 util.VersionWarning,
+                stacklevel=1,
             )
             version = self.DEFAULT_VERSION
         feature_group_object = self._feature_group_api.get(
@@ -336,6 +336,7 @@ class FeatureStore:
                     name, self.DEFAULT_VERSION
                 ),
                 util.VersionWarning,
+                stacklevel=1,
             )
             version = self.DEFAULT_VERSION
         return self._training_dataset_api.get(name, version)
@@ -393,7 +394,7 @@ class FeatureStore:
         query: str,
         dataframe_type: Optional[str] = "default",
         online: Optional[bool] = False,
-        read_options: Optional[dict] = {},
+        read_options: Optional[dict] = None,
     ):
         """Execute SQL command on the offline or online feature store database
 
@@ -408,8 +409,9 @@ class FeatureStore:
 
         # Arguments
             query: The SQL query to execute.
-            dataframe_type: The type of the returned dataframe. Defaults to "default".
-                which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Hive engine.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
             online: Set to true to execute the query against the online feature store.
                 Defaults to False.
             read_options: Additional options as key/value pairs to pass to the execution engine.
@@ -426,8 +428,9 @@ class FeatureStore:
         # Returns
             `DataFrame`: DataFrame depending on the chosen type.
         """
+
         return self._feature_group_engine.sql(
-            query, self._name, dataframe_type, online, read_options
+            query, self._name, dataframe_type, online, read_options or {}
         )
 
     @usage.method_logger
@@ -458,18 +461,18 @@ class FeatureStore:
         description: Optional[str] = "",
         online_enabled: Optional[bool] = False,
         time_travel_format: Optional[str] = "HUDI",
-        partition_key: Optional[List[str]] = [],
-        primary_key: Optional[List[str]] = [],
+        partition_key: Optional[List[str]] = None,
+        primary_key: Optional[List[str]] = None,
         embedding_index: Optional[EmbeddingIndex] = None,
         hudi_precombine_key: Optional[str] = None,
-        features: Optional[List[feature.Feature]] = [],
+        features: Optional[List[feature.Feature]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
         expectation_suite: Optional[
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
-        parents: Optional[List[feature_group.FeatureGroup]] = [],
+        parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
     ):
@@ -541,6 +544,7 @@ class FeatureStore:
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
+
             stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
                 Stream enabled Feature Groups have unified single API for writing streaming features transparently
                 to both online and offline store.
@@ -563,18 +567,18 @@ class FeatureStore:
             description=description,
             online_enabled=online_enabled,
             time_travel_format=time_travel_format,
-            partition_key=partition_key,
-            primary_key=primary_key,
+            partition_key=partition_key or [],
+            primary_key=primary_key or [],
             hudi_precombine_key=hudi_precombine_key,
             featurestore_id=self._id,
             featurestore_name=self._name,
-            features=features,
+            features=features or [],
             embedding_index=embedding_index,
             statistics_config=statistics_config,
             event_time=event_time,
             stream=stream,
             expectation_suite=expectation_suite,
-            parents=parents,
+            parents=parents or [],
             topic_name=topic_name,
             notification_topic_name=notification_topic_name,
         )
@@ -589,18 +593,18 @@ class FeatureStore:
         description: Optional[str] = "",
         online_enabled: Optional[bool] = False,
         time_travel_format: Optional[str] = "HUDI",
-        partition_key: Optional[List[str]] = [],
-        primary_key: Optional[List[str]] = [],
+        partition_key: Optional[List[str]] = None,
+        primary_key: Optional[List[str]] = None,
         embedding_index: Optional[EmbeddingIndex] = None,
         hudi_precombine_key: Optional[str] = None,
-        features: Optional[List[feature.Feature]] = [],
+        features: Optional[List[feature.Feature]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         expectation_suite: Optional[
             Union[expectation_suite.ExpectationSuite, ge.core.ExpectationSuite]
         ] = None,
         event_time: Optional[str] = None,
         stream: Optional[bool] = False,
-        parents: Optional[List[feature_group.FeatureGroup]] = [],
+        parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
     ):
@@ -673,6 +677,7 @@ class FeatureStore:
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
+
             stream: Optionally, Define whether the feature group should support real time stream writing capabilities.
                 Stream enabled Feature Groups have unified single API for writing streaming features transparently
                 to both online and offline store.
@@ -703,18 +708,18 @@ class FeatureStore:
                     description=description,
                     online_enabled=online_enabled,
                     time_travel_format=time_travel_format,
-                    partition_key=partition_key,
-                    primary_key=primary_key,
+                    partition_key=partition_key or [],
+                    primary_key=primary_key or [],
                     embedding_index=embedding_index,
                     hudi_precombine_key=hudi_precombine_key,
                     featurestore_id=self._id,
                     featurestore_name=self._name,
-                    features=features,
+                    features=features or [],
                     statistics_config=statistics_config,
                     event_time=event_time,
                     stream=stream,
                     expectation_suite=expectation_suite,
-                    parents=parents,
+                    parents=parents or [],
                     topic_name=topic_name,
                     notification_topic_name=notification_topic_name,
                 )
@@ -731,11 +736,11 @@ class FeatureStore:
         query: Optional[str] = None,
         data_format: Optional[str] = None,
         path: Optional[str] = "",
-        options: Optional[Dict[str, str]] = {},
+        options: Optional[Dict[str, str]] = None,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        primary_key: Optional[List[str]] = [],
-        features: Optional[List[feature.Feature]] = [],
+        primary_key: Optional[List[str]] = None,
+        features: Optional[List[feature.Feature]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         event_time: Optional[str] = None,
         expectation_suite: Optional[
@@ -801,6 +806,7 @@ class FeatureStore:
                 !!!note "Event time data type restriction"
                     The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
 
+
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
@@ -813,14 +819,14 @@ class FeatureStore:
             query=query,
             data_format=data_format,
             path=path,
-            options=options,
+            options=options or {},
             storage_connector=storage_connector,
             version=version,
             description=description,
-            primary_key=primary_key,
+            primary_key=primary_key or [],
             featurestore_id=self._id,
             featurestore_name=self._name,
-            features=features,
+            features=features or [],
             statistics_config=statistics_config,
             event_time=event_time,
             expectation_suite=expectation_suite,
@@ -838,11 +844,12 @@ class FeatureStore:
         query: Optional[str] = None,
         data_format: Optional[str] = None,
         path: Optional[str] = "",
-        options: Optional[Dict[str, str]] = {},
+        options: Optional[Dict[str, str]] = None,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        primary_key: Optional[List[str]] = [],
-        features: Optional[List[feature.Feature]] = [],
+        primary_key: Optional[List[str]] = None,
+        embedding_index: Optional[EmbeddingIndex] = None,
+        features: Optional[List[feature.Feature]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         event_time: Optional[str] = None,
         expectation_suite: Optional[
@@ -937,8 +944,11 @@ class FeatureStore:
             event_time: Optionally, provide the name of the feature containing the event
                 time for the features in this feature group. If event_time is set
                 the feature group can be used for point-in-time joins. Defaults to `None`.
-            !!! note "Event time data type restriction"
-                The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+                !!! note "Event time data type restriction"
+                    The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+
             expectation_suite: Optionally, attach an expectation suite to the feature
                 group which dataframes should be validated against upon insertion.
                 Defaults to `None`.
@@ -957,14 +967,15 @@ class FeatureStore:
             query=query,
             data_format=data_format,
             path=path,
-            options=options,
+            options=options or {},
             storage_connector=storage_connector,
             version=version,
             description=description,
-            primary_key=primary_key,
+            primary_key=primary_key or [],
+            embedding_index=embedding_index,
             featurestore_id=self._id,
             featurestore_name=self._name,
-            features=features,
+            features=features or [],
             statistics_config=statistics_config,
             event_time=event_time,
             expectation_suite=expectation_suite,
@@ -981,9 +992,9 @@ class FeatureStore:
         name: str,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        primary_key: Optional[List[str]] = [],
+        primary_key: Optional[List[str]] = None,
         event_time: Optional[str] = None,
-        features: Optional[List[feature.Feature]] = [],
+        features: Optional[List[feature.Feature]] = None,
         dataframe: Union[
             pd.DataFrame,
             TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
@@ -1082,8 +1093,11 @@ class FeatureStore:
                 list of `Feature` objects. Defaults to empty list `[]` and will use the
                 schema information of the DataFrame resulting by executing the provided query
                 against the data source.
-            !!!note "Event time data type restriction"
-                The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+                !!!note "Event time data type restriction"
+                    The supported data types for the event time column are: `timestamp`, `date` and `bigint`.
+
+
             dataframe: DataFrame, RDD, Ndarray, list. Spine dataframe with primary key, event time and
                 label column to use for point in time join when fetching features.
 
@@ -1106,9 +1120,9 @@ class FeatureStore:
                     name=name,
                     version=version,
                     description=description,
-                    primary_key=primary_key,
+                    primary_key=primary_key or [],
                     event_time=event_time,
-                    features=features,
+                    features=features or [],
                     dataframe=dataframe,
                     featurestore_id=self._id,
                     featurestore_name=self._name,
@@ -1126,12 +1140,12 @@ class FeatureStore:
         data_format: Optional[str] = "tfrecords",
         coalesce: Optional[bool] = False,
         storage_connector: Optional[storage_connector.StorageConnector] = None,
-        splits: Optional[Dict[str, float]] = {},
+        splits: Optional[Dict[str, float]] = None,
         location: Optional[str] = "",
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        label: Optional[List[str]] = [],
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
+        label: Optional[List[str]] = None,
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
         train_split: str = None,
     ):
         """Create a training dataset metadata object.
@@ -1217,12 +1231,12 @@ class FeatureStore:
             storage_connector=storage_connector,
             location=location,
             featurestore_id=self._id,
-            splits=splits,
+            splits=splits or {},
             seed=seed,
             statistics_config=statistics_config,
-            label=label,
+            label=label or [],
             coalesce=coalesce,
-            transformation_functions=transformation_functions,
+            transformation_functions=transformation_functions or {},
             train_split=train_split,
         )
 
@@ -1412,10 +1426,10 @@ class FeatureStore:
         query: Query,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        labels: Optional[List[str]] = [],
-        inference_helper_columns: Optional[List[str]] = [],
-        training_helper_columns: Optional[List[str]] = [],
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
+        labels: Optional[List[str]] = None,
+        inference_helper_columns: Optional[List[str]] = None,
+        training_helper_columns: Optional[List[str]] = None,
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
     ):
         """Create a feature view metadata object and saved it to hopsworks.
 
@@ -1513,10 +1527,10 @@ class FeatureStore:
             featurestore_id=self._id,
             version=version,
             description=description,
-            labels=labels,
-            inference_helper_columns=inference_helper_columns,
-            training_helper_columns=training_helper_columns,
-            transformation_functions=transformation_functions,
+            labels=labels or [],
+            inference_helper_columns=inference_helper_columns or [],
+            training_helper_columns=training_helper_columns or [],
+            transformation_functions=transformation_functions or {},
         )
         return self._feature_view_engine.save(feat_view)
 
@@ -1527,10 +1541,10 @@ class FeatureStore:
         query: Query,
         version: int,
         description: Optional[str] = "",
-        labels: Optional[List[str]] = [],
-        inference_helper_columns: Optional[List[str]] = [],
-        training_helper_columns: Optional[List[str]] = [],
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
+        labels: Optional[List[str]] = None,
+        inference_helper_columns: Optional[List[str]] = None,
+        training_helper_columns: Optional[List[str]] = None,
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
     ):
         """Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
         existing feature view metadata object.
@@ -1596,10 +1610,10 @@ class FeatureStore:
                     query=query,
                     version=version,
                     description=description,
-                    labels=labels,
-                    inference_helper_columns=inference_helper_columns,
-                    training_helper_columns=training_helper_columns,
-                    transformation_functions=transformation_functions,
+                    labels=labels or [],
+                    inference_helper_columns=inference_helper_columns or [],
+                    training_helper_columns=training_helper_columns or [],
+                    transformation_functions=transformation_functions or {},
                 )
             else:
                 raise e
@@ -1639,6 +1653,7 @@ class FeatureStore:
                     name, self.DEFAULT_VERSION
                 ),
                 util.VersionWarning,
+                stacklevel=1,
             )
             version = self.DEFAULT_VERSION
         return self._feature_view_engine.get(name, version)

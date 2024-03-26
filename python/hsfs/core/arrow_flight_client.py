@@ -14,22 +14,22 @@
 #   limitations under the License.
 #
 
+import base64
 import datetime
 import json
-import base64
 import warnings
 from functools import wraps
 
+import polars as pl
 import pyarrow
 import pyarrow.flight
-from pyarrow.flight import FlightServerError
-from hsfs import client
-from hsfs import feature_group
+from hsfs import client, feature_group, util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core.variable_api import VariableApi
-from hsfs import util
 from hsfs.storage_connector import StorageConnector
+from pyarrow.flight import FlightServerError
 from retrying import retry
+
 
 _arrow_flight_instance = None
 
@@ -78,7 +78,8 @@ class ArrowFlightClient:
             f"Could not establish connection to ArrowFlight Server. ({message}) "
             f"Will fall back to hive/spark for this session. "
             f"If the error persists, you can disable using ArrowFlight "
-            f"by changing the cluster configuration (set 'enable_flyingduck'='false')."
+            f"by changing the cluster configuration (set 'enable_flyingduck'='false').",
+            stacklevel=1,
         )
 
     def _initialize_connection(self):
@@ -204,7 +205,7 @@ class ArrowFlightClient:
 
         return decorator
 
-    def _should_retry(exception):
+    def _should_retry(self, exception):
         return isinstance(exception, pyarrow._flight.FlightUnavailableError)
 
     @retry(
@@ -215,27 +216,37 @@ class ArrowFlightClient:
     def get_flight_info(self, descriptor):
         return self._connection.get_flight_info(descriptor)
 
-    def _get_dataset(self, descriptor, timeout=DEFAULT_TIMEOUT):
+    def _get_dataset(
+        self, descriptor, timeout=DEFAULT_TIMEOUT, dataframe_type="default"
+    ):
         info = self.get_flight_info(descriptor)
         options = pyarrow.flight.FlightCallOptions(timeout=timeout)
         reader = self._connection.do_get(self._info_to_ticket(info), options)
-        return reader.read_pandas()
+        if dataframe_type.lower() == "polars":
+            return pl.from_arrow(reader.read_all())
+        else:
+            return reader.read_pandas()
 
     @_handle_afs_exception(user_message=READ_ERROR)
-    def read_query(self, query_object, arrow_flight_config):
+    def read_query(self, query_object, arrow_flight_config, dataframe_type):
         query_encoded = json.dumps(query_object).encode("ascii")
         descriptor = pyarrow.flight.FlightDescriptor.for_command(query_encoded)
         return self._get_dataset(
             descriptor,
-            arrow_flight_config.get("timeout")
-            if arrow_flight_config
-            else self.DEFAULT_TIMEOUT,
+            (
+                arrow_flight_config.get("timeout")
+                if arrow_flight_config
+                else self.DEFAULT_TIMEOUT
+            ),
+            dataframe_type,
         )
 
     @_handle_afs_exception(user_message=READ_ERROR)
-    def read_path(self, path, arrow_flight_config):
+    def read_path(self, path, arrow_flight_config, dataframe_type):
         descriptor = pyarrow.flight.FlightDescriptor.for_path(path)
-        return self._get_dataset(descriptor, arrow_flight_config)
+        return self._get_dataset(
+            descriptor, arrow_flight_config, dataframe_type=dataframe_type
+        )
 
     @_handle_afs_exception(user_message=WRITE_ERROR)
     def create_training_dataset(
@@ -270,7 +281,9 @@ class ArrowFlightClient:
     def is_flyingduck_query_object(self, query_obj):
         return isinstance(query_obj, dict) and "query_string" in query_obj
 
-    def create_query_object(self, query, query_str, on_demand_fg_aliases=[]):
+    def create_query_object(self, query, query_str, on_demand_fg_aliases=None):
+        if on_demand_fg_aliases is None:
+            on_demand_fg_aliases = []
         features = {}
         connectors = {}
         for fg in query.featuregroups:

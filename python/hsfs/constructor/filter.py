@@ -16,7 +16,7 @@
 
 import json
 
-from hsfs import util, feature
+from hsfs import feature, util
 
 
 class Filter:

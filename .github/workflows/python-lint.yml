@@ -11,21 +11,12 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
       - name: install deps
-        run: pip install flake8==3.9.0 black==22.3.0 pre-commit-hooks==2.4.0
+        run: pip install ruff==0.3.2 pre-commit-hooks==2.4.0
 
-      - name: black
-        run: black --check python
-
-      - name: flake8
-        run: flake8 --config python/.flake8 python
-
-      - name: trailing-whitespace-fixer
-        run: trailing-whitespace-fixer $(find python -name "*.py" -type f) || exit 1
-
-      - name: end-of-file-fixer
-        run: end-of-file-fixer $(find python -name "*.py" -type f) || exit 1
+      - name: ruff
+        run: ruff check python --config=python/pyproject.toml --output-format=github
 
   unit_tests_ubuntu_utc:
     name: Unit Testing (Ubuntu)
@@ -145,7 +136,6 @@ jobs:
         env:
           ENABLE_HOPSWORKS_USAGE: "false"
         run: pytest python/tests
-
 
   unit_tests_windows_local:
     name: Unit Testing (Windows) (Local TZ)

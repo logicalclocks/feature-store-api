@@ -1,19 +1,18 @@
+import concurrent.futures
 import functools
-import logging
-import traceback
-import platform
-import json
-import os
-import time
-import uuid
 import hashlib
+import http.client
+import json
+import logging
+import os
+import platform
 import random
 import sys
-import http.client
-import concurrent.futures
-
-from os.path import expanduser, join
+import time
+import traceback
+import uuid
 from datetime import datetime
+from os.path import expanduser, join
 
 
 class EnvironmentAttribute:

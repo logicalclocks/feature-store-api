@@ -15,56 +15,56 @@
 #
 
 import copy
-import time
-
-from hsfs.embedding import EmbeddingIndex
-from hsfs.ge_validation_result import ValidationResult
-import humps
 import json
+import time
 import warnings
-import pandas as pd
-import numpy as np
-import great_expectations as ge
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+
 import avro.schema
-from hsfs.constructor.filter import Filter, Logic
-from typing import Optional, Union, Any, Dict, List, TypeVar, Tuple
-
-from datetime import datetime, date
-
+import great_expectations as ge
+import humps
+import numpy as np
+import pandas as pd
+import polars as pl
 from hsfs import (
-    util,
     engine,
     feature,
-    user,
     feature_group_writer,
+    user,
+    util,
+)
+from hsfs import (
     storage_connector as sc,
 )
+from hsfs.client.exceptions import FeatureStoreException, RestAPIError
+from hsfs.constructor import filter, query
+from hsfs.constructor.filter import Filter, Logic
 from hsfs.core import (
-    feature_group_engine,
-    statistics_engine,
-    expectation_suite_engine,
-    validation_report_engine,
     code_engine,
+    expectation_suite_engine,
     external_feature_group_engine,
-    spine_group_engine,
-    validation_result_engine,
-    job_api,
+    feature_group_engine,
     feature_monitoring_config_engine,
     feature_monitoring_result_engine,
+    great_expectation_engine,
+    job_api,
+    spine_group_engine,
+    statistics_engine,
+    validation_report_engine,
+    validation_result_engine,
 )
-
-from hsfs.statistics_config import StatisticsConfig
-from hsfs.statistics import Statistics
-from hsfs.expectation_suite import ExpectationSuite
-from hsfs.validation_report import ValidationReport
 from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
-from hsfs.constructor import query, filter
-from hsfs.client.exceptions import FeatureStoreException, RestAPIError
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
-from hsfs.core import great_expectation_engine
 from hsfs.core.vector_db_client import VectorDbClient
+from hsfs.embedding import EmbeddingIndex
+from hsfs.expectation_suite import ExpectationSuite
+from hsfs.ge_validation_result import ValidationResult
+from hsfs.statistics import Statistics
+from hsfs.statistics_config import StatisticsConfig
+from hsfs.validation_report import ValidationReport
 
 
 class FeatureGroupBase:
@@ -150,7 +150,8 @@ class FeatureGroupBase:
     def check_deprecated(self):
         if self.deprecated:
             warnings.warn(
-                f"Feature Group `{self._name}`, version `{self._version}` is deprecated"
+                f"Feature Group `{self._name}`, version `{self._version}` is deprecated",
+                stacklevel=1,
             )
 
     def delete(self):
@@ -184,6 +185,7 @@ class FeatureGroupBase:
                 self._name, self._version
             ),
             util.JobWarning,
+            stacklevel=1,
         )
         self._feature_group_engine.delete(self)
 
@@ -301,7 +303,9 @@ class FeatureGroupBase:
             feature_store_id=self._feature_store_id,
         )
 
-    def select_except(self, features: Optional[List[Union[str, feature.Feature]]] = []):
+    def select_except(
+        self, features: Optional[List[Union[str, feature.Feature]]] = None
+    ):
         """Select all features including primary key and event time feature
         of the feature group except provided `features` and return a query object.
 
@@ -560,10 +564,10 @@ class FeatureGroupBase:
         """
         try:
             return self.__getitem__(name)
-        except KeyError:
+        except KeyError as err:
             raise FeatureStoreException(
                 f"'FeatureGroup' object has no feature called '{name}'."
-            )
+            ) from err
 
     def update_statistics_config(self):
         """Update the statistics configuration of the feature group.
@@ -1064,7 +1068,7 @@ class FeatureGroupBase:
         expectation_id: int,
         start_validation_time: Union[str, int, datetime, date, None] = None,
         end_validation_time: Union[str, int, datetime, date, None] = None,
-        filter_by: List[str] = [],
+        filter_by: List[str] = None,
         ge_type: bool = True,
     ) -> Union[List[ValidationResult], List[ge.core.ExpectationValidationResult]]:
         """Fetch validation history of an Expectation specified by its id.
@@ -1107,7 +1111,7 @@ class FeatureGroupBase:
                 expectation_id=expectation_id,
                 start_validation_time=start_validation_time,
                 end_validation_time=end_validation_time,
-                filter_by=filter_by,
+                filter_by=filter_by or [],
                 ge_type=ge_type,
             )
         else:
@@ -1122,7 +1126,7 @@ class FeatureGroupBase:
         ] = None,
         expectation_suite: Optional[ExpectationSuite] = None,
         save_report: Optional[bool] = False,
-        validation_options: Optional[Dict[Any, Any]] = {},
+        validation_options: Optional[Dict[Any, Any]] = None,
         ingestion_result: str = "UNKNOWN",
         ge_type: bool = True,
     ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
@@ -1175,7 +1179,7 @@ class FeatureGroupBase:
             dataframe=engine.get_instance().convert_to_default_dataframe(dataframe),
             expectation_suite=expectation_suite,
             save_report=save_report,
-            validation_options=validation_options,
+            validation_options=validation_options or {},
             ingestion_result=ingestion_result,
             ge_type=ge_type,
         )
@@ -1443,12 +1447,12 @@ class FeatureGroupBase:
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
-        except KeyError:
+        except KeyError as err:
             raise AttributeError(
                 f"'FeatureGroup' object has no attribute '{name}'. "
                 "If you are trying to access a feature, fall back on "
                 "using the `get_feature` method."
-            )
+            ) from err
 
     def __getitem__(self, name):
         if not isinstance(name, str):
@@ -1650,6 +1654,7 @@ class FeatureGroupBase:
                     " `{}`. No statistics computed."
                 ).format(self._name, self._version),
                 util.StorageWarning,
+                stacklevel=1,
             )
 
     @property
@@ -1806,7 +1811,9 @@ class FeatureGroupBase:
         try:
             avro.schema.parse(schema_s)
         except avro.schema.SchemaParseException as e:
-            raise FeatureStoreException("Failed to construct Avro Schema: {}".format(e))
+            raise FeatureStoreException(
+                "Failed to construct Avro Schema: {}".format(e)
+            ) from e
         return schema_s
 
     def _get_feature_avro_schema(self, feature_name):
@@ -1983,6 +1990,7 @@ class FeatureGroup(FeatureGroupBase):
                             "because Stream enabled feature groups only support `{}`"
                         ).format(self._time_travel_format, expected_format),
                         util.FeatureGroupWarning,
+                        stacklevel=1,
                     )
                     self._time_travel_format = expected_format
 
@@ -2013,7 +2021,7 @@ class FeatureGroup(FeatureGroupBase):
         wallclock_time: Optional[Union[str, int, datetime, date]] = None,
         online: Optional[bool] = False,
         dataframe_type: Optional[str] = "default",
-        read_options: Optional[dict] = {},
+        read_options: Optional[dict] = None,
     ):
         """
         Read the feature group into a dataframe.
@@ -2048,8 +2056,9 @@ class FeatureGroup(FeatureGroupBase):
                 or `%Y-%m-%d %H:%M:%S.%f`.
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                 Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
             read_options: Additional options as key/value pairs to pass to the execution engine.
                 For spark engine: Dictionary of read options for Spark.
                 For python engine:
@@ -2068,6 +2077,7 @@ class FeatureGroup(FeatureGroupBase):
             `DataFrame`: The spark dataframe containing the feature data.
             `pyspark.DataFrame`. A Spark DataFrame.
             `pandas.DataFrame`. A Pandas DataFrame.
+            `polars.DataFrame`. A Polars DataFrame.
             `numpy.ndarray`. A two-dimensional Numpy array.
             `list`. A two-dimensional Python list.
 
@@ -2087,21 +2097,21 @@ class FeatureGroup(FeatureGroupBase):
                 .read(
                     online,
                     dataframe_type,
-                    read_options,
+                    read_options or {},
                 )
             )
         else:
             return self.select_all().read(
                 online,
                 dataframe_type,
-                read_options,
+                read_options or {},
             )
 
     def read_changes(
         self,
         start_wallclock_time: Union[str, int, datetime, date],
         end_wallclock_time: Union[str, int, datetime, date],
-        read_options: Optional[dict] = {},
+        read_options: Optional[dict] = None,
     ):
         """Reads updates of this feature that occurred between specified points in time.
 
@@ -2110,7 +2120,11 @@ class FeatureGroup(FeatureGroupBase):
                     `as_of(end_wallclock_time, exclude_until=start_wallclock_time).read(read_options=read_options)`
                     instead.
 
-        This function only works on feature groups with `HUDI` time travel format.
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
+
+        !!! warning
+            This function only works for feature groups with time_travel_format='HUDI'.
 
         # Arguments
             start_wallclock_time: Start time of the time travel query. Strings should be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`,
@@ -2135,7 +2149,7 @@ class FeatureGroup(FeatureGroupBase):
         return (
             self.select_all()
             .pull_changes(start_wallclock_time, end_wallclock_time)
-            .read(False, "default", read_options)
+            .read(False, "default", read_options or {})
         )
 
     def find_neighbors(
@@ -2148,6 +2162,10 @@ class FeatureGroup(FeatureGroupBase):
     ) -> List[Tuple[float, List[Any]]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
+
+        If `filter` or `min_score` is specified, or if embedding feature is stored in default project index,
+        the number of results returned may be less than k. Try using a large value of k and extract the top k
+        items from the results if needed.
 
         # Arguments
             embedding: The target embedding for which neighbors are to be found.
@@ -2243,13 +2261,14 @@ class FeatureGroup(FeatureGroupBase):
         self,
         features: Union[
             pd.DataFrame,
+            pl.DataFrame,
             TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
             TypeVar("pyspark.RDD"),  # noqa: F821
             np.ndarray,
             List[feature.Feature],
         ] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
-        validation_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
+        validation_options: Optional[Dict[Any, Any]] = None,
         wait: bool = False,
     ):
         """Persist the metadata and materialize the feature group to the feature store.
@@ -2259,14 +2278,14 @@ class FeatureGroup(FeatureGroupBase):
             To achieve the old behaviour, set `wait` argument to `True`.
 
         Calling `save` creates the metadata for the feature group in the feature store.
-        If a DataFrame, RDD or Ndarray is provided, the data is written to the
+        If a Pandas DataFrame, Polars DatFrame, RDD or Ndarray is provided, the data is written to the
         online/offline feature store as specified.
         By default, this writes the feature group to the offline storage, and if
         `online_enabled` for the feature group, also to the online feature store.
         The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
         # Arguments
-            features: DataFrame, RDD, Ndarray or a list of features. Features to be saved.
+            features: Pandas DataFrame, Polars DataFrame, RDD, Ndarray or a list of features. Features to be saved.
                 This argument is optional if the feature list is provided in the create_feature_group or
                 in the get_or_create_feature_group method invokation.
             write_options: Additional write options as key-value pairs, defaults to `{}`.
@@ -2320,7 +2339,7 @@ class FeatureGroup(FeatureGroupBase):
             # dataframe structure
             self._features = self._features if len(self._features) > 0 else features
             self._feature_group_engine.save_feature_group_metadata(
-                self, None, write_options
+                self, None, write_options or {}
             )
 
             return None, None
@@ -2342,7 +2361,7 @@ class FeatureGroup(FeatureGroupBase):
 
         # fg_job is used only if the python engine is used
         fg_job, ge_report = self._feature_group_engine.save(
-            self, feature_dataframe, write_options, validation_options
+            self, feature_dataframe, write_options, validation_options or {}
         )
         if ge_report is None or ge_report.ingestion_result == "INGESTED":
             self._code_engine.save_code(self)
@@ -2357,6 +2376,7 @@ class FeatureGroup(FeatureGroupBase):
                     self._name, self._version
                 ),
                 util.VersionWarning,
+                stacklevel=1,
             )
         return (
             fg_job,
@@ -2367,6 +2387,7 @@ class FeatureGroup(FeatureGroupBase):
         self,
         features: Union[
             pd.DataFrame,
+            pl.DataFrame,
             TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
             TypeVar("pyspark.RDD"),  # noqa: F821
             np.ndarray,
@@ -2375,8 +2396,8 @@ class FeatureGroup(FeatureGroupBase):
         overwrite: Optional[bool] = False,
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
-        write_options: Optional[Dict[str, Any]] = {},
-        validation_options: Optional[Dict[str, Any]] = {},
+        write_options: Optional[Dict[str, Any]] = None,
+        validation_options: Optional[Dict[str, Any]] = None,
         save_code: Optional[bool] = True,
         wait: bool = False,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
@@ -2387,7 +2408,7 @@ class FeatureGroup(FeatureGroupBase):
         default, the data is inserted into the offline storage as well as the online storage if the feature group is
         `online_enabled=True`.
 
-        The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame,
+        The `features` dataframe can be a Spark DataFrame or RDD, a Pandas DataFrame, a Polars DataFrame
         or a two-dimensional Numpy array or a two-dimensional Python nested list.
         If statistics are enabled, statistics are recomputed for the entire feature
         group.
@@ -2446,7 +2467,7 @@ class FeatureGroup(FeatureGroupBase):
             ```
 
         # Arguments
-            features: DataFrame, RDD, Ndarray, list. Features to be saved.
+            features: Pandas DataFrame, Polars DataFrame, RDD, Ndarray, list. Features to be saved.
             overwrite: Drop all data in the feature group before
                 inserting new data. This does not affect metadata, defaults to False.
             operation: Apache Hudi operation type `"insert"` or `"upsert"`.
@@ -2492,14 +2513,23 @@ class FeatureGroup(FeatureGroupBase):
 
         # Returns
             (`Job`, `ValidationReport`) A tuple with job information if python engine is used and the validation report if validation is enabled.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`. e.g fail to create feature group, dataframe schema does not match
+                existing feature group schema, etc.
+            `hsfs.client.exceptions.DataValidationException`. If data validation fails and the expectation
+                suite `validation_ingestion_policy` is set to `STRICT`. Data is NOT ingested.
         """
         if storage and self.stream:
             warnings.warn(
-                "Specifying the storage option is not supported if the streaming APIs are enabled"
+                "Specifying the storage option is not supported if the streaming APIs are enabled",
+                stacklevel=1,
             )
 
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
+        if validation_options is None:
+            validation_options = {}
         if write_options is None:
             write_options = {}
         if "wait_for_job" not in write_options:
@@ -2533,6 +2563,7 @@ class FeatureGroup(FeatureGroupBase):
         self,
         features: Union[
             pd.DataFrame,
+            pl.DataFrame,
             TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
             TypeVar("pyspark.RDD"),  # noqa: F821
             np.ndarray,
@@ -2541,8 +2572,8 @@ class FeatureGroup(FeatureGroupBase):
         overwrite: Optional[bool] = False,
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
-        write_options: Optional[Dict[str, Any]] = {},
-        validation_options: Optional[Dict[str, Any]] = {},
+        write_options: Optional[Dict[str, Any]] = None,
+        validation_options: Optional[Dict[str, Any]] = None,
     ) -> Union[
         Tuple[Optional[Job], Optional[ValidationReport]],
         feature_group_writer.FeatureGroupWriter,
@@ -2603,7 +2634,7 @@ class FeatureGroup(FeatureGroupBase):
             ```
 
         # Arguments
-            features: DataFrame, RDD, Ndarray, list. Features to be saved.
+            features: Pandas DataFrame, Polars DataFrame, RDD, Ndarray, list. Features to be saved.
             overwrite: Drop all data in the feature group before
                 inserting new data. This does not affect metadata, defaults to False.
             operation: Apache Hudi operation type `"insert"` or `"upsert"`.
@@ -2657,8 +2688,8 @@ class FeatureGroup(FeatureGroupBase):
                 overwrite,
                 operation,
                 storage,
-                write_options,
-                validation_options,
+                write_options or {},
+                validation_options or {},
             )
 
     def finalize_multi_part_insert(self):
@@ -2699,7 +2730,7 @@ class FeatureGroup(FeatureGroupBase):
         await_termination: Optional[bool] = False,
         timeout: Optional[int] = None,
         checkpoint_dir: Optional[str] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
     ):
         """Ingest a Spark Structured Streaming Dataframe to the online feature store.
 
@@ -2775,6 +2806,7 @@ class FeatureGroup(FeatureGroupBase):
                     " `{}` will not compute statistics."
                 ).format(self._name, self._version),
                 util.StatisticsWarning,
+                stacklevel=1,
             )
 
             return self._feature_group_engine.insert_stream(
@@ -2785,7 +2817,7 @@ class FeatureGroup(FeatureGroupBase):
                 await_termination,
                 timeout,
                 checkpoint_dir,
-                write_options,
+                write_options or {},
             )
 
     def commit_details(
@@ -2826,7 +2858,7 @@ class FeatureGroup(FeatureGroupBase):
     def commit_delete_record(
         self,
         delete_df: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
     ):
         """Drops records present in the provided DataFrame and commits it as update to this
         Feature group. This method can only be used on time travel enabled feature groups.
@@ -2838,7 +2870,7 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        self._feature_group_engine.commit_delete(self, delete_df, write_options)
+        self._feature_group_engine.commit_delete(self, delete_df, write_options or {})
 
     def as_of(
         self,
@@ -2846,6 +2878,9 @@ class FeatureGroup(FeatureGroupBase):
         exclude_until: Optional[Union[str, int, datetime, date]] = None,
     ):
         """Get Query object to retrieve all features of the group at a point in the past.
+
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
 
         This method selects all features in the feature group and returns a Query object
         at the specified point in time. Optionally, commits before a specified point in time can be
@@ -3038,7 +3073,7 @@ class FeatureGroup(FeatureGroupBase):
             _ = json_decamelized.pop("type", None)
             json_decamelized.pop("validation_type", None)
             if "embedding_index" in json_decamelized:
-                json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+                json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
                     json_decamelized["embedding_index"]
                 )
             return cls(**json_decamelized)
@@ -3048,7 +3083,7 @@ class FeatureGroup(FeatureGroupBase):
             _ = fg.pop("type", None)
             fg.pop("validation_type", None)
             if "embedding_index" in fg:
-                fg["embedding_index"] = EmbeddingIndex.from_json_response(
+                fg["embedding_index"] = EmbeddingIndex.from_response_json(
                     fg["embedding_index"]
                 )
         return [cls(**fg) for fg in json_decamelized]
@@ -3058,7 +3093,7 @@ class FeatureGroup(FeatureGroupBase):
         json_decamelized["stream"] = json_decamelized["type"] == "streamFeatureGroupDTO"
         _ = json_decamelized.pop("type")
         if "embedding_index" in json_decamelized:
-            json_decamelized["embedding_index"] = EmbeddingIndex.from_json_response(
+            json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
                 json_decamelized["embedding_index"]
             )
         self.__init__(**json_decamelized)
@@ -3248,7 +3283,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         query=None,
         data_format=None,
         path=None,
-        options={},
+        options=None,
         name=None,
         version=None,
         description=None,
@@ -3270,6 +3305,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         notification_topic_name=None,
         spine=False,
         deprecated=False,
+        embedding_index=None,
         **kwargs,
     ):
         super().__init__(
@@ -3280,6 +3316,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             event_time=event_time,
             online_enabled=online_enabled,
             id=id,
+            embedding_index=embedding_index,
             expectation_suite=expectation_suite,
             online_topic_name=online_topic_name,
             topic_name=topic_name,
@@ -3332,7 +3369,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             self.primary_key = primary_key
             self.statistics_config = statistics_config
             self._features = features
-            self._options = options
+            self._options = options or {}
 
         if storage_connector is not None and isinstance(storage_connector, dict):
             self._storage_connector = sc.StorageConnector.from_response_json(
@@ -3340,7 +3377,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             )
         else:
             self._storage_connector = storage_connector
-
+        self._vector_db_client = None
         self._href = href
 
     def save(self):
@@ -3378,13 +3415,78 @@ class ExternalFeatureGroup(FeatureGroupBase):
             np.ndarray,
             List[list],
         ],
-        write_options: Optional[Dict[str, Any]] = {},
-        validation_options: Optional[Dict[str, Any]] = {},
+        write_options: Optional[Dict[str, Any]] = None,
+        validation_options: Optional[Dict[str, Any]] = None,
         save_code: Optional[bool] = True,
         wait: bool = False,
     ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
+        """Insert the dataframe feature values ONLY in the online feature store.
+
+        External Feature Groups contains metadata about feature data in an external storage system.
+        External storage system are usually offline, meaning feature values cannot be retrieved in real-time.
+        In order to use the feature values for real-time use-cases, you can insert them
+        in Hopsoworks Online Feature Store via this method.
+
+        The Online Feature Store has a single-entry per primary key value, meaining that providing a new value with
+        for a given primary key will overwrite the existing value. No record of the previous value is kept.
+
+        !!! example
+            ```python
+            # connect to the Feature Store
+            fs = ...
+
+            # get the External Feature Group instance
+            fg = fs.get_feature_group(name="external_sales_records", version=1)
+
+            # get the feature values, e.g reading from csv files in a S3 bucket
+            feature_values = ...
+
+            # insert the feature values in the online feature store
+            fg.insert(feature_values)
+            ```
+
+        !!! Note
+            Data Validation via Great Expectation is supported if you have attached an expectation suite to
+            your External Feature Group. However, as opposed to regular Feature Groups, this can lead to
+            discrepancies between the data in the external storage system and the online feature store.
+
+        # Arguments
+            features: DataFrame, RDD, Ndarray, list. Features to be saved.
+            write_options: Additional write options as key-value pairs, defaults to `{}`.
+                When using the `python` engine, write_options can contain the
+                following entries:
+                * key `kafka_producer_config` and value an object of type [properties](https://docs.confluent.io/platform/current/clients/librdkafka/html/md_CONFIGURATION.htmln)
+                  used to configure the Kafka client. To optimize for throughput in high latency connection consider
+                  changing [producer properties](https://docs.confluent.io/cloud/current/client-apps/optimizing/throughput.html#producer).
+                * key `internal_kafka` and value `True` or `False` in case you established
+                  connectivity from you Python environment to the internal advertised
+                  listeners of the Hopsworks Kafka Cluster. Defaults to `False` and
+                  will use external listeners when connecting from outside of Hopsworks.
+            validation_options: Additional validation options as key-value pairs, defaults to `{}`.
+                * key `run_validation` boolean value, set to `False` to skip validation temporarily on ingestion.
+                * key `save_report` boolean value, set to `False` to skip upload of the validation report to Hopsworks.
+                * key `ge_validate_kwargs` a dictionary containing kwargs for the validate method of Great Expectations.
+                * key `fetch_expectation_suite` a boolean value, by default `True`, to control whether the expectation
+                   suite of the feature group should be fetched before every insert.
+            save_code: When running HSFS on Hopsworks or Databricks, HSFS can save the code/notebook used to create
+                the feature group or used to insert data to it. When calling the `insert` method repeatedly
+                with small batches of data, this can slow down the writes. Use this option to turn off saving
+                code. Defaults to `True`.
+
+        # Returns
+            Tuple(`Job`, `ValidationReport`) The validation report if validation is enabled.
+
+        # Raises
+            `hsfs.client.exceptions.RestAPIError`. e.g fail to create feature group, dataframe schema does not match
+                existing feature group schema, etc.
+            `hsfs.client.exceptions.DataValidationException`. If data validation fails and the expectation
+                suite `validation_ingestion_policy` is set to `STRICT`. Data is NOT ingested.
+
+        """
         feature_dataframe = engine.get_instance().convert_to_default_dataframe(features)
 
+        if validation_options is None:
+            validation_options = {}
         if write_options is None:
             write_options = {}
         if "wait_for_job" not in write_options:
@@ -3409,6 +3511,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
                     " `{}`. Call `compute_statistics` explicitly to compute statistics over the data in the external storage system."
                 ).format(self._name, self._version),
                 util.StorageWarning,
+                stacklevel=1,
             )
 
         return (
@@ -3417,7 +3520,10 @@ class ExternalFeatureGroup(FeatureGroupBase):
         )
 
     def read(
-        self, dataframe_type: Optional[str] = "default", online: Optional[bool] = False
+        self,
+        dataframe_type: Optional[str] = "default",
+        online: Optional[bool] = False,
+        read_options: Optional[dict] = None,
     ):
         """Get the feature group as a DataFrame.
 
@@ -3441,11 +3547,13 @@ class ExternalFeatureGroup(FeatureGroupBase):
             Feature Groups.
 
         # Arguments
-            dataframe_type: str, optional. Possible values are `"default"`, `"spark"`,
-                `"pandas"`, `"numpy"` or `"python"`, defaults to `"default"`.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
             online: bool, optional. If `True` read from online feature store, defaults
                 to `False`.
-
+            read_options: Additional options as key/value pairs to pass to the spark engine.
+                Defaults to `None`.
         # Returns
             `DataFrame`: The spark dataframe containing the feature data.
             `pyspark.DataFrame`. A Spark DataFrame.
@@ -3478,10 +3586,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().read(dataframe_type=dataframe_type, online=online)
+        return self.select_all().read(
+            dataframe_type=dataframe_type,
+            online=online,
+            read_options=read_options or {},
+        )
 
-    def show(self, n):
-        """Show the first n rows of the feature group.
+    def show(self, n: int, online: Optional[bool] = False):
+        """Show the first `n` rows of the feature group.
 
         !!! example
             ```python
@@ -3491,8 +3603,14 @@ class ExternalFeatureGroup(FeatureGroupBase):
             # get the Feature Group instance
             fg = fs.get_or_create_feature_group(...)
 
-            fg.show(5)
+            # make a query and show top 5 rows
+            fg.select(['date','weekly_sales','is_holiday']).show(5)
             ```
+
+        # Arguments
+            n: int. Number of rows to show.
+            online: bool, optional. If `True` read from online feature store, defaults
+                to `False`.
         """
         engine.get_instance().set_job_group(
             "Fetching Feature group",
@@ -3500,22 +3618,111 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 self._name, self._feature_store_name
             ),
         )
-        return self.select_all().show(n)
+        if online and self.embedding_index:
+            if self._vector_db_client is None:
+                self._vector_db_client = VectorDbClient(self.select_all())
+            results = self._vector_db_client.read(
+                self.id,
+                {},
+                pk=self.embedding_index.col_prefix + self.primary_key[0],
+                index_name=self.embedding_index.index_name,
+                n=n,
+            )
+            return [[result[f.name] for f in self.features] for result in results]
+        return self.select_all().show(n, online)
+
+    def find_neighbors(
+        self,
+        embedding: List[Union[int, float]],
+        col: Optional[str] = None,
+        k: Optional[int] = 10,
+        filter: Optional[Union[Filter, Logic]] = None,
+        min_score: Optional[float] = 0,
+    ) -> List[Tuple[float, List[Any]]]:
+        """
+        Finds the nearest neighbors for a given embedding in the vector database.
+
+        If `filter` or `min_score` is specified, or if embedding feature is stored in default project index,
+        the number of results returned may be less than k. Try using a large value of k and extract the top k
+        items from the results if needed.
+
+        # Arguments
+            embedding: The target embedding for which neighbors are to be found.
+            col: The column name used to compute similarity score. Required only if there
+            are multiple embeddings (optional).
+            k: The number of nearest neighbors to retrieve (default is 10).
+            filter: A filter expression to restrict the search space (optional).
+            min_score: The minimum similarity score for neighbors to be considered (default is 0).
+
+        # Returns
+            A list of tuples representing the nearest neighbors.
+            Each tuple contains: `(The similarity score, A list of feature values)`
+
+        !!! Example
+            ```
+            embedding_index = EmbeddingIndex()
+            embedding_index.add_embedding(name="user_vector", dimension=3)
+            fg = fs.create_feature_group(
+                        name='air_quality',
+                        embedding_index = embedding_index,
+                        version=1,
+                        primary_key=['id1'],
+                        online_enabled=True,
+                    )
+            fg.insert(data)
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+            )
+
+            # apply filter
+            fg.find_neighbors(
+                [0.1, 0.2, 0.3],
+                k=5,
+                filter=(fg.id1 > 10) & (fg.id1 < 30)
+            )
+            ```
+        """
+        if self._vector_db_client is None and self._embedding_index:
+            self._vector_db_client = VectorDbClient(self.select_all())
+        results = self._vector_db_client.find_neighbors(
+            embedding,
+            feature=(self.__getattr__(col) if col else None),
+            k=k,
+            filter=filter,
+            min_score=min_score,
+        )
+        return [
+            (result[0], [result[1][f.name] for f in self.features])
+            for result in results
+        ]
 
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         if isinstance(json_decamelized, dict):
             _ = json_decamelized.pop("type", None)
+            if "embedding_index" in json_decamelized:
+                json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
+                    json_decamelized["embedding_index"]
+                )
             return cls(**json_decamelized)
         for fg in json_decamelized:
             _ = fg.pop("type", None)
+            if "embedding_index" in fg:
+                fg["embedding_index"] = EmbeddingIndex.from_response_json(
+                    fg["embedding_index"]
+                )
         return [cls(**fg) for fg in json_decamelized]
 
     def update_from_response_json(self, json_dict):
         json_decamelized = humps.decamelize(json_dict)
         if "type" in json_decamelized:
             _ = json_decamelized.pop("type")
+        if "embedding_index" in json_decamelized:
+            json_decamelized["embedding_index"] = EmbeddingIndex.from_response_json(
+                json_decamelized["embedding_index"]
+            )
         self.__init__(**json_decamelized)
         return self
 
@@ -3523,7 +3730,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def to_dict(self):
-        return {
+        fg_meta_dict = {
             "id": self._id,
             "name": self._name,
             "description": self._description,
@@ -3547,6 +3754,9 @@ class ExternalFeatureGroup(FeatureGroupBase):
             "notificationTopicName": self.notification_topic_name,
             "deprecated": self.deprecated,
         }
+        if self.embedding_index:
+            fg_meta_dict["embeddingIndex"] = self.embedding_index
+        return fg_meta_dict
 
     @property
     def id(self):
@@ -3604,7 +3814,7 @@ class SpineGroup(FeatureGroupBase):
         query=None,
         data_format=None,
         path=None,
-        options={},
+        options=None,
         name=None,
         version=None,
         description=None,

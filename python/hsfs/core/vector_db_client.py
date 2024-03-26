@@ -14,12 +14,13 @@
 #   limitations under the License.
 #
 
-from hsfs.client.exceptions import FeatureStoreException
-from hsfs.constructor.join import Join
-from hsfs.constructor.filter import Filter, Logic
-from hsfs.feature import Feature
-from hsfs.core.opensearch import OpenSearchClientSingleton
 from typing import Union
+
+from hsfs.client.exceptions import FeatureStoreException, VectorDatabaseException
+from hsfs.constructor.filter import Filter, Logic
+from hsfs.constructor.join import Join
+from hsfs.core.opensearch import OpenSearchClientSingleton
+from hsfs.feature import Feature
 
 
 class VectorDbClient:
@@ -40,6 +41,7 @@ class VectorDbClient:
         self._fg_embedding_map = {}
         self._embedding_fg_by_join_index = {}
         self._opensearch_client = None
+        self._index_result_limit_k = {}
         self.init()
 
     def init(self):
@@ -60,9 +62,9 @@ class VectorDbClient:
                     fg_col_vdb_col_map[f.name] = fg.embedding_index.col_prefix + f.name
                 # add primary key to the map in case it is not selected as feature
                 for pk in q._left_feature_group.primary_key:
-                    vdb_col_fg_col_map[
-                        fg.embedding_index.col_prefix + pk
-                    ] = q._left_feature_group[pk]
+                    vdb_col_fg_col_map[fg.embedding_index.col_prefix + pk] = (
+                        q._left_feature_group[pk]
+                    )
                     fg_col_vdb_col_map[pk] = fg.embedding_index.col_prefix + pk
                 self._fg_vdb_col_fg_col_map[fg.id] = vdb_col_fg_col_map
                 self._fg_col_vdb_col_map[fg.id] = fg_col_vdb_col_map
@@ -84,9 +86,7 @@ class VectorDbClient:
                 for feat in join_fg.features:
                     vdb_col_td_col_map[
                         join_fg.embedding_index.col_prefix + feat.name
-                    ] = (
-                        join.prefix or ""
-                    ) + feat.name  # join.prefix can be None
+                    ] = (join.prefix or "") + feat.name  # join.prefix can be None
                 self._fg_vdb_col_td_col_map[join_fg.id] = vdb_col_td_col_map
 
     def find_neighbors(
@@ -135,6 +135,36 @@ class VectorDbClient:
             index_name = embedding_feature.embedding_index.index_name
 
         results = self._opensearch_client.search(body=query, index=index_name)
+
+        # When using project index (`embedding_feature.embedding_index.col_prefix` is not empty), sometimes the total number of result returned is less than k. Possible reason is that when using project index, some embedding columns have null value if the row is from a different feature group. And opensearch filter out the result where embedding is null after retrieving the top k results. So search 3 times more data if it is using project index and size of result is not k.
+        if (
+            embedding_feature.embedding_index.col_prefix
+            and len(results["hits"]["hits"]) != k
+        ):
+            # Get the max number of results allowed to request if it is not available.
+            # This is expected to be executed once only.
+            if not self._index_result_limit_k.get(index_name):
+                query["query"]["bool"]["must"][0]["knn"][col_name]["k"] = 2**31 - 1
+                try:
+                    # It is expected that this request ALWAYS fails because requested k is too large.
+                    # The purpose here is to get the max k allowed from the vector database, and cache it.
+                    self._opensearch_client.search(body=query, index=index_name)
+                except VectorDatabaseException as e:
+                    if (
+                        e.reason == VectorDatabaseException.REQUESTED_K_TOO_LARGE
+                        and e.info.get(
+                            VectorDatabaseException.REQUESTED_K_TOO_LARGE_INFO_K
+                        )
+                    ):
+                        self._index_result_limit_k[index_name] = e.info.get(
+                            VectorDatabaseException.REQUESTED_K_TOO_LARGE_INFO_K
+                        )
+                    else:
+                        raise e
+            query["query"]["bool"]["must"][0]["knn"][col_name]["k"] = min(
+                self._index_result_limit_k.get(index_name, k), 3 * k
+            )
+            results = self._opensearch_client.search(body=query, index=index_name)
 
         # https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
         return [

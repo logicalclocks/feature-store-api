@@ -18,6 +18,7 @@ from hsfs import feature_group_commit, util
 from hsfs.core import feature_group_api
 from hsfs.client.exceptions import FeatureStoreException
 
+
 try:
     from delta.tables import DeltaTable
 except ImportError:

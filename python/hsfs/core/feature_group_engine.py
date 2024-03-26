@@ -14,7 +14,7 @@
 #
 import warnings
 
-from hsfs import engine, client, util
+from hsfs import engine, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.core import feature_group_base_engine, hudi_engine, delta_engine
@@ -33,7 +33,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         feature_group,
         feature_dataframe,
         write_options,
-        validation_options: dict = {},
+        validation_options: dict = None,
     ):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
@@ -47,7 +47,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         ge_report = feature_group._great_expectation_engine.validate(
             feature_group=feature_group,
             dataframe=feature_dataframe,
-            validation_options=validation_options,
+            validation_options=validation_options or {},
             ingestion_result="INGESTED",
         )
 
@@ -80,7 +80,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         operation,
         storage,
         write_options,
-        validation_options: dict = {},
+        validation_options: dict = None,
     ):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
@@ -101,13 +101,21 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         ge_report = feature_group._great_expectation_engine.validate(
             feature_group=feature_group,
             dataframe=feature_dataframe,
-            validation_options=validation_options,
+            validation_options=validation_options or {},
             ingestion_result="INGESTED",
             ge_type=False,
         )
 
         if ge_report is not None and ge_report.ingestion_result == "REJECTED":
-            return None, ge_report
+            feature_group_url = util.get_feature_group_url(
+                feature_store_id=feature_group.feature_store_id,
+                feature_group_id=feature_group.id,
+            )
+            raise exceptions.DataValidationException(
+                "Data validation failed while validation ingestion policy set to strict, "
+                + f"insertion to {feature_group.name} was aborted.\n"
+                + f"You can check a summary or download your report at {feature_group_url}."
+            )
 
         offline_write_options = write_options
         online_write_options = write_options
@@ -298,7 +306,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         if not feature_group.stream:
             warnings.warn(
                 "`insert_stream` method in the next release will be available only for feature groups created with "
-                "`stream=True`."
+                "`stream=True`.",
+                stacklevel=1,
             )
 
         streaming_query = engine.get_instance().save_stream_dataframe(
@@ -363,16 +372,8 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         self._feature_group_api.save(feature_group)
         print(
             "Feature Group created successfully, explore it at \n"
-            + self._get_feature_group_url(feature_group)
+            + util.get_feature_group_url(
+                feature_store_id=feature_group.feature_store_id,
+                feature_group_id=feature_group.id,
+            )
         )
-
-    def _get_feature_group_url(self, feature_group):
-        sub_path = (
-            "/p/"
-            + str(client.get_instance()._project_id)
-            + "/fs/"
-            + str(feature_group.feature_store_id)
-            + "/fg/"
-            + str(feature_group.id)
-        )
-        return util.get_hostname_replaced_url(sub_path)

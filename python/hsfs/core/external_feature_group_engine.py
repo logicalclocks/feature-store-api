@@ -15,7 +15,7 @@
 
 from hsfs import engine, util
 from hsfs import feature_group as fg
-from hsfs.client.exceptions import FeatureStoreException
+from hsfs.client.exceptions import DataValidationException, FeatureStoreException
 from hsfs.core import feature_group_base_engine
 
 
@@ -52,7 +52,7 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
         feature_group,
         feature_dataframe,
         write_options: dict,
-        validation_options: dict = {},
+        validation_options: dict = None,
     ):
         if not feature_group.online_enabled:
             raise FeatureStoreException(
@@ -74,13 +74,21 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
         ge_report = feature_group._great_expectation_engine.validate(
             feature_group=feature_group,
             dataframe=feature_dataframe,
-            validation_options=validation_options,
+            validation_options=validation_options or {},
             ingestion_result="INGESTED",
             ge_type=False,
         )
 
         if ge_report is not None and ge_report.ingestion_result == "REJECTED":
-            return None, ge_report
+            feature_group_url = util.get_feature_group_url(
+                feature_store_id=feature_group.feature_store_id,
+                feature_group_id=feature_group.id,
+            )
+            raise DataValidationException(
+                "Data validation failed while validation ingestion policy set to strict, "
+                + f"insertion to {feature_group.name} was aborted.\n"
+                + f"You can check a summary or download your report at {feature_group_url}"
+            )
 
         return (
             engine.get_instance().save_dataframe(

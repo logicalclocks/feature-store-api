@@ -14,10 +14,11 @@
 #   limitations under the License.
 #
 
+from datetime import date, datetime
+
+import pytest
 from hsfs.core import validation_result_engine
 from hsfs.util import convert_event_time_to_timestamp
-from datetime import date, datetime
-import pytest
 
 
 class TestValidationResultEngine:

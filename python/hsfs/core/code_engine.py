@@ -15,10 +15,10 @@
 #
 
 import datetime
+import os
 
 from hsfs import code
 from hsfs.core import code_api
-import os
 
 
 class CodeEngine:

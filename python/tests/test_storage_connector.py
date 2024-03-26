@@ -15,12 +15,12 @@
 #
 
 import base64
-
-from hsfs import engine, storage_connector
-from hsfs.storage_connector import BigQueryConnector
-from hsfs.engine import spark, python
 from pathlib import WindowsPath
+
 import pytest
+from hsfs import engine, storage_connector
+from hsfs.engine import python, spark
+from hsfs.storage_connector import BigQueryConnector
 
 
 class TestHopsfsConnector:

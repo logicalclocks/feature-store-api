@@ -13,16 +13,16 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from typing import List, Optional, TypeVar, Union, Tuple
 import re
 from datetime import datetime, timedelta
+from typing import List, Optional, Tuple, TypeVar, Union
 
 from hsfs import feature_group, feature_view
-from hsfs.core import monitoring_window_config as mwc
-from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
-from hsfs.core import statistics_engine
-from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.client.exceptions import RestAPIError
+from hsfs.core import monitoring_window_config as mwc
+from hsfs.core import statistics_engine
+from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.util import convert_event_time_to_timestamp
 
 
@@ -244,7 +244,10 @@ class MonitoringWindowConfigEngine:
             [FeatureDescriptiveStatistics, List[FeatureDescriptiveStatitics]]: List of Descriptive statistics.
         """
         self._init_statistics_engine(entity._feature_store_id, entity.ENTITY_TYPE)
-        (start_time, end_time,) = self.get_window_start_end_times(
+        (
+            start_time,
+            end_time,
+        ) = self.get_window_start_end_times(
             monitoring_window_config=monitoring_window_config,
         )
         if (
@@ -256,9 +259,14 @@ class MonitoringWindowConfigEngine:
                 entity,
                 training_dataset_version=monitoring_window_config.training_dataset_version,
             )
+            before_transformation = (
+                feature_name is not None
+                and td_meta.transformation_functions is not None
+                and feature_name in td_meta.transformation_functions.keys()
+            )
             registered_stats = entity.get_training_dataset_statistics(
                 training_dataset_version=monitoring_window_config.training_dataset_version,
-                before_transformation=td_meta.transformation_functions is not None,
+                before_transformation=before_transformation,
                 feature_names=[feature_name] if feature_name is not None else None,
             )
             if (

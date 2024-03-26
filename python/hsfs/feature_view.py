@@ -14,44 +14,43 @@
 #   limitations under the License.
 #
 
+import copy
 import json
 import warnings
-from datetime import datetime, date
-from typing import Optional, Union, List, Dict, Any, TypeVar
-from hsfs.client.exceptions import FeatureStoreException
-from hsfs.core import feature_monitoring_config as fmc
-from hsfs.core import feature_monitoring_result as fmr
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 import humps
-import copy
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 from hsfs import (
-    util,
-    training_dataset_feature,
     storage_connector,
     training_dataset,
+    training_dataset_feature,
     usage,
+    util,
 )
-from hsfs.constructor import query, filter
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.constructor import filter, query
 from hsfs.constructor.filter import Filter, Logic
+from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import (
-    feature_view_engine,
-    transformation_function_engine,
-    vector_server,
-    statistics_engine,
     feature_monitoring_config_engine,
     feature_monitoring_result_engine,
+    feature_view_engine,
+    statistics_engine,
+    transformation_function_engine,
+    vector_server,
 )
-from hsfs.transformation_function import TransformationFunction
-from hsfs.statistics_config import StatisticsConfig
-from hsfs.statistics import Statistics
+from hsfs.core import feature_monitoring_result as fmr
 from hsfs.core.feature_view_api import FeatureViewApi
-from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.serving_key import ServingKey
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.feature import Feature
+from hsfs.serving_key import ServingKey
+from hsfs.statistics import Statistics
+from hsfs.statistics_config import StatisticsConfig
+from hsfs.training_dataset_split import TrainingDatasetSplit
+from hsfs.transformation_function import TransformationFunction
 
 
 class FeatureView:
@@ -65,10 +64,10 @@ class FeatureView:
         id=None,
         version: Optional[int] = None,
         description: Optional[str] = "",
-        labels: Optional[List[str]] = [],
-        inference_helper_columns: Optional[List[str]] = [],
-        training_helper_columns: Optional[List[str]] = [],
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = {},
+        labels: Optional[List[str]] = None,
+        inference_helper_columns: Optional[List[str]] = None,
+        training_helper_columns: Optional[List[str]] = None,
+        transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
         featurestore_name=None,
         serving_keys: Optional[List[ServingKey]] = None,
         **kwargs,
@@ -81,16 +80,20 @@ class FeatureView:
         self._feature_store_name = featurestore_name
         self._version = version
         self._description = description
-        self._labels = labels
-        self._inference_helper_columns = inference_helper_columns
-        self._training_helper_columns = training_helper_columns
+        self._labels = labels if labels else []
+        self._inference_helper_columns = (
+            inference_helper_columns if inference_helper_columns else []
+        )
+        self._training_helper_columns = (
+            training_helper_columns if training_helper_columns else []
+        )
         self._transformation_functions = (
             {
                 ft_name: copy.deepcopy(transformation_functions[ft_name])
                 for ft_name in transformation_functions
             }
             if transformation_functions
-            else transformation_functions
+            else {}
         )
         self._features = []
         self._feature_view_engine = feature_view_engine.FeatureViewEngine(
@@ -140,6 +143,7 @@ class FeatureView:
                 self._name, self._version
             ),
             util.JobWarning,
+            stacklevel=2,
         )
         self._feature_view_engine.delete(self.name, self.version)
 
@@ -257,6 +261,7 @@ class FeatureView:
             warnings.warn(
                 "No training dataset version was provided to initialise serving. Defaulting to version 1.",
                 util.VersionWarning,
+                stacklevel=1,
             )
 
         # initiate single vector server
@@ -379,7 +384,7 @@ class FeatureView:
     def get_feature_vector(
         self,
         entry: Dict[str, Any],
-        passed_features: Optional[Dict[str, Any]] = {},
+        passed_features: Optional[Dict[str, Any]] = None,
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
@@ -450,13 +455,13 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
+            return_type: `"list"`, `"pandas"`, `"polars"` or `"numpy"`. Defaults to `"list"`.
             allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
-            `list`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"` or `"numpy"`
+            `list`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list"`, `"pandas"`, `"polars"` or `"numpy"`
             respectively. Defaults to `list`.
-            Returned `list`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary keys,
+            Returned `list`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` contains feature values related to provided primary keys,
             ordered according to positions of this features in the feature view query.
 
         # Raises
@@ -475,7 +480,7 @@ class FeatureView:
     def get_feature_vectors(
         self,
         entry: List[Dict[str, Any]],
-        passed_features: Optional[List[Dict[str, Any]]] = [],
+        passed_features: Optional[List[Dict[str, Any]]] = None,
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
@@ -544,14 +549,14 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"list"`, `"pandas"` or `"numpy"`. Defaults to `"list"`.
+            return_type: `"list"`, `"pandas"`, `"polars"` or `"numpy"`. Defaults to `"list"`.
             allow_missing: Setting to `True` returns feature vectors with missing values.
 
         # Returns
-            `List[list]`, `pd.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"` or `"numpy"`
+            `List[list]`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` if `return type` is set to `"list", `"pandas"`,`"polars"` or `"numpy"`
             respectively. Defaults to `List[list]`.
 
-            Returned `List[list]`, `pd.DataFrame` or `np.ndarray` contains feature values related to provided primary
+            Returned `List[list]`, `pd.DataFrame`, `polars.DataFrame` or `np.ndarray` contains feature values related to provided primary
             keys, ordered according to positions of this features in the feature view query.
 
         # Raises
@@ -603,10 +608,10 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"pandas"` or `"dict"`. Defaults to `"pandas"`.
+            return_type: `"pandas"`, `"polars"` or `"dict"`. Defaults to `"pandas"`.
 
         # Returns
-            `pd.DataFrame` or `dict`. Defaults to `pd.DataFrame`.
+            `pd.DataFrame`, `polars.DataFrame` or `dict`. Defaults to `pd.DataFrame`.
 
         # Raises
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
@@ -657,10 +662,10 @@ class FeatureView:
                 If set to False, the online feature store storage connector is used
                 which relies on the private IP. Defaults to True if connection to Hopsworks is established from
                 external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.
-            return_type: `"pandas"` or `"dict"`. Defaults to `"dict"`.
+            return_type: `"pandas"`, `"polars"` or `"dict"`. Defaults to `"pandas"`.
 
         # Returns
-            `pd.DataFrame` or `List[dict]`.  Defaults to `pd.DataFrame`.
+            `pd.DataFrame`, `polars.DataFrame` or `List[dict]`.  Defaults to `pd.DataFrame`.
 
             Returned `pd.DataFrame` or `List[dict]`  contains feature values related to provided primary
             keys, ordered according to positions of this features in the feature view query.
@@ -708,6 +713,10 @@ class FeatureView:
     ) -> List[List[Any]]:
         """
         Finds the nearest neighbors for a given embedding in the vector database.
+
+        If `filter` or `min_score` is specified, or if embedding feature is stored in default project index,
+        the number of results returned may be less than k. Try using a large value of k and extract the top k
+        items from the results if needed.
 
         # Arguments
             embedding: The target embedding for which neighbors are to be found.
@@ -804,6 +813,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         inference_helper_columns=False,
+        dataframe_type: Optional[str] = "default",
     ):
         """Get a batch of data from an event time interval from the offline feature store.
 
@@ -859,8 +869,16 @@ class FeatureView:
                 that may not be used in training the model itself but can be used during batch or online inference
                 for extra information. If inference helper columns were not defined in the feature view
                 `inference_helper_columns=True` will not any effect. Defaults to `False`, no helper columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
-            `DataFrame`: A dataframe
+            `DataFrame`: The spark dataframe containing the feature data.
+            `pyspark.DataFrame`. A Spark DataFrame.
+            `pandas.DataFrame`. A Pandas DataFrame.
+            `polars.DataFrame`. A Polars DataFrame.
+            `numpy.ndarray`. A two-dimensional Numpy array.
+            `list`. A two-dimensional Python list.
         """
 
         if self._batch_scoring_server is None:
@@ -877,6 +895,7 @@ class FeatureView:
             primary_keys,
             event_time,
             inference_helper_columns,
+            dataframe_type,
         )
 
     def add_tag(self, name: str, value):
@@ -968,6 +987,55 @@ class FeatureView:
         """
         return self._feature_view_engine.get_parent_feature_groups(self)
 
+    def get_newest_model(self, training_dataset_version: Optional[int] = None):
+        """Get the latest generated model using this feature view, based on explicit
+        provenance. Search only through the accessible models.
+        For more items use the base method - get_models_provenance
+
+        # Arguments
+            training_dataset_version: Filter generated models based on the used training dataset version.
+
+        # Returns
+            `Model`: Newest Generated Model.
+        """
+        models = self.get_models(training_dataset_version=training_dataset_version)
+        models.sort(key=lambda model: model.created, reverse=True)
+        if models:
+            return models[0]
+        else:
+            return None
+
+    def get_models(self, training_dataset_version: Optional[int] = None):
+        """Get the generated models using this feature view, based on explicit
+        provenance. Only the accessible models are returned.
+        For more items use the base method - get_models_provenance
+
+        # Arguments
+            training_dataset_version: Filter generated models based on the used training dataset version.
+        # Returns
+            `List[Model]: List of models.
+        """
+        return self.get_models_provenance(
+            training_dataset_version=training_dataset_version
+        ).accessible
+
+    def get_models_provenance(self, training_dataset_version: Optional[int] = None):
+        """Get the generated models using this feature view, based on explicit
+        provenance. These models can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated model links, so deleted
+        will always be empty.
+        For inaccessible models, only a minimal information is returned.
+
+        # Arguments
+            training_dataset_version: Filter generated models based on the used training dataset version.
+
+        # Returns
+            `ProvenanceLinks`: Object containing the section of provenance graph requested.
+        """
+        return self._feature_view_engine.get_models_provenance(
+            self, training_dataset_version=training_dataset_version
+        )
+
     def delete_tag(self, name: str):
         """Delete a tag attached to a feature view.
 
@@ -1004,7 +1072,7 @@ class FeatureView:
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[
             Union[
                 pd.DataFrame,
@@ -1214,7 +1282,7 @@ class FeatureView:
         td, td_job = self._feature_view_engine.create_training_dataset(
             self,
             td,
-            write_options,
+            write_options or {},
             spine=spine,
             primary_keys=primary_keys,
             event_time=event_time,
@@ -1223,6 +1291,7 @@ class FeatureView:
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
 
         return td.version, td_job
@@ -1243,7 +1312,7 @@ class FeatureView:
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[
             Union[
                 pd.DataFrame,
@@ -1508,7 +1577,7 @@ class FeatureView:
         td, td_job = self._feature_view_engine.create_training_dataset(
             self,
             td,
-            write_options,
+            write_options or {},
             spine=spine,
             primary_keys=primary_keys,
             event_time=event_time,
@@ -1517,6 +1586,7 @@ class FeatureView:
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
 
         return td.version, td_job
@@ -1540,7 +1610,7 @@ class FeatureView:
         coalesce: Optional[bool] = False,
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
         spine: Optional[
             Union[
                 pd.DataFrame,
@@ -1799,7 +1869,7 @@ class FeatureView:
         td, td_job = self._feature_view_engine.create_training_dataset(
             self,
             td,
-            write_options,
+            write_options or {},
             spine=spine,
             primary_keys=primary_keys,
             event_time=event_time,
@@ -1808,6 +1878,7 @@ class FeatureView:
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
 
         return td.version, td_job
@@ -1885,7 +1956,7 @@ class FeatureView:
             `Job`: When using the `python` engine, it returns the Hopsworks Job
                 that was launched to create the training dataset.
         """
-        td, td_job = self._feature_view_engine.recreate_training_dataset(
+        _, td_job = self._feature_view_engine.recreate_training_dataset(
             self,
             training_dataset_version=training_dataset_version,
             statistics_config=statistics_config,
@@ -1916,6 +1987,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
+        dataframe_type: Optional[str] = "default",
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -2012,6 +2084,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view
                 then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
                 columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X, y): Tuple of dataframe of features and labels. If there are no labels, y returns `None`.
         """
@@ -2038,10 +2113,12 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
         return df
 
@@ -2070,6 +2147,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
+        dataframe_type: Optional[str] = "default",
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -2176,6 +2254,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view
                 then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
                 columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
@@ -2211,10 +2292,12 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
         return df
 
@@ -2255,6 +2338,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
+        dataframe_type: Optional[str] = "default",
     ):
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
@@ -2374,6 +2458,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view
                 then`training_helper_columns=True` will not have any effect. Defaults to `False`, no training helper
                 columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
@@ -2422,10 +2509,12 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type,
         )
         warnings.warn(
             "Incremented version to `{}`.".format(td.version),
             util.VersionWarning,
+            stacklevel=1,
         )
         return df
 
@@ -2458,6 +2547,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
+        dataframe_type: Optional[str] = "default",
     ):
         """
         Get training data created by `feature_view.create_training_data`
@@ -2502,6 +2592,9 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view or during
                 materializing training dataset in the file system then`training_helper_columns=True` will not have
                 any effect. Defaults to `False`, no training helper columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X, y): Tuple of dataframe of features and labels
         """
@@ -2512,6 +2605,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type,
         )
         return df
 
@@ -2523,6 +2617,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
+        dataframe_type: Optional[str] = "default",
     ):
         """
         Get training data created by `feature_view.create_train_test_split`
@@ -2562,11 +2657,14 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view or during
                 materializing training dataset in the file system then`training_helper_columns=True` will not have
                 any effect. Defaults to `False`, no training helper columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X_train, X_test, y_train, y_test):
                 Tuple of dataframe of features and labels
         """
-        td, df = self._feature_view_engine.get_training_data(
+        _, df = self._feature_view_engine.get_training_data(
             self,
             read_options,
             training_dataset_version=training_dataset_version,
@@ -2574,6 +2672,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type,
         )
         return df
 
@@ -2585,6 +2684,7 @@ class FeatureView:
         primary_keys=False,
         event_time=False,
         training_helper_columns=False,
+        dataframe_type: Optional[str] = "default",
     ):
         """
         Get training data created by `feature_view.create_train_validation_test_split`
@@ -2624,11 +2724,14 @@ class FeatureView:
                 extra information. If training helper columns were not defined in the feature view or during
                 materializing training dataset in the file system then`training_helper_columns=True` will not have
                 any effect. Defaults to `False`, no training helper columns.
+            dataframe_type: str, optional. The type of the returned dataframe.
+                Possible values are `"default"`, `"spark"`,`"pandas"`, `"polars"`, `"numpy"` or `"python"`.
+                Defaults to "default", which maps to Spark dataframe for the Spark Engine and Pandas dataframe for the Python engine.
         # Returns
             (X_train, X_val, X_test, y_train, y_val, y_test):
                 Tuple of dataframe of features and labels
         """
-        td, df = self._feature_view_engine.get_training_data(
+        _, df = self._feature_view_engine.get_training_data(
             self,
             read_options,
             training_dataset_version=training_dataset_version,
@@ -2640,6 +2743,7 @@ class FeatureView:
             primary_keys=primary_keys,
             event_time=event_time,
             training_helper_columns=training_helper_columns,
+            dataframe_type=dataframe_type,
         )
         return df
 
@@ -3167,6 +3271,7 @@ class FeatureView:
     @classmethod
     def from_response_json(cls, json_dict):
         json_decamelized = humps.decamelize(json_dict)
+
         serving_keys = json_decamelized.get("serving_keys", None)
         if serving_keys is not None:
             serving_keys = [ServingKey.from_response_json(sk) for sk in serving_keys]
@@ -3244,6 +3349,7 @@ class FeatureView:
 
     def to_dict(self):
         return {
+            "featurestoreId": self._featurestore_id,
             "name": self._name,
             "version": self._version,
             "description": self._description,

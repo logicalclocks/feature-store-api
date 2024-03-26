@@ -13,13 +13,14 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import pytest
-from hsfs.core import vector_db_client
-from hsfs.feature_group import FeatureGroup
-from hsfs.feature import Feature
-from hsfs.client.exceptions import FeatureStoreException
 from unittest.mock import MagicMock
+
+import pytest
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core import vector_db_client
 from hsfs.embedding import EmbeddingIndex
+from hsfs.feature import Feature
+from hsfs.feature_group import FeatureGroup
 
 
 class TestVectorDbClient:
