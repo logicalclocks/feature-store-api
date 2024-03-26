@@ -42,6 +42,7 @@ class OnlineStoreSqlClient:
         self._skip_fg_ids = skip_fg_ids or set()
         self._async_pool = None
         self._external = True
+        self._serving_keys = set()
 
         self._feature_view_api = feature_view_api.FeatureViewApi(feature_store_id)
         self._training_dataset_api = training_dataset_api.TrainingDatasetApi(
@@ -87,6 +88,7 @@ class OnlineStoreSqlClient:
                     inference_helper_columns=False,
                 )
             )
+            _logger.debug(f"Statements: {self._prepared_statements}.")
             self._batch_prepared_statements = (
                 self._feature_view_api.get_serving_prepared_statement(
                     entity.name,
@@ -114,18 +116,11 @@ class OnlineStoreSqlClient:
                 "Object type needs to be `feature_view.FeatureView` or `training_dataset.TrainingDataset`."
             )
 
-    def init_prepared_statement(
-        self,
-        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
-        external: bool,
-        inference_helper_columns: bool,
-        options: Optional[Dict[str, Any]] = None,
-    ) -> None:
-        _logger.debug(
-            "Fetch and reset prepared statements and external as user may be re-initialising with different parameters"
+    def init_async_mysql_connection(self, options=None):
+        assert self._prepared_statements is not None, (
+            "Prepared statements are not initialized. "
+            "Please call `init_prepared_statement` method first."
         )
-        self.fetch_prepared_statements(entity, inference_helper_columns)
-        self._external = external
         _logger.debug("Acquiring or starting event loop for async engine.")
         loop = asyncio.get_event_loop()
         _logger.debug(f"Setting up aiomysql connection, with options : {options}")
@@ -135,12 +130,25 @@ class OnlineStoreSqlClient:
             )
         )
 
+    def init_prepared_statement(
+        self,
+        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
+        external: bool,
+        inference_helper_columns: bool,
+    ) -> None:
+        _logger.debug(
+            "Fetch and reset prepared statements and external as user may be re-initialising with different parameters"
+        )
+        self.fetch_prepared_statements(entity, inference_helper_columns)
+        self._external = external
+
+        # Use the prepared statements to initialize the serving utils
+        self.init_parametrize_and_serving_utils()
         self._prepared_statements = self._parametrize_prepared_statements(
             self._prepared_statements, batch=False
         )
-        # Use the prepared statements to initialize the serving utils
-        self.init_parametrize_and_serving_utils()
-        self._batch_prepared_statements, _ = self._parametrize_prepared_statements(
+
+        self._batch_prepared_statements = self._parametrize_prepared_statements(
             self._batch_prepared_statements, batch=True
         )
 
@@ -163,33 +171,37 @@ class OnlineStoreSqlClient:
             if statement.feature_group_id in self._skip_fg_ids:
                 continue
 
-        self._prefix_by_serving_index[statement.prepared_statement_index] = (
-            statement.prefix
-        )
-        self._feature_name_order_by_psp[statement.prepared_statement_index] = dict(
-            [(psp.name, psp.index) for psp in statement.prepared_statement_parameters]
-        )
-        pk_names = [
-            psp.name
-            for psp in sorted(
-                statement.prepared_statement_parameters,
-                key=lambda psp: psp.index,
+            self._prefix_by_serving_index[statement.prepared_statement_index] = (
+                statement.prefix
             )
-        ]
-        # construct serving key if it is not provided.
-        if self._serving_keys is None:
-            serving_keys = set()
-            for pk_name in pk_names:
-                # should use `ignore_prefix=True` because before hsfs 3.3,
-                # only primary key of a feature group are matched in
-                # user provided entry.
-                serving_key = ServingKey(
-                    feature_name=pk_name,
-                    join_index=statement.prepared_statement_index,
-                    prefix=statement.prefix,
-                    ignore_prefix=True,
+            self._feature_name_order_by_psp[statement.prepared_statement_index] = dict(
+                [
+                    (psp.name, psp.index)
+                    for psp in statement.prepared_statement_parameters
+                ]
+            )
+            pk_names = [
+                psp.name
+                for psp in sorted(
+                    statement.prepared_statement_parameters,
+                    key=lambda psp: psp.index,
                 )
-                serving_keys.add(serving_key)
+            ]
+            # construct serving key if it is not provided.
+            if self._serving_keys is None:
+                serving_keys = set()
+                for pk_name in pk_names:
+                    # should use `ignore_prefix=True` because before hsfs 3.3,
+                    # only primary key of a feature group are matched in
+                    # user provided entry.
+                    serving_key = ServingKey(
+                        feature_name=pk_name,
+                        join_index=statement.prepared_statement_index,
+                        prefix=statement.prefix,
+                        ignore_prefix=True,
+                    )
+                    serving_keys.add(serving_key)
+                self._serving_keys = serving_keys
 
         for sk in self._serving_keys:
             self._serving_key_by_serving_index[sk.join_index] = (
@@ -680,9 +692,17 @@ class OnlineStoreSqlClient:
         return self._skip_fg_ids
 
     @property
+    def serving_keys(self) -> Set["ServingKey"]:
+        return self._serving_keys
+
+    @property
     def training_dataset_api(self) -> training_dataset_api.TrainingDatasetApi:
         return self._training_dataset_api
 
     @property
     def feature_view_api(self) -> feature_view_api.FeatureViewApi:
         return self._feature_view_api
+
+    @property
+    def storage_connector_api(self) -> storage_connector_api.StorageConnectorApi:
+        return self._storage_connector_api

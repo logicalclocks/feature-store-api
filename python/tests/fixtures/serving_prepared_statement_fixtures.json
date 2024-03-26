@@ -17,8 +17,8 @@
           "query_online": "test_query_online",
           "prefix": "test_prefix",
           "type": "test_type",
-          "items": "test_items",
-          "count": "test_count",
+          "items": null,
+          "count": null,
           "href": "test_href"
         }
       ]
