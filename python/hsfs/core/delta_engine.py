@@ -15,8 +15,8 @@
 #
 
 from hsfs import feature_group_commit, util
-from hsfs.core import feature_group_api
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core import feature_group_api
 
 
 try:

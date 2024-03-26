@@ -17,7 +17,7 @@ import warnings
 from hsfs import engine, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
-from hsfs.core import feature_group_base_engine, hudi_engine, delta_engine
+from hsfs.core import delta_engine, feature_group_base_engine, hudi_engine
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 
 
