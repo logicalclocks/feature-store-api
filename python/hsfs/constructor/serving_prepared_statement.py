@@ -80,7 +80,7 @@ class ServingPreparedStatement:
     def prepared_statement_parameters(
         self,
     ) -> List["prepared_statement_parameter.PreparedStatementParameter"]:
-        return sorted(self._prepared_statement_parameters, key=lambda x: x.index)
+        return self._prepared_statement_parameters
 
     @property
     def query_online(self) -> Optional[str]:
@@ -114,7 +114,7 @@ class ServingPreparedStatement:
                     )
                     for pstm_param in prepared_statement_parameters
                 ],
-                lambda x: x.get("index"),
+                key=lambda x: x.get("index"),
             )
         else:
             self._prepared_statement_parameters = sorted(
