@@ -68,6 +68,56 @@ class TestOnlineStoreSqlClient:
             backend_fixtures["training_dataset"]["get"]["response"][0]
         )
 
+    @pytest.fixture
+    def prices_prepared_statements(self, backend_fixtures):
+        # assumes retrieved prepared statements single first and batch second
+        return [
+            hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
+                json_dict=backend_fixtures["serving_prepared_statement"][
+                    "prices_single"
+                ]["response"]
+            ),
+            hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
+                json_dict=backend_fixtures["serving_prepared_statement"][
+                    "prices_batch"
+                ]["response"]
+            ),
+        ]
+
+    @pytest.fixture(scope="function")
+    def fake_transactions_prepared_statements(self, backend_fixtures):
+        # assumes retrieved prepared statements single first and batch second
+        return [
+            hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
+                json_dict=backend_fixtures["serving_prepared_statement"][
+                    "fake_transactions_single"
+                ]["response"]
+            ),
+            hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
+                json_dict=backend_fixtures["serving_prepared_statement"][
+                    "fake_transactions_batch"
+                ]["response"]
+            ),
+        ]
+
+    @pytest.fixture(scope="function")
+    def fake_transactions_prepared_statements_with_helper_columns(
+        self, fake_transactions_prepareed_statements, backend_fixtures
+    ):
+        # assumes retrieved prepared statements single first and batch second
+        return fake_transactions_prepareed_statements + [
+            hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
+                json_dict=backend_fixtures["serving_prepared_statement"][
+                    "fake_transactions_single_helper"
+                ]["response"]
+            ),
+            hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
+                json_dict=backend_fixtures["serving_prepared_statement"][
+                    "fake_transactions_batch_helper"
+                ]["response"]
+            ),
+        ]
+
     @pytest.fixture(scope="function")
     def online_store_sql_client(self, mocker):
         feature_store_id = 1
@@ -104,7 +154,7 @@ class TestOnlineStoreSqlClient:
     ):
         # Arrange
         prepared_statements = hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
-            json_dict=backend_fixtures["serving_prepared_statement"]["get_list"][
+            json_dict=backend_fixtures["serving_prepared_statement"]["prices_single"][
                 "response"
             ]
         )
@@ -143,16 +193,16 @@ class TestOnlineStoreSqlClient:
         assert len(serving_statements[BATCH_VECTOR_KEY]) == 1
 
     def test_fetch_prepared_statements_feature_view_with_helper_columns(
-        self, mocker, backend_fixtures, online_store_sql_client, fv
+        self,
+        mocker,
+        fake_transactions_prepared_statements_with_helper_columns,
+        online_store_sql_client,
+        fv,
     ):
         # Arrange
         mocker.patch(
             "hsfs.core.feature_view_api.FeatureViewApi.get_serving_prepared_statement",
-            return_value=hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
-                json_dict=backend_fixtures["serving_prepared_statement"]["get_list"][
-                    "response"
-                ]
-            ),
+            return_value=fake_transactions_prepared_statements_with_helper_columns,
         )
 
         # Act
@@ -197,16 +247,12 @@ class TestOnlineStoreSqlClient:
         assert len(serving_statements[BATCH_VECTOR_KEY]) == 1
 
     def test_init_prepared_statements(
-        self, mocker, backend_fixtures, fv, online_store_sql_client
+        self, mocker, prices_prepared_statements, fv, online_store_sql_client
     ):
         # Arrange
         mocker.patch(
             "hsfs.core.feature_view_api.FeatureViewApi.get_serving_prepared_statement",
-            return_value=hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
-                json_dict=backend_fixtures["serving_prepared_statement"]["get_list"][
-                    "response"
-                ]
-            ),
+            return_value=prices_prepared_statements,
         )
 
         # Act

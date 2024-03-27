@@ -24,6 +24,120 @@
       ]
     }
   },
+  "prices_single": {
+    "response": {
+      "href": "https://hopsworks.glassfish.service.consul:8182/hopsworks-api/api/project/7299/featurestores/7247/featureview/prices_fv_no_tf/version/1/preparedstatements",
+      "items": [
+        {
+          "featureGroupId": 7291,
+          "preparedStatementIndex": 0,
+          "preparedStatementParameters": [
+            {
+              "name": "ticker",
+              "index": 1
+            }
+          ],
+          "queryOnline": "SELECT `fg0`.`ticker` AS `ticker`, `fg0`.`when` AS `when`, `fg0`.`price` AS `price`\nFROM `rdrs2`.`prices_fg_full_1` AS `fg0`\nWHERE `fg0`.`ticker` = ?"
+        }
+      ],
+      "count": 1
+    }
+  },
+  "prices_batch": {
+    "response": {
+      "href": "https://hopsworks.glassfish.service.consul:8182/hopsworks-api/api/project/7299/featurestores/7247/featureview/prices_fv_no_tf/version/1/preparedstatements",
+      "items": [
+        {
+          "featureGroupId": 7291,
+          "preparedStatementIndex": 0,
+          "preparedStatementParameters": [
+            {
+              "name": "ticker",
+              "index": 1
+            }
+          ],
+          "queryOnline": "SELECT `fg0`.`ticker` AS `ticker`, `fg0`.`when` AS `when`, `fg0`.`price` AS `price`\nFROM `rdrs2`.`prices_fg_full_1` AS `fg0`\nWHERE `fg0`.`ticker` IN ?"
+        }
+      ],
+      "count": 1
+    }
+  },
+  "fake_transactions_single": {
+    "response": {
+      "href": "https://hopsworks.glassfish.service.consul:8182/hopsworks-api/api/project/7299/featurestores/7247/featureview/fake_transactions_with_inference_helper_columns_fv/version/1/preparedstatements",
+      "items": [
+        {
+          "featureGroupId": 7298,
+          "preparedStatementIndex": 0,
+          "preparedStatementParameters": [
+            {
+              "name": "tid",
+              "index": 1
+            }
+          ],
+          "queryOnline": "SELECT `fg0`.`tid` AS `tid`, `fg0`.`cc_num` AS `cc_num`, `fg0`.`amount` AS `amount`, `fg0`.`when` AS `when`, `fg0`.`item` AS `item`\nFROM `rdrs2`.`fake_transactions_fg_full_1` AS `fg0`\nWHERE `fg0`.`tid` = ?"
+        }
+      ],
+      "count": 1
+    }
+  },
+  "fake_transactions_batch": {
+    "response": {
+      "href": "https://hopsworks.glassfish.service.consul:8182/hopsworks-api/api/project/7299/featurestores/7247/featureview/fake_transactions_with_inference_helper_columns_fv/version/1/preparedstatements",
+      "items": [
+        {
+          "featureGroupId": 7298,
+          "preparedStatementIndex": 0,
+          "preparedStatementParameters": [
+            {
+              "name": "tid",
+              "index": 1
+            }
+          ],
+          "queryOnline": "SELECT `fg0`.`tid` AS `tid`, `fg0`.`cc_num` AS `cc_num`, `fg0`.`amount` AS `amount`, `fg0`.`when` AS `when`, `fg0`.`item` AS `item`\nFROM `rdrs2`.`fake_transactions_fg_full_1` AS `fg0`\nWHERE `fg0`.`tid` IN ?"
+        }
+      ],
+      "count": 1
+    }
+  },
+  "fake_transactions_helper_single": {
+    "response": {
+      "href": "https://hopsworks.glassfish.service.consul:8182/hopsworks-api/api/project/7299/featurestores/7247/featureview/fake_transactions_with_inference_helper_columns_fv/version/1/preparedstatements",
+      "items": [
+        {
+          "featureGroupId": 7298,
+          "preparedStatementIndex": 0,
+          "preparedStatementParameters": [
+            {
+              "name": "tid",
+              "index": 1
+            }
+          ],
+          "queryOnline": "SELECT `fg0`.`location` AS `location`\nFROM `rdrs2`.`fake_transactions_fg_full_1` AS `fg0`\nWHERE `fg0`.`tid` = ?"
+        }
+      ],
+      "count": 1
+    }
+  },
+  "fake_transactions_helper_batch": {
+    "response": {
+      "href": "https://hopsworks.glassfish.service.consul:8182/hopsworks-api/api/project/7299/featurestores/7247/featureview/fake_transactions_with_inference_helper_columns_fv/version/1/preparedstatements",
+      "items": [
+        {
+          "featureGroupId": 7298,
+          "preparedStatementIndex": 0,
+          "preparedStatementParameters": [
+            {
+              "name": "tid",
+              "index": 1
+            }
+          ],
+          "queryOnline": "SELECT `fg0`.`location` AS `location`, `fg0`.`tid` AS `tid`\nFROM `rdrs2`.`fake_transactions_fg_full_1` AS `fg0`\nWHERE `fg0`.`tid` IN ?"
+        }
+      ],
+      "count": 1
+    }
+  },
   "get_list_empty": {
     "response": {
       "count": 0,
