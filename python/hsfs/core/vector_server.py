@@ -430,13 +430,13 @@ class VectorServer:
             self.default_online_store_client = self.DEFAULT_ONLINE_STORE_SQL_CLIENT
 
     def get_inference_helper(
-        self, entry, return_type: str
+        self, entry: Dict[str, Any], return_type: str
     ) -> Union[pd.DataFrame, pl.DataFrame, Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
         _logger.info("Retrieve inference helper values for single entry.")
         _logger.debug(f"entry: {entry} as return type: {return_type}")
         return self.handle_feature_vector_return_type(
-            self.get_inference_helper_result(entry),
+            self.online_store_sql_client.get_inference_helper_vector(entry),
             batch=False,
             inference_helper=True,
             return_type=return_type,
@@ -449,12 +449,12 @@ class VectorServer:
         return_type: str,
     ) -> Union[pd.DataFrame, pl.DataFrame, List[Dict[str, Any]]]:
         """Assembles serving vector from online feature store."""
-        batch_results, serving_keys = self._batch_vector_results(
-            entries, self._helper_column_prepared_statements
+        batch_results = self.online_store_sql_client.get_batch_inference_helper_vectors(
+            entries
         )
 
         # drop serving and primary key names from the result dict
-        drop_list = serving_keys + list(feature_view_object.primary_keys)
+        drop_list = self.serving_keys + list(feature_view_object.primary_keys)
 
         _ = list(
             map(
