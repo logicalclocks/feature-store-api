@@ -67,6 +67,7 @@ class OnlineStoreSqlClient:
                 f"Initializing prepared statements for feature view {entity.name} version {entity.version}."
             )
             for key in self.get_prepared_statement_labels(inference_helper_columns):
+                _logger.debug(f"Fetching prepared statement for key {key}")
                 self.prepared_statements[key] = (
                     self.feature_view_api.get_serving_prepared_statement(
                         entity.name,
@@ -75,6 +76,7 @@ class OnlineStoreSqlClient:
                         inference_helper_columns=key.endswith("helper_column"),
                     )
                 )
+                _logger.debug(f"{self.prepared_statements[key]}")
         elif isinstance(entity, training_dataset.TrainingDataset):
             _logger.debug(
                 f"Initializing prepared statements for training dataset {entity.name} version {entity.version}."
@@ -82,6 +84,7 @@ class OnlineStoreSqlClient:
             for key in self.get_prepared_statement_labels(
                 with_inference_helper_column=False
             ):
+                _logger.debug(f"Fetching prepared statement for key {key}")
                 self.prepared_statements[key] = (
                     self.training_dataset_api.get_serving_prepared_statement(
                         entity, batch=key.startswith("batch")
@@ -92,7 +95,7 @@ class OnlineStoreSqlClient:
                 "Object type needs to be `feature_view.FeatureView` or `training_dataset.TrainingDataset`."
             )
 
-    def init_prepared_statement(
+    def init_prepared_statements(
         self,
         entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
         external: bool,
@@ -104,12 +107,13 @@ class OnlineStoreSqlClient:
         self.fetch_prepared_statements(entity, inference_helper_columns)
         self._external = external
 
-        # Use the prepared statements to initialize the serving utils
+        _logger.debug("Use the prepared statements to initialize the class utils")
         self.init_parametrize_and_serving_utils(
             self.prepared_statements[self.SINGLE_VECTOR_KEY]
         )
 
         for key in self.get_prepared_statement_labels(inference_helper_columns):
+            _logger.debug(f"Parametrize prepared statements for key {key}")
             self._parametrised_prepared_statements[key] = (
                 self._parametrize_prepared_statements(
                     self.prepared_statements[key], batch=key.startswith("batch")
@@ -145,7 +149,7 @@ class OnlineStoreSqlClient:
                 )
             ]
             # construct serving key if it is not provided.
-            if self._serving_keys is None:
+            if len(self._serving_keys) == 0:
                 serving_keys = set()
                 for pk_name in pk_names:
                     # should use `ignore_prefix=True` because before hsfs 3.3,

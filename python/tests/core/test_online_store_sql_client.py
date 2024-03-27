@@ -14,10 +14,34 @@
 #   limitations under the License.
 #
 
+import logging
+import sys
+
 import hsfs
 import hsfs.constructor
 import hsfs.constructor.serving_prepared_statement
 import pytest
+
+
+SINGLE_VECTOR_KEY = (
+    hsfs.core.online_store_sql_client.OnlineStoreSqlClient.SINGLE_VECTOR_KEY
+)
+BATCH_VECTOR_KEY = (
+    hsfs.core.online_store_sql_client.OnlineStoreSqlClient.BATCH_VECTOR_KEY
+)
+SINGLE_HELPER_KEY = (
+    hsfs.core.online_store_sql_client.OnlineStoreSqlClient.SINGLE_HELPER_KEY
+)
+BATCH_HELPER_KEY = (
+    hsfs.core.online_store_sql_client.OnlineStoreSqlClient.BATCH_HELPER_KEY
+)
+MOCK_API_ATTRIBUTE_GET_SERVING_PREPARED_STATEMENT = "get_serving_prepared_statement"
+
+
+_logger = logging.getLogger("hsfs.core.online_store_sql_client")
+_logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler(stream=sys.stdout)
+_logger.addHandler(handler)
 
 
 class TestOnlineStoreSqlClient:
@@ -38,11 +62,17 @@ class TestOnlineStoreSqlClient:
             ]["response"]
         )
 
+    @pytest.fixture
+    def training_dataset(self, backend_fixtures):
+        return hsfs.training_dataset.TrainingDataset.from_response_json(
+            backend_fixtures["training_dataset"]["get"]["response"][0]
+        )
+
     @pytest.fixture(scope="function")
     def online_store_sql_client(self, mocker):
         feature_store_id = 1
         skip_fg_ids = set()
-        mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mocker.patch("hsfs.client.get_instance")
 
         return hsfs.core.online_store_sql_client.OnlineStoreSqlClient(
             feature_store_id=feature_store_id, skip_fg_ids=skip_fg_ids
@@ -86,14 +116,13 @@ class TestOnlineStoreSqlClient:
         assert isinstance(online_store_sql_client.serving_keys, set)
         assert len(online_store_sql_client.serving_keys) == 1
 
-    def test_init_serving_feature_view_no_helper_columns(
-        self, monkeypatch, backend_fixtures, online_store_sql_client, fv
+    def test_fetch_prepared_statements_feature_view_no_helper_columns(
+        self, mocker, backend_fixtures, online_store_sql_client, fv
     ):
         # Arrange
-        monkeypatch.setattr(
-            hsfs.core.feature_view_api.FeatureViewApi,
-            "get_serving_prepared_statements",
-            hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
+        mocker.patch(
+            "hsfs.core.feature_view_api.FeatureViewApi.get_serving_prepared_statement",
+            return_value=hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
                 json_dict=backend_fixtures["serving_prepared_statement"]["get_list"][
                     "response"
                 ]
@@ -101,13 +130,102 @@ class TestOnlineStoreSqlClient:
         )
 
         # Act
-        online_store_sql_client.init_prepared_statement(
+        online_store_sql_client.fetch_prepared_statements(
             entity=fv,
-            external=True,
             inference_helper_columns=False,
         )
 
         # Assert
+        serving_statements = online_store_sql_client.prepared_statements
         assert isinstance(online_store_sql_client._prepared_statements, dict)
-        assert len(online_store_sql_client._prepared_statements) == 1
-        assert online_store_sql_client._helper_column_prepared_statement is None
+        assert len(serving_statements) == 2
+        assert len(serving_statements[SINGLE_VECTOR_KEY]) == 1
+        assert len(serving_statements[BATCH_VECTOR_KEY]) == 1
+
+    def test_fetch_prepared_statements_feature_view_with_helper_columns(
+        self, mocker, backend_fixtures, online_store_sql_client, fv
+    ):
+        # Arrange
+        mocker.patch(
+            "hsfs.core.feature_view_api.FeatureViewApi.get_serving_prepared_statement",
+            return_value=hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
+                json_dict=backend_fixtures["serving_prepared_statement"]["get_list"][
+                    "response"
+                ]
+            ),
+        )
+
+        # Act
+        online_store_sql_client.fetch_prepared_statements(
+            entity=fv,
+            inference_helper_columns=True,
+        )
+
+        # Assert
+        serving_statements = online_store_sql_client.prepared_statements
+        assert isinstance(online_store_sql_client.prepared_statements, dict)
+        assert len(serving_statements) == 4
+        assert len(serving_statements[SINGLE_VECTOR_KEY]) == 1
+        assert len(serving_statements[BATCH_VECTOR_KEY]) == 1
+        assert len(serving_statements[SINGLE_HELPER_KEY]) == 1
+        assert len(serving_statements[BATCH_HELPER_KEY]) == 1
+
+    def test_fetch_prepared_statements_training_dataset(
+        self, mocker, backend_fixtures, online_store_sql_client, training_dataset
+    ):
+        # Arrange
+        mocker.patch(
+            "hsfs.core.training_dataset_api.TrainingDatasetApi.get_serving_prepared_statement",
+            return_value=hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
+                json_dict=backend_fixtures["serving_prepared_statement"]["get_list"][
+                    "response"
+                ]
+            ),
+        )
+
+        # Act
+        online_store_sql_client.fetch_prepared_statements(
+            entity=training_dataset,
+            inference_helper_columns=False,
+        )
+
+        # Assert
+        serving_statements = online_store_sql_client.prepared_statements
+        assert isinstance(online_store_sql_client.prepared_statements, dict)
+        assert len(serving_statements) == 2
+        assert len(serving_statements[SINGLE_VECTOR_KEY]) == 1
+        assert len(serving_statements[BATCH_VECTOR_KEY]) == 1
+
+    def test_init_prepared_statements(
+        self, mocker, backend_fixtures, fv, online_store_sql_client
+    ):
+        # Arrange
+        mocker.patch(
+            "hsfs.core.feature_view_api.FeatureViewApi.get_serving_prepared_statement",
+            return_value=hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
+                json_dict=backend_fixtures["serving_prepared_statement"]["get_list"][
+                    "response"
+                ]
+            ),
+        )
+
+        # Act
+        online_store_sql_client.init_prepared_statements(
+            entity=fv, external=True, inference_helper_columns=False
+        )
+
+        # Assert
+        serving_statements = online_store_sql_client.prepared_statements
+        assert isinstance(serving_statements, dict)
+        assert (
+            len(serving_statements) == 2
+            and len(serving_statements[SINGLE_VECTOR_KEY]) == 1
+        )
+
+        parametrised_statements = online_store_sql_client.parametrised_statements
+        assert isinstance(parametrised_statements, dict)
+        assert (
+            len(parametrised_statements) == 2
+            and len(parametrised_statements[SINGLE_VECTOR_KEY]) == 1
+            and len(parametrised_statements[BATCH_VECTOR_KEY]) == 1
+        )

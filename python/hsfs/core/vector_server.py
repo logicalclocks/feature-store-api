@@ -195,7 +195,7 @@ class VectorServer:
             feature_store_id=self._feature_store_id,
             skip_fg_ids=self._skip_fg_ids,
         )
-        self.online_store_sql_client.init_prepared_statement(
+        self.online_store_sql_client.init_prepared_statements(
             entity,
             external,
             inference_helper_columns,
