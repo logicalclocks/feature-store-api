@@ -279,7 +279,9 @@ class VectorServer:
             )
         else:
             _logger.info("get_feature_vectors through SQL client")
-            batch_results, _ = self._batch_vector_results(entries)
+            batch_results, _ = self.online_store_sql_client.get_batch_feature_vectors(
+                entries
+            )
             # Deserialize complex features
             _logger.debug("Deserializing complex features")
             batch_results = list(

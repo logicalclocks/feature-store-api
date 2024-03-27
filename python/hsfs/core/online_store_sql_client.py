@@ -250,7 +250,7 @@ class OnlineStoreSqlClient:
             entry, self.parametrised_prepared_statements[self.SINGLE_VECTOR_KEY]
         )
 
-    def get_batch_feature_vector(
+    def get_batch_feature_vectors(
         self, entries: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Retrieve batch vector with parallel queries using aiomysql engine."""
@@ -264,7 +264,7 @@ class OnlineStoreSqlClient:
             entry, self.parametrised_prepared_statements[self.SINGLE_HELPER_KEY]
         )
 
-    def get_batch_inference_helper_vector(
+    def get_batch_inference_helper_vectors(
         self, entries: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Retrieve batch vector with parallel queries using aiomysql engine."""
