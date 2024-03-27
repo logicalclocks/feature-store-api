@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 import asyncio
+import json
 import logging
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
@@ -95,6 +96,16 @@ class OnlineStoreSqlClient:
                 "Object type needs to be `feature_view.FeatureView` or `training_dataset.TrainingDataset`."
             )
 
+        if len(self.skip_fg_ids) > 0:
+            _logger.debug(
+                f"Skip feature groups {self.skip_fg_ids} when initializing prepared statements."
+            )
+            self.prepared_statements[key] = {
+                k: v
+                for k, v in self.prepared_statements[key].items()
+                if v.feature_group_id not in self.skip_fg_ids
+            }
+
     def init_prepared_statements(
         self,
         entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
@@ -107,7 +118,6 @@ class OnlineStoreSqlClient:
         self.fetch_prepared_statements(entity, inference_helper_columns)
         self._external = external
 
-        _logger.debug("Use the prepared statements to initialize the class utils")
         self.init_parametrize_and_serving_utils(
             self.prepared_statements[self.SINGLE_VECTOR_KEY]
         )
@@ -126,50 +136,33 @@ class OnlineStoreSqlClient:
             int, "serving_prepared_statement.ServingPreparedStatement"
         ],
     ) -> None:
-        self._prefix_by_serving_index = {}
-        self._feature_name_order_by_psp = {}
-        for statement in prepared_statements:
-            if statement.feature_group_id in self._skip_fg_ids:
-                continue
-
-            self._prefix_by_serving_index[statement.prepared_statement_index] = (
-                statement.prefix
-            )
-            self._feature_name_order_by_psp[statement.prepared_statement_index] = dict(
+        _logger.debug(
+            f"Initializing parametrize and serving utils property using {json.dumps(prepared_statements, default=lambda x: x.__dict__, indent=2)}"
+        )
+        self._prefix_by_serving_index = {
+            statement.prepared_statement_index: statement.prefix
+            for statement in prepared_statements.values()
+        }
+        self._feature_name_order_by_psp = {
+            statement.prepared_statement_index: dict(
                 [
                     (psp.name, psp.index)
                     for psp in statement.prepared_statement_parameters
                 ]
             )
-            pk_names = [
-                psp.name
-                for psp in sorted(
-                    statement.prepared_statement_parameters,
-                    key=lambda psp: psp.index,
-                )
-            ]
-            # construct serving key if it is not provided.
-            if len(self._serving_keys) == 0:
-                serving_keys = set()
-                for pk_name in pk_names:
-                    # should use `ignore_prefix=True` because before hsfs 3.3,
-                    # only primary key of a feature group are matched in
-                    # user provided entry.
-                    serving_key = ServingKey(
-                        feature_name=pk_name,
-                        join_index=statement.prepared_statement_index,
-                        prefix=statement.prefix,
-                        ignore_prefix=True,
-                    )
-                    serving_keys.add(serving_key)
-                self._serving_keys = serving_keys
+            for statement in prepared_statements.values()
+        }
+        self._serving_keys = self.build_serving_keys_from_prepared_statements(
+            prepared_statements
+        )
+        _logger.debug(f"Set Serving keys: {self._serving_keys}")
 
+        _logger.debug("Build serving keys by PreparedStatementParameter.index")
         for sk in self._serving_keys:
             self._serving_key_by_serving_index[sk.join_index] = (
                 self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
             )
-
-        # sort the serving by PreparedStatementParameter.index
+        _logger.debug("Sort serving keys by PreparedStatementParameter.index")
         for join_index in self._serving_key_by_serving_index:
             # feature_name_order_by_psp do not include the join index when the joint feature only contains label only
             # But _serving_key_by_serving_index include the index when the join_index is 0 (left side)
@@ -186,6 +179,7 @@ class OnlineStoreSqlClient:
             [sk.feature_name for sk in self._serving_keys]
             + [sk.required_serving_key for sk in self._serving_keys]
         )
+        _logger.debug(f"Set valid serving keys: {self._valid_serving_keys}")
 
     def _parametrize_prepared_statements(
         self,
@@ -200,17 +194,9 @@ class OnlineStoreSqlClient:
                 continue
             query_online = str(prepared_statement.query_online).replace("\n", " ")
 
-            pk_names = [
-                psp.name
-                for psp in sorted(
-                    prepared_statement.prepared_statement_parameters,
-                    key=lambda psp: psp.index,
-                )
-            ]
-
             if not batch:
-                for pk_name in pk_names:
-                    query_online = self._parametrize_query(pk_name, query_online)
+                for param in prepared_statement.prepared_statement_parameters:
+                    query_online = self._parametrize_query(param.name, query_online)
                 query_online = sql.text(query_online)
             else:
                 query_online = self._parametrize_query("batch_ids", query_online)
@@ -224,6 +210,17 @@ class OnlineStoreSqlClient:
             )
 
         return prepared_statements_dict
+
+    def build_serving_keys_from_prepared_statements(
+        self,
+        prepared_statements: Dict[
+            int, "serving_prepared_statement.ServingPreparedStatement"
+        ],
+    ) -> Set["ServingKey"]:
+        serving_keys = set()
+        for prepared_statement in prepared_statements.values():
+            serving_keys.update(prepared_statement.serving_keys)
+        return serving_keys
 
     def init_async_mysql_connection(self, options=None):
         assert self._prepared_statements.get(self.SINGLE_VECTOR_KEY) is not None, (

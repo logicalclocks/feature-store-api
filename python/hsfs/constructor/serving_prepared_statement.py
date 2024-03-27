@@ -13,7 +13,7 @@
 #  limitations under the License.
 #
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import humps
 from hsfs import util
@@ -38,12 +38,8 @@ class ServingPreparedStatement:
     ):
         self._feature_group_id = feature_group_id
         self._prepared_statement_index = prepared_statement_index
-        self._prepared_statement_parameters = [
-            prepared_statement_parameter.PreparedStatementParameter.from_response_json(
-                psp
-            )
-            for psp in prepared_statement_parameters
-        ]
+        # use setter to ensure that the parameters are sorted by index
+        self.prepared_statement_parameters = prepared_statement_parameters
         self._query_online = query_online
         self._prefix = prefix
 
@@ -84,7 +80,7 @@ class ServingPreparedStatement:
     def prepared_statement_parameters(
         self,
     ) -> List["prepared_statement_parameter.PreparedStatementParameter"]:
-        return self._prepared_statement_parameters
+        return sorted(self._prepared_statement_parameters, key=lambda x: x.index)
 
     @property
     def query_online(self) -> Optional[str]:
@@ -105,11 +101,25 @@ class ServingPreparedStatement:
     @prepared_statement_parameters.setter
     def prepared_statement_parameters(
         self,
-        prepared_statement_parameters: List[
-            "prepared_statement_parameter.PreparedStatementParameter"
+        prepared_statement_parameters: Union[
+            List["prepared_statement_parameter.PreparedStatementParameter"],
+            List[Dict[str, Any]],
         ],
     ):
-        self._prepared_statement_parameters = prepared_statement_parameters
+        if isinstance(prepared_statement_parameters[0], dict):
+            self._prepared_statement_parameters = sorted(
+                [
+                    prepared_statement_parameter.PreparedStatementParameter.from_response_json(
+                        pstm_param
+                    )
+                    for pstm_param in prepared_statement_parameters
+                ],
+                lambda x: x.get("index"),
+            )
+        else:
+            self._prepared_statement_parameters = sorted(
+                prepared_statement_parameters, key=lambda x: x.index
+            )
 
     @query_online.setter
     def query_online(self, query_online: Optional[str]):
