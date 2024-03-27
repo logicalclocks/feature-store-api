@@ -16,6 +16,7 @@
 
 import base64
 import json
+import logging
 import os
 
 import boto3
@@ -29,6 +30,9 @@ except ImportError:
 
 from hsfs.client import auth, base, exceptions
 from hsfs.client.exceptions import FeatureStoreException
+
+
+_logger = logging.getLogger(__name__)
 
 
 class Client(base.Client):
@@ -52,6 +56,7 @@ class Client(base.Client):
         api_key_value,
     ):
         """Initializes a client in an external environment such as AWS Sagemaker."""
+        _logger.info("Initializing external client")
         if not host:
             raise exceptions.ExternalClientError("host")
         if not project:
@@ -60,21 +65,33 @@ class Client(base.Client):
         self._host = host
         self._port = port
         self._base_url = "https://" + self._host + ":" + str(self._port)
+        _logger.info("Base URL: %s", self._base_url)
         self._project_name = project
+        _logger.debug("Project name: %s", self._project_name)
         self._region_name = region_name or self.DEFAULT_REGION
+        _logger.debug("Region name: %s", self._region_name)
 
         if api_key_value is not None:
+            _logger.debug("Using provided API key value")
             api_key = api_key_value
         else:
+            _logger.debug("Querying secrets store for API key")
             api_key = self._get_secret(secrets_store, "api-key", api_key_file)
+
+        _logger.debug("Using api key to setup header authentification")
         self._auth = auth.ApiKeyAuth(api_key)
 
+        _logger.debug("Setting up requests session")
         self._session = requests.session()
         self._connected = True
+
         self._verify = self._get_verify(self._host, trust_store_path)
+        _logger.debug("Verify: %s", self._verify)
 
         project_info = self._get_project_info(self._project_name)
+
         self._project_id = str(project_info["projectId"])
+        _logger.debug("Setting Project ID: %s", self._project_id)
 
         self._cert_key = None
         self._cert_folder_base = None
@@ -87,7 +104,16 @@ class Client(base.Client):
             self._trust_store_path = os.path.join(self._cert_folder, "trustStore.jks")
             self._key_store_path = os.path.join(self._cert_folder, "keyStore.jks")
 
-            os.makedirs(self._cert_folder, exist_ok=True)
+            if os.path.exists(self._cert_folder):
+                _logger.debug(
+                    f"Running in Python environment, reading certificates from certificates folder {cert_folder}"
+                )
+                _logger.debug("Found certificates: %s", os.listdir(cert_folder))
+            else:
+                _logger.debug(
+                    f"Running in Python environment, creating certificates folder {cert_folder}"
+                )
+                os.makedirs(self._cert_folder, exist_ok=True)
             credentials = self._get_credentials(self._project_id)
             self._write_b64_cert_to_bytes(
                 str(credentials["kStore"]),
@@ -109,6 +135,7 @@ class Client(base.Client):
                 f.write(str(credentials["password"]))
 
         elif engine.startswith("spark"):
+            _logger.debug("Running in Spark environment, initializing Spark session")
             _spark_session = SparkSession.builder.getOrCreate()
 
             self.validate_spark_configuration(
@@ -128,6 +155,7 @@ class Client(base.Client):
             )
 
     def validate_spark_configuration(self, _spark_session, no_metastore):
+        _logger.debug("Validating Spark configuration")
         exception_text = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: "
 
         configuration_dict = {
@@ -141,12 +169,15 @@ class Client(base.Client):
             "spark.hadoop.hops.ipc.server.ssl.enabled": "true",
             "spark.hadoop.client.rpc.ssl.enabled.protocol": "TLSv1.2",
         }
+        _logger.debug("Configuration dict: %s", configuration_dict)
 
         if not no_metastore:
+            _logger.debug("Found no_metastore option, dropping Hive configuration")
             configuration_dict["spark.hadoop.hive.metastore.uris"] = None
             configuration_dict["spark.sql.hive.metastore.jars"] = None
 
         for key, value in configuration_dict.items():
+            _logger.debug("Validating key: %s", key)
             if not (
                 _spark_session.conf.get(key, "not_found") != "not_found"
                 and (value is None or _spark_session.conf.get(key, None) == value)
@@ -155,12 +186,15 @@ class Client(base.Client):
 
     def _close(self):
         """Closes a client and deletes certificates."""
+        _logger.info("Closing external client and cleaning up certificates.")
         if self._cert_folder_base is None:
+            _logger.debug("No certificates to clean up.")
             # On external Spark clients (Databricks, Spark Cluster),
             # certificates need to be provided before the Spark application starts.
             return
 
         # Clean up only on AWS
+        _logger.debug("Cleaning up certificates. AWS only.")
         self._cleanup_file(self._get_jks_key_store_path())
         self._cleanup_file(self._get_jks_trust_store_path())
         self._cleanup_file(os.path.join(self._cert_folder, "material_passwd"))
@@ -180,19 +214,27 @@ class Client(base.Client):
         self._connected = False
 
     def _get_jks_trust_store_path(self):
+        _logger.debug("Getting trust store path: %s", self._trust_store_path)
         return self._trust_store_path
 
     def _get_jks_key_store_path(self):
+        _logger.debug("Getting key store path: %s", self._key_store_path)
         return self._key_store_path
 
     def _get_ca_chain_path(self) -> str:
-        return os.path.join(self._cert_folder, "ca_chain.pem")
+        path = os.path.join(self._cert_folder, "ca_chain.pem")
+        _logger.debug(f"Getting ca chain path {path}")
+        return path
 
     def _get_client_cert_path(self) -> str:
-        return os.path.join(self._cert_folder, "client_cert.pem")
+        path = os.path.join(self._cert_folder, "client_cert.pem")
+        _logger.debug(f"Getting client cert path {path}")
+        return path
 
     def _get_client_key_path(self) -> str:
-        return os.path.join(self._cert_folder, "client_key.pem")
+        path = os.path.join(self._cert_folder, "client_key.pem")
+        _logger.debug(f"Getting client key path {path}")
+        return path
 
     def _get_secret(self, secrets_store, secret_key=None, api_key_file=None):
         """Returns secret value from the AWS Secrets Manager or Parameter Store.
@@ -208,6 +250,7 @@ class Client(base.Client):
         :return: secret
         :rtype: str
         """
+        _logger.debug(f"Querying secrets store {secrets_store} for secret {secret_key}")
         if secrets_store == self.SECRETS_MANAGER:
             return self._query_secrets_manager(secret_key)
         elif secrets_store == self.PARAMETER_STORE:
@@ -217,6 +260,7 @@ class Client(base.Client):
                 raise exceptions.ExternalClientError(
                     "api_key_file needs to be set for local mode"
                 )
+            _logger.debug(f"Reading api key from {api_key_file}")
             with open(api_key_file) as f:
                 return f.readline().strip()
         else:
@@ -225,6 +269,7 @@ class Client(base.Client):
             )
 
     def _query_secrets_manager(self, secret_key):
+        _logger.debug("Querying secrets manager for secret key: %s", secret_key)
         secret_name = "hopsworks/role/" + self._assumed_role()
         args = {"service_name": "secretsmanager"}
         region_name = self._get_region()
@@ -235,6 +280,7 @@ class Client(base.Client):
         return json.loads(get_secret_value_response["SecretString"])[secret_key]
 
     def _assumed_role(self):
+        _logger.debug("Getting assumed role")
         client = boto3.client("sts")
         response = client.get_caller_identity()
         # arns for assumed roles in SageMaker follow the following schema
@@ -248,11 +294,14 @@ class Client(base.Client):
 
     def _get_region(self):
         if self._region_name != self.DEFAULT_REGION:
+            _logger.debug(f"Region name is not default, returning {self._region_name}")
             return self._region_name
         else:
+            _logger.debug("Region name is default, returning None")
             return None
 
     def _query_parameter_store(self, secret_key):
+        _logger.debug("Querying parameter store for secret key: %s", secret_key)
         args = {"service_name": "ssm"}
         region_name = self._get_region()
         if region_name:
@@ -271,6 +320,7 @@ class Client(base.Client):
         :return: JSON response with project info
         :rtype: dict
         """
+        _logger.debug("Getting project info for project: %s", project_name)
         return self._send_request("GET", ["project", "getProjectInfo", project_name])
 
     def _write_b64_cert_to_bytes(self, b64_string, path):
@@ -281,13 +331,14 @@ class Client(base.Client):
         :param path: path where file is saved, including file name. e.g. /path/key-store.jks
         :type path: str
         """
-
+        _logger.debug(f"Writing b64 encoded certificate to {path}")
         with open(path, "wb") as f:
             cert_b64 = base64.b64decode(b64_string)
             f.write(cert_b64)
 
     def _cleanup_file(self, file_path):
         """Removes local files with `file_path`."""
+        _logger.debug(f"Cleaning up file {file_path}")
         try:
             os.remove(file_path)
         except OSError:
@@ -297,9 +348,9 @@ class Client(base.Client):
         """no need to replace as we are already in external client"""
         return url
 
-    def _is_external(self):
+    def _is_external(self) -> bool:
         return True
 
     @property
-    def host(self):
+    def host(self) -> str:
         return self._host
