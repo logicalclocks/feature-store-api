@@ -17,7 +17,7 @@ import warnings
 from hsfs import engine, util
 from hsfs import feature_group as fg
 from hsfs.client import exceptions
-from hsfs.core import feature_group_base_engine, hudi_engine
+from hsfs.core import delta_engine, feature_group_base_engine, hudi_engine
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 
 
@@ -147,7 +147,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
     def commit_details(self, feature_group, wallclock_time, limit):
         if (
             feature_group._time_travel_format is None
-            or feature_group._time_travel_format.upper() != "HUDI"
+            or feature_group._time_travel_format.upper() not in ["HUDI", "DELTA"]
         ):
             raise exceptions.FeatureStoreException(
                 "commit_details can only be used on time travel enabled feature groups"
@@ -172,14 +172,24 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
     @staticmethod
     def commit_delete(feature_group, delete_df, write_options):
-        hudi_engine_instance = hudi_engine.HudiEngine(
-            feature_group.feature_store_id,
-            feature_group.feature_store_name,
-            feature_group,
-            engine.get_instance()._spark_context,
-            engine.get_instance()._spark_session,
-        )
-        return hudi_engine_instance.delete_record(delete_df, write_options)
+        if feature_group.time_travel_format == "DELTA":
+            delta_engine_instance = delta_engine.DeltaEngine(
+                feature_group.feature_store_id,
+                feature_group.feature_store_name,
+                feature_group,
+                engine.get_instance()._spark_session,
+                engine.get_instance()._spark_context,
+            )
+            return delta_engine_instance.delete_record(delete_df)
+        else:
+            hudi_engine_instance = hudi_engine.HudiEngine(
+                feature_group.feature_store_id,
+                feature_group.feature_store_name,
+                feature_group,
+                engine.get_instance()._spark_context,
+                engine.get_instance()._spark_session,
+            )
+            return hudi_engine_instance.delete_record(delete_df, write_options)
 
     def sql(self, query, feature_store_name, dataframe_type, online, read_options):
         if online and self._online_conn is None:
