@@ -35,7 +35,6 @@ SINGLE_HELPER_KEY = (
 BATCH_HELPER_KEY = (
     hsfs.core.online_store_sql_client.OnlineStoreSqlClient.BATCH_HELPER_KEY
 )
-MOCK_API_ATTRIBUTE_GET_SERVING_PREPARED_STATEMENT = "get_serving_prepared_statement"
 
 
 _logger = logging.getLogger("hsfs.core.online_store_sql_client")
@@ -65,8 +64,8 @@ class TestOnlineStoreSqlClient:
     @pytest.fixture
     def training_dataset(self, backend_fixtures):
         return hsfs.training_dataset.TrainingDataset.from_response_json(
-            backend_fixtures["training_dataset"]["get"]["response"][0]
-        )
+            backend_fixtures["training_dataset"]["get_basic_info"]["response"]
+        )[0]
 
     @pytest.fixture
     def prices_prepared_statements(self, backend_fixtures):
@@ -102,10 +101,10 @@ class TestOnlineStoreSqlClient:
 
     @pytest.fixture(scope="function")
     def fake_transactions_prepared_statements_with_helper_columns(
-        self, fake_transactions_prepareed_statements, backend_fixtures
+        self, fake_transactions_prepared_statements, backend_fixtures
     ):
         # assumes retrieved prepared statements single first and batch second
-        return fake_transactions_prepareed_statements + [
+        return fake_transactions_prepared_statements + [
             hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
                 json_dict=backend_fixtures["serving_prepared_statement"][
                     "fake_transactions_single_helper"
@@ -132,7 +131,7 @@ class TestOnlineStoreSqlClient:
     def test_init(self, mocker, skip_fg_ids):
         # Arrange
         feature_store_id = 1
-        mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mocker.patch("hsfs.client.get_instance")
 
         # Act
         online_store_sql_client = (
@@ -167,17 +166,12 @@ class TestOnlineStoreSqlClient:
         assert len(online_store_sql_client.serving_keys) == 1
 
     def test_fetch_prepared_statements_feature_view_no_helper_columns(
-        self, mocker, backend_fixtures, online_store_sql_client, fv
+        self, mocker, prices_prepared_statements, online_store_sql_client, fv
     ):
         # Arrange
         mocker.patch(
             "hsfs.core.feature_view_api.FeatureViewApi.get_serving_prepared_statement",
-            return_value=hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
-                json_dict=backend_fixtures["serving_prepared_statement"]["get_list"][
-                    "response"
-                ]
-            ),
-        )
+        ).side_effect = prices_prepared_statements
 
         # Act
         online_store_sql_client.fetch_prepared_statements(
@@ -202,8 +196,7 @@ class TestOnlineStoreSqlClient:
         # Arrange
         mocker.patch(
             "hsfs.core.feature_view_api.FeatureViewApi.get_serving_prepared_statement",
-            return_value=fake_transactions_prepared_statements_with_helper_columns,
-        )
+        ).side_effect = fake_transactions_prepared_statements_with_helper_columns
 
         # Act
         online_store_sql_client.fetch_prepared_statements(
@@ -221,17 +214,16 @@ class TestOnlineStoreSqlClient:
         assert len(serving_statements[BATCH_HELPER_KEY]) == 1
 
     def test_fetch_prepared_statements_training_dataset(
-        self, mocker, backend_fixtures, online_store_sql_client, training_dataset
+        self,
+        mocker,
+        prices_prepared_statements,
+        online_store_sql_client,
+        training_dataset,
     ):
         # Arrange
         mocker.patch(
             "hsfs.core.training_dataset_api.TrainingDatasetApi.get_serving_prepared_statement",
-            return_value=hsfs.constructor.serving_prepared_statement.ServingPreparedStatement.from_response_json(
-                json_dict=backend_fixtures["serving_prepared_statement"]["get_list"][
-                    "response"
-                ]
-            ),
-        )
+        ).side_effect = prices_prepared_statements
 
         # Act
         online_store_sql_client.fetch_prepared_statements(
@@ -252,8 +244,7 @@ class TestOnlineStoreSqlClient:
         # Arrange
         mocker.patch(
             "hsfs.core.feature_view_api.FeatureViewApi.get_serving_prepared_statement",
-            return_value=prices_prepared_statements,
-        )
+        ).side_effect = prices_prepared_statements
 
         # Act
         online_store_sql_client.init_prepared_statements(
@@ -268,7 +259,9 @@ class TestOnlineStoreSqlClient:
             and len(serving_statements[SINGLE_VECTOR_KEY]) == 1
         )
 
-        parametrised_statements = online_store_sql_client.parametrised_statements
+        parametrised_statements = (
+            online_store_sql_client.parametrised_prepared_statements
+        )
         assert isinstance(parametrised_statements, dict)
         assert (
             len(parametrised_statements) == 2

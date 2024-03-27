@@ -101,9 +101,9 @@ class OnlineStoreSqlClient:
                 f"Skip feature groups {self.skip_fg_ids} when initializing prepared statements."
             )
             self.prepared_statements[key] = {
-                k: v
-                for k, v in self.prepared_statements[key].items()
-                if v.feature_group_id not in self.skip_fg_ids
+                ps
+                for ps in self.prepared_statements[key]
+                if ps.feature_group_id not in self.skip_fg_ids
             }
 
     def init_prepared_statements(
@@ -132,8 +132,8 @@ class OnlineStoreSqlClient:
 
     def init_parametrize_and_serving_utils(
         self,
-        prepared_statements: Dict[
-            int, "serving_prepared_statement.ServingPreparedStatement"
+        prepared_statements: List[
+            "serving_prepared_statement.ServingPreparedStatement"
         ],
     ) -> None:
         _logger.debug(
@@ -141,16 +141,16 @@ class OnlineStoreSqlClient:
         )
         self._prefix_by_serving_index = {
             statement.prepared_statement_index: statement.prefix
-            for statement in prepared_statements.values()
+            for statement in prepared_statements
         }
         self._feature_name_order_by_psp = {
             statement.prepared_statement_index: dict(
                 [
-                    (psp.name, psp.index)
-                    for psp in statement.prepared_statement_parameters
+                    (param.name, param.index)
+                    for param in statement.prepared_statement_parameters
                 ]
             )
-            for statement in prepared_statements.values()
+            for statement in prepared_statements
         }
         self._serving_keys = self.build_serving_keys_from_prepared_statements(
             prepared_statements
@@ -175,7 +175,7 @@ class OnlineStoreSqlClient:
                     ].get(_sk.feature_name, 0),
                 )
 
-        self._valid_serving_key = set(
+        self._valid_serving_keys = set(
             [sk.feature_name for sk in self._serving_keys]
             + [sk.required_serving_key for sk in self._serving_keys]
         )
@@ -213,13 +213,21 @@ class OnlineStoreSqlClient:
 
     def build_serving_keys_from_prepared_statements(
         self,
-        prepared_statements: Dict[
-            int, "serving_prepared_statement.ServingPreparedStatement"
+        prepared_statements: List[
+            "serving_prepared_statement.ServingPreparedStatement"
         ],
     ) -> Set["ServingKey"]:
         serving_keys = set()
-        for prepared_statement in prepared_statements.values():
-            serving_keys.update(prepared_statement.serving_keys)
+        for statement in prepared_statements:
+            for param in statement.prepared_statement_parameters:
+                serving_keys.add(
+                    ServingKey(
+                        feature_name=param.name,
+                        join_index=statement.prepared_statement_index,
+                        prefix=statement.prefix,
+                        ignore_prefix=True,  # compatibility with hsfs 3.3
+                    )
+                )
         return serving_keys
 
     def init_async_mysql_connection(self, options=None):
@@ -247,7 +255,7 @@ class OnlineStoreSqlClient:
     ) -> List[Dict[str, Any]]:
         """Retrieve batch vector with parallel queries using aiomysql engine."""
         return self._batch_vector_results(
-            entries, self.prepared_statements[self.BATCH_VECTOR_KEY]
+            entries, self.parametrised_prepared_statements[self.BATCH_VECTOR_KEY]
         )
 
     def get_inference_helper_vector(self, entry: Dict[str, Any]) -> Dict[str, Any]:
@@ -277,7 +285,7 @@ class OnlineStoreSqlClient:
                 "`training_dataset.init_prepared_statement()` "
                 "or `feature_view.init_serving()`"
             )
-        self._validate_serving_key(entry)
+        self._validate_serving_keys(entry)
         # Initialize the set of values
         serving_vector = {}
         bind_entries = {}
@@ -454,13 +462,13 @@ class OnlineStoreSqlClient:
             online_conn, self._external, options=options
         )
 
-    def _validate_serving_key(self, entry: Dict[str, Any]):
+    def _validate_serving_keys(self, entry: Dict[str, Any]):
         _logger.debug(f"Validating serving key {entry}")
         for key in entry:
-            if key not in self._valid_serving_key:
+            if key not in self._valid_serving_keys:
                 raise ValueError(
                     f"'{key}' is not a correct serving key. Expect one of the"
-                    f" followings: [{', '.join(self._valid_serving_key)}]"
+                    f" followings: [{', '.join(self._valid_serving_keys)}]"
                 )
 
     def filter_entry_by_join_index(self, entry: Dict[str, Any], join_index: int):
@@ -606,18 +614,23 @@ class OnlineStoreSqlClient:
         return self._feature_store_id
 
     @property
-    def prepared_statement_engine(self):
+    def prepared_statement_engine(
+        self,
+    ) -> "prepared_statement_engine.PreparedStatementsEngine":
         """JDBC connection engine to retrieve connections to online features store from."""
         return self._prepared_statement_engine
 
     @prepared_statement_engine.setter
-    def prepared_statement_engine(self, prepared_statement_engine):
+    def prepared_statement_engine(
+        self,
+        prepared_statement_engine: "prepared_statement_engine.PreparedStatementsEngine",
+    ) -> None:
         self._prepared_statement_engine = prepared_statement_engine
 
     @property
     def prepared_statements(
         self,
-    ) -> Dict[str, Dict[int, "serving_prepared_statement.ServingPreparedStatement"]]:
+    ) -> Dict[str, List["serving_prepared_statement.ServingPreparedStatement"]]:
         """Contains up to 4 prepared statements for single and batch vector retrieval, and single or batch inference helpers.
 
         The keys are the labels for the prepared statements, and the values are dictionaries of prepared statements
@@ -629,7 +642,7 @@ class OnlineStoreSqlClient:
     def prepared_statements(
         self,
         prepared_statements: Dict[
-            str, Dict[int, "serving_prepared_statement.ServingPreparedStatement"]
+            str, List["serving_prepared_statement.ServingPreparedStatement"]
         ],
     ) -> None:
         self._prepared_statements = prepared_statements

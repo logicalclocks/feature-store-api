@@ -100,7 +100,7 @@
       "count": 1
     }
   },
-  "fake_transactions_helper_single": {
+  "fake_transactions_single_helper": {
     "response": {
       "href": "https://hopsworks.glassfish.service.consul:8182/hopsworks-api/api/project/7299/featurestores/7247/featureview/fake_transactions_with_inference_helper_columns_fv/version/1/preparedstatements",
       "items": [
@@ -119,7 +119,7 @@
       "count": 1
     }
   },
-  "fake_transactions_helper_batch": {
+  "fake_transactions_batch_helper": {
     "response": {
       "href": "https://hopsworks.glassfish.service.consul:8182/hopsworks-api/api/project/7299/featurestores/7247/featureview/fake_transactions_with_inference_helper_columns_fv/version/1/preparedstatements",
       "items": [
