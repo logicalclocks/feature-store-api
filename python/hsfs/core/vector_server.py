@@ -26,7 +26,6 @@ import polars as pl
 from hsfs import client, feature_view, training_dataset
 from hsfs.core import (
     feature_view_engine,
-    online_store_rest_client_engine,
     online_store_sql_client,
     transformation_function_engine,
 )
@@ -38,12 +37,6 @@ _logger = logging.getLogger(__name__)
 
 @typechecked
 class VectorServer:
-    DEFAULT_ONLINE_STORE_REST_CLIENT = "rest"
-    DEFAULT_ONLINE_STORE_SQL_CLIENT = "sql"
-    DEFAULT_ONLINE_STORE_CLIENT_KEY = "default_online_store_client"
-    ONLINE_REST_CLIENT_CONFIG_OPTIONS_KEY = "config_online_store_rest_client"
-    RESET_ONLINE_REST_CLIENT_OPTIONS_KEY = "reset_online_store_rest_client"
-
     def __init__(
         self,
         feature_store_id: int,
@@ -53,9 +46,6 @@ class VectorServer:
         training_dataset_version: Optional[int] = None,
         serving_keys: Optional[List["hsfs.serving_key.ServingKey"]] = None,
         skip_fg_ids: Optional[Set] = None,
-        feature_store_name: Optional[str] = None,
-        feature_view_name: Optional[str] = None,
-        feature_view_version: Optional[int] = None,
     ):
         self._training_dataset_version = training_dataset_version
 
@@ -80,9 +70,6 @@ class VectorServer:
         self._serving_keys = serving_keys
 
         self._feature_store_id = feature_store_id
-        self._feature_store_name = feature_store_name
-        self._feature_view_name = feature_view_name
-        self._feature_view_version = feature_view_version
 
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(
@@ -94,17 +81,11 @@ class VectorServer:
         )
         self._transformation_functions = None
         self._required_serving_keys = None
-
         self._online_store_sql_client = None
-        self._online_store_rest_client_engine = None
-        self._init_online_store_rest_client = None
-        self._init_online_store_sql_client = None
-        self._default_online_store_client = None
 
     def init_serving(
         self,
         entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
-        batch: bool,
         external: bool = None,
         inference_helper_columns: bool = False,
         init_online_store_sql_client: bool = True,
@@ -150,41 +131,6 @@ class VectorServer:
         # attach transformation functions
         self._transformation_functions = self._get_transformation_fns(entity)
 
-    def setup_online_store_rest_client_and_engine(
-        self,
-        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
-        options: Optional[Dict[str, Any]] = None,
-    ):
-        # naming is off here, but it avoids confusion with the argument init_online_store_rest_client
-        _logger.info("Initialising Vector Server Online Store REST client")
-        self._online_store_rest_client_engine = online_store_rest_client_engine.OnlineStoreRestClientEngine(
-            feature_store_name=self._feature_store_name,
-            feature_view_name=entity.name,
-            feature_view_version=entity.version,
-            features=entity.features,
-            skip_fg_ids=self._skip_fg_ids,
-            # Code duplication added to avoid unnecessary transforming and iterating over feature vectors
-            # multiple times. This is a temporary solution until the code is refactored with new sql client
-            complex_features=self._complex_features,
-            transformation_functions=self._transformation_functions,
-        )
-        # This logic needs to move to the above engine init
-        reset_online_rest_client = False
-        online_store_rest_client_config = None
-        if isinstance(options, dict):
-            reset_online_rest_client = options.get(
-                self.RESET_ONLINE_REST_CLIENT_OPTIONS_KEY, reset_online_rest_client
-            )
-            online_store_rest_client_config = options.get(
-                self.ONLINE_REST_CLIENT_CONFIG_OPTIONS_KEY,
-                online_store_rest_client_config,
-            )
-
-        client.online_store_rest_client.init_or_reset_online_store_rest_client(
-            optional_config=online_store_rest_client_config,
-            reset_client=reset_online_rest_client,
-        )
-
     def setup_online_store_sql_client(
         self,
         entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
@@ -210,47 +156,30 @@ class VectorServer:
         return_type: Optional[str] = None,
         passed_features: Optional[Dict[str, Any]] = None,
         allow_missing: bool = False,
-        force_rest_client: bool = False,
-        force_sql_client: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
         if passed_features is None:
-            passed_features = []
+            passed_features = {}
 
-        online_client_str = self.which_client_and_ensure_initialised(
-            force_rest_client=force_rest_client, force_sql_client=force_sql_client
+        # get result row
+        _logger.info("get_feature_vector Online SQL client")
+        serving_vector = self.online_store_sql_client.get_single_feature_vector(entry)
+        # Deserialize complex features
+        _logger.debug("Deserializing complex features")
+        serving_vector = self.deserialize_complex_features(serving_vector)
+
+        # Add the passed features
+        _logger.debug("Updating with passed features")
+        serving_vector.update(passed_features)
+
+        # apply transformation functions
+        _logger.debug("Applying transformation functions")
+        result_dict = self._apply_transformation(serving_vector)
+
+        _logger.debug(
+            "Converting to row vectors to list, optionally filling missing values"
         )
-
-        if online_client_str == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
-            _logger.info("get_feature_vector Online REST client")
-            vector = self._online_store_rest_client_engine.get_single_feature_vector(
-                entry=entry,
-                passed_features=passed_features,
-                return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_LIST,
-            )
-
-        else:  # aiomysql branch
-            # get result row
-            _logger.info("get_feature_vector Online SQL client")
-            serving_vector = self.online_store_sql_client.get_single_feature_vector(
-                entry
-            )
-            # Deserialize complex features
-            _logger.debug("Deserializing complex features")
-            serving_vector = self.deserialize_complex_features(serving_vector)
-
-            # Add the passed features
-            _logger.debug("Updating with passed features")
-            serving_vector.update(passed_features)
-
-            # apply transformation functions
-            _logger.debug("Applying transformation functions")
-            result_dict = self._apply_transformation(serving_vector)
-
-            _logger.debug(
-                "Converting to row vectors to list, optionally filling missing values"
-            )
-            vector = self._generate_vector(result_dict, allow_missing)
+        vector = self._generate_vector(result_dict, allow_missing)
 
         return self.handle_feature_vector_return_type(
             vector, batch=False, inference_helper=False, return_type=return_type
@@ -262,61 +191,47 @@ class VectorServer:
         return_type: Optional[str] = None,
         passed_features: List[Dict[str, Any]] = None,
         allow_missing: bool = False,
-        force_rest_client: bool = False,
-        force_sql_client: bool = False,
     ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], List[Dict[str, Any]]]:
         if passed_features is None:
             passed_features = []
         """Assembles serving vector from online feature store."""
-        online_client_str = self.which_client_and_ensure_initialised(
-            force_rest_client=force_rest_client, force_sql_client=force_sql_client
+        _logger.info("get_feature_vectors through SQL client")
+        batch_results, _ = self.online_store_sql_client.get_batch_feature_vectors(
+            entries
+        )
+        # Deserialize complex features
+        _logger.debug("Deserializing complex features")
+        batch_results = list(
+            map(
+                lambda row_dict: self.deserialize_complex_features(row_dict),
+                batch_results,
+            )
         )
 
-        if online_client_str == self.DEFAULT_ONLINE_STORE_REST_CLIENT:
-            _logger.info("get_feature_vectors through REST client")
-            vectors = self._online_store_rest_client_engine.get_batch_feature_vectors(
-                entries=entries,
-                passed_features=passed_features,
-                return_type=self._online_store_rest_client_engine.RETURN_TYPE_FEATURE_VALUE_LIST,
-            )
-        else:
-            _logger.info("get_feature_vectors through SQL client")
-            batch_results, _ = self.online_store_sql_client.get_batch_feature_vectors(
-                entries
-            )
-            # Deserialize complex features
-            _logger.debug("Deserializing complex features")
-            batch_results = list(
-                map(
-                    lambda row_dict: self.deserialize_complex_features(row_dict),
-                    batch_results,
-                )
-            )
+        # apply passed features to each batch result
+        _logger.debug("Updating with passed features")
+        for vector_index, pf in enumerate(passed_features):
+            batch_results[vector_index].update(pf)
 
-            # apply passed features to each batch result
-            _logger.debug("Updating with passed features")
-            for vector_index, pf in enumerate(passed_features):
-                batch_results[vector_index].update(pf)
-
-            # apply transformation functions
-            _logger.debug("Applying transformation functions")
-            batch_transformed = list(
-                map(
-                    lambda results_dict: self._apply_transformation(results_dict),
-                    batch_results,
-                )
+        # apply transformation functions
+        _logger.debug("Applying transformation functions")
+        batch_transformed = list(
+            map(
+                lambda results_dict: self._apply_transformation(results_dict),
+                batch_results,
             )
+        )
 
-            # get vectors
-            _logger.debug(
-                "Converting to row vectors to list, optionally filling missing values"
-            )
-            vectors = []
-            for result in batch_transformed:
-                # for backward compatibility, before 3.4, if result is empty,
-                # instead of throwing error, it skips the result
-                if len(result) != 0 or allow_missing:
-                    vectors.append(self._generate_vector(result, fill_na=allow_missing))
+        # get vectors
+        _logger.debug(
+            "Converting to row vectors to list, optionally filling missing values"
+        )
+        vectors = []
+        for result in batch_transformed:
+            # for backward compatibility, before 3.4, if result is empty,
+            # instead of throwing error, it skips the result
+            if len(result) != 0 or allow_missing:
+                vectors.append(self._generate_vector(result, fill_na=allow_missing))
 
         return self.handle_feature_vector_return_type(
             vectors, batch=True, inference_helper=False, return_type=return_type
@@ -367,81 +282,6 @@ class VectorServer:
             raise ValueError(
                 f"""Unknown return type. Supported return types are {"'list', " if not inference_helper else ""}'dict', 'polars', 'pandas' and 'numpy'"""
             )
-
-    def which_client_and_ensure_initialised(
-        self, force_rest_client: bool, force_sql_client: bool
-    ) -> str:
-        """Check if the requested client is initialised as well as deciding which client to use based on default.
-
-        # Arguments:
-            force_rest_client: bool. user specified override to use rest_client.
-            force_sql_client: bool. user specified override to use sql_client.
-
-        # Returns:
-            An enum specifying the client to be used.
-        """
-        if force_rest_client and force_sql_client:
-            raise ValueError(
-                "force_rest_client and force_sql_client cannot be used at the same time."
-            )
-
-        # No override, use default client
-        if not force_rest_client and not force_sql_client:
-            return self.default_online_store_client
-
-        if (
-            self._init_online_store_rest_client is False
-            and self._init_online_store_sql_client is False
-        ):
-            raise ValueError(
-                "No client is initialised. Call `init_serving` with init_online_store_sql_client or init_online_store_rest_client set to True before using it."
-            )
-        if force_sql_client and (self._init_online_store_sql_client is False):
-            raise ValueError(
-                "SQL Client is not initialised. Call `init_serving` with init_online_store_sql_client set to True before using it."
-            )
-        elif force_sql_client:
-            return self.DEFAULT_ONLINE_STORE_SQL_CLIENT
-
-        if force_rest_client and (self._init_online_store_rest_client is False):
-            raise ValueError(
-                "RonDB Rest Client is not initialised. Call `init_serving` with init_online_store_rest_client set to True before using it."
-            )
-        elif force_rest_client:
-            return self.DEFAULT_ONLINE_STORE_REST_CLIENT
-
-    def _set_default_online_store_client(
-        self,
-        init_online_store_rest_client: bool,
-        init_online_store_sql_client: bool,
-        options: Optional[Dict[str, Any]] = None,
-    ):
-        if (
-            init_online_store_rest_client is False
-            and init_online_store_sql_client is False
-        ):
-            raise ValueError(
-                "At least one of the clients should be initialised. Set init_online_store_sql_client or init_online_store_rest_client to True."
-            )
-        self._init_online_store_rest_client = init_online_store_rest_client
-        self._init_online_store_sql_client = init_online_store_sql_client
-
-        if (
-            init_online_store_rest_client is True
-            and init_online_store_sql_client is True
-        ):
-            # Defaults to SQL as client for legacy reasons mainly.
-            self.default_online_store_client = (
-                options.get(
-                    "default_online_store_client", self.DEFAULT_ONLINE_STORE_SQL_CLIENT
-                )
-                if isinstance(options, dict)
-                else self.DEFAULT_ONLINE_STORE_SQL_CLIENT
-            )
-        elif init_online_store_rest_client is True:
-            self.default_online_store_client = self.DEFAULT_ONLINE_STORE_REST_CLIENT
-        else:
-            self.default_online_store_client = self.DEFAULT_ONLINE_STORE_SQL_CLIENT
 
     def get_inference_helper(
         self, entry: Dict[str, Any], return_type: str
@@ -613,12 +453,6 @@ class VectorServer:
         return self._online_store_sql_client
 
     @property
-    def online_store_rest_client_engine(
-        self,
-    ) -> Optional["online_store_rest_client_engine.OnlineStoreRestClientEngine"]:
-        return self._online_store_rest_client_engine
-
-    @property
     def serving_keys(self) -> List["hsfs.serving_key.ServingKey"]:
         return self._serving_keys
 
@@ -633,39 +467,3 @@ class VectorServer:
     @training_dataset_version.setter
     def training_dataset_version(self, training_dataset_version: Optional[int]):
         self._training_dataset_version = training_dataset_version
-
-    @property
-    def default_online_store_client(self) -> str:
-        return self._default_online_store_client
-
-    @default_online_store_client.setter
-    def default_online_store_client(self, default_online_store_client: str):
-        if default_online_store_client not in [
-            self.DEFAULT_ONLINE_STORE_REST_CLIENT,
-            self.DEFAULT_ONLINE_STORE_SQL_CLIENT,
-        ]:
-            raise ValueError(
-                f"Default Online Feature Store Client should be one of {self.DEFAULT_ONLINE_STORE_REST_CLIENT} or {self.DEFAULT_ONLINE_STORE_SQL_CLIENT}."
-            )
-
-        if (
-            default_online_store_client == self.DEFAULT_ONLINE_STORE_REST_CLIENT
-            and self._init_online_store_rest_client is False
-        ):
-            raise ValueError(
-                f"Default Online Store Cient is set to {self.DEFAULT_ONLINE_STORE_REST_CLIENT} but Online Store REST client"
-                + " is not initialised. Call `init_serving` with init_client set to True before using it."
-            )
-        elif (
-            default_online_store_client == self.DEFAULT_ONLINE_STORE_SQL_CLIENT
-            and self._init_online_store_sql_client is False
-        ):
-            raise ValueError(
-                f"Default online client is set to {self.DEFAULT_ONLINE_STORE_SQL_CLIENT} but Online Store SQL client"
-                + " is not initialised. Call `init_serving` with init_online_store_sql_client set to True before using it."
-            )
-
-        _logger.info(
-            f"Default Online Store Client is set to {default_online_store_client}."
-        )
-        self._default_online_store_client = default_online_store_client
