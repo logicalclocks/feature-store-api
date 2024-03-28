@@ -97,18 +97,16 @@ class FeatureView:
             else {}
         )
         self._features = []
-        self._feature_view_engine = feature_view_engine.FeatureViewEngine(
+        self._feature_view_engine: "feature_view_engine.FeatureViewEngine" = (
+            feature_view_engine.FeatureViewEngine(featurestore_id)
+        )
+        self._transformation_function_engine: "transformation_function_engine.TransformationFunctionEngine" = transformation_function_engine.TransformationFunctionEngine(
             featurestore_id
         )
-        self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(featurestore_id)
-        )
-        self._vector_server = None
-        self._batch_scoring_server = None
+        self._vector_server: Optional["vector_server.VectorServer"] = None
         self._serving_keys = serving_keys
         self._prefix_serving_key_map = {}
         self._vector_db_client = None
-
         self._statistics_engine = statistics_engine.StatisticsEngine(
             featurestore_id, self.ENTITY_TYPE
         )
@@ -243,7 +241,6 @@ class FeatureView:
                 * key: kwargs of SqlAlchemy engine creation (See: https://docs.sqlalchemy.org/en/20/core/engines.html#sqlalchemy.create_engine).
                   For example: `{"pool_size": 10}`
         """
-
         # initiate batch scoring server
         # `training_dataset_version` should not be set if `None` otherwise backend will look up the td.
         try:
@@ -282,7 +279,7 @@ class FeatureView:
         self._prefix_serving_key_map = dict(
             [
                 (f"{sk.prefix}{sk.feature_name}", sk)
-                for sk in self._single_vector_server.serving_keys
+                for sk in self._vector_server.serving_keys
             ]
         )
         if len(self._get_embedding_fgs()) > 0:
@@ -313,7 +310,6 @@ class FeatureView:
             training_dataset_version: int, optional. Default to be None. Transformation statistics
                 are fetched from training dataset and applied to the feature vector.
         """
-
         self._batch_scoring_server = vector_server.VectorServer(
             self._featurestore_id,
             self._features,
@@ -365,11 +361,9 @@ class FeatureView:
             self,
             start_time,
             end_time,
-            training_dataset_version=(
-                self._batch_scoring_server.training_dataset_version
-                if self._batch_scoring_server
-                else None
-            ),
+            training_dataset_version=self._batch_scoring_server.training_dataset_version
+            if self._batch_scoring_server
+            else None,
         )
 
     def get_feature_vector(
@@ -461,9 +455,11 @@ class FeatureView:
         """
         if self._vector_server is None:
             self.init_serving(external=external)
-        passed_features = self._update_with_vector_db_result(
-            self._vector_server, entry, passed_features
-        )
+
+        if self._vector_db_client:
+            passed_features = self._update_with_vector_db_result(
+                self._vector_server, entry, passed_features
+            )
         return self._vector_server.get_feature_vector(
             entry, return_type, passed_features, allow_missing
         )
@@ -869,7 +865,6 @@ class FeatureView:
             `numpy.ndarray`. A two-dimensional Numpy array.
             `list`. A two-dimensional Python list.
         """
-
         if self._batch_scoring_server is None:
             self.init_batch_scoring()
 

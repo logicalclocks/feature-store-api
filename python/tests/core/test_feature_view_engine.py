@@ -353,7 +353,7 @@ class TestFeatureViewEngine:
 
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mocker.patch(
-            "hsfs.core.feature_view_engine.FeatureViewEngine.get_attached_transformation_fn"
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.get_fv_attached_transformation_fn"
         )
         mock_attach_transformation = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.attach_transformation_function",
@@ -395,7 +395,7 @@ class TestFeatureViewEngine:
 
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mocker.patch(
-            "hsfs.core.feature_view_engine.FeatureViewEngine.get_attached_transformation_fn"
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.get_fv_attached_transformation_fn"
         )
         mock_attach_transformation = mocker.patch(
             "hsfs.core.feature_view_engine.FeatureViewEngine.attach_transformation_function",
@@ -2190,7 +2190,7 @@ class TestFeatureViewEngine:
         mock_client_get_instance.return_value._project_id = 50
 
         # Act
-        fv_engine._get_feature_view_url(feature_view=fv)
+        fv_engine._get_feature_view_url(fv=fv)
 
         # Assert
         assert mock_util_get_hostname_replaced_url.call_count == 1
