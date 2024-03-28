@@ -23,6 +23,7 @@ from typing import Any, Dict, List, Optional, TypeVar, Union
 import humps
 import numpy as np
 import pandas as pd
+import polars as pl
 from hsfs import (
     storage_connector,
     training_dataset,
@@ -102,8 +103,7 @@ class FeatureView:
         self._transformation_function_engine = (
             transformation_function_engine.TransformationFunctionEngine(featurestore_id)
         )
-        self._single_vector_server = None
-        self._batch_vectors_server = None
+        self._vector_server = None
         self._batch_scoring_server = None
         self._serving_keys = serving_keys
         self._prefix_serving_key_map = {}
@@ -265,15 +265,18 @@ class FeatureView:
             )
 
         # initiate single vector server
-        self._single_vector_server = vector_server.VectorServer(
+        self._vector_server = vector_server.VectorServer(
             self._featurestore_id,
             self._features,
             training_dataset_version,
             serving_keys=self._serving_keys,
             skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
         )
-        self._single_vector_server.init_serving(
-            self, False, external, True, options=options
+        self._vector_server.init_serving(
+            entity=self,
+            external=external,
+            inference_helper_columns=True,
+            options=options,
         )
 
         self._prefix_serving_key_map = dict(
@@ -281,18 +284,6 @@ class FeatureView:
                 (f"{sk.prefix}{sk.feature_name}", sk)
                 for sk in self._single_vector_server.serving_keys
             ]
-        )
-
-        # initiate batch vector server
-        self._batch_vectors_server = vector_server.VectorServer(
-            self._featurestore_id,
-            self._features,
-            training_dataset_version,
-            serving_keys=self._serving_keys,
-            skip_fg_ids=set([fg.id for fg in self._get_embedding_fgs()]),
-        )
-        self._batch_vectors_server.init_serving(
-            self, True, external, True, options=options
         )
         if len(self._get_embedding_fgs()) > 0:
             self._vector_db_client = VectorDbClient(self.query)
@@ -388,7 +379,7 @@ class FeatureView:
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
-    ):
+    ) -> Union[List[Any], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
               1. The training dataset version of the transformation statistics
@@ -468,12 +459,12 @@ class FeatureView:
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if self._single_vector_server is None:
+        if self._vector_server is None:
             self.init_serving(external=external)
         passed_features = self._update_with_vector_db_result(
-            self._single_vector_server, entry, passed_features
+            self._vector_server, entry, passed_features
         )
-        return self._single_vector_server.get_feature_vector(
+        return self._vector_server.get_feature_vector(
             entry, return_type, passed_features, allow_missing
         )
 
@@ -484,7 +475,7 @@ class FeatureView:
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
-    ):
+    ) -> Union[List[List[Any]], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
               1. The training dataset version of the transformation statistics
@@ -563,18 +554,18 @@ class FeatureView:
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if self._batch_vectors_server is None:
+        if self._vector_server is None:
             self.init_serving(external=external)
         updated_passed_feature = []
         for i in range(len(entry)):
             updated_passed_feature.append(
                 self._update_with_vector_db_result(
-                    self._batch_vectors_server,
+                    self._vector_server,
                     entry[i],
                     passed_features[i] if passed_features else {},
                 )
             )
-        return self._batch_vectors_server.get_feature_vectors(
+        return self._vector_server.get_feature_vectors(
             entry, return_type, updated_passed_feature, allow_missing
         )
 
@@ -583,7 +574,7 @@ class FeatureView:
         entry: Dict[str, Any],
         external: Optional[bool] = None,
         return_type: Optional[str] = "pandas",
-    ):
+    ) -> Union[pd.DataFrame, pl.DataFrame, Dict[str, Any]]:
         """Returns assembled inference helper column vectors from online feature store.
         !!! example
             ```python
@@ -617,16 +608,16 @@ class FeatureView:
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if self._single_vector_server is None:
+        if self._vector_server is None:
             self.init_serving(external=external)
-        return self._single_vector_server.get_inference_helper(entry, return_type)
+        return self._vector_server.get_inference_helper(entry, return_type)
 
     def get_inference_helpers(
         self,
         entry: List[Dict[str, Any]],
         external: Optional[bool] = None,
         return_type: Optional[str] = "pandas",
-    ):
+    ) -> Union[List[Dict[str, Any]], pd.DataFrame, pl.DataFrame]:
         """Returns assembled inference helper column vectors in batches from online feature store.
         !!! warning "Missing primary key entries"
             If any of the provided primary key elements in `entry` can't be found in any
@@ -665,7 +656,7 @@ class FeatureView:
             return_type: `"pandas"`, `"polars"` or `"dict"`. Defaults to `"pandas"`.
 
         # Returns
-            `pd.DataFrame`, `polars.DataFrame` or `List[dict]`.  Defaults to `pd.DataFrame`.
+            `pd.DataFrame`, `polars.DataFrame` or `List[Dict[str, Any]]`.  Defaults to `pd.DataFrame`.
 
             Returned `pd.DataFrame` or `List[dict]`  contains feature values related to provided primary
             keys, ordered according to positions of this features in the feature view query.
@@ -674,11 +665,9 @@ class FeatureView:
             `Exception`. When primary key entry cannot be found in one or more of the feature groups used by this
                 feature view.
         """
-        if self._batch_vectors_server is None:
+        if self._vector_server is None:
             self.init_serving(external=external)
-        return self._batch_vectors_server.get_inference_helpers(
-            self, entry, return_type
-        )
+        return self._vector_server.get_inference_helpers(self, entry, return_type)
 
     def _update_with_vector_db_result(self, vec_server, entry, passed_features):
         if not self._vector_db_client:
@@ -783,7 +772,7 @@ class FeatureView:
                 primary_key_map[sk.required_serving_key] = result_key[prefix_sk]
             elif sk.feature_name in result_key:  # fall back to use raw feature name
                 primary_key_map[sk.required_serving_key] = result_key[sk.feature_name]
-        if len(self._single_vector_server.required_serving_keys) > len(primary_key_map):
+        if len(self._vector_server.required_serving_keys) > len(primary_key_map):
             raise FeatureStoreException(
                 f"Failed to get feature vector because required primary key [{', '.join([k for k in set([sk.required_serving_key for sk in self._prefix_serving_key_map.values()]) - primary_key_map.keys()])}] are not present in vector db."
                 "If the join of the embedding feature group in the query does not have a prefix,"
@@ -3486,7 +3475,7 @@ class FeatureView:
         prefix is generated and prepended to the primary key name in this format
         "fgId_{feature_group_id}_{join_index}" where `join_index` is the order of the join.
         """
-        _vector_server = self._single_vector_server or self._batch_vectors_server
+        _vector_server = self._vector_server or self._vector_server
         if _vector_server:
             return _vector_server.required_serving_keys
         else:
