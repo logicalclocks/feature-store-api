@@ -566,62 +566,6 @@ class TestFeatureViewEngine:
         assert mock_fv_api.return_value.get_batch_query.call_count == 1
         assert mock_qc_api.return_value.construct_query.call_count == 1
 
-    def test_get_attached_transformation_fn(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-
-        fv_engine = feature_view_engine.FeatureViewEngine(
-            feature_store_id=feature_store_id
-        )
-
-        def testFunction():
-            print("Test")
-
-        tf = transformation_function_attached.TransformationFunctionAttached(
-            name="tf_name", transformation_function=testFunction
-        )
-
-        mock_fv_api.return_value.get_attached_transformation_fn.return_value = tf
-
-        # Act
-        result = fv_engine.get_attached_transformation_fn(name="fv_name", version=1)
-
-        # Assert
-        assert "tf_name" in result
-        assert mock_fv_api.return_value.get_attached_transformation_fn.call_count == 1
-
-    def test_get_attached_transformation_fn_multiple(self, mocker):
-        # Arrange
-        feature_store_id = 99
-
-        mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
-
-        fv_engine = feature_view_engine.FeatureViewEngine(
-            feature_store_id=feature_store_id
-        )
-
-        def testFunction():
-            print("Test")
-
-        tf = transformation_function_attached.TransformationFunctionAttached(
-            name="tf_name", transformation_function=testFunction
-        )
-        tf1 = transformation_function_attached.TransformationFunctionAttached(
-            name="tf1_name", transformation_function=testFunction
-        )
-
-        mock_fv_api.return_value.get_attached_transformation_fn.return_value = [tf, tf1]
-
-        # Act
-        result = fv_engine.get_attached_transformation_fn(name="fv_name", version=1)
-
-        # Assert
-        assert "tf_name" in result
-        assert "tf1_name" in result
-        assert mock_fv_api.return_value.get_attached_transformation_fn.call_count == 1
-
     def test_attach_transformation_function(self, mocker):
         def testFunction():
             print("Test")
@@ -631,7 +575,7 @@ class TestFeatureViewEngine:
         )
         mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mocker.patch(
-            "hsfs.core.feature_view_engine.FeatureViewEngine.get_attached_transformation_fn",
+            "hsfs.core.transformation_function_engine.TransformationFunctionEngine.get_fv_attached_transformation_fn",
             return_value={"label": tf},
         )
         feature_store_id = 99
