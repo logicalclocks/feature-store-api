@@ -138,3 +138,6 @@ keyFile.json
 
 # delombok dir
 delombok
+
+# storage connector test storage file
+bigquery.json

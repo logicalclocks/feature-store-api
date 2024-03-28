@@ -14,9 +14,12 @@
 #   limitations under the License.
 #
 
+import logging
+
 from hsfs.client import external, hopsworks
 
 
+_logger = logging.getLogger(__name__)
 _client = None
 
 
@@ -37,8 +40,10 @@ def init(
     global _client
     if not _client:
         if client_type == "hopsworks":
+            _logger.info("Initializing internal Hopsworks client")
             _client = hopsworks.Client()
         elif client_type == "external":
+            _logger.info("Initializing external client")
             _client = external.Client(
                 host,
                 port,
@@ -52,16 +57,19 @@ def init(
                 api_key_file,
                 api_key_value,
             )
+    _logger.info("Found initialized Hopsworks client, skipping initialization.")
 
 
 def get_instance():
     global _client
     if _client:
+        _logger.debug("Accessing hopsworks client instance.")
         return _client
     raise Exception("Couldn't find client. Try reconnecting to Hopsworks.")
 
 
 def stop():
     global _client
+    _logger.info("Closing Hopsworks client")
     _client._close()
     _client = None

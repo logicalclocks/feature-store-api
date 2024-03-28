@@ -60,6 +60,7 @@ FIXTURES = [
     "transformation_function",
     "user",
     "validation_report",
+    "rondb_server",
     "serving_keys",
 ]
 

@@ -37,3 +37,14 @@ class ApiKeyAuth(requests.auth.AuthBase):
     def __call__(self, r):
         r.headers["Authorization"] = "ApiKey " + self._token
         return r
+
+
+class OnlineStoreKeyAuth(requests.auth.AuthBase):
+    """Class to encapsulate an API key."""
+
+    def __init__(self, token):
+        self._token = token.strip()
+
+    def __call__(self, r):
+        r.headers["X-API-KEY"] = self._token
+        return r

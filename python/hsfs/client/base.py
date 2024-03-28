@@ -15,6 +15,8 @@
 #
 
 import base64
+import json
+import logging
 import os
 import textwrap
 from abc import ABC, abstractmethod
@@ -35,6 +37,8 @@ except ImportError:
 
 urllib3.disable_warnings(urllib3.exceptions.SecurityWarning)
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+_logger = logging.getLogger(__name__)
 
 
 class Client(ABC):
@@ -65,11 +69,12 @@ class Client(ABC):
         :rtype: str or boolean
         """
         if verify == "true":
+            _logger.debug("Setting hostname verification to true")
             if trust_store_path is not None:
                 return trust_store_path
             else:
                 return True
-
+        _logger.debug("Setting hostname verification to false")
         return False
 
     def _get_host_port_pair(self):
@@ -89,14 +94,17 @@ class Client(ABC):
 
     def _read_jwt(self):
         """Retrieve jwt from local container."""
+        _logger.debug("Reading jwt from local container")
         return self._read_file(self.TOKEN_FILE)
 
     def _read_apikey(self):
         """Retrieve apikey from local container."""
+        _logger.debug("Reading apikey from local container")
         return self._read_file(self.APIKEY_FILE)
 
     def _read_file(self, secret_file):
         """Retrieve secret from local container."""
+        _logger.debug(f"Reading secret from local container: {secret_file}")
         with open(os.path.join(self._secrets_dir, secret_file), "r") as secret:
             return secret.read()
 
@@ -108,9 +116,11 @@ class Client(ABC):
         :return: JSON response with credentials
         :rtype: dict
         """
+        _logger.info("Getting project credentials")
         return self._send_request("GET", ["project", project_id, "credentials"])
 
     def _write_pem_file(self, content: str, path: str) -> None:
+        _logger.debug(f"Writing pem content to {path}")
         with open(path, "w") as f:
             f.write(content)
 
@@ -154,6 +164,13 @@ class Client(ABC):
         f_url.path.segments = base_path_params + path_params
         url = str(f_url)
 
+        _logger.debug(f"Instantiating request for {method}::{url}")
+        _logger.debug(f"Extra Headers: {headers}")  # Does not contain auth yet
+        _logger.debug(f"Data: {data}")
+        _logger.debug(f"Query params: {query_params}")
+        if files:
+            _logger.debug("Found encoded file chunks.")
+
         request = requests.Request(
             method,
             url=url,
@@ -163,11 +180,15 @@ class Client(ABC):
             auth=self._auth,
             files=files,
         )
-
         prepped = self._session.prepare_request(request)
+        _logger.info(f"Sending request: {method}::{url}")
         response = self._session.send(prepped, verify=self._verify, stream=stream)
+        _logger.debug(f"Response status code: {response.status_code}")
 
         if response.status_code == 401 and self.REST_ENDPOINT in os.environ:
+            _logger.debug(
+                "Authentication failed. Refreshing token and retrying request"
+            )
             # refresh token and retry request - only on hopsworks
             self._auth = auth.BearerAuth(self._read_jwt())
             # Update request with the new token
@@ -176,23 +197,36 @@ class Client(ABC):
             response = self._session.send(prepped, verify=self._verify, stream=stream)
 
         if response.status_code // 100 != 2:
+            _logger.error(
+                f"Request failed with status code: {response.status_code}, response: {response.content}"
+            )
             raise exceptions.RestAPIError(url, response)
 
         if stream:
+            _logger.debug("Returning stream response")
             return response
         else:
             # handle different success response codes
             if len(response.content) == 0:
+                _logger.debug("Empty response, defaulting to None")
                 return None
-            return response.json()
+            deserialized_response = response.json()
+            _logger.debug(
+                f"Returning response json : {json.dumps(deserialized_response, indent=2)}"
+            )
+            return deserialized_response
 
     def _close(self):
         """Closes a client. Can be implemented for clean up purposes, not mandatory."""
+        _logger.debug("Closing client")
         self._connected = False
 
     def _write_pem(
         self, keystore_path, keystore_pw, truststore_path, truststore_pw, prefix
     ):
+        _logger.debug("Writing PEM files.")
+        _logger.debug(f"Keystore path: {keystore_path}")
+        _logger.debug(f"Truststore path: {truststore_path}")
         ks = jks.KeyStore.load(Path(keystore_path), keystore_pw, try_decrypt_keys=True)
         ts = jks.KeyStore.load(
             Path(truststore_path), truststore_pw, try_decrypt_keys=True
@@ -215,10 +249,12 @@ class Client(ABC):
         """
         ca_chain = ""
         for store in [ks, ts]:
-            for _, c in store.certs.items():
+            for key, c in store.certs.items():
+                _logger.debug(f"Adding cert to CA chain: {key}")
                 ca_chain = ca_chain + self._bytes_to_pem_str(c.cert, "CERTIFICATE")
 
         with Path(ca_chain_path).open("w") as f:
+            _logger.debug(f"Writing CA chain to {ca_chain_path}.")
             f.write(ca_chain)
 
     def _write_client_cert(self, ks, client_cert_path):
@@ -228,9 +264,11 @@ class Client(ABC):
         client_cert = ""
         for _, pk in ks.private_keys.items():
             for c in pk.cert_chain:
+                _logger.debug(f"Adding cert to client cert: {c[0]}")
                 client_cert = client_cert + self._bytes_to_pem_str(c[1], "CERTIFICATE")
 
         with Path(client_cert_path).open("w") as f:
+            _logger.debug(f"Writing client cert to {client_cert_path}.")
             f.write(client_cert)
 
     def _write_client_key(self, ks, client_key_path):
@@ -238,12 +276,14 @@ class Client(ABC):
         Converts JKS keystore file into client key PEM to be compatible with Python libraries
         """
         client_key = ""
-        for _, pk in ks.private_keys.items():
+        for name, pk in ks.private_keys.items():
+            _logger.debug(f"Adding private key to client key: {name}")
             client_key = client_key + self._bytes_to_pem_str(
                 pk.pkey_pkcs8, "PRIVATE KEY"
             )
 
         with Path(client_key_path).open("w") as f:
+            _logger.debug(f"Writing client key to {client_key_path}.")
             f.write(client_key)
 
     def _bytes_to_pem_str(self, der_bytes, pem_type):
@@ -257,6 +297,7 @@ class Client(ABC):
         Returns:
             PEM String for a DER-encoded certificate or private key
         """
+        _logger.debug(f"Converting DER bytes to PEM for {pem_type}.")
         pem_str = ""
         pem_str = pem_str + "-----BEGIN {}-----".format(pem_type) + "\n"
         pem_str = (

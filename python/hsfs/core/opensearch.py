@@ -87,7 +87,7 @@ class OpenSearchClientSingleton:
                 VectorDatabaseException.OTHERS,
                 f"Error in Opensearch request: {e}",
                 e.info,
-            )  from e
+            ) from e
 
     def close(self):
         if self._opensearch_client:

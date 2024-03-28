@@ -21,8 +21,10 @@ import re
 import threading
 import time
 from datetime import date, datetime, timezone
+from typing import Optional
 from urllib.parse import urljoin, urlparse
 
+import numpy as np
 import pandas as pd
 from aiomysql.sa import create_engine as async_create_engine
 from hsfs import client, feature
@@ -230,7 +232,7 @@ def get_delta_datestr_from_timestamp(timestamp):
     ]
 
 
-def convert_event_time_to_timestamp(event_time):
+def convert_event_time_to_timestamp(event_time) -> Optional[int]:
     if not event_time:
         return None
     if isinstance(event_time, str):
@@ -431,6 +433,24 @@ def get_feature_group_url(feature_store_id: int, feature_group_id: int):
         + str(feature_group_id)
     )
     return get_hostname_replaced_url(sub_path)
+
+
+class NpDatetimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        dtypes = (np.datetime64, np.complexfloating)
+        if isinstance(obj, (datetime, date)):
+            return convert_event_time_to_timestamp(obj)
+        elif isinstance(obj, dtypes):
+            return str(obj)
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            if any([np.issubdtype(obj.dtype, i) for i in dtypes]):
+                return obj.astype(str).tolist()
+            return obj.tolist()
+        return super(NpDatetimeEncoder, self).default(obj)
 
 
 class VersionWarning(Warning):

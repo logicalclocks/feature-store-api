@@ -540,7 +540,7 @@ class Engine:
             if isinstance(df, pl.DataFrame) or isinstance(
                 df, pl.dataframe.frame.DataFrame
             ):
-                stats[col] = dict(zip(stats["statistic"], stats[col]))
+                stats[col] = dict(zip(stats["statistic"], stats[col], strict=False))
 
             # set data type
             arrow_type = arrow_schema.field(col).type
@@ -616,6 +616,8 @@ class Engine:
         expectation_suite: TypeVar("ge.core.ExpectationSuite"),
         ge_validate_kwargs: Optional[Dict[Any, Any]] = None,
     ):
+        if ge_validate_kwargs is None:
+            ge_validate_kwargs = {}
         # This conversion might cause a bottleneck in performance when using polars with greater expectations.
         # This patch is done becuase currently great_expecatations does not support polars, would need to be made proper when support added.
         if isinstance(dataframe, pl.DataFrame) or isinstance(

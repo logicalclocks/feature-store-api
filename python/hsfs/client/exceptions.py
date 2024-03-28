@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import json
 from enum import Enum
 
 
@@ -34,6 +35,11 @@ class RestAPIError(Exception):
     def __init__(self, url, response):
         try:
             error_object = response.json()
+            if isinstance(error_object, str):
+                error_object = json.loads(error_object)
+                error_object["errorCode"] = error_object.get("code", "")
+                error_object["errorMsg"] = error_object.get("reason", "")
+                error_object["usrMsg"] = error_object.get("message", "")
         except Exception:
             error_object = {}
         message = (
@@ -63,7 +69,6 @@ class FeatureStoreException(Exception):
 
 
 class VectorDatabaseException(Exception):
-
     # reason
     REQUESTED_K_TOO_LARGE = "REQUESTED_K_TOO_LARGE"
     REQUESTED_NUM_RESULT_TOO_LARGE = "REQUESTED_NUM_RESULT_TOO_LARGE"
