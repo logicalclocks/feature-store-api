@@ -167,40 +167,40 @@
           "name": "intt",
           "label": "t",
           "featuregroup": {
-              "type": "featuregroupDTO",
-              "featurestoreId": 67,
-              "version": 1,
-              "name": "fg_test",
-              "id": 15,
-              "statisticsConfig": {
-                  "enabled": true,
-                  "histograms": false,
-                  "correlations": false,
-                  "exactUniqueness": false,
-                  "columns": []
-              },
-              "onlineEnabled": false,
-              "deprecated": false
+            "type": "featuregroupDTO",
+            "featurestoreId": 67,
+            "version": 1,
+            "name": "fg_test",
+            "id": 15,
+            "statisticsConfig": {
+              "enabled": true,
+              "histograms": false,
+              "correlations": false,
+              "exactUniqueness": false,
+              "columns": []
+            },
+            "onlineEnabled": false,
+            "deprecated": false
           }
         },
         {
           "name": "stringt",
-          "featurestoreId":	67,
+          "featurestoreId": 67,
           "featuregroup": {
-              "type": "featuregroupDTO",
-              "featurestoreId": 67,
-              "version": 1,
-              "name": "fg_test",
-              "id": 15,
-              "statisticsConfig": {
-                  "enabled": true,
-                  "histograms": false,
-                  "correlations": false,
-                  "exactUniqueness": false,
-                  "columns": []
-              },
-              "onlineEnabled": false,
-              "deprecated": false
+            "type": "featuregroupDTO",
+            "featurestoreId": 67,
+            "version": 1,
+            "name": "fg_test",
+            "id": 15,
+            "statisticsConfig": {
+              "enabled": true,
+              "histograms": false,
+              "correlations": false,
+              "exactUniqueness": false,
+              "columns": []
+            },
+            "onlineEnabled": false,
+            "deprecated": false
           }
         }
       ]
@@ -524,6 +524,224 @@
         }
       },
       "featurestore_id": 5
+    }
+  },
+  "get_with_complete_training_dataset_features": {
+    "response": {
+      "name": "test_name",
+      "query": {
+        "left_feature_group": {
+          "type": "cachedFeaturegroupDTO",
+          "validation_type": "test_validation_type",
+          "created": "2022-08-01T11:07:55Z",
+          "creator": {
+            "email": "admin@hopsworks.ai",
+            "firstName": "Admin",
+            "lastName": "Admin",
+            "maxNumProjects": 0,
+            "numActiveProjects": 0,
+            "numRemainingProjects": 0,
+            "status": 0,
+            "testUser": false,
+            "tos": false,
+            "toursState": 0,
+            "twoFactor": false
+          },
+          "description": "test_description",
+          "featurestoreId": 67,
+          "featurestoreName": "test_featurestore",
+          "id": 15,
+          "location": "hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1",
+          "name": "fg_test",
+          "statisticsConfig": {
+            "columns": [],
+            "correlations": false,
+            "enabled": true,
+            "exactUniqueness": false,
+            "histograms": false
+          },
+          "version": 1,
+          "features": [
+            {
+              "defaultValue": null,
+              "featureGroupId": 15,
+              "hudiPrecombineKey": true,
+              "name": "intt",
+              "onlineType": "int",
+              "partition": false,
+              "primary": true,
+              "type": "int"
+            },
+            {
+              "defaultValue": null,
+              "featureGroupId": 15,
+              "hudiPrecombineKey": false,
+              "name": "stringt",
+              "onlineType": "varchar(1000)",
+              "partition": false,
+              "primary": false,
+              "type": "string"
+            }
+          ],
+          "onlineTopicName": "119_15_fg_test_1_onlinefs",
+          "onlineEnabled": true,
+          "timeTravelFormat": "HUDI"
+        },
+        "left_features": "test_left_features",
+        "feature_store_name": "test_feature_store_name",
+        "feature_store_id": "test_feature_store_id",
+        "left_feature_group_start_time": "test_start_time",
+        "left_feature_group_end_time": "test_end_time",
+        "joins": [
+          {
+            "query": {
+              "left_feature_group": {
+                "type": "cachedFeaturegroupDTO",
+                "validation_type": "test_validation_type",
+                "created": "2022-08-01T11:07:55Z",
+                "creator": {
+                  "email": "admin@hopsworks.ai",
+                  "firstName": "Admin",
+                  "lastName": "Admin",
+                  "maxNumProjects": 0,
+                  "numActiveProjects": 0,
+                  "numRemainingProjects": 0,
+                  "status": 0,
+                  "testUser": false,
+                  "tos": false,
+                  "toursState": 0,
+                  "twoFactor": false
+                },
+                "description": "test_description",
+                "featurestoreId": 67,
+                "featurestoreName": "test_featurestore",
+                "id": 15,
+                "location": "hopsfs://10.0.2.15:8020/apps/hive/warehouse/test_featurestore.db/fg_test_1",
+                "name": "fg_test",
+                "statisticsConfig": {
+                  "columns": [],
+                  "correlations": false,
+                  "enabled": true,
+                  "exactUniqueness": false,
+                  "histograms": false
+                },
+                "version": 1,
+                "features": [
+                  {
+                    "defaultValue": null,
+                    "featureGroupId": 15,
+                    "hudiPrecombineKey": true,
+                    "name": "intt",
+                    "onlineType": "int",
+                    "partition": false,
+                    "primary": true,
+                    "type": "int"
+                  },
+                  {
+                    "defaultValue": null,
+                    "featureGroupId": 15,
+                    "hudiPrecombineKey": false,
+                    "name": "stringt",
+                    "onlineType": "varchar(1000)",
+                    "partition": false,
+                    "primary": false,
+                    "type": "string"
+                  }
+                ],
+                "onlineTopicName": "119_15_fg_test_1_onlinefs",
+                "onlineEnabled": true,
+                "timeTravelFormat": "HUDI"
+              },
+              "left_features": "test_left_features",
+              "feature_store_name": "test_feature_store_name",
+              "feature_store_id": "test_feature_store_id",
+              "left_feature_group_start_time": "test_left_feature_group_start_time",
+              "left_feature_group_end_time": "test_left_feature_group_end_time",
+              "joins": [],
+              "filter": null
+            },
+            "on": "test_on",
+            "left_on": "test_left_on",
+            "right_on": "test_right_on",
+            "type": "test_join_type",
+            "prefix": "test_prefix"
+          }
+        ],
+        "filter": {
+          "condition": "test_condition",
+          "value": "test_value",
+          "feature": {
+            "defaultValue": null,
+            "featureGroupId": 15,
+            "hudiPrecombineKey": true,
+            "name": "intt",
+            "onlineType": "int",
+            "partition": false,
+            "primary": true,
+            "type": "int"
+          }
+        }
+      },
+      "featurestore_id": 5,
+      "id": 11,
+      "version": 1,
+      "description": "test_description",
+      "transformation_functions": {
+        "featurestore_id": 5
+      },
+      "features": [
+        {
+          "name": "intt",
+          "type": "int",
+          "index": 1,
+          "featureGroupGeatureName": "intt",
+          "label": false,
+          "inferenceHelperColumn": false,
+          "trainingHelperColumn": false,
+          "featuregroup": {
+            "type": "featuregroupDTO",
+            "featurestoreId": 67,
+            "version": 1,
+            "name": "fg_test",
+            "id": 15,
+            "statisticsConfig": {
+              "enabled": true,
+              "histograms": false,
+              "correlations": false,
+              "exactUniqueness": false,
+              "columns": []
+            },
+            "onlineEnabled": false,
+            "deprecated": false
+          }
+        },
+        {
+          "name": "stringt",
+          "type": "string",
+          "index": 1,
+          "featureGroupGeatureName": "stringt",
+          "label": false,
+          "inferenceHelperColumn": false,
+          "trainingHelperColumn": false,
+          "featurestoreId": 67,
+          "featuregroup": {
+            "type": "featuregroupDTO",
+            "featurestoreId": 67,
+            "version": 1,
+            "name": "fg_test",
+            "id": 15,
+            "statisticsConfig": {
+              "enabled": true,
+              "histograms": false,
+              "correlations": false,
+              "exactUniqueness": false,
+              "columns": []
+            },
+            "onlineEnabled": false,
+            "deprecated": false
+          }
+        }
+      ]
     }
   }
 }

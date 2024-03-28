@@ -26,7 +26,7 @@ class StatisticsApi:
 
         :param feature_store_id: id of the respective featurestore
         :type feature_store_id: int
-        :param entity_type: "trainingdatasets" or "featuregroups"
+        :param entity_type: "trainingdatasets" or "featuregroups" or "featureview"
         :type entity_type: str
         """
         self._feature_store_id = feature_store_id
