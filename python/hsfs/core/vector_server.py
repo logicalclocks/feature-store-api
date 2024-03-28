@@ -30,11 +30,13 @@ from hsfs.core import (
     online_store_sql_client,
     transformation_function_engine,
 )
+from typeguard import typechecked
 
 
 _logger = logging.getLogger(__name__)
 
 
+@typechecked
 class VectorServer:
     DEFAULT_ONLINE_STORE_REST_CLIENT = "rest"
     DEFAULT_ONLINE_STORE_SQL_CLIENT = "sql"
@@ -50,10 +52,10 @@ class VectorServer:
         ] = None,
         training_dataset_version: Optional[int] = None,
         serving_keys: Optional[List["hsfs.serving_key.ServingKey"]] = None,
-        skip_fg_ids=None,
-        feature_store_name: str = None,
-        feature_view_name: str = None,
-        feature_view_version: int = None,
+        skip_fg_ids: Optional[Set] = None,
+        feature_store_name: Optional[str] = None,
+        feature_view_name: Optional[str] = None,
+        feature_view_version: Optional[int] = None,
     ):
         self._training_dataset_version = training_dataset_version
 
@@ -210,7 +212,7 @@ class VectorServer:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
-    ) -> Union[pd.DataFrame, pl.DataFrame, List[Any], Dict[str, Any]]:
+    ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], Dict[str, Any]]:
         """Assembles serving vector from online feature store."""
         if passed_features is None:
             passed_features = []
@@ -262,7 +264,7 @@ class VectorServer:
         allow_missing: bool = False,
         force_rest_client: bool = False,
         force_sql_client: bool = False,
-    ):
+    ) -> Union[pd.DataFrame, pl.DataFrame, np.ndarray, List[Any], List[Dict[str, Any]]]:
         if passed_features is None:
             passed_features = []
         """Assembles serving vector from online feature store."""
@@ -326,10 +328,23 @@ class VectorServer:
         batch: bool,
         inference_helper: bool,
         return_type: str,
-    ) -> Union[pd.DataFrame, pl.DataFrame, List[Any], Dict[str, Any]]:
+    ) -> Union[
+        pd.DataFrame,
+        pl.DataFrame,
+        np.ndarray,
+        List[Any],
+        Dict[str, Any],
+        List[Dict[str, Any]],
+    ]:
         if return_type.lower() == "list" and not inference_helper:
             _logger.debug("Returning feature vector as value list")
             return feature_vectorz
+        elif return_type.lower() == "dict":
+            _logger.debug("Returning feature vector as dictionary")
+            return {
+                self._feature_vector_col_name[i]: feature_vectorz[i]
+                for i in range(len(self._feature_vector_col_name))
+            }
         elif return_type.lower() == "numpy":
             _logger.debug("Returning feature vector as numpy array")
             return np.array(feature_vectorz)
@@ -343,15 +358,14 @@ class VectorServer:
             return pandas_df
         elif return_type.lower() == "polars":
             _logger.debug("Returning feature vector as polars dataframe")
-            polars_df = pl.DataFrame(
+            return pl.DataFrame(
                 feature_vectorz if batch else [feature_vectorz],
                 schema=self._feature_vector_col_name if not inference_helper else None,
                 orient="row",
             )
-            return polars_df
         else:
             raise ValueError(
-                f"""Unknown return type. Supported return types are {"'list', " if not inference_helper else ""}'polars', 'pandas' and 'numpy'"""
+                f"""Unknown return type. Supported return types are {"'list', " if not inference_helper else ""}'dict', 'polars', 'pandas' and 'numpy'"""
             )
 
     def which_client_and_ensure_initialised(
@@ -400,7 +414,7 @@ class VectorServer:
         self,
         init_online_store_rest_client: bool,
         init_online_store_sql_client: bool,
-        options: dict,
+        options: Optional[Dict[str, Any]] = None,
     ):
         if (
             init_online_store_rest_client is False
@@ -593,6 +607,18 @@ class VectorServer:
         return self._required_serving_keys
 
     @property
+    def online_store_sql_client(
+        self,
+    ) -> Optional["online_store_sql_client.OnlineStoreSqlClient"]:
+        return self._online_store_sql_client
+
+    @property
+    def online_store_rest_client_engine(
+        self,
+    ) -> Optional["online_store_rest_client_engine.OnlineStoreRestClientEngine"]:
+        return self._online_store_rest_client_engine
+
+    @property
     def serving_keys(self) -> List["hsfs.serving_key.ServingKey"]:
         return self._serving_keys
 
@@ -611,10 +637,6 @@ class VectorServer:
     @property
     def default_online_store_client(self) -> str:
         return self._default_online_store_client
-
-    @property
-    def online_store_sql_client(self) -> "online_store_sql_client.OnlineStoreSqlClient":
-        return self._online_store_sql_client
 
     @default_online_store_client.setter
     def default_online_store_client(self, default_online_store_client: str):

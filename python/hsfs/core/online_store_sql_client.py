@@ -24,11 +24,13 @@ from hsfs.constructor import serving_prepared_statement
 from hsfs.core import feature_view_api, storage_connector_api, training_dataset_api
 from hsfs.serving_key import ServingKey
 from sqlalchemy import bindparam, exc, sql, text
+from typeguard import typechecked
 
 
 _logger = logging.getLogger(__name__)
 
 
+@typechecked
 class OnlineStoreSqlClient:
     BATCH_HELPER_KEY = "batch_helper_column"
     SINGLE_HELPER_KEY = "single_helper_column"
@@ -691,7 +693,7 @@ class OnlineStoreSqlClient:
         return self._feature_name_order_by_psp
 
     @property
-    def skip_fg_ids(self) -> List[int]:
+    def skip_fg_ids(self) -> Set[int]:
         """The list of feature group ids to skip when retrieving feature vectors.
 
         The retrieval of Feature values stored in Feature Group with embedding is handled via a separate client

@@ -68,7 +68,7 @@ class TestVectorServer:
     def single_server(self, mocker, fv):
         mocker.patch("hsfs.core.feature_view_engine.FeatureViewEngine")
         return vector_server.VectorServer(
-            init_kwargs_fixtures(fv), features=fv._features
+            **init_kwargs_fixtures(fv), features=fv._features
         )
 
     @pytest.fixture
@@ -553,17 +553,23 @@ class TestVectorServer:
     @pytest.mark.parametrize(
         "feature_vectorz, batch, inference_helper",
         [
-            (single_base_feature_vectorz, False, False),
-            (single_complete_feature_vectorz, True, False),
-            (single_feature_vectorz_with_embedding, False, True),
-            (single_feature_vectorz_partial, True, True),
+            ("single_base_feature_vectorz", False, False),
+            ("single_complete_feature_vectorz", True, False),
+            ("single_feature_vectorz_with_embedding", False, True),
+            ("single_feature_vectorz_partial", True, True),
         ],
     )
     def test_handle_feature_vector_return_type_unknown(
-        self, single_server, feature_vectorz, batch, inference_helper
+        self,
+        request,
+        single_server,
+        feature_vectorz,
+        batch: bool,
+        inference_helper: bool,
     ):
         # Arrange
         return_type = "unknown"
+        feature_vectorz = request.getfixturevalue(feature_vectorz)
 
         # Act & Assert
         with pytest.raises(ValueError):
