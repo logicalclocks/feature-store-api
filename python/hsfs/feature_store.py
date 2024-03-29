@@ -471,7 +471,7 @@ class FeatureStore:
         )
 
     @usage.method_logger
-    def get_online_storage_connector(self):
+    def get_online_storage_connector(self) -> "storage_connector.StorageConnector":
         """Get the storage connector for the Online Feature Store of the respective
         project's feature store.
 
@@ -512,7 +512,7 @@ class FeatureStore:
         parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ):
+    ) -> "feature_group.FeatureGroup":
         """Create a feature group metadata object.
 
         !!! example
@@ -644,7 +644,11 @@ class FeatureStore:
         parents: Optional[List[feature_group.FeatureGroup]] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ):
+    ) -> Union[
+        "feature_group.FeatureGroup",
+        "feature_group.ExternalFeatureGroup",
+        "feature_group.SpineGroup",
+    ]:
         """Get feature group metadata object or create a new one if it doesn't exist. This method doesn't update existing feature group metadata object.
 
         !!! example
@@ -785,7 +789,7 @@ class FeatureStore:
         ] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ):
+    ) -> "feature_group.ExternalFeatureGroup":
         """Create a external feature group metadata object.
 
         !!! warning "Deprecated"
@@ -895,7 +899,7 @@ class FeatureStore:
         online_enabled: Optional[bool] = False,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
-    ):
+    ) -> "feature_group.ExternalFeatureGroup":
         """Create a external feature group metadata object.
 
         !!! example
@@ -1039,7 +1043,7 @@ class FeatureStore:
             np.ndarray,
             List[list],
         ] = None,
-    ):
+    ) -> "feature_group.SpineGroup":
         """Create a spine group metadata object.
 
         Instead of using a feature group to save a label/prediction target, you can use a spine together with a dataframe containing the labels.
@@ -1184,7 +1188,7 @@ class FeatureStore:
         label: Optional[List[str]] = None,
         transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
         train_split: str = None,
-    ):
+    ) -> "training_dataset.TrainingDataset":
         """Create a training dataset metadata object.
 
         !!! warning "Deprecated"
@@ -1297,7 +1301,7 @@ class FeatureStore:
             bool,
         ],
         version: Optional[int] = None,
-    ):
+    ) -> "TransformationFunction":
         """Create a transformation function metadata object.
 
         !!! example
@@ -1341,7 +1345,7 @@ class FeatureStore:
         self,
         name: str,
         version: Optional[int] = None,
-    ):
+    ) -> "TransformationFunction":
         """Get  transformation function metadata object.
 
         !!! example "Get transformation function by name. This will default to version 1"
@@ -1439,7 +1443,7 @@ class FeatureStore:
         return self._transformation_function_engine.get_transformation_fn(name, version)
 
     @usage.method_logger
-    def get_transformation_functions(self):
+    def get_transformation_functions(self) -> List["TransformationFunction"]:
         """Get  all transformation functions metadata objects.
 
         !!! example "Get all transformation functions"
@@ -1467,7 +1471,7 @@ class FeatureStore:
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
         transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
-    ):
+    ) -> "feature_view.FeatureView":
         """Create a feature view metadata object and saved it to hopsworks.
 
         !!! example
@@ -1582,7 +1586,7 @@ class FeatureStore:
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
         transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
-    ):
+    ) -> "feature_view.FeatureView":
         """Get feature view metadata object or create a new one if it doesn't exist. This method doesn't update
         existing feature view metadata object.
 
@@ -1656,7 +1660,9 @@ class FeatureStore:
                 raise e
 
     @usage.method_logger
-    def get_feature_view(self, name: str, version: int = None):
+    def get_feature_view(
+        self, name: str, version: int = None
+    ) -> "feature_view.FeatureView":
         """Get a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
@@ -1696,7 +1702,7 @@ class FeatureStore:
         return self._feature_view_engine.get(name, version)
 
     @usage.method_logger
-    def get_feature_views(self, name):
+    def get_feature_views(self, name) -> List["feature_view.FeatureView"]:
         """Get a list of all versions of a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.
@@ -1724,46 +1730,46 @@ class FeatureStore:
         return self._feature_view_engine.get(name)
 
     @property
-    def id(self):
+    def id(self) -> int:
         """Id of the feature store."""
         return self._id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the feature store."""
         return self._name
 
     @property
-    def project_name(self):
+    def project_name(self) -> str:
         """Name of the project in which the feature store is located."""
         return self._project_name
 
     @property
-    def project_id(self):
+    def project_id(self) -> int:
         """Id of the project in which the feature store is located."""
         return self._project_id
 
     @property
-    def online_featurestore_name(self):
+    def online_featurestore_name(self) -> Optional[str]:
         """Name of the online feature store database."""
         return self._online_feature_store_name
 
     @property
-    def mysql_server_endpoint(self):
+    def mysql_server_endpoint(self) -> Optional[str]:
         """MySQL server endpoint for the online feature store."""
         return self._mysql_server_endpoint
 
     @property
-    def online_enabled(self):
+    def online_enabled(self) -> bool:
         """Indicator whether online feature store is enabled."""
         return self._online_enabled
 
     @property
-    def hive_endpoint(self):
+    def hive_endpoint(self) -> str:
         """Hive endpoint for the offline feature store."""
         return self._hive_endpoint
 
     @property
-    def offline_featurestore_name(self):
+    def offline_featurestore_name(self) -> str:
         """Name of the offline feature store database."""
         return self._offline_feature_store_name
