@@ -18,13 +18,14 @@ import copy
 import json
 import warnings
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, Set, TypeVar, Union
 
 import humps
 import numpy as np
 import pandas as pd
 from hsfs import (
     storage_connector,
+    tag,
     training_dataset,
     training_dataset_feature,
     usage,
@@ -59,16 +60,16 @@ class FeatureView:
     def __init__(
         self,
         name: str,
-        query,
-        featurestore_id,
-        id=None,
+        query: query.Query,
+        featurestore_id: int,
+        id: Optional[int] = None,
         version: Optional[int] = None,
         description: Optional[str] = "",
         labels: Optional[List[str]] = None,
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
         transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
-        featurestore_name=None,
+        featurestore_name: Optional[str] = None,
         serving_keys: Optional[List[ServingKey]] = None,
         **kwargs,
     ):
@@ -2774,7 +2775,7 @@ class FeatureView:
     @usage.method_logger
     def get_training_dataset_statistics(
         self,
-        training_dataset_version,
+        training_dataset_version: int,
         before_transformation=False,
         feature_names: Optional[List[str]] = None,
     ) -> Statistics:
@@ -2808,7 +2809,12 @@ class FeatureView:
         )
 
     @usage.method_logger
-    def add_training_dataset_tag(self, training_dataset_version: int, name: str, value):
+    def add_training_dataset_tag(
+        self,
+        training_dataset_version: int,
+        name: str,
+        value: Union[Dict[str, Any], "tag.Tag"],
+    ):
         """Attach a tag to a training dataset.
 
         !!! example
@@ -2840,7 +2846,9 @@ class FeatureView:
         )
 
     @usage.method_logger
-    def get_training_dataset_tag(self, training_dataset_version: int, name: str):
+    def get_training_dataset_tag(
+        self, training_dataset_version: int, name: str
+    ) -> "tag.Tag":
         """Get the tags of a training dataset.
 
         !!! example
@@ -2873,7 +2881,9 @@ class FeatureView:
         )
 
     @usage.method_logger
-    def get_training_dataset_tags(self, training_dataset_version: int):
+    def get_training_dataset_tags(
+        self, training_dataset_version: int
+    ) -> Dict[str, "tag.Tag"]:
         """Returns all tags attached to a training dataset.
 
         !!! example
@@ -2901,7 +2911,9 @@ class FeatureView:
         )
 
     @usage.method_logger
-    def delete_training_dataset_tag(self, training_dataset_version: int, name: str):
+    def delete_training_dataset_tag(
+        self, training_dataset_version: int, name: str
+    ) -> None:
         """Delete a tag attached to a training dataset.
 
         !!! example
@@ -2931,7 +2943,7 @@ class FeatureView:
         )
 
     @usage.method_logger
-    def purge_training_data(self, training_dataset_version: int):
+    def purge_training_data(self, training_dataset_version: int) -> None:
         """Delete a training dataset (data only).
 
         !!! example
@@ -2957,7 +2969,7 @@ class FeatureView:
         )
 
     @usage.method_logger
-    def purge_all_training_data(self):
+    def purge_all_training_data(self) -> None:
         """Delete all training datasets (data only).
 
         !!! example
@@ -2978,7 +2990,7 @@ class FeatureView:
         self._feature_view_engine.delete_training_dataset_only(self)
 
     @usage.method_logger
-    def delete_training_dataset(self, training_dataset_version: int):
+    def delete_training_dataset(self, training_dataset_version: int) -> None:
         """Delete a training dataset. This will delete both metadata and training data.
 
         !!! example
@@ -3006,7 +3018,7 @@ class FeatureView:
         )
 
     @usage.method_logger
-    def delete_all_training_datasets(self):
+    def delete_all_training_datasets(self) -> None:
         """Delete all training datasets. This will delete both metadata and training data.
 
         !!! example
@@ -3190,7 +3202,7 @@ class FeatureView:
         """
         if not self._id:
             raise FeatureStoreException(
-                "Only Feature Group registered with Hopsworks can enable scheduled statistics monitoring."
+                "Only Feature View registered with Hopsworks can enable scheduled statistics monitoring."
             )
 
         return self._feature_monitoring_config_engine._build_default_statistics_monitoring_config(
@@ -3255,7 +3267,7 @@ class FeatureView:
         """
         if not self._id:
             raise FeatureStoreException(
-                "Only Feature Group registered with Hopsworks can enable feature monitoring."
+                "Only Feature View registered with Hopsworks can enable feature monitoring."
             )
 
         return self._feature_monitoring_config_engine._build_default_feature_monitoring_config(
@@ -3269,7 +3281,7 @@ class FeatureView:
         )
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(cls, json_dict: Dict[str, Any]) -> "FeatureView":
         json_decamelized = humps.decamelize(json_dict)
 
         serving_keys = json_decamelized.get("serving_keys", None)
@@ -3304,7 +3316,7 @@ class FeatureView:
         ]
         return fv
 
-    def update_from_response_json(self, json_dict):
+    def update_from_response_json(self, json_dict: Dict[str, Any]) -> "FeatureView":
         other = self.from_response_json(json_dict)
         for key in [
             "name",
@@ -3324,11 +3336,11 @@ class FeatureView:
         return self
 
     @staticmethod
-    def _update_attribute_if_present(this, new, key):
+    def _update_attribute_if_present(this, new: Any, key: str) -> None:
         if getattr(new, key):
             setattr(this, key, getattr(new, key))
 
-    def _init_feature_monitoring_engine(self):
+    def _init_feature_monitoring_engine(self) -> None:
         self._feature_monitoring_config_engine = (
             feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
                 feature_store_id=self._featurestore_id,
@@ -3344,10 +3356,10 @@ class FeatureView:
             )
         )
 
-    def json(self):
+    def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "featurestoreId": self._featurestore_id,
             "name": self._name,
@@ -3359,48 +3371,48 @@ class FeatureView:
         }
 
     @property
-    def id(self):
+    def id(self) -> int:
         """Feature view id."""
         return self._id
 
     @id.setter
-    def id(self, id):
+    def id(self, id: Optional[int]) -> None:
         self._id = id
 
     @property
-    def featurestore_id(self):
+    def featurestore_id(self) -> int:
         """Feature store id."""
         return self._featurestore_id
 
     @featurestore_id.setter
-    def featurestore_id(self, id):
+    def featurestore_id(self, id) -> None:
         self._featurestore_id = id
 
     @property
-    def feature_store_name(self):
+    def feature_store_name(self) -> Optional[str]:
         """Name of the feature store in which the feature group is located."""
         return self._feature_store_name
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the feature view."""
         return self._name
 
     @name.setter
-    def name(self, name):
+    def name(self, name: str) -> None:
         self._name = name
 
     @property
-    def version(self):
+    def version(self) -> int:
         """Version number of the feature view."""
         return self._version
 
     @version.setter
-    def version(self, version):
+    def version(self, version: int) -> None:
         self._version = version
 
     @property
-    def labels(self):
+    def labels(self) -> List[str]:
         """The labels/prediction feature of the feature view.
 
         Can be a composite of multiple features.
@@ -3408,11 +3420,11 @@ class FeatureView:
         return self._labels
 
     @labels.setter
-    def labels(self, labels):
+    def labels(self, labels: List[str]):
         self._labels = [lb.lower() for lb in labels]
 
     @property
-    def inference_helper_columns(self):
+    def inference_helper_columns(self) -> List[str]:
         """The helper column sof the feature view.
 
         Can be a composite of multiple features.
@@ -3420,13 +3432,13 @@ class FeatureView:
         return self._inference_helper_columns
 
     @inference_helper_columns.setter
-    def inference_helper_columns(self, inference_helper_columns):
+    def inference_helper_columns(self, inference_helper_columns: List[str]) -> None:
         self._inference_helper_columns = [
             exf.lower() for exf in inference_helper_columns
         ]
 
     @property
-    def training_helper_columns(self):
+    def training_helper_columns(self) -> List[str]:
         """The helper column sof the feature view.
 
         Can be a composite of multiple features.
@@ -3434,52 +3446,61 @@ class FeatureView:
         return self._training_helper_columns
 
     @training_helper_columns.setter
-    def training_helper_columns(self, training_helper_columns):
+    def training_helper_columns(self, training_helper_columns: List[str]) -> None:
         self._training_helper_columns = [exf.lower() for exf in training_helper_columns]
 
     @property
-    def description(self):
+    def description(self) -> Optional[str]:
         """Description of the feature view."""
         return self._description
 
     @description.setter
-    def description(self, description):
+    def description(self, description: Optional[str]) -> None:
         self._description = description
 
     @property
-    def query(self):
+    def query(self) -> "query.Query":
         """Query of the feature view."""
         return self._query
 
     @query.setter
-    def query(self, query_obj):
+    def query(self, query_obj: "query.Query") -> None:
         self._query = query_obj
 
     @property
-    def transformation_functions(self):
+    def transformation_functions(
+        self,
+    ) -> Dict[str, "transformation_functions.TransformationFunction"]:
         """Get transformation functions."""
         return self._transformation_functions
 
     @transformation_functions.setter
-    def transformation_functions(self, transformation_functions):
+    def transformation_functions(
+        self,
+        transformation_functions: Dict[
+            str, "transformation_functions.TransformationFunction"
+        ],
+    ):
         self._transformation_functions = transformation_functions
 
     @property
-    def schema(self):
+    def schema(self) -> List["training_dataset_feature.TrainingDatasetFeature"]:
         """Feature view schema."""
         return self._features
 
     @property
-    def features(self):
+    def features(self) -> List["training_dataset_feature.TrainingDatasetFeature"]:
         """Feature view schema. (alias)"""
         return self._features
 
     @schema.setter
-    def schema(self, features):
+    def schema(
+        self, features: List["training_dataset_feature.TrainingDatasetFeature"]
+    ) -> None:
         self._features = features
 
     @property
-    def primary_keys(self):
+    def primary_keys(self) -> Set[str]:
         """Set of primary key names that is required as keys in input dict object
         for [`get_feature_vector(s)`](#get_feature_vector) method.
         When there are duplicated primary key names and prefix is not defined in the query,
@@ -3500,10 +3521,10 @@ class FeatureView:
             return _vector_server.required_serving_keys
 
     @property
-    def serving_keys(self):
+    def serving_keys(self) -> List["ServingKey"]:
         """All primary keys of the feature groups included in the query."""
         return self._serving_keys
 
     @serving_keys.setter
-    def serving_keys(self, serving_keys):
+    def serving_keys(self, serving_keys: List["ServingKey"]) -> None:
         self._serving_keys = serving_keys
