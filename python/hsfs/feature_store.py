@@ -17,13 +17,14 @@
 
 import datetime
 import warnings
-from typing import Dict, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 import great_expectations as ge
 import humps
 import numpy
 import numpy as np
 import pandas as pd
+import polars as pl
 from hsfs import (
     expectation_suite,
     feature,
@@ -54,21 +55,21 @@ class FeatureStore:
 
     def __init__(
         self,
-        featurestore_id,
-        featurestore_name,
-        created,
-        project_name,
-        project_id,
-        offline_featurestore_name,
-        hive_endpoint,
-        online_enabled,
-        num_feature_groups=None,
-        num_training_datasets=None,
-        num_storage_connectors=None,
-        num_feature_views=None,
-        online_featurestore_name=None,
-        mysql_server_endpoint=None,
-        online_featurestore_size=None,
+        featurestore_id: int,
+        featurestore_name: str,
+        created: Union[str, datetime.datetime],
+        project_name: str,
+        project_id: int,
+        offline_featurestore_name: str,
+        hive_endpoint: str,
+        online_enabled: bool,
+        num_feature_groups: Optional[int] = None,
+        num_training_datasets: Optional[int] = None,
+        num_storage_connectors: Optional[int] = None,
+        num_feature_views: Optional[int] = None,
+        online_featurestore_name: Optional[str] = None,
+        mysql_server_endpoint: Optional[str] = None,
+        online_featurestore_size: Optional[int] = None,
         **kwargs,
     ):
         self._id = featurestore_id
@@ -87,19 +88,29 @@ class FeatureStore:
         self._num_storage_connectors = num_storage_connectors
         self._num_feature_views = num_feature_views
 
-        self._feature_group_api = feature_group_api.FeatureGroupApi()
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
-        self._training_dataset_api = training_dataset_api.TrainingDatasetApi(self._id)
-
-        self._feature_group_engine = feature_group_engine.FeatureGroupEngine(self._id)
-
-        self._transformation_function_engine = (
-            transformation_function_engine.TransformationFunctionEngine(self._id)
+        self._feature_group_api: "feature_group_api.FeatureGroupApi" = (
+            feature_group_api.FeatureGroupApi()
         )
-        self._feature_view_engine = feature_view_engine.FeatureViewEngine(self._id)
+        self._storage_connector_api: "storage_connector_api.StorageConnectorApi" = (
+            storage_connector_api.StorageConnectorApi()
+        )
+        self._training_dataset_api: "training_dataset_api.TrainingDatasetApi" = (
+            training_dataset_api.TrainingDatasetApi(self._id)
+        )
+
+        self._feature_group_engine: "feature_group_engine.FeatureGroupEngine" = (
+            feature_group_engine.FeatureGroupEngine(self._id)
+        )
+
+        self._transformation_function_engine: "transformation_function_engine.TransformationFunctionEngine" = transformation_function_engine.TransformationFunctionEngine(
+            self._id
+        )
+        self._feature_view_engine: "feature_view_engine.FeatureViewEngine" = (
+            feature_view_engine.FeatureViewEngine(self._id)
+        )
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(cls, json_dict: Dict[str, Any]) -> "FeatureStore":
         json_decamelized = humps.decamelize(json_dict)
         # fields below are removed from 3.4. remove them for backward compatibility.
         json_decamelized.pop("hdfs_store_path", None)
@@ -107,7 +118,13 @@ class FeatureStore:
         json_decamelized.pop("inode_id", None)
         return cls(**json_decamelized)
 
-    def get_feature_group(self, name: str, version: int = None):
+    def get_feature_group(
+        self, name: str, version: int = None
+    ) -> Union[
+        "feature_group.FeatureGroup",
+        "feature_group.ExternalFeatureGroup",
+        "feature_group.SpineGroup",
+    ]:
         """Get a feature group entity from the feature store.
 
         Getting a feature group from the Feature Store means getting its metadata handle
@@ -151,7 +168,15 @@ class FeatureStore:
         feature_group_object.feature_store = self
         return feature_group_object
 
-    def get_feature_groups(self, name: str):
+    def get_feature_groups(
+        self, name: str
+    ) -> List[
+        Union[
+            "feature_group.FeatureGroup",
+            "feature_group.ExternalFeatureGroup",
+            "feature_group.SpineGroup",
+        ]
+    ]:
         """Get a list of all versions of a feature group entity from the feature store.
 
         Getting a feature group from the Feature Store means getting its metadata handle
@@ -185,7 +210,9 @@ class FeatureStore:
         return feature_group_object
 
     @usage.method_logger
-    def get_on_demand_feature_group(self, name: str, version: int = None):
+    def get_on_demand_feature_group(
+        self, name: str, version: int = None
+    ) -> "feature_group.ExternalFeatureGroup":
         """Get a external feature group entity from the feature store.
 
         !!! warning "Deprecated"
@@ -209,7 +236,9 @@ class FeatureStore:
         return self.get_external_feature_group(name, version)
 
     @usage.method_logger
-    def get_external_feature_group(self, name: str, version: int = None):
+    def get_external_feature_group(
+        self, name: str, version: int = None
+    ) -> "feature_group.ExternalFeatureGroup":
         """Get a external feature group entity from the feature store.
 
         Getting a external feature group from the Feature Store means getting its
@@ -251,7 +280,9 @@ class FeatureStore:
         return feature_group_object
 
     @usage.method_logger
-    def get_on_demand_feature_groups(self, name: str):
+    def get_on_demand_feature_groups(
+        self, name: str
+    ) -> List["feature_group.ExternalFeatureGroup"]:
         """Get a list of all versions of an external feature group entity from the feature store.
 
         !!! warning "Deprecated"
@@ -273,7 +304,9 @@ class FeatureStore:
         return self.get_external_feature_groups(name)
 
     @usage.method_logger
-    def get_external_feature_groups(self, name: str):
+    def get_external_feature_groups(
+        self, name: str
+    ) -> List["feature_group.ExternalFeatureGroup"]:
         """Get a list of all versions of an external feature group entity from the feature store.
 
         Getting a external feature group from the Feature Store means getting its
@@ -304,7 +337,9 @@ class FeatureStore:
             fg_object.feature_store = self
         return feature_group_object
 
-    def get_training_dataset(self, name: str, version: int = None):
+    def get_training_dataset(
+        self, name: str, version: int = None
+    ) -> "training_dataset.TrainingDataset":
         """Get a training dataset entity from the feature store.
 
         !!! warning "Deprecated"
@@ -327,7 +362,7 @@ class FeatureStore:
             `TrainingDataset`: The training dataset metadata object.
 
         # Raises
-            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve feature group from the feature store.
+            `hsfs.client.exceptions.RestAPIError`: If unable to retrieve training dataset from the feature store.
         """
 
         if version is None:
@@ -341,7 +376,9 @@ class FeatureStore:
             version = self.DEFAULT_VERSION
         return self._training_dataset_api.get(name, version)
 
-    def get_training_datasets(self, name: str):
+    def get_training_datasets(
+        self, name: str
+    ) -> List["training_dataset.TrainingDataset"]:
         """Get a list of all versions of a training dataset entity from the feature store.
 
         !!! warning "Deprecated"
@@ -362,7 +399,7 @@ class FeatureStore:
         return self._training_dataset_api.get(name, None)
 
     @usage.method_logger
-    def get_storage_connector(self, name: str):
+    def get_storage_connector(self, name: str) -> "storage_connector.StorageConnector":
         """Get a previously created storage connector from the feature store.
 
         Storage connectors encapsulate all information needed for the execution engine
@@ -395,7 +432,7 @@ class FeatureStore:
         dataframe_type: Optional[str] = "default",
         online: Optional[bool] = False,
         read_options: Optional[dict] = None,
-    ):
+    ) -> Union[pd.DataFrame, pd.Series, np.ndarray, pl.DataFrame]:
         """Execute SQL command on the offline or online feature store database
 
         !!! example
