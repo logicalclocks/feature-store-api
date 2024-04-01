@@ -28,6 +28,7 @@ import numpy as np
 import pandas as pd
 import polars as pl
 from hsfs import (
+    embedding,
     engine,
     feature,
     feature_group_writer,
@@ -70,19 +71,21 @@ from hsfs.validation_report import ValidationReport
 class FeatureGroupBase:
     def __init__(
         self,
-        name,
-        version,
-        featurestore_id,
-        location,
-        event_time=None,
-        online_enabled=False,
-        id=None,
-        embedding_index=None,
-        expectation_suite=None,
-        online_topic_name=None,
-        topic_name=None,
-        notification_topic_name=None,
-        deprecated=False,
+        name: str,
+        version: int,
+        featurestore_id: int,
+        location: str,
+        event_time: Optional[Union[str, int, date, datetime]] = None,
+        online_enabled: bool = False,
+        id: Optional[int] = None,
+        embedding_index: "embedding.EmbeddingIndex" = None,
+        expectation_suite: Optional[
+            Union["expectation_suite.ExpectationSuite", "ge.core.ExpectationSuite"]
+        ] = None,
+        online_topic_name: Optional[str] = None,
+        topic_name: Optional[str] = None,
+        notification_topic_name: Optional[str] = None,
+        deprecated: bool = False,
         **kwargs,
     ):
         self._version = version
@@ -99,50 +102,52 @@ class FeatureGroupBase:
         self._feature_store_id = featurestore_id
         # use setter for correct conversion
         self.expectation_suite = expectation_suite
-        self._statistics_engine = statistics_engine.StatisticsEngine(
+        self._statistics_engine: "statistics_engine.StatisticsEngine" = (
+            statistics_engine.StatisticsEngine(featurestore_id, self.ENTITY_TYPE)
+        )
+        self._code_engine: "code_engine.CodeEngine" = code_engine.CodeEngine(
             featurestore_id, self.ENTITY_TYPE
         )
-        self._code_engine = code_engine.CodeEngine(featurestore_id, self.ENTITY_TYPE)
-        self._great_expectation_engine = (
-            great_expectation_engine.GreatExpectationEngine(featurestore_id)
+        self._great_expectation_engine: "great_expectation_engine.GreatExpectationEngine" = great_expectation_engine.GreatExpectationEngine(
+            featurestore_id
         )
         if self._id is not None:
             if expectation_suite:
                 self._expectation_suite._init_expectation_engine(
                     feature_store_id=featurestore_id, feature_group_id=self._id
                 )
-            self._expectation_suite_engine = (
-                expectation_suite_engine.ExpectationSuiteEngine(
-                    feature_store_id=featurestore_id, feature_group_id=self._id
-                )
+            self._expectation_suite_engine: Optional[
+                "expectation_suite_engine.ExpectationSuiteEngine"
+            ] = expectation_suite_engine.ExpectationSuiteEngine(
+                feature_store_id=featurestore_id, feature_group_id=self._id
             )
-            self._validation_report_engine = (
-                validation_report_engine.ValidationReportEngine(
-                    featurestore_id, self._id
-                )
+            self._validation_report_engine: Optional[
+                "validation_report_engine.ValidationReportEngine"
+            ] = validation_report_engine.ValidationReportEngine(
+                featurestore_id, self._id
             )
-            self._validation_result_engine = (
-                validation_result_engine.ValidationResultEngine(
-                    featurestore_id, self._id
-                )
+            self._validation_result_engine: Optional[
+                "validation_result_engine.ValidationResultEngine"
+            ] = validation_result_engine.ValidationResultEngine(
+                featurestore_id, self._id
             )
-            self._feature_monitoring_config_engine = (
-                feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
-                    feature_store_id=featurestore_id,
-                    feature_group_id=self._id,
-                )
+            self._feature_monitoring_config_engine: Optional[
+                "feature_monitoring_config_engine.FeatureMonitoringConfigEngine"
+            ] = feature_monitoring_config_engine.FeatureMonitoringConfigEngine(
+                feature_store_id=featurestore_id,
+                feature_group_id=self._id,
             )
-            self._feature_monitoring_result_engine = (
-                feature_monitoring_result_engine.FeatureMonitoringResultEngine(
-                    feature_store_id=self._feature_store_id,
-                    feature_group_id=self._id,
-                )
+            self._feature_monitoring_result_engine: "feature_monitoring_result_engine.FeatureMonitoringResultEngine" = feature_monitoring_result_engine.FeatureMonitoringResultEngine(
+                feature_store_id=self._feature_store_id,
+                feature_group_id=self._id,
             )
 
         self._feature_store_id = featurestore_id
-        self._variable_api = VariableApi()
-        self._feature_group_engine = None
-        self._multi_part_insert = False
+        self._variable_api: "VariableApi" = VariableApi()
+        self._feature_group_engine: Optional[
+            "feature_group_engine.FeatureGroupEngine"
+        ] = None
+        self._multi_part_insert: bool = False
         self._embedding_index = embedding_index
 
         self.check_deprecated()
@@ -1740,12 +1745,12 @@ class FeatureGroupBase:
             )
 
     @property
-    def online_enabled(self):
+    def online_enabled(self) -> bool:
         """Setting if the feature group is available in online storage."""
         return self._online_enabled
 
     @online_enabled.setter
-    def online_enabled(self, online_enabled):
+    def online_enabled(self, online_enabled: bool) -> None:
         self._online_enabled = online_enabled
 
     @property
@@ -1758,21 +1763,21 @@ class FeatureGroupBase:
         self._topic_name = topic_name
 
     @property
-    def notification_topic_name(self):
+    def notification_topic_name(self) -> Optional[str]:
         """The topic used for feature group notifications."""
         return self._notification_topic_name
 
     @notification_topic_name.setter
-    def notification_topic_name(self, notification_topic_name):
+    def notification_topic_name(self, notification_topic_name: Optional[str]):
         self._notification_topic_name = notification_topic_name
 
     @property
-    def deprecated(self):
+    def deprecated(self) -> bool:
         """Setting if the feature group is deprecated."""
         return self._deprecated
 
     @deprecated.setter
-    def deprecated(self, deprecated):
+    def deprecated(self, deprecated: bool) -> None:
         self._deprecated = deprecated
 
     @property
@@ -1788,7 +1793,7 @@ class FeatureGroupBase:
         """Avro schema representation of the feature group."""
         return self.subject["schema"]
 
-    def get_complex_features(self):
+    def get_complex_features(self) -> List[str]:
         """Returns the names of all features with a complex data type in this
         feature group.
 
@@ -1799,7 +1804,7 @@ class FeatureGroupBase:
         """
         return [f.name for f in self.features if f.is_complex()]
 
-    def _get_encoded_avro_schema(self):
+    def _get_encoded_avro_schema(self) -> str:
         complex_features = self.get_complex_features()
         schema = json.loads(self.avro_schema)
 
@@ -1816,22 +1821,22 @@ class FeatureGroupBase:
             ) from e
         return schema_s
 
-    def _get_feature_avro_schema(self, feature_name):
+    def _get_feature_avro_schema(self, feature_name: str) -> str:
         for field in json.loads(self.avro_schema)["fields"]:
             if field["name"] == feature_name:
                 return json.dumps(field["type"])
 
     @property
-    def features(self):
+    def features(self) -> List["feature.Feature"]:
         """Feature Group schema (alias)"""
         return self._features
 
     @property
-    def schema(self):
+    def schema(self) -> List["feature.Feature"]:
         """Feature Group schema"""
         return self._features
 
-    def _are_statistics_missing(self, statistics: Statistics):
+    def _are_statistics_missing(self, statistics: Statistics) -> bool:
         if not self.statistics_config.enabled:
             return False
         elif statistics is None:
@@ -1862,11 +1867,11 @@ class FeatureGroupBase:
 
         return False
 
-    def _are_statistics_supported(self):
+    def _are_statistics_supported(self) -> bool:
         """Whether statistics are supported or not for the current Feature Group type"""
         return not isinstance(self, SpineGroup)
 
-    def _check_statistics_support(self):
+    def _check_statistics_support(self) -> None:
         """Check for statistics support on the current Feature Group type"""
         if not self._are_statistics_supported():
             raise FeatureStoreException(
@@ -1874,10 +1879,10 @@ class FeatureGroupBase:
             )
 
     @features.setter
-    def features(self, new_features):
+    def features(self, new_features: List["feature.Feature"]) -> None:
         self._features = new_features
 
-    def _get_project_name(self):
+    def _get_project_name(self) -> str:
         return util.strip_feature_store_suffix(self.feature_store_name)
 
 
