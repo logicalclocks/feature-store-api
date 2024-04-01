@@ -1702,7 +1702,7 @@ class FeatureStore:
         return self._feature_view_engine.get(name, version)
 
     @usage.method_logger
-    def get_feature_views(self, name) -> List["feature_view.FeatureView"]:
+    def get_feature_views(self, name: str) -> List["feature_view.FeatureView"]:
         """Get a list of all versions of a feature view entity from the feature store.
 
         Getting a feature view from the Feature Store means getting its metadata.

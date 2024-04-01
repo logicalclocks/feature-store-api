@@ -18,12 +18,14 @@ import copy
 import json
 import warnings
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Set, TypeVar, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, Union
 
 import humps
 import numpy as np
 import pandas as pd
+import polars as pl
 from hsfs import (
+    feature_group,
     storage_connector,
     tag,
     training_dataset,
@@ -34,15 +36,17 @@ from hsfs import (
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import filter, query
 from hsfs.constructor.filter import Filter, Logic
-from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import (
+    explicit_provenance,
     feature_monitoring_config_engine,
     feature_monitoring_result_engine,
     feature_view_engine,
+    job,
     statistics_engine,
     transformation_function_engine,
     vector_server,
 )
+from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
 from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.core.vector_db_client import VectorDbClient
@@ -52,6 +56,24 @@ from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.transformation_function import TransformationFunction
+
+
+TrainingDatasetDataFrameTypes = Union[
+    pd.DataFrame,
+    TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+    TypeVar("pyspark.RDD"),  # noqa: F821
+    np.ndarray,
+    List[List[Any]],
+]
+
+SplineDataFrameTypes = Union[
+    pd.DataFrame,
+    TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+    TypeVar("pyspark.RDD"),  # noqa: F821
+    np.ndarray,
+    List[List[Any]],
+    TypeVar("SplineGroup"),  # noqa: F821
+]
 
 
 class FeatureView:
@@ -117,7 +139,7 @@ class FeatureView:
         if self._id:
             self._init_feature_monitoring_engine()
 
-    def delete(self):
+    def delete(self) -> None:
         """Delete current feature view, all associated metadata and training data.
 
         !!! example
@@ -149,7 +171,9 @@ class FeatureView:
         self._feature_view_engine.delete(self.name, self.version)
 
     @staticmethod
-    def clean(feature_store_id: int, feature_view_name: str, feature_view_version: str):
+    def clean(
+        feature_store_id: int, feature_view_name: str, feature_view_version: str
+    ) -> None:
         """
         Delete the feature view and all associated metadata and training data.
         This can delete corrupted feature view which cannot be retrieved due to a corrupted query for example.
@@ -184,7 +208,7 @@ class FeatureView:
             feature_view_name, feature_view_version
         )
 
-    def update(self):
+    def update(self) -> "FeatureView":
         """Update the description of the feature view.
 
         !!! example "Update the feature view with a new description."
@@ -216,7 +240,7 @@ class FeatureView:
         training_dataset_version: Optional[int] = None,
         external: Optional[bool] = None,
         options: Optional[dict] = None,
-    ):
+    ) -> None:
         """Initialise feature view to retrieve feature vector from online and offline feature store.
 
         !!! example
@@ -301,7 +325,7 @@ class FeatureView:
     def init_batch_scoring(
         self,
         training_dataset_version: Optional[int] = None,
-    ):
+    ) -> None:
         """Initialise feature view to retrieve feature vector from offline feature store.
 
         !!! example
@@ -337,7 +361,7 @@ class FeatureView:
         self,
         start_time: Optional[Union[str, int, datetime, date]] = None,
         end_time: Optional[Union[str, int, datetime, date]] = None,
-    ):
+    ) -> str:
         """Get a query string of the batch query.
 
         !!! example "Batch query for the last 24 hours"
@@ -389,7 +413,7 @@ class FeatureView:
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
-    ):
+    ) -> Union[List[Any], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vector from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
               1. The training dataset version of the transformation statistics
@@ -485,7 +509,7 @@ class FeatureView:
         external: Optional[bool] = None,
         return_type: Optional[str] = "list",
         allow_missing: Optional[bool] = False,
-    ):
+    ) -> Union[List[List[Any]], pd.DataFrame, np.ndarray, pl.DataFrame]:
         """Returns assembled feature vectors in batches from online feature store.
             Call [`feature_view.init_serving`](#init_serving) before this method if the following configurations are needed.
               1. The training dataset version of the transformation statistics
@@ -584,7 +608,7 @@ class FeatureView:
         entry: Dict[str, Any],
         external: Optional[bool] = None,
         return_type: Optional[str] = "pandas",
-    ):
+    ) -> Union[pd.DataFrame, pl.DataFrame, Dict[str, Any]]:
         """Returns assembled inference helper column vectors from online feature store.
         !!! example
             ```python
@@ -627,7 +651,7 @@ class FeatureView:
         entry: List[Dict[str, Any]],
         external: Optional[bool] = None,
         return_type: Optional[str] = "pandas",
-    ):
+    ) -> Union[List[Dict[str, Any]], pd.DataFrame, pl.DataFrame]:
         """Returns assembled inference helper column vectors in batches from online feature store.
         !!! warning "Missing primary key entries"
             If any of the provided primary key elements in `entry` can't be found in any
@@ -777,7 +801,7 @@ class FeatureView:
             allow_missing=True,
         )
 
-    def _extract_primary_key(self, result_key):
+    def _extract_primary_key(self, result_key) -> Dict[str, str]:
         primary_key_map = {}
         for prefix_sk, sk in self._prefix_serving_key_map.items():
             if prefix_sk in result_key:
@@ -792,7 +816,9 @@ class FeatureView:
             )
         return primary_key_map
 
-    def _get_embedding_fgs(self):
+    def _get_embedding_fgs(
+        self,
+    ) -> Set["feature_group.FeatureGroup"]:
         return set([fg for fg in self.query.featuregroups if fg.embedding_index])
 
     @usage.method_logger
@@ -801,21 +827,12 @@ class FeatureView:
         start_time: Optional[Union[str, int, datetime, date]] = None,
         end_time: Optional[Union[str, int, datetime, date]] = None,
         read_options=None,
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
+        spine: Optional[SplineDataFrameTypes] = None,
         primary_keys=False,
         event_time=False,
         inference_helper_columns=False,
         dataframe_type: Optional[str] = "default",
-    ):
+    ) -> TrainingDatasetDataFrameTypes:
         """Get a batch of data from an event time interval from the offline feature store.
 
         !!! example "Batch data for the last 24 hours"
@@ -899,7 +916,7 @@ class FeatureView:
             dataframe_type,
         )
 
-    def add_tag(self, name: str, value):
+    def add_tag(self, name: str, value: Dict[str, Any]) -> None:
         """Attach a tag to a feature view.
 
         A tag consists of a name and value pair.
@@ -927,7 +944,7 @@ class FeatureView:
         """
         return self._feature_view_engine.add_tag(self, name, value)
 
-    def get_tag(self, name: str):
+    def get_tag(self, name: str) -> "tag.Tag":
         """Get the tags of a feature view.
 
         !!! example
@@ -953,7 +970,7 @@ class FeatureView:
         """
         return self._feature_view_engine.get_tag(self, name)
 
-    def get_tags(self):
+    def get_tags(self) -> List[tag.Tag]:
         """Returns all tags attached to a training dataset.
 
         !!! example
@@ -976,7 +993,7 @@ class FeatureView:
         """
         return self._feature_view_engine.get_tags(self)
 
-    def get_parent_feature_groups(self):
+    def get_parent_feature_groups(self) -> "explicit_provenance.Links":
         """Get the parents of this feature view, based on explicit provenance.
         Parents are feature groups or external feature groups. These feature
         groups can be accessible, deleted or inaccessible.
@@ -988,7 +1005,9 @@ class FeatureView:
         """
         return self._feature_view_engine.get_parent_feature_groups(self)
 
-    def get_newest_model(self, training_dataset_version: Optional[int] = None):
+    def get_newest_model(
+        self, training_dataset_version: Optional[int] = None
+    ) -> Optional[Any]:
         """Get the latest generated model using this feature view, based on explicit
         provenance. Search only through the accessible models.
         For more items use the base method - get_models_provenance
@@ -1006,7 +1025,7 @@ class FeatureView:
         else:
             return None
 
-    def get_models(self, training_dataset_version: Optional[int] = None):
+    def get_models(self, training_dataset_version: Optional[int] = None) -> List[Any]:
         """Get the generated models using this feature view, based on explicit
         provenance. Only the accessible models are returned.
         For more items use the base method - get_models_provenance
@@ -1020,7 +1039,9 @@ class FeatureView:
             training_dataset_version=training_dataset_version
         ).accessible
 
-    def get_models_provenance(self, training_dataset_version: Optional[int] = None):
+    def get_models_provenance(
+        self, training_dataset_version: Optional[int] = None
+    ) -> "explicit_provenance.Links":
         """Get the generated models using this feature view, based on explicit
         provenance. These models can be accessible or inaccessible. Explicit
         provenance does not track deleted generated model links, so deleted
@@ -1037,7 +1058,7 @@ class FeatureView:
             self, training_dataset_version=training_dataset_version
         )
 
-    def delete_tag(self, name: str):
+    def delete_tag(self, name: str) -> None:
         """Delete a tag attached to a feature view.
 
         !!! example
@@ -1074,20 +1095,11 @@ class FeatureView:
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
-    ):
+        spine: Optional[SplineDataFrameTypes] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
+    ) -> Tuple[int, "job.Job"]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data can be retrieved by calling `feature_view.get_training_data`.
 
@@ -1314,20 +1326,11 @@ class FeatureView:
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
-    ):
+        spine: Optional[SplineDataFrameTypes] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
+    ) -> Tuple[int, "job.Job"]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train and test set at random or according to time ranges.
         The training data can be retrieved by calling `feature_view.get_train_test_split`.
@@ -1612,20 +1615,11 @@ class FeatureView:
         seed: Optional[int] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
-    ):
+        spine: Optional[SplineDataFrameTypes] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
+    ) -> Tuple[int, "job.Job"]:
         """Create the metadata for a training dataset and save the corresponding training data into `location`.
         The training data is split into train, validation, and test set at random or according to time range.
         The training data can be retrieved by calling `feature_view.get_train_validation_test_split`.
@@ -1890,17 +1884,8 @@ class FeatureView:
         training_dataset_version: int,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         write_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-    ):
+        spine: Optional[SplineDataFrameTypes] = None,
+    ) -> "job.Job":
         """
         Recreate a training dataset.
 
@@ -1975,21 +1960,15 @@ class FeatureView:
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
+        spine: Optional[SplineDataFrameTypes] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
-    ):
+    ) -> Tuple[
+        TrainingDatasetDataFrameTypes,
+        Optional[TrainingDatasetDataFrameTypes],  # optional label DataFrame
+    ]:
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
         This returns the training data in memory and does not materialise data in storage.
@@ -2135,21 +2114,17 @@ class FeatureView:
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
+        spine: Optional[SplineDataFrameTypes] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
-    ):
+    ) -> Tuple[
+        TrainingDatasetDataFrameTypes,
+        TrainingDatasetDataFrameTypes,
+        Optional[TrainingDatasetDataFrameTypes],
+        Optional[TrainingDatasetDataFrameTypes],
+    ]:
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
         This returns the training data in memory and does not materialise data in storage.
@@ -2303,7 +2278,11 @@ class FeatureView:
         return df
 
     @staticmethod
-    def _validate_train_test_split(test_size, train_end, test_start):
+    def _validate_train_test_split(
+        test_size: Optional[float],
+        train_end: Optional[Union[str, int, datetime, date]],
+        test_start: Optional[Union[str, int, datetime, date]],
+    ) -> None:
         if not ((test_size and 0 < test_size < 1) or (train_end or test_start)):
             raise ValueError(
                 "Invalid split input."
@@ -2326,21 +2305,19 @@ class FeatureView:
         extra_filter: Optional[Union[filter.Filter, filter.Logic]] = None,
         statistics_config: Optional[Union[StatisticsConfig, bool, dict]] = None,
         read_options: Optional[Dict[Any, Any]] = None,
-        spine: Optional[
-            Union[
-                pd.DataFrame,
-                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-                TypeVar("pyspark.RDD"),  # noqa: F821
-                np.ndarray,
-                List[list],
-                TypeVar("SpineGroup"),
-            ]
-        ] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
+        spine: Optional[SplineDataFrameTypes] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
-    ):
+    ) -> Tuple[
+        TrainingDatasetDataFrameTypes,
+        TrainingDatasetDataFrameTypes,
+        TrainingDatasetDataFrameTypes,
+        Optional[TrainingDatasetDataFrameTypes],
+        Optional[TrainingDatasetDataFrameTypes],
+        Optional[TrainingDatasetDataFrameTypes],
+    ]:
         """
         Create the metadata for a training dataset and get the corresponding training data from the offline feature store.
         This returns the training data in memory and does not materialise data in storage.
@@ -2521,12 +2498,12 @@ class FeatureView:
 
     @staticmethod
     def _validate_train_validation_test_split(
-        validation_size,
-        test_size,
-        train_end,
-        validation_start,
-        validation_end,
-        test_start,
+        validation_size: Optional[float],
+        test_size: Optional[float],
+        train_end: Optional[Union[str, int, datetime, date]],
+        validation_start: Optional[Union[str, int, datetime, date]],
+        validation_end: Optional[Union[str, int, datetime, date]],
+        test_start: Optional[Union[str, int, datetime, date]],
     ):
         if not (
             (validation_size and 0 < validation_size < 1)
@@ -2543,13 +2520,16 @@ class FeatureView:
     @usage.method_logger
     def get_training_data(
         self,
-        training_dataset_version,
-        read_options: Optional[Dict[Any, Any]] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
+        training_dataset_version: int,
+        read_options: Optional[Dict[str, Any]] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
-    ):
+    ) -> Tuple[
+        TrainingDatasetDataFrameTypes,
+        Optional[TrainingDatasetDataFrameTypes],
+    ]:
         """
         Get training data created by `feature_view.create_training_data`
         or `feature_view.training_data`.
@@ -2613,13 +2593,18 @@ class FeatureView:
     @usage.method_logger
     def get_train_test_split(
         self,
-        training_dataset_version,
+        training_dataset_version: int,
         read_options: Optional[Dict[Any, Any]] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
-    ):
+    ) -> Tuple[
+        TrainingDatasetDataFrameTypes,
+        TrainingDatasetDataFrameTypes,
+        Optional[TrainingDatasetDataFrameTypes],
+        Optional[TrainingDatasetDataFrameTypes],
+    ]:
         """
         Get training data created by `feature_view.create_train_test_split`
         or `feature_view.train_test_split`.
@@ -2686,7 +2671,14 @@ class FeatureView:
         event_time=False,
         training_helper_columns=False,
         dataframe_type: Optional[str] = "default",
-    ):
+    ) -> Tuple[
+        TrainingDatasetDataFrameTypes,
+        TrainingDatasetDataFrameTypes,
+        TrainingDatasetDataFrameTypes,
+        Optional[TrainingDatasetDataFrameTypes],
+        Optional[TrainingDatasetDataFrameTypes],
+        Optional[TrainingDatasetDataFrameTypes],
+    ]:
         """
         Get training data created by `feature_view.create_train_validation_test_split`
         or `feature_view.train_validation_test_split`.
@@ -2749,7 +2741,7 @@ class FeatureView:
         return df
 
     @usage.method_logger
-    def get_training_datasets(self):
+    def get_training_datasets(self) -> List["training_dataset.TrainingDatasetBase"]:
         """Returns the metadata of all training datasets created with this feature view.
 
         !!! example
@@ -2776,7 +2768,7 @@ class FeatureView:
     def get_training_dataset_statistics(
         self,
         training_dataset_version: int,
-        before_transformation=False,
+        before_transformation: bool = False,
         feature_names: Optional[List[str]] = None,
     ) -> Statistics:
         """
@@ -2814,7 +2806,7 @@ class FeatureView:
         training_dataset_version: int,
         name: str,
         value: Union[Dict[str, Any], "tag.Tag"],
-    ):
+    ) -> None:
         """Attach a tag to a training dataset.
 
         !!! example
