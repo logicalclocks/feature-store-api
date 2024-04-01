@@ -3462,16 +3462,14 @@ class FeatureView:
     @property
     def transformation_functions(
         self,
-    ) -> Dict[str, "transformation_functions.TransformationFunction"]:
+    ) -> Dict[str, "TransformationFunction"]:
         """Get transformation functions."""
         return self._transformation_functions
 
     @transformation_functions.setter
     def transformation_functions(
         self,
-        transformation_functions: Dict[
-            str, "transformation_functions.TransformationFunction"
-        ],
+        transformation_functions: Dict[str, "TransformationFunction"],
     ):
         self._transformation_functions = transformation_functions
 
