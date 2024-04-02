@@ -16,8 +16,8 @@
 
 import logging
 import re
-import urllib3
 
+import urllib3
 from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException, VectorDatabaseException
 from hsfs.core.opensearch_api import OpenSearchApi
@@ -98,6 +98,15 @@ class OpenSearchClientSingleton:
                 f"Error in Opensearch request: {e}",
                 e.info,
             )  from e
+
+    @retry(
+        wait_exponential_multiplier=1000,
+        stop_max_attempt_number=3,
+        retry_on_exception=_is_timeout,
+    )
+    def count(self, index, body=None):
+        result = self._opensearch_client.count(index=index, body=body)
+        return result['count']
 
     def close(self):
         if self._opensearch_client:

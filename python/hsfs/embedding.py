@@ -24,6 +24,7 @@ from hsfs import (
     util,
 )
 from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core.vector_db_client import VectorDbClient
 
 
 class SimilarityFunctionType:
@@ -261,6 +262,7 @@ class EmbeddingIndex:
             self._features = dict([(feat.name, feat) for feat in features])
         self._feature_group = None
         self._col_prefix = col_prefix
+        self._vector_db_client = None
 
     def add_embedding(
         self,
@@ -305,7 +307,10 @@ class EmbeddingIndex:
         # Returns
             `hsfs.embedding.EmbeddingFeature` object
         """
-        return self._features.get(name)
+        feat = self._features.get(name)
+        feat.feature_group = self._feature_group
+        feat.embedding_index = self
+        return feat
 
     def get_embeddings(self):
         """
@@ -318,6 +323,13 @@ class EmbeddingIndex:
             feat.feature_group = self._feature_group
             feat.embedding_index = self
         return self._features.values()
+
+    def count(self):
+        if self._vector_db_client is None:
+            self._vector_db_client = VectorDbClient(
+                self._feature_group.select_all()
+            )
+        return self._vector_db_client.count(self.feature_group)
 
     @classmethod
     def from_response_json(cls, json_dict):

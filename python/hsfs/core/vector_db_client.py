@@ -40,6 +40,7 @@ class VectorDbClient:
         self._fg_col_vdb_col_map = {}
         self._fg_embedding_map = {}
         self._embedding_fg_by_join_index = {}
+        self._fg_pks_map = {}
         self._opensearch_client = None
         self._index_result_limit_k = {}
         self.init()
@@ -67,6 +68,7 @@ class VectorDbClient:
                     )
                     fg_col_vdb_col_map[pk] = fg.embedding_index.col_prefix + pk
                 self._fg_vdb_col_fg_col_map[fg.id] = vdb_col_fg_col_map
+                self._fg_pks_map[fg.id] = [vdb_col_fg_col_map[pk].name for pk in fg.primary_key]
                 self._fg_col_vdb_col_map[fg.id] = fg_col_vdb_col_map
                 self._fg_embedding_map[fg.id] = fg.embedding_index
 
@@ -306,6 +308,12 @@ class VectorDbClient:
             )
             for item in results["hits"]["hits"]
         ]
+
+    def count(self, fg):
+        query = {
+            "query": {"bool": {"must": {"exists": {"field": self._fg_pks_map[fg.id][0]}}}},
+        }
+        return self._opensearch_client.count(self._get_vector_db_index_name(fg.id), query)
 
     def _get_vector_db_index_name(self, fg_id):
         embedding = self._fg_embedding_map.get(fg_id)
