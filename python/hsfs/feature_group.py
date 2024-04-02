@@ -3384,7 +3384,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         created: Optional[str] = None,
         creator: Optional[Dict[str, Any]] = None,
         id: Optional[int] = None,
-        features: Optional[List[Dict[str, Any]]] = None,
+        features: Optional[Union[List[Dict[str, Any]], List["feature.Feature"]]] = None,
         location: Optional[str] = None,
         statistics_config: Optional[Union["StatisticsConfig", Dict[str, Any]]] = None,
         event_time: Optional[str] = None,
