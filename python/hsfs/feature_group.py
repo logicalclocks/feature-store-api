@@ -91,16 +91,16 @@ else:
 class FeatureGroupBase:
     def __init__(
         self,
-        name: str,
-        version: int,
-        featurestore_id: int,
+        name: Optional[str],
+        version: Optional[int],
+        featurestore_id: Optional[int],
         location: Optional[str],
         event_time: Optional[Union[str, int, date, datetime]] = None,
         online_enabled: bool = False,
         id: Optional[int] = None,
         embedding_index: Optional["EmbeddingIndex"] = None,
         expectation_suite: Optional[
-            Union["ExpectationSuite", "ge.core.ExpectationSuite"]
+            Union["ExpectationSuite", "ge.core.ExpectationSuite", Dict[str, Any]]
         ] = None,
         online_topic_name: Optional[str] = None,
         topic_name: Optional[str] = None,
@@ -1562,7 +1562,7 @@ class FeatureGroupBase:
             )
 
     @property
-    def feature_store_id(self) -> int:
+    def feature_store_id(self) -> Optional[int]:
         return self._feature_store_id
 
     @property
@@ -1574,12 +1574,12 @@ class FeatureGroupBase:
         self._feature_store = feature_store
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         """Name of the feature group."""
         return self._name
 
     @property
-    def version(self) -> int:
+    def version(self) -> Optional[int]:
         """Version number of the feature group."""
         return self._version
 
@@ -1778,7 +1778,7 @@ class FeatureGroupBase:
     def expectation_suite(
         self,
         expectation_suite: Union[
-            ExpectationSuite, ge.core.ExpectationSuite, dict, None
+            ExpectationSuite, ge.core.ExpectationSuite, Dict[str, Any], None
         ],
     ) -> None:
         if isinstance(expectation_suite, ExpectationSuite):
@@ -1957,7 +1957,7 @@ class FeatureGroup(FeatureGroupBase):
     def __init__(
         self,
         name: str,
-        version: int,
+        version: Optional[int],
         featurestore_id: int,
         description: Optional[str] = "",
         partition_key: Optional[List[str]] = None,
@@ -1965,7 +1965,7 @@ class FeatureGroup(FeatureGroupBase):
         hudi_precombine_key: Optional[str] = None,
         featurestore_name: Optional[str] = None,
         embedding_index: Optional["EmbeddingIndex"] = None,
-        created: Optional[Union[str, int, date, datetime]] = None,
+        created: Optional[str] = None,
         creator: Optional[Dict[str, Any]] = None,
         id: Optional[int] = None,
         features: Optional[List[Union["feature.Feature", Dict[str, Any]]]] = None,
@@ -1979,7 +1979,7 @@ class FeatureGroup(FeatureGroupBase):
         event_time: Optional[str] = None,
         stream: bool = False,
         expectation_suite: Optional[
-            Union["ge.core.ExpectationSuite", "ExpectationSuite"]
+            Union["ge.core.ExpectationSuite", "ExpectationSuite", Dict[str, Any]]
         ] = None,
         parents: Optional[List["explicit_provenance.Links"]] = None,
         href: Optional[str] = None,
@@ -3280,12 +3280,12 @@ class FeatureGroup(FeatureGroupBase):
         return self._feature_store_name
 
     @property
-    def creator(self) -> "user.User":
+    def creator(self) -> Optional["user.User"]:
         """Username of the creator."""
         return self._creator
 
     @property
-    def created(self) -> int:
+    def created(self) -> Optional[str]:
         """Timestamp when the feature group was created."""
         return self._created
 
@@ -3301,7 +3301,7 @@ class FeatureGroup(FeatureGroupBase):
         return self._parents
 
     @property
-    def materialization_job(self) -> "Job":
+    def materialization_job(self) -> Optional["Job"]:
         """Get the Job object reference for the materialization job for this
         Feature Group."""
         if self._materialization_job is not None:
@@ -3370,7 +3370,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
 
     def __init__(
         self,
-        storage_connector: Union["storage_connector.StorageConnector", Dict[str, Any]],
+        storage_connector: Union["sc.StorageConnector", Dict[str, Any]],
         query: Optional[str] = None,
         data_format: Optional[str] = None,
         path: Optional[str] = None,
@@ -3381,15 +3381,15 @@ class ExternalFeatureGroup(FeatureGroupBase):
         primary_key: Optional[List[str]] = None,
         featurestore_id: Optional[int] = None,
         featurestore_name: Optional[str] = None,
-        created: Optional[Union[str, int, date, datetime]] = None,
+        created: Optional[str] = None,
         creator: Optional[Dict[str, Any]] = None,
         id: Optional[int] = None,
         features: Optional[List[Dict[str, Any]]] = None,
         location: Optional[str] = None,
-        statistics_config: "StatisticsConfig" = None,
+        statistics_config: Optional[Union["StatisticsConfig", Dict[str, Any]]] = None,
         event_time: Optional[str] = None,
         expectation_suite: Optional[
-            Union["ExpectationSuite", "ge.core.ExpectationSuite"]
+            Union["ExpectationSuite", "ge.core.ExpectationSuite", Dict[str, Any]]
         ] = None,
         online_enabled: bool = False,
         href: Optional[str] = None,
@@ -3469,9 +3469,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 storage_connector
             )
         else:
-            self._storage_connector: "storage_connector.StorageConnector" = (
-                storage_connector
-            )
+            self._storage_connector: "sc.StorageConnector" = storage_connector
         self._vector_db_client: Optional["VectorDbClient"] = None
         self._href: Optional[str] = href
 
@@ -3888,15 +3886,15 @@ class ExternalFeatureGroup(FeatureGroupBase):
         return self._options
 
     @property
-    def storage_connector(self) -> "storage_connector.StorageConnector":
+    def storage_connector(self) -> "sc.StorageConnector":
         return self._storage_connector
 
     @property
-    def creator(self) -> "user.User":
+    def creator(self) -> Optional["user.User"]:
         return self._creator
 
     @property
-    def created(self) -> int:
+    def created(self) -> Optional[str]:
         return self._created
 
     @description.setter
@@ -3929,8 +3927,8 @@ class SpineGroup(FeatureGroupBase):
         primary_key: Optional[List[str]] = None,
         featurestore_id: Optional[int] = None,
         featurestore_name: Optional[str] = None,
-        created: Optional[Union[str, int, datetime, date]] = None,
-        creator: Optional["user.User"] = None,
+        created: Optional[str] = None,
+        creator: Optional[Dict[str, Any]] = None,
         id: Optional[int] = None,
         features: Optional[List[Union["feature.Feature", Dict[str, Any]]]] = None,
         location: Optional[str] = None,

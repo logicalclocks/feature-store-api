@@ -97,7 +97,9 @@ class Query:
 
     def _prep_read(
         self, online: bool, read_options: Dict[str, Any]
-    ) -> Tuple[str, Optional["storage_connector.StorageConnector"]]:
+    ) -> Tuple[
+        Union[str, Dict[str, Any]], Optional["storage_connector.StorageConnector"]
+    ]:
         fs_query = self._query_constructor_api.construct_query(self)
 
         if online:
