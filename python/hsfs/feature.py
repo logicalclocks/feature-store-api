@@ -56,7 +56,7 @@ class Feature:
         partition: bool = False,
         hudi_precombine_key: bool = False,
         online_type: Optional[str] = None,
-        default_value: str = None,
+        default_value: Optional[str] = None,
         feature_group_id: Optional[int] = None,
         feature_group: Optional[
             Union[

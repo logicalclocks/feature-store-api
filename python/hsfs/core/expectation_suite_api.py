@@ -22,7 +22,7 @@ from hsfs.core.variable_api import VariableApi
 
 
 class ExpectationSuiteApi:
-    def __init__(self, feature_store_id: int, feature_group_id: int):
+    def __init__(self, feature_store_id: int, feature_group_id: int) -> None:
         """Expectation Suite endpoints for the Feature Group resource.
 
         :param feature_store_id: id of the respective Feature Store
@@ -34,7 +34,7 @@ class ExpectationSuiteApi:
         self._feature_group_id = feature_group_id
         self._variable_api = VariableApi()
 
-    def create(self, expectation_suite: es.ExpectationSuite) -> es.ExpectationSuite:
+    def create(self, expectation_suite: "es.ExpectationSuite") -> "es.ExpectationSuite":
         """Create an expectation suite attached to a Feature Group.
 
         :param expectation_suite: expectation suite object to be created for a Feature Group
@@ -66,7 +66,7 @@ class ExpectationSuiteApi:
             _client._send_request(method, path_params, headers=headers, data=payload)
         )
 
-    def update(self, expectation_suite: es.ExpectationSuite) -> es.ExpectationSuite:
+    def update(self, expectation_suite: "es.ExpectationSuite") -> "es.ExpectationSuite":
         """Update an expectation suite attached to a Feature Group.
 
         :param expectation_suite: expectation suite object to be created for a Feature Group
@@ -102,8 +102,8 @@ class ExpectationSuiteApi:
         )
 
     def update_metadata(
-        self, expectation_suite: es.ExpectationSuite
-    ) -> es.ExpectationSuite:
+        self, expectation_suite: "es.ExpectationSuite"
+    ) -> "es.ExpectationSuite":
         """Update the metadata of an expectation suite attached to a Feature Group.
 
         :param expectation_suite: expectation suite object to be updated
@@ -162,7 +162,7 @@ class ExpectationSuiteApi:
 
         _client._send_request("DELETE", path_params)
 
-    def get(self) -> Optional[es.ExpectationSuite]:
+    def get(self) -> Optional["es.ExpectationSuite"]:
         """Get the expectation suite attached to a Feature Group.
 
         :return: fetched expectation suite attached to the FeatureG Group

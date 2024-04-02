@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import copy
 import json
@@ -93,11 +94,11 @@ class FeatureGroupBase:
         name: str,
         version: int,
         featurestore_id: int,
-        location: str,
+        location: Optional[str],
         event_time: Optional[Union[str, int, date, datetime]] = None,
         online_enabled: bool = False,
         id: Optional[int] = None,
-        embedding_index: "EmbeddingIndex" = None,
+        embedding_index: Optional["EmbeddingIndex"] = None,
         expectation_suite: Optional[
             Union["ExpectationSuite", "ge.core.ExpectationSuite"]
         ] = None,
@@ -1541,7 +1542,8 @@ class FeatureGroupBase:
 
     @statistics_config.setter
     def statistics_config(
-        self, statistics_config: Optional[Union["StatisticsConfig", dict, bool]]
+        self,
+        statistics_config: Optional[Union["StatisticsConfig", Dict[str, Any], bool]],
     ) -> None:
         self._check_statistics_support()  # raises an error if stats not supported
         if isinstance(statistics_config, StatisticsConfig):
@@ -1761,7 +1763,7 @@ class FeatureGroupBase:
         )
 
     @property
-    def location(self) -> str:
+    def location(self) -> Optional[str]:
         return self._location
 
     @property
@@ -1964,13 +1966,13 @@ class FeatureGroup(FeatureGroupBase):
         featurestore_name: Optional[str] = None,
         embedding_index: Optional["EmbeddingIndex"] = None,
         created: Optional[Union[str, int, date, datetime]] = None,
-        creator: Optional[user.User] = None,
+        creator: Optional[Dict[str, Any]] = None,
         id: Optional[int] = None,
         features: Optional[List[Union["feature.Feature", Dict[str, Any]]]] = None,
         location: Optional[str] = None,
         online_enabled: bool = False,
         time_travel_format: Optional[str] = None,
-        statistics_config: Optional["StatisticsConfig"] = None,
+        statistics_config: Optional[Union["StatisticsConfig", Dict[str, Any]]] = None,
         online_topic_name: Optional[str] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
@@ -3380,9 +3382,9 @@ class ExternalFeatureGroup(FeatureGroupBase):
         featurestore_id: Optional[int] = None,
         featurestore_name: Optional[str] = None,
         created: Optional[Union[str, int, date, datetime]] = None,
-        creator: Optional["user.User"] = None,
+        creator: Optional[Dict[str, Any]] = None,
         id: Optional[int] = None,
-        features: Optional[List[Union["feature.Feature", Dict[str, Any]]]] = None,
+        features: Optional[List[Dict[str, Any]]] = None,
         location: Optional[str] = None,
         statistics_config: "StatisticsConfig" = None,
         event_time: Optional[str] = None,
@@ -3396,7 +3398,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         notification_topic_name: Optional[str] = None,
         spine: bool = False,
         deprecated: bool = False,
-        embedding_index: "EmbeddingIndex" = None,
+        embedding_index: Optional["EmbeddingIndex"] = None,
         **kwargs,
     ) -> None:
         super().__init__(
