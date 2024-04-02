@@ -136,7 +136,7 @@
             "on": ["test_on"],
             "left_on": ["test_left_on"],
             "right_on": ["test_right_on"],
-            "type": "inner",
+            "join_type": "inner",
             "prefix": "test_prefix"
           }
         ],
@@ -344,7 +344,7 @@
             "on": ["test_on"],
             "left_on": ["test_left_on"],
             "right_on": ["test_right_on"],
-            "type": "left",
+            "join_type": "left",
             "prefix": "test_prefix"
           }
         ],
@@ -504,7 +504,7 @@
             "on": ["test_on"],
             "left_on": ["test_left_on"],
             "right_on": ["test_right_on"],
-            "type": "left",
+            "join_type": "left",
             "prefix": "test_prefix"
           }
         ],
