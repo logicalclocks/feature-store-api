@@ -19,7 +19,7 @@ from enum import Enum
 from typing import Optional, Set
 
 import humps
-from hsfs import feature_group, feature_view, training_dataset, util
+from hsfs import feature_group, feature_view, training_dataset, util, storage_connector
 
 
 class Artifact:
@@ -137,7 +137,7 @@ class Links:
     def deleted(self):
         """List of [Artifact objects] which contains
         minimal information (name, version) about the entities
-        (feature groups, feature views, models) they represent.
+        (storage connectors, feature groups, feature views, models) they represent.
         These entities have been removed from the feature store/model registry.
         """
         return self._deleted
@@ -146,7 +146,7 @@ class Links:
     def inaccessible(self):
         """List of [Artifact objects] which contains
         minimal information (name, version) about the entities
-        (feature groups, feature views, models) they represent.
+        (storage connectors, feature groups, feature views, models) they represent.
         These entities exist in the feature store/model registry, however the user
         does not have access to them anymore.
         """
@@ -154,7 +154,7 @@ class Links:
 
     @property
     def accessible(self):
-        """List of [FeatureGroups|FeatureViews|Models] objects
+        """List of [StorageConnectors|FeatureGroups|FeatureViews|Models] objects
         which are part of the provenance graph requested. These entities
         exist in the feature store/model registry and the user has access to them.
         """
@@ -164,7 +164,7 @@ class Links:
     def faulty(self):
         """List of [Artifact objects] which contains
         minimal information (name, version) about the entities
-        (feature groups, feature views, models) they represent.
+        (storage connectors, feature groups, feature views, models) they represent.
         These entities exist in the feature store/model registry, however they are corrupted.
         """
         return self._faulty
@@ -177,6 +177,7 @@ class Links:
         FEATURE_GROUP = 1
         FEATURE_VIEW = 2
         MODEL = 3
+        STORAGE_CONNECTOR = 4
 
     def __str__(self, indent=None):
         return json.dumps(self, cls=ProvenanceEncoder, indent=indent)
@@ -186,6 +187,27 @@ class Links:
             f"Links({self._accessible!r}, {self._deleted!r}"
             f", {self._inaccessible!r}, {self._faulty!r})"
         )
+    
+    @staticmethod
+    def __parse_storage_connector(links_json: dict, artifacts: Set[str]):
+        links = Links()
+        for link_json in links_json:
+            if link_json["node"]["artifact_type"] in artifacts:
+                if link_json["node"].get("exception_cause") is not None:
+                    links._faulty.append(Artifact.from_response_json(link_json["node"]))
+                elif bool(link_json["node"]["accessible"]):
+                    links.accessible.append(
+                        storage_connector.StorageConnector.from_response_json(
+                            link_json["node"]["artifact"]
+                        )
+                    )
+                elif bool(link_json["node"]["deleted"]):
+                    links.deleted.append(Artifact.from_response_json(link_json["node"]))
+                else:
+                    links.inaccessible.append(
+                        Artifact.from_response_json(link_json["node"])
+                    )
+        return links
 
     @staticmethod
     def __feature_group(link_json: dict):
@@ -292,13 +314,13 @@ class Links:
         artifact: Type,
         training_dataset_version: Optional[int] = None,
     ):
-        """Parse explicit links from json response. There are three types of
-        Links: UpstreamFeatureGroups, DownstreamFeatureGroups, DownstreamFeatureViews
+        """Parse explicit links from json response. There are four types of
+        Links: UpstreamStorageConnectors, UpstreamFeatureGroups, DownstreamFeatureGroups, DownstreamFeatureViews
 
         # Arguments
             json_dict: json response from the explicit provenance endpoint
             direction: subset of links to parse - UPSTREAM/DOWNSTREAM
-            artifact: subset of links to parse - FEATURE_GROUP/FEATURE_VIEW/MODEL
+            artifact: subset of links to parse - FEATURE_GROUP/FEATURE_VIEW/MODEL/STORAGE_CONNECTOR
             training_dataset_version: training dataset version
 
         # Returns
@@ -334,14 +356,20 @@ class Links:
             )
         else:
             if direction == Links.Direction.UPSTREAM:
-                # upstream is currently, always, only feature groups
-                return Links.__parse_feature_groups(
-                    links_json["upstream"],
-                    {
-                        "FEATURE_GROUP",
-                        "EXTERNAL_FEATURE_GROUP",
-                    },
-                )
+                if artifact == Links.Type.FEATURE_GROUP:
+                    return Links.__parse_feature_groups(
+                        links_json["upstream"],
+                        {
+                            "FEATURE_GROUP",
+                            "EXTERNAL_FEATURE_GROUP",
+                        },
+                    )
+                elif artifact == Links.Type.STORAGE_CONNECTOR:
+                    return Links.__parse_storage_connector(
+                        links_json["upstream"], {"STORAGE_CONNECTOR"}
+                    )
+                else:
+                    return Links()
 
             if direction == Links.Direction.DOWNSTREAM:
                 if artifact == Links.Type.FEATURE_GROUP:
@@ -372,6 +400,7 @@ class ProvenanceEncoder(json.JSONEncoder):
         elif isinstance(
             obj,
             (
+                storage_connector.StorageConnector,
                 feature_group.FeatureGroup,
                 feature_group.ExternalFeatureGroup,
                 feature_view.FeatureView,

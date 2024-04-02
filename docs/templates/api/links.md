@@ -1,6 +1,6 @@
 # Provenance Links
 
-Provenance Links are objects returned by methods such as [get_parent_feature_group](../feature_group_api/#get_parent_feature_groups), [get_generated_feature_groups](../feature_group_api/#get_generated_feature_groups), [get_generated_feature_views](../feature_group_api/#get_generated_feature_views) [get_models_provenance](../feature_view_api/#get_models_provenance) and represent sections of the provenance graph, depending on the method invoked.
+Provenance Links are objects returned by methods such as [get_generated_feature_groups](../storage_connector_api/#get_generated_feature_groups), [get_parent_feature_group](../feature_group_api/#get_parent_feature_groups), [get_generated_feature_groups](../feature_group_api/#get_generated_feature_groups), [get_generated_feature_views](../feature_group_api/#get_generated_feature_views) [get_models_provenance](../feature_view_api/#get_models_provenance) and represent sections of the provenance graph, depending on the method invoked.
 
 ## Properties
 
