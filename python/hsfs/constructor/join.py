@@ -14,6 +14,8 @@
 #   limitations under the License.
 #
 
+from typing import Any, Dict, List, Optional
+
 import humps
 from hsfs import util
 from hsfs.constructor import query
@@ -28,7 +30,16 @@ class Join:
     LEFT_SEMI_JOIN = "LEFT_SEMI_JOIN"
     COMMA = "COMMA"
 
-    def __init__(self, query, on, left_on, right_on, join_type, prefix, **kwargs):
+    def __init__(
+        self,
+        query: "query.Query",
+        on: Optional[List[str]],
+        left_on: Optional[List[str]],
+        right_on: Optional[List[str]],
+        join_type: str,
+        prefix: Optional[str],
+        **kwargs,
+    ) -> None:
         self._query = query
         self._on = util.parse_features(on)
         self._left_on = util.parse_features(left_on)
@@ -36,7 +47,7 @@ class Join:
         self._join_type = join_type or self.INNER
         self._prefix = prefix
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "query": self._query,
             "on": self._on,
@@ -47,7 +58,7 @@ class Join:
         }
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(cls, json_dict: Dict[str, Any]) -> "Join":
         json_decamelized = humps.decamelize(json_dict)
 
         return cls(
@@ -60,13 +71,13 @@ class Join:
         )
 
     @property
-    def query(self):
+    def query(self) -> "query.Query":
         return self._query
 
     @query.setter
-    def query(self, query):
+    def query(self, query: "query.Query") -> None:
         self._query = query
 
     @property
-    def prefix(self):
+    def prefix(self) -> Optional[str]:
         return self._prefix
