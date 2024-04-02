@@ -17,13 +17,16 @@
 import json
 import warnings
 from datetime import date, datetime
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 import humps
-from hsfs import engine, feature_group, util
+import numpy as np
+import pandas as pd
+from hsfs import engine, feature_group, storage_connector, util
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import join
 from hsfs.constructor.filter import Filter, Logic
+from hsfs.constructor.fs_query import FsQuery
 from hsfs.core import arrow_flight_client, query_constructor_api, storage_connector_api
 from hsfs.feature import Feature
 
@@ -47,16 +50,20 @@ class Query:
 
     def __init__(
         self,
-        left_feature_group,
-        left_features,
-        feature_store_name=None,
-        feature_store_id=None,
-        left_feature_group_start_time=None,
-        left_feature_group_end_time=None,
-        joins=None,
-        filter=None,
+        left_feature_group: Union[
+            "feature_group.FeatureGroup",
+            "feature_group.ExternalFeatureGroup",
+            "feature_group.SpineGroup",
+        ],
+        left_features: List[Union[str, "Feature"]],
+        feature_store_name: Optional[str] = None,
+        feature_store_id: Optional[int] = None,
+        left_feature_group_start_time: Optional[Union[str, int, date, datetime]] = None,
+        left_feature_group_end_time: Optional[Union[str, int, date, datetime]] = None,
+        joins: Optional[List["join.Join"]] = None,
+        filter: Optional[Union[Filter, Logic, Dict[str, Any]]] = None,
         **kwargs,
-    ):
+    ) -> None:
         self._feature_store_name = feature_store_name
         self._feature_store_id = feature_store_id
         self._left_feature_group = left_feature_group
@@ -65,11 +72,17 @@ class Query:
         self._left_feature_group_end_time = left_feature_group_end_time
         self._joins = joins or []
         self._filter = Logic.from_response_json(filter)
-        self._python_engine = True if engine.get_type() == "python" else False
-        self._query_constructor_api = query_constructor_api.QueryConstructorApi()
-        self._storage_connector_api = storage_connector_api.StorageConnectorApi()
+        self._python_engine: bool = True if engine.get_type() == "python" else False
+        self._query_constructor_api: "query_constructor_api.QueryConstructorApi" = (
+            query_constructor_api.QueryConstructorApi()
+        )
+        self._storage_connector_api: "storage_connector_api.StorageConnectorApi" = (
+            storage_connector_api.StorageConnectorApi()
+        )
 
-    def _prep_read(self, online, read_options):
+    def _prep_read(
+        self, online: bool, read_options: Dict[str, Any]
+    ) -> Tuple[str, Optional["storage_connector.StorageConnector"]]:
         fs_query = self._query_constructor_api.construct_query(self)
 
         if online:
@@ -114,10 +127,16 @@ class Query:
 
     def read(
         self,
-        online: Optional[bool] = False,
-        dataframe_type: Optional[str] = "default",
-        read_options: Optional[dict] = None,
-    ):
+        online: bool = False,
+        dataframe_type: str = "default",
+        read_options: Optional[Dict[str, Any]] = None,
+    ) -> Union[
+        pd.DataFrame,
+        np.ndarray,
+        List[List[Any]],
+        TypeVar("pyspark.sql.DataFrame"),
+        TypeVar("pyspark.RDD"),
+    ]:
         """Read the specified query into a DataFrame.
 
         It is possible to specify the storage (online/offline) to read from and the
@@ -179,7 +198,7 @@ class Query:
             schema,
         )
 
-    def show(self, n: int, online: Optional[bool] = False):
+    def show(self, n: int, online: bool = False) -> List[List[Any]]:
         """Show the first N rows of the Query.
 
         !!! example "Show the first 10 rows"
@@ -212,7 +231,7 @@ class Query:
         right_on: Optional[List[str]] = None,
         join_type: Optional[str] = "inner",
         prefix: Optional[str] = None,
-    ):
+    ) -> "Query":
         """Join Query with another Query.
 
         If no join keys are specified, Hopsworks will use the maximal matching subset of
@@ -271,7 +290,7 @@ class Query:
         self,
         wallclock_time: Optional[Union[str, int, datetime, date]] = None,
         exclude_until: Optional[Union[str, int, datetime, date]] = None,
-    ):
+    ) -> "Query":
         """Perform time travel on the given Query.
 
         !!! warning "Pyspark/Spark Only"
@@ -362,7 +381,11 @@ class Query:
         self.left_feature_group_start_time = exclude_until_timestamp
         return self
 
-    def pull_changes(self, wallclock_start_time, wallclock_end_time):
+    def pull_changes(
+        self,
+        wallclock_start_time: Union[str, int, date, datetime],
+        wallclock_end_time: Union[str, int, date, datetime],
+    ):
         """
         !!! warning "Deprecated"
         `pull_changes` method is deprecated. Use
@@ -376,7 +399,7 @@ class Query:
         )
         return self
 
-    def filter(self, f: Union[Filter, Logic]):
+    def filter(self, f: Union[Filter, Logic]) -> "Query":
         """Apply filter to the feature group.
 
         Selects all features and returns the resulting `Query` with the applied filter.
@@ -446,10 +469,10 @@ class Query:
 
         return self
 
-    def json(self):
+    def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "featureStoreName": self._feature_store_name,
             "featureStoreId": self._feature_store_id,
@@ -463,7 +486,7 @@ class Query:
         }
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(cls, json_dict: Dict[str, Any]) -> "Query":
         json_decamelized = humps.decamelize(json_dict)
         feature_group_json = json_decamelized["left_feature_group"]
         if (
@@ -502,7 +525,7 @@ class Query:
             filter=json_decamelized.get("filter", None),
         )
 
-    def _check_read_supported(self, online):
+    def _check_read_supported(self, online: bool) -> None:
         if not online:
             return
         for fg in self.featuregroups:
@@ -520,7 +543,7 @@ class Query:
                 )
 
     @classmethod
-    def _hopsworks_json(cls, json_dict):
+    def _hopsworks_json(cls, json_dict: Dict[str, Any]) -> "Query":
         """
         This method is used by the Hopsworks helper job.
         It does not fully deserialize the message as the usecase is to
@@ -538,7 +561,7 @@ class Query:
         new._joins = humps.camelize(new._joins)
         return new
 
-    def to_string(self, online=False, arrow_flight=False):
+    def to_string(self, online: bool = False, arrow_flight: bool = False) -> str:
         """
         !!! example
             ```python
@@ -554,7 +577,9 @@ class Query:
 
         return self._to_string(fs_query, online, arrow_flight)
 
-    def _to_string(self, fs_query, online=False, asof=False):
+    def _to_string(
+        self, fs_query: "FsQuery", online: bool = False, asof: bool = False
+    ) -> str:
         if online:
             return fs_query.query_online
         if fs_query.pit_query is not None:
@@ -564,28 +589,30 @@ class Query:
                 return fs_query.pit_query
         return fs_query.query
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self._query_constructor_api.construct_query(self)
 
     @property
-    def left_feature_group_start_time(self):
+    def left_feature_group_start_time(
+        self,
+    ) -> Optional[Union[str, int, date, datetime]]:
         """Start time of time travel for the left feature group."""
         return self._left_feature_group_start_time
 
     @property
-    def left_feature_group_end_time(self):
+    def left_feature_group_end_time(self) -> Optional[Union[str, int, date, datetime]]:
         """End time of time travel for the left feature group."""
         return self._left_feature_group_end_time
 
     @left_feature_group_start_time.setter
-    def left_feature_group_start_time(self, left_feature_group_start_time):
+    def left_feature_group_start_time(self, left_feature_group_start_time) -> None:
         self._left_feature_group_start_time = left_feature_group_start_time
 
     @left_feature_group_end_time.setter
-    def left_feature_group_end_time(self, left_feature_group_end_time):
+    def left_feature_group_end_time(self, left_feature_group_end_time) -> None:
         self._left_feature_group_end_time = left_feature_group_end_time
 
-    def append_feature(self, feature):
+    def append_feature(self, feature: Union[str, "Feature"]) -> "Query":
         """
         Append a feature to the query.
 
@@ -598,7 +625,7 @@ class Query:
 
         return self
 
-    def is_time_travel(self):
+    def is_time_travel(self) -> bool:
         """Query contains time travel"""
         return (
             self.left_feature_group_start_time
@@ -606,13 +633,19 @@ class Query:
             or any([_join.query.is_time_travel() for _join in self._joins])
         )
 
-    def is_cache_feature_group_only(self):
+    def is_cache_feature_group_only(self) -> bool:
         """Query contains only cached feature groups"""
         return all(
             [isinstance(fg, feature_group.FeatureGroup) for fg in self.featuregroups]
         )
 
-    def _get_featuregroup_by_feature(self, feature: Feature):
+    def _get_featuregroup_by_feature(
+        self, feature: Feature
+    ) -> Union[
+        "feature_group.FeatureGroup",
+        "feature_group.ExternalFeatureGroup",
+        "feature_group.SpineGroup",
+    ]:
         # search for feature by id, and return the fg object
         fg_id = feature._feature_group_id
         for fg in self.featuregroups:
@@ -646,7 +679,15 @@ class Query:
     def _get_feature_by_name(
         self,
         feature_name: str,
-    ):
+    ) -> Tuple[
+        "Feature",
+        Optional[str],
+        Union[
+            "feature_group.FeatureGroup",
+            "feature_group.ExternalFeatureGroup",
+            "feature_group.SpineGroup",
+        ],
+    ]:
         # collect a dict that maps feature names -> (feature, prefix, fg)
         query_features = {}
         for feat in self._left_features:
@@ -692,12 +733,20 @@ class Query:
         )
 
     @property
-    def joins(self):
+    def joins(self) -> List["join.Join"]:
         """List of joins in the query"""
         return self._joins
 
     @property
-    def featuregroups(self):
+    def featuregroups(
+        self,
+    ) -> List[
+        Union[
+            "feature_group.FeatureGroup",
+            "feature_group.ExternalFeatureGroup",
+            "feature_group.SpineGroup",
+        ]
+    ]:
         """List of feature groups used in the query"""
         featuregroups = {self._left_feature_group}
         for join_obj in self.joins:
@@ -705,7 +754,7 @@ class Query:
         return list(featuregroups)
 
     @property
-    def filters(self):
+    def filters(self) -> Optional[Logic]:
         """All filters used in the query"""
         filters = self._filter
         for join_obj in self.joins:
@@ -717,7 +766,7 @@ class Query:
         return filters
 
     @property
-    def features(self):
+    def features(self) -> List["Feature"]:
         """List of all features in the query"""
         features = []
         for feat in self._left_features:
@@ -729,7 +778,7 @@ class Query:
 
         return features
 
-    def get_feature(self, feature_name):
+    def get_feature(self, feature_name: str) -> "Feature":
         """
         Get a feature by name.
 
@@ -741,13 +790,13 @@ class Query:
         """
         return self._get_feature_by_name(feature_name)[0]
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         try:
             return self.__getitem__(name)
         except FeatureStoreException as err:
             raise AttributeError(f"'Query' object has no attribute '{name}'. ") from err
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> Feature:
         if not isinstance(name, str):
             raise TypeError(
                 f"Expected type `str`, got `{type(name)}`. "
