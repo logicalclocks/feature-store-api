@@ -22,16 +22,18 @@ from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
 
 import avro.schema
+import confluent_kafka
 import great_expectations as ge
 import humps
 import numpy as np
 import pandas as pd
 import polars as pl
 from hsfs import (
-    embedding,
     engine,
     feature,
     feature_group_writer,
+    feature_store,
+    tag,
     user,
     util,
 )
@@ -43,7 +45,9 @@ from hsfs.constructor import filter, query
 from hsfs.constructor.filter import Filter, Logic
 from hsfs.core import (
     code_engine,
+    deltastreamer_jobconf,
     expectation_suite_engine,
+    explicit_provenance,
     external_feature_group_engine,
     feature_group_engine,
     feature_monitoring_config_engine,
@@ -78,16 +82,16 @@ class FeatureGroupBase:
         event_time: Optional[Union[str, int, date, datetime]] = None,
         online_enabled: bool = False,
         id: Optional[int] = None,
-        embedding_index: "embedding.EmbeddingIndex" = None,
+        embedding_index: "EmbeddingIndex" = None,
         expectation_suite: Optional[
-            Union["expectation_suite.ExpectationSuite", "ge.core.ExpectationSuite"]
+            Union["ExpectationSuite", "ge.core.ExpectationSuite"]
         ] = None,
         online_topic_name: Optional[str] = None,
         topic_name: Optional[str] = None,
         notification_topic_name: Optional[str] = None,
         deprecated: bool = False,
         **kwargs,
-    ):
+    ) -> None:
         self._version = version
         self._name = name
         self.event_time = event_time
@@ -149,6 +153,7 @@ class FeatureGroupBase:
         ] = None
         self._multi_part_insert: bool = False
         self._embedding_index = embedding_index
+        self._feature_store: Optional["feature_store.FeatureStore"] = None
 
         self.check_deprecated()
 
@@ -159,7 +164,7 @@ class FeatureGroupBase:
                 stacklevel=1,
             )
 
-    def delete(self):
+    def delete(self) -> None:
         """Drop the entire feature group along with its feature data.
 
         !!! example
@@ -198,7 +203,7 @@ class FeatureGroupBase:
         self,
         include_primary_key: Optional[bool] = True,
         include_event_time: Optional[bool] = True,
-    ):
+    ) -> "query.Query":
         """Select all features in the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
@@ -264,7 +269,7 @@ class FeatureGroupBase:
         else:
             return self.select_except(self.primary_key + [self.event_time])
 
-    def select(self, features: List[Union[str, feature.Feature]]):
+    def select(self, features: List[Union[str, feature.Feature]]) -> "query.Query":
         """Select a subset of features of the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
@@ -310,7 +315,7 @@ class FeatureGroupBase:
 
     def select_except(
         self, features: Optional[List[Union[str, feature.Feature]]] = None
-    ):
+    ) -> "query.Query":
         """Select all features including primary key and event time feature
         of the feature group except provided `features` and return a query object.
 
@@ -364,7 +369,7 @@ class FeatureGroupBase:
         else:
             return self.select_all()
 
-    def filter(self, f: Union[filter.Filter, filter.Logic]):
+    def filter(self, f: Union[filter.Filter, filter.Logic]) -> "query.Query":
         """Apply filter to the feature group.
 
         Selects all features and returns the resulting `Query` with the applied filter.
@@ -403,7 +408,7 @@ class FeatureGroupBase:
         """
         return self.select_all().filter(f)
 
-    def add_tag(self, name: str, value):
+    def add_tag(self, name: str, value: Any) -> None:
         """Attach a tag to a feature group.
 
         A tag consists of a <name,value> pair. Tag names are unique identifiers across the whole cluster.
@@ -430,7 +435,7 @@ class FeatureGroupBase:
 
         self._feature_group_engine.add_tag(self, name, value)
 
-    def delete_tag(self, name: str):
+    def delete_tag(self, name: str) -> None:
         """Delete a tag attached to a feature group.
 
         !!! example
@@ -452,7 +457,7 @@ class FeatureGroupBase:
         """
         self._feature_group_engine.delete_tag(self, name)
 
-    def get_tag(self, name: str):
+    def get_tag(self, name: str) -> "tag.Tag":
         """Get the tags of a feature group.
 
         !!! example
@@ -477,7 +482,7 @@ class FeatureGroupBase:
         """
         return self._feature_group_engine.get_tag(self, name)
 
-    def get_tags(self):
+    def get_tags(self) -> Dict[str, "tag.Tag"]:
         """Retrieves all tags attached to a feature group.
 
         # Returns
@@ -488,7 +493,7 @@ class FeatureGroupBase:
         """
         return self._feature_group_engine.get_tags(self)
 
-    def get_parent_feature_groups(self):
+    def get_parent_feature_groups(self) -> "explicit_provenance.Links":
         """Get the parents of this feature group, based on explicit provenance.
         Parents are feature groups or external feature groups. These feature
         groups can be accessible, deleted or inaccessible.
@@ -503,7 +508,7 @@ class FeatureGroupBase:
         """
         return self._feature_group_engine.get_parent_feature_groups(self)
 
-    def get_generated_feature_views(self):
+    def get_generated_feature_views(self) -> "explicit_provenance.Links":
         """Get the generated feature view using this feature group, based on explicit
         provenance. These feature views can be accessible or inaccessible. Explicit
         provenance does not track deleted generated feature view links, so deleted
@@ -518,7 +523,7 @@ class FeatureGroupBase:
         """
         return self._feature_group_engine.get_generated_feature_views(self)
 
-    def get_generated_feature_groups(self):
+    def get_generated_feature_groups(self) -> "explicit_provenance.Links":
         """Get the generated feature groups using this feature group, based on explicit
         provenance. These feature groups can be accessible or inaccessible. Explicit
         provenance does not track deleted generated feature group links, so deleted
@@ -533,7 +538,7 @@ class FeatureGroupBase:
         """
         return self._feature_group_engine.get_generated_feature_groups(self)
 
-    def get_feature(self, name: str):
+    def get_feature(self, name: str) -> "feature.Feature":
         """Retrieve a `Feature` object from the schema of the feature group.
 
         There are several ways to access features of a feature group:
@@ -574,7 +579,7 @@ class FeatureGroupBase:
                 f"'FeatureGroup' object has no feature called '{name}'."
             ) from err
 
-    def update_statistics_config(self):
+    def update_statistics_config(self) -> "FeatureGroup":
         """Update the statistics configuration of the feature group.
 
         Change the `statistics_config` object and persist the changes by calling
@@ -629,7 +634,9 @@ class FeatureGroupBase:
         self._feature_group_engine.update_description(self, description)
         return self
 
-    def update_notification_topic_name(self, notification_topic_name: str):
+    def update_notification_topic_name(
+        self, notification_topic_name: str
+    ) -> "FeatureGroup":
         """Update the notification topic name of the feature group.
 
         !!! example
@@ -659,7 +666,7 @@ class FeatureGroupBase:
         )
         return self
 
-    def update_deprecated(self, deprecate: bool = True):
+    def update_deprecated(self, deprecate: bool = True) -> "FeatureGroup":
         """Deprecate the feature group.
 
         !!! example
@@ -686,7 +693,9 @@ class FeatureGroupBase:
         self._feature_group_engine.update_deprecated(self, deprecate)
         return self
 
-    def update_features(self, features: Union[feature.Feature, List[feature.Feature]]):
+    def update_features(
+        self, features: Union[feature.Feature, List[feature.Feature]]
+    ) -> "FeatureGroup":
         """Update metadata of features in this feature group.
 
         Currently it's only supported to update the description of a feature.
@@ -725,7 +734,9 @@ class FeatureGroupBase:
         self._feature_group_engine.update_features(self, new_features)
         return self
 
-    def update_feature_description(self, feature_name: str, description: str):
+    def update_feature_description(
+        self, feature_name: str, description: str
+    ) -> "FeatureGroup":
         """Update the description of a single feature in this feature group.
 
         !!! example
@@ -756,7 +767,9 @@ class FeatureGroupBase:
         self._feature_group_engine.update_features(self, [f_copy])
         return self
 
-    def append_features(self, features: Union[feature.Feature, List[feature.Feature]]):
+    def append_features(
+        self, features: Union[feature.Feature, List[feature.Feature]]
+    ) -> "FeatureGroup":
         """Append features to the schema of the feature group.
 
         !!! example
@@ -782,7 +795,9 @@ class FeatureGroupBase:
             schema.
 
         It is only possible to append features to a feature group. Removing
-        features is considered a breaking change.
+        features is considered a breaking change. Note that feature views built on
+        top of this feature group will not read appended feature data. Create a new
+        feature view based on an updated query via `fg.select` to include the new features.
 
         # Arguments
             features: Feature or list. A feature object or list thereof to append to
@@ -1003,7 +1018,7 @@ class FeatureGroupBase:
     def save_validation_report(
         self,
         validation_report: Union[
-            dict,
+            Dict[str, Any],
             ValidationReport,
             ge.core.expectation_validation_result.ExpectationSuiteValidationResult,
         ],
@@ -1131,7 +1146,7 @@ class FeatureGroupBase:
         ] = None,
         expectation_suite: Optional[ExpectationSuite] = None,
         save_report: Optional[bool] = False,
-        validation_options: Optional[Dict[Any, Any]] = None,
+        validation_options: Optional[Dict[str, Any]] = None,
         ingestion_result: str = "UNKNOWN",
         ge_type: bool = True,
     ) -> Union[ge.core.ExpectationSuiteValidationResult, ValidationReport, None]:
@@ -1190,7 +1205,9 @@ class FeatureGroupBase:
         )
 
     @classmethod
-    def from_response_json(cls, feature_group_json):
+    def from_response_json(
+        cls, feature_group_json
+    ) -> Union["FeatureGroup", "ExternalFeatureGroup", "SpineGroup"]:
         if (
             feature_group_json["type"] == "onDemandFeaturegroupDTO"
             and not feature_group_json["spine"]
@@ -1225,15 +1242,20 @@ class FeatureGroupBase:
             ```python3
             # fetch your feature group
             fg = fs.get_feature_group(name="my_feature_group", version=1)
+
             # fetch all feature monitoring configs attached to the feature group
             fm_configs = fg.get_feature_monitoring_configs()
+
             # fetch a single feature monitoring config by name
             fm_config = fg.get_feature_monitoring_configs(name="my_config")
+
             # fetch all feature monitoring configs attached to a particular feature
             fm_configs = fg.get_feature_monitoring_configs(feature_name="my_feature")
+
             # fetch a single feature monitoring config with a given id
             fm_config = fg.get_feature_monitoring_configs(config_id=1)
             ```
+
         # Arguments
             name: If provided fetch only the feature monitoring config with the given name.
                 Defaults to None.
@@ -1241,11 +1263,13 @@ class FeatureGroupBase:
                 Defaults to None.
             config_id: If provided, fetch only the feature monitoring config with the given id.
                 Defaults to None.
+
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
             `hsfs.client.exceptions.FeatureStoreException`.
             ValueError: if both name and feature_name are provided.
             TypeError: if name or feature_name are not string or None.
+
         # Return
             Union[`FeatureMonitoringConfig`, List[`FeatureMonitoringConfig`], None]
                 A list of feature monitoring configs. If name provided,
@@ -1271,15 +1295,18 @@ class FeatureGroupBase:
         with_statistics: Optional[bool] = True,
     ) -> List["fmr.FeatureMonitoringResult"]:
         """Fetch feature monitoring history for a given feature monitoring config.
+
         !!! example
             ```python3
             # fetch your feature group
             fg = fs.get_feature_group(name="my_feature_group", version=1)
+
             # fetch feature monitoring history for a given feature monitoring config
             fm_history = fg.get_feature_monitoring_history(
                 config_name="my_config",
                 start_time="2020-01-01",
             )
+
             # fetch feature monitoring history for a given feature monitoring config id
             fm_history = fg.get_feature_monitoring_history(
                 config_id=1,
@@ -1288,6 +1315,7 @@ class FeatureGroupBase:
                 with_statistics=False,
             )
             ```
+
         # Arguments
             config_name: The name of the feature monitoring config to fetch history for.
                 Defaults to None.
@@ -1299,11 +1327,13 @@ class FeatureGroupBase:
                 Defaults to None.
             with_statistics: Whether to include statistics in the feature monitoring history.
                 Defaults to True. If False, only metadata about the monitoring will be fetched.
+
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
             `hsfs.client.exceptions.FeatureStoreException`.
             ValueError: if both config_name and config_id are provided.
             TypeError: if config_name or config_id are not respectively string, int or None.
+
         # Return
             List[`FeatureMonitoringResult`]
                 A list of feature monitoring results containing the monitoring metadata
@@ -1333,12 +1363,15 @@ class FeatureGroupBase:
         cron_expression: Optional[str] = "0 0 12 ? * * *",
     ) -> "fmc.FeatureMonitoringConfig":
         """Run a job to compute statistics on snapshot of feature data on a schedule.
+
         !!! experimental
             Public API is subject to change, this feature is not suitable for production use-cases.
+
         !!! example
             ```python3
             # fetch feature group
             fg = fs.get_feature_group(name="my_feature_group", version=1)
+
             # enable statistics monitoring
             my_config = fg.create_statistics_monitoring(
                 name="my_config",
@@ -1351,6 +1384,7 @@ class FeatureGroupBase:
                 row_percentage=0.1,
             ).save()
             ```
+
         # Arguments
             name: Name of the feature monitoring configuration.
                 name must be unique for all configurations attached to the feature group.
@@ -1362,8 +1396,10 @@ class FeatureGroupBase:
             cron_expression: Cron expression to use to schedule the job. The cron expression
                 must be in UTC and follow the Quartz specification. Default is '0 0 12 ? * * *',
                 every day at 12pm UTC.
+
         # Raises
             `hsfs.client.exceptions.FeatureStoreException`.
+
         # Return
             `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
                 Additional information are required before feature monitoring is enabled.
@@ -1393,12 +1429,15 @@ class FeatureGroupBase:
         cron_expression: Optional[str] = "0 0 12 ? * * *",
     ) -> "fmc.FeatureMonitoringConfig":
         """Enable feature monitoring to compare statistics on snapshots of feature data over time.
+
         !!! experimental
             Public API is subject to change, this feature is not suitable for production use-cases.
+
         !!! example
             ```python3
             # fetch feature group
             fg = fs.get_feature_group(name="my_feature_group", version=1)
+
             # enable feature monitoring
             my_config = fg.create_feature_monitoring(
                 name="my_monitoring_config",
@@ -1418,6 +1457,7 @@ class FeatureGroupBase:
                 threshold=0.5,
             ).save()
             ```
+
         # Arguments
             name: Name of the feature monitoring configuration.
                 name must be unique for all configurations attached to the feature group.
@@ -1428,8 +1468,10 @@ class FeatureGroupBase:
             cron_expression: Cron expression to use to schedule the job. The cron expression
                 must be in UTC and follow the Quartz specification. Default is '0 0 12 ? * * *',
                 every day at 12pm UTC.
+
         # Raises
             `hsfs.client.exceptions.FeatureStoreException`.
+
         # Return
             `FeatureMonitoringConfig` Configuration with minimal information about the feature monitoring.
                 Additional information are required before feature monitoring is enabled.
@@ -1449,7 +1491,7 @@ class FeatureGroupBase:
             cron_expression=cron_expression,
         )
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         try:
             return self.__getitem__(name)
         except KeyError as err:
@@ -1459,7 +1501,7 @@ class FeatureGroupBase:
                 "using the `get_feature` method."
             ) from err
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> feature.Feature:
         if not isinstance(name, str):
             raise TypeError(
                 f"Expected type `str`, got `{type(name)}`. "
@@ -1472,7 +1514,7 @@ class FeatureGroupBase:
             raise KeyError(f"'FeatureGroup' object has no feature called '{name}'.")
 
     @property
-    def statistics_config(self):
+    def statistics_config(self) -> "StatisticsConfig":
         """Statistics configuration object defining the settings for statistics
         computation of the feature group.
 
@@ -1483,7 +1525,9 @@ class FeatureGroupBase:
         return self._statistics_config
 
     @statistics_config.setter
-    def statistics_config(self, statistics_config):
+    def statistics_config(
+        self, statistics_config: Optional[Union["StatisticsConfig", dict, bool]]
+    ) -> None:
         self._check_statistics_support()  # raises an error if stats not supported
         if isinstance(statistics_config, StatisticsConfig):
             self._statistics_config = statistics_config
@@ -1501,36 +1545,36 @@ class FeatureGroupBase:
             )
 
     @property
-    def feature_store_id(self):
+    def feature_store_id(self) -> int:
         return self._feature_store_id
 
     @property
-    def feature_store(self):
+    def feature_store(self) -> "feature_store.FeatureStore":
         return self._feature_store
 
     @feature_store.setter
-    def feature_store(self, feature_store):
+    def feature_store(self, feature_store: "feature_store.FeatureStore") -> None:
         self._feature_store = feature_store
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the feature group."""
         return self._name
 
     @property
-    def version(self):
+    def version(self) -> int:
         """Version number of the feature group."""
         return self._version
 
     @version.setter
-    def version(self, version):
+    def version(self, version: int) -> None:
         self._version = version
 
-    def get_fg_name(self):
+    def get_fg_name(self) -> str:
         return f"{self.name}_{self.version}"
 
     @property
-    def statistics(self):
+    def statistics(self) -> Optional[Statistics]:
         """Get the latest computed statistics for the whole feature group.
 
         # Raises
@@ -1540,12 +1584,12 @@ class FeatureGroupBase:
         return self._statistics_engine.get(self)
 
     @property
-    def primary_key(self):
+    def primary_key(self) -> List[str]:
         """List of features building the primary key."""
         return self._primary_key
 
     @primary_key.setter
-    def primary_key(self, new_primary_key):
+    def primary_key(self, new_primary_key: List[str]) -> None:
         self._primary_key = [pk.lower() for pk in new_primary_key]
 
     def get_statistics(
@@ -1610,6 +1654,7 @@ class FeatureGroupBase:
                 be formatted in one of the following formats `%Y-%m-%d`, `%Y-%m-%d %H`, `%Y-%m-%d %H:%M`, `%Y-%m-%d %H:%M:%S`,
                 or `%Y-%m-%d %H:%M:%S.%f`.
             feature_names: List of feature names of which statistics are retrieved.
+
         # Returns
             `Statistics`. Statistics object.
 
@@ -1622,7 +1667,7 @@ class FeatureGroupBase:
             self, computation_time=computation_time, feature_names=feature_names
         )
 
-    def compute_statistics(self):
+    def compute_statistics(self) -> None:
         """Recompute the statistics for the feature group and save them to the
         feature store.
         Statistics are only computed for data in the offline storage of the feature
@@ -1663,22 +1708,22 @@ class FeatureGroupBase:
             )
 
     @property
-    def embedding_index(self):
+    def embedding_index(self) -> Optional["EmbeddingIndex"]:
         if self._embedding_index:
             self._embedding_index.feature_group = self
         return self._embedding_index
 
     @embedding_index.setter
-    def embedding_index(self, embedding_index):
+    def embedding_index(self, embedding_index: Optional["EmbeddingIndex"]) -> None:
         self._embedding_index = embedding_index
 
     @property
-    def event_time(self):
+    def event_time(self) -> Optional[str]:
         """Event time feature in the feature group."""
         return self._event_time
 
     @event_time.setter
-    def event_time(self, feature_name: Optional[str]):
+    def event_time(self, feature_name: Optional[str]) -> None:
         if feature_name is None:
             self._event_time = None
             return
@@ -1701,7 +1746,7 @@ class FeatureGroupBase:
         )
 
     @property
-    def location(self):
+    def location(self) -> str:
         return self._location
 
     @property
@@ -1718,7 +1763,7 @@ class FeatureGroupBase:
         expectation_suite: Union[
             ExpectationSuite, ge.core.ExpectationSuite, dict, None
         ],
-    ):
+    ) -> None:
         if isinstance(expectation_suite, ExpectationSuite):
             tmp_expectation_suite = expectation_suite.to_json_dict(decamelize=True)
             tmp_expectation_suite["feature_group_id"] = self._id
@@ -1754,12 +1799,12 @@ class FeatureGroupBase:
         self._online_enabled = online_enabled
 
     @property
-    def topic_name(self):
+    def topic_name(self) -> Optional[str]:
         """The topic used for feature group data ingestion."""
         return self._topic_name
 
     @topic_name.setter
-    def topic_name(self, topic_name):
+    def topic_name(self, topic_name: Optional[str]) -> None:
         self._topic_name = topic_name
 
     @property
@@ -1768,7 +1813,7 @@ class FeatureGroupBase:
         return self._notification_topic_name
 
     @notification_topic_name.setter
-    def notification_topic_name(self, notification_topic_name: Optional[str]):
+    def notification_topic_name(self, notification_topic_name: Optional[str]) -> None:
         self._notification_topic_name = notification_topic_name
 
     @property
@@ -1781,7 +1826,7 @@ class FeatureGroupBase:
         self._deprecated = deprecated
 
     @property
-    def subject(self):
+    def subject(self) -> Dict[str, Any]:
         """Subject of the feature group."""
         if self._subject is None:
             # cache the schema
@@ -1789,7 +1834,7 @@ class FeatureGroupBase:
         return self._subject
 
     @property
-    def avro_schema(self):
+    def avro_schema(self) -> str:
         """Avro schema representation of the feature group."""
         return self.subject["schema"]
 
@@ -1893,33 +1938,37 @@ class FeatureGroup(FeatureGroupBase):
 
     def __init__(
         self,
-        name,
-        version,
-        featurestore_id,
-        description="",
-        partition_key=None,
-        primary_key=None,
-        hudi_precombine_key=None,
-        featurestore_name=None,
-        embedding_index=None,
-        created=None,
-        creator=None,
-        id=None,
-        features=None,
-        location=None,
-        online_enabled=False,
-        time_travel_format=None,
-        statistics_config=None,
-        online_topic_name=None,
-        topic_name=None,
-        notification_topic_name=None,
-        event_time=None,
-        stream=False,
-        expectation_suite=None,
-        parents=None,
-        href=None,
-        delta_streamer_job_conf=None,
-        deprecated=False,
+        name: str,
+        version: int,
+        featurestore_id: int,
+        description: Optional[str] = "",
+        partition_key: Optional[List[str]] = None,
+        primary_key: Optional[List[str]] = None,
+        hudi_precombine_key: Optional[str] = None,
+        featurestore_name: Optional[str] = None,
+        embedding_index: Optional["EmbeddingIndex"] = None,
+        created: Optional[Union[str, int, date, datetime]] = None,
+        creator: Optional[user.User] = None,
+        id: Optional[int] = None,
+        features: Optional[List["feature.Feature"]] = None,
+        location: Optional[str] = None,
+        online_enabled: bool = False,
+        time_travel_format: Optional[str] = None,
+        statistics_config: Optional["StatisticsConfig"] = None,
+        online_topic_name: Optional[str] = None,
+        topic_name: Optional[str] = None,
+        notification_topic_name: Optional[str] = None,
+        event_time: Optional[str] = None,
+        stream: bool = False,
+        expectation_suite: Optional[
+            Union["ge.core.ExpectationSuite", "ExpectationSuite"]
+        ] = None,
+        parents: Optional[List["explicit_provenance.Links"]] = None,
+        href: Optional[str] = None,
+        delta_streamer_job_conf: Optional[
+            Union[Dict[str, Any], "deltastreamer_jobconf.DeltaStreamerJobConf"]
+        ] = None,
+        deprecated: bool = False,
         **kwargs,
     ):
         super().__init__(
@@ -1937,8 +1986,8 @@ class FeatureGroup(FeatureGroupBase):
             notification_topic_name=notification_topic_name,
             deprecated=deprecated,
         )
-        self._feature_store_name = featurestore_name
-        self._description = description
+        self._feature_store_name: Optional[str] = featurestore_name
+        self._description: Optional[str] = description
         self._created = created
         self._creator = user.User.from_response_json(creator)
         self._features = [
@@ -1954,14 +2003,14 @@ class FeatureGroup(FeatureGroupBase):
         self._parents = parents
         self._deltastreamer_jobconf = delta_streamer_job_conf
 
-        self._materialization_job = None
+        self._materialization_job: "Job" = None
 
         if self._id:
             # initialized by backend
-            self.primary_key = [
+            self.primary_key: List[str] = [
                 feat.name for feat in self._features if feat.primary is True
             ]
-            self._partition_key = [
+            self._partition_key: List[str] = [
                 feat.name for feat in self._features if feat.partition is True
             ]
             if (
@@ -1970,13 +2019,13 @@ class FeatureGroup(FeatureGroupBase):
                 and self._features
             ):
                 # hudi precombine key is always a single feature
-                self._hudi_precombine_key = [
+                self._hudi_precombine_key: Optional[str] = [
                     feat.name
                     for feat in self._features
                     if feat.hudi_precombine_key is True
                 ][0]
             else:
-                self._hudi_precombine_key = None
+                self._hudi_precombine_key: Optional[str] = None
 
             self.statistics_config = statistics_config
 
@@ -2010,24 +2059,31 @@ class FeatureGroup(FeatureGroupBase):
             )
             self.statistics_config = statistics_config
 
-        self._feature_group_engine = feature_group_engine.FeatureGroupEngine(
-            featurestore_id
+        self._feature_group_engine: "feature_group_engine.FeatureGroupEngine" = (
+            feature_group_engine.FeatureGroupEngine(featurestore_id)
         )
-        self._vector_db_client = None
-        self._href = href
+        self._vector_db_client: Optional["VectorDbClient"] = None
+        self._href: Optional[str] = href
 
         # cache for optimized writes
-        self._kafka_producer = None
-        self._feature_writers = None
-        self._writer = None
+        self._kafka_producer: Optional["confluent_kafka.Producer"] = None
+        self._feature_writers: Optional[Dict[str, callable]] = None
+        self._writer: Optional[callable] = None
 
     def read(
         self,
         wallclock_time: Optional[Union[str, int, datetime, date]] = None,
-        online: Optional[bool] = False,
-        dataframe_type: Optional[str] = "default",
+        online: bool = False,
+        dataframe_type: str = "default",
         read_options: Optional[dict] = None,
-    ):
+    ) -> Union[
+        pd.DataFrame,
+        np.ndarray,
+        List[List[Any]],
+        TypeVar("pyspark.sql.DataFrame"),
+        TypeVar("pyspark.RDD"),
+        pl.DataFrame,
+    ]:
         """
         Read the feature group into a dataframe.
 
@@ -2117,7 +2173,14 @@ class FeatureGroup(FeatureGroupBase):
         start_wallclock_time: Union[str, int, datetime, date],
         end_wallclock_time: Union[str, int, datetime, date],
         read_options: Optional[dict] = None,
-    ):
+    ) -> Union[
+        pd.DataFrame,
+        np.ndarray,
+        List[List[Any]],
+        TypeVar("pyspark.sql.DataFrame"),
+        TypeVar("pyspark.RDD"),
+        pl.DataFrame,
+    ]:
         """Reads updates of this feature that occurred between specified points in time.
 
         !!! warning "Deprecated"
@@ -2223,7 +2286,7 @@ class FeatureGroup(FeatureGroupBase):
             for result in results
         ]
 
-    def show(self, n: int, online: Optional[bool] = False):
+    def show(self, n: int, online: Optional[bool] = False) -> List[List[Any]]:
         """Show the first `n` rows of the feature group.
 
         !!! example
@@ -2272,10 +2335,10 @@ class FeatureGroup(FeatureGroupBase):
             np.ndarray,
             List[feature.Feature],
         ] = None,
-        write_options: Optional[Dict[Any, Any]] = None,
-        validation_options: Optional[Dict[Any, Any]] = None,
+        write_options: Optional[Dict[str, Any]] = None,
+        validation_options: Optional[Dict[str, Any]] = None,
         wait: bool = False,
-    ):
+    ) -> Tuple[Optional["Job"], Optional["ge.core.ExpectationSuiteValidationResult"]]:
         """Persist the metadata and materialize the feature group to the feature store.
 
         !!! warning "Changed in 3.3.0"
@@ -2398,7 +2461,7 @@ class FeatureGroup(FeatureGroupBase):
             np.ndarray,
             List[list],
         ],
-        overwrite: Optional[bool] = False,
+        overwrite: bool = False,
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
         write_options: Optional[Dict[str, Any]] = None,
@@ -2574,7 +2637,7 @@ class FeatureGroup(FeatureGroupBase):
             np.ndarray,
             List[list],
         ] = None,
-        overwrite: Optional[bool] = False,
+        overwrite: bool = False,
         operation: Optional[str] = "upsert",
         storage: Optional[str] = None,
         write_options: Optional[Dict[str, Any]] = None,

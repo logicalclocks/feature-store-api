@@ -916,7 +916,7 @@ class FeatureView:
             dataframe_type,
         )
 
-    def add_tag(self, name: str, value: Dict[str, Any]) -> None:
+    def add_tag(self, name: str, value: Any) -> None:
         """Attach a tag to a feature view.
 
         A tag consists of a name and value pair.

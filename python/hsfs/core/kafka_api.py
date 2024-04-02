@@ -14,6 +14,8 @@
 #   limitations under the License.
 #
 
+from typing import Any, Dict
+
 from hsfs import client
 
 
@@ -23,7 +25,7 @@ class KafkaApi:
         feature_store_id: str,
         subject: str,
         version: str = "latest",
-    ):
+    ) -> Dict[str, Any]:
         _client = client.get_instance()
         path_params = [
             "project",
