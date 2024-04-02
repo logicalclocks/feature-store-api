@@ -17,6 +17,7 @@
 from hsfs import client, storage_connector
 from hsfs.core import explicit_provenance
 
+
 class StorageConnectorApi:
     def _get(self, feature_store_id: int, name: str):
         """Returning response dict instead of initialized object."""
@@ -89,8 +90,10 @@ class StorageConnectorApi:
         return storage_connector.StorageConnector.from_response_json(
             _client._send_request("GET", path_params, query_params=query_params)
         )
-    
-    def get_generated_feature_groups(self, storage_connector_instance: storage_connector.StorageConnector):
+
+    def get_generated_feature_groups(
+        self, storage_connector_instance: storage_connector.StorageConnector
+    ):
         """Get the generated feature groups using this storage connector, based on explicit
         provenance. These feature groups can be accessible or inaccessible. Explicit
         provenance does not track deleted generated feature group links, so deleted

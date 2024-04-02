@@ -187,7 +187,7 @@ class Links:
             f"Links({self._accessible!r}, {self._deleted!r}"
             f", {self._inaccessible!r}, {self._faulty!r})"
         )
-    
+
     @staticmethod
     def __parse_storage_connector(links_json: dict, artifacts: Set[str]):
         links = Links()
