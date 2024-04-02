@@ -76,7 +76,7 @@ class TestHudiEngine:
         )
         assert mock_hudi_engine_write_hudi_dataset.call_args[0][1] == "append"
 
-    def test_register_temporary_table(self, mocker):
+    def test_register_temporary_table(self, mocker, backend_fixtures):
         # Arrange
         feature_store_id = 99
 
@@ -101,7 +101,8 @@ class TestHudiEngine:
         )
 
         hudi_fg_alias = hudi_feature_group_alias.HudiFeatureGroupAlias(
-            feature_group="", alias=None
+            feature_group=backend_fixtures["feature_group"]["get"]["response"],
+            alias=None,
         )
 
         # Act
@@ -182,7 +183,7 @@ class TestHudiEngine:
             featurestore_id=99,
             primary_key=["key1", "key2"],
             partition_key=["key3", "key4"],
-            hudi_precombine_key=[],
+            hudi_precombine_key=None,
         )
 
         h_engine = hudi_engine.HudiEngine(
@@ -269,7 +270,7 @@ class TestHudiEngine:
             "test_name": "test_value",
         }
 
-    def test_setup_hudi_read_opts(self, mocker):
+    def test_setup_hudi_read_opts(self, mocker, backend_fixtures):
         # Arrange
         feature_store_id = 99
 
@@ -286,7 +287,7 @@ class TestHudiEngine:
         )
 
         hudi_fg_alias = hudi_feature_group_alias.HudiFeatureGroupAlias(
-            feature_group="",
+            feature_group=backend_fixtures["feature_group"]["get"]["response"],
             alias=None,
             left_feature_group_end_timestamp=None,
             left_feature_group_start_timestamp=None,
@@ -305,7 +306,7 @@ class TestHudiEngine:
             "test_name": "test_value",
         }
 
-    def test_setup_hudi_read_opts_timestamp(self, mocker):
+    def test_setup_hudi_read_opts_timestamp(self, mocker, backend_fixtures):
         # Arrange
         feature_store_id = 99
 
@@ -322,7 +323,7 @@ class TestHudiEngine:
         )
 
         hudi_fg_alias = hudi_feature_group_alias.HudiFeatureGroupAlias(
-            feature_group="",
+            feature_group=backend_fixtures["feature_group"]["get"]["response"],
             alias=None,
             left_feature_group_end_timestamp=2,
             left_feature_group_start_timestamp=1,

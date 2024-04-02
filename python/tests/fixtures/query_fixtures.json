@@ -58,9 +58,9 @@
         "onlineEnabled": true,
         "timeTravelFormat": "HUDI"
       },
-      "left_features": "test_left_features",
+      "left_features": ["intt"],
       "feature_store_name": "test_feature_store_name",
-      "feature_store_id": "test_feature_store_id",
+      "feature_store_id": 67,
       "left_feature_group_start_time": "test_start_time",
       "left_feature_group_end_time": "test_end_time",
       "joins": [
@@ -123,18 +123,18 @@
               "onlineEnabled": true,
               "timeTravelFormat": "HUDI"
             },
-            "left_features": "test_left_features2",
+            "left_features": ["stringt"],
             "feature_store_name": "test_feature_store_name",
-            "feature_store_id": "test_feature_store_id",
+            "feature_store_id": 67,
             "left_feature_group_start_time": "test_left_feature_group_start_time",
             "left_feature_group_end_time": "test_left_feature_group_end_time",
             "joins": [],
             "filter": null
           },
-          "on": "test_on",
-          "left_on": "test_left_on",
-          "right_on": "test_right_on",
-          "type": "test_join_type",
+          "on": ["test_on"],
+          "left_on": ["test_left_on"],
+          "right_on": ["test_right_on"],
+          "join_type": "left",
           "prefix": "test_prefix"
         }
       ],
@@ -252,11 +252,11 @@
         "query": "Select * from ",
         "dataFormat": "HUDI",
         "path": "test_path",
-        "options": [{"name":  "test_name", "value":  "test_value"}]
+        "options": [{ "name": "test_name", "value": "test_value" }]
       },
-      "left_features": "test_left_features",
+      "left_features": ["intt"],
       "feature_store_name": "test_feature_store_name",
-      "feature_store_id": "test_feature_store_id",
+      "feature_store_id": 67,
       "left_feature_group_start_time": "test_start_time",
       "left_feature_group_end_time": "test_end_time",
       "joins": [
@@ -319,18 +319,18 @@
               "onlineEnabled": true,
               "timeTravelFormat": "HUDI"
             },
-            "left_features": "test_left_features",
+            "left_features": ["stringt"],
             "feature_store_name": "test_feature_store_name",
-            "feature_store_id": "test_feature_store_id",
+            "feature_store_id": 67,
             "left_feature_group_start_time": "test_left_feature_group_start_time",
             "left_feature_group_end_time": "test_left_feature_group_end_time",
             "joins": [],
             "filter": null
           },
-          "on": "test_on",
-          "left_on": "test_left_on",
-          "right_on": "test_right_on",
-          "type": "test_join_type",
+          "on": ["test_on"],
+          "left_on": ["test_left_on"],
+          "right_on": ["test_right_on"],
+          "join_type": "left",
           "prefix": "test_prefix"
         }
       ],
@@ -410,7 +410,7 @@
         "timeTravelFormat": "HUDI",
         "deprecated": false
       },
-      "left_features": ""
+      "left_features": []
     }
   },
   "get_basic_info_deprecated": {
@@ -473,7 +473,7 @@
         "timeTravelFormat": "HUDI",
         "deprecated": true
       },
-      "left_features": ""
+      "left_features": []
     }
   }
 }
