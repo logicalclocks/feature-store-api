@@ -19,7 +19,7 @@ from enum import Enum
 from typing import Optional, Set
 
 import humps
-from hsfs import feature_group, feature_view, training_dataset, util, storage_connector
+from hsfs import feature_group, feature_view, storage_connector, training_dataset, util
 
 
 class Artifact:
