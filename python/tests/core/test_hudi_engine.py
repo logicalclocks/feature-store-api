@@ -120,9 +120,7 @@ class TestHudiEngine:
         assert (
             spark_session.read.format.return_value.options.return_value.load.return_value.createOrReplaceTempView.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == hudi_fg_alias.alias
         )
 
@@ -168,9 +166,7 @@ class TestHudiEngine:
         assert (
             dataset.write.format.return_value.options.return_value.mode.return_value.save.call_args[
                 0
-            ][
-                0
-            ]
+            ][0]
             == fg.location
         )
 
@@ -364,18 +360,10 @@ class TestHudiEngine:
         )
 
         spark_context = mocker.Mock()
-        spark_context._jvm.org.apache.hudi.HoodieDataSourceHelpers.allCompletedCommitsCompactions().lastInstant().get().getTimestamp.return_value = (
-            1
-        )
-        spark_context._jvm.org.apache.hudi.common.model.HoodieCommitMetadata.fromBytes().fetchTotalInsertRecordsWritten.return_value = (
-            2
-        )
-        spark_context._jvm.org.apache.hudi.common.model.HoodieCommitMetadata.fromBytes().fetchTotalUpdateRecordsWritten.return_value = (
-            3
-        )
-        spark_context._jvm.org.apache.hudi.common.model.HoodieCommitMetadata.fromBytes().getTotalRecordsDeleted.return_value = (
-            4
-        )
+        spark_context._jvm.org.apache.hudi.HoodieDataSourceHelpers.allCompletedCommitsCompactions().lastInstant().get().getTimestamp.return_value = 1
+        spark_context._jvm.org.apache.hudi.common.model.HoodieCommitMetadata.fromBytes().fetchTotalInsertRecordsWritten.return_value = 2
+        spark_context._jvm.org.apache.hudi.common.model.HoodieCommitMetadata.fromBytes().fetchTotalUpdateRecordsWritten.return_value = 3
+        spark_context._jvm.org.apache.hudi.common.model.HoodieCommitMetadata.fromBytes().getTotalRecordsDeleted.return_value = 4
         mock_util_get_timestamp_from_date_string.return_value = 5
 
         # Act
