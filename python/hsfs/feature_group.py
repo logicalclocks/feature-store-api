@@ -1950,7 +1950,7 @@ class FeatureGroup(FeatureGroupBase):
         created: Optional[Union[str, int, date, datetime]] = None,
         creator: Optional[user.User] = None,
         id: Optional[int] = None,
-        features: Optional[List["feature.Feature"]] = None,
+        features: Optional[List[Union["feature.Feature", Dict[str, Any]]]] = None,
         location: Optional[str] = None,
         online_enabled: bool = False,
         time_travel_format: Optional[str] = None,
@@ -3365,7 +3365,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         created: Optional[Union[str, int, date, datetime]] = None,
         creator: Optional["user.User"] = None,
         id: Optional[int] = None,
-        features: Optional[List["feature.Feature"]] = None,
+        features: Optional[List[Union["feature.Feature", Dict[str, Any]]]] = None,
         location: Optional[str] = None,
         statistics_config: "StatisticsConfig" = None,
         event_time: Optional[str] = None,
@@ -3896,32 +3896,36 @@ class SpineGroup(FeatureGroupBase):
 
     def __init__(
         self,
-        storage_connector=None,
-        query=None,
-        data_format=None,
-        path=None,
-        options=None,
-        name=None,
-        version=None,
-        description=None,
-        primary_key=None,
-        featurestore_id=None,
-        featurestore_name=None,
-        created=None,
-        creator=None,
-        id=None,
-        features=None,
-        location=None,
-        statistics_config=None,
-        event_time=None,
-        expectation_suite=None,
-        online_enabled=False,
-        href=None,
-        online_topic_name=None,
-        topic_name=None,
-        spine=True,
-        dataframe="spine",
-        deprecated=False,
+        storage_connector: Optional[
+            Union["sc.StorageConnector", Dict[str, Any]]
+        ] = None,
+        query: Optional[str] = None,
+        data_format: Optional[str] = None,
+        path: Optional[str] = None,
+        options: Dict[str, Any] = None,
+        name: Optional[str] = None,
+        version: Optional[int] = None,
+        description: Optional[str] = None,
+        primary_key: Optional[List[str]] = None,
+        featurestore_id: Optional[int] = None,
+        featurestore_name: Optional[str] = None,
+        created: Optional[Union[str, int, datetime, date]] = None,
+        creator: Optional["user.User"] = None,
+        id: Optional[int] = None,
+        features: Optional[List[Union["feature.Feature", Dict[str, Any]]]] = None,
+        location: Optional[str] = None,
+        statistics_config: Optional["StatisticsConfig"] = None,
+        event_time: Optional[str] = None,
+        expectation_suite: Optional[
+            Union["ExpectationSuite", "ge.core.ExpectationSuite"]
+        ] = None,
+        online_enabled: bool = False,
+        href: Optional[str] = None,
+        online_topic_name: Optional[str] = None,
+        topic_name: Optional[str] = None,
+        spine: bool = True,
+        dataframe: str = "spine",
+        deprecated: bool = False,
         **kwargs,
     ):
         super().__init__(
@@ -3948,8 +3952,8 @@ class SpineGroup(FeatureGroupBase):
             for feat in (features or [])
         ]
 
-        self._feature_group_engine = spine_group_engine.SpineGroupEngine(
-            featurestore_id
+        self._feature_group_engine: "spine_group_engine.SpineGroupEngine" = (
+            spine_group_engine.SpineGroupEngine(featurestore_id)
         )
 
         if self._id:
@@ -3981,7 +3985,7 @@ class SpineGroup(FeatureGroupBase):
         # use setter to convert to default dataframe type for engine
         self.dataframe = dataframe
 
-    def _save(self):
+    def _save(self) -> "SpineGroup":
         """Persist the metadata for this spine group.
 
         Without calling this method, your feature group will only exist
@@ -4004,14 +4008,23 @@ class SpineGroup(FeatureGroupBase):
         return self
 
     @property
-    def dataframe(self):
+    def dataframe(self) -> Union[pd.DataFrame, TypeVar("pyspark.sql.DataFrame")]:
         """Spine dataframe with primary key, event time and
         label column to use for point in time join when fetching features.
         """
         return self._dataframe
 
     @dataframe.setter
-    def dataframe(self, dataframe):
+    def dataframe(
+        self,
+        dataframe: Union[
+            pd.DataFrame,
+            pl.DataFrame,
+            np.ndarray,
+            TypeVar("pyspark.sql.DataFrame"),
+            TypeVar("pyspark.RDD"),
+        ],
+    ) -> None:
         """Update the spine dataframe contained in the spine group."""
         self._dataframe = engine.get_instance().convert_to_default_dataframe(dataframe)
 
@@ -4029,7 +4042,9 @@ class SpineGroup(FeatureGroupBase):
             )
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(
+        cls, json_dict: Dict[str, Any]
+    ) -> Union["SpineGroup", List["SpineGroup"]]:
         json_decamelized = humps.decamelize(json_dict)
         if isinstance(json_decamelized, dict):
             _ = json_decamelized.pop("type", None)
@@ -4038,17 +4053,17 @@ class SpineGroup(FeatureGroupBase):
             _ = fg.pop("type", None)
         return [cls(**fg) for fg in json_decamelized]
 
-    def update_from_response_json(self, json_dict):
+    def update_from_response_json(self, json_dict: Dict[str, Any]) -> "SpineGroup":
         json_decamelized = humps.decamelize(json_dict)
         if "type" in json_decamelized:
             _ = json_decamelized.pop("type")
         self.__init__(**json_decamelized)
         return self
 
-    def json(self):
+    def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self._id,
             "name": self._name,
