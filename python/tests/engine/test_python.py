@@ -2859,7 +2859,7 @@ class TestPython:
         assert mock_td_api.return_value.compute.call_count == 0
         assert mock_python_engine_wait_for_job.call_count == 0
 
-    def test_write_training_dataset_query_td(self, mocker):
+    def test_write_training_dataset_query_td(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
@@ -2873,7 +2873,10 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        q = query.Query(None, None)
+        fg = feature_group.FeatureGroup.from_response_json(
+            backend_fixtures["feature_group"]["get"]["response"]
+        )
+        q = query.Query(fg, fg.features)
 
         td = training_dataset.TrainingDataset(
             name="test",
@@ -2900,7 +2903,7 @@ class TestPython:
         assert mock_td_api.return_value.compute.call_count == 1
         assert mock_job._wait_for_job.call_count == 1
 
-    def test_write_training_dataset_query_fv(self, mocker):
+    def test_write_training_dataset_query_fv(self, mocker, backend_fixtures):
         # Arrange
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
@@ -2913,7 +2916,10 @@ class TestPython:
 
         python_engine = python.Engine()
 
-        q = query.Query(None, None)
+        fg = feature_group.FeatureGroup.from_response_json(
+            backend_fixtures["feature_group"]["get"]["response"]
+        )
+        q = query.Query(fg, fg.features)
 
         td = training_dataset.TrainingDataset(
             name="test",

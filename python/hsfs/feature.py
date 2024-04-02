@@ -205,13 +205,13 @@ class Feature:
         self._hudi_precombine_key = hudi_precombine_key
 
     @property
-    def default_value(self) -> str:
+    def default_value(self) -> Optional[str]:
         """Default value of the feature as string, if the feature was appended to the
         feature group."""
         return self._default_value
 
     @default_value.setter
-    def default_value(self, default_value: str) -> None:
+    def default_value(self, default_value: Optional[str]) -> None:
         self._default_value = default_value
 
     @property

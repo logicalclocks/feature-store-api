@@ -1,7 +1,7 @@
 {
   "get": {
     "response": {
-      "defaultValue": 1,
+      "defaultValue": "1",
       "featureGroupId": 15,
       "hudiPrecombineKey": true,
       "name": "intt",

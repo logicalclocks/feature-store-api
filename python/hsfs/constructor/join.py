@@ -51,7 +51,7 @@ class Join:
         on: Optional[List[str]],
         left_on: Optional[List[str]],
         right_on: Optional[List[str]],
-        join_type: str,
+        join_type: Optional[str],
         prefix: Optional[str],
         **kwargs,
     ) -> None:

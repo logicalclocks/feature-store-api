@@ -34,7 +34,7 @@ class TestFeature:
         assert f.partition is False
         assert f.hudi_precombine_key is True
         assert f.online_type == "int"
-        assert f.default_value == 1
+        assert f.default_value == "1"  # default value should be specified as string
         assert f._feature_group_id == 15
 
     def test_from_response_json_basic_info(self, backend_fixtures):
