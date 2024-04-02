@@ -15,6 +15,7 @@
 #
 
 import json
+import sys
 from typing import Any, Dict, List, Optional, Union
 
 import hsfs
@@ -23,6 +24,20 @@ from hsfs import util
 from hsfs.constructor import filter
 
 
+if "pytest" in sys.modules:
+    from typeguard import typechecked
+else:
+    from typing import TypeVar
+
+    _T = TypeVar("_T")
+
+    def typechecked(
+        target: _T,
+    ) -> _T:
+        return target if target else typechecked
+
+
+@typechecked
 class Feature:
     """Metadata object representing a feature in a feature group in the Feature Store.
 

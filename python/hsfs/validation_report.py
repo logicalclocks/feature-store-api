@@ -44,14 +44,14 @@ class ValidationReport:
         featurestore_id: Optional[int] = None,
         featuregroup_id: Optional[int] = None,
         href: Optional[str] = None,
-        expand=None,
+        expand: bool = None,
         items: Optional[Dict[str, Any]] = None,
         count: Optional[int] = None,
         type: Optional[str] = None,
         validation_time: Optional[str] = None,
         ingestion_result: str = "UNKNOWN",
         **kwargs,
-    ):
+    ) -> None:
         self._id = id
         self._success = success
         self._full_report_path = full_report_path

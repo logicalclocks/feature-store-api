@@ -16,6 +16,7 @@
 
 import copy
 import json
+import sys
 import time
 import warnings
 from datetime import date, datetime
@@ -72,6 +73,20 @@ from hsfs.statistics_config import StatisticsConfig
 from hsfs.validation_report import ValidationReport
 
 
+if "pytest" in sys.modules:
+    from typeguard import typechecked
+else:
+    from typing import TypeVar
+
+    _T = TypeVar("_T")
+
+    def typechecked(
+        target: _T,
+    ) -> _T:
+        return target if target else typechecked
+
+
+@typechecked
 class FeatureGroupBase:
     def __init__(
         self,
@@ -157,7 +172,7 @@ class FeatureGroupBase:
 
         self.check_deprecated()
 
-    def check_deprecated(self):
+    def check_deprecated(self) -> None:
         if self.deprecated:
             warnings.warn(
                 f"Feature Group `{self._name}`, version `{self._version}` is deprecated",
@@ -607,7 +622,7 @@ class FeatureGroupBase:
         self._feature_group_engine.update_statistics_config(self)
         return self
 
-    def update_description(self, description: str):
+    def update_description(self, description: str) -> "FeatureGroupBase":
         """Update the description of the feature group.
 
         !!! example
@@ -636,7 +651,7 @@ class FeatureGroupBase:
 
     def update_notification_topic_name(
         self, notification_topic_name: str
-    ) -> "FeatureGroup":
+    ) -> "FeatureGroupBase":
         """Update the notification topic name of the feature group.
 
         !!! example
@@ -1206,7 +1221,7 @@ class FeatureGroupBase:
 
     @classmethod
     def from_response_json(
-        cls, feature_group_json
+        cls, feature_group_json: Dict[str, Any]
     ) -> Union["FeatureGroup", "ExternalFeatureGroup", "SpineGroup"]:
         if (
             feature_group_json["type"] == "onDemandFeaturegroupDTO"
@@ -1931,6 +1946,7 @@ class FeatureGroupBase:
         return util.strip_feature_store_suffix(self.feature_store_name)
 
 
+@typechecked
 class FeatureGroup(FeatureGroupBase):
     CACHED_FEATURE_GROUP = "CACHED_FEATURE_GROUP"
     STREAM_FEATURE_GROUP = "STREAM_FEATURE_GROUP"
@@ -1970,7 +1986,7 @@ class FeatureGroup(FeatureGroupBase):
         ] = None,
         deprecated: bool = False,
         **kwargs,
-    ):
+    ) -> None:
         super().__init__(
             name,
             version,
@@ -2929,7 +2945,7 @@ class FeatureGroup(FeatureGroupBase):
         self,
         delete_df: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
         write_options: Optional[Dict[Any, Any]] = None,
-    ):
+    ) -> None:
         """Drops records present in the provided DataFrame and commits it as update to this
         Feature group. This method can only be used on feature groups stored as HUDI or DELTA.
 
@@ -3345,6 +3361,7 @@ class FeatureGroup(FeatureGroupBase):
         self._parents = new_parents
 
 
+@typechecked
 class ExternalFeatureGroup(FeatureGroupBase):
     EXTERNAL_FEATURE_GROUP = "ON_DEMAND_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"
@@ -3890,6 +3907,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         return self._feature_store_name
 
 
+@typechecked
 class SpineGroup(FeatureGroupBase):
     SPINE_GROUP = "ON_DEMAND_FEATURE_GROUP"
     ENTITY_TYPE = "featuregroups"
@@ -3927,7 +3945,7 @@ class SpineGroup(FeatureGroupBase):
         dataframe: str = "spine",
         deprecated: bool = False,
         **kwargs,
-    ):
+    ) -> None:
         super().__init__(
             name,
             version,

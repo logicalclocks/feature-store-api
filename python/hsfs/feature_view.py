@@ -16,6 +16,7 @@
 
 import copy
 import json
+import sys
 import warnings
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, Union
@@ -75,7 +76,20 @@ SplineDataFrameTypes = Union[
     TypeVar("SplineGroup"),  # noqa: F821
 ]
 
+if "pytest" in sys.modules:
+    from typeguard import typechecked
+else:
+    from typing import TypeVar
 
+    _T = TypeVar("_T")
+
+    def typechecked(
+        target: _T,
+    ) -> _T:
+        return target if target else typechecked
+
+
+@typechecked
 class FeatureView:
     ENTITY_TYPE = "featureview"
 
@@ -94,7 +108,7 @@ class FeatureView:
         featurestore_name: Optional[str] = None,
         serving_keys: Optional[List[ServingKey]] = None,
         **kwargs,
-    ):
+    ) -> None:
         self._name = name
         self._id = id
         self._query = query
@@ -705,7 +719,12 @@ class FeatureView:
             self, entry, return_type
         )
 
-    def _update_with_vector_db_result(self, vec_server, entry, passed_features):
+    def _update_with_vector_db_result(
+        self,
+        vec_server: "vector_server.VectorServer",
+        entry: Dict[str, Any],
+        passed_features: Optional[Dict[str, Any]],
+    ) -> Optional[Dict[str, Any]]:
         if not self._vector_db_client:
             return passed_features
         for join_index, fg in self._vector_db_client.embedding_fg_by_join_index.items():
@@ -801,7 +820,7 @@ class FeatureView:
             allow_missing=True,
         )
 
-    def _extract_primary_key(self, result_key) -> Dict[str, str]:
+    def _extract_primary_key(self, result_key: Dict[str, str]) -> Dict[str, str]:
         primary_key_map = {}
         for prefix_sk, sk in self._prefix_serving_key_map.items():
             if prefix_sk in result_key:
@@ -826,11 +845,11 @@ class FeatureView:
         self,
         start_time: Optional[Union[str, int, datetime, date]] = None,
         end_time: Optional[Union[str, int, datetime, date]] = None,
-        read_options=None,
+        read_options: Optional[Dict[str, Any]] = None,
         spine: Optional[SplineDataFrameTypes] = None,
-        primary_keys=False,
-        event_time=False,
-        inference_helper_columns=False,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        inference_helper_columns: bool = False,
         dataframe_type: Optional[str] = "default",
     ) -> TrainingDatasetDataFrameTypes:
         """Get a batch of data from an event time interval from the offline feature store.
@@ -2504,7 +2523,7 @@ class FeatureView:
         validation_start: Optional[Union[str, int, datetime, date]],
         validation_end: Optional[Union[str, int, datetime, date]],
         test_start: Optional[Union[str, int, datetime, date]],
-    ):
+    ) -> None:
         if not (
             (validation_size and 0 < validation_size < 1)
             and (test_size and 0 < test_size < 1)
@@ -2665,12 +2684,12 @@ class FeatureView:
     @usage.method_logger
     def get_train_validation_test_split(
         self,
-        training_dataset_version,
-        read_options: Optional[Dict[Any, Any]] = None,
-        primary_keys=False,
-        event_time=False,
-        training_helper_columns=False,
-        dataframe_type: Optional[str] = "default",
+        training_dataset_version: int,
+        read_options: Optional[Dict[str, Any]] = None,
+        primary_keys: bool = False,
+        event_time: bool = False,
+        training_helper_columns: bool = False,
+        dataframe_type: str = "default",
     ) -> Tuple[
         TrainingDatasetDataFrameTypes,
         TrainingDatasetDataFrameTypes,
@@ -3328,7 +3347,7 @@ class FeatureView:
         return self
 
     @staticmethod
-    def _update_attribute_if_present(this, new: Any, key: str) -> None:
+    def _update_attribute_if_present(this: "FeatureView", new: Any, key: str) -> None:
         if getattr(new, key):
             setattr(this, key, getattr(new, key))
 
@@ -3377,7 +3396,7 @@ class FeatureView:
         return self._featurestore_id
 
     @featurestore_id.setter
-    def featurestore_id(self, id) -> None:
+    def featurestore_id(self, id: Optional[int]) -> None:
         self._featurestore_id = id
 
     @property
@@ -3412,7 +3431,7 @@ class FeatureView:
         return self._labels
 
     @labels.setter
-    def labels(self, labels: List[str]):
+    def labels(self, labels: List[str]) -> None:
         self._labels = [lb.lower() for lb in labels]
 
     @property
@@ -3470,7 +3489,7 @@ class FeatureView:
     def transformation_functions(
         self,
         transformation_functions: Dict[str, "TransformationFunction"],
-    ):
+    ) -> None:
         self._transformation_functions = transformation_functions
 
     @property

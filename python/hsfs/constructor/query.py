@@ -15,6 +15,7 @@
 #
 
 import json
+import sys
 import warnings
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
@@ -31,6 +32,20 @@ from hsfs.core import arrow_flight_client, query_constructor_api, storage_connec
 from hsfs.feature import Feature
 
 
+if "pytest" in sys.modules:
+    from typeguard import typechecked
+else:
+    from typing import TypeVar
+
+    _T = TypeVar("_T")
+
+    def typechecked(
+        target: _T,
+    ) -> _T:
+        return target if target else typechecked
+
+
+@typechecked
 class Query:
     ERROR_MESSAGE_FEATURE_AMBIGUOUS = (
         "Provided feature name '{}' is ambiguous and exists in more than one feature group. "
@@ -385,7 +400,7 @@ class Query:
         self,
         wallclock_start_time: Union[str, int, date, datetime],
         wallclock_end_time: Union[str, int, date, datetime],
-    ):
+    ) -> "Query":
         """
         !!! warning "Deprecated"
         `pull_changes` method is deprecated. Use
@@ -605,11 +620,15 @@ class Query:
         return self._left_feature_group_end_time
 
     @left_feature_group_start_time.setter
-    def left_feature_group_start_time(self, left_feature_group_start_time) -> None:
+    def left_feature_group_start_time(
+        self, left_feature_group_start_time: Optional[Union[str, int, datetime, date]]
+    ) -> None:
         self._left_feature_group_start_time = left_feature_group_start_time
 
     @left_feature_group_end_time.setter
-    def left_feature_group_end_time(self, left_feature_group_end_time) -> None:
+    def left_feature_group_end_time(
+        self, left_feature_group_end_time: Optional[Union[str, int, date, datetime]]
+    ) -> None:
         self._left_feature_group_end_time = left_feature_group_end_time
 
     def append_feature(self, feature: Union[str, "Feature"]) -> "Query":

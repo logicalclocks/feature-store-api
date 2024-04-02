@@ -16,6 +16,7 @@
 #
 
 import datetime
+import sys
 import warnings
 from typing import Any, Dict, List, Optional, TypeVar, Union
 
@@ -50,6 +51,20 @@ from hsfs.statistics_config import StatisticsConfig
 from hsfs.transformation_function import TransformationFunction
 
 
+if "pytest" in sys.modules:
+    from typeguard import typechecked
+else:
+    from typing import TypeVar
+
+    _T = TypeVar("_T")
+
+    def typechecked(
+        target: _T,
+    ) -> _T:
+        return target if target else typechecked
+
+
+@typechecked
 class FeatureStore:
     DEFAULT_VERSION = 1
 
@@ -71,7 +86,7 @@ class FeatureStore:
         mysql_server_endpoint: Optional[str] = None,
         online_featurestore_size: Optional[int] = None,
         **kwargs,
-    ):
+    ) -> None:
         self._id = featurestore_id
         self._name = featurestore_name
         self._created = created

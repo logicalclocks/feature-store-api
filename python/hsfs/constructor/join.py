@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+import sys
 from typing import Any, Dict, List, Optional
 
 import humps
@@ -21,6 +22,20 @@ from hsfs import util
 from hsfs.constructor import query
 
 
+if "pytest" in sys.modules:
+    from typeguard import typechecked
+else:
+    from typing import TypeVar
+
+    _T = TypeVar("_T")
+
+    def typechecked(
+        target: _T,
+    ) -> _T:
+        return target if target else typechecked
+
+
+@typechecked
 class Join:
     INNER = "INNER"
     LEFT = "LEFT"
