@@ -2629,13 +2629,15 @@ class FeatureGroup(FeatureGroupBase):
 
     def multi_part_insert(
         self,
-        features: Union[
-            pd.DataFrame,
-            pl.DataFrame,
-            TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
-            TypeVar("pyspark.RDD"),  # noqa: F821
-            np.ndarray,
-            List[list],
+        features: Optional[
+            Union[
+                pd.DataFrame,
+                pl.DataFrame,
+                TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
+                TypeVar("pyspark.RDD"),  # noqa: F821
+                np.ndarray,
+                List[list],
+            ]
         ] = None,
         overwrite: bool = False,
         operation: Optional[str] = "upsert",
@@ -2760,7 +2762,7 @@ class FeatureGroup(FeatureGroupBase):
                 validation_options or {},
             )
 
-    def finalize_multi_part_insert(self):
+    def finalize_multi_part_insert(self) -> None:
         """Finalizes and exits the multi part insert context opened by `multi_part_insert`
         in a blocking fashion once all rows have been transmitted.
 
@@ -2795,11 +2797,11 @@ class FeatureGroup(FeatureGroupBase):
         features: TypeVar("pyspark.sql.DataFrame"),  # noqa: F821
         query_name: Optional[str] = None,
         output_mode: Optional[str] = "append",
-        await_termination: Optional[bool] = False,
+        await_termination: bool = False,
         timeout: Optional[int] = None,
         checkpoint_dir: Optional[str] = None,
-        write_options: Optional[Dict[Any, Any]] = None,
-    ):
+        write_options: Optional[Dict[str, Any]] = None,
+    ) -> TypeVar("StreamingQuery"):
         """Ingest a Spark Structured Streaming Dataframe to the online feature store.
 
         This method creates a long running Spark Streaming Query, you can control the
@@ -2892,7 +2894,7 @@ class FeatureGroup(FeatureGroupBase):
         self,
         wallclock_time: Optional[Union[str, int, datetime, date]] = None,
         limit: Optional[int] = None,
-    ):
+    ) -> Dict[str, Dict[str, str]]:
         """Retrieves commit timeline for this feature group. This method can only be used
         on time travel enabled feature groups
 
@@ -2944,7 +2946,7 @@ class FeatureGroup(FeatureGroupBase):
         self,
         wallclock_time: Optional[Union[str, int, datetime, date]] = None,
         exclude_until: Optional[Union[str, int, datetime, date]] = None,
-    ):
+    ) -> "query.Query":
         """Get Query object to retrieve all features of the group at a point in the past.
 
         !!! warning "Pyspark/Spark Only"
@@ -3042,7 +3044,7 @@ class FeatureGroup(FeatureGroupBase):
         from_commit_time: Optional[Union[str, int, datetime, date]] = None,
         to_commit_time: Optional[Union[str, int, datetime, date]] = None,
         feature_names: Optional[List[str]] = None,
-    ):
+    ) -> Optional[Union["Statistics", List["Statistics"]]]:
         """Returns the statistics computed on a specific commit window for this feature group. If time travel is not enabled, it raises an exception.
 
         If `from_commit_time` is `None`, the commit window starts from the first commit.
@@ -3080,7 +3082,7 @@ class FeatureGroup(FeatureGroupBase):
 
     def compute_statistics(
         self, wallclock_time: Optional[Union[str, int, datetime, date]] = None
-    ):
+    ) -> None:
         """Recompute the statistics for the feature group and save them to the
         feature store.
 
@@ -3131,7 +3133,9 @@ class FeatureGroup(FeatureGroupBase):
         return super().compute_statistics()
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(
+        cls, json_dict: Union[Dict[str, Any], List[Dict[str, Any]]]
+    ) -> Union["FeatureGroup", List["FeatureGroup"]]:
         json_decamelized = humps.decamelize(json_dict)
         if isinstance(json_decamelized, dict):
             if "type" in json_decamelized:
@@ -3156,7 +3160,7 @@ class FeatureGroup(FeatureGroupBase):
                 )
         return [cls(**fg) for fg in json_decamelized]
 
-    def update_from_response_json(self, json_dict):
+    def update_from_response_json(self, json_dict: Dict[str, Any]) -> "FeatureGroup":
         json_decamelized = humps.decamelize(json_dict)
         json_decamelized["stream"] = json_decamelized["type"] == "streamFeatureGroupDTO"
         _ = json_decamelized.pop("type")
@@ -3167,7 +3171,7 @@ class FeatureGroup(FeatureGroupBase):
         self.__init__(**json_decamelized)
         return self
 
-    def json(self):
+    def json(self) -> str:
         """Get specific Feature Group metadata in json format.
 
         !!! example
@@ -3177,7 +3181,7 @@ class FeatureGroup(FeatureGroupBase):
         """
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Get structured info about specific Feature Group in python dictionary format.
 
         !!! example
@@ -3217,10 +3221,10 @@ class FeatureGroup(FeatureGroupBase):
             fg_meta_dict["deltaStreamerJobConf"] = self._deltastreamer_jobconf
         return fg_meta_dict
 
-    def _get_table_name(self):
+    def _get_table_name(self) -> str:
         return self.feature_store_name + "." + self.get_fg_name()
 
-    def _is_time_travel_enabled(self):
+    def _is_time_travel_enabled(self) -> bool:
         """Whether time-travel is enabled or not"""
         return (
             self._time_travel_format is not None
@@ -3228,58 +3232,58 @@ class FeatureGroup(FeatureGroupBase):
         )
 
     @property
-    def id(self):
+    def id(self) -> Optional[int]:
         """Feature group id."""
         return self._id
 
     @property
-    def description(self):
+    def description(self) -> Optional[str]:
         """Description of the feature group contents."""
         return self._description
 
     @property
-    def time_travel_format(self):
+    def time_travel_format(self) -> Optional[str]:
         """Setting of the feature group time travel format."""
         return self._time_travel_format
 
     @property
-    def partition_key(self):
+    def partition_key(self) -> List[str]:
         """List of features building the partition key."""
         return self._partition_key
 
     @property
-    def hudi_precombine_key(self):
+    def hudi_precombine_key(self) -> Optional[str]:
         """Feature name that is the hudi precombine key."""
         return self._hudi_precombine_key
 
     @property
-    def feature_store_name(self):
+    def feature_store_name(self) -> Optional[str]:
         """Name of the feature store in which the feature group is located."""
         return self._feature_store_name
 
     @property
-    def creator(self):
+    def creator(self) -> "user.User":
         """Username of the creator."""
         return self._creator
 
     @property
-    def created(self):
+    def created(self) -> int:
         """Timestamp when the feature group was created."""
         return self._created
 
     @property
-    def stream(self):
+    def stream(self) -> bool:
         """Whether to enable real time stream writing capabilities."""
         return self._stream
 
     @property
-    def parents(self):
+    def parents(self) -> List["explicit_provenance.Links"]:
         """Parent feature groups as origin of the data in the current feature group.
         This is part of explicit provenance"""
         return self._parents
 
     @property
-    def materialization_job(self):
+    def materialization_job(self) -> "Job":
         """Get the Job object reference for the materialization job for this
         Feature Group."""
         if self._materialization_job is not None:
@@ -3304,7 +3308,7 @@ class FeatureGroup(FeatureGroupBase):
             raise FeatureStoreException("No materialization job was found")
 
     @property
-    def statistics(self):
+    def statistics(self) -> "Statistics":
         """Get the latest computed statistics for the whole feature group."""
         if self._is_time_travel_enabled():
             # retrieve the latests statistics computed on the whole Feature Group, including all the commits.
@@ -3317,27 +3321,27 @@ class FeatureGroup(FeatureGroupBase):
         return super().statistics
 
     @description.setter
-    def description(self, new_description):
+    def description(self, new_description: Optional[str]) -> None:
         self._description = new_description
 
     @time_travel_format.setter
-    def time_travel_format(self, new_time_travel_format):
+    def time_travel_format(self, new_time_travel_format: Optional[str]) -> None:
         self._time_travel_format = new_time_travel_format
 
     @partition_key.setter
-    def partition_key(self, new_partition_key):
+    def partition_key(self, new_partition_key: List[str]) -> None:
         self._partition_key = [pk.lower() for pk in new_partition_key]
 
     @hudi_precombine_key.setter
-    def hudi_precombine_key(self, hudi_precombine_key):
+    def hudi_precombine_key(self, hudi_precombine_key: str) -> None:
         self._hudi_precombine_key = hudi_precombine_key.lower()
 
     @stream.setter
-    def stream(self, stream):
+    def stream(self, stream: bool) -> None:
         self._stream = stream
 
     @parents.setter
-    def parents(self, new_parents):
+    def parents(self, new_parents: "explicit_provenance.Links") -> None:
         self._parents = new_parents
 
 
@@ -3347,35 +3351,37 @@ class ExternalFeatureGroup(FeatureGroupBase):
 
     def __init__(
         self,
-        storage_connector,
-        query=None,
-        data_format=None,
-        path=None,
-        options=None,
-        name=None,
-        version=None,
-        description=None,
-        primary_key=None,
-        featurestore_id=None,
-        featurestore_name=None,
-        created=None,
-        creator=None,
-        id=None,
-        features=None,
-        location=None,
-        statistics_config=None,
-        event_time=None,
-        expectation_suite=None,
-        online_enabled=False,
-        href=None,
-        online_topic_name=None,
-        topic_name=None,
-        notification_topic_name=None,
-        spine=False,
-        deprecated=False,
-        embedding_index=None,
+        storage_connector: Union["storage_connector.StorageConnector", Dict[str, Any]],
+        query: Optional[str] = None,
+        data_format: Optional[str] = None,
+        path: Optional[str] = None,
+        options: Optional[Dict[str, Any]] = None,
+        name: Optional[str] = None,
+        version: Optional[int] = None,
+        description: Optional[str] = None,
+        primary_key: Optional[List[str]] = None,
+        featurestore_id: Optional[int] = None,
+        featurestore_name: Optional[str] = None,
+        created: Optional[Union[str, int, date, datetime]] = None,
+        creator: Optional["user.User"] = None,
+        id: Optional[int] = None,
+        features: Optional[List["feature.Feature"]] = None,
+        location: Optional[str] = None,
+        statistics_config: "StatisticsConfig" = None,
+        event_time: Optional[str] = None,
+        expectation_suite: Optional[
+            Union["ExpectationSuite", "ge.core.ExpectationSuite"]
+        ] = None,
+        online_enabled: bool = False,
+        href: Optional[str] = None,
+        online_topic_name: Optional[str] = None,
+        topic_name: Optional[str] = None,
+        notification_topic_name: Optional[str] = None,
+        spine: bool = False,
+        deprecated: bool = False,
+        embedding_index: "EmbeddingIndex" = None,
         **kwargs,
-    ):
+    ) -> None:
         super().__init__(
             name,
             version,
@@ -3405,8 +3411,8 @@ class ExternalFeatureGroup(FeatureGroupBase):
             for feat in (features or [])
         ]
 
-        self._feature_group_engine = (
-            external_feature_group_engine.ExternalFeatureGroupEngine(featurestore_id)
+        self._feature_group_engine: "external_feature_group_engine.ExternalFeatureGroupEngine" = external_feature_group_engine.ExternalFeatureGroupEngine(
+            featurestore_id
         )
 
         if self._id:
@@ -3444,11 +3450,13 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 storage_connector
             )
         else:
-            self._storage_connector = storage_connector
-        self._vector_db_client = None
-        self._href = href
+            self._storage_connector: "storage_connector.StorageConnector" = (
+                storage_connector
+            )
+        self._vector_db_client: Optional["VectorDbClient"] = None
+        self._href: Optional[str] = href
 
-    def save(self):
+    def save(self) -> None:
         """Persist the metadata for this external feature group.
 
         Without calling this method, your feature group will only exist
@@ -3487,7 +3495,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
         validation_options: Optional[Dict[str, Any]] = None,
         save_code: Optional[bool] = True,
         wait: bool = False,
-    ) -> Tuple[Optional[Job], Optional[ValidationReport]]:
+    ) -> Tuple[None, Optional["ge.core.ExpectationSuiteValidationResult"]]:
         """Insert the dataframe feature values ONLY in the online feature store.
 
         External Feature Groups contains metadata about feature data in an external storage system.
@@ -3542,7 +3550,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 code. Defaults to `True`.
 
         # Returns
-            Tuple(`Job`, `ValidationReport`) The validation report if validation is enabled.
+            Tuple(None, `ge.core.ExpectationSuiteValidationResult`) The validation report if validation is enabled.
 
         # Raises
             `hsfs.client.exceptions.RestAPIError`. e.g fail to create feature group, dataframe schema does not match
@@ -3589,10 +3597,16 @@ class ExternalFeatureGroup(FeatureGroupBase):
 
     def read(
         self,
-        dataframe_type: Optional[str] = "default",
-        online: Optional[bool] = False,
-        read_options: Optional[dict] = None,
-    ):
+        dataframe_type: str = "default",
+        online: bool = False,
+        read_options: Optional[Dict[str, Any]] = None,
+    ) -> Union[
+        TypeVar("pyspark.sql.DataFrame"),
+        TypeVar("pyspark.RDD"),
+        pd.DataFrame,
+        pl.DataFrame,
+        np.ndarray,
+    ]:
         """Get the feature group as a DataFrame.
 
         !!! example
@@ -3660,7 +3674,7 @@ class ExternalFeatureGroup(FeatureGroupBase):
             read_options=read_options or {},
         )
 
-    def show(self, n: int, online: Optional[bool] = False):
+    def show(self, n: int, online: bool = False) -> List[List[Any]]:
         """Show the first `n` rows of the feature group.
 
         !!! example
@@ -3766,7 +3780,9 @@ class ExternalFeatureGroup(FeatureGroupBase):
         ]
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(
+        cls, json_dict: Dict[str, Any]
+    ) -> Union["ExternalFeatureGroup", List["ExternalFeatureGroup"]]:
         json_decamelized = humps.decamelize(json_dict)
         if isinstance(json_decamelized, dict):
             _ = json_decamelized.pop("type", None)
@@ -3783,7 +3799,9 @@ class ExternalFeatureGroup(FeatureGroupBase):
                 )
         return [cls(**fg) for fg in json_decamelized]
 
-    def update_from_response_json(self, json_dict):
+    def update_from_response_json(
+        self, json_dict: Dict[str, Any]
+    ) -> "ExternalFeatureGroup":
         json_decamelized = humps.decamelize(json_dict)
         if "type" in json_decamelized:
             _ = json_decamelized.pop("type")
@@ -3794,10 +3812,10 @@ class ExternalFeatureGroup(FeatureGroupBase):
         self.__init__(**json_decamelized)
         return self
 
-    def json(self):
+    def json(self) -> str:
         return json.dumps(self, cls=util.FeatureStoreEncoder)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         fg_meta_dict = {
             "id": self._id,
             "name": self._name,
@@ -3827,47 +3845,47 @@ class ExternalFeatureGroup(FeatureGroupBase):
         return fg_meta_dict
 
     @property
-    def id(self):
+    def id(self) -> Optional[int]:
         return self._id
 
     @property
-    def description(self):
+    def description(self) -> Optional[str]:
         return self._description
 
     @property
-    def query(self):
+    def query(self) -> Optional[str]:
         return self._query
 
     @property
-    def data_format(self):
+    def data_format(self) -> Optional[str]:
         return self._data_format
 
     @property
-    def path(self):
+    def path(self) -> Optional[str]:
         return self._path
 
     @property
-    def options(self):
+    def options(self) -> Optional[Dict[str, Any]]:
         return self._options
 
     @property
-    def storage_connector(self):
+    def storage_connector(self) -> "storage_connector.StorageConnector":
         return self._storage_connector
 
     @property
-    def creator(self):
+    def creator(self) -> "user.User":
         return self._creator
 
     @property
-    def created(self):
+    def created(self) -> int:
         return self._created
 
     @description.setter
-    def description(self, new_description):
+    def description(self, new_description: Optional[str]) -> None:
         self._description = new_description
 
     @property
-    def feature_store_name(self):
+    def feature_store_name(self) -> Optional[str]:
         """Name of the feature store in which the feature group is located."""
         return self._feature_store_name
 
