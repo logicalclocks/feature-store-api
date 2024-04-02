@@ -410,7 +410,7 @@
         "timeTravelFormat": "HUDI",
         "deprecated": false
       },
-      "left_features": []
+      "left_features": ["intt"]
     }
   },
   "get_basic_info_deprecated": {
@@ -473,7 +473,7 @@
         "timeTravelFormat": "HUDI",
         "deprecated": true
       },
-      "left_features": []
+      "left_features": ["intt"]
     }
   }
 }

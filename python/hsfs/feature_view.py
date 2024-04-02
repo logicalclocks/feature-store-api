@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import copy
 import json
-import sys
+import os
 import warnings
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, Union
@@ -77,7 +77,7 @@ SplineDataFrameTypes = Union[
     TypeVar("SplineGroup"),  # noqa: F821
 ]
 
-if "pytest" in sys.modules:
+if os.environ.get("HOPSWORKS_RUN_WITH_TYPECHECK", False):
     from typeguard import typechecked
 else:
     from typing import TypeVar

@@ -108,6 +108,31 @@ jobs:
           ENABLE_HOPSWORKS_USAGE: "false"
         run: pytest python/tests
 
+  unit_tests_ubuntu_typechecked:
+    name: Typechecked Unit Testing (Ubuntu)
+    needs: lint_stylecheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Copy README
+        run: cp README.md python/
+
+      - uses: actions/setup-python@v4
+        name: Setup Python
+        with:
+          python-version: "3.10"
+          cache: "pip"
+          cache-dependency-path: "python/setup.py"
+      - run: pip install -e python[python,dev,docs]
+
+      - name: Run Pytest suite
+        env:
+          ENABLE_HOPSWORKS_USAGE: "false"
+          HOPSWORKS_RUN_WITH_TYPECHECK: "true"
+        run: pytest python/tests
+        continue-on-error: true
+
   unit_tests_windows_utc:
     name: Unit Testing (Windows)
     needs: lint_stylecheck

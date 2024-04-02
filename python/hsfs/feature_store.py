@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import datetime
-import sys
+import os
 import warnings
 from typing import Any, Dict, List, Optional, TypeVar, Union
 
@@ -52,7 +52,7 @@ from hsfs.statistics_config import StatisticsConfig
 from hsfs.transformation_function import TransformationFunction
 
 
-if "pytest" in sys.modules:
+if os.environ.get("HOPSWORKS_RUN_WITH_TYPECHECK", False):
     from typeguard import typechecked
 else:
     from typing import TypeVar

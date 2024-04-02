@@ -13,8 +13,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
-import sys
+import os
 from typing import Any, Dict, List, Optional
 
 import humps
@@ -22,7 +23,7 @@ from hsfs import util
 from hsfs.constructor import query
 
 
-if "pytest" in sys.modules:
+if os.environ.get("HOPSWORKS_RUN_WITH_TYPECHECK", False):
     from typeguard import typechecked
 else:
     from typing import TypeVar

@@ -13,9 +13,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import json
-import sys
+import os
 import warnings
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
@@ -32,7 +33,7 @@ from hsfs.core import arrow_flight_client, query_constructor_api, storage_connec
 from hsfs.feature import Feature
 
 
-if "pytest" in sys.modules:
+if os.environ.get("HOPSWORKS_RUN_WITH_TYPECHECK", False):
     from typeguard import typechecked
 else:
     from typing import TypeVar

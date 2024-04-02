@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import copy
 import json
-import sys
+import os
 import time
 import warnings
 from datetime import date, datetime
@@ -74,7 +74,7 @@ from hsfs.statistics_config import StatisticsConfig
 from hsfs.validation_report import ValidationReport
 
 
-if "pytest" in sys.modules:
+if os.environ.get("HOPSWORKS_RUN_WITH_TYPECHECK", False):
     from typeguard import typechecked
 else:
     from typing import TypeVar
