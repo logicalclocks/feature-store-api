@@ -46,6 +46,7 @@ setup(
             "ruff==0.3.2",
             "pyspark==3.1.1",
             "moto[s3]==5.0.0",
+            "typeguard==4.2.1",
         ],
         "dev-pandas1": [
             "pytest==7.4.4",
