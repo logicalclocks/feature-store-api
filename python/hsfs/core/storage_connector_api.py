@@ -112,7 +112,7 @@ class StorageConnectorApi:
             _client._project_id,
             "featurestores",
             storage_connector_instance._featurestore_id,
-            "featuregroups",
+            "storageconnectors",
             storage_connector_instance.id,
             "provenance",
             "links",
