@@ -148,6 +148,12 @@ class Query:
         # Returns
             `DataFrame`: DataFrame depending on the chosen type.
         """
+        if not isinstance(online, bool):
+            warnings.warn(
+                f"Passed {online} as value to online kwarg for `read` method. The `online` parameter is expected to be a boolean"
+                + " to specify whether to read from the Online Feature Store.",
+                stacklevel=1,
+            )
         if not read_options:
             read_options = {}
         sql_query, online_conn = self._prep_read(online, read_options)

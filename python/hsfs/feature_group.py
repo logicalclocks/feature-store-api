@@ -2873,7 +2873,7 @@ class FeatureGroup(FeatureGroupBase):
         write_options: Optional[Dict[Any, Any]] = None,
     ):
         """Drops records present in the provided DataFrame and commits it as update to this
-        Feature group. This method can only be used on time travel enabled feature groups.
+        Feature group. This method can only be used on feature groups stored as HUDI or DELTA.
 
         # Arguments
             delete_df: dataFrame containing records to be deleted.
