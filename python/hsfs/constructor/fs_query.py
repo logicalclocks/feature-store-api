@@ -13,6 +13,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 import humps
 from hsfs import engine
@@ -22,18 +25,18 @@ from hsfs.constructor import external_feature_group_alias, hudi_feature_group_al
 class FsQuery:
     def __init__(
         self,
-        query,
-        on_demand_feature_groups,
-        hudi_cached_feature_groups,
-        query_online=None,
-        pit_query=None,
-        pit_query_asof=None,
-        href=None,
-        expand=None,
-        items=None,
-        type=None,
+        query: str,
+        on_demand_feature_groups: Optional[List[Dict[str, Any]]],
+        hudi_cached_feature_groups: Optional[List[Dict[str, Any]]],
+        query_online: Optional[str] = None,
+        pit_query: Optional[str] = None,
+        pit_query_asof: Optional[str] = None,
+        href: Optional[str] = None,
+        expand: Optional[List[str]] = None,
+        items: Optional[List[Dict[str, Any]]] = None,
+        type: Optional[str] = None,
         **kwargs,
-    ):
+    ) -> None:
         self._query = query
         self._query_online = query_online
         self._pit_query = pit_query
@@ -58,35 +61,44 @@ class FsQuery:
             self._hudi_cached_feature_groups = []
 
     @classmethod
-    def from_response_json(cls, json_dict):
+    def from_response_json(cls, json_dict: Dict[str, Any]) -> "FsQuery":
         json_decamelized = humps.decamelize(json_dict)
         return cls(**json_decamelized)
 
     @property
-    def query(self):
+    def query(self) -> str:
         return self._query
 
     @property
-    def query_online(self):
+    def query_online(self) -> Optional[str]:
         return self._query_online
 
     @property
-    def pit_query(self):
+    def pit_query(self) -> Optional[str]:
         return self._pit_query
 
     @property
-    def pit_query_asof(self):
+    def pit_query_asof(self) -> Optional[str]:
         return self._pit_query_asof
 
     @property
-    def on_demand_fg_aliases(self):
+    def on_demand_fg_aliases(
+        self,
+    ) -> List["external_feature_group_alias.ExternalFeatureGroupAlias"]:
         return self._on_demand_fg_aliases
 
     @property
-    def hudi_cached_feature_groups(self):
+    def hudi_cached_feature_groups(
+        self,
+    ) -> List["hudi_feature_group_alias.HudiFeatureGroupAlias"]:
         return self._hudi_cached_feature_groups
 
-    def register_external(self, spine=None):
+    def register_external(
+        self,
+        spine: Optional[
+            Union[TypeVar("pyspark.sql.DataFrame"), TypeVar("pyspark.RDD")]
+        ] = None,
+    ) -> None:
         if self._on_demand_fg_aliases is None:
             return
 
@@ -98,13 +110,23 @@ class FsQuery:
                 external_fg_alias.alias,
             )
 
-    def register_hudi_tables(self, feature_store_id, feature_store_name, read_options):
+    def register_hudi_tables(
+        self,
+        feature_store_id: int,
+        feature_store_name: str,
+        read_options: Optional[Dict[str, Any]],
+    ) -> None:
         for hudi_fg in self._hudi_cached_feature_groups:
             engine.get_instance().register_hudi_temporary_table(
                 hudi_fg, feature_store_id, feature_store_name, read_options
             )
 
-    def register_delta_tables(self, feature_store_id, feature_store_name, read_options):
+    def register_delta_tables(
+        self,
+        feature_store_id: int,
+        feature_store_name: str,
+        read_options: Optional[Dict[str, Any]],
+    ) -> None:
         for hudi_fg in self._hudi_cached_feature_groups:
             engine.get_instance().register_delta_temporary_table(
                 hudi_fg, feature_store_id, feature_store_name, read_options
