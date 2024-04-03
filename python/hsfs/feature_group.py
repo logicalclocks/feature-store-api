@@ -2074,12 +2074,24 @@ class FeatureGroup(FeatureGroupBase):
         # Raises
             `hsfs.client.exceptions.RestAPIError`. No data is available for feature group with this commit date, If time travel enabled.
         """
+        if wallclock_time and self._time_travel_format is None:
+            raise FeatureStoreException(
+                "Time travel format is not set for the feature group, cannot read as of specific point in time."
+            )
+        elif wallclock_time and engine.get_type() == "python":
+            raise FeatureStoreException(
+                "Python environments does not support incremental queries. "
+                + "Read feature group without timestamp to retrieve latest snapshot or switch to "
+                + "environment with Spark Engine."
+            )
+
         engine.get_instance().set_job_group(
             "Fetching Feature group",
             "Getting feature group: {} from the featurestore {}".format(
                 self._name, self._feature_store_name
             ),
         )
+
         if wallclock_time:
             return (
                 self.select_all()
