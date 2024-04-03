@@ -113,7 +113,7 @@ class StorageConnectorApi:
             "featurestores",
             storage_connector_instance._featurestore_id,
             "storageconnectors",
-            storage_connector_instance.id,
+            storage_connector_instance.name,
             "provenance",
             "links",
         ]
