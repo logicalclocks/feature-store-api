@@ -15,7 +15,6 @@
 #
 
 from hsfs import client, storage_connector
-from hsfs.core import explicit_provenance
 
 
 class StorageConnectorApi:
@@ -92,7 +91,7 @@ class StorageConnectorApi:
         )
 
     def get_generated_feature_groups(
-        self, storage_connector_instance: storage_connector.StorageConnector
+        self, storage_connector_instance
     ):
         """Get the generated feature groups using this storage connector, based on explicit
         provenance. These feature groups can be accessible or inaccessible. Explicit
@@ -124,6 +123,7 @@ class StorageConnectorApi:
             "downstreamLvls": 1,
         }
         links_json = _client._send_request("GET", path_params, query_params)
+        from hsfs.core import explicit_provenance
         return explicit_provenance.Links.from_response_json(
             links_json,
             explicit_provenance.Links.Direction.DOWNSTREAM,
