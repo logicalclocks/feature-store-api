@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, TypeVar, Union
 import humps
 import numpy as np
 import pandas as pd
-from hsfs import client, engine, storage_connector as sc, training_dataset_feature, util
+from hsfs import client, engine, training_dataset_feature, util
 from hsfs.client.exceptions import RestAPIError
 from hsfs.constructor import filter, query
 from hsfs.core import (
@@ -32,6 +32,7 @@ from hsfs.core import (
     vector_server,
 )
 from hsfs.statistics_config import StatisticsConfig
+from hsfs.storage_connector import HopsFSConnector, StorageConnector
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
@@ -135,7 +136,7 @@ class TrainingDatasetBase:
             self._end_time = event_end_time
             # type available -> init from backend response
             # make rest call to get all connector information, description etc.
-            self._storage_connector = sc.StorageConnector.from_response_json(
+            self._storage_connector = StorageConnector.from_response_json(
                 storage_connector
             )
 
@@ -214,12 +215,12 @@ class TrainingDatasetBase:
             )
 
     def _infer_training_dataset_type(self, connector_type):
-        if connector_type == sc.StorageConnector.HOPSFS or connector_type is None:
+        if connector_type == StorageConnector.HOPSFS or connector_type is None:
             return self.HOPSFS
         elif (
-            connector_type == sc.StorageConnector.S3
-            or connector_type == sc.StorageConnector.ADLS
-            or connector_type == sc.StorageConnector.GCS
+            connector_type == StorageConnector.S3
+            or connector_type == StorageConnector.ADLS
+            or connector_type == StorageConnector.GCS
         ):
             return self.EXTERNAL
         else:
@@ -302,11 +303,11 @@ class TrainingDatasetBase:
 
     @storage_connector.setter
     def storage_connector(self, storage_connector):
-        if isinstance(storage_connector, sc.StorageConnector):
+        if isinstance(storage_connector, StorageConnector):
             self._storage_connector = storage_connector
         elif storage_connector is None:
             # init empty connector, otherwise will have to handle it at serialization time
-            self._storage_connector = sc.HopsFSConnector(
+            self._storage_connector = HopsFSConnector(
                 None, None, None, None, None, None
             )
         else:
