@@ -943,10 +943,10 @@ class FeatureViewEngine:
     ) -> str:
         rich_text = f"{fv['name']}, v{fv['version']}, id: {fv['id']}"
         if show_description and fv.get("description", False):
-            rich_text += f"\nDescription: {fv.get('description')}"
+            rich_text += f"\n\tDescription: {fv.get('description')}"
         if show_feature_list:
             rich_text += (
-                "\nFeatures: ["
+                "\n\tFeatures: ["
                 + ", ".join([feature["name"] for feature in fv["features"]])
                 + "]"
             )

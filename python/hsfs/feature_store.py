@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import datetime
 import warnings
-from typing import Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Dict, List, Optional, TypeVar, Union
 
 import great_expectations as ge
 import humps
@@ -118,7 +118,8 @@ class FeatureStore:
         show_online_enabled: bool = True,
         show_description: bool = False,
         show_feature_list: bool = False,
-    ) -> List[Tuple[str, int]]:
+    ) -> None:
+        # ) -> List[Tuple[str, int]]:
         fg_list = self._feature_group_engine.list_feature_groups(
             online_enabled_only=online_enabled_only,
             latest_version_only=latest_version_only,
@@ -137,7 +138,7 @@ class FeatureStore:
                 )
             )
 
-        return [(fg.name, fg.version) for fg in fg_list]
+        # return [(fg.name, fg.version) for fg in fg_list]
 
     def get_feature_group(self, name: str, version: int = None):
         """Get a feature group entity from the feature store.
@@ -1453,7 +1454,8 @@ class FeatureStore:
 
     def list_feature_views(
         self, show_description: bool = False, show_feature_list: bool = False
-    ) -> List[Tuple[str, int]]:
+    ) -> None:
+        # ) -> List[Tuple[str, int]]:
         fv_dict_list = self._feature_view_engine.list_feature_views(
             with_features=show_feature_list
         )
@@ -1467,7 +1469,7 @@ class FeatureStore:
                 )
             )
 
-        return [(fv_dict["name"], fv_dict["version"]) for fv_dict in fv_dict_list]
+        # return [(fv_dict["name"], fv_dict["version"]) for fv_dict in fv_dict_list]
 
     @usage.method_logger
     def create_feature_view(
