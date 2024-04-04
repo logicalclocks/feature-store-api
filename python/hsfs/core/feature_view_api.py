@@ -13,8 +13,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
-from typing import Optional
+from typing import List, Optional
 
 from hsfs import (
     client,
@@ -53,6 +54,14 @@ class FeatureViewApi:
             self._feature_store_id,
             "featureview",
         ]
+
+    def get_all(self, with_features: bool) -> List[feature_view.FeatureView]:
+        path = self._base_path
+        return self._client._send_request(
+            "GET",
+            path_params=path,
+            query_params={"expand": ["features"]} if with_features else None,
+        )["items"]
 
     def post(self, feature_view_obj):
         headers = {"content-type": "application/json"}

@@ -13,10 +13,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import datetime
 import warnings
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from hsfs import client, engine, feature_group, training_dataset_feature, util
 from hsfs.client import exceptions
@@ -930,3 +931,23 @@ class FeatureViewEngine:
             )
         else:
             return f_name
+
+    def list_feature_views(self, with_features: bool) -> List[Dict[str, Any]]:
+        return self._feature_view_api.get_all(with_features=with_features)
+
+    def make_rich_text_fv(
+        self,
+        fv: Dict[str, Any],
+        show_description: bool,
+        show_feature_list: bool,
+    ) -> str:
+        rich_text = f"{fv['name']}, v{fv['version']}, id: {fv['id']}"
+        if show_description and fv.get("description", False):
+            rich_text += f"\nDescription: {fv.get('description')}"
+        if show_feature_list:
+            rich_text += (
+                "\nFeatures: ["
+                + ", ".join([feature["name"] for feature in fv["features"]])
+                + "]"
+            )
+        return rich_text

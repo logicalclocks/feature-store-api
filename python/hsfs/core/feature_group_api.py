@@ -13,6 +13,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
+
+from typing import List, Optional, Union
 
 from hsfs import client, feature_group, feature_group_commit
 from hsfs.core import explicit_provenance, ingestion_job
@@ -22,6 +25,45 @@ class FeatureGroupApi:
     CACHED = "cached"
     ONDEMAND = "ondemand"
     SPINE = "spine"
+
+    def get_all(
+        self,
+        feature_store_id: int,
+        feature_group_type: Optional[str],
+        with_features: bool,
+    ) -> List[
+        Union[
+            feature_group.FeatureGroup,
+            feature_group.SpineGroup,
+            feature_group.ExternalFeatureGroup,
+        ]
+    ]:
+        """Get a list of feature groups in a feature store.
+
+        :param feature_store_id: feature store id
+        :type feature_store_id: int
+        :param feature_group_type: type of the feature group to return
+        :type feature_group_type: string
+        :return: list of feature group metadata objects
+        :rtype: List[FeatureGroup]
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            feature_store_id,
+            "featuregroups",
+        ]
+        query_params = {}
+        if feature_group_type:
+            query_params["type"] = feature_group_type
+        if with_features:
+            query_params["expand"] = ["features"]
+
+        return feature_group.FeatureGroup.from_response_json(
+            _client._send_request("GET", path_params, query_params)
+        )
 
     def save(self, feature_group_instance):
         """Save feature group metadata to the feature store.

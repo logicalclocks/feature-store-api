@@ -14,10 +14,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 import datetime
 import warnings
-from typing import Dict, List, Optional, TypeVar, Union
+from typing import Dict, List, Optional, Tuple, TypeVar, Union
 
 import great_expectations as ge
 import humps
@@ -106,6 +107,37 @@ class FeatureStore:
         json_decamelized.pop("featurestore_description", None)
         json_decamelized.pop("inode_id", None)
         return cls(**json_decamelized)
+
+    def list_feature_groups(
+        self,
+        latest_version_only: bool = False,
+        external_only: bool = False,
+        spine_only: bool = False,
+        online_enabled_only: bool = False,
+        show_fg_type: bool = True,
+        show_online_enabled: bool = True,
+        show_description: bool = False,
+        show_feature_list: bool = False,
+    ) -> List[Tuple[str, int]]:
+        fg_list = self._feature_group_engine.list_feature_groups(
+            online_enabled_only=online_enabled_only,
+            latest_version_only=latest_version_only,
+            external_only=external_only,
+            spine_only=spine_only,
+            with_features=show_feature_list,
+        )
+        for fg in fg_list:
+            print(
+                self._feature_group_engine.make_rich_text_fg(
+                    fg,
+                    show_feature_list=show_feature_list,
+                    show_fg_type=show_fg_type,
+                    show_online_enabled=show_online_enabled,
+                    show_description=show_description,
+                )
+            )
+
+        return [(fg.name, fg.version) for fg in fg_list]
 
     def get_feature_group(self, name: str, version: int = None):
         """Get a feature group entity from the feature store.
@@ -1418,6 +1450,24 @@ class FeatureStore:
              `List[TransformationFunction]`. List of transformation function instances.
         """
         return self._transformation_function_engine.get_transformation_fns()
+
+    def list_feature_views(
+        self, show_description: bool = False, show_feature_list: bool = False
+    ) -> List[Tuple[str, int]]:
+        fv_dict_list = self._feature_view_engine.list_feature_views(
+            with_features=show_feature_list
+        )
+
+        for fv_dict in fv_dict_list:
+            print(
+                self._feature_view_engine.make_rich_text_fv(
+                    fv_dict,
+                    show_description=show_description,
+                    show_feature_list=show_feature_list,
+                )
+            )
+
+        return [(fv_dict["name"], fv_dict["version"]) for fv_dict in fv_dict_list]
 
     @usage.method_logger
     def create_feature_view(

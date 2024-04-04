@@ -12,7 +12,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
+
 import warnings
+from typing import List, Union
 
 from hsfs import engine, util
 from hsfs import feature_group as fg
@@ -22,6 +25,12 @@ from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
+    SHOW_TYPE_MAPPING = {
+        "stream": "Stream",
+        "spine": "Spine",
+        "external": "External",
+    }
+
     def __init__(self, feature_store_id):
         super().__init__(feature_store_id)
 
@@ -377,3 +386,75 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
                 feature_group_id=feature_group.id,
             )
         )
+
+    def list_feature_groups(
+        self,
+        latest_version_only: bool,
+        online_enabled_only: bool,
+        spine_only: bool,
+        external_only: bool,
+        with_features: bool,
+    ) -> List[fg.FeatureGroup, fg.ExternalFeatureGroup, fg.SpineGroup]:
+        if spine_only:
+            feature_group_type = "spine"
+        elif external_only:
+            feature_group_type = "external"
+        else:
+            feature_group_type = None
+        fg_list = self._feature_group_api.get_all(
+            feature_store_id=self._feature_store_id,
+            feature_group_type=feature_group_type,
+            with_features=with_features,
+        )
+
+        if online_enabled_only:
+            fg_list = [fgroup for fgroup in fg_list if fgroup.online_enabled]
+        if spine_only:
+            fg_list = [
+                fgroup for fgroup in fg_list if isinstance(fgroup, fg.SpineGroup)
+            ]
+        if external_only:
+            fg_list = [
+                fgroup
+                for fgroup in fg_list
+                if isinstance(fgroup, fg.ExternalFeatureGroup)
+            ]
+
+        if latest_version_only:
+            fg_list = [
+                fgroup
+                for fgroup in fg_list
+                if fgroup.version
+                == max(fg1.version for fg1 in fg_list if fg1.name == fgroup.name)
+            ]
+
+        return sorted(fg_list, key=lambda fgroup: fgroup.name)
+
+    def make_rich_text_fg(
+        self,
+        fgroup: Union[fg.FeatureGroup, fg.ExternalFeatureGroup, fg.SpineGroup],
+        show_online_enabled: bool,
+        show_description: bool,
+        show_feature_list: bool,
+        show_fg_type: bool,
+    ) -> str:
+        rich_text = ""
+
+        rich_text += f"{fgroup.name}, v{fgroup.version}, id: {fgroup.id}, "
+        if show_fg_type and isinstance(fgroup, fg.SpineGroup):
+            rich_text += f"{self.SHOW_TYPE_MAPPING['spine']}, "
+        elif show_fg_type and isinstance(fgroup, fg.ExternalFeatureGroup):
+            rich_text += f"{self.SHOW_TYPE_MAPPING['external']}, "
+        elif show_fg_type:
+            rich_text += f"{self.SHOW_TYPE_MAPPING['stream']}, "
+        if show_online_enabled:
+            rich_text += f"{'Online (Real-Time)' if fgroup.online_enabled else 'Offline (Batch)'}, "
+        if show_description and fgroup.description is not None:
+            rich_text += f"\n\tDescription: {fgroup.description}"
+        if show_feature_list:
+            rich_text += (
+                "\n\tFeatures: ["
+                + ", ".join([f"{feature.name}" for feature in fgroup.features])
+                + "]"
+            )
+        return rich_text
