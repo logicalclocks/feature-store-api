@@ -1,3 +1,4 @@
+import os
 import pathlib
 import shutil
 
@@ -334,12 +335,16 @@ PAGES = {
 }
 
 hsfs_dir = pathlib.Path(__file__).resolve().parents[0]
+if "GITHUB_BASE_REF" in os.environ:
+    branch_name = os.environ["GITHUB_BASE_REF"]
+else:
+    branch_name = "master"
 
 
 def generate(dest_dir):
     doc_generator = keras_autodoc.DocumentationGenerator(
         PAGES,
-        project_url="https://github.com/logicalclocks/feature-store-api/blob/master/python",
+        project_url=f"https://github.com/logicalclocks/feature-store-api/blob/{branch_name}/python",
         template_dir="./docs/templates",
         titles_size="###",
         extra_aliases={
