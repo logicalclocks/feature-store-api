@@ -348,16 +348,22 @@ PAGES = {
 }
 
 hsfs_dir = pathlib.Path(__file__).resolve().parents[0]
-if "GITHUB_BASE_REF" in os.environ:
-    branch_name = os.environ["GITHUB_BASE_REF"]
+if "GITHUB_SHA" in os.environ:
+    commit_sha = os.environ["GITHUB_SHA"]
+    project_url = (
+        f"https://github.com/logicalclocks/feature-store-api/tree/{commit_sha}/python"
+    )
 else:
-    branch_name = "master"
+    branch_name = os.environ.get("GITHUB_BASE_REF", "master")
+    project_url = (
+        f"https://github.com/logicalclocks/feature-store-api/blob/{branch_name}/python"
+    )
 
 
 def generate(dest_dir):
     doc_generator = keras_autodoc.DocumentationGenerator(
         PAGES,
-        project_url=f"https://github.com/logicalclocks/feature-store-api/blob/{branch_name}/python",
+        project_url=project_url,
         template_dir="./docs/templates",
         titles_size="###",
         extra_aliases={
