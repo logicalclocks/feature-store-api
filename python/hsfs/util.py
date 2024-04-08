@@ -27,6 +27,7 @@ import pandas as pd
 from aiomysql.sa import create_engine as async_create_engine
 from hsfs import client, feature
 from hsfs.client import exceptions
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import variable_api
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
@@ -50,6 +51,27 @@ def validate_feature(ft):
         return feature.Feature(ft)
     elif isinstance(ft, dict):
         return feature.Feature(**ft)
+
+
+VALID_EMBEDDING_TYPE = {
+    "array<int>",
+    "array<bigint>",
+    "array<float>",
+    "array<double>",
+}
+
+
+def validate_embedding_feature_type(feature_group, schema):
+    if not feature_group.embedding_index:
+        return
+    feature_type_map = dict([(feat.name, feat.type) for feat in schema])
+    for embedding in feature_group.embedding_index.get_embeddings():
+        feature_type = feature_type_map.get(embedding.name)
+        if feature_type not in VALID_EMBEDDING_TYPE:
+            raise FeatureStoreException(
+                f"Provide feature `{embedding.name}` has type `{feature_type}`, "
+                f"but requires one of the following: {', '.join(VALID_EMBEDDING_TYPE)}"
+            )
 
 
 def parse_features(feature_names):
