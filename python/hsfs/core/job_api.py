@@ -35,7 +35,7 @@ class JobApi:
         job_conf: Union[
             job_configuration.JobConfiguration, ingestion_job_conf.IngestionJobConf
         ],
-    ):
+    ) -> job.Job:
         _client = client.get_instance()
         path_params = ["project", _client._project_id, "jobs", name]
 

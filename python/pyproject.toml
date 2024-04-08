@@ -44,8 +44,8 @@ ignore = [
     "B905",   # zip has no strict kwarg until Python 3.10
     "ANN101", # Missing type annotation for self in method
     "ANN102", # Missing type annotation for cls in classmethod
-    "ANN204", # Missing type annotation for *args
-    "ANN206", # Missing type annotation for **kwargs
+    "ANN002", # Missing type annotation for *args
+    "ANN003", # Missing type annotation for **kwargs
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
