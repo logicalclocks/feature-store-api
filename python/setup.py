@@ -61,7 +61,7 @@ setup(
             "mkdocs-material==9.5.17",
             "mike==1.1.2",
             "sphinx==7.2.6",
-            "keras_autodoc @ git+https://git@github.com/vatj/keras-autodoc@add-moritz-implementations",
+            "keras_autodoc @ git+https://git@github.com/logicalclocks/keras-autodoc",
             "markdown-include==0.8.1",
             "mkdocs-jupyter==0.24.3",
             "markdown==3.6",
