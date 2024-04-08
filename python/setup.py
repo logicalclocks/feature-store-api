@@ -11,7 +11,7 @@ __version__ = (
 )
 
 
-def read(fname):
+def read(fname: str) -> str:
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 

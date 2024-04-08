@@ -28,8 +28,6 @@ exclude = [
     "site-packages",
     "venv",
     "java",
-    # Added
-    "**setup.py",
 ]
 
 # Same as Black.
