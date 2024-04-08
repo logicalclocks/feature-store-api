@@ -1,7 +1,9 @@
+import os
 import pathlib
 import shutil
 
 import keras_autodoc
+
 
 PAGES = {
     "api/connection_api.md": {
@@ -326,9 +328,7 @@ PAGES = {
         ),
     },
     "api/embedding_index_api.md": {
-        "embedding_index": [
-            "hsfs.embedding.EmbeddingIndex"
-        ],
+        "embedding_index": ["hsfs.embedding.EmbeddingIndex"],
         "embedding_index_properties": keras_autodoc.get_properties(
             "hsfs.embedding.EmbeddingIndex"
         ),
@@ -337,27 +337,33 @@ PAGES = {
         ),
     },
     "api/embedding_feature_api.md": {
-        "embedding_feature": [
-            "hsfs.embedding.EmbeddingFeature"
-        ],
+        "embedding_feature": ["hsfs.embedding.EmbeddingFeature"],
         "embedding_feature_properties": keras_autodoc.get_properties(
             "hsfs.embedding.EmbeddingFeature"
         ),
     },
     "api/similarity_function_type_api.md": {
-        "similarity_function_type": [
-            "hsfs.embedding.SimilarityFunctionType"
-        ],
+        "similarity_function_type": ["hsfs.embedding.SimilarityFunctionType"],
     },
 }
 
 hsfs_dir = pathlib.Path(__file__).resolve().parents[0]
+if "GITHUB_SHA" in os.environ:
+    commit_sha = os.environ["GITHUB_SHA"]
+    project_url = (
+        f"https://github.com/logicalclocks/feature-store-api/tree/{commit_sha}/python"
+    )
+else:
+    branch_name = os.environ.get("GITHUB_BASE_REF", "master")
+    project_url = (
+        f"https://github.com/logicalclocks/feature-store-api/blob/{branch_name}/python"
+    )
 
 
 def generate(dest_dir):
     doc_generator = keras_autodoc.DocumentationGenerator(
         PAGES,
-        project_url="https://github.com/logicalclocks/feature-store-api/blob/master/python",
+        project_url=project_url,
         template_dir="./docs/templates",
         titles_size="###",
         extra_aliases={

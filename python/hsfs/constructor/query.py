@@ -101,6 +101,7 @@ class Query:
     ) -> Tuple[
         Union[str, Dict[str, Any]], Optional["storage_connector.StorageConnector"]
     ]:
+        self._check_read_supported(online)
         fs_query = self._query_constructor_api.construct_query(self)
 
         if online:
@@ -192,7 +193,6 @@ class Query:
             )
         if not read_options:
             read_options = {}
-        self._check_read_supported(online)
         sql_query, online_conn = self._prep_read(online, read_options)
 
         schema = None
@@ -546,6 +546,12 @@ class Query:
     def _check_read_supported(self, online: bool) -> None:
         if not online:
             return
+        if not isinstance(online, bool):
+            warnings.warn(
+                f"Passed {online} as value to online kwarg for `read` method. The `online` parameter is expected to be a boolean"
+                + " to specify whether to read from the Online Feature Store.",
+                stacklevel=1,
+            )
         for fg in self.featuregroups:
             if fg.embedding_index:
                 raise FeatureStoreException(
