@@ -10,65 +10,65 @@ edit_uri: ""
 
 nav:
   - Feature Store:
-    - Introduction: index.md
-    - Quickstart: quickstart.md
-    - Integrations:
-      - Overview: setup.md
-      - Storage Connectors:
-        - Overview: integrations/storage-connectors.md
-        - ADLS: integrations/storage-connectors/adls.md
-        - HopsFS: integrations/storage-connectors/hopsfs.md
-        - JDBC: integrations/storage-connectors/jdbc.md
-        - Redshift: integrations/storage-connectors/redshift.md
-        - S3: integrations/storage-connectors/s3.md
-        - Snowflake: integrations/storage-connectors/snowflake.md
-        - AWS Credential passthrough:
-          - Resource role to project mapping : integrations/role_mapping.md
-          - Assume role : integrations/assume_role.md
-      - Databricks:
-        - Networking: integrations/databricks/networking.md
-        - Hopsworks API Key: integrations/databricks/api_key.md
-        - Configuration: integrations/databricks/configuration.md
-      - AWS Sagemaker: integrations/sagemaker.md
-      - AWS EMR:
-        - Networking: integrations/emr/networking.md
-        - Configure EMR for the Hopsworks Feature Store: integrations/emr/emr_configuration.md
-      - Azure HDInsight: integrations/hdinsight.md
-      - Azure Machine Learning:
-        - Designer: integrations/mlstudio_designer.md
-        - Notebooks: integrations/mlstudio_notebooks.md
-      - Python: integrations/python.md
-      - Spark: integrations/spark.md
-    - Guides:
-      - Overview: overview.md
-      - Project/Connection: generated/project.md
-      - Feature Store: generated/feature_store.md
-      - Feature Group: generated/feature_group.md
-      - Storage Connector: generated/storage_connector.md
-      - On-demand (External) Feature Group: generated/on_demand_feature_group.md
-      - Feature: generated/feature.md
-      - Training Dataset: generated/training_dataset.md
-      - Query vs. Dataframe: generated/query_vs_dataframe.md
-      - Statistics: generated/statistics.md
-      - Versioning: generated/versioning.md
-      - Feature Validation: generated/feature_validation.md
-      - Feature Store Tags: generated/tags.md
-      - Transformation Functions: generated/transformation_functions.md
-    - API Reference:
-      - Connection: generated/api/connection_api.md
-      - FeatureStore: generated/api/feature_store_api.md
-      - FeatureGroup: generated/api/feature_group_api.md
-      - TrainingDataset: generated/api/training_dataset_api.md
-      - Storage Connector: generated/api/storage_connector_api.md
-      - Feature: generated/api/feature_api.md
-      - Query: generated/api/query_api.md
-      - Rule Definiton: generated/api/rule_definition_api.md
-      - Rule: generated/api/rule_api.md
-      - Expectation: generated/api/expectation_api.md
-      - Validation: generated/api/validation_api.md
-      - Transformation Functions: generated/api/transformation_functions_api.md
-      - Job configuration: generated/api/job_configuration.md
-    - Contributing: CONTRIBUTING.md
+      - Introduction: index.md
+      - Quickstart: quickstart.md
+      - Integrations:
+          - Overview: setup.md
+          - Storage Connectors:
+              - Overview: integrations/storage-connectors.md
+              - ADLS: integrations/storage-connectors/adls.md
+              - HopsFS: integrations/storage-connectors/hopsfs.md
+              - JDBC: integrations/storage-connectors/jdbc.md
+              - Redshift: integrations/storage-connectors/redshift.md
+              - S3: integrations/storage-connectors/s3.md
+              - Snowflake: integrations/storage-connectors/snowflake.md
+              - AWS Credential passthrough:
+                  - Resource role to project mapping: integrations/role_mapping.md
+                  - Assume role: integrations/assume_role.md
+          - Databricks:
+              - Networking: integrations/databricks/networking.md
+              - Hopsworks API Key: integrations/databricks/api_key.md
+              - Configuration: integrations/databricks/configuration.md
+          - AWS Sagemaker: integrations/sagemaker.md
+          - AWS EMR:
+              - Networking: integrations/emr/networking.md
+              - Configure EMR for the Hopsworks Feature Store: integrations/emr/emr_configuration.md
+          - Azure HDInsight: integrations/hdinsight.md
+          - Azure Machine Learning:
+              - Designer: integrations/mlstudio_designer.md
+              - Notebooks: integrations/mlstudio_notebooks.md
+          - Python: integrations/python.md
+          - Spark: integrations/spark.md
+      - Guides:
+          - Overview: overview.md
+          - Project/Connection: generated/project.md
+          - Feature Store: generated/feature_store.md
+          - Feature Group: generated/feature_group.md
+          - Storage Connector: generated/storage_connector.md
+          - On-demand (External) Feature Group: generated/on_demand_feature_group.md
+          - Feature: generated/feature.md
+          - Training Dataset: generated/training_dataset.md
+          - Query vs. Dataframe: generated/query_vs_dataframe.md
+          - Statistics: generated/statistics.md
+          - Versioning: generated/versioning.md
+          - Feature Validation: generated/feature_validation.md
+          - Feature Store Tags: generated/tags.md
+          - Transformation Functions: generated/transformation_functions.md
+      - API Reference:
+          - Connection: generated/api/connection_api.md
+          - FeatureStore: generated/api/feature_store_api.md
+          - FeatureGroup: generated/api/feature_group_api.md
+          - TrainingDataset: generated/api/training_dataset_api.md
+          - Storage Connector: generated/api/storage_connector_api.md
+          - Feature: generated/api/feature_api.md
+          - Query: generated/api/query_api.md
+          - Rule Definiton: generated/api/rule_definition_api.md
+          - Rule: generated/api/rule_api.md
+          - Expectation: generated/api/expectation_api.md
+          - Validation: generated/api/validation_api.md
+          - Transformation Functions: generated/api/transformation_functions_api.md
+          - Job configuration: generated/api/job_configuration.md
+      - Contributing: CONTRIBUTING.md
   - Model Management: https://docs.hopsworks.ai/machine-learning-api/latest/
   - Compute Management: https://docs.hopsworks.ai/hopsworks/latest/compute/
   - Administration: https://docs.hopsworks.ai/hopsworks/latest/admin/
@@ -79,6 +79,7 @@ nav:
 
 theme:
   name: material
+  custom_dir: overrides
   favicon: assets/images/favicon.ico
   logo: assets/images/hops-logo.png
   icon:
@@ -97,6 +98,8 @@ extra:
     provider: google
     property: G-64FEEXPSDN
   generator: false
+  version:
+    default: latest
   social:
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/logicalclocks
@@ -108,31 +111,31 @@ extra:
       link: https://www.linkedin.com/company/logicalclocks/
 
 extra_css:
-    - css/custom.css
-    - css/version-select.css
+  - css/custom.css
+  - css/version-select.css
 
 extra_javascript:
-    - js/version-select.js
+  - js/version-select.js
 
 plugins:
-    - search
+  - search
 
 markdown_extensions:
-    - admonition
-    - codehilite
-    - footnotes
-    - pymdownx.tabbed:
-        alternate_style: true
-    - pymdownx.arithmatex
-    - pymdownx.superfences
-    - pymdownx.details
-    - pymdownx.caret
-    - pymdownx.mark
-    - pymdownx.tilde
-    - pymdownx.critic
-    - toc:
-        permalink: "#"
-    - pymdownx.tasklist:
-        custom_checkbox: true
-    - markdown_include.include:
-        base_path: docs
+  - admonition
+  - codehilite
+  - footnotes
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.arithmatex
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.critic
+  - toc:
+      permalink: "#"
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - markdown_include.include:
+      base_path: docs
