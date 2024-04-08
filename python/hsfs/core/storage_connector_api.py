@@ -15,11 +15,13 @@
 #
 from __future__ import annotations
 
+from typing import Any, Dict
+
 from hsfs import client, storage_connector
 
 
 class StorageConnectorApi:
-    def _get(self, feature_store_id: int, name: str):
+    def _get(self, feature_store_id: int, name: str) -> Dict[str, Any]:
         """Returning response dict instead of initialized object."""
         _client = client.get_instance()
         path_params = [
