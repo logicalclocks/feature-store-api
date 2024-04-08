@@ -23,6 +23,7 @@ jobs:
               - '!python/tests/**/*.py'
             test:
               - 'python/tests/**/*.py'
+            fixtures:
               - 'python/tests/**/*.json'
 
       - name: install deps
@@ -39,6 +40,17 @@ jobs:
         env:
           TEST_ALL_CHANGED_FILES: ${{ steps.get-changed-files.outputs.test_all_changed_files }}
         run: ruff check --output-format=github $TEST_ALL_CHANGED_FILES
+
+      - name: ruff on fixtures
+        if: steps.get-changed-files.outputs.fixtures_any_changed == 'true'
+        env:
+          FIXTURES_ALL_CHANGED_FILES: ${{ steps.get-changed-files.outputs.fixtures_all_changed_files }}
+        run: ruff check --output-format=github $FIXTURES_ALL_CHANGED_FILES
+
+      - name: ruff format
+        env:
+          ALL_CHANGED_FILES: ${{ steps.get-changed-files.outputs.all_changed_files }}
+        run: ruff format $ALL_CHANGED_FILES
 
   unit_tests_ubuntu_utc:
     name: Unit Testing (Ubuntu)
