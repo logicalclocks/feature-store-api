@@ -16,6 +16,7 @@ jobs:
           files_yaml: |
             src:
               - 'python/**/*.py'
+              - '!python/tests/**/*.py'
             test:
               - 'python/tests/**/*.py'
               - 'python/tests/**/*.json'
