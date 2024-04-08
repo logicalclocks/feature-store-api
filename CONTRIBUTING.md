@@ -72,7 +72,7 @@ We use `mkdocs` together with `mike` ([for versioning](https://github.com/jimpor
 1. Currently we are using our own version of `keras-autodoc`
 
    ```bash
-   pip install git+https://github.com/moritzmeister/keras-autodoc@split-tags-properties
+   pip install git+https://github.com/logicalclocks/keras-autodoc
    ```
 
 2. Install HSFS with `docs` extras:
