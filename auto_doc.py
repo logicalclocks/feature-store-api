@@ -342,9 +342,9 @@ PAGES = {
             "hsfs.embedding.EmbeddingFeature"
         ),
     },
-    "api/similarity_function_type_api.md": {
-        "similarity_function_type": ["hsfs.embedding.SimilarityFunctionType"],
-    },
+    # "api/similarity_function_type_api.md": {
+    #     "similarity_function_type": ["hsfs.embedding.SimilarityFunctionType"],
+    # },
 }
 
 hsfs_dir = pathlib.Path(__file__).resolve().parents[0]
