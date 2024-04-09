@@ -13,12 +13,14 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import json
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from warnings import warn
 
 import requests
+import requests.adapters
 from furl import furl
 from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException
@@ -31,15 +33,21 @@ _online_store_rest_client = None
 
 
 def init_or_reset_online_store_rest_client(
-    optional_config: Optional[Dict[str, Any]] = None, reset_client: bool = False
+    transport: Optional[
+        Union[requests.adapters.HTTPAdapter, requests.adapters.BaseAdapter]
+    ] = None,
+    optional_config: Optional[Dict[str, Any]] = None,
+    reset_client: bool = False,
 ):
     global _online_store_rest_client
     if not _online_store_rest_client:
         _online_store_rest_client = OnlineStoreRestClientSingleton(
-            optional_config=optional_config
+            transport=transport, optional_config=optional_config
         )
     elif reset_client:
-        _online_store_rest_client.reset_client(optional_config=optional_config)
+        _online_store_rest_client.reset_client(
+            transport=transport, optional_config=optional_config
+        )
     else:
         _logger.warning(
             "Online Store Rest Client is already initialised. To reset connection or/and override configuration, "
@@ -78,7 +86,13 @@ class OnlineStoreRestClientSingleton:
     SERVER_API_VERSION = "server_api_version"
     API_KEY = "api_key"
 
-    def __init__(self, optional_config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        transport: Optional[
+            Union[requests.adapaters.HTTPadapter, requests.adapters.BaseAdapter]
+        ] = None,
+        optional_config: Optional[Dict[str, Any]] = None,
+    ):
         _logger.info(
             f"Initialising Online Store Rest Client {'with optional configuration' if optional_config else ''}."
         )
@@ -91,11 +105,19 @@ class OnlineStoreRestClientSingleton:
         self._current_config: Dict[str, Any]
         self._base_url: furl
         self._setup_rest_client(
-            optional_config=optional_config, use_current_config=False
+            transport=transport,
+            optional_config=optional_config,
+            use_current_config=False,
         )
         self.is_connected()
 
-    def reset_client(self, optional_config: Optional[Dict[str, Any]] = None):
+    def reset_client(
+        self,
+        transport: Optional[
+            Union[requests.adapters.HttpAdapter, requests.adapters.BaseAdapter]
+        ] = None,
+        optional_config: Optional[Dict[str, Any]] = None,
+    ):
         _logger.info(
             f"Resetting Online Store Rest Client {'with optional configuration' if optional_config else ''}."
         )
@@ -107,12 +129,16 @@ class OnlineStoreRestClientSingleton:
             self._session.close()
             delattr(self, "_session")
         self._setup_rest_client(
+            transport=transport,
             optional_config=optional_config,
             use_current_config=False if optional_config else True,
         )
 
     def _setup_rest_client(
         self,
+        transport: Optional[
+            Union[requests.adapters.HttpAdapter, requests.adapters.BaseAdapter]
+        ] = None,
         optional_config: Optional[Dict[str, Any]] = None,
         use_current_config: bool = True,
     ):
@@ -121,7 +147,7 @@ class OnlineStoreRestClientSingleton:
             raise ValueError(
                 "optional_config must be a dictionary. See documentation for allowed keys and values."
             )
-        _logger.debug(f"Optional Config: {json.dumps(optional_config, indent=2)}")
+        _logger.debug("Optional Config: %s", optional_config)
         if not use_current_config:
             _logger.debug(
                 "Retrieving default configuration for Online Store REST Client."
@@ -142,6 +168,11 @@ class OnlineStoreRestClientSingleton:
                 "Use the init_or_reset_online_store_connection method with reset_connection flag set "
                 + "to True to reset the online_store_client_connection"
             )
+        if transport is not None:
+            _logger.debug("Setting custom transport adapter.")
+            self._session.mount("https://", transport)
+            self._session.mount("http://", transport)
+
         if not self._current_config[self.VERIFY_CERTS]:
             _logger.warning(
                 "Disabling SSL certificate verification. This is not recommended for production environments."
