@@ -44,7 +44,7 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
         for feat in feature_group.features:
             if feat.name in feature_group.primary_key:
                 feat.primary = True
-        util.validate_embedding_feature_type(feature_group, feature_group._features)
+        util.validate_embedding_feature_type(feature_group.embedding_index, feature_group._features)
 
         self._feature_group_api.save(feature_group)
 
@@ -62,7 +62,7 @@ class ExternalFeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngin
             )
 
         schema = engine.get_instance().parse_schema_feature_group(feature_dataframe)
-        util.validate_embedding_feature_type(feature_group, schema)
+        util.validate_embedding_feature_type(feature_group.embedding_index, schema)
 
         if not feature_group._id:
             # only save metadata if feature group does not exist

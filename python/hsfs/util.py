@@ -61,11 +61,11 @@ VALID_EMBEDDING_TYPE = {
 }
 
 
-def validate_embedding_feature_type(feature_group, schema):
-    if not feature_group.embedding_index:
+def validate_embedding_feature_type(embedding_index, schema):
+    if not embedding_index or not schema:
         return
     feature_type_map = dict([(feat.name, feat.type) for feat in schema])
-    for embedding in feature_group.embedding_index.get_embeddings():
+    for embedding in embedding_index.get_embeddings():
         feature_type = feature_type_map.get(embedding.name)
         if feature_type not in VALID_EMBEDDING_TYPE:
             raise FeatureStoreException(
