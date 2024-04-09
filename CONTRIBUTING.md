@@ -26,7 +26,10 @@
 - To run formatting and code-style separately, you can configure your IDE, such as VSCode, to use `ruff`, or run it via the command line:
 
   ```bash
-  ruff check python --fix --config python/pyproject.toml
+  # linting
+  ruff check python --fix
+  # formatting
+  ruff format python
   ```
 
 ### Python documentation

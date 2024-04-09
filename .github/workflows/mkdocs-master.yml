@@ -23,9 +23,6 @@ jobs:
         working-directory: ./python
         run: cp ../README.md . && pip3 install -e .[python,dev,docs]
 
-      - name: use dev mike
-        run: pip3 uninstall -y mike && pip3 install git+'https://github.com/jimporter/mike.git'
-
       - name: generate autodoc
         run: python3 auto_doc.py
 
