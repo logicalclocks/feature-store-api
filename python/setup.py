@@ -35,7 +35,7 @@ setup(
         "tzlocal",
         "fsspec",
         "retrying",
-        "aiomysql[sa] @ git+https://git@github.com/logicalclocks/aiomysql", # aiomysql does not support sqlalchemy 2 yet so we use a fork till then
+        "aiomysql[sa] @ git+https://git@github.com/logicalclocks/aiomysql", # fork to have fix for upstream aiomysql issue https://github.com/aio-libs/aiomysql/discussions/908
         "polars>=0.20.18,<0.21.0",
         "opensearch-py>=1.1.0,<=2.4.2",
     ],
