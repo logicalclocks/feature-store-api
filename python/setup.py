@@ -60,7 +60,7 @@ setup(
             "mkdocs==1.5.3",
             "mkdocs-material==9.5.17",
             "mike==2.0.0",
-            "sphinx==7.2.6",
+            "sphinx==7.1.2",
             "keras_autodoc @ git+https://git@github.com/logicalclocks/keras-autodoc",
             "markdown-include==0.8.1",
             "mkdocs-jupyter==0.24.3",
