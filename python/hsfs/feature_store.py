@@ -48,6 +48,7 @@ from hsfs.core import (
 from hsfs.embedding import EmbeddingIndex
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.transformation_function import TransformationFunction
+from rich.console import Console
 
 
 class FeatureStore:
@@ -127,16 +128,26 @@ class FeatureStore:
             spine_only=spine_only,
             with_features=show_feature_list,
         )
+
+        console = Console()
+        table = self._feature_group_engine.make_list_fg_table(
+            show_fg_type=show_fg_type,
+            show_online_enabled=show_online_enabled,
+            show_description=show_description,
+            show_feature_list=show_feature_list,
+        )
+
         for fg in fg_list:
-            print(
-                self._feature_group_engine.make_rich_text_fg(
-                    fg,
-                    show_feature_list=show_feature_list,
-                    show_fg_type=show_fg_type,
-                    show_online_enabled=show_online_enabled,
-                    show_description=show_description,
-                )
+            self._feature_group_engine.make_rich_text_fg(
+                table=table,
+                fgroup=fg,
+                show_feature_list=show_feature_list,
+                show_fg_type=show_fg_type,
+                show_online_enabled=show_online_enabled,
+                show_description=show_description,
             )
+
+        console.print(table)
 
         # return [(fg.name, fg.version) for fg in fg_list]
 

@@ -22,6 +22,7 @@ from hsfs import feature_group as fg
 from hsfs.client import exceptions
 from hsfs.core import delta_engine, feature_group_base_engine, hudi_engine
 from hsfs.core.deltastreamer_jobconf import DeltaStreamerJobConf
+from rich.table import Table
 
 
 class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
@@ -430,31 +431,63 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
 
         return sorted(fg_list, key=lambda fgroup: fgroup.name)
 
+    def make_list_fg_table(
+        self,
+        show_online_enabled: bool,
+        show_description: bool,
+        show_feature_list: bool,
+        show_fg_type: bool,
+    ) -> Table:
+        table = Table(show_header=True, header_style="bold")
+
+        table.add_column("Name")
+        table.add_column("Version")
+        table.add_column("ID")
+        if show_fg_type:
+            table.add_column("Type")
+        if show_online_enabled:
+            table.add_column("Online Status")
+        if show_description:
+            table.add_column("Description")
+
+        return table
+
     def make_rich_text_fg(
         self,
+        table: Table,
         fgroup: Union[fg.FeatureGroup, fg.ExternalFeatureGroup, fg.SpineGroup],
         show_online_enabled: bool,
         show_description: bool,
         show_feature_list: bool,
         show_fg_type: bool,
     ) -> str:
-        rich_text = ""
+        fg_type = ""
+        if isinstance(fgroup, fg.SpineGroup):
+            fg_type = self.SHOW_TYPE_MAPPING["spine"]
+        elif isinstance(fgroup, fg.ExternalFeatureGroup):
+            fg_type = self.SHOW_TYPE_MAPPING["external"]
+        else:
+            fg_type = self.SHOW_TYPE_MAPPING["stream"]
+        online_status = (
+            "🟢 Online (Real-Time)" if fgroup.online_enabled else "🔴 Offline (Batch)"
+        )
+        entry_list = [
+            f"{fgroup.name}",
+            f"v{fgroup.version}",
+            f"{fgroup.id}",
+            fg_type if show_fg_type else "",
+            online_status if show_online_enabled else "",
+        ]
+        if show_description and fgroup.description:
+            entry_list.append(f"{fgroup.description}")
+        elif show_description:
+            entry_list.append("")
 
-        rich_text += f"{fgroup.name}, v{fgroup.version}, id: {fgroup.id}, "
-        if show_fg_type and isinstance(fgroup, fg.SpineGroup):
-            rich_text += f"{self.SHOW_TYPE_MAPPING['spine']}, "
-        elif show_fg_type and isinstance(fgroup, fg.ExternalFeatureGroup):
-            rich_text += f"{self.SHOW_TYPE_MAPPING['external']}, "
-        elif show_fg_type:
-            rich_text += f"{self.SHOW_TYPE_MAPPING['stream']}, "
-        if show_online_enabled:
-            rich_text += f"{'Online (Real-Time)' if fgroup.online_enabled else 'Offline (Batch)'}, "
-        if show_description and fgroup.description is not None:
-            rich_text += f"\n\tDescription: {fgroup.description}"
+        table.add_row(
+            *entry_list,
+        )
+
         if show_feature_list:
-            rich_text += (
-                "\n\tFeatures: ["
-                + ", ".join([f"{feature.name}" for feature in fgroup.features])
-                + "]"
-            )
-        return rich_text
+            table.add_row("", "- Columns:", "", "", "", "")
+            for feature in fgroup.features:
+                table.add_row("", "*", f"{feature.name} :", f"{feature.type}")
