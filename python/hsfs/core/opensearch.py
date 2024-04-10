@@ -27,6 +27,7 @@ from retrying import retry
 def _is_timeout(exception):
     return isinstance(exception, urllib3.exceptions.ReadTimeoutError)
 
+
 class OpenSearchClientSingleton:
     _instance = None
 
@@ -78,21 +79,26 @@ class OpenSearchClientSingleton:
 
     @retry(
         wait_exponential_multiplier=1000,
-        stop_max_attempt_number=3,
+        stop_max_attempt_number=5,
         retry_on_exception=_is_timeout,
     )
     def search(self, index=None, body=None):
         try:
             return self._opensearch_client.search(body=body, index=index)
-        except (self.OpenSearchConnectionError, self.OpenSearchAuthenticationException):
+        except (
+        self.OpenSearchConnectionError, self.OpenSearchAuthenticationException):
             # OpenSearchConnectionError occurs when connection is closed.
             # OpenSearchAuthenticationException occurs when jwt is expired
             self._refresh_opensearch_connection()
-            return self._opensearch_client.search(body=body, index=index)
+            return self._opensearch_client.search(body=body, index=index,
+                                                  params={
+                                                    "timeout": 30,
+                                                  })
         except self.RequestError as e:
             caused_by = e.info.get("error") and e.info["error"].get("caused_by")
             if caused_by and caused_by["type"] == "illegal_argument_exception":
-                raise self._create_vector_database_exception(caused_by["reason"]) from e
+                raise self._create_vector_database_exception(
+                    caused_by["reason"]) from e
             raise VectorDatabaseException(
                 VectorDatabaseException.OTHERS,
                 f"Error in Opensearch request: {e}",
@@ -101,11 +107,12 @@ class OpenSearchClientSingleton:
 
     @retry(
         wait_exponential_multiplier=1000,
-        stop_max_attempt_number=3,
+        stop_max_attempt_number=5,
         retry_on_exception=_is_timeout,
     )
     def count(self, index, body=None):
-        result = self._opensearch_client.count(index=index, body=body)
+        result = self._opensearch_client.count(index=index, body=body,
+                                               params={"timeout": 30})
         return result['count']
 
     def close(self):
@@ -123,7 +130,9 @@ class OpenSearchClientSingleton:
                     f"Illegal argument in vector database request: "
                     f"Requested k is too large, it needs to be less than {k}."
                 )
-                info = {VectorDatabaseException.REQUESTED_K_TOO_LARGE_INFO_K: int(k)}
+                info = {
+                    VectorDatabaseException.REQUESTED_K_TOO_LARGE_INFO_K: int(
+                        k)}
             else:
                 reason = VectorDatabaseException.REQUESTED_K_TOO_LARGE
                 message = "Illegal argument in vector database request: Requested k is too large."
