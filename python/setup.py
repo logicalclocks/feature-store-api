@@ -29,13 +29,13 @@ setup(
         "pyjks",
         "mock",
         "avro==1.11.3",
-        "sqlalchemy<=1.4.48",  # aiomysql does not support v2 yet https://github.com/aio-libs/aiomysql/discussions/908
+        "sqlalchemy",
         "PyMySQL[rsa]",
         "great_expectations==0.15.12",
         "tzlocal",
         "fsspec",
         "retrying",
-        "aiomysql",
+        "aiomysql[sa] @ git+https://git@github.com/logicalclocks/aiomysql", # fork to have fix for upstream aiomysql issue https://github.com/aio-libs/aiomysql/discussions/908
         "polars>=0.20.18,<0.21.0",
         "opensearch-py>=1.1.0,<=2.4.2",
     ],
