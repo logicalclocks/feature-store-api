@@ -161,6 +161,9 @@ jobs:
       - name: Display Python version
         run: python --version
 
+      - name: Display pip freeze
+        run: pip freeze
+
       - name: Run Pytest suite
         env:
           ENABLE_HOPSWORKS_USAGE: "false"
