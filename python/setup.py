@@ -31,12 +31,12 @@ setup(
         "avro==1.11.3",
         "sqlalchemy",
         "PyMySQL[rsa]",
-        "great_expectations==0.15.12",
+        "great_expectations==0.18.12",
         "tzlocal",
         "fsspec",
         "retrying",
-        "aiomysql[sa] @ git+https://git@github.com/logicalclocks/aiomysql", # fork to have fix for upstream aiomysql issue https://github.com/aio-libs/aiomysql/discussions/908
-        "polars>=0.20.18,<0.21.0",
+        "aiomysql[sa] @ git+https://git@github.com/logicalclocks/aiomysql",
+        "polars==0.20.17",
         "opensearch-py>=1.1.0,<=2.4.2",
     ],
     extras_require={
