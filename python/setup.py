@@ -31,7 +31,7 @@ setup(
         "avro==1.11.3",
         "sqlalchemy<=1.4.48",  # aiomysql does not support v2 yet https://github.com/aio-libs/aiomysql/discussions/908
         "PyMySQL[rsa]",
-        "great_expectations==0.15.12",
+        "great_expectations==0.18.12",
         "tzlocal",
         "fsspec",
         "retrying",
