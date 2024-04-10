@@ -32,7 +32,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
 
 
-FEATURE_STORE_NAME_SUFFIX = "_featurestore"
+FEATURE_STORE_NAME_SUFFIX = "_featurestoe"
 
 
 class FeatureStoreEncoder(json.JSONEncoder):
