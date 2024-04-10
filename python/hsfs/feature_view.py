@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import copy
 import json
-import os
 import warnings
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Set, Tuple, TypeVar, Union
@@ -58,6 +57,7 @@ from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.transformation_function import TransformationFunction
+from hsfs.util import typechecked
 
 
 TrainingDatasetDataFrameTypes = Union[
@@ -66,6 +66,7 @@ TrainingDatasetDataFrameTypes = Union[
     TypeVar("pyspark.RDD"),  # noqa: F821
     np.ndarray,
     List[List[Any]],
+    pl.DataFrame,
 ]
 
 SplineDataFrameTypes = Union[
@@ -76,18 +77,6 @@ SplineDataFrameTypes = Union[
     List[List[Any]],
     TypeVar("SplineGroup"),  # noqa: F821
 ]
-
-if os.environ.get("HOPSWORKS_RUN_WITH_TYPECHECK", False):
-    from typeguard import typechecked
-else:
-    from typing import TypeVar
-
-    _T = TypeVar("_T")
-
-    def typechecked(
-        target: _T,
-    ) -> _T:
-        return target if target else typechecked
 
 
 @typechecked

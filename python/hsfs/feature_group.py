@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import copy
 import json
-import os
 import time
 import warnings
 from datetime import date, datetime
@@ -71,20 +70,8 @@ from hsfs.expectation_suite import ExpectationSuite
 from hsfs.ge_validation_result import ValidationResult
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
+from hsfs.util import typechecked
 from hsfs.validation_report import ValidationReport
-
-
-if os.environ.get("HOPSWORKS_RUN_WITH_TYPECHECK", False):
-    from typeguard import typechecked
-else:
-    from typing import TypeVar
-
-    _T = TypeVar("_T")
-
-    def typechecked(
-        target: _T,
-    ) -> _T:
-        return target if target else typechecked
 
 
 @typechecked

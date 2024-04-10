@@ -39,7 +39,7 @@ jobs:
           TEST_ALL_CHANGED_FILES: ${{ steps.get-changed-files.outputs.test_all_changed_files }}
         run: ruff check --output-format=github $TEST_ALL_CHANGED_FILES
 
-      - name: ruff format
+      - name: ruff format --check $ALL_CHANGED_FILES
         env:
           ALL_CHANGED_FILES: ${{ steps.get-changed-files.outputs.all_changed_files }}
         run: ruff format $ALL_CHANGED_FILES

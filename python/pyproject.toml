@@ -45,6 +45,7 @@ ignore = [
     "ANN101", # Missing type annotation for self in method
     "ANN102", # Missing type annotation for cls in classmethod
     "ANN003", # Missing type annotation for **kwarg in function
+    "ANN002", # Missing type annotation for *args in function
     "ANN401", # Allow Any in type annotations
 ]
 

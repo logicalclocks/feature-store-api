@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import json
-import os
 import warnings
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
@@ -31,19 +30,7 @@ from hsfs.constructor.filter import Filter, Logic
 from hsfs.constructor.fs_query import FsQuery
 from hsfs.core import arrow_flight_client, query_constructor_api, storage_connector_api
 from hsfs.feature import Feature
-
-
-if os.environ.get("HOPSWORKS_RUN_WITH_TYPECHECK", False):
-    from typeguard import typechecked
-else:
-    from typing import TypeVar
-
-    _T = TypeVar("_T")
-
-    def typechecked(
-        target: _T,
-    ) -> _T:
-        return target if target else typechecked
+from hsfs.util import typechecked
 
 
 @typechecked

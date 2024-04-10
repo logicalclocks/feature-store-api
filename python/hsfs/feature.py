@@ -15,26 +15,13 @@
 #
 
 import json
-import os
 from typing import Any, Dict, List, Optional, Union
 
 import hsfs
 import humps
 from hsfs import util
 from hsfs.constructor import filter
-
-
-if os.environ.get("HOPSWORKS_RUN_WITH_TYPECHECK", False):
-    from typeguard import typechecked
-else:
-    from typing import TypeVar
-
-    _T = TypeVar("_T")
-
-    def typechecked(
-        target: _T,
-    ) -> _T:
-        return target if target else typechecked
+from hsfs.util import typechecked
 
 
 @typechecked
