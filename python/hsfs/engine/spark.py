@@ -106,6 +106,7 @@ class Engine:
     def __init__(self):
         self._spark_session = SparkSession.builder.enableHiveSupport().getOrCreate()
         self._spark_context = self._spark_session.sparkContext
+        # self._spark_context.setLogLevel("DEBUG")
         self._jvm = self._spark_context._jvm
 
         self._spark_session.conf.set("hive.exec.dynamic.partition", "true")
