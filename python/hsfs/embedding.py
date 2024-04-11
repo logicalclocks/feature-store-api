@@ -364,7 +364,7 @@ class EmbeddingIndex:
         """
         return {
             "indexName": self._index_name,
-            "features": list(self._features.values()),
+            "features": [feature.to_dict() for feature in self._features.values()],
             "colPrefix": self._col_prefix,
         }
 
