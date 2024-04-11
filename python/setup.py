@@ -1,3 +1,4 @@
+# ruff: noqa
 import os
 from importlib.machinery import SourceFileLoader
 
