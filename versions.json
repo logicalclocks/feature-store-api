@@ -3,15 +3,14 @@
     "version": "3.7.1",
     "title": "3.7.1",
     "aliases": [
-      "3.7"
+      "3.7",
+      "latest"
     ]
   },
   {
     "version": "3.7.1-RC0",
     "title": "3.7.1-RC0",
-    "aliases": [
-      "latest"
-    ]
+    "aliases": []
   },
   {
     "version": "3.7.0-RC8",
