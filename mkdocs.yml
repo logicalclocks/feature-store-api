@@ -16,7 +16,7 @@ nav:
   - Guides: https://docs.hopsworks.ai/
   - Setup and Installation: https://docs.hopsworks.ai/
   - Administration: https://docs.hopsworks.ai/
-  - API:
+  - <div class="dropdown"><button class="dropbtn"> API </button> <div id="myDropdown" class="dropdown-content"> <a id="hopsworks_api_link" href="https://docs.hopsworks.ai/hopsworks-api/dev">Hopsworks API</a> <a id="hsfs_api_link" href="https://docs.hopsworks.ai/feature-store-api/dev">Feature Store API</a> <a id="hsfs_javadoc_link" href="https://docs.hopsworks.ai/feature-store-api/dev/javadoc">Feature Store JavaDoc</a> <a id="hsml_api_link" href="https://docs.hopsworks.ai/machine-learning-api/dev">MLOps API</a> </div></div>:
     - API Reference:
       - Connection: generated/api/connection_api.md
       - ExpectationSuite: generated/api/expectation_suite_api.md
@@ -38,6 +38,7 @@ nav:
 
 theme:
   name: material
+  custom_dir: docs/overrides
   favicon: assets/images/favicon.ico
   logo: assets/images/hops-logo.png
   icon:
@@ -47,18 +48,21 @@ theme:
     code: "IBM Plex Mono"
   palette:
     accent: teal
+    scheme: hopsworks
   features:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.sections
     - navigation.indexes
-  custom_dir: docs/overrides
 
 extra:
   analytics:
     provider: google
     property: G-64FEEXPSDN
   generator: false
+  version:
+    - provider: mike
+    - default: latest
   social:
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/logicalclocks
@@ -78,9 +82,16 @@ extra_css:
 extra_javascript:
     - js/version-select.js
     - js/inject-api-links.js
+    - js/dropdown.js
 
 plugins:
     - search
+    - minify:
+        minify_html: true
+        minify_css: true
+        minify_js: true
+    - mike:
+        canonical_version: latest
 
 markdown_extensions:
     - admonition
