@@ -498,7 +498,7 @@ class FeatureGroupBase:
         """
         return self._feature_group_engine.get_parent_feature_groups(self)
     
-    def get_parent_storage_connectors(self):
+    def get_parent_storage_connector(self):
         """Get the parents of this feature group, based on explicit provenance.
         Parents are storage connectors. These storage connector can be accessible,
         deleted or inaccessible.
@@ -512,7 +512,7 @@ class FeatureGroupBase:
         # Raises
             `hsfs.client.exceptions.RestAPIError`.
         """
-        return self._feature_group_engine.get_parent_storage_connectors(self)
+        return self._feature_group_engine.get_parent_storage_connector(self)
 
     def get_generated_feature_views(self):
         """Get the generated feature view using this feature group, based on explicit

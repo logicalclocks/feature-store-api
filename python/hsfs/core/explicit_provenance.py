@@ -320,7 +320,7 @@ class Links:
         # Arguments
             json_dict: json response from the explicit provenance endpoint
             direction: subset of links to parse - UPSTREAM/DOWNSTREAM
-            artifact: subset of links to parse - FEATURE_GROUP/FEATURE_VIEW/MODEL/STORAGE_CONNECTOR
+            artifact: subset of links to parse - STORAGE_CONNECTOR/FEATURE_GROUP/FEATURE_VIEW/MODEL
             training_dataset_version: training dataset version
 
         # Returns
