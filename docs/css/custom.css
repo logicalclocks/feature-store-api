@@ -1,4 +1,4 @@
-:root {
+[data-md-color-scheme="hopsworks"] {
   --md-primary-fg-color: #1EB382;
   --md-secondary-fg-color: #188a64;
   --md-tertiary-fg-color: #0d493550;
@@ -22,6 +22,10 @@
 
 .md-header[data-md-state=shadow] {
   box-shadow: 0 0 0 0;
+}
+
+.md-tabs__item {
+  min-width: 2.25rem;
 }
 
 .md-tabs__item:hover {
