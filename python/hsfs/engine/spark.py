@@ -21,7 +21,7 @@ import os
 import re
 import shutil
 import warnings
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Optional, TypeVar
 
 import avro
@@ -644,9 +644,45 @@ class Engine:
     def _time_series_split(
         self, training_dataset, dataset, event_time, drop_event_time=False
     ):
+        # importing it from util causes issues on windows for some reason
+        def convert_event_time_to_timestamp(event_time):
+            if not event_time:
+                return None
+            if isinstance(event_time, str):
+                return util.get_timestamp_from_date_string(event_time)
+            elif isinstance(event_time, pd._libs.tslibs.timestamps.Timestamp):
+                # convert to unix epoch time in milliseconds.
+                event_time = event_time.to_pydatetime()
+                # convert to unix epoch time in milliseconds.
+                if event_time.tzinfo is None:
+                    event_time = event_time.replace(tzinfo=timezone.utc)
+                return int(event_time.timestamp() * 1000)
+            elif isinstance(event_time, datetime):
+                # convert to unix epoch time in milliseconds.
+                if event_time.tzinfo is None:
+                    event_time = event_time.replace(tzinfo=timezone.utc)
+                return int(event_time.timestamp() * 1000)
+            elif isinstance(event_time, date):
+                # convert to unix epoch time in milliseconds.
+                event_time = datetime(*event_time.timetuple()[:7])
+                if event_time.tzinfo is None:
+                    event_time = event_time.replace(tzinfo=timezone.utc)
+                return int(event_time.timestamp() * 1000)
+            elif isinstance(event_time, int):
+                if event_time == 0:
+                    raise ValueError("Event time should be greater than 0.")
+                # jdbc supports timestamp precision up to second only.
+                if len(str(event_time)) <= 10:
+                    event_time = event_time * 1000
+                return event_time
+            else:
+                raise ValueError(
+                    "Given event time should be in `datetime`, `date`, `str` or `int` type"
+                )
+
         # registering the UDF
         _convert_event_time_to_timestamp = udf(
-            util.convert_event_time_to_timestamp, LongType()
+            convert_event_time_to_timestamp, LongType()
         )
 
         result_dfs = {}
