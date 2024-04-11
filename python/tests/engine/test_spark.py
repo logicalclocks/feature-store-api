@@ -3404,8 +3404,8 @@ class TestSpark:
         # Act
         result = spark_engine.validate_with_great_expectations(
             dataframe=spark_df,
-            expectation_suite=es,
-            ge_validate_kwargs={"run_id": "test_run_id"},
+            expectation_suite=es.to_ge_type(),
+            ge_validate_kwargs={"run_name": "test_run_id"},
         )
 
         # Assert
@@ -3423,8 +3423,9 @@ class TestSpark:
                     "batch_data": "SparkDataFrame",
                     "data_asset_name": "<YOUR_MEANGINGFUL_NAME>",
                 },
+                "checkpoint_name": None,
                 "expectation_suite_name": "es_name",
-                "great_expectations_version": "0.15.12",
+                "great_expectations_version": "0.18.12",
                 "run_id": {"run_name": "test_run_id", "run_time": mocker.ANY},
                 "validation_time": mocker.ANY,
             },
