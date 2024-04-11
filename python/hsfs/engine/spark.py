@@ -14,6 +14,7 @@
 #   limitations under the License.
 #
 
+# ruff: noqa
 import copy
 import importlib.util
 import json
@@ -80,7 +81,7 @@ from great_expectations.data_context.types.base import (
     DataContextConfig,
     InMemoryStoreBackendDefaults,
 )
-from hsfs import client, feature, training_dataset_feature, util
+from hsfs import client, feature, training_dataset_feature
 from hsfs.client import hopsworks
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import query
@@ -94,6 +95,12 @@ from hsfs.core import (
 from hsfs.feature_group import ExternalFeatureGroup, SpineGroup
 from hsfs.storage_connector import StorageConnector
 from hsfs.training_dataset_split import TrainingDatasetSplit
+from hsfs.util import (
+    FeatureGroupWarning,
+    convert_event_time_to_timestamp,
+    get_dataset_type,
+    setup_pydoop,
+)
 
 
 class Engine:
@@ -115,7 +122,7 @@ class Engine:
 
         if importlib.util.find_spec("pydoop"):
             # If we are on Databricks don't setup Pydoop as it's not available and cannot be easily installed.
-            util.setup_pydoop()
+            setup_pydoop()
         self._storage_connector_api = storage_connector_api.StorageConnectorApi()
         self._dataset_api = dataset_api.DatasetApi()
 
@@ -269,7 +276,7 @@ class Engine:
                     "Feature names are sanitized to lower case in the feature store.".format(
                         upper_case_features
                     ),
-                    util.FeatureGroupWarning,
+                    FeatureGroupWarning,
                     stacklevel=1,
                 )
 
@@ -645,7 +652,7 @@ class Engine:
     ):
         # registering the UDF
         _convert_event_time_to_timestamp = udf(
-            util.convert_event_time_to_timestamp, LongType()
+            convert_event_time_to_timestamp, LongType()
         )
 
         result_dfs = {}
@@ -814,7 +821,7 @@ class Engine:
         if isinstance(client.get_instance(), client.external.Client):
             tmp_file = os.path.join(SparkFiles.getRootDirectory(), file_name)
             print("Reading key file from storage connector.")
-            response = self._dataset_api.read_content(file, util.get_dataset_type(file))
+            response = self._dataset_api.read_content(file, get_dataset_type(file))
 
             with open(tmp_file, "wb") as f:
                 f.write(response.content)
@@ -824,8 +831,8 @@ class Engine:
             # The file is not added to the driver current working directory
             # We should add it manually by copying from the download location
             # The file will be added to the executors current working directory
-            # before the next task is executed
             shutil.copy(SparkFiles.get(file_name), file_name)
+            # before the next task is executed
 
         return file_name
 
