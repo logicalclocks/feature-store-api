@@ -28,6 +28,18 @@ from retrying import retry
 def _is_timeout(exception):
     return isinstance(exception, urllib3.exceptions.ReadTimeoutError)
 
+def _handle_opensearch_exception(func):
+    @wraps(func)
+    def error_handler_wrapper(*args, **kw):
+        try:
+            return func(*args, **kw)
+        except Exception as e:
+            if _is_timeout(e):
+                raise FeatureStoreException(OpenSearchClientSingleton.TIMEOUT_ERROR_MSG) from e
+            else:
+                raise e
+
+    return error_handler_wrapper
 
 class OpensearchRequestOption:
     TIME_OUT = "timeout"
@@ -72,22 +84,6 @@ class OpenSearchClientSingleton:
             cls._instance._setup_opensearch_client()
         return cls._instance
 
-    def _handle_opensearch_exception(self):
-        def decorator(func):
-            @wraps(func)
-            def error_handler_wrapper(*args, **kw):
-                try:
-                    return func(*args, **kw)
-                except Exception as e:
-                    if _is_timeout(e):
-                        raise FeatureStoreException(OpenSearchClientSingleton.TIMEOUT_ERROR_MSG) from e
-                    else:
-                        raise e
-
-            return error_handler_wrapper
-
-        return decorator
-
     def _setup_opensearch_client(self):
         if not self._opensearch_client:
             try:
@@ -127,7 +123,7 @@ class OpenSearchClientSingleton:
         self._opensearch_client = None
         self._setup_opensearch_client()
 
-    @_handle_opensearch_exception()
+    @_handle_opensearch_exception
     @retry(
         wait_exponential_multiplier=1000,
         stop_max_attempt_number=5,
@@ -154,7 +150,7 @@ class OpenSearchClientSingleton:
                 e.info,
             )  from e
 
-    @_handle_opensearch_exception()
+    @_handle_opensearch_exception
     @retry(
         wait_exponential_multiplier=1000,
         stop_max_attempt_number=5,
