@@ -99,6 +99,7 @@ class VectorDbClient:
         k=10,
         filter: Union[Filter, Logic] = None,
         min_score=0,
+        options=None
     ):
         if not feature:
             if not self._embedding_features:
@@ -136,7 +137,7 @@ class VectorDbClient:
         if not index_name:
             index_name = embedding_feature.embedding_index.index_name
 
-        results = self._opensearch_client.search(body=query, index=index_name)
+        results = self._opensearch_client.search(body=query, index=index_name, options=options)
 
         # When using project index (`embedding_feature.embedding_index.col_prefix` is not empty), sometimes the total number of result returned is less than k. Possible reason is that when using project index, some embedding columns have null value if the row is from a different feature group. And opensearch filter out the result where embedding is null after retrieving the top k results. So search 3 times more data if it is using project index and size of result is not k.
         if (
@@ -150,7 +151,7 @@ class VectorDbClient:
                 try:
                     # It is expected that this request ALWAYS fails because requested k is too large.
                     # The purpose here is to get the max k allowed from the vector database, and cache it.
-                    self._opensearch_client.search(body=query, index=index_name)
+                    self._opensearch_client.search(body=query, index=index_name, options=options)
                 except VectorDatabaseException as e:
                     if (
                         e.reason == VectorDatabaseException.REQUESTED_K_TOO_LARGE
@@ -166,7 +167,7 @@ class VectorDbClient:
             query["query"]["bool"]["must"][0]["knn"][col_name]["k"] = min(
                 self._index_result_limit_k.get(index_name, k), 3 * k
             )
-            results = self._opensearch_client.search(body=query, index=index_name)
+            results = self._opensearch_client.search(body=query, index=index_name, options=options)
 
         # https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/#spaces
         return [
@@ -309,11 +310,11 @@ class VectorDbClient:
             for item in results["hits"]["hits"]
         ]
 
-    def count(self, fg):
+    def count(self, fg, options=None):
         query = {
             "query": {"bool": {"must": {"exists": {"field": self._fg_pks_map[fg.id][0]}}}},
         }
-        return self._opensearch_client.count(self._get_vector_db_index_name(fg.id), query)
+        return self._opensearch_client.count(self._get_vector_db_index_name(fg.id), query, options=options)
 
     def _get_vector_db_index_name(self, fg_id):
         embedding = self._fg_embedding_map.get(fg_id)

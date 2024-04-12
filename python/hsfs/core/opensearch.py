@@ -16,6 +16,7 @@
 
 import logging
 import re
+from functools import wraps
 
 import urllib3
 from hsfs import client
@@ -28,8 +29,41 @@ def _is_timeout(exception):
     return isinstance(exception, urllib3.exceptions.ReadTimeoutError)
 
 
+class OpensearchRequestOption:
+    TIME_OUT = "timeout"
+
+    @classmethod
+    def get_options(cls, options: dict):
+        """
+        Construct a map of options for the request to the vector database.
+
+        Args:
+            options (dict): The options used for the request to the vector database.
+                The keys are attribute values of the OpensearchRequestOption class.
+
+        Returns:
+            dict: A dictionary containing the constructed options map, where keys represent
+            attribute values of the OpensearchRequestOption class, and values are obtained
+            either from the provided options or default values if not available.
+        """
+        option_map = {
+            cls.TIME_OUT: 30
+        }
+        if options:
+            # Iterate over attributes of the OpensearchRequestOption class
+            for _, attr_value in vars(cls).items():
+                # Check if the attribute value exists in the options dictionary
+                if attr_value in options:
+                    option_map[attr_value] = options[attr_value]
+        return option_map
+
+
 class OpenSearchClientSingleton:
     _instance = None
+
+    TIMEOUT_ERROR_MSG = """
+    Cannot fetch results from Opensearch due to timeout. It is because the server is busy right now or longer time is needed to reload the index. Try and increase the timeout limit by providing `options={"timeout": 60}` in the method.
+    """
 
     def __new__(cls):
         if not cls._instance:
@@ -37,6 +71,22 @@ class OpenSearchClientSingleton:
             cls._instance._opensearch_client = None
             cls._instance._setup_opensearch_client()
         return cls._instance
+
+    def _handle_opensearch_exception(self):
+        def decorator(func):
+            @wraps(func)
+            def afs_error_handler_wrapper(instance, *args, **kw):
+                try:
+                    return func(instance, *args, **kw)
+                except Exception as e:
+                    if _is_timeout(e):
+                        raise FeatureStoreException(OpenSearchClientSingleton.TIMEOUT_ERROR_MSG) from e
+                    else:
+                        raise e
+
+            return afs_error_handler_wrapper
+
+        return decorator
 
     def _setup_opensearch_client(self):
         if not self._opensearch_client:
@@ -77,23 +127,22 @@ class OpenSearchClientSingleton:
         self._opensearch_client = None
         self._setup_opensearch_client()
 
+    @_handle_opensearch_exception
     @retry(
         wait_exponential_multiplier=1000,
         stop_max_attempt_number=5,
         retry_on_exception=_is_timeout,
     )
-    def search(self, index=None, body=None):
+    def search(self, index=None, body=None, options=None):
         try:
-            return self._opensearch_client.search(body=body, index=index)
+            return self._opensearch_client.search(body=body, index=index, options=options)
         except (
         self.OpenSearchConnectionError, self.OpenSearchAuthenticationException):
             # OpenSearchConnectionError occurs when connection is closed.
             # OpenSearchAuthenticationException occurs when jwt is expired
             self._refresh_opensearch_connection()
             return self._opensearch_client.search(body=body, index=index,
-                                                  params={
-                                                    "timeout": 30,
-                                                  })
+                                                  params=OpensearchRequestOption.get_options(options))
         except self.RequestError as e:
             caused_by = e.info.get("error") and e.info["error"].get("caused_by")
             if caused_by and caused_by["type"] == "illegal_argument_exception":
@@ -105,14 +154,15 @@ class OpenSearchClientSingleton:
                 e.info,
             )  from e
 
+    @_handle_opensearch_exception
     @retry(
         wait_exponential_multiplier=1000,
         stop_max_attempt_number=5,
         retry_on_exception=_is_timeout,
     )
-    def count(self, index, body=None):
+    def count(self, index, body=None, options=None):
         result = self._opensearch_client.count(index=index, body=body,
-                                               params={"timeout": 30})
+                                               params=OpensearchRequestOption.get_options(options))
         return result['count']
 
     def close(self):

@@ -324,12 +324,26 @@ class EmbeddingIndex:
             feat.embedding_index = self
         return self._features.values()
 
-    def count(self):
+    def count(self, options: map = None):
+        """
+        Count the number of records in the feature group.
+
+        # Arguments
+            options: The options used for the request to the vector database.
+                The keys are attribute values of the `hsfs.core.opensearch.OpensearchRequestOption` class.
+
+        # Returns
+            int: The number of records in the feature group.
+
+        # Raises:
+            ValueError: If the feature group is not initialized.
+            FeaturestoreException: If an error occurs during the count operation.
+        """
         if self._vector_db_client is None:
             self._vector_db_client = VectorDbClient(
                 self._feature_group.select_all()
             )
-        return self._vector_db_client.count(self.feature_group)
+        return self._vector_db_client.count(self.feature_group, options=options)
 
     @classmethod
     def from_response_json(cls, json_dict):
