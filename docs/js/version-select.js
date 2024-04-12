@@ -33,7 +33,7 @@ window.addEventListener("DOMContentLoaded", function() {
       return i.aliases.includes("latest");
     }).version;
     let outdated_banner = document.querySelector(
-      'div[data-md-color-scheme="default"][data-md-component="outdated"]'
+      'div[data-md-component="outdated"]'
     );
     if (realVersion !== latestVersion) {
       outdated_banner.removeAttribute("hidden");
