@@ -75,16 +75,16 @@ class OpenSearchClientSingleton:
     def _handle_opensearch_exception(self):
         def decorator(func):
             @wraps(func)
-            def afs_error_handler_wrapper(instance, *args, **kw):
+            def error_handler_wrapper(*args, **kw):
                 try:
-                    return func(instance, *args, **kw)
+                    return func(*args, **kw)
                 except Exception as e:
                     if _is_timeout(e):
                         raise FeatureStoreException(OpenSearchClientSingleton.TIMEOUT_ERROR_MSG) from e
                     else:
                         raise e
 
-            return afs_error_handler_wrapper
+            return error_handler_wrapper
 
         return decorator
 
@@ -127,7 +127,7 @@ class OpenSearchClientSingleton:
         self._opensearch_client = None
         self._setup_opensearch_client()
 
-    @_handle_opensearch_exception
+    @_handle_opensearch_exception()
     @retry(
         wait_exponential_multiplier=1000,
         stop_max_attempt_number=5,
