@@ -12,7 +12,7 @@
         <meta name="author" content="Logical Clocks">
       
       
-        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/3.7.1/generated/api/training_dataset_api/">
+        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/latest/generated/api/training_dataset_api/">
       
       <link rel="icon" href="../../../assets/images/favicon.ico">
       <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.8">
@@ -91,6 +91,22 @@
     <div data-md-component="announce">
       
     </div>
+    
+      <div data-md-component="outdated" hidden>
+        <aside class="md-banner md-banner--warning">
+          
+            <div class="md-banner__inner md-grid md-typeset">
+              
+You're not viewing the latest version of the documentation.
+<a href="https://docs.hopsworks.ai/latest/">
+    <strong>Click here to go to latest.</strong>
+</a>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),outdated=__md_get("__outdated",sessionStorage);!0===outdated&&el&&(el.hidden=!1)</script>
+          
+        </aside>
+      </div>
     
     
       
@@ -483,10 +499,10 @@
   
   <li class="md-tabs__item dropdown-api"><button class="dropbtn-api  md-tabs__link md-tabs__link--active"> API </button>
     <div id="myDropdown" class="dropdown-content-api">
-      <a id="hopsworks_api_link" href="https://docs.hopsworks.ai/hopsworks-api/dev">Hopsworks API</a>
-      <a id="hsfs_api_link" href="https://docs.hopsworks.ai/feature-store-api/dev">Feature Store API</a>
-      <a id="hsfs_javadoc_link" href="https://docs.hopsworks.ai/feature-store-api/dev/javadoc">Feature Store JavaDoc</a>
-      <a id="hsml_api_link" href="https://docs.hopsworks.ai/machine-learning-api/dev">MLOps API</a>
+      <a id="hopsworks_api_link" href="https://docs.hopsworks.ai/hopsworks-api/latest">Hopsworks API</a>
+      <a id="hsfs_api_link" href="https://docs.hopsworks.ai/feature-store-api/latest">Feature Store API</a>
+      <a id="hsfs_javadoc_link" href="https://docs.hopsworks.ai/feature-store-api/dev/latest">Feature Store JavaDoc</a>
+      <a id="hsml_api_link" href="https://docs.hopsworks.ai/machine-learning-api/latest">MLOps API</a>
     </div>
   </li>
 
@@ -2172,7 +2188,7 @@
 
 
 <h1 id="training-dataset">Training Dataset<a class="headerlink" href="#training-dataset" title="Permanent link">#</a></h1>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L494">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L494">[source]</a></span></p>
 <h3 id="trainingdataset">TrainingDataset<a class="headerlink" href="#trainingdataset" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">hsfs</span><span class="o">.</span><span class="n">training_dataset</span><span class="o">.</span><span class="n">TrainingDataset</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -2215,7 +2231,7 @@
 </code></pre></div>
 <hr />
 <h2 id="creation">Creation<a class="headerlink" href="#creation" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/feature_store.py#L1130">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/feature_store.py#L1130">[source]</a></span></p>
 <h3 id="create_training_dataset">create_training_dataset<a class="headerlink" href="#create_training_dataset" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">create_training_dataset</span><span class="p">(</span>
     <span class="n">name</span><span class="p">,</span>
@@ -2312,7 +2328,7 @@ training datasets:</p>
 <p><code>TrainingDataset</code>: The training dataset metadata object.</p>
 <hr />
 <h2 id="retrieval">Retrieval<a class="headerlink" href="#retrieval" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/feature_store.py#L307">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/feature_store.py#L307">[source]</a></span></p>
 <h3 id="get_training_dataset">get_training_dataset<a class="headerlink" href="#get_training_dataset" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">FeatureStore</span><span class="o">.</span><span class="n">get_training_dataset</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -2341,128 +2357,128 @@ so you can subsequently read the data into a Spark or Pandas DataFrame.</p>
 </ul>
 <hr />
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L289">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L289">[source]</a></span></p>
 <h3 id="coalesce">coalesce<a class="headerlink" href="#coalesce" title="Permanent link">#</a></h3>
 <p>If true the training dataset data will be coalesced into
 a single partition before writing. The resulting training dataset
 will be a single file per split</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L280">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L280">[source]</a></span></p>
 <h3 id="data_format">data_format<a class="headerlink" href="#data_format" title="Permanent link">#</a></h3>
 <p>File format of the training dataset.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L271">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L271">[source]</a></span></p>
 <h3 id="description">description<a class="headerlink" href="#description" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L399">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L399">[source]</a></span></p>
 <h3 id="event_end_time">event_end_time<a class="headerlink" href="#event_end_time" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L391">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L391">[source]</a></span></p>
 <h3 id="event_start_time">event_start_time<a class="headerlink" href="#event_start_time" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L485">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L485">[source]</a></span></p>
 <h3 id="extra_filter">extra_filter<a class="headerlink" href="#extra_filter" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L1063">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L1063">[source]</a></span></p>
 <h3 id="feature_store_id">feature_store_id<a class="headerlink" href="#feature_store_id" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L1067">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L1067">[source]</a></span></p>
 <h3 id="feature_store_name">feature_store_name<a class="headerlink" href="#feature_store_name" title="Permanent link">#</a></h3>
 <p>Name of the feature store in which the feature group is located.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L929">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L929">[source]</a></span></p>
 <h3 id="id">id<a class="headerlink" href="#id" title="Permanent link">#</a></h3>
 <p>Training dataset id.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L1051">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L1051">[source]</a></span></p>
 <h3 id="label">label<a class="headerlink" href="#label" title="Permanent link">#</a></h3>
 <p>The label/prediction feature of the training dataset.</p>
 <p>Can be a composite of multiple features.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L341">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L341">[source]</a></span></p>
 <h3 id="location">location<a class="headerlink" href="#location" title="Permanent link">#</a></h3>
 <p>Path to the training dataset location.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L253">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L253">[source]</a></span></p>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
 <p>Name of the training dataset.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L966">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L966">[source]</a></span></p>
 <h3 id="query">query<a class="headerlink" href="#query" title="Permanent link">#</a></h3>
 <p>Query to generate this training dataset from online feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L947">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L947">[source]</a></span></p>
 <h3 id="schema">schema<a class="headerlink" href="#schema" title="Permanent link">#</a></h3>
 <p>Training dataset schema.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L350">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L350">[source]</a></span></p>
 <h3 id="seed">seed<a class="headerlink" href="#seed" title="Permanent link">#</a></h3>
 <p>Seed.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L325">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L325">[source]</a></span></p>
 <h3 id="splits">splits<a class="headerlink" href="#splits" title="Permanent link">#</a></h3>
 <p>Training dataset splits. <code>train</code>, <code>test</code> or <code>eval</code> and corresponding percentages.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L957">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L957">[source]</a></span></p>
 <h3 id="statistics">statistics<a class="headerlink" href="#statistics" title="Permanent link">#</a></h3>
 <p>Get computed statistics for the training dataset.</p>
 <p><strong>Returns</strong></p>
 <p><code>Statistics</code>. Object with statistics information.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L359">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L359">[source]</a></span></p>
 <h3 id="statistics_config">statistics_config<a class="headerlink" href="#statistics_config" title="Permanent link">#</a></h3>
 <p>Statistics configuration object defining the settings for statistics
 computation of the training dataset.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L300">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L300">[source]</a></span></p>
 <h3 id="storage_connector">storage_connector<a class="headerlink" href="#storage_connector" title="Permanent link">#</a></h3>
 <p>Storage connector.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L477">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L477">[source]</a></span></p>
 <h3 id="test_end">test_end<a class="headerlink" href="#test_end" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L429">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L429">[source]</a></span></p>
 <h3 id="test_size">test_size<a class="headerlink" href="#test_size" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L469">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L469">[source]</a></span></p>
 <h3 id="test_start">test_start<a class="headerlink" href="#test_start" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L445">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L445">[source]</a></span></p>
 <h3 id="train_end">train_end<a class="headerlink" href="#train_end" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L382">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L382">[source]</a></span></p>
 <h3 id="train_split">train_split<a class="headerlink" href="#train_split" title="Permanent link">#</a></h3>
 <p>Set name of training dataset split that is used for training.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L437">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L437">[source]</a></span></p>
 <h3 id="train_start">train_start<a class="headerlink" href="#train_start" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L407">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L407">[source]</a></span></p>
 <h3 id="training_dataset_type">training_dataset_type<a class="headerlink" href="#training_dataset_type" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L1072">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L1072">[source]</a></span></p>
 <h3 id="transformation_functions">transformation_functions<a class="headerlink" href="#transformation_functions" title="Permanent link">#</a></h3>
 <p>Set transformation functions.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L461">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L461">[source]</a></span></p>
 <h3 id="validation_end">validation_end<a class="headerlink" href="#validation_end" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L421">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L421">[source]</a></span></p>
 <h3 id="validation_size">validation_size<a class="headerlink" href="#validation_size" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L453">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L453">[source]</a></span></p>
 <h3 id="validation_start">validation_start<a class="headerlink" href="#validation_start" title="Permanent link">#</a></h3>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L262">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L262">[source]</a></span></p>
 <h3 id="version">version<a class="headerlink" href="#version" title="Permanent link">#</a></h3>
 <p>Version number of the training dataset.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L938">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L938">[source]</a></span></p>
 <h3 id="write_options">write_options<a class="headerlink" href="#write_options" title="Permanent link">#</a></h3>
 <p>User provided options to write training dataset.</p>
 <hr />
 <h2 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L766">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L766">[source]</a></span></p>
 <h3 id="add_tag">add_tag<a class="headerlink" href="#add_tag" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">add_tag</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 </code></pre></div>
@@ -2477,14 +2493,14 @@ The value of a tag can be any valid json - primitives, arrays or json objects.</
 <p><strong>Raises</strong></p>
 <p><code>hsfs.client.exceptions.RestAPIError</code> in case the backend fails to add the tag.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L727">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L727">[source]</a></span></p>
 <h3 id="compute_statistics">compute_statistics<a class="headerlink" href="#compute_statistics" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">compute_statistics</span><span class="p">()</span>
 </code></pre></div>
 <p>Compute the statistics for the training dataset and save them to the
 feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L832">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L832">[source]</a></span></p>
 <h3 id="delete">delete<a class="headerlink" href="#delete" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
 </code></pre></div>
@@ -2504,7 +2520,7 @@ training dataset <strong>and</strong> and the materialized data in HopsFS.</p>
 <p><strong>Raises</strong></p>
 <p><code>hsfs.client.exceptions.RestAPIError</code>.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L781">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L781">[source]</a></span></p>
 <h3 id="delete_tag">delete_tag<a class="headerlink" href="#delete_tag" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">delete_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -2516,17 +2532,17 @@ training dataset <strong>and</strong> and the materialized data in HopsFS.</p>
 <p><strong>Raises</strong></p>
 <p><code>hsfs.client.exceptions.RestAPIError</code> in case the backend fails to delete the tag.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L856">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L856">[source]</a></span></p>
 <h3 id="from_response_json">from_response_json<a class="headerlink" href="#from_response_json" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L875">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L875">[source]</a></span></p>
 <h3 id="from_response_json_single">from_response_json_single<a class="headerlink" href="#from_response_json_single" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">from_response_json_single</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L971">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L971">[source]</a></span></p>
 <h3 id="get_query">get_query<a class="headerlink" href="#get_query" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_query</span><span class="p">(</span><span class="n">online</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">with_label</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
@@ -2543,7 +2559,7 @@ training dataset <strong>and</strong> and the materialized data in HopsFS.</p>
 <p><code>str</code>. Query string for the chosen storage used to generate this training
     dataset.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L1007">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L1007">[source]</a></span></p>
 <h3 id="get_serving_vector">get_serving_vector<a class="headerlink" href="#get_serving_vector" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_serving_vector</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">external</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -2563,7 +2579,7 @@ training dataset <strong>and</strong> and the materialized data in HopsFS.</p>
 <p><code>list</code> List of feature values related to provided primary keys, ordered according to positions of this
 features in training dataset query.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L1029">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L1029">[source]</a></span></p>
 <h3 id="get_serving_vectors">get_serving_vectors<a class="headerlink" href="#get_serving_vectors" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_serving_vectors</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">external</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -2583,7 +2599,7 @@ features in training dataset query.</p>
 <p><code>List[list]</code> List of lists of feature values related to provided primary keys, ordered according to
 positions of this features in training dataset query.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L792">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L792">[source]</a></span></p>
 <h3 id="get_tag">get_tag<a class="headerlink" href="#get_tag" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_tag</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 </code></pre></div>
@@ -2597,7 +2613,7 @@ positions of this features in training dataset query.</p>
 <p><strong>Raises</strong></p>
 <p><code>hsfs.client.exceptions.RestAPIError</code> in case the backend fails to retrieve the tag.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L806">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L806">[source]</a></span></p>
 <h3 id="get_tags">get_tags<a class="headerlink" href="#get_tags" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">get_tags</span><span class="p">()</span>
 </code></pre></div>
@@ -2607,7 +2623,7 @@ positions of this features in training dataset query.</p>
 <p><strong>Raises</strong></p>
 <p><code>hsfs.client.exceptions.RestAPIError</code> in case the backend fails to retrieve the tags.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L989">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L989">[source]</a></span></p>
 <h3 id="init_prepared_statement">init_prepared_statement<a class="headerlink" href="#init_prepared_statement" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">init_prepared_statement</span><span class="p">(</span><span class="n">batch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">external</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -2625,7 +2641,7 @@ positions of this features in training dataset query.</p>
     external environment (e.g AWS Sagemaker or Google Colab), otherwise to False.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L652">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L652">[source]</a></span></p>
 <h3 id="insert">insert<a class="headerlink" href="#insert" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">,</span> <span class="n">write_options</span><span class="o">=</span><span class="p">{})</span>
 </code></pre></div>
@@ -2662,12 +2678,12 @@ lists or Numpy ndarrays. The schemas must match for this operation.</p>
 <li><strong><code>hsfs.client.exceptions.RestAPIError</code></strong>: Unable to create training dataset metadata.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L904">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L904">[source]</a></span></p>
 <h3 id="json">json<a class="headerlink" href="#json" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L706">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L706">[source]</a></span></p>
 <h3 id="read">read<a class="headerlink" href="#read" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">read_options</span><span class="o">=</span><span class="p">{})</span>
 </code></pre></div>
@@ -2684,7 +2700,7 @@ lists or Numpy ndarrays. The schemas must match for this operation.</p>
 <p><code>DataFrame</code>: The spark dataframe containing the feature data of the
     training dataset.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L589">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L589">[source]</a></span></p>
 <h3 id="save">save<a class="headerlink" href="#save" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">write_options</span><span class="o">=</span><span class="p">{})</span>
 </code></pre></div>
@@ -2720,13 +2736,13 @@ From v2.5 onward, filters are saved along with the <code>Query</code>.</p>
 <li><strong><code>hsfs.client.exceptions.RestAPIError</code></strong>: Unable to create training dataset metadata.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L1085">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L1085">[source]</a></span></p>
 <h3 id="serving_keys">serving_keys<a class="headerlink" href="#serving_keys" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">serving_keys</span><span class="p">()</span>
 </code></pre></div>
 <p>Set of primary key names that is used as keys in input dict object for <code>get_serving_vector</code> method.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L754">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L754">[source]</a></span></p>
 <h3 id="show">show<a class="headerlink" href="#show" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
@@ -2739,17 +2755,17 @@ From v2.5 onward, filters are saved along with the <code>Query</code>.</p>
     when taking all splits together.</li>
 </ul>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L907">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L907">[source]</a></span></p>
 <h3 id="to_dict">to_dict<a class="headerlink" href="#to_dict" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L883">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L883">[source]</a></span></p>
 <h3 id="update_from_response_json">update_from_response_json<a class="headerlink" href="#update_from_response_json" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">update_from_response_json</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/training_dataset.py#L817">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/training_dataset.py#L817">[source]</a></span></p>
 <h3 id="update_statistics_config">update_statistics_config<a class="headerlink" href="#update_statistics_config" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code><span class="n">TrainingDataset</span><span class="o">.</span><span class="n">update_statistics_config</span><span class="p">()</span>
 </code></pre></div>
@@ -2861,7 +2877,7 @@ this method.</p>
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes"], "search": "../../../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes"], "search": "../../../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
       <script src="../../../assets/javascripts/bundle.c44cc438.min.js"></script>

@@ -12,7 +12,7 @@
         <meta name="author" content="Logical Clocks">
       
       
-        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/3.7.1/generated/api/links/">
+        <link rel="canonical" href="https://docs.hopsworks.ai/feature-store-api/latest/latest/generated/api/links/">
       
       <link rel="icon" href="../../../assets/images/favicon.ico">
       <meta name="generator" content="mkdocs-1.3.0, mkdocs-material-8.2.8">
@@ -91,6 +91,22 @@
     <div data-md-component="announce">
       
     </div>
+    
+      <div data-md-component="outdated" hidden>
+        <aside class="md-banner md-banner--warning">
+          
+            <div class="md-banner__inner md-grid md-typeset">
+              
+You're not viewing the latest version of the documentation.
+<a href="https://docs.hopsworks.ai/latest/">
+    <strong>Click here to go to latest.</strong>
+</a>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),outdated=__md_get("__outdated",sessionStorage);!0===outdated&&el&&(el.hidden=!1)</script>
+          
+        </aside>
+      </div>
     
     
       
@@ -483,10 +499,10 @@
   
   <li class="md-tabs__item dropdown-api"><button class="dropbtn-api  md-tabs__link md-tabs__link--active"> API </button>
     <div id="myDropdown" class="dropdown-content-api">
-      <a id="hopsworks_api_link" href="https://docs.hopsworks.ai/hopsworks-api/dev">Hopsworks API</a>
-      <a id="hsfs_api_link" href="https://docs.hopsworks.ai/feature-store-api/dev">Feature Store API</a>
-      <a id="hsfs_javadoc_link" href="https://docs.hopsworks.ai/feature-store-api/dev/javadoc">Feature Store JavaDoc</a>
-      <a id="hsml_api_link" href="https://docs.hopsworks.ai/machine-learning-api/dev">MLOps API</a>
+      <a id="hopsworks_api_link" href="https://docs.hopsworks.ai/hopsworks-api/latest">Hopsworks API</a>
+      <a id="hsfs_api_link" href="https://docs.hopsworks.ai/feature-store-api/latest">Feature Store API</a>
+      <a id="hsfs_javadoc_link" href="https://docs.hopsworks.ai/feature-store-api/dev/latest">Feature Store JavaDoc</a>
+      <a id="hsml_api_link" href="https://docs.hopsworks.ai/machine-learning-api/latest">MLOps API</a>
     </div>
   </li>
 
@@ -1368,28 +1384,28 @@
 <h1 id="provenance-links">Provenance Links<a class="headerlink" href="#provenance-links" title="Permanent link">#</a></h1>
 <p>Provenance Links are objects returned by methods such as <a href="../feature_group_api/#get_parent_feature_groups">get_parent_feature_group</a>, <a href="../feature_group_api/#get_generated_feature_groups">get_generated_feature_groups</a>, <a href="../feature_group_api/#get_generated_feature_views">get_generated_feature_views</a> and represent sections of the provenance graph, depending on the method invoked.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/core/explicit_provenance.py#L134">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L134">[source]</a></span></p>
 <h3 id="accessible">accessible<a class="headerlink" href="#accessible" title="Permanent link">#</a></h3>
 <p>List of <a href="../feature_group_api">feature groups</a> or
 <a href="../feature_view_api">feature views</a> metadata objects
 which are part of the provenance graph requested. These entities
 exist in the feature store and the user has access to them.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/core/explicit_provenance.py#L115">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L115">[source]</a></span></p>
 <h3 id="deleted">deleted<a class="headerlink" href="#deleted" title="Permanent link">#</a></h3>
 <p>List of <a href="../links#artifact">Artifact objects</a> which contains
 minimal information (name, version) about the entities
 (feature groups, feature views) they represent.
 These entities have been removed from the feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/core/explicit_provenance.py#L143">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L143">[source]</a></span></p>
 <h3 id="faulty">faulty<a class="headerlink" href="#faulty" title="Permanent link">#</a></h3>
 <p>List of <a href="../links#artifact">Artifact objects</a> which contains
 minimal information (name, version) about the entities
 (feature groups, feature views) they represent.
 These entities exist in the feature store, however they are corrupted.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/core/explicit_provenance.py#L124">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L124">[source]</a></span></p>
 <h3 id="inaccessible">inaccessible<a class="headerlink" href="#inaccessible" title="Permanent link">#</a></h3>
 <p>List of <a href="../links#artifact">Artifact objects</a> which contains
 minimal information (name, version) about the entities
@@ -1400,15 +1416,15 @@ does not have access to them anymore.</p>
 <h1 id="artifact">Artifact<a class="headerlink" href="#artifact" title="Permanent link">#</a></h1>
 <p>Artifacts objects are part of the provenance graph and contain a minimal set of information regarding the entities (feature groups, feature views) they represent.
 The provenance graph contains Artifact objects when the underlying entities have been deleted or they are corrupted or they are not accessible by the user.</p>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/core/explicit_provenance.py#L49">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L49">[source]</a></span></p>
 <h3 id="feature_store_name">feature_store_name<a class="headerlink" href="#feature_store_name" title="Permanent link">#</a></h3>
 <p>Name of the feature store in which the artifact is located.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/core/explicit_provenance.py#L54">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L54">[source]</a></span></p>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
 <p>Name of the artifact.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/257ce1a19b569e8cb0122f36ca396e330f2795bd/python/hsfs/core/explicit_provenance.py#L59">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L59">[source]</a></span></p>
 <h3 id="version">version<a class="headerlink" href="#version" title="Permanent link">#</a></h3>
 <p>Version of the artifact</p>
 <hr />
@@ -1512,7 +1528,7 @@ The provenance graph contains Artifact objects when the underlying entities have
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes"], "search": "../../../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes"], "search": "../../../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
       <script src="../../../assets/javascripts/bundle.c44cc438.min.js"></script>
