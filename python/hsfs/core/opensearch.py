@@ -131,7 +131,7 @@ class OpenSearchClientSingleton:
     )
     def search(self, index=None, body=None, options=None):
         try:
-            return self._opensearch_client.search(body=body, index=index, options=options)
+            return self._opensearch_client.search(body=body, index=index, params=options)
         except (
         self.OpenSearchConnectionError, self.OpenSearchAuthenticationException):
             # OpenSearchConnectionError occurs when connection is closed.
