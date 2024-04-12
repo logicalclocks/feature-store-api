@@ -1384,28 +1384,28 @@ You're not viewing the latest version of the documentation.
 <h1 id="provenance-links">Provenance Links<a class="headerlink" href="#provenance-links" title="Permanent link">#</a></h1>
 <p>Provenance Links are objects returned by methods such as <a href="../feature_group_api/#get_parent_feature_groups">get_parent_feature_group</a>, <a href="../feature_group_api/#get_generated_feature_groups">get_generated_feature_groups</a>, <a href="../feature_group_api/#get_generated_feature_views">get_generated_feature_views</a> and represent sections of the provenance graph, depending on the method invoked.</p>
 <h2 id="properties">Properties<a class="headerlink" href="#properties" title="Permanent link">#</a></h2>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L134">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/06f20a6c79058a321964b4f266202a6512afc779/python/hsfs/core/explicit_provenance.py#L134">[source]</a></span></p>
 <h3 id="accessible">accessible<a class="headerlink" href="#accessible" title="Permanent link">#</a></h3>
 <p>List of <a href="../feature_group_api">feature groups</a> or
 <a href="../feature_view_api">feature views</a> metadata objects
 which are part of the provenance graph requested. These entities
 exist in the feature store and the user has access to them.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L115">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/06f20a6c79058a321964b4f266202a6512afc779/python/hsfs/core/explicit_provenance.py#L115">[source]</a></span></p>
 <h3 id="deleted">deleted<a class="headerlink" href="#deleted" title="Permanent link">#</a></h3>
 <p>List of <a href="../links#artifact">Artifact objects</a> which contains
 minimal information (name, version) about the entities
 (feature groups, feature views) they represent.
 These entities have been removed from the feature store.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L143">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/06f20a6c79058a321964b4f266202a6512afc779/python/hsfs/core/explicit_provenance.py#L143">[source]</a></span></p>
 <h3 id="faulty">faulty<a class="headerlink" href="#faulty" title="Permanent link">#</a></h3>
 <p>List of <a href="../links#artifact">Artifact objects</a> which contains
 minimal information (name, version) about the entities
 (feature groups, feature views) they represent.
 These entities exist in the feature store, however they are corrupted.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L124">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/06f20a6c79058a321964b4f266202a6512afc779/python/hsfs/core/explicit_provenance.py#L124">[source]</a></span></p>
 <h3 id="inaccessible">inaccessible<a class="headerlink" href="#inaccessible" title="Permanent link">#</a></h3>
 <p>List of <a href="../links#artifact">Artifact objects</a> which contains
 minimal information (name, version) about the entities
@@ -1416,15 +1416,15 @@ does not have access to them anymore.</p>
 <h1 id="artifact">Artifact<a class="headerlink" href="#artifact" title="Permanent link">#</a></h1>
 <p>Artifacts objects are part of the provenance graph and contain a minimal set of information regarding the entities (feature groups, feature views) they represent.
 The provenance graph contains Artifact objects when the underlying entities have been deleted or they are corrupted or they are not accessible by the user.</p>
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L49">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/06f20a6c79058a321964b4f266202a6512afc779/python/hsfs/core/explicit_provenance.py#L49">[source]</a></span></p>
 <h3 id="feature_store_name">feature_store_name<a class="headerlink" href="#feature_store_name" title="Permanent link">#</a></h3>
 <p>Name of the feature store in which the artifact is located.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L54">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/06f20a6c79058a321964b4f266202a6512afc779/python/hsfs/core/explicit_provenance.py#L54">[source]</a></span></p>
 <h3 id="name">name<a class="headerlink" href="#name" title="Permanent link">#</a></h3>
 <p>Name of the artifact.</p>
 <hr />
-<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/eb06dedd2c717a918b2a6f726dd43152cf643f2e/python/hsfs/core/explicit_provenance.py#L59">[source]</a></span></p>
+<p><span style="float:right;"><a href="https://github.com/logicalclocks/feature-store-api/tree/06f20a6c79058a321964b4f266202a6512afc779/python/hsfs/core/explicit_provenance.py#L59">[source]</a></span></p>
 <h3 id="version">version<a class="headerlink" href="#version" title="Permanent link">#</a></h3>
 <p>Version of the artifact</p>
 <hr />
@@ -1528,7 +1528,7 @@ The provenance graph contains Artifact objects when the underlying entities have
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes"], "search": "../../../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.indexes"], "search": "../../../assets/javascripts/workers/search.5e67fbfe.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": {"default": "latest"}}</script>
     
     
       <script src="../../../assets/javascripts/bundle.c44cc438.min.js"></script>
