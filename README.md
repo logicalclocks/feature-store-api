@@ -135,7 +135,7 @@ You can find more examples on how to use the library in our [hops-examples](http
 
 ## Usage
 
-Usage data is collected for improving quality of the library. It is turned on by default if the backend 
+Usage data is collected for improving quality of the library. It is turned on by default if the backend
 is "c.app.hopsworks.ai". To turn it off, use one of the following way:
 ```python
 # use environment variable
