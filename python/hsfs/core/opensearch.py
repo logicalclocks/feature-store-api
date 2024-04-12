@@ -154,7 +154,7 @@ class OpenSearchClientSingleton:
                 e.info,
             )  from e
 
-    @_handle_opensearch_exception
+    @_handle_opensearch_exception()
     @retry(
         wait_exponential_multiplier=1000,
         stop_max_attempt_number=5,
