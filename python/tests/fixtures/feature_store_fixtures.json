@@ -7,14 +7,12 @@
       "project_name": "test_project_name",
       "project_id": 67,
       "offline_featurestore_name": "test_offline_featurestore_name",
-      "hive_endpoint": "test_hive_endpoint",
       "online_enabled": true,
       "num_feature_groups": 2,
       "num_training_datasets": 3,
       "num_storage_connectors": 4,
       "num_feature_views": 5,
       "online_featurestore_name": "test_online_featurestore_name",
-      "mysql_server_endpoint": "test_mysql_server_endpoint",
       "online_featurestore_size": 31
     }
   },
@@ -26,7 +24,6 @@
       "project_name": "test_project_name",
       "project_id": 67,
       "offline_featurestore_name": "test_offline_featurestore_name",
-      "hive_endpoint": "test_hive_endpoint",
       "online_enabled": true
     }
   }
