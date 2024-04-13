@@ -48,6 +48,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
         )
+        util.validate_embedding_feature_type(feature_group.embedding_index, dataframe_features)
 
         self.save_feature_group_metadata(
             feature_group, dataframe_features, write_options
@@ -95,6 +96,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
         )
+        util.validate_embedding_feature_type(feature_group.embedding_index, dataframe_features)
 
         if not feature_group._id:
             # only save metadata if feature group does not exist
@@ -285,6 +287,7 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             dataframe, feature_group.time_travel_format
         )
+        util.validate_embedding_feature_type(feature_group.embedding_index, dataframe_features)
 
         if not feature_group._id:
             self.save_feature_group_metadata(

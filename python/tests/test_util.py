@@ -19,6 +19,9 @@ from datetime import date, datetime
 import pytest
 import pytz
 from hsfs import util
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.embedding import EmbeddingFeature, EmbeddingIndex
+from hsfs.feature import Feature
 
 
 class TestUtil:
@@ -145,3 +148,58 @@ class TestUtil:
         assert (
             mock_util_get_hostname_replaced_url.call_args[0][0] == "/p/50/fs/99/fg/10"
         )
+
+    def test_valid_embedding_type(self):
+        embedding_index = EmbeddingIndex(
+            features=[
+                EmbeddingFeature("feature1", 3),
+                EmbeddingFeature("feature2", 3),
+                EmbeddingFeature("feature3", 3),
+                EmbeddingFeature("feature4", 3),
+        ])
+        # Define a schema with valid feature types
+        schema = [
+            Feature(name="feature1", type="array<int>"),
+            Feature(name="feature2", type="array<bigint>"),
+            Feature(name="feature3", type="array<float>"),
+            Feature(name="feature4", type="array<double>"),
+        ]
+        # Call the method and expect no exceptions
+        util.validate_embedding_feature_type(embedding_index, schema)
+
+    def test_invalid_embedding_type(self):
+        embedding_index = EmbeddingIndex(
+            features=[
+                EmbeddingFeature("feature1", 3),
+                EmbeddingFeature("feature2", 3),
+        ])
+        # Define a schema with an invalid feature type
+        schema = [
+            Feature(name="feature1", type="array<int>"),
+            Feature(name="feature2", type="array<string>"), # Invalid type
+        ]
+        # Call the method and expect a FeatureStoreException
+        with pytest.raises(FeatureStoreException):
+            util.validate_embedding_feature_type(embedding_index, schema)
+
+    def test_missing_embedding_index(self):
+        # Define a schema without an embedding index
+        schema = [
+            Feature(name="feature1", type="array<int>"),
+            Feature(name="feature2", type="array<bigint>"),
+        ]
+        # Call the method with an empty feature_group (no embedding index)
+        util.validate_embedding_feature_type(None, schema)
+        # No exception should be raised
+
+    def test_empty_schema(self):
+        embedding_index = EmbeddingIndex(
+            features=[
+                EmbeddingFeature("feature1", 3),
+                EmbeddingFeature("feature2", 3),
+        ])
+        # Define an empty schema
+        schema = []
+        # Call the method with an empty schema
+        util.validate_embedding_feature_type(embedding_index, schema)
+        # No exception should be raised

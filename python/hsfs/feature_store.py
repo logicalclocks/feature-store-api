@@ -62,14 +62,12 @@ class FeatureStore:
         project_name,
         project_id,
         offline_featurestore_name,
-        hive_endpoint,
         online_enabled,
         num_feature_groups=None,
         num_training_datasets=None,
         num_storage_connectors=None,
         num_feature_views=None,
         online_featurestore_name=None,
-        mysql_server_endpoint=None,
         online_featurestore_size=None,
         **kwargs,
     ):
@@ -81,8 +79,6 @@ class FeatureStore:
         self._online_feature_store_name = online_featurestore_name
         self._online_feature_store_size = online_featurestore_size
         self._offline_feature_store_name = offline_featurestore_name
-        self._hive_endpoint = hive_endpoint
-        self._mysql_server_endpoint = mysql_server_endpoint
         self._online_enabled = online_enabled
         self._num_feature_groups = num_feature_groups
         self._num_training_datasets = num_training_datasets
@@ -1775,19 +1771,9 @@ class FeatureStore:
         return self._online_feature_store_name
 
     @property
-    def mysql_server_endpoint(self):
-        """MySQL server endpoint for the online feature store."""
-        return self._mysql_server_endpoint
-
-    @property
     def online_enabled(self):
         """Indicator whether online feature store is enabled."""
         return self._online_enabled
-
-    @property
-    def hive_endpoint(self):
-        """Hive endpoint for the offline feature store."""
-        return self._hive_endpoint
 
     @property
     def offline_featurestore_name(self):
