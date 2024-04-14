@@ -112,36 +112,21 @@ class Client(base.Client):
             self._materialize_certs(cert_folder, host, project)
 
             # Set credentials location in the Spark configuration
-            _spark_session._jsc.hadoopConfiguration().set(
-                "hops.ssl.trustore.name", self._trust_store_path
-            )
-            _spark_session._jsc.hadoopConfiguration().set(
-                "hops.ssl.keystore.name", self._key_store_path
-            )
-            _spark_session._jsc.hadoopConfiguration().set(
-                "hops.ssl.keystores.passwd.name", self._cert_key_path
-            )
-
             # Set other options in the Spark configuration
-            _spark_session._jsc.hadoopConfiguration().set(
-                "fs.permissions.umask-mode", "0002"
-            )
-            _spark_session._jsc.hadoopConfiguration().set(
-                "fs.hopsfs.impl", "io.hops.hopsfs.client.HopsFileSystem"
-            )
-            _spark_session._jsc.hadoopConfiguration().set(
-                "hops.rpc.socket.factory.class.default",
-                "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory",
-            )
-            _spark_session._jsc.hadoopConfiguration().set(
-                "client.rpc.ssl.enabled.protocol", "TLSv1.2"
-            )
-            _spark_session._jsc.hadoopConfiguration().set(
-                "hops.ssl.hostname.verifier", "ALLOW_ALL"
-            )
-            _spark_session._jsc.hadoopConfiguration().set(
-                "hops.ipc.server.ssl.enabled", "true"
-            )
+            configuration_dict = {
+                "hops.ssl.trustore.name": self._trust_store_path,
+                "hops.ssl.keystore.name": self._key_store_path,
+                "hops.ssl.keystores.passwd.name": self._cert_key_path,
+                "fs.permissions.umask-mode": "0002",
+                "fs.hopsfs.impl": "io.hops.hopsfs.client.HopsFileSystem",
+                "hops.rpc.socket.factory.class.default": "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory",
+                "client.rpc.ssl.enabled.protocol": "TLSv1.2",
+                "hops.ssl.hostname.verifier": "ALLOW_ALL",
+                "hops.ipc.server.ssl.enabled": "true",
+            }
+
+            for conf_key, conf_value in configuration_dict.items():
+                _spark_session._jsc.hadoopConfiguration().set(conf_key, conf_value)
 
     def _materialize_certs(self, cert_folder, host, project):
         self._cert_folder_base = cert_folder
