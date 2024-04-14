@@ -94,7 +94,7 @@ class Client(base.Client):
             # So in this case, we can't materialize the certificates on the fly.
             _spark_session = SparkSession.builder.enableHiveSupport.getOrCreate()
 
-            self._validate_spark_configuration(_spark_session, False)
+            self._validate_spark_configuration(_spark_session)
             with open(
                 _spark_session.conf.get("spark.hadoop.hops.ssl.keystores.passwd.name"),
                 "r",
@@ -152,7 +152,7 @@ class Client(base.Client):
         # Return the credentials object for the Python engine to materialize the pem files.
         return credentials
 
-    def _validate_spark_configuration(self, _spark_session, no_metastore):
+    def _validate_spark_configuration(self, _spark_session):
         exception_text = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: "
 
         configuration_dict = {
@@ -165,11 +165,9 @@ class Client(base.Client):
             "spark.hadoop.hops.ssl.keystores.passwd.name": None,
             "spark.hadoop.hops.ipc.server.ssl.enabled": "true",
             "spark.hadoop.client.rpc.ssl.enabled.protocol": "TLSv1.2",
+            "spark.hadoop.hive.metastore.uris": None,
+            "spark.sql.hive.metastore.jars": None,
         }
-
-        if not no_metastore:
-            configuration_dict["spark.hadoop.hive.metastore.uris"] = None
-            configuration_dict["spark.sql.hive.metastore.jars"] = None
 
         for key, value in configuration_dict.items():
             if not (
