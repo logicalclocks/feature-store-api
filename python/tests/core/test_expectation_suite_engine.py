@@ -14,8 +14,8 @@
 #   limitations under the License.
 #
 
-from hsfs.core import expectation_suite_engine
 from hsfs import expectation_suite as es
+from hsfs.core import expectation_suite_engine
 
 
 class TestExpectationSuiteEngine:
@@ -79,10 +79,11 @@ class TestExpectationSuiteEngine:
         # Assert
         assert mock_es_api.return_value.update.call_count == 1
         assert mock_print.call_count == 1
-        assert mock_print.call_args[0][
-            0
-        ] == "Updated expectation suite attached to Feature Group, edit it at {}".format(
-            expectation_suite_url
+        assert (
+            mock_print.call_args[0][0]
+            == "Updated expectation suite attached to Feature Group, edit it at {}".format(
+                expectation_suite_url
+            )
         )
 
     def test_save(self, mocker):

@@ -14,10 +14,14 @@
 #   limitations under the License.
 #
 
-from datetime import datetime, date
-from hsfs import util
+from datetime import date, datetime
+
 import pytest
 import pytz
+from hsfs import util
+from hsfs.client.exceptions import FeatureStoreException
+from hsfs.embedding import EmbeddingFeature, EmbeddingIndex
+from hsfs.feature import Feature
 
 
 class TestUtil:
@@ -86,3 +90,116 @@ class TestUtil:
     def test_convert_hudi_commit_time_to_timestamp(self):
         timestamp = util.get_timestamp_from_date_string("20221118095233099")
         assert timestamp == 1668765153099
+
+    def test_get_dataset_type_HIVEDB(self):
+        db_type = util.get_dataset_type(
+            "/apps/hive/warehouse/temp_featurestore.db/storage_connector_resources/kafka__tstore.jks"
+        )
+        assert db_type == "HIVEDB"
+
+    def test_get_dataset_type_HIVEDB_with_dfs(self):
+        db_type = util.get_dataset_type(
+            "hdfs:///apps/hive/warehouse/temp_featurestore.db/storage_connector_resources/kafka__tstore.jks"
+        )
+        assert db_type == "HIVEDB"
+
+    def test_get_dataset_type_DATASET(self):
+        db_type = util.get_dataset_type("/Projects/temp/Resources/kafka__tstore.jks")
+        assert db_type == "DATASET"
+
+    def test_get_dataset_type_DATASET_with_dfs(self):
+        db_type = util.get_dataset_type(
+            "hdfs:///Projects/temp/Resources/kafka__tstore.jks"
+        )
+        assert db_type == "DATASET"
+
+    def test_get_job_url(self, mocker):
+        # Arrange
+        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
+
+        # Act
+        util.get_job_url(href="1/2/3/4/5/6/7/8")
+
+        # Assert
+        assert (
+            mock_client_get_instance.return_value.replace_public_host.call_args[0][
+                0
+            ].path
+            == "p/5/jobs/named/7/executions"
+        )
+
+    def test_get_feature_group_url(self, mocker):
+        # Arrange
+        feature_store_id = 99
+        feature_group_id = 10
+        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
+        mock_util_get_hostname_replaced_url = mocker.patch(
+            "hsfs.util.get_hostname_replaced_url"
+        )
+        mock_client_get_instance.return_value._project_id = 50
+
+        # Act
+        util.get_feature_group_url(
+            feature_group_id=feature_group_id, feature_store_id=feature_store_id
+        )
+
+        # Assert
+        assert mock_util_get_hostname_replaced_url.call_count == 1
+        assert (
+            mock_util_get_hostname_replaced_url.call_args[0][0] == "/p/50/fs/99/fg/10"
+        )
+
+    def test_valid_embedding_type(self):
+        embedding_index = EmbeddingIndex(
+            features=[
+                EmbeddingFeature("feature1", 3),
+                EmbeddingFeature("feature2", 3),
+                EmbeddingFeature("feature3", 3),
+                EmbeddingFeature("feature4", 3),
+        ])
+        # Define a schema with valid feature types
+        schema = [
+            Feature(name="feature1", type="array<int>"),
+            Feature(name="feature2", type="array<bigint>"),
+            Feature(name="feature3", type="array<float>"),
+            Feature(name="feature4", type="array<double>"),
+        ]
+        # Call the method and expect no exceptions
+        util.validate_embedding_feature_type(embedding_index, schema)
+
+    def test_invalid_embedding_type(self):
+        embedding_index = EmbeddingIndex(
+            features=[
+                EmbeddingFeature("feature1", 3),
+                EmbeddingFeature("feature2", 3),
+        ])
+        # Define a schema with an invalid feature type
+        schema = [
+            Feature(name="feature1", type="array<int>"),
+            Feature(name="feature2", type="array<string>"), # Invalid type
+        ]
+        # Call the method and expect a FeatureStoreException
+        with pytest.raises(FeatureStoreException):
+            util.validate_embedding_feature_type(embedding_index, schema)
+
+    def test_missing_embedding_index(self):
+        # Define a schema without an embedding index
+        schema = [
+            Feature(name="feature1", type="array<int>"),
+            Feature(name="feature2", type="array<bigint>"),
+        ]
+        # Call the method with an empty feature_group (no embedding index)
+        util.validate_embedding_feature_type(None, schema)
+        # No exception should be raised
+
+    def test_empty_schema(self):
+        embedding_index = EmbeddingIndex(
+            features=[
+                EmbeddingFeature("feature1", 3),
+                EmbeddingFeature("feature2", 3),
+        ])
+        # Define an empty schema
+        schema = []
+        # Call the method with an empty schema
+        util.validate_embedding_feature_type(embedding_index, schema)
+        # No exception should be raised

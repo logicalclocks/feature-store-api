@@ -15,26 +15,25 @@
 
 import json
 import warnings
-from typing import Optional, Union, Any, Dict, List, TypeVar
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 import humps
-import pandas as pd
 import numpy as np
-
-from hsfs import util, engine, training_dataset_feature, client
-from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.statistics_config import StatisticsConfig
-from hsfs.storage_connector import StorageConnector, HopsFSConnector
+import pandas as pd
+from hsfs import client, engine, training_dataset_feature, util
+from hsfs.client.exceptions import RestAPIError
+from hsfs.constructor import filter, query
 from hsfs.core import (
+    code_engine,
+    statistics_engine,
     training_dataset_api,
     training_dataset_engine,
-    statistics_engine,
-    code_engine,
     transformation_function_engine,
     vector_server,
 )
-from hsfs.constructor import query, filter
-from hsfs.client.exceptions import RestAPIError
+from hsfs.statistics_config import StatisticsConfig
+from hsfs.storage_connector import HopsFSConnector, StorageConnector
+from hsfs.training_dataset_split import TrainingDatasetSplit
 
 
 class TrainingDatasetBase:
@@ -251,29 +250,29 @@ class TrainingDatasetBase:
         }
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of the training dataset."""
         return self._name
 
     @name.setter
-    def name(self, name):
+    def name(self, name: str) -> None:
         self._name = name
 
     @property
-    def version(self):
+    def version(self) -> int:
         """Version number of the training dataset."""
         return self._version
 
     @version.setter
-    def version(self, version):
+    def version(self, version: int) -> None:
         self._version = version
 
     @property
-    def description(self):
+    def description(self) -> Optional[str]:
         return self._description
 
     @description.setter
-    def description(self, description):
+    def description(self, description: Optional[str]) -> None:
         """Description of the training dataset contents."""
         self._description = description
 
@@ -287,14 +286,14 @@ class TrainingDatasetBase:
         self._data_format = data_format
 
     @property
-    def coalesce(self):
+    def coalesce(self) -> bool:
         """If true the training dataset data will be coalesced into
         a single partition before writing. The resulting training dataset
         will be a single file per split"""
         return self._coalesce
 
     @coalesce.setter
-    def coalesce(self, coalesce):
+    def coalesce(self, coalesce: bool):
         self._coalesce = coalesce
 
     @property
@@ -323,37 +322,46 @@ class TrainingDatasetBase:
             )
 
     @property
-    def splits(self):
+    def splits(self) -> List[TrainingDatasetSplit]:
         """Training dataset splits. `train`, `test` or `eval` and corresponding percentages."""
         return self._splits
 
     @splits.setter
-    def splits(self, splits):
+    def splits(self, splits: Optional[Dict[str, float]]):
         # user api differs from how the backend expects the splits to be represented
-        self._splits = [
-            TrainingDatasetSplit(
-                name=k, split_type=TrainingDatasetSplit.RANDOM_SPLIT, percentage=v
+        if splits is None:
+            self._splits = []
+        elif isinstance(splits, dict):
+            self._splits = [
+                TrainingDatasetSplit(
+                    name=k, split_type=TrainingDatasetSplit.RANDOM_SPLIT, percentage=v
+                )
+                for k, v in splits.items()
+                if v is not None
+            ]
+        else:
+            raise TypeError(
+                "The argument `splits` has to be `None` or a dictionary of key, relative size e.g "
+                + "{'train': 0.7, 'test': 0.1, 'validation': 0.2}.\n"
+                + "Got {} with type {}".format(splits, type(splits))
             )
-            for k, v in splits.items()
-            if v is not None
-        ]
 
     @property
-    def location(self):
-        """Path to the training dataset location."""
+    def location(self) -> str:
+        """Path to the training dataset location. Can be an empty string if e.g. the training dataset is in-memory."""
         return self._location
 
     @location.setter
-    def location(self, location):
+    def location(self, location: str):
         self._location = location
 
     @property
-    def seed(self):
-        """Seed."""
+    def seed(self) -> Optional[int]:
+        """Seed used to perform random split, ensure reproducibility of the random split at a later date."""
         return self._seed
 
     @seed.setter
-    def seed(self, seed):
+    def seed(self, seed: Optional[int]):
         self._seed = seed
 
     @property
@@ -596,7 +604,7 @@ class TrainingDataset(TrainingDatasetBase):
             np.ndarray,
             List[list],
         ],
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
     ):
         """Materialize the training dataset to storage.
 
@@ -631,7 +639,7 @@ class TrainingDataset(TrainingDatasetBase):
         user_stats_config = self._statistics_config
         # td_job is used only if the python engine is used
         training_dataset, td_job = self._training_dataset_engine.save(
-            self, features, write_options
+            self, features, write_options or {}
         )
         self.storage_connector = training_dataset.storage_connector
         # currently we do not save the training dataset statistics config for training datasets
@@ -645,6 +653,7 @@ class TrainingDataset(TrainingDatasetBase):
                     self._name, self._version
                 ),
                 util.VersionWarning,
+                stacklevel=1,
             )
 
         return td_job
@@ -660,7 +669,7 @@ class TrainingDataset(TrainingDatasetBase):
             List[list],
         ],
         overwrite: bool,
-        write_options: Optional[Dict[Any, Any]] = {},
+        write_options: Optional[Dict[Any, Any]] = None,
     ):
         """Insert additional feature data into the training dataset.
 
@@ -695,7 +704,7 @@ class TrainingDataset(TrainingDatasetBase):
         """
         # td_job is used only if the python engine is used
         td_job = self._training_dataset_engine.insert(
-            self, features, write_options, overwrite
+            self, features, write_options or {}, overwrite
         )
 
         self._code_engine.save_code(self)
@@ -703,7 +712,7 @@ class TrainingDataset(TrainingDatasetBase):
 
         return td_job
 
-    def read(self, split=None, read_options={}):
+    def read(self, split=None, read_options=None):
         """Read the training dataset into a dataframe.
 
         It is also possible to read only a specific split.
@@ -722,7 +731,7 @@ class TrainingDataset(TrainingDatasetBase):
                 "The training dataset has splits, please specify the split you want to read"
             )
 
-        return self._training_dataset_engine.read(self, split, read_options)
+        return self._training_dataset_engine.read(self, split, read_options or {})
 
     def compute_statistics(self):
         """Compute the statistics for the training dataset and save them to the
@@ -850,6 +859,7 @@ class TrainingDataset(TrainingDatasetBase):
                 self._name, self._version
             ),
             util.JobWarning,
+            stacklevel=1,
         )
         self._training_dataset_api.delete(self)
 
@@ -897,9 +907,9 @@ class TrainingDataset(TrainingDatasetBase):
             if td_json["location"].endswith(
                 f"/Projects/{_client._project_name}/{_client._project_name}_Training_Datasets"
             ):
-                td_json[
-                    "location"
-                ] = f"{td_json['location']}/{td_json['name']}_{td_json['version']}"
+                td_json["location"] = (
+                    f"{td_json['location']}/{td_json['name']}_{td_json['version']}"
+                )
 
     def json(self):
         return json.dumps(self, cls=util.FeatureStoreEncoder)

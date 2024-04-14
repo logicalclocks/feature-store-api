@@ -14,29 +14,30 @@
 #   limitations under the License.
 #
 import decimal
+from datetime import date, datetime
 
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
+import polars as pl
 import pyarrow as pa
-from confluent_kafka.admin import TopicMetadata, PartitionMetadata
-
-from datetime import datetime, date
+import pytest
+from confluent_kafka.admin import PartitionMetadata, TopicMetadata
 from hsfs import (
-    storage_connector,
-    feature_group,
-    training_dataset,
-    feature_view,
-    transformation_function,
     feature,
+    feature_group,
+    feature_view,
+    storage_connector,
+    training_dataset,
+    transformation_function,
     util,
 )
-from hsfs.engine import python
-from hsfs.core import inode, execution, job
-from hsfs.constructor import query
 from hsfs.client import exceptions
+from hsfs.constructor import query
 from hsfs.constructor.hudi_feature_group_alias import HudiFeatureGroupAlias
+from hsfs.core import inode, job
+from hsfs.engine import python
 from hsfs.training_dataset_feature import TrainingDatasetFeature
+from polars.testing import assert_frame_equal as polars_assert_frame_equal
 
 
 class TestPython:
@@ -97,12 +98,28 @@ class TestPython:
 
         # Act
         python_engine._sql_offline(
-            sql_query="", feature_store=None, dataframe_type=None
+            sql_query="", feature_store=None, dataframe_type="default"
         )
 
         # Assert
         assert mock_python_engine_create_hive_connection.call_count == 1
         assert mock_python_engine_return_dataframe_type.call_count == 1
+
+    def test_sql_offline_dataframe_type_none(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.engine.python.Engine._create_hive_connection")
+
+        python_engine = python.Engine()
+
+        with pytest.raises(exceptions.FeatureStoreException) as fstore_except:
+            # Act
+            python_engine._sql_offline(
+                sql_query="", feature_store=None, dataframe_type=None
+            )
+        assert (
+            str(fstore_except.value)
+            == 'dataframe_type : None not supported. Possible values are "default", "pandas", "polars", "numpy" or "python"'
+        )
 
     def test_jdbc(self, mocker):
         # Arrange
@@ -117,12 +134,32 @@ class TestPython:
 
         # Act
         python_engine._jdbc(
-            sql_query=query, connector=None, dataframe_type=None, read_options={}
+            sql_query=query, connector=None, dataframe_type="default", read_options={}
         )
 
         # Assert
         assert mock_util_create_mysql_engine.call_count == 1
         assert mock_python_engine_return_dataframe_type.call_count == 1
+
+    def test_jdbc_dataframe_type_none(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.util.create_mysql_engine")
+        mocker.patch("hsfs.client.get_instance")
+        query = "SELECT * FROM TABLE"
+
+        python_engine = python.Engine()
+
+        # Act
+        with pytest.raises(exceptions.FeatureStoreException) as fstore_except:
+            python_engine._jdbc(
+                sql_query=query, connector=None, dataframe_type=None, read_options={}
+            )
+
+        # Assert
+        assert (
+            str(fstore_except.value)
+            == 'dataframe_type : None not supported. Possible values are "default", "pandas", "polars", "numpy" or "python"'
+        )
 
     def test_jdbc_read_options(self, mocker):
         # Arrange
@@ -139,7 +176,7 @@ class TestPython:
         python_engine._jdbc(
             sql_query=query,
             connector=None,
-            dataframe_type=None,
+            dataframe_type="default",
             read_options={"external": ""},
         )
 
@@ -160,6 +197,7 @@ class TestPython:
                 data_format=None,
                 read_options=None,
                 location=None,
+                dataframe_type="default",
             )
 
         # Assert
@@ -178,6 +216,7 @@ class TestPython:
                 data_format="",
                 read_options=None,
                 location=None,
+                dataframe_type="default",
             )
 
         # Assert
@@ -203,11 +242,70 @@ class TestPython:
             data_format="csv",
             read_options=None,
             location=None,
+            dataframe_type="default",
         )
 
         # Assert
         assert mock_python_engine_read_hopsfs.call_count == 1
         assert mock_python_engine_read_s3.call_count == 0
+
+    def test_read_hopsfs_connector_empty_dataframe(self, mocker):
+        # Arrange
+
+        # Setting list of empty dataframes as return value from _read_hopsfs
+        mock_python_engine_read_hopsfs = mocker.patch(
+            "hsfs.engine.python.Engine._read_hopsfs",
+            return_value=[pd.DataFrame(), pd.DataFrame()],
+        )
+
+        python_engine = python.Engine()
+
+        connector = storage_connector.HopsFSConnector(
+            id=1, name="test_connector", featurestore_id=1
+        )
+
+        # Act
+        dataframe = python_engine.read(
+            storage_connector=connector,
+            data_format="csv",
+            read_options=None,
+            location=None,
+            dataframe_type="default",
+        )
+
+        # Assert
+        assert mock_python_engine_read_hopsfs.call_count == 1
+        assert isinstance(dataframe, pd.DataFrame)
+        assert len(dataframe) == 0
+
+    def test_read_hopsfs_connector_empty_dataframe_polars(self, mocker):
+        # Arrange
+
+        # Setting empty list as return value from _read_hopsfs
+        mock_python_engine_read_hopsfs = mocker.patch(
+            "hsfs.engine.python.Engine._read_hopsfs",
+            return_value=[pl.DataFrame(), pl.DataFrame()],
+        )
+
+        python_engine = python.Engine()
+
+        connector = storage_connector.HopsFSConnector(
+            id=1, name="test_connector", featurestore_id=1
+        )
+
+        # Act
+        dataframe = python_engine.read(
+            storage_connector=connector,
+            data_format="csv",
+            read_options=None,
+            location=None,
+            dataframe_type="polars",
+        )
+
+        # Assert
+        assert mock_python_engine_read_hopsfs.call_count == 1
+        assert isinstance(dataframe, pl.DataFrame)
+        assert len(dataframe) == 0
 
     def test_read_s3_connector(self, mocker):
         # Arrange
@@ -229,6 +327,7 @@ class TestPython:
             data_format="csv",
             read_options=None,
             location=None,
+            dataframe_type="default",
         )
 
         # Assert
@@ -255,6 +354,7 @@ class TestPython:
                 data_format="csv",
                 read_options=None,
                 location=None,
+                dataframe_type="default",
             )
 
         # Assert
@@ -325,6 +425,70 @@ class TestPython:
         assert (
             str(e_info.value)
             == "ocr training dataset format is not supported to read as pandas dataframe."
+        )
+        assert mock_pandas_read_csv.call_count == 0
+        assert mock_pandas_read_parquet.call_count == 0
+
+    def test_read_polars_csv(self, mocker):
+        # Arrange
+        mock_pandas_read_csv = mocker.patch("polars.read_csv")
+        mock_pandas_read_parquet = mocker.patch("polars.read_parquet")
+
+        python_engine = python.Engine()
+
+        # Act
+        python_engine._read_polars(data_format="csv", obj=None)
+
+        # Assert
+        assert mock_pandas_read_csv.call_count == 1
+        assert mock_pandas_read_parquet.call_count == 0
+
+    def test_read_polars_tsv(self, mocker):
+        # Arrange
+        mock_pandas_read_csv = mocker.patch("polars.read_csv")
+        mock_pandas_read_parquet = mocker.patch("polars.read_parquet")
+
+        python_engine = python.Engine()
+
+        # Act
+        python_engine._read_polars(data_format="tsv", obj=None)
+
+        # Assert
+        assert mock_pandas_read_csv.call_count == 1
+        assert mock_pandas_read_parquet.call_count == 0
+
+    def test_read_polars_parquet(self, mocker):
+        # Arrange
+        mock_pandas_read_csv = mocker.patch("polars.read_csv")
+        mock_pandas_read_parquet = mocker.patch("polars.read_parquet")
+
+        python_engine = python.Engine()
+
+        mock_obj = mocker.Mock()
+        mock_obj.read.return_value = bytes()
+
+        # Act
+        python_engine._read_polars(data_format="parquet", obj=mock_obj)
+
+        # Assert
+        assert mock_pandas_read_csv.call_count == 0
+        assert mock_pandas_read_parquet.call_count == 1
+
+    def test_read_polars_other(self, mocker):
+        # Arrange
+        mock_pandas_read_csv = mocker.patch("polars.read_csv")
+        mock_pandas_read_parquet = mocker.patch("polars.read_parquet")
+
+        python_engine = python.Engine()
+
+        # Act
+        with pytest.raises(TypeError) as e_info:
+            python_engine._read_polars(data_format="ocr", obj=None)
+
+        # Assert
+        assert (
+            str(e_info.value)
+            == "ocr training dataset format is not supported to read as polars dataframe."
         )
         assert mock_pandas_read_csv.call_count == 0
         assert mock_pandas_read_parquet.call_count == 0
@@ -773,7 +937,7 @@ class TestPython:
             + "environment with Spark Engine."
         )
 
-    def test_profile(self, mocker):
+    def test_profile_pandas(self, mocker):
         # Arrange
         mock_python_engine_convert_pandas_statistics = mocker.patch(
             "hsfs.engine.python.Engine._convert_pandas_statistics"
@@ -782,9 +946,9 @@ class TestPython:
         python_engine = python.Engine()
 
         mock_python_engine_convert_pandas_statistics.side_effect = [
-            {"test_key": "test_value"},
-            {"test_key": "test_value"},
-            {"test_key": "test_value"},
+            {"dataType": "Integral", "test_key": "test_value"},
+            {"dataType": "Fractional", "test_key": "test_value"},
+            {"dataType": "String", "test_key": "test_value"},
         ]
 
         d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
@@ -802,12 +966,50 @@ class TestPython:
         # Assert
         assert (
             result
-            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
-            '"column": "col1", "completeness": 1, "dataType": "Integral"}, '
-            '{"test_key": "test_value", "isDataTypeInferred": "false", '
-            '"column": "col2", "completeness": 1, "dataType": "Fractional"}, '
-            '{"test_key": "test_value", "isDataTypeInferred": "false", '
-            '"column": "col3", "completeness": 1, "dataType": "String"}]}'
+            == '{"columns": [{"dataType": "Integral", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1}, '
+            '{"dataType": "Fractional", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col2", "completeness": 1}, '
+            '{"dataType": "String", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1}]}'
+        )
+        assert mock_python_engine_convert_pandas_statistics.call_count == 3
+
+    def test_profile_polars(self, mocker):
+        # Arrange
+        mock_python_engine_convert_pandas_statistics = mocker.patch(
+            "hsfs.engine.python.Engine._convert_pandas_statistics"
+        )
+
+        python_engine = python.Engine()
+
+        mock_python_engine_convert_pandas_statistics.side_effect = [
+            {"dataType": "Integral", "test_key": "test_value"},
+            {"dataType": "Fractional", "test_key": "test_value"},
+            {"dataType": "String", "test_key": "test_value"},
+        ]
+
+        d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
+        df = pl.DataFrame(data=d)
+
+        # Act
+        result = python_engine.profile(
+            df=df,
+            relevant_columns=None,
+            correlations=None,
+            histograms=None,
+            exact_uniqueness=True,
+        )
+
+        # Assert
+        assert (
+            result
+            == '{"columns": [{"dataType": "Integral", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1}, '
+            '{"dataType": "Fractional", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col2", "completeness": 1}, '
+            '{"dataType": "String", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1}]}'
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 3
 
@@ -820,7 +1022,8 @@ class TestPython:
         python_engine = python.Engine()
 
         mock_python_engine_convert_pandas_statistics.return_value = {
-            "test_key": "test_value"
+            "dataType": "Integral",
+            "test_key": "test_value",
         }
 
         d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
@@ -838,8 +1041,8 @@ class TestPython:
         # Assert
         assert (
             result
-            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
-            '"column": "col1", "completeness": 1, "dataType": "Integral"}]}'
+            == '{"columns": [{"dataType": "Integral", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1}]}'
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 1
 
@@ -852,8 +1055,8 @@ class TestPython:
         python_engine = python.Engine()
 
         mock_python_engine_convert_pandas_statistics.side_effect = [
-            {"test_key": "test_value"},
-            {"test_key": "test_value"},
+            {"dataType": "Integral", "test_key": "test_value"},
+            {"dataType": "String", "test_key": "test_value"},
         ]
 
         d = {"col1": [1, 2], "col2": [0.1, 0.2], "col3": ["a", "b"]}
@@ -871,10 +1074,10 @@ class TestPython:
         # Assert
         assert (
             result
-            == '{"columns": [{"test_key": "test_value", "isDataTypeInferred": "false", '
-            '"column": "col1", "completeness": 1, "dataType": "Integral"}, '
-            '{"test_key": "test_value", "isDataTypeInferred": "false", '
-            '"column": "col3", "completeness": 1, "dataType": "String"}]}'
+            == '{"columns": [{"dataType": "Integral", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col1", "completeness": 1}, '
+            '{"dataType": "String", "test_key": "test_value", "isDataTypeInferred": "false", '
+            '"column": "col3", "completeness": 1}]}'
         )
         assert mock_python_engine_convert_pandas_statistics.call_count == 2
 
@@ -894,10 +1097,11 @@ class TestPython:
         }
 
         # Act
-        result = python_engine._convert_pandas_statistics(stat=stat)
+        result = python_engine._convert_pandas_statistics(stat=stat, dataType="Integer")
 
         # Assert
         assert result == {
+            "dataType": "Integer",
             "approxPercentiles": [
                 0,
                 0,
@@ -1046,7 +1250,7 @@ class TestPython:
         # Assert
         assert result is None
 
-    def test_convert_to_default_dataframe(self, mocker):
+    def test_convert_to_default_dataframe_pandas(self, mocker):
         # Arrange
         mock_warnings = mocker.patch("warnings.warn")
 
@@ -1065,7 +1269,54 @@ class TestPython:
             == "The ingested dataframe contains upper case letters in feature names: `['Col1']`. Feature names are sanitized to lower case in the feature store."
         )
 
-    def test_parse_schema_feature_group(self, mocker):
+    def test_convert_to_default_dataframe_polars(self, mocker):
+        # Arrange
+        mock_warnings = mocker.patch("warnings.warn")
+
+        python_engine = python.Engine()
+
+        df = pl.DataFrame(
+            [
+                pl.Series("Col1", [1, 2], dtype=pl.Float32),
+                pl.Series("col2", [1, 2], dtype=pl.Int64),
+                pl.Series(
+                    "Date",
+                    [
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                    ],
+                    pl.Datetime(time_zone="Africa/Abidjan"),
+                ),
+            ]
+        )
+
+        # Resulting dataframe
+        expected_converted_df = pl.DataFrame(
+            [
+                pl.Series("col1", [1, 2], dtype=pl.Float32),
+                pl.Series("col2", [1, 2], dtype=pl.Int64),
+                pl.Series(
+                    "date",
+                    [
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                    ],
+                    pl.Datetime(time_zone=None),
+                ),
+            ]
+        )
+
+        # Act
+        result = python_engine.convert_to_default_dataframe(dataframe=df)
+
+        # Assert
+        polars_assert_frame_equal(result, expected_converted_df)
+        assert (
+            mock_warnings.call_args[0][0]
+            == "The ingested dataframe contains upper case letters in feature names: `['Col1', 'Date']`. Feature names are sanitized to lower case in the feature store."
+        )
+
+    def test_parse_schema_feature_group_pandas(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
 
@@ -1083,6 +1334,39 @@ class TestPython:
         assert len(result) == 2
         assert result[0].name == "col1"
         assert result[1].name == "col2"
+
+    def test_parse_schema_feature_group_polars(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.engine.python.Engine._convert_pandas_dtype_to_offline_type")
+
+        python_engine = python.Engine()
+
+        df = pl.DataFrame(
+            [
+                pl.Series("col1", [1, 2], dtype=pl.Float32),
+                pl.Series("col2", [1, 2], dtype=pl.Int64),
+                pl.Series(
+                    "date",
+                    [
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                        datetime.strptime("09/19/18 13:55:26", "%m/%d/%y %H:%M:%S"),
+                    ],
+                    pl.Datetime(time_zone="Africa/Abidjan"),
+                ),
+            ]
+        )
+
+        # Act
+        result = python_engine.parse_schema_feature_group(
+            dataframe=df, time_travel_format=None
+        )
+        print(result)
+
+        # Assert
+        assert len(result) == 3
+        assert result[0].name == "col1"
+        assert result[1].name == "col2"
+        assert result[2].name == "date"
 
     def test_parse_schema_training_dataset(self):
         # Arrange
@@ -1340,6 +1624,34 @@ class TestPython:
         # Assert
         assert result == "string"
 
+    def test_convert_simple_pandas_type_large_string_category_unordered(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.dictionary(
+                value_type=pa.large_string(), index_type=pa.int64(), ordered=False
+            )
+        )
+
+        # Assert
+        assert result == "string"
+
+    def test_convert_simple_pandas_type_large_string_category_ordered(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.dictionary(
+                value_type=pa.large_string(), index_type=pa.int64(), ordered=True
+            )
+        )
+
+        # Assert
+        assert result == "string"
+
     def test_convert_simple_pandas_type_category_ordered(self):
         # Arrange
         python_engine = python.Engine()
@@ -1375,6 +1687,19 @@ class TestPython:
         # Act
         result = python_engine._convert_pandas_object_type_to_offline_type(
             arrow_type=pa.list_(pa.int8())
+        )
+
+        # Assert
+        assert result == "array<int>"
+
+    def test_infer_type_pyarrow_large_list(self):
+        # Arrange
+
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_pandas_object_type_to_offline_type(
+            arrow_type=pa.large_list(pa.int8())
         )
 
         # Assert
@@ -1428,6 +1753,18 @@ class TestPython:
         # Assert
         assert result == "binary"
 
+    def test_infer_type_pyarrow_large_binary(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.large_binary()
+        )
+
+        # Assert
+        assert result == "binary"
+
     def test_infer_type_pyarrow_string(self):
         # Arrange
         python_engine = python.Engine()
@@ -1435,6 +1772,18 @@ class TestPython:
         # Act
         result = python_engine._convert_simple_pandas_dtype_to_offline_type(
             arrow_type=pa.string()
+        )
+
+        # Assert
+        assert result == "string"
+
+    def test_infer_type_pyarrow_large_string(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        # Act
+        result = python_engine._convert_simple_pandas_dtype_to_offline_type(
+            arrow_type=pa.large_string()
         )
 
         # Assert
@@ -1469,7 +1818,8 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": 2.0 for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1487,7 +1837,8 @@ class TestPython:
         # Arrange
         mapping = {"user0": 2.0, "user1": "test"}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1505,7 +1856,8 @@ class TestPython:
         # Arrange
         mapping = {"user0": list(np.random.normal(size=5)), "user1": ["test", "test"]}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1523,7 +1875,8 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": "test" for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1541,7 +1894,8 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": {"value": "test"} for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1564,7 +1918,8 @@ class TestPython:
             f"user{i}": {"value": list(np.random.normal(size=5))} for i in range(2)
         }
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1585,7 +1940,8 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": {"value": {"value": "test"}} for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1606,7 +1962,8 @@ class TestPython:
         # Arrange
         mapping = [{"value": np.random.normal(size=5)}]
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1624,7 +1981,8 @@ class TestPython:
         # Arrange
         mapping = {f"user{i}": [{"value": np.random.normal(size=5)}] for i in range(2)}
         pdf = pd.DataFrame(
-            data=zip(list(range(1, 2)), [mapping] * 2), columns=["id", "mapping"]
+            data=zip(list(range(1, 2)), [mapping] * 2),
+            columns=["id", "mapping"],
         )
         arrow_schema = pa.Schema.from_pandas(pdf)
 
@@ -1721,8 +2079,7 @@ class TestPython:
         mock_fg_api = mocker.patch("hsfs.core.feature_group_api.FeatureGroupApi")
         mock_dataset_api = mocker.patch("hsfs.core.dataset_api.DatasetApi")
         mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
-        mock_engine_get_instance = mocker.patch("hsfs.engine.get_instance")
+        mock_util_get_job_url = mocker.patch("hsfs.util.get_job_url")
 
         python_engine = python.Engine()
 
@@ -1746,7 +2103,7 @@ class TestPython:
         assert mock_fg_api.return_value.ingestion.call_count == 1
         assert mock_dataset_api.return_value.upload.call_count == 1
         assert mock_job_api.return_value.launch.call_count == 1
-        assert mock_engine_get_instance.return_value.get_job_url.call_count == 1
+        assert mock_util_get_job_url.call_count == 1
 
     def test_get_training_data(self, mocker):
         # Arrange
@@ -1776,6 +2133,7 @@ class TestPython:
             feature_view_obj=None,
             query_obj=mocker.Mock(),
             read_options=None,
+            dataframe_type="default",
         )
 
         # Assert
@@ -1809,6 +2167,7 @@ class TestPython:
             feature_view_obj=None,
             query_obj=mocker.Mock(),
             read_options=None,
+            dataframe_type="default",
         )
 
         # Assert
@@ -1822,11 +2181,92 @@ class TestPython:
         df = pd.DataFrame(data=d)
 
         # Act
-        result_df, result_df_split = python_engine.split_labels(df=df, labels=None)
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="default", labels=None
+        )
 
         # Assert
         assert str(result_df) == "   Col1  col2\n0     1     3\n1     2     4"
         assert str(result_df_split) == "None"
+
+    def test_split_labels_dataframe_type_default(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"Col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="default", labels=None
+        )
+
+        # Assert
+        assert isinstance(result_df, pd.DataFrame)
+        assert result_df_split is None
+
+    def test_split_labels_dataframe_type_pandas(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"Col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="pandas", labels=None
+        )
+
+        # Assert
+        assert isinstance(result_df, pd.DataFrame)
+        assert result_df_split is None
+
+    def test_split_labels_dataframe_type_polars(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"Col1": [1, 2], "col2": [3, 4]}
+
+        df = pl.DataFrame(data=d)
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="polars", labels=None
+        )
+
+        # Assert
+        assert isinstance(result_df, pl.DataFrame) or isinstance(
+            result_df, pl.dataframe.frame.DataFrame
+        )
+        assert result_df_split is None
+
+    def test_split_labels_dataframe_type_python(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"Col1": [1, 2], "col2": [3, 4]}
+
+        df = pd.DataFrame(data=d)
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="python", labels=None
+        )
+
+        # Assert
+        assert isinstance(result_df, list)
+        assert result_df_split is None
+
+    def test_split_labels_dataframe_type_numpy(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"Col1": [1, 2], "col2": [3, 4]}
+
+        df = pd.DataFrame(data=d)
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="numpy", labels=None
+        )
+
+        # Assert
+        assert isinstance(result_df, np.ndarray)
+        assert result_df_split is None
 
     def test_split_labels_labels(self):
         # Arrange
@@ -1836,11 +2276,95 @@ class TestPython:
         df = pd.DataFrame(data=d)
 
         # Act
-        result_df, result_df_split = python_engine.split_labels(df=df, labels="col1")
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="default", labels="col1"
+        )
 
         # Assert
         assert str(result_df) == "   col2\n0     3\n1     4"
         assert str(result_df_split) == "0    1\n1    2\nName: col1, dtype: int64"
+
+    def test_split_labels_labels_dataframe_type_default(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="default", labels="col1"
+        )
+
+        # Assert
+        assert isinstance(result_df, pd.DataFrame)
+        assert isinstance(result_df_split, pd.Series)
+
+    def test_split_labels_labels_dataframe_type_pandas(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="pandas", labels="col1"
+        )
+
+        # Assert
+        assert isinstance(result_df, pd.DataFrame)
+        assert isinstance(result_df_split, pd.Series)
+
+    def test_split_labels_labels_dataframe_type_polars(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2], "col2": [3, 4]}
+        df = pl.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="polars", labels="col1"
+        )
+        print(type(result_df_split))
+        # Assert
+        assert isinstance(result_df, pl.DataFrame) or isinstance(
+            result_df, pl.dataframe.frame.DataFrame
+        )
+        assert isinstance(result_df_split, pl.Series)
+
+    def test_split_labels_labels_dataframe_type_python(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="python", labels="col1"
+        )
+
+        # Assert
+        assert isinstance(result_df, list)
+        assert isinstance(result_df_split, list)
+
+    def test_split_labels_labels_dataframe_type_numpy(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2], "col2": [3, 4]}
+        df = pd.DataFrame(data=d)
+
+        # Act
+        result_df, result_df_split = python_engine.split_labels(
+            df=df, dataframe_type="numpy", labels="col1"
+        )
+
+        # Assert
+        assert isinstance(result_df, np.ndarray)
+        assert isinstance(result_df_split, np.ndarray)
 
     def test_prepare_transform_split_df_random_split(self, mocker):
         # Arrange
@@ -1882,6 +2406,7 @@ class TestPython:
             training_dataset_obj=td,
             feature_view_obj=None,
             read_option=None,
+            dataframe_type="default",
         )
 
         # Assert
@@ -1947,6 +2472,7 @@ class TestPython:
             training_dataset_obj=td,
             feature_view_obj=None,
             read_option=None,
+            dataframe_type="default",
         )
 
         # Assert
@@ -2011,6 +2537,7 @@ class TestPython:
             training_dataset_obj=td,
             feature_view_obj=None,
             read_option=None,
+            dataframe_type="default",
         )
 
         # Assert
@@ -2305,9 +2832,9 @@ class TestPython:
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
+        mocker.patch("hsfs.util.get_job_url")
         mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine.wait_for_job"
+            "hsfs.core.job.Job._wait_for_job"
         )
 
         python_engine = python.Engine()
@@ -2336,12 +2863,13 @@ class TestPython:
         # Arrange
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
+        mock_job = mocker.patch("hsfs.core.job.Job")
+
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
-        mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine.wait_for_job"
-        )
+        mock_td_api.return_value.compute.return_value = mock_job
+        mocker.patch("hsfs.util.get_job_url")
 
         python_engine = python.Engine()
 
@@ -2370,18 +2898,18 @@ class TestPython:
         # Assert
         assert mock_fv_api.return_value.compute_training_dataset.call_count == 0
         assert mock_td_api.return_value.compute.call_count == 1
-        assert mock_python_engine_wait_for_job.call_count == 1
+        assert mock_job._wait_for_job.call_count == 1
 
     def test_write_training_dataset_query_fv(self, mocker):
         # Arrange
         mocker.patch("hsfs.engine.get_type")
         mocker.patch("hsfs.core.training_dataset_job_conf.TrainingDatasetJobConf")
+        mock_job = mocker.patch("hsfs.core.job.Job")
         mock_fv_api = mocker.patch("hsfs.core.feature_view_api.FeatureViewApi")
+        mock_fv_api.return_value.compute_training_dataset.return_value = mock_job
+
         mock_td_api = mocker.patch("hsfs.core.training_dataset_api.TrainingDatasetApi")
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
-        mock_python_engine_wait_for_job = mocker.patch(
-            "hsfs.engine.python.Engine.wait_for_job"
-        )
+        mocker.patch("hsfs.util.get_job_url")
 
         python_engine = python.Engine()
 
@@ -2418,7 +2946,7 @@ class TestPython:
         # Assert
         assert mock_fv_api.return_value.compute_training_dataset.call_count == 1
         assert mock_td_api.return_value.compute.call_count == 0
-        assert mock_python_engine_wait_for_job.call_count == 1
+        assert mock_job._wait_for_job.call_count == 1
 
     def test_create_hive_connection(self, mocker):
         # Arrange
@@ -2462,6 +2990,24 @@ class TestPython:
 
         # Assert
         assert str(result) == "   col1  col2\n0     1     3\n1     2     4"
+
+    def test_return_dataframe_type_polars(self):
+        # Arrange
+        python_engine = python.Engine()
+
+        d = {"col1": [1, 2], "col2": [3, 4]}
+        df = pl.DataFrame(data=d)
+
+        # Act
+        result = python_engine._return_dataframe_type(
+            dataframe=df, dataframe_type="pandas"
+        )
+
+        # Assert
+        assert isinstance(result, pl.DataFrame) or isinstance(
+            result, pl.dataframe.frame.DataFrame
+        )
+        assert df.equals(result)
 
     def test_return_dataframe_type_numpy(self):
         # Arrange
@@ -2552,23 +3098,6 @@ class TestPython:
         # Assert
         assert result is None
 
-    def test_get_job_url(self, mocker):
-        # Arrange
-        mock_client_get_instance = mocker.patch("hsfs.client.get_instance")
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine.get_job_url(href="1/2/3/4/5/6/7/8")
-
-        # Assert
-        assert (
-            mock_client_get_instance.return_value.replace_public_host.call_args[0][
-                0
-            ].path
-            == "p/5/jobs/named/7/executions"
-        )
-
     def test_get_app_options(self, mocker):
         # Arrange
         mock_ingestion_job_conf = mocker.patch(
@@ -2584,97 +3113,6 @@ class TestPython:
         assert mock_ingestion_job_conf.call_count == 1
         assert mock_ingestion_job_conf.call_args[1]["write_options"] == {"test": 2}
 
-    def test_wait_for_job(self, mocker):
-        # Arrange
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine.wait_for_job(job=None)
-
-        # Assert
-        assert mock_job_api.return_value.last_execution.call_count == 1
-
-    def test_wait_for_job_wait_for_job_true(self, mocker):
-        # Arrange
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine.wait_for_job(job=None, await_termination=True)
-
-        # Assert
-        assert mock_job_api.return_value.last_execution.call_count == 1
-
-    def test_wait_for_job_wait_for_job_false(self, mocker):
-        # Arrange
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-
-        python_engine = python.Engine()
-
-        # Act
-        python_engine.wait_for_job(job=None, await_termination=False)
-
-        # Assert
-        assert mock_job_api.return_value.last_execution.call_count == 0
-
-    def test_wait_for_job_final_status_succeeded(self, mocker):
-        # Arrange
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-
-        python_engine = python.Engine()
-
-        mock_job_api.return_value.last_execution.return_value = [
-            execution.Execution(id=1, state=None, final_status="succeeded")
-        ]
-
-        # Act
-        python_engine.wait_for_job(job=None)
-
-        # Assert
-        assert mock_job_api.return_value.last_execution.call_count == 1
-
-    def test_wait_for_job_final_status_failed(self, mocker):
-        # Arrange
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-
-        python_engine = python.Engine()
-
-        mock_job_api.return_value.last_execution.return_value = [
-            execution.Execution(id=1, state=None, final_status="failed")
-        ]
-
-        # Act
-        with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            python_engine.wait_for_job(job=None)
-
-        # Assert
-        assert mock_job_api.return_value.last_execution.call_count == 1
-        assert (
-            str(e_info.value)
-            == "The Hopsworks Job failed, use the Hopsworks UI to access the job logs"
-        )
-
-    def test_wait_for_job_final_status_killed(self, mocker):
-        # Arrange
-        mock_job_api = mocker.patch("hsfs.core.job_api.JobApi")
-
-        python_engine = python.Engine()
-
-        mock_job_api.return_value.last_execution.return_value = [
-            execution.Execution(id=1, state=None, final_status="killed")
-        ]
-
-        # Act
-        with pytest.raises(exceptions.FeatureStoreException) as e_info:
-            python_engine.wait_for_job(job=None)
-
-        # Assert
-        assert mock_job_api.return_value.last_execution.call_count == 1
-        assert str(e_info.value) == "The Hopsworks Job was stopped"
-
     def test_add_file(self):
         # Arrange
         python_engine = python.Engine()
@@ -2687,7 +3125,7 @@ class TestPython:
         # Assert
         assert result == file
 
-    def test_apply_transformation_function(self, mocker):
+    def test_apply_transformation_function_pandas(self, mocker):
         # Arrange
         mocker.patch("hsfs.client.get_instance")
 
@@ -2718,6 +3156,48 @@ class TestPython:
         )
 
         df = pd.DataFrame(data={"tf_name": [1, 2]})
+
+        # Act
+        result = python_engine._apply_transformation_function(
+            transformation_functions=td.transformation_functions, dataset=df
+        )
+
+        # Assert
+        assert len(result["tf_name"]) == 2
+        assert result["tf_name"][0] == 2
+        assert result["tf_name"][1] == 3
+
+    def test_apply_transformation_function_polars(self, mocker):
+        # Arrange
+        mocker.patch("hsfs.client.get_instance")
+
+        python_engine = python.Engine()
+
+        def plus_one(a):
+            return a + 1
+
+        tf = transformation_function.TransformationFunction(
+            99,
+            transformation_fn=plus_one,
+            builtin_source_code="",
+            output_type="int",
+        )
+
+        transformation_fn_dict = dict()
+
+        transformation_fn_dict["tf_name"] = tf
+
+        td = training_dataset.TrainingDataset(
+            name="test",
+            version=1,
+            data_format="CSV",
+            featurestore_id=99,
+            splits={},
+            id=10,
+            transformation_functions=transformation_fn_dict,
+        )
+
+        df = pl.DataFrame(data={"tf_name": [1, 2]})
 
         # Act
         result = python_engine._apply_transformation_function(
@@ -3081,7 +3561,7 @@ class TestPython:
         mock_python_engine_kafka_produce = mocker.patch(
             "hsfs.engine.python.Engine._kafka_produce"
         )
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
+        mocker.patch("hsfs.util.get_job_url")
         mocker.patch(
             "hsfs.engine.python.Engine._kafka_get_offsets",
             return_value=" tests_offsets",
@@ -3132,7 +3612,7 @@ class TestPython:
         mock_python_engine_kafka_produce = mocker.patch(
             "hsfs.engine.python.Engine._kafka_produce"
         )
-        mocker.patch("hsfs.engine.python.Engine.get_job_url")
+        mocker.patch("hsfs.util.get_job_url")
         mocker.patch(
             "hsfs.engine.python.Engine._kafka_get_offsets",
             side_effect=["", " tests_offsets"],

@@ -14,35 +14,32 @@
 #   limitations under the License.
 #
 
+import datetime
 import statistics
 
-import pandas as pd
 import numpy as np
-import datetime
+import pandas as pd
+import pytest
 import pytz
 import tzlocal
-
-import pytest
-from pyspark.sql.types import (
-    IntegerType,
-    DoubleType,
-    DateType,
-    StringType,
-    TimestampType,
-    StructType,
-    BooleanType,
-    StructField,
-)
-
 from hsfs import (
     training_dataset,
-    transformation_function,
     training_dataset_feature,
+    transformation_function,
 )
-from hsfs.engine import spark
-from hsfs.engine import python
-from hsfs.core.transformation_function_engine import TransformationFunctionEngine
 from hsfs.core.feature_descriptive_statistics import FeatureDescriptiveStatistics
+from hsfs.core.transformation_function_engine import TransformationFunctionEngine
+from hsfs.engine import python, spark
+from pyspark.sql.types import (
+    BooleanType,
+    DateType,
+    DoubleType,
+    IntegerType,
+    StringType,
+    StructField,
+    StructType,
+    TimestampType,
+)
 
 
 class TestPythonSparkTransformationFunctions:
@@ -167,16 +164,16 @@ class TestPythonSparkTransformationFunctions:
 
         td = self._create_training_dataset(tf_fun, "DOUBLE", "min_max_scaler")
 
-        td.transformation_functions[
-            "col_0"
-        ] = TransformationFunctionEngine.populate_builtin_fn_arguments(
-            "col_0",
-            td.transformation_functions["col_0"],
-            [
-                FeatureDescriptiveStatistics(
-                    feature_name="col_0", feature_type="Integral", min=0, max=2
-                )
-            ],
+        td.transformation_functions["col_0"] = (
+            TransformationFunctionEngine.populate_builtin_fn_arguments(
+                "col_0",
+                td.transformation_functions["col_0"],
+                [
+                    FeatureDescriptiveStatistics(
+                        feature_name="col_0", feature_type="Integral", min=0, max=2
+                    )
+                ],
+            )
         )
 
         # Assert
@@ -233,17 +230,17 @@ class TestPythonSparkTransformationFunctions:
 
         td = self._create_training_dataset(tf_fun, "INT", "label_encoder", "col_1")
 
-        td.transformation_functions[
-            "col_1"
-        ] = TransformationFunctionEngine.populate_builtin_fn_arguments(
-            "col_1",
-            td.transformation_functions["col_1"],
-            [
-                FeatureDescriptiveStatistics(
-                    feature_name="col_1",
-                    extended_statistics={"unique_values": ["test_1", "test_2"]},
-                )
-            ],
+        td.transformation_functions["col_1"] = (
+            TransformationFunctionEngine.populate_builtin_fn_arguments(
+                "col_1",
+                td.transformation_functions["col_1"],
+                [
+                    FeatureDescriptiveStatistics(
+                        feature_name="col_1",
+                        extended_statistics={"unique_values": ["test_1", "test_2"]},
+                    )
+                ],
+            )
         )
 
         # Assert
@@ -301,19 +298,19 @@ class TestPythonSparkTransformationFunctions:
 
         mean = statistics.mean([1, 2])
         stddev = statistics.pstdev([1, 2])
-        td.transformation_functions[
-            "col_0"
-        ] = TransformationFunctionEngine.populate_builtin_fn_arguments(
-            "col_0",
-            td.transformation_functions["col_0"],
-            [
-                FeatureDescriptiveStatistics(
-                    feature_name="col_0",
-                    feature_type="Integral",
-                    mean=mean,
-                    stddev=stddev,
-                )
-            ],
+        td.transformation_functions["col_0"] = (
+            TransformationFunctionEngine.populate_builtin_fn_arguments(
+                "col_0",
+                td.transformation_functions["col_0"],
+                [
+                    FeatureDescriptiveStatistics(
+                        feature_name="col_0",
+                        feature_type="Integral",
+                        mean=mean,
+                        stddev=stddev,
+                    )
+                ],
+            )
         )
 
         # Assert
@@ -373,18 +370,18 @@ class TestPythonSparkTransformationFunctions:
         percentiles[24] = 1
         percentiles[49] = 2
         percentiles[74] = 2
-        td.transformation_functions[
-            "col_0"
-        ] = TransformationFunctionEngine.populate_builtin_fn_arguments(
-            "col_0",
-            td.transformation_functions["col_0"],
-            [
-                FeatureDescriptiveStatistics(
-                    feature_name="col_0",
-                    feature_type="Integral",
-                    percentiles=percentiles,
-                )
-            ],
+        td.transformation_functions["col_0"] = (
+            TransformationFunctionEngine.populate_builtin_fn_arguments(
+                "col_0",
+                td.transformation_functions["col_0"],
+                [
+                    FeatureDescriptiveStatistics(
+                        feature_name="col_0",
+                        feature_type="Integral",
+                        percentiles=percentiles,
+                    )
+                ],
+            )
         )
 
         # Assert

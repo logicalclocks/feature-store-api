@@ -15,8 +15,8 @@
 #
 
 import json
-import humps
 
+import humps
 from hsfs import util
 
 
@@ -27,7 +27,7 @@ class StatisticsConfig:
         correlations=False,
         histograms=False,
         exact_uniqueness=False,
-        columns=[],
+        columns=None,
         **kwargs,
     ):
         self._enabled = enabled

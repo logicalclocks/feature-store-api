@@ -15,8 +15,8 @@
 #
 
 
-from hsfs.constructor import filter
 from hsfs import feature
+from hsfs.constructor import filter
 
 
 class TestFilter:

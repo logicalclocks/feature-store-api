@@ -15,8 +15,9 @@
 #
 
 import json
-from hsfs import util
+
 import humps
+from hsfs import util
 
 
 class TrainingDatasetSplit:
@@ -33,7 +34,7 @@ class TrainingDatasetSplit:
         percentage=None,
         start_time=None,
         end_time=None,
-        **kwargs
+        **kwargs,
     ):
         self._name = name
         self._percentage = percentage

@@ -13,36 +13,38 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import re
+import asyncio
 import io
-import avro.schema
+import re
+
 import avro.io
-from sqlalchemy import sql, bindparam, exc, text
+import avro.schema
 import numpy as np
 import pandas as pd
-from hsfs import util
-from hsfs import training_dataset, feature_view, client
-from hsfs.serving_key import ServingKey
+import polars as pl
+from hsfs import client, feature_view, training_dataset, util
 from hsfs.core import (
-    training_dataset_api,
-    storage_connector_api,
-    transformation_function_engine,
     feature_view_api,
     feature_view_engine,
+    storage_connector_api,
+    training_dataset_api,
+    transformation_function_engine,
 )
-
-import asyncio
+from hsfs.serving_key import ServingKey
+from sqlalchemy import bindparam, exc, sql, text
 
 
 class VectorServer:
     def __init__(
         self,
         feature_store_id,
-        features=[],
+        features=None,
         training_dataset_version=None,
         serving_keys=None,
         skip_fg_ids=None,
     ):
+        if features is None:
+            features = []
         self._training_dataset_version = training_dataset_version
         self._features = features
         self._feature_vector_col_name = (
@@ -168,9 +170,9 @@ class VectorServer:
 
         self._prefix_by_serving_index = prefix_by_serving_index
         for sk in self._serving_keys:
-            self._serving_key_by_serving_index[
-                sk.join_index
-            ] = self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
+            self._serving_key_by_serving_index[sk.join_index] = (
+                self._serving_key_by_serving_index.get(sk.join_index, []) + [sk]
+            )
         # sort the serving by PreparedStatementParameter.index
         for join_index in self._serving_key_by_serving_index:
             # feature_name_order_by_psp do not include the join index when the joint feature only contains label only
@@ -198,9 +200,9 @@ class VectorServer:
             if prepared_statement.feature_group_id in self._skip_fg_ids:
                 continue
             query_online = str(prepared_statement.query_online).replace("\n", " ")
-            prefix_by_serving_index[
-                prepared_statement.prepared_statement_index
-            ] = prepared_statement.prefix
+            prefix_by_serving_index[prepared_statement.prepared_statement_index] = (
+                prepared_statement.prefix
+            )
 
             # In java prepared statement `?` is used for parametrization.
             # In sqlalchemy `:feature_name` is used instead of `?`
@@ -211,13 +213,13 @@ class VectorServer:
                     key=lambda psp: psp.index,
                 )
             ]
-            feature_name_order_by_psp[
-                prepared_statement.prepared_statement_index
-            ] = dict(
-                [
-                    (psp.name, psp.index)
-                    for psp in prepared_statement.prepared_statement_parameters
-                ]
+            feature_name_order_by_psp[prepared_statement.prepared_statement_index] = (
+                dict(
+                    [
+                        (psp.name, psp.index)
+                        for psp in prepared_statement.prepared_statement_parameters
+                    ]
+                )
             )
             # construct serving key if it is not provided.
             if self._serving_keys is None:
@@ -244,9 +246,9 @@ class VectorServer:
                     batch_ids=bindparam("batch_ids", expanding=True)
                 )
 
-            prepared_statements_dict[
-                prepared_statement.prepared_statement_index
-            ] = query_online
+            prepared_statements_dict[prepared_statement.prepared_statement_index] = (
+                query_online
+            )
 
         # assign serving key if it is not provided.
         if self._serving_keys is None:
@@ -270,12 +272,14 @@ class VectorServer:
         self,
         entry,
         return_type=None,
-        passed_features=[],
+        passed_features=None,
         allow_missing=False,
     ):
         """Assembles serving vector from online feature store."""
 
         # get result row
+        if passed_features is None:
+            passed_features = []
         serving_vector = self._vector_result(entry, self._prepared_statements)
         # Add the passed features
         serving_vector.update(passed_features)
@@ -292,20 +296,28 @@ class VectorServer:
             pandas_df = pd.DataFrame(vector).transpose()
             pandas_df.columns = self._feature_vector_col_name
             return pandas_df
+        elif return_type.lower() == "polars":
+            # Polar considers one dimensional list as a single columns so passed vector as 2d list
+            polars_df = pl.DataFrame(
+                [vector], schema=self._feature_vector_col_name, orient="row"
+            )
+            return polars_df
         else:
             raise Exception(
-                "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
+                "Unknown return type. Supported return types are 'list', 'polars', 'pandas' and 'numpy'"
             )
 
     def get_feature_vectors(
         self,
         entries,
         return_type=None,
-        passed_features=[],
+        passed_features=None,
         allow_missing=False,
     ):
         """Assembles serving vector from online feature store."""
 
+        if passed_features is None:
+            passed_features = []
         batch_results, _ = self._batch_vector_results(
             entries, self._prepared_statements
         )
@@ -337,9 +349,14 @@ class VectorServer:
             pandas_df = pd.DataFrame(vectors)
             pandas_df.columns = self._feature_vector_col_name
             return pandas_df
+        elif return_type.lower() == "polars":
+            polars_df = pl.DataFrame(
+                vectors, schema=self._feature_vector_col_name, orient="row"
+            )
+            return polars_df
         else:
             raise Exception(
-                "Unknown return type. Supported return types are 'list', 'pandas' and 'numpy'"
+                "Unknown return type. Supported return types are 'list', 'polars', 'pandas' and 'numpy'"
             )
 
     def get_inference_helper(self, entry, return_type):
@@ -353,6 +370,12 @@ class VectorServer:
             return pd.DataFrame([serving_vector])
         elif return_type.lower() == "dict":
             return serving_vector
+        elif return_type.lower() == "polars":
+            # Polar considers one dimensional list as a single columns so passed vector as 2d list
+            polars_df = pl.DataFrame(
+                [serving_vector], schema=serving_vector.keys(), orient="row"
+            )
+            return polars_df
         else:
             raise Exception(
                 "Unknown return type. Supported return types are 'pandas' and 'dict'"
@@ -386,6 +409,13 @@ class VectorServer:
             return batch_results
         elif return_type.lower() == "pandas":
             return pd.DataFrame(batch_results)
+        elif return_type.lower() == "polars":
+            polars_df = pl.DataFrame(
+                batch_results,
+                schema=feature_view_object.inference_helper_columns,
+                orient="row",
+            )
+            return polars_df
         else:
             raise Exception(
                 "Unknown return type. Supported return types are 'dict' and 'pandas'"
@@ -406,6 +436,7 @@ class VectorServer:
         # Initialize the set of values
         serving_vector = {}
         bind_entries = {}
+        prepared_statement_execution = {}
         for prepared_statement_index in prepared_statement_objects:
             pk_entry = {}
             next_statement = False
@@ -425,11 +456,14 @@ class VectorServer:
             if next_statement:
                 continue
             bind_entries[prepared_statement_index] = pk_entry
+            prepared_statement_execution[prepared_statement_index] = (
+                prepared_statement_objects[prepared_statement_index]
+            )
 
         # run all the prepared statements in parallel using aiomysql engine
         loop = asyncio.get_event_loop()
         results_dict = loop.run_until_complete(
-            self._execute_prep_statements(prepared_statement_objects, bind_entries)
+            self._execute_prep_statements(prepared_statement_execution, bind_entries)
         )
 
         for key in results_dict:
@@ -458,9 +492,9 @@ class VectorServer:
             if prepared_statement_index not in self._serving_key_by_serving_index:
                 continue
 
-            prepared_stmts_to_execute[
-                prepared_statement_index
-            ] = prepared_statement_objects[prepared_statement_index]
+            prepared_stmts_to_execute[prepared_statement_index] = (
+                prepared_statement_objects[prepared_statement_index]
+            )
             entry_values_tuples = list(
                 map(
                     lambda e: tuple(
@@ -507,9 +541,9 @@ class VectorServer:
                 )
                 # note: should used serialized value
                 # as it is from users' input
-                statement_results[
-                    self._get_result_key(prefix_features, row_dict)
-                ] = result_dict
+                statement_results[self._get_result_key(prefix_features, row_dict)] = (
+                    result_dict
+                )
 
             # add partial results to the global results
             for i, entry in enumerate(entries):
@@ -711,6 +745,14 @@ class VectorServer:
     async def _execute_prep_statements(self, prepared_statements: dict, entries: dict):
         """Iterate over prepared statements to create async tasks
         and gather all tasks results for a given list of entries."""
+
+        # validate if prepared_statements and entries have the same keys
+        if prepared_statements.keys() != entries.keys():
+            # iterate over prepared_statements and entries to find the missing key
+            # remove missing keys from prepared_statements
+            for key in list(prepared_statements.keys()):
+                if key not in entries:
+                    prepared_statements.pop(key)
 
         tasks = [
             asyncio.ensure_future(

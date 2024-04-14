@@ -14,17 +14,17 @@
 #   limitations under the License.
 #
 
+from typing import Optional
+
 from hsfs import (
     client,
     feature_view,
-    transformation_function_attached,
     training_dataset,
+    transformation_function_attached,
 )
-from hsfs.core import job
-from hsfs.constructor import serving_prepared_statement, query
 from hsfs.client.exceptions import RestAPIError
-
-from hsfs.core import explicit_provenance
+from hsfs.constructor import query, serving_prepared_statement
+from hsfs.core import explicit_provenance, job
 
 
 class FeatureViewApi:
@@ -90,7 +90,7 @@ class FeatureViewApi:
                     "Cannot get back the feature view because the query defined is no longer valid."
                     " Some feature groups used in the query may have been deleted. You can clean up this feature view on the UI"
                     " or `FeatureView.clean`."
-                )
+                ) from e
             else:
                 raise e
 
@@ -108,7 +108,7 @@ class FeatureViewApi:
                     "Cannot get back the feature view because the query defined is no longer valid."
                     " Some feature groups used in the query may have been deleted. You can clean up this feature view on the UI"
                     " or `FeatureView.clean`."
-                )
+                ) from e
             else:
                 raise e
 
@@ -288,4 +288,46 @@ class FeatureViewApi:
             links_json,
             explicit_provenance.Links.Direction.UPSTREAM,
             explicit_provenance.Links.Type.FEATURE_GROUP,
+        )
+
+    def get_models_provenance(
+        self,
+        feature_view_name,
+        feature_view_version,
+        training_dataset_version: Optional[int] = None,
+    ):
+        """Get the generated models using this feature view, based on explicit
+        provenance. These models can be accessible or inaccessible. Explicit
+        provenance does not track deleted generated model links, so deleted
+        will always be empty.
+        For inaccessible models, only a minimal information is returned.
+
+        # Arguments
+            feature_view_name: Filter generated models based on feature view name.
+            feature_view_version: Filter generated models based on feature view version.
+            training_dataset_version: Filter generated models based on the used training dataset version.
+
+        # Returns
+            `ExplicitProvenance.Links`: the models generated using this feature
+            group
+        """
+        _client = client.get_instance()
+        path_params = self._base_path + [
+            feature_view_name,
+            self._VERSION,
+            feature_view_version,
+            self._PROVENANCE,
+            self._LINKS,
+        ]
+        query_params = {
+            "expand": "provenance_artifacts",
+            "upstreamLvls": 0,
+            "downstreamLvls": 2,
+        }
+        links_json = _client._send_request("GET", path_params, query_params)
+        return explicit_provenance.Links.from_response_json(
+            links_json,
+            explicit_provenance.Links.Direction.DOWNSTREAM,
+            explicit_provenance.Links.Type.MODEL,
+            training_dataset_version=training_dataset_version,
         )

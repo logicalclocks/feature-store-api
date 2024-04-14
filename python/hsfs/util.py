@@ -14,24 +14,24 @@
 #   limitations under the License.
 #
 
-import re
-import json
-import pandas as pd
-import time
-import threading
+import asyncio
 import itertools
-
-from datetime import datetime, date, timezone
+import json
+import re
+import threading
+import time
+from datetime import date, datetime, timezone
 from urllib.parse import urljoin, urlparse
 
-from sqlalchemy import create_engine
-
+import pandas as pd
+from aiomysql.sa import create_engine as async_create_engine
 from hsfs import client, feature
 from hsfs.client import exceptions
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.core import variable_api
-from aiomysql.sa import create_engine as async_create_engine
-import asyncio
+from sqlalchemy import create_engine
 from sqlalchemy.engine.url import make_url
+
 
 FEATURE_STORE_NAME_SUFFIX = "_featurestore"
 
@@ -51,6 +51,27 @@ def validate_feature(ft):
         return feature.Feature(ft)
     elif isinstance(ft, dict):
         return feature.Feature(**ft)
+
+
+VALID_EMBEDDING_TYPE = {
+    "array<int>",
+    "array<bigint>",
+    "array<float>",
+    "array<double>",
+}
+
+
+def validate_embedding_feature_type(embedding_index, schema):
+    if not embedding_index or not schema:
+        return
+    feature_type_map = dict([(feat.name, feat.type) for feat in schema])
+    for embedding in embedding_index.get_embeddings():
+        feature_type = feature_type_map.get(embedding.name)
+        if feature_type not in VALID_EMBEDDING_TYPE:
+            raise FeatureStoreException(
+                f"Provide feature `{embedding.name}` has type `{feature_type}`, "
+                f"but requires one of the following: {', '.join(VALID_EMBEDDING_TYPE)}"
+            )
 
 
 def parse_features(feature_names):
@@ -133,6 +154,13 @@ def get_host_name():
     return host
 
 
+def get_dataset_type(path: str):
+    if re.match(r"^(?:hdfs://|)/apps/hive/warehouse/*", path):
+        return "HIVEDB"
+    else:
+        return "DATASET"
+
+
 async def create_async_engine(
     online_conn, external: bool, default_min_size: int, options: dict = None
 ):
@@ -202,13 +230,13 @@ def get_timestamp_from_date_string(input_date):
             date_time = datetime.strptime(norm_input_date, date_format)
         else:
             date_time = datetime.fromisoformat(input_date[:-1])
-    except ValueError:
+    except ValueError as err:
         raise ValueError(
             "Unable to parse the normalized input date value : "
             + norm_input_date
             + " with format "
             + date_format
-        )
+        ) from err
     if date_time.tzinfo is None:
         date_time = date_time.replace(tzinfo=timezone.utc)
     return int(float(date_time.timestamp()) * 1000)
@@ -335,6 +363,23 @@ def verify_attribute_key_names(feature_group_obj, external_feature_group=False):
                 )
 
 
+def get_job_url(href: str):
+    """Use the endpoint returned by the API to construct the UI url for jobs
+
+    Args:
+        href (str): the endpoint returned by the API
+    """
+    url = urlparse(href)
+    url_splits = url.path.split("/")
+    project_id = url_splits[4]
+    job_name = url_splits[6]
+    ui_url = url._replace(
+        path="p/{}/jobs/named/{}/executions".format(project_id, job_name)
+    )
+    ui_url = client.get_instance().replace_public_host(ui_url)
+    return ui_url.geturl()
+
+
 def translate_legacy_spark_type(output_type):
     if output_type == "StringType()":
         return "STRING"
@@ -396,6 +441,18 @@ def run_with_loading_animation(message, func, *args, **kwargs):
             print(f"\rError: {message}           ", end="\n")
         else:
             print(f"\rFinished: {message} ({(end-start):.2f}s) ", end="\n")
+
+
+def get_feature_group_url(feature_store_id: int, feature_group_id: int):
+    sub_path = (
+        "/p/"
+        + str(client.get_instance()._project_id)
+        + "/fs/"
+        + str(feature_store_id)
+        + "/fg/"
+        + str(feature_group_id)
+    )
+    return get_hostname_replaced_url(sub_path)
 
 
 class VersionWarning(Warning):

@@ -14,9 +14,10 @@
 #   limitations under the License.
 #
 
-from hsfs.engine import spark, spark_no_metastore
 from hsfs.client import exceptions
 from hsfs.core import arrow_flight_client
+from hsfs.engine import spark, spark_no_metastore
+
 
 _engine = None
 _engine_type = None
@@ -35,12 +36,12 @@ def init(engine_type):
         elif engine_type in ["hive", "python", "training"]:
             try:
                 from hsfs.engine import python
-            except ImportError:
+            except ImportError as err:
                 raise exceptions.FeatureStoreException(
                     "Trying to instantiate Python as engine, but 'python' extras are "
                     "missing in HSFS installation. Install with `pip install "
                     "hsfs[python]`."
-                )
+                ) from err
             _engine_type = "python"
             _engine = python.Engine()
         elif engine_type == "training":

@@ -14,10 +14,12 @@
 #   limitations under the License.
 #
 
-from hsfs.client.exceptions import FeatureStoreException
 import logging
-from hsfs.core.opensearch_api import OpenSearchApi
+import re
+
 from hsfs import client
+from hsfs.client.exceptions import FeatureStoreException, VectorDatabaseException
+from hsfs.core.opensearch_api import OpenSearchApi
 
 
 class OpenSearchClientSingleton:
@@ -35,18 +37,25 @@ class OpenSearchClientSingleton:
             try:
                 from opensearchpy import OpenSearch
                 from opensearchpy.exceptions import (
-                    ConnectionError as OpenSearchConnectionError,
                     AuthenticationException as OpenSearchAuthenticationException,
+                )
+                from opensearchpy.exceptions import (
+                    ConnectionError as OpenSearchConnectionError,
+                )
+                from opensearchpy.exceptions import (
+                    RequestError as RequestError,
                 )
 
                 self.OpenSearchConnectionError = OpenSearchConnectionError
                 self.OpenSearchAuthenticationException = (
                     OpenSearchAuthenticationException
                 )
-            except ModuleNotFoundError:
+                self.RequestError = RequestError
+
+            except ModuleNotFoundError as err:
                 raise FeatureStoreException(
                     "hopsworks and opensearchpy are required for embedding similarity search"
-                )
+                ) from err
             # query log is at INFO level
             # 2023-11-24 15:10:49,470 INFO: POST https://localhost:9200/index/_search [status:200 request:0.041s]
             logging.getLogger("opensearchpy").setLevel(logging.WARNING)
@@ -70,7 +79,60 @@ class OpenSearchClientSingleton:
             # OpenSearchAuthenticationException occurs when jwt is expired
             self._refresh_opensearch_connection()
             return self._opensearch_client.search(body=body, index=index)
+        except self.RequestError as e:
+            caused_by = e.info.get("error") and e.info["error"].get("caused_by")
+            if caused_by and caused_by["type"] == "illegal_argument_exception":
+                raise self._create_vector_database_exception(caused_by["reason"]) from e
+            raise VectorDatabaseException(
+                VectorDatabaseException.OTHERS,
+                f"Error in Opensearch request: {e}",
+                e.info,
+            )  from e
 
     def close(self):
         if self._opensearch_client:
             self._opensearch_client.close()
+
+    def _create_vector_database_exception(self, message):
+        if "[knn] requires k" in message:
+            pattern = r"\[knn\] requires k <= (\d+)"
+            match = re.search(pattern, message)
+            if match:
+                k = match.group(1)
+                reason = VectorDatabaseException.REQUESTED_K_TOO_LARGE
+                message = (
+                    f"Illegal argument in vector database request: "
+                    f"Requested k is too large, it needs to be less than {k}."
+                )
+                info = {VectorDatabaseException.REQUESTED_K_TOO_LARGE_INFO_K: int(k)}
+            else:
+                reason = VectorDatabaseException.REQUESTED_K_TOO_LARGE
+                message = "Illegal argument in vector database request: Requested k is too large."
+                info = {}
+        elif "Result window is too large" in message:
+            pattern = r"or equal to: \[(\d+)\]"
+            match = re.search(pattern, message)
+            if match:
+                n = match.group(1)
+                reason = VectorDatabaseException.REQUESTED_NUM_RESULT_TOO_LARGE
+                message = (
+                    f"Illegal argument in vector database request: "
+                    f"Requested n is too large, it needs to be less than {n}."
+                )
+                info = {
+                    VectorDatabaseException.REQUESTED_NUM_RESULT_TOO_LARGE_INFO_N: int(
+                        n
+                    )
+                }
+            else:
+                reason = VectorDatabaseException.REQUESTED_NUM_RESULT_TOO_LARGE
+                message = (
+                    "Illegal argument in vector database request: "
+                    "Requested n is too large."
+                )
+                info = {}
+        else:
+            reason = VectorDatabaseException.OTHERS
+            message = message
+            info = {}
+        return VectorDatabaseException(reason, message, info)

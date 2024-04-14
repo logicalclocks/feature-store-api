@@ -13,13 +13,24 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-
+import os
 import warnings
 
-from hsfs import util, version
-from hsfs.connection import Connection
-from hsfs import usage
 import nest_asyncio
+
+
+# Setting polars skip cpu flag to suppress CPU false positive warning messages printed while importing hsfs
+os.environ["POLARS_SKIP_CPU_CHECK"] = "1"
+
+from hsfs import (  # noqa: E402,  Module level import not at top of file because os.environ must be set before importing hsfs
+    usage,
+    util,
+    version,
+)
+from hsfs.connection import (  # noqa: E402,  Module level import not at top of file because os.environ must be set before importing hsfs
+    Connection,
+)
+
 
 __version__ = version.__version__
 

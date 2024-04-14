@@ -14,13 +14,19 @@
 #   limitations under the License.
 #
 
-import pytest
 import json
 
+import pytest
+from hsfs import (
+    engine,
+    feature_group,
+    feature_view,
+    statistics_config,
+    training_dataset,
+)
 from hsfs.client import exceptions
-from hsfs import training_dataset, feature_group, feature_view, statistics_config
 from hsfs.core import statistics_engine
-from hsfs import engine
+
 
 engine._engine_type = "python"
 fg = feature_group.FeatureGroup(

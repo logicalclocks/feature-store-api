@@ -62,6 +62,38 @@ class FeatureStoreException(Exception):
     """Generic feature store exception"""
 
 
+class VectorDatabaseException(Exception):
+
+    # reason
+    REQUESTED_K_TOO_LARGE = "REQUESTED_K_TOO_LARGE"
+    REQUESTED_NUM_RESULT_TOO_LARGE = "REQUESTED_NUM_RESULT_TOO_LARGE"
+    OTHERS = "OTHERS"
+
+    # info
+    REQUESTED_K_TOO_LARGE_INFO_K = "k"
+    REQUESTED_NUM_RESULT_TOO_LARGE_INFO_N = "n"
+
+    def __init__(self, reason, message, info):
+        super().__init__(message)
+        self._info = info
+        self._reason = reason
+
+    @property
+    def reason(self):
+        return self._reason
+
+    @property
+    def info(self):
+        return self._info
+
+
+class DataValidationException(FeatureStoreException):
+    """Raised when data validation fails only when using "STRICT" validation ingestion policy."""
+
+    def __init__(self, message):
+        super().__init__(message)
+
+
 class ExternalClientError(TypeError):
     """Raised when external client cannot be initialized due to missing arguments."""
 

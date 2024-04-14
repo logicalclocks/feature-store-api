@@ -15,15 +15,16 @@
 #
 
 import json
-import humps
-from typing import Optional, List, Union
-from datetime import datetime, date
+import warnings
+from datetime import date, datetime
+from typing import List, Optional, Union
 
-from hsfs import util, engine, feature_group
-from hsfs.core import query_constructor_api, storage_connector_api, arrow_flight_client
+import humps
+from hsfs import engine, feature_group, util
+from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import join
 from hsfs.constructor.filter import Filter, Logic
-from hsfs.client.exceptions import FeatureStoreException
+from hsfs.core import arrow_flight_client, query_constructor_api, storage_connector_api
 from hsfs.feature import Feature
 
 
@@ -69,6 +70,7 @@ class Query:
         self._storage_connector_api = storage_connector_api.StorageConnectorApi()
 
     def _prep_read(self, online, read_options):
+        self._check_read_supported(online)
         fs_query = self._query_constructor_api.construct_query(self)
 
         if online:
@@ -115,7 +117,7 @@ class Query:
         self,
         online: Optional[bool] = False,
         dataframe_type: Optional[str] = "default",
-        read_options: Optional[dict] = {},
+        read_options: Optional[dict] = None,
     ):
         """Read the specified query into a DataFrame.
 
@@ -146,9 +148,14 @@ class Query:
         # Returns
             `DataFrame`: DataFrame depending on the chosen type.
         """
+        if not isinstance(online, bool):
+            warnings.warn(
+                f"Passed {online} as value to online kwarg for `read` method. The `online` parameter is expected to be a boolean"
+                + " to specify whether to read from the Online Feature Store.",
+                stacklevel=1,
+            )
         if not read_options:
             read_options = {}
-        self._check_read_supported(online)
         sql_query, online_conn = self._prep_read(online, read_options)
 
         schema = None
@@ -200,9 +207,9 @@ class Query:
     def join(
         self,
         sub_query: "Query",
-        on: Optional[List[str]] = [],
-        left_on: Optional[List[str]] = [],
-        right_on: Optional[List[str]] = [],
+        on: Optional[List[str]] = None,
+        left_on: Optional[List[str]] = None,
+        right_on: Optional[List[str]] = None,
         join_type: Optional[str] = "inner",
         prefix: Optional[str] = None,
     ):
@@ -248,7 +255,14 @@ class Query:
             `Query`: A new Query object representing the join.
         """
         self._joins.append(
-            join.Join(sub_query, on, left_on, right_on, join_type.upper(), prefix)
+            join.Join(
+                sub_query,
+                on or [],
+                left_on or [],
+                right_on or [],
+                join_type.upper(),
+                prefix,
+            )
         )
 
         return self
@@ -259,6 +273,9 @@ class Query:
         exclude_until: Optional[Union[str, int, datetime, date]] = None,
     ):
         """Perform time travel on the given Query.
+
+        !!! warning "Pyspark/Spark Only"
+            Apache HUDI exclusively supports Time Travel and Incremental Query via Spark Context
 
         This method returns a new Query object at the specified point in time. Optionally, commits before a
         specified point in time can be excluded from the query. The Query can then either be read into a Dataframe
@@ -488,11 +505,24 @@ class Query:
     def _check_read_supported(self, online):
         if not online:
             return
+        if not isinstance(online, bool):
+            warnings.warn(
+                f"Passed {online} as value to online kwarg for `read` method. The `online` parameter is expected to be a boolean"
+                + " to specify whether to read from the Online Feature Store.",
+                stacklevel=1,
+            )
         for fg in self.featuregroups:
             if fg.embedding_index:
                 raise FeatureStoreException(
                     "Reading from query containing embedding is not supported."
                     " Use `feature_view.get_feature_vector(s) instead."
+                )
+            elif fg.online_enabled is False:
+                raise FeatureStoreException(
+                    f"Found {fg.name} in query Feature Groups which is not `online_enabled`."
+                    + "If you intend to use the Online Feature Store, please enable the Feature Group"
+                    + " for online serving by setting `online=True` on creation. Otherwise, set online=False"
+                    + " when using the `read` method."
                 )
 
     @classmethod
@@ -720,8 +750,8 @@ class Query:
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
-        except FeatureStoreException:
-            raise AttributeError(f"'Query' object has no attribute '{name}'. ")
+        except FeatureStoreException as err:
+            raise AttributeError(f"'Query' object has no attribute '{name}'. ") from err
 
     def __getitem__(self, name):
         if not isinstance(name, str):

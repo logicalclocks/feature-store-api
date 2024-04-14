@@ -15,10 +15,10 @@
 #
 
 from typing import List, Union
-from hsfs.core import validation_report_api
-from hsfs import client, util
-import great_expectations as ge
 
+import great_expectations as ge
+from hsfs import client, util
+from hsfs.core import validation_report_api
 from hsfs.validation_report import ValidationReport
 
 

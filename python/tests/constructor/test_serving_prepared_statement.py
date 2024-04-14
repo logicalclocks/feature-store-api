@@ -15,7 +15,7 @@
 #
 
 
-from hsfs.constructor import serving_prepared_statement, prepared_statement_parameter
+from hsfs.constructor import prepared_statement_parameter, serving_prepared_statement
 
 
 class TestServingPreparedStatement:
