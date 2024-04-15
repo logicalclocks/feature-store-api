@@ -80,23 +80,7 @@ class Client(base.Client):
         self._cert_folder_base = None
 
         if engine == "python":
-            # On external Spark clients (Databricks, Spark Cluster),
-            # certificates need to be provided before the Spark application starts.
-            self._cert_folder_base = cert_folder
-            self._cert_folder = os.path.join(cert_folder, host, project)
-            self._trust_store_path = os.path.join(self._cert_folder, "trustStore.jks")
-            self._key_store_path = os.path.join(self._cert_folder, "keyStore.jks")
-
-            os.makedirs(self._cert_folder, exist_ok=True)
-            credentials = self._get_credentials(self._project_id)
-            self._write_b64_cert_to_bytes(
-                str(credentials["kStore"]),
-                path=self._get_jks_key_store_path(),
-            )
-            self._write_b64_cert_to_bytes(
-                str(credentials["tStore"]),
-                path=self._get_jks_trust_store_path(),
-            )
+            credentials = self._materialize_certs(cert_folder, host, project)
 
             self._write_pem_file(credentials["caChain"], self._get_ca_chain_path())
             self._write_pem_file(
@@ -104,16 +88,13 @@ class Client(base.Client):
             )
             self._write_pem_file(credentials["clientKey"], self._get_client_key_path())
 
-            self._cert_key = str(credentials["password"])
-            with open(os.path.join(self._cert_folder, "material_passwd"), "w") as f:
-                f.write(str(credentials["password"]))
+        elif engine == "spark":
+            # When using the Spark engine with metastore connection, the certificates
+            # are needed when the application starts (before user code is run)
+            # So in this case, we can't materialize the certificates on the fly.
+            _spark_session = SparkSession.builder.enableHiveSupport.getOrCreate()
 
-        elif engine.startswith("spark"):
-            _spark_session = SparkSession.builder.getOrCreate()
-
-            self.validate_spark_configuration(
-                _spark_session, engine == "spark-no-metastore"
-            )
+            self._validate_spark_configuration(_spark_session)
             with open(
                 _spark_session.conf.get("spark.hadoop.hops.ssl.keystores.passwd.name"),
                 "r",
@@ -126,8 +107,52 @@ class Client(base.Client):
             self._key_store_path = _spark_session.conf.get(
                 "spark.hadoop.hops.ssl.keystore.name"
             )
+        elif engine == "spark-no-metastore":
+            _spark_session = SparkSession.builder.getOrCreate()
+            self._materialize_certs(cert_folder, host, project)
 
-    def validate_spark_configuration(self, _spark_session, no_metastore):
+            # Set credentials location in the Spark configuration
+            # Set other options in the Spark configuration
+            configuration_dict = {
+                "hops.ssl.trustore.name": self._trust_store_path,
+                "hops.ssl.keystore.name": self._key_store_path,
+                "hops.ssl.keystores.passwd.name": self._cert_key_path,
+                "fs.permissions.umask-mode": "0002",
+                "fs.hopsfs.impl": "io.hops.hopsfs.client.HopsFileSystem",
+                "hops.rpc.socket.factory.class.default": "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory",
+                "client.rpc.ssl.enabled.protocol": "TLSv1.2",
+                "hops.ssl.hostname.verifier": "ALLOW_ALL",
+                "hops.ipc.server.ssl.enabled": "true",
+            }
+
+            for conf_key, conf_value in configuration_dict.items():
+                _spark_session._jsc.hadoopConfiguration().set(conf_key, conf_value)
+
+    def _materialize_certs(self, cert_folder, host, project):
+        self._cert_folder_base = cert_folder
+        self._cert_folder = os.path.join(cert_folder, host, project)
+        self._trust_store_path = os.path.join(self._cert_folder, "trustStore.jks")
+        self._key_store_path = os.path.join(self._cert_folder, "keyStore.jks")
+
+        os.makedirs(self._cert_folder, exist_ok=True)
+        credentials = self._get_credentials(self._project_id)
+        self._write_b64_cert_to_bytes(
+            str(credentials["kStore"]),
+            path=self._get_jks_key_store_path(),
+        )
+        self._write_b64_cert_to_bytes(
+            str(credentials["tStore"]),
+            path=self._get_jks_trust_store_path(),
+        )
+        self._cert_key = str(credentials["password"])
+        self._cert_key_path = os.path.join(self._cert_folder, "material_passwd")
+        with open(self._cert_key_path, "w") as f:
+            f.write(str(credentials["password"]))
+
+        # Return the credentials object for the Python engine to materialize the pem files.
+        return credentials
+
+    def _validate_spark_configuration(self, _spark_session):
         exception_text = "Spark is misconfigured for communication with Hopsworks, missing or invalid property: "
 
         configuration_dict = {
@@ -140,11 +165,9 @@ class Client(base.Client):
             "spark.hadoop.hops.ssl.keystores.passwd.name": None,
             "spark.hadoop.hops.ipc.server.ssl.enabled": "true",
             "spark.hadoop.client.rpc.ssl.enabled.protocol": "TLSv1.2",
+            "spark.hadoop.hive.metastore.uris": None,
+            "spark.sql.hive.metastore.jars": None,
         }
-
-        if not no_metastore:
-            configuration_dict["spark.hadoop.hive.metastore.uris"] = None
-            configuration_dict["spark.sql.hive.metastore.jars"] = None
 
         for key, value in configuration_dict.items():
             if not (
