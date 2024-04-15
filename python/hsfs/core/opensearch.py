@@ -19,6 +19,10 @@ import re
 from functools import wraps
 
 import urllib3
+from opensearchpy import OpenSearch
+from opensearchpy.exceptions import (
+    AuthenticationException, ConnectionError, RequestError, ConnectionTimeout
+)
 from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException, VectorDatabaseException
 from hsfs.core.opensearch_api import OpenSearchApi
@@ -26,7 +30,8 @@ from retrying import retry
 
 
 def _is_timeout(exception):
-    return isinstance(exception, urllib3.exceptions.ReadTimeoutError)
+    return (isinstance(exception, urllib3.exceptions.ReadTimeoutError)
+            or isinstance(exception, ConnectionTimeout))
 
 def _handle_opensearch_exception(func):
     @wraps(func)
@@ -42,7 +47,7 @@ def _handle_opensearch_exception(func):
     return error_handler_wrapper
 
 class OpensearchRequestOption:
-    TIME_OUT = "timeout"
+    TIMEOUT = "timeout"
 
     @classmethod
     def get_options(cls, options: dict):
@@ -59,7 +64,7 @@ class OpensearchRequestOption:
             either from the provided options or default values if not available.
         """
         option_map = {
-            cls.TIME_OUT: 30
+            cls.TIMEOUT: 30,
         }
         if options:
             # Iterate over attributes of the OpensearchRequestOption class
@@ -74,7 +79,7 @@ class OpenSearchClientSingleton:
     _instance = None
 
     TIMEOUT_ERROR_MSG = """
-    Cannot fetch results from Opensearch due to timeout. It is because the server is busy right now or longer time is needed to reload the index. Try and increase the timeout limit by providing `options={"timeout": 60}` in the method.
+    Cannot fetch results from Opensearch due to timeout. It is because the server is busy right now or longer time is needed to reload a large index. Try and increase the timeout limit by providing the parameter `options={"timeout": 60}` in the method `find_neighbor` or `count`.
     """
 
     def __new__(cls):
@@ -86,28 +91,6 @@ class OpenSearchClientSingleton:
 
     def _setup_opensearch_client(self):
         if not self._opensearch_client:
-            try:
-                from opensearchpy import OpenSearch
-                from opensearchpy.exceptions import (
-                    AuthenticationException as OpenSearchAuthenticationException,
-                )
-                from opensearchpy.exceptions import (
-                    ConnectionError as OpenSearchConnectionError,
-                )
-                from opensearchpy.exceptions import (
-                    RequestError as RequestError,
-                )
-
-                self.OpenSearchConnectionError = OpenSearchConnectionError
-                self.OpenSearchAuthenticationException = (
-                    OpenSearchAuthenticationException
-                )
-                self.RequestError = RequestError
-
-            except ModuleNotFoundError as err:
-                raise FeatureStoreException(
-                    "hopsworks and opensearchpy are required for embedding similarity search"
-                ) from err
             # query log is at INFO level
             # 2023-11-24 15:10:49,470 INFO: POST https://localhost:9200/index/_search [status:200 request:0.041s]
             logging.getLogger("opensearchpy").setLevel(logging.WARNING)
@@ -123,23 +106,22 @@ class OpenSearchClientSingleton:
         self._opensearch_client = None
         self._setup_opensearch_client()
 
-    @_handle_opensearch_exception
     @retry(
         wait_exponential_multiplier=1000,
         stop_max_attempt_number=5,
         retry_on_exception=_is_timeout,
     )
+    @_handle_opensearch_exception
     def search(self, index=None, body=None, options=None):
         try:
-            return self._opensearch_client.search(body=body, index=index, params=options)
-        except (
-        self.OpenSearchConnectionError, self.OpenSearchAuthenticationException):
+            return self._opensearch_client.search(body=body, index=index, params=OpensearchRequestOption.get_options(options))
+        except (ConnectionError, AuthenticationException):
             # OpenSearchConnectionError occurs when connection is closed.
             # OpenSearchAuthenticationException occurs when jwt is expired
             self._refresh_opensearch_connection()
             return self._opensearch_client.search(body=body, index=index,
                                                   params=OpensearchRequestOption.get_options(options))
-        except self.RequestError as e:
+        except RequestError as e:
             caused_by = e.info.get("error") and e.info["error"].get("caused_by")
             if caused_by and caused_by["type"] == "illegal_argument_exception":
                 raise self._create_vector_database_exception(
@@ -150,12 +132,12 @@ class OpenSearchClientSingleton:
                 e.info,
             )  from e
 
-    @_handle_opensearch_exception
     @retry(
         wait_exponential_multiplier=1000,
         stop_max_attempt_number=5,
         retry_on_exception=_is_timeout,
     )
+    @_handle_opensearch_exception
     def count(self, index, body=None, options=None):
         result = self._opensearch_client.count(index=index, body=body,
                                                params=OpensearchRequestOption.get_options(options))
