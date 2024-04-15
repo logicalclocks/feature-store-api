@@ -58,7 +58,7 @@ def init_or_reset_online_store_rest_client(
 
 def get_instance() -> "OnlineStoreRestClientSingleton":
     global _online_store_rest_client
-    if _online_store_rest_client is not None:
+    if _online_store_rest_client is None:
         _logger.warning(
             "Online Store Rest Client is not initialised. Initialising with default configuration."
         )
