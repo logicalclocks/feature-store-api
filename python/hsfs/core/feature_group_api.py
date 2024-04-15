@@ -454,7 +454,8 @@ class FeatureGroupApi:
                 "executions",
                 "validationreport",
                 "expectationsuite",
-            ]
+            ],
+            "sorted": "date_created:desc",
         }
 
         return _client._send_request("GET", path_params, query_params)
