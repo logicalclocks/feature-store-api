@@ -206,7 +206,7 @@ class FeatureGroupBase:
         self,
         include_primary_key: Optional[bool] = True,
         include_event_time: Optional[bool] = True,
-    ) -> "query.Query":
+    ) -> query.Query:
         """Select all features in the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
@@ -272,7 +272,7 @@ class FeatureGroupBase:
         else:
             return self.select_except(self.primary_key + [self.event_time])
 
-    def select(self, features: List[Union[str, feature.Feature]]) -> "query.Query":
+    def select(self, features: List[Union[str, feature.Feature]]) -> query.Query:
         """Select a subset of features of the feature group and return a query object.
 
         The query can be used to construct joins of feature groups or create a
@@ -318,7 +318,7 @@ class FeatureGroupBase:
 
     def select_except(
         self, features: Optional[List[Union[str, feature.Feature]]] = None
-    ) -> "query.Query":
+    ) -> query.Query:
         """Select all features including primary key and event time feature
         of the feature group except provided `features` and return a query object.
 
@@ -372,7 +372,7 @@ class FeatureGroupBase:
         else:
             return self.select_all()
 
-    def filter(self, f: Union[filter.Filter, filter.Logic]) -> "query.Query":
+    def filter(self, f: Union[filter.Filter, filter.Logic]) -> query.Query:
         """Apply filter to the feature group.
 
         Selects all features and returns the resulting `Query` with the applied filter.
@@ -460,7 +460,7 @@ class FeatureGroupBase:
         """
         self._feature_group_engine.delete_tag(self, name)
 
-    def get_tag(self, name: str) -> "tag.Tag":
+    def get_tag(self, name: str) -> tag.Tag:
         """Get the tags of a feature group.
 
         !!! example
@@ -485,7 +485,7 @@ class FeatureGroupBase:
         """
         return self._feature_group_engine.get_tag(self, name)
 
-    def get_tags(self) -> Dict[str, "tag.Tag"]:
+    def get_tags(self) -> Dict[str, tag.Tag]:
         """Retrieves all tags attached to a feature group.
 
         # Returns
@@ -496,7 +496,7 @@ class FeatureGroupBase:
         """
         return self._feature_group_engine.get_tags(self)
 
-    def get_parent_feature_groups(self) -> "explicit_provenance.Links":
+    def get_parent_feature_groups(self) -> explicit_provenance.Links:
         """Get the parents of this feature group, based on explicit provenance.
         Parents are feature groups or external feature groups. These feature
         groups can be accessible, deleted or inaccessible.
@@ -511,7 +511,7 @@ class FeatureGroupBase:
         """
         return self._feature_group_engine.get_parent_feature_groups(self)
 
-    def get_generated_feature_views(self) -> "explicit_provenance.Links":
+    def get_generated_feature_views(self) -> explicit_provenance.Links:
         """Get the generated feature view using this feature group, based on explicit
         provenance. These feature views can be accessible or inaccessible. Explicit
         provenance does not track deleted generated feature view links, so deleted
@@ -526,7 +526,7 @@ class FeatureGroupBase:
         """
         return self._feature_group_engine.get_generated_feature_views(self)
 
-    def get_generated_feature_groups(self) -> "explicit_provenance.Links":
+    def get_generated_feature_groups(self) -> explicit_provenance.Links:
         """Get the generated feature groups using this feature group, based on explicit
         provenance. These feature groups can be accessible or inaccessible. Explicit
         provenance does not track deleted generated feature group links, so deleted
@@ -541,7 +541,7 @@ class FeatureGroupBase:
         """
         return self._feature_group_engine.get_generated_feature_groups(self)
 
-    def get_feature(self, name: str) -> "feature.Feature":
+    def get_feature(self, name: str) -> feature.Feature:
         """Retrieve a `Feature` object from the schema of the feature group.
 
         There are several ways to access features of a feature group:
@@ -582,7 +582,9 @@ class FeatureGroupBase:
                 f"'FeatureGroup' object has no feature called '{name}'."
             ) from err
 
-    def update_statistics_config(self) -> "FeatureGroup":
+    def update_statistics_config(
+        self,
+    ) -> Union[FeatureGroup, ExternalFeatureGroup, SpineGroup, FeatureGroupBase]:
         """Update the statistics configuration of the feature group.
 
         Change the `statistics_config` object and persist the changes by calling
@@ -610,7 +612,9 @@ class FeatureGroupBase:
         self._feature_group_engine.update_statistics_config(self)
         return self
 
-    def update_description(self, description: str) -> "FeatureGroupBase":
+    def update_description(
+        self, description: str
+    ) -> Union[FeatureGroupBase, FeatureGroup, ExternalFeatureGroup, SpineGroup]:
         """Update the description of the feature group.
 
         !!! example
@@ -639,7 +643,7 @@ class FeatureGroupBase:
 
     def update_notification_topic_name(
         self, notification_topic_name: str
-    ) -> "FeatureGroupBase":
+    ) -> Union[FeatureGroupBase, ExternalFeatureGroup, SpineGroup, FeatureGroup]:
         """Update the notification topic name of the feature group.
 
         !!! example
@@ -669,7 +673,9 @@ class FeatureGroupBase:
         )
         return self
 
-    def update_deprecated(self, deprecate: bool = True) -> "FeatureGroup":
+    def update_deprecated(
+        self, deprecate: bool = True
+    ) -> Union[FeatureGroupBase, FeatureGroup, ExternalFeatureGroup, SpineGroup]:
         """Deprecate the feature group.
 
         !!! example
@@ -698,7 +704,7 @@ class FeatureGroupBase:
 
     def update_features(
         self, features: Union[feature.Feature, List[feature.Feature]]
-    ) -> "FeatureGroup":
+    ) -> Union[FeatureGroupBase, FeatureGroup, ExternalFeatureGroup, SpineGroup]:
         """Update metadata of features in this feature group.
 
         Currently it's only supported to update the description of a feature.
@@ -739,7 +745,7 @@ class FeatureGroupBase:
 
     def update_feature_description(
         self, feature_name: str, description: str
-    ) -> "FeatureGroup":
+    ) -> Union[FeatureGroupBase, FeatureGroup, ExternalFeatureGroup, SpineGroup]:
         """Update the description of a single feature in this feature group.
 
         !!! example
@@ -772,7 +778,7 @@ class FeatureGroupBase:
 
     def append_features(
         self, features: Union[feature.Feature, List[feature.Feature]]
-    ) -> "FeatureGroup":
+    ) -> Union[FeatureGroupBase, FeatureGroup, ExternalFeatureGroup, SpineGroup]:
         """Append features to the schema of the feature group.
 
         !!! example
@@ -1210,7 +1216,7 @@ class FeatureGroupBase:
     @classmethod
     def from_response_json(
         cls, feature_group_json: Dict[str, Any]
-    ) -> Union["FeatureGroup", "ExternalFeatureGroup", "SpineGroup"]:
+    ) -> Union[FeatureGroup, ExternalFeatureGroup, SpineGroup]:
         if (
             feature_group_json["type"] == "onDemandFeaturegroupDTO"
             and not feature_group_json["spine"]
@@ -1232,9 +1238,7 @@ class FeatureGroupBase:
         name: Optional[str] = None,
         feature_name: Optional[str] = None,
         config_id: Optional[int] = None,
-    ) -> Union[
-        "fmc.FeatureMonitoringConfig", List["fmc.FeatureMonitoringConfig"], None
-    ]:
+    ) -> Union[fmc.FeatureMonitoringConfig, List[fmc.FeatureMonitoringConfig], None]:
         """Fetch all feature monitoring configs attached to the feature group, or fetch by name or feature name only.
         If no arguments is provided the method will return all feature monitoring configs
         attached to the feature group, meaning all feature monitoring configs that are attach
@@ -1296,7 +1300,7 @@ class FeatureGroupBase:
         start_time: Optional[Union[int, str, datetime, date]] = None,
         end_time: Optional[Union[int, str, datetime, date]] = None,
         with_statistics: Optional[bool] = True,
-    ) -> List["fmr.FeatureMonitoringResult"]:
+    ) -> List[fmr.FeatureMonitoringResult]:
         """Fetch feature monitoring history for a given feature monitoring config.
 
         !!! example
@@ -1364,7 +1368,7 @@ class FeatureGroupBase:
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
         end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
         cron_expression: Optional[str] = "0 0 12 ? * * *",
-    ) -> "fmc.FeatureMonitoringConfig":
+    ) -> fmc.FeatureMonitoringConfig:
         """Run a job to compute statistics on snapshot of feature data on a schedule.
 
         !!! experimental
@@ -1430,7 +1434,7 @@ class FeatureGroupBase:
         start_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
         end_date_time: Optional[Union[int, str, datetime, date, pd.Timestamp]] = None,
         cron_expression: Optional[str] = "0 0 12 ? * * *",
-    ) -> "fmc.FeatureMonitoringConfig":
+    ) -> fmc.FeatureMonitoringConfig:
         """Enable feature monitoring to compare statistics on snapshots of feature data over time.
 
         !!! experimental
@@ -1517,7 +1521,7 @@ class FeatureGroupBase:
             raise KeyError(f"'FeatureGroup' object has no feature called '{name}'.")
 
     @property
-    def statistics_config(self) -> "StatisticsConfig":
+    def statistics_config(self) -> StatisticsConfig:
         """Statistics configuration object defining the settings for statistics
         computation of the feature group.
 
@@ -1530,7 +1534,7 @@ class FeatureGroupBase:
     @statistics_config.setter
     def statistics_config(
         self,
-        statistics_config: Optional[Union["StatisticsConfig", Dict[str, Any], bool]],
+        statistics_config: Optional[Union[StatisticsConfig, Dict[str, Any], bool]],
     ) -> None:
         self._check_statistics_support()  # raises an error if stats not supported
         if isinstance(statistics_config, StatisticsConfig):
@@ -1553,11 +1557,11 @@ class FeatureGroupBase:
         return self._feature_store_id
 
     @property
-    def feature_store(self) -> "feature_store.FeatureStore":
+    def feature_store(self) -> feature_store.FeatureStore:
         return self._feature_store
 
     @feature_store.setter
-    def feature_store(self, feature_store: "feature_store.FeatureStore") -> None:
+    def feature_store(self, feature_store: feature_store.FeatureStore) -> None:
         self._feature_store = feature_store
 
     @property

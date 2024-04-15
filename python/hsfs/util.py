@@ -27,7 +27,6 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 from urllib.parse import urljoin, urlparse
 
 import pandas as pd
-from aiomysql.sa import _EngineContextManager
 from aiomysql.sa import create_engine as async_create_engine
 from hsfs import client, feature, feature_group
 from hsfs.client import exceptions
@@ -175,7 +174,7 @@ async def create_async_engine(
     external: bool,
     default_min_size: int,
     options: Optional[Dict[str, Any]] = None,
-) -> _EngineContextManager:
+) -> Any:
     online_options = online_conn.spark_options()
     # create a aiomysql connection pool
     # read the keys user, password from online_conn as use them while creating the connection pool

@@ -14,6 +14,8 @@
 #   limitations under the License.
 #
 
+from typing import TypeVar, Union
+
 from hsfs.client import exceptions
 from hsfs.core import arrow_flight_client
 from hsfs.engine import spark, spark_no_metastore
@@ -23,7 +25,7 @@ _engine = None
 _engine_type = None
 
 
-def init(engine_type):
+def init(engine_type: str) -> None:
     global _engine_type
     global _engine
     if not _engine:
@@ -48,7 +50,9 @@ def init(engine_type):
             _engine = "training"
 
 
-def get_instance():
+def get_instance() -> (
+    Union[spark.Engine, spark_no_metastore.Engine, TypeVar("python.Engine")]
+):
     global _engine
     if _engine:
         if _engine == "training":
@@ -61,21 +65,24 @@ def get_instance():
 
 
 # Used for testing
-def set_instance(engine_type, engine):
+def set_instance(
+    engine_type: str,
+    engine: Union[spark.Engine, spark_no_metastore.Engine, TypeVar("python.Engine")],
+) -> None:
     global _engine_type
     global _engine
     _engine_type = engine_type
     _engine = engine
 
 
-def get_type():
+def get_type() -> str:
     global _engine_type
     if _engine_type:
         return _engine_type
     raise Exception("Couldn't find execution engine. Try reconnecting to Hopsworks.")
 
 
-def stop():
+def stop() -> None:
     global _engine
     _engine = None
     arrow_flight_client.close()

@@ -13,8 +13,12 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 from enum import Enum
+from typing import Any, Union
+
+import requests
 
 
 class RestAPIError(Exception):
@@ -24,14 +28,14 @@ class RestAPIError(Exception):
         FEATURE_GROUP_COMMIT_NOT_FOUND = 270227
         STATISTICS_NOT_FOUND = 270228
 
-        def __eq__(self, other):
+        def __eq__(self, other: Union[int, Any]) -> bool:
             if isinstance(other, int):
                 return self.value == other
             if isinstance(other, self.__class__):
                 return self is other
             return False
 
-    def __init__(self, url, response):
+    def __init__(self, url: str, response: requests.Response) -> None:
         try:
             error_object = response.json()
         except Exception:
@@ -63,7 +67,6 @@ class FeatureStoreException(Exception):
 
 
 class VectorDatabaseException(Exception):
-
     # reason
     REQUESTED_K_TOO_LARGE = "REQUESTED_K_TOO_LARGE"
     REQUESTED_NUM_RESULT_TOO_LARGE = "REQUESTED_NUM_RESULT_TOO_LARGE"
@@ -73,31 +76,31 @@ class VectorDatabaseException(Exception):
     REQUESTED_K_TOO_LARGE_INFO_K = "k"
     REQUESTED_NUM_RESULT_TOO_LARGE_INFO_N = "n"
 
-    def __init__(self, reason, message, info):
+    def __init__(self, reason: str, message: str, info: str) -> None:
         super().__init__(message)
         self._info = info
         self._reason = reason
 
     @property
-    def reason(self):
+    def reason(self) -> str:
         return self._reason
 
     @property
-    def info(self):
+    def info(self) -> str:
         return self._info
 
 
 class DataValidationException(FeatureStoreException):
     """Raised when data validation fails only when using "STRICT" validation ingestion policy."""
 
-    def __init__(self, message):
+    def __init__(self, message: str) -> None:
         super().__init__(message)
 
 
 class ExternalClientError(TypeError):
     """Raised when external client cannot be initialized due to missing arguments."""
 
-    def __init__(self, missing_argument):
+    def __init__(self, missing_argument: str) -> None:
         message = (
             "{0} cannot be of type NoneType, {0} is a non-optional "
             "argument to connect to hopsworks from an external environment."
