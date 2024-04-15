@@ -18,7 +18,6 @@ from __future__ import annotations
 import asyncio
 import itertools
 import json
-import os
 import re
 import threading
 import time
@@ -37,19 +36,6 @@ from sqlalchemy.engine.url import make_url
 
 
 FEATURE_STORE_NAME_SUFFIX = "_featurestore"
-
-
-if os.environ.get("HOPSWORKS_RUN_WITH_TYPECHECK", False):
-    from typeguard import typechecked
-else:
-    from typing import TypeVar
-
-    _T = TypeVar("_T")
-
-    def typechecked(
-        target: _T,
-    ) -> _T:
-        return target if target else typechecked
 
 
 class FeatureStoreEncoder(json.JSONEncoder):

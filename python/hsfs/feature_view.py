@@ -51,13 +51,13 @@ from hsfs.core import feature_monitoring_config as fmc
 from hsfs.core import feature_monitoring_result as fmr
 from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.core.vector_db_client import VectorDbClient
+from hsfs.decorators import typechecked
 from hsfs.feature import Feature
 from hsfs.serving_key import ServingKey
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
 from hsfs.transformation_function import TransformationFunction
-from hsfs.util import typechecked
 
 
 TrainingDatasetDataFrameTypes = Union[

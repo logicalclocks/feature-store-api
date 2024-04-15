@@ -22,7 +22,7 @@ import hsfs
 import humps
 from hsfs import util
 from hsfs.constructor import filter
-from hsfs.util import typechecked
+from hsfs.decorators import typechecked
 
 
 @typechecked

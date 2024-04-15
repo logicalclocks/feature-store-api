@@ -65,12 +65,12 @@ from hsfs.core import feature_monitoring_result as fmr
 from hsfs.core.job import Job
 from hsfs.core.variable_api import VariableApi
 from hsfs.core.vector_db_client import VectorDbClient
+from hsfs.decorators import typechecked
 from hsfs.embedding import EmbeddingIndex
 from hsfs.expectation_suite import ExpectationSuite
 from hsfs.ge_validation_result import ValidationResult
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
-from hsfs.util import typechecked
 from hsfs.validation_report import ValidationReport
 
 

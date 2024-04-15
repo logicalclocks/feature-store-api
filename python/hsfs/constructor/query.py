@@ -29,8 +29,8 @@ from hsfs.constructor import join
 from hsfs.constructor.filter import Filter, Logic
 from hsfs.constructor.fs_query import FsQuery
 from hsfs.core import arrow_flight_client, query_constructor_api, storage_connector_api
+from hsfs.decorators import typechecked
 from hsfs.feature import Feature
-from hsfs.util import typechecked
 
 
 @typechecked

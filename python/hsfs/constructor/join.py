@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional
 import humps
 from hsfs import util
 from hsfs.constructor import query
-from hsfs.util import typechecked
+from hsfs.decorators import typechecked
 
 
 @typechecked
