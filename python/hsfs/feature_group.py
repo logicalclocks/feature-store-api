@@ -3156,7 +3156,7 @@ class FeatureGroup(FeatureGroupBase):
             "deprecated": self.deprecated,
         }
         if self.embedding_index:
-            fg_meta_dict["embeddingIndex"] = self.embedding_index
+            fg_meta_dict["embeddingIndex"] = self.embedding_index.to_dict()
         if self._stream:
             fg_meta_dict["deltaStreamerJobConf"] = self._deltastreamer_jobconf
         return fg_meta_dict
