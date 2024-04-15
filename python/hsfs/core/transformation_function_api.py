@@ -13,6 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
 
 from hsfs import client, transformation_function, transformation_function_attached
 
