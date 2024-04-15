@@ -20,8 +20,8 @@ from enum import Enum
 from typing import List, Optional, Union
 
 import humps
+from hsfs import util
 from hsfs.core import monitoring_window_config_engine
-from hsfs.util import FeatureStoreEncoder
 
 
 class WindowConfigType(str, Enum):
@@ -177,7 +177,7 @@ class MonitoringWindowConfig:
         return the_dict
 
     def json(self) -> str:
-        return json.dumps(self, cls=FeatureStoreEncoder)
+        return json.dumps(self, cls=util.FeatureStoreEncoder)
 
     def __str__(self):
         return self.json()

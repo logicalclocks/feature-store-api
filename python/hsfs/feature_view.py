@@ -34,6 +34,8 @@ from hsfs import (
     usage,
     util,
 )
+from hsfs import serving_key as skm
+from hsfs import transformation_function as tfm
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import filter, query
 from hsfs.constructor.filter import Filter, Logic
@@ -53,11 +55,9 @@ from hsfs.core.feature_view_api import FeatureViewApi
 from hsfs.core.vector_db_client import VectorDbClient
 from hsfs.decorators import typechecked
 from hsfs.feature import Feature
-from hsfs.serving_key import ServingKey
 from hsfs.statistics import Statistics
 from hsfs.statistics_config import StatisticsConfig
 from hsfs.training_dataset_split import TrainingDatasetSplit
-from hsfs.transformation_function import TransformationFunction
 
 
 TrainingDatasetDataFrameTypes = Union[
@@ -94,9 +94,11 @@ class FeatureView:
         labels: Optional[List[str]] = None,
         inference_helper_columns: Optional[List[str]] = None,
         training_helper_columns: Optional[List[str]] = None,
-        transformation_functions: Optional[Dict[str, TransformationFunction]] = None,
+        transformation_functions: Optional[
+            Dict[str, tfm.TransformationFunction]
+        ] = None,
         featurestore_name: Optional[str] = None,
-        serving_keys: Optional[List[ServingKey]] = None,
+        serving_keys: Optional[List[skm.ServingKey]] = None,
         **kwargs,
     ) -> None:
         self._name = name
@@ -3287,7 +3289,9 @@ class FeatureView:
 
         serving_keys = json_decamelized.get("serving_keys", None)
         if serving_keys is not None:
-            serving_keys = [ServingKey.from_response_json(sk) for sk in serving_keys]
+            serving_keys = [
+                skm.ServingKey.from_response_json(sk) for sk in serving_keys
+            ]
         fv = cls(
             id=json_decamelized.get("id", None),
             name=json_decamelized["name"],
@@ -3471,30 +3475,30 @@ class FeatureView:
     @property
     def transformation_functions(
         self,
-    ) -> Dict[str, "TransformationFunction"]:
+    ) -> Dict[str, tfm.TransformationFunction]:
         """Get transformation functions."""
         return self._transformation_functions
 
     @transformation_functions.setter
     def transformation_functions(
         self,
-        transformation_functions: Dict[str, "TransformationFunction"],
+        transformation_functions: Dict[str, tfm.TransformationFunction],
     ) -> None:
         self._transformation_functions = transformation_functions
 
     @property
-    def schema(self) -> List["training_dataset_feature.TrainingDatasetFeature"]:
+    def schema(self) -> List[training_dataset_feature.TrainingDatasetFeature]:
         """Feature view schema."""
         return self._features
 
     @property
-    def features(self) -> List["training_dataset_feature.TrainingDatasetFeature"]:
+    def features(self) -> List[training_dataset_feature.TrainingDatasetFeature]:
         """Feature view schema. (alias)"""
         return self._features
 
     @schema.setter
     def schema(
-        self, features: List["training_dataset_feature.TrainingDatasetFeature"]
+        self, features: List[training_dataset_feature.TrainingDatasetFeature]
     ) -> None:
         self._features = features
 
@@ -3520,10 +3524,10 @@ class FeatureView:
             return _vector_server.required_serving_keys
 
     @property
-    def serving_keys(self) -> List["ServingKey"]:
+    def serving_keys(self) -> List[skm.ServingKey]:
         """All primary keys of the feature groups included in the query."""
         return self._serving_keys
 
     @serving_keys.setter
-    def serving_keys(self, serving_keys: List["ServingKey"]) -> None:
+    def serving_keys(self, serving_keys: List[skm.ServingKey]) -> None:
         self._serving_keys = serving_keys

@@ -82,6 +82,7 @@ from great_expectations.data_context.types.base import (
     InMemoryStoreBackendDefaults,
 )
 from hsfs import client, feature, training_dataset_feature, util
+from hsfs import feature_group as fg_mod
 from hsfs.client import hopsworks
 from hsfs.client.exceptions import FeatureStoreException
 from hsfs.constructor import query
@@ -92,7 +93,6 @@ from hsfs.core import (
     storage_connector_api,
     transformation_function_engine,
 )
-from hsfs.feature_group import ExternalFeatureGroup, SpineGroup
 from hsfs.storage_connector import StorageConnector
 from hsfs.training_dataset_split import TrainingDatasetSplit
 
@@ -155,7 +155,7 @@ class Engine:
         self._spark_session.sparkContext.setJobGroup(group_id, description)
 
     def register_external_temporary_table(self, external_fg, alias):
-        if not isinstance(external_fg, SpineGroup):
+        if not isinstance(external_fg, fg_mod.SpineGroup):
             external_dataset = external_fg.storage_connector.read(
                 external_fg.query,
                 external_fg.data_format,
@@ -311,7 +311,7 @@ class Engine:
     ):
         try:
             if (
-                isinstance(feature_group, ExternalFeatureGroup)
+                isinstance(feature_group, fg_mod.ExternalFeatureGroup)
                 and feature_group.online_enabled
             ) or feature_group.stream:
                 self._save_online_dataframe(
