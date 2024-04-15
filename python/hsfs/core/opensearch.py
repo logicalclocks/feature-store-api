@@ -19,13 +19,16 @@ import re
 from functools import wraps
 
 import urllib3
-from opensearchpy import OpenSearch
-from opensearchpy.exceptions import (
-    AuthenticationException, ConnectionError, RequestError, ConnectionTimeout
-)
 from hsfs import client
 from hsfs.client.exceptions import FeatureStoreException, VectorDatabaseException
 from hsfs.core.opensearch_api import OpenSearchApi
+from opensearchpy import OpenSearch
+from opensearchpy.exceptions import (
+    AuthenticationException,
+    ConnectionError,
+    ConnectionTimeout,
+    RequestError,
+)
 from retrying import retry
 
 
