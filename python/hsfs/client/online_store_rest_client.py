@@ -58,21 +58,13 @@ def init_or_reset_online_store_rest_client(
 
 def get_instance() -> "OnlineStoreRestClientSingleton":
     global _online_store_rest_client
-    if not _online_store_rest_client:
+    if _online_store_rest_client is not None:
         _logger.warning(
             "Online Store Rest Client is not initialised. Initialising with default configuration."
         )
         _online_store_rest_client = OnlineStoreRestClientSingleton()
     _logger.debug("Accessing global Online Store Rest Client instance.")
     return _online_store_rest_client
-
-
-_DEFAULT_ONLINE_STORE_REST_CLIENT_PORT = 4406
-_DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_MS = 600
-_DEFAULT_ONLINE_STORE_REST_CLIENT_VERIFY_CERTS = True
-_DEFAULT_ONLINE_STORE_REST_CLIENT_USE_SSL = True
-_DEFAULT_ONLINE_STORE_REST_CLIENT_SERVER_API_VERSION = "0.1.0"
-_DEFAULT_ONLINE_STORE_REST_CLIENT_HTTP_AUTHORIZATION = "X-API-KEY"
 
 
 class OnlineStoreRestClientSingleton:
@@ -85,6 +77,12 @@ class OnlineStoreRestClientSingleton:
     TIMEOUT = "timeout"
     SERVER_API_VERSION = "server_api_version"
     API_KEY = "api_key"
+    _DEFAULT_ONLINE_STORE_REST_CLIENT_PORT = 4406
+    _DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_MS = 600
+    _DEFAULT_ONLINE_STORE_REST_CLIENT_VERIFY_CERTS = True
+    _DEFAULT_ONLINE_STORE_REST_CLIENT_USE_SSL = True
+    _DEFAULT_ONLINE_STORE_REST_CLIENT_SERVER_API_VERSION = "0.1.0"
+    _DEFAULT_ONLINE_STORE_REST_CLIENT_HTTP_AUTHORIZATION = "X-API-KEY"
 
     def __init__(
         self,
@@ -214,11 +212,11 @@ class OnlineStoreRestClientSingleton:
             "Retrieving default static configuration for Online Store REST Client."
         )
         return {
-            self.TIMEOUT: _DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_MS,
-            self.VERIFY_CERTS: _DEFAULT_ONLINE_STORE_REST_CLIENT_VERIFY_CERTS,
-            self.USE_SSL: _DEFAULT_ONLINE_STORE_REST_CLIENT_USE_SSL,
-            self.SERVER_API_VERSION: _DEFAULT_ONLINE_STORE_REST_CLIENT_SERVER_API_VERSION,
-            self.HTTP_AUTHORIZATION: _DEFAULT_ONLINE_STORE_REST_CLIENT_HTTP_AUTHORIZATION,
+            self.TIMEOUT: self._DEFAULT_ONLINE_STORE_REST_CLIENT_TIMEOUT_MS,
+            self.VERIFY_CERTS: self._DEFAULT_ONLINE_STORE_REST_CLIENT_VERIFY_CERTS,
+            self.USE_SSL: self._DEFAULT_ONLINE_STORE_REST_CLIENT_USE_SSL,
+            self.SERVER_API_VERSION: self._DEFAULT_ONLINE_STORE_REST_CLIENT_SERVER_API_VERSION,
+            self.HTTP_AUTHORIZATION: self._DEFAULT_ONLINE_STORE_REST_CLIENT_HTTP_AUTHORIZATION,
         }
 
     def _get_default_dynamic_parameters_config(
@@ -259,9 +257,7 @@ class OnlineStoreRestClientSingleton:
                     "External Online Store REST Client : Loadbalancer external domain is not set. Using client host as endpoint."
                 )
                 external_domain = client.get_instance().host
-            default_url = (
-                f"https://{external_domain}:{_DEFAULT_ONLINE_STORE_REST_CLIENT_PORT}"
-            )
+            default_url = f"https://{external_domain}:{self._DEFAULT_ONLINE_STORE_REST_CLIENT_PORT}"
             _logger.debug(
                 f"External Online Store REST Client : Default RonDB Rest Server endpoint: {default_url}"
             )
@@ -273,7 +269,7 @@ class OnlineStoreRestClientSingleton:
             service_discovery_domain = self.variable_api.get_service_discovery_domain()
             if service_discovery_domain == "":
                 raise FeatureStoreException("Service discovery domain is not set.")
-            default_url = f"https://rdrs.service.{service_discovery_domain}:{_DEFAULT_ONLINE_STORE_REST_CLIENT_PORT}"
+            default_url = f"https://rdrs.service.{service_discovery_domain}:{self._DEFAULT_ONLINE_STORE_REST_CLIENT_PORT}"
             _logger.debug(
                 f"Internal Online Store REST Client : Default RonDB Rest Server endpoint: {default_url}"
             )
