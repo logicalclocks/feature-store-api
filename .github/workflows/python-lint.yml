@@ -56,17 +56,17 @@ jobs:
       - name: Set Timezone
         run: sudo timedatectl set-timezone UTC
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Copy README
         run: cp README.md python/
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Setup Python
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
           cache-dependency-path: "python/setup.py"
-      - run: pip install -e python[python,dev,docs]
+      - run: pip install -e python[python,dev]
 
       - name: Display Python version
         run: python --version
@@ -85,7 +85,7 @@ jobs:
       - name: Set Timezone
         run: sudo timedatectl set-timezone UTC
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Copy README
         run: cp README.md python/
 
@@ -95,7 +95,7 @@ jobs:
           python-version: "3.10"
           cache: "pip"
           cache-dependency-path: "python/setup.py"
-      - run: pip install -e python[python,dev-pandas1,docs]
+      - run: pip install -e python[python,dev-pandas1]
 
       - name: Display Python version
         run: python --version
@@ -114,17 +114,17 @@ jobs:
       - name: Set Timezone
         run: sudo timedatectl set-timezone Europe/Amsterdam
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Copy README
         run: cp README.md python/
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Setup Python
         with:
           python-version: "3.10"
           cache: "pip"
           cache-dependency-path: "python/setup.py"
-      - run: pip install -e python[python,dev,docs]
+      - run: pip install -e 'python[python,dev]'
 
       - name: Display Python version
         run: python --version
@@ -168,17 +168,17 @@ jobs:
       - name: Set Timezone
         run: tzutil /s "UTC"
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Copy README
         run: cp README.md python/
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Setup Python
         with:
           python-version: "3.10"
           cache: "pip"
           cache-dependency-path: "python/setup.py"
-      - run: pip install -e python[python,dev,docs]
+      - run: pip install -e python[python,dev]
 
       - name: Display Python version
         run: python --version
@@ -197,20 +197,23 @@ jobs:
       - name: Set Timezone
         run: tzutil /s "W. Europe Standard Time"
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Copy README
         run: cp README.md python/
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Setup Python
         with:
           python-version: "3.10"
           cache: "pip"
           cache-dependency-path: "python/setup.py"
-      - run: pip install -e python[python,dev,docs]
+      - run: pip install -e python[python,dev]
 
       - name: Display Python version
         run: python --version
+
+      - name: Display pip freeze
+        run: pip freeze
 
       - name: Run Pytest suite
         env:

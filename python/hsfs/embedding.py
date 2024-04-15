@@ -40,6 +40,10 @@ class SimilarityFunctionType:
     COSINE = "cosine"
     DOT_PRODUCT = "dot_product"
 
+    def __init__(self) -> None:
+        # Fix for the doc
+        raise NotImplementedError("This class should not be instantiated.")
+
 
 @dataclass
 class HsmlModel:
@@ -360,7 +364,7 @@ class EmbeddingIndex:
         """
         return {
             "indexName": self._index_name,
-            "features": list(self._features.values()),
+            "features": [feature.to_dict() for feature in self._features.values()],
             "colPrefix": self._col_prefix,
         }
 
