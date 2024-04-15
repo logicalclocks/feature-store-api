@@ -418,3 +418,43 @@ class FeatureGroupApi:
             explicit_provenance.Links.Direction.DOWNSTREAM,
             explicit_provenance.Links.Type.FEATURE_GROUP,
         )
+
+    def get_feature_group_activities(
+        self,
+        feature_group_instance: Union[
+            feature_group.FeatureGroup,
+            feature_group.ExternalFeatureGroup,
+            feature_group.SpineGroup,
+        ],
+    ):
+        """Get the activities of this feature group, based on explicit provenance.
+
+        # Arguments
+            feature_group_instance: Metadata object of feature group.
+
+        # Returns
+            `Dict[str, Any]`: the activities of this feature group
+        """
+        _client = client.get_instance()
+        path_params = [
+            "project",
+            _client._project_id,
+            "featurestores",
+            feature_group_instance.feature_store_id,
+            "featuregroups",
+            feature_group_instance.id,
+            "activity",
+        ]
+        query_params = {
+            "expand": [
+                "statistics",
+                "commits",
+                "jobs",
+                "users",
+                "executions",
+                "validationreport",
+                "expectationsuite",
+            ]
+        }
+
+        return _client._send_request("GET", path_params, query_params)

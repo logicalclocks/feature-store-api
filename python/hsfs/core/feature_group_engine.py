@@ -48,7 +48,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
         )
-        util.validate_embedding_feature_type(feature_group.embedding_index, dataframe_features)
+        util.validate_embedding_feature_type(
+            feature_group.embedding_index, dataframe_features
+        )
 
         self.save_feature_group_metadata(
             feature_group, dataframe_features, write_options
@@ -96,7 +98,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             feature_dataframe, feature_group.time_travel_format
         )
-        util.validate_embedding_feature_type(feature_group.embedding_index, dataframe_features)
+        util.validate_embedding_feature_type(
+            feature_group.embedding_index, dataframe_features
+        )
 
         if not feature_group._id:
             # only save metadata if feature group does not exist
@@ -287,7 +291,9 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
         dataframe_features = engine.get_instance().parse_schema_feature_group(
             dataframe, feature_group.time_travel_format
         )
-        util.validate_embedding_feature_type(feature_group.embedding_index, dataframe_features)
+        util.validate_embedding_feature_type(
+            feature_group.embedding_index, dataframe_features
+        )
 
         if not feature_group._id:
             self.save_feature_group_metadata(
@@ -494,3 +500,25 @@ class FeatureGroupEngine(feature_group_base_engine.FeatureGroupBaseEngine):
             table.add_row("", "- Columns:", "", "", "", "")
             for feature in fgroup.features:
                 table.add_row("", "*", f"{feature.name} :", f"{feature.type}")
+
+    def get_feature_group_activities(
+        self,
+        feature_group: Union[fg.FeatureGroup, fg.ExternalFeatureGroup, fg.SpineGroup],
+    ):
+        return self._feature_group_api.get_feature_group_activities(feature_group)
+
+    # def make_activity_table(self, feature_group: Union[fg.FeatureGroup, fg.ExternalFeatureGroup, fg.SpineGroup]):
+    #     table = Table(show_header=True, header_style="bold")
+    #     table.add_column("Activity")
+    #     table.add_column("Timestamp")
+    #     table.add_column("User")
+    #     table.add_column("Description")
+    #     return table
+
+    # def make_rich_text_activity(self, table: Table, activity):
+    #     table.add_row(
+    #         activity.activity,
+    #         activity.timestamp,
+    #         activity.user,
+    #         activity.description
+    #     )
