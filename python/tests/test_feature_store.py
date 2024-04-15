@@ -36,8 +36,6 @@ class TestFeatureStore:
         assert fs._online_feature_store_name == "test_online_featurestore_name"
         assert fs._online_feature_store_size == 31
         assert fs._offline_feature_store_name == "test_offline_featurestore_name"
-        assert fs.hive_endpoint == "test_hive_endpoint"
-        assert fs.mysql_server_endpoint == "test_mysql_server_endpoint"
         assert fs.online_enabled is True
         assert fs._num_feature_groups == 2
         assert fs._num_training_datasets == 3
@@ -61,8 +59,6 @@ class TestFeatureStore:
         assert fs._online_feature_store_name is None
         assert fs._online_feature_store_size is None
         assert fs._offline_feature_store_name == "test_offline_featurestore_name"
-        assert fs.hive_endpoint == "test_hive_endpoint"
-        assert fs.mysql_server_endpoint is None
         assert fs.online_enabled is True
         assert fs._num_feature_groups is None
         assert fs._num_training_datasets is None
