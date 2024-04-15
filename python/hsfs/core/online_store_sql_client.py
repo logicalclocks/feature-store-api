@@ -24,13 +24,11 @@ from hsfs.constructor import serving_prepared_statement
 from hsfs.core import feature_view_api, storage_connector_api, training_dataset_api
 from hsfs.serving_key import ServingKey
 from sqlalchemy import bindparam, exc, sql, text
-from typeguard import typechecked
 
 
 _logger = logging.getLogger(__name__)
 
 
-@typechecked
 class OnlineStoreSqlClient:
     BATCH_HELPER_KEY = "batch_helper_column"
     SINGLE_HELPER_KEY = "single_helper_column"

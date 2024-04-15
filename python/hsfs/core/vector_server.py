@@ -13,6 +13,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from __future__ import annotations
+
 import io
 import logging
 from typing import Any, Dict, List, Optional, Set, Union
@@ -33,22 +35,20 @@ from hsfs.core import (
     online_store_sql_client,
     transformation_function_engine,
 )
-from typeguard import typechecked
 
 
 _logger = logging.getLogger(__name__)
 
 
-@typechecked
 class VectorServer:
     def __init__(
         self,
         feature_store_id: int,
         features: Optional[
-            List["hsfs.training_dataset_feature.TrainingDatasetFeature"]
+            List[hsfs.training_dataset_feature.TrainingDatasetFeature]
         ] = None,
         training_dataset_version: Optional[int] = None,
-        serving_keys: Optional[List["hsfs.serving_key.ServingKey"]] = None,
+        serving_keys: Optional[List[hsfs.serving_key.ServingKey]] = None,
         skip_fg_ids: Optional[Set] = None,
     ):
         self._training_dataset_version = training_dataset_version
@@ -85,19 +85,11 @@ class VectorServer:
 
     def init_serving(
         self,
-        entity: Union["feature_view.FeatureView", "training_dataset.TrainingDataset"],
-        external: bool = None,
+        entity: Union[feature_view.FeatureView, training_dataset.TrainingDataset],
+        external: bool = False,
         inference_helper_columns: bool = False,
-        init_online_store_sql_client: bool = True,
-        init_online_store_rest_client: bool = False,
         options: Optional[Dict[str, Any]] = None,
     ):
-        self._set_default_online_store_client(
-            init_online_store_rest_client=init_online_store_rest_client,
-            init_online_store_sql_client=init_online_store_sql_client,
-            options=options,
-        )
-
         if external is None:
             external = isinstance(client.get_instance(), client.external.Client)
         # `init_prepared_statement` should be the last because other initialisations

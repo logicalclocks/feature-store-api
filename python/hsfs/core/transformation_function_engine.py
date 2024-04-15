@@ -322,13 +322,15 @@ class TransformationFunctionEngine:
     ) -> Dict[
         str, "hsfs.transformation_function_attached.TransformationFunctionAttached"
     ]:
+        is_feat_view = isinstance(entity, feature_view.FeatureView)
         if self._feature_view_api is None:
             self._feature_view_api = feature_view_api.FeatureViewApi(
                 self._feature_store_id
             )
         if self._statistics_engine is None:
             self._statistics_engine = statistics_engine.StatisticsEngine(
-                self._feature_store_id
+                self._feature_store_id,
+                entity_type="featureview" if is_feat_view else "trainingdataset",
             )
         # get attached transformation functions
         transformation_functions = (
