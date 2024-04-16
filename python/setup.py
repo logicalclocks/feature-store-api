@@ -36,7 +36,7 @@ setup(
         "fsspec",
         "retrying",
         "aiomysql[sa] @ git+https://git@github.com/logicalclocks/aiomysql",
-        "polars==0.20.17",
+        "polars>=0.20.18,<=0.21.0",
         "opensearch-py>=1.1.0,<=2.4.2",
     ],
     extras_require={
