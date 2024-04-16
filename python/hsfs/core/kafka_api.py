@@ -14,16 +14,18 @@
 #   limitations under the License.
 #
 
+from typing import Any, Dict, Union
+
 from hsfs import client
 
 
 class KafkaApi:
     def get_subject(
         self,
-        feature_store_id: str,
+        feature_store_id: int,
         subject: str,
-        version: str = "latest",
-    ):
+        version: Union[str, int] = "latest",
+    ) -> Dict[str, Any]:
         _client = client.get_instance()
         path_params = [
             "project",
